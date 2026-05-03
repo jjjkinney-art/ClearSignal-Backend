@@ -164,12 +164,11 @@ def synthesizer_prompt(
 ) -> str:
     """Construct a prompt for the Head Analyst synthesizer.
 
-    This is the most output-critical prompt.  It explicitly instructs
-    the model to:
-    - Name the company in verdict_reasoning
-    - Reference top drivers and risks by name and connect them causally
-    - Avoid generic hedging phrases
-    - Produce analyst-quality, decision-specific language
+    Structured so that the two highest-priority fields — final_verdict and
+    verdict_reasoning — are demanded before any list fields, making it
+    impossible for token budget pressure to starve them.  A hard in-prompt
+    fallback string is provided so the model always has something concrete
+    to write even under uncertainty.
     """
     context_section = _context_section(context)
 
@@ -183,9 +182,8 @@ def synthesizer_prompt(
     )
 
     return (
-        f"You are the Head Analyst writing an internal investment committee brief for '{company}'.\n"
-        "This is an internal decision document for portfolio managers — not external advice.\n"
-        "Write with the directness and specificity of a senior hedge fund analyst.\n\n"
+        f"You are the Head Analyst writing an investment decision note for '{company}'.\n"
+        "Write with the directness of a senior analyst. Plain English. Second person.\n\n"
 
         "━━━ AGENT REPORTS ━━━\n"
         f"{agent_reports}\n"
@@ -193,19 +191,29 @@ def synthesizer_prompt(
 
         "━━━ YOUR TASK ━━━\n"
         f"Synthesize the agent reports into a single investment decision note for '{company}'.\n"
-        "Resolve contradictions across agents. Weigh evidence quality. Produce a definitive verdict.\n\n"
+        "Resolve contradictions. Weigh evidence quality. Produce a definitive verdict.\n\n"
 
-        "━━━ FIELD REQUIREMENTS ━━━\n\n"
+        # ── CRITICAL BLOCK — must come before ALL list fields in the output ──
+        "━━━ MANDATORY: OUTPUT THESE TWO FIELDS FIRST — NO EXCEPTIONS ━━━\n\n"
 
-        "final_verdict (string):\n"
-        "  One word only: bullish, constructive, neutral, cautious, or bearish.\n"
-        "  Choose the word that best captures the risk/reward balance.\n\n"
+        "YOU MUST write both fields below before writing any lists.\n"
+        "An empty verdict_reasoning is a system failure. It is NOT acceptable under any circumstances.\n"
+        "If you are uncertain, still produce a best-effort explanation — use the hard fallback below.\n\n"
 
-        "verdict_reasoning (string):\n"
-        "  EXACTLY 4 sentences. This is the most important field — it is read directly by the user.\n"
-        "  Write in second person ('you'). Use plain English. No jargon. No institutional hedging.\n"
-        "  Imagine you are explaining this to a smart friend who is new to investing.\n\n"
-        "  Sentence 1 — Decision + company name (mandatory opening format):\n"
+        '{"final_verdict": "...", "verdict_reasoning": "..."}\n\n'
+
+        "▶ final_verdict (string) — write this first:\n"
+        "  One word only: bullish, constructive, neutral, cautious, or bearish.\n\n"
+
+        "▶ verdict_reasoning (string) — write this second, IMMEDIATELY after final_verdict:\n"
+        "  YOU MUST produce a non-empty string here. This field CANNOT be empty or null.\n\n"
+        "  HARD FALLBACK — if you cannot write the full explanation below, output EXACTLY this\n"
+        "  (substituting the real verdict word and company name):\n"
+        f'  "Hold {company} for now. The current signals are not strong enough to justify '
+        f'adding exposure, but the business remains stable. Monitor the key drivers and risks '
+        f'listed below before making a decision."\n\n'
+        "  Otherwise, write EXACTLY 4 sentences in this structure:\n\n"
+        "  Sentence 1 — Decision + company name:\n"
         "    Map final_verdict to an opening action phrase:\n"
         f"      bullish      → 'Add {company}.' or 'Add to {company}.'\n"
         f"      constructive → 'Add {company} on weakness.' or 'Hold and consider adding {company}.'\n"
@@ -213,106 +221,66 @@ def synthesizer_prompt(
         f"      cautious     → 'Be cautious with {company} here.' or 'Hold {company} lightly.'\n"
         f"      bearish      → 'Avoid {company} at current levels.'\n"
         f"    Always use '{company}' by name — never a ticker symbol.\n\n"
-        "  Sentences 2–3 — Driver into risk (one causal story, not two separate points):\n"
-        "    Sentence 2: explain what is working and why it matters to the business in plain terms.\n"
-        "      Reference the top 1-2 drivers from key_drivers_ranked. Paraphrase naturally — do NOT copy bullet text.\n"
-        "    Sentence 3: carry the story forward into the risk using 'but' or 'however'.\n"
-        "      Reference the top risk from key_risks_ranked. Show how it limits or threatens what sentence 2 described.\n"
-        "      The two sentences should read as cause → complication, not as two unrelated observations.\n\n"
-        "  Sentence 4 — Guidance (opener blended into action, not prepended as a prefix):\n"
-        "    The opener and the action must form one grammatically natural sentence.\n"
-        "    The verb after the opener should be gerund or infinitive form — NOT an imperative.\n"
-        "      Wrong: 'Given this setup, Add Nvidia.'         ← imperative clashes with the opener\n"
-        "      Right: 'Given this setup, adding to Nvidia on weakness makes sense.'\n"
-        "      Wrong: 'If you already own it, Hold Apple.'   ← sounds robotic\n"
-        "      Right: 'If you already own Apple, holding for now makes sense.'\n\n"
-        "    Choose the opener that fits final_verdict — the opener signals the stance:\n"
-        f"      bullish      → 'Given this setup, [gerund action]...'              e.g. 'Given this setup, adding on weakness makes sense — watch [X].'\n"
-        f"      constructive → 'At this point, [gerund action]...'                 e.g. 'At this point, adding on any pullback makes sense — keep an eye on [X].'\n"
-        f"      neutral      → 'If you already own {company}, [gerund action]...'  e.g. 'If you already own {company}, holding makes sense — watch [X] before adding more.'\n"
-        f"      cautious     → 'For now, [gerund action] is the safer move...'     e.g. 'For now, holding lightly and avoiding new exposure is the safer move until [X] improves.'\n"
-        f"      bearish      → 'At this point, [gerund action]...'                 e.g. 'At this point, avoiding new exposure makes sense — the risk of [X] outweighs the upside.'\n"
-        "    Do NOT swap openers across verdicts.\n"
-        "    After the opener + action: add one concrete watchpoint from what_to_monitor.\n"
-        "    The full sentence should read as natural speech, not a template with a prefix attached.\n\n"
-        "  TONE:\n"
-        "  ✓ Conversational but professional — like a trusted advisor talking through their thinking\n"
-        "  ✓ Fluid and connected — the four sentences should read as one coherent thought, not four bullets\n"
-        "  ✓ Active voice throughout — no passive constructions\n"
-        "  ✓ Accessible — a newcomer to investing should understand every sentence\n"
-        "  ✓ Specific — name actual drivers and risks, not generic observations\n\n"
-        "  BANNED phrases (any of these fails the output):\n"
-        "  ✗ 'mixed signals'\n"
-        "  ✗ 'balanced outlook'\n"
-        "  ✗ 'could go either way'\n"
-        "  ✗ 'uncertainty remains'\n"
-        "  ✗ 'while there are risks'\n"
-        "  ✗ 'overall picture is mixed'\n"
-        "  ✗ 'no compelling reason'\n"
-        "  ✗ 'wait for clearer signals'\n"
-        "  ✗ 'stay patient —'\n"
-        "  ✗ 'investment committee'\n"
-        "  ✗ 'portfolio manager'\n"
-        "  ✗ 'risk/reward'\n\n"
-        "  EXAMPLES — note how opener and action blend into one fluid sentence:\n\n"
-        "  Neutral verdict:\n"
-        "  'Hold Apple for now. Services growth continues to support the business and keeps margins\n"
-        "   healthy even when hardware sales slow, but the stock's valuation already reflects that\n"
-        "   strength, which limits how much upside you're likely to see near term. If you already own\n"
-        "   Apple, holding makes sense — just keep an eye on the next earnings call for any sign that\n"
-        "   Services momentum is fading before adding more.'\n\n"
-        "  Bullish verdict:\n"
-        "  'Add Nvidia. Data-center demand for its GPU platform continues to outpace supply, and the\n"
-        "   software moat around CUDA makes it difficult for customers to switch, but any pause in\n"
-        "   hyperscaler capex spending could slow order flow faster than the market expects. Given this\n"
-        "   setup, adding on any near-term pullback makes sense — watch quarterly data-center revenue\n"
-        "   guidance for confirmation that demand remains intact.'\n\n"
-        "  Cautious verdict:\n"
-        "  'Be cautious with Tesla here. Strong brand recognition and its energy-storage business\n"
-        "   provide real long-term optionality, but deteriorating vehicle margins and intensifying\n"
-        "   EV competition are pressuring profitability right now. For now, holding lightly and avoiding\n"
-        "   new exposure is the safer move — gross margins need to stabilise above 18% for at least\n"
-        "   two quarters before the thesis improves.'\n\n"
+        "  Sentence 2 — What is working (plain English, company-specific):\n"
+        "    Explain the top driver from key_drivers_ranked in one sentence. Paraphrase naturally.\n\n"
+        "  Sentence 3 — The complication (use 'but' or 'however'):\n"
+        "    Carry Sentence 2 forward into the top risk. Show cause → complication.\n\n"
+        "  Sentence 4 — Guidance (opener + gerund action, one natural sentence):\n"
+        f"      bullish      → 'Given this setup, adding on weakness makes sense — watch [X].'\n"
+        f"      constructive → 'At this point, adding on any pullback makes sense — keep an eye on [X].'\n"
+        f"      neutral      → 'If you already own {company}, holding makes sense — watch [X] before adding more.'\n"
+        f"      cautious     → 'For now, holding lightly and avoiding new exposure is the safer move until [X] improves.'\n"
+        f"      bearish      → 'At this point, avoiding new exposure makes sense — the risk of [X] outweighs the upside.'\n\n"
+        "  TONE: Conversational, active voice, accessible, specific — no jargon, no hedging.\n"
+        "  BANNED: 'mixed signals', 'balanced outlook', 'could go either way', 'uncertainty remains',\n"
+        "          'while there are risks', 'no compelling reason', 'wait for clearer signals',\n"
+        "          'stay patient', 'risk/reward'\n\n"
+        "  EXAMPLES:\n"
+        "  Neutral: 'Hold Apple for now. Services growth keeps margins healthy even when hardware\n"
+        "   sales slow, but the stock's valuation already reflects that strength, limiting near-term\n"
+        "   upside. If you already own Apple, holding makes sense — watch the next earnings call\n"
+        "   for any sign that Services momentum is fading before adding more.'\n\n"
+        "  Bullish: 'Add Nvidia. Data-center demand for its GPU platform outpaces supply and the\n"
+        "   CUDA software moat makes switching difficult, but any pause in hyperscaler capex could\n"
+        "   slow order flow faster than the market expects. Given this setup, adding on any\n"
+        "   near-term pullback makes sense — watch quarterly data-center revenue guidance.'\n\n"
+        "  Cautious: 'Be cautious with Tesla here. Brand recognition and energy storage provide\n"
+        "   real long-term optionality, but deteriorating vehicle margins and intensifying EV\n"
+        "   competition are pressuring profitability right now. For now, holding lightly and\n"
+        "   avoiding new exposure is the safer move — gross margins need to stabilise above 18%\n"
+        "   for two quarters before the thesis improves.'\n\n"
 
-        "key_drivers_ranked (list, 3-5 items):\n"
-        "  Ordered most important first.\n"
-        f"  Each item: one specific sentence starting with a named signal for '{company}'.\n"
-        "  Example format: 'Services revenue growing >15% annually provides durable recurring income and margin uplift.'\n"
-        "  NOT: 'The company has strong revenue growth.'\n\n"
-
-        "key_risks_ranked (list, 3-5 items):\n"
-        "  Ordered most severe first.\n"
-        f"  Each item: one specific sentence naming the risk mechanism for '{company}'.\n"
-        "  Example format: 'Hardware margin compression from commoditizing ASICs threatens blended gross margin trajectory.'\n"
-        "  NOT: 'There are risks to margins.'\n\n"
-
-        "what_to_monitor (list, 3-5 items):\n"
-        "  Specific metrics or events with thresholds or timeframes where possible.\n"
-        "  Example: 'Gross margin trajectory over the next 2 reporting periods — deterioration below 43% would pressure the thesis.'\n"
-        "  NOT: 'Watch for changes in the business environment.'\n\n"
-
-        "what_changes_the_thesis (list, 3-5 items):\n"
-        "  Specific observable events that would flip the verdict.\n"
-        "  Example: 'If services revenue growth decelerates below 10% for two consecutive quarters, the premium valuation becomes indefensible.'\n"
-        "  NOT: 'If conditions worsen significantly.'\n\n"
+        # ── Remaining fields — listed AFTER the critical block ────────────────
+        "━━━ REMAINING FIELDS (write after verdict_reasoning) ━━━\n\n"
 
         "confidence_score (float 0.0–1.0):\n"
-        "  ≥0.70 requires strong, consistent evidence across agents.\n"
-        "  0.50–0.69 for moderate evidence with some contradictions.\n"
-        "  <0.50 if data is thin, contradictory, or thesis is highly fragile.\n\n"
+        "  ≥0.70 strong consistent evidence. 0.50–0.69 moderate with some contradictions. <0.50 thin or contradictory.\n\n"
 
         "confidence_level (string): 'high', 'medium', or 'low'\n\n"
 
-        "thesis_fragility (string):\n"
-        "  1-2 sentences. Name the single biggest assumption the thesis depends on and what breaks if it fails.\n\n"
+        "thesis_fragility (string): 1-2 sentences — the single biggest assumption and what breaks if it fails.\n\n"
 
-        "Also include: bull_case (list), bear_case (list), key_risks (list), key_catalysts (list),\n"
-        "macro_overlay (list), what_changes_the_thesis (list), assumptions (list), uncertainties (list).\n\n"
+        "key_drivers_ranked (list, exactly 3 items, most important first):\n"
+        f"  Each: one specific sentence naming a signal for '{company}'.\n"
+        "  Good: 'Services revenue growing >15% annually provides durable recurring income and margin uplift.'\n"
+        "  Bad:  'The company has strong revenue growth.'\n\n"
 
-        "━━━ OUTPUT ORDER — CRITICAL ━━━\n"
-        "Output the JSON fields in EXACTLY this order so the most important fields are never truncated:\n"
-        "  1. final_verdict        ← FIRST\n"
-        "  2. verdict_reasoning    ← SECOND (REQUIRED — never omit, never leave empty)\n"
+        "key_risks_ranked (list, exactly 3 items, most severe first):\n"
+        f"  Each: one specific sentence naming the risk mechanism for '{company}'.\n"
+        "  Good: 'Hardware margin compression from commoditizing ASICs threatens blended gross margin trajectory.'\n"
+        "  Bad:  'There are risks to margins.'\n\n"
+
+        "what_to_monitor (list, 3 items): specific metrics or events with thresholds or timeframes.\n\n"
+
+        "what_changes_the_thesis (list, 3 items): specific observable events that would flip the verdict.\n\n"
+
+        "Also include: bull_case (list, 3 items), bear_case (list, 3 items), key_risks (list, 3 items),\n"
+        "key_catalysts (list, 3 items), macro_overlay (list, 3 items), assumptions (list), uncertainties (list).\n\n"
+
+        "━━━ JSON OUTPUT ORDER — STRICTLY REQUIRED ━━━\n"
+        "Write the JSON fields in EXACTLY this order:\n"
+        "  1. final_verdict\n"
+        "  2. verdict_reasoning   ← MUST BE NON-EMPTY\n"
         "  3. confidence_score\n"
         "  4. confidence_level\n"
         "  5. thesis_fragility\n"
@@ -321,8 +289,6 @@ def synthesizer_prompt(
         "  8. what_to_monitor\n"
         "  9. what_changes_the_thesis\n"
         " 10. bull_case, bear_case, key_risks, key_catalysts, macro_overlay\n"
-        " 11. assumptions, uncertainties, and all remaining fields\n\n"
-        "verdict_reasoning MUST be a non-empty string. If you are uncertain, write your best assessment.\n"
-        "An empty verdict_reasoning is not acceptable.\n\n"
-        "Return only the JSON object without surrounding text."
+        " 11. assumptions, uncertainties, remaining fields\n\n"
+        "Return only the JSON object. No prose before or after it."
     )

@@ -734,7 +734,9 @@ def _normalize_synthesis(synthesis: SynthesisOutput, company: str = "") -> Synth
     synthesis.what_would_change_this_view = _derive_change_triggers(synthesis)
 
     # 5. Guarantee verdict_reasoning is always non-empty
+    print(f"LLM RAW VERDICT_REASONING: {synthesis.verdict_reasoning!r}")
     if not synthesis.verdict_reasoning or not synthesis.verdict_reasoning.strip():
+        print(f"FALLBACK TRIGGERED for company={company!r} — LLM returned empty verdict_reasoning")
         synthesis.verdict_reasoning = _build_fallback_reasoning(synthesis, company)
 
     return synthesis
