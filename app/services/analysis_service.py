@@ -669,42 +669,131 @@ _VERDICT_ACTION_MAP: dict = {
 }
 
 
-def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
-    """Construct a non-generic verdict_reasoning when the model returns an empty one.
+def _clean(text: str, max_chars: int = 150) -> str:
+    """Truncate to max_chars and strip trailing punctuation for clean sentence embedding."""
+    t = (text or "").strip()[:max_chars].rstrip(".,;: ")
+    if not t:
+        return ""
+    # Lowercase the first character so the text embeds naturally after a prefix
+    return t[0].lower() + t[1:]
 
-    Uses real signals from the synthesis to produce a company-specific, readable
-    sentence rather than a bare verdict word or generic placeholder text.
+
+def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
+    """Build a 4-sentence verdict_reasoning when the LLM returns empty.
+
+    Sentence structure:
+      1. Decision + company name (verdict-mapped opener)
+      2. Key driver — what is working (or why the case is uncertain)
+      3. Key risk — the complication (using 'but' / 'however')
+      4. Practical guidance for a beginner investor with a concrete watchpoint
+
+    Sources (in priority order):
+      - key_drivers_ranked / key_risks_ranked  (already ranked by _normalize_synthesis)
+      - bull_case / bear_case                  (fallback when ranked lists are empty)
+      - Generic stanced sentences              (last resort — no banned phrases)
     """
     co = company.strip() if company and company.strip() else "this company"
-    verdict_word = (synthesis.final_verdict or "neutral").lower().strip()
-    action_template = _VERDICT_ACTION_MAP.get(verdict_word, "Hold {company} for now")
-    action = action_template.format(company=co)
 
-    parts: List[str] = [f"{action}."]
+    # ── Resolve stance word ───────────────────────────────────────────────────
+    # synthesis.stance is set by _derive_stance_and_confidence (step 3) which
+    # runs before this fallback (step 5), so prefer it over final_verdict.
+    _known = {"bullish", "bearish", "constructive", "cautious", "neutral", "mixed"}
+    stance = (synthesis.stance or "").lower().strip()
+    if stance not in _known:
+        # Extract first known word from final_verdict if stance is missing/sentence
+        fv = (synthesis.final_verdict or "").lower()
+        stance = next((w for w in _known if w in fv), "neutral")
 
-    driver = next(
-        (d.strip() for d in (synthesis.key_drivers_ranked or []) if d and d.strip()),
+    # ── Collect raw material ──────────────────────────────────────────────────
+    drivers = [d.strip() for d in (synthesis.key_drivers_ranked or []) if d and d.strip()]
+    risks   = [r.strip() for r in (synthesis.key_risks_ranked   or []) if r and r.strip()]
+    bulls   = [b.strip() for b in (synthesis.bull_case          or []) if b and b.strip()]
+    bears   = [b.strip() for b in (synthesis.bear_case          or []) if b and b.strip()]
+    monitor = next(
+        (m.strip() for m in (synthesis.what_to_monitor or []) if m and m.strip()),
         None,
     )
-    risk = next(
-        (r.strip() for r in (synthesis.key_risks_ranked or []) if r and r.strip()),
-        None,
-    )
 
+    # Choose best available driver and risk signal
+    driver = drivers[0] if drivers else (bulls[0] if bulls else None)
+    risk   = risks[0]   if risks   else (bears[0] if bears else None)
+
+    print(f"FALLBACK DRIVER USED: {driver!r}")
+    print(f"FALLBACK RISK USED:   {risk!r}")
+
+    # ── Sentence 1: Decision + company ───────────────────────────────────────
+    action_template = _VERDICT_ACTION_MAP.get(stance, "Hold {company} for now")
+    s1 = action_template.format(company=co) + "."
+
+    # ── Sentence 2: Key driver ────────────────────────────────────────────────
+    # key_drivers_ranked signals are already full sentences — use them directly.
+    # When falling back to bull_case, strip trailing punctuation then re-terminate.
     if driver:
-        # Truncate to ~120 chars and strip trailing punctuation for clean sentence
-        short_driver = driver[:120].rstrip(".,;: ")
-        parts.append(f"{short_driver} is a key driver of this view.")
-    if risk:
-        short_risk = risk[:120].rstrip(".,;: ")
-        parts.append(f"The primary risk: {short_risk[:1].lower()}{short_risk[1:]}.")
+        d_text = driver.strip().rstrip(".,;: ")
+        # Ensure first character is upper-case (signal may start with lower-case)
+        s2 = d_text[0].upper() + d_text[1:] + "."
+    else:
+        # Generic — stance-appropriate, no banned phrases
+        if stance in ("bullish", "constructive"):
+            s2 = (f"The evidence across equity, macro, and operational signals points "
+                  f"toward a positive setup for {co}.")
+        elif stance in ("bearish", "cautious"):
+            s2 = (f"The current evidence for {co} points to meaningful headwinds "
+                  f"that make adding new exposure difficult to justify.")
+        else:  # neutral / mixed
+            s2 = (f"The current evidence for {co} does not yet give a strong enough "
+                  f"reason to add more exposure at this point.")
 
-    if not driver and not risk:
-        parts.append(
-            f"Review the listed drivers and risks for {co} before acting."
+    # ── Sentence 3: Key risk (the complication — leads with 'but' / 'however') ─
+    # key_risks_ranked signals are already full sentences — use them directly.
+    if risk:
+        r_text = risk.strip().rstrip(".,;: ")
+        r_lower = r_text[0].lower() + r_text[1:]
+        s3 = f"However, {r_lower}, and this is the key risk to watch."
+    else:
+        if stance in ("bullish", "constructive"):
+            s3 = (f"That said, any deterioration in {co}'s fundamentals or a shift "
+                  f"in macro conditions could limit the upside.")
+        elif stance in ("bearish", "cautious"):
+            s3 = (f"Until there is clear evidence of improvement in the fundamentals, "
+                  f"the downside risk outweighs the potential upside for {co}.")
+        else:
+            s3 = (f"The stock needs clearer confirmation from earnings, margins, or "
+                  f"key operating metrics before the case becomes more compelling.")
+
+    # ── Sentence 4: Practical guidance ───────────────────────────────────────
+    if monitor:
+        m = _clean(monitor, max_chars=120)
+    else:
+        m = None
+
+    if stance == "bullish":
+        s4 = (
+            f"Given this setup, adding on any pullback makes sense"
+            + (f" — keep an eye on {m}." if m else f" — size the position conservatively until the thesis confirms.")
+        )
+    elif stance == "constructive":
+        s4 = (
+            f"At this point, adding on any weakness makes sense"
+            + (f" — watch {m} before committing more." if m else f" — but keep the position small until there is more confirmation.")
+        )
+    elif stance == "bearish":
+        s4 = (
+            f"At this point, avoiding new exposure is the prudent move"
+            + (f" — watch {m} for any sign of a turn." if m else f" until the fundamental picture improves.")
+        )
+    elif stance == "cautious":
+        s4 = (
+            f"For now, holding lightly and avoiding new exposure is the safer move"
+            + (f" — {m} needs to improve before adding." if m else f" until the fundamentals stabilize.")
+        )
+    else:  # neutral / mixed
+        s4 = (
+            f"If you already own {co}, holding is reasonable"
+            + (f" — watch {m} before adding more." if m else f" — but wait for stronger evidence before buying more.")
         )
 
-    return " ".join(parts)
+    return " ".join([s1, s2, s3, s4])
 
 
 def _normalize_synthesis(synthesis: SynthesisOutput, company: str = "") -> SynthesisOutput:
