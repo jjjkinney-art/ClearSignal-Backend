@@ -12,11 +12,17 @@ Enterprise lifecycle:
     alerts).
 """
 
-from fastapi import APIRouter, HTTPException, Request
+import logging
+from typing import Optional
+
+import requests as _requests
+from fastapi import APIRouter, HTTPException, Query, Request
 
 from .schemas import AnalysisRequest, AnalysisResponse, QuestionRequest, AgentAnswerResponse
 from .services.analysis_service import analyze_company
 from .services.router_service import route_question
+
+logger = logging.getLogger(__name__)
 
 # Enterprise scope extraction
 try:
@@ -98,3 +104,116 @@ async def ask_question(request: QuestionRequest) -> AgentAnswerResponse:
         return route_question(request)
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Question routing failed") from exc
+
+
+# ── Exchange short-name normalisation ─────────────────────────────────────────
+_EXCHANGE_MAP = {
+    "NASDAQ Global Select":    "NASDAQ",
+    "NASDAQ Global Market":    "NASDAQ",
+    "NASDAQ Capital Market":   "NASDAQ",
+    "New York Stock Exchange": "NYSE",
+    "NYSE American":           "AMEX",
+    "NYSE Arca":               "AMEX",
+    "Tokyo Stock Exchange":    "TSE",
+    "London Stock Exchange":   "LSE",
+    "Euronext Amsterdam":      "EURONEXT",
+    "Euronext Paris":          "EURONEXT",
+}
+
+
+def _normalise_exchange(raw: Optional[str]) -> str:
+    if not raw:
+        return "NYSE"
+    return _EXCHANGE_MAP.get(raw, raw)
+
+
+def _fmp_get(url: str) -> Optional[list | dict]:
+    """Minimal HTTP helper — returns None on any failure."""
+    try:
+        r = _requests.get(url, timeout=8)
+        r.raise_for_status()
+        return r.json()
+    except Exception as exc:
+        logger.warning("FMP request failed: %s", exc)
+        return None
+
+
+@router.get(
+    "/market/resolve",
+    summary="Resolve company name/ticker to exchange symbol and market data",
+    tags=["market"],
+)
+async def market_resolve(
+    query: str = Query(..., description="Company name or ticker to resolve"),
+) -> dict:
+    """Resolve a company name or ticker to its exchange symbol.
+
+    Returns resolved symbol information and optional real-time market data
+    when FMP_API_KEY is configured.  Fields that cannot be populated are
+    omitted from the response — the frontend must handle missing fields
+    gracefully and must not display placeholder values.
+    """
+    from .config import settings
+
+    api_key = settings.fmp_api_key
+    base    = "https://financialmodelingprep.com/api/v3"
+
+    ticker: Optional[str]   = None
+    name:   Optional[str]   = None
+    exchange: Optional[str] = None
+
+    # ── Step 1: FMP symbol search ──────────────────────────────────────────
+    search_url = f"{base}/search?query={_requests.utils.quote(query)}&limit=5"
+    if api_key:
+        search_url += f"&apikey={api_key}"
+    search_data = _fmp_get(search_url)
+    if search_data and isinstance(search_data, list) and search_data:
+        top        = search_data[0]
+        ticker     = top.get("symbol")
+        name       = top.get("name")
+        exchange   = _normalise_exchange(
+            top.get("stockExchange") or top.get("exchangeShortName")
+        )
+
+    if not ticker:
+        return {"query": query, "error": "Symbol could not be resolved"}
+
+    tv_symbol = f"{exchange}:{ticker}" if exchange else ticker
+
+    result: dict = {
+        "query":             query,
+        "name":              name,
+        "ticker":            ticker,
+        "exchange":          exchange,
+        "tradingViewSymbol": tv_symbol,
+    }
+
+    # ── Step 2: real-time quote (only when API key present) ────────────────
+    if api_key:
+        quote_url  = f"{base}/quote/{ticker}?apikey={api_key}"
+        quote_data = _fmp_get(quote_url)
+        if quote_data and isinstance(quote_data, list) and quote_data:
+            q_rec = quote_data[0]
+            def _safe_float(val) -> Optional[float]:
+                try:
+                    return float(val) if val is not None else None
+                except (TypeError, ValueError):
+                    return None
+
+            price           = _safe_float(q_rec.get("price"))
+            change_pct      = _safe_float(q_rec.get("changesPercentage"))
+            market_cap      = _safe_float(q_rec.get("marketCap"))
+            volume          = q_rec.get("volume")
+            high_52         = _safe_float(q_rec.get("yearHigh"))
+            low_52          = _safe_float(q_rec.get("yearLow"))
+            pe              = _safe_float(q_rec.get("pe"))
+
+            if price           is not None: result["price"]            = price
+            if change_pct      is not None: result["changePercent"]    = change_pct
+            if market_cap      is not None: result["marketCap"]        = market_cap
+            if volume          is not None: result["volume"]           = volume
+            if high_52         is not None: result["fiftyTwoWeekHigh"] = high_52
+            if low_52          is not None: result["fiftyTwoWeekLow"]  = low_52
+            if pe              is not None: result["peRatio"]          = pe
+
+    return result
