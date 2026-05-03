@@ -1056,4 +1056,7 @@ def analyze_company(
         accounting = accounting,
         synthesis  = synthesis,
         routing    = routing_decision,
+        # Mirrors synthesis.verdict_reasoning at the top level for frontend
+        # debugging — confirms the field survives serialization.
+        debug_verdict_reasoning = synthesis.verdict_reasoning,
     )

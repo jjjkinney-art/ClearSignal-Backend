@@ -285,6 +285,12 @@ class AnalysisResponse(BaseModel):
     # ensure the response is always schema‑safe.
     routing: Dict[str, Any] = Field(default_factory=dict)
 
+    # Temporary debug field — mirrors synthesis.verdict_reasoning at the top
+    # level so the frontend can confirm it is present in the serialized response
+    # without having to dig into the nested synthesis object.
+    # TODO: remove once verdict_reasoning is confirmed non-empty in production.
+    debug_verdict_reasoning: str = Field(default="")
+
 
 class QuestionRequest(BaseModel):
     """Schema for routing questions to appropriate agents."""
