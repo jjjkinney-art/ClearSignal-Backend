@@ -49,7 +49,7 @@ class Settings(BaseSettings):
 
     openai_api_key: str = ""
     openai_model: str = "gpt-4o"
-    max_tokens: int = 2048
+    max_tokens: int = 4096
     temperature: float = 0.0
 
     # Enable or disable retrieval of external data for grounding.  When

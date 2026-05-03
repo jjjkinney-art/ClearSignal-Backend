@@ -659,13 +659,62 @@ def _derive_stance_and_confidence(synthesis: SynthesisOutput) -> tuple:
     return stance, confidence
 
 
-def _normalize_synthesis(synthesis: SynthesisOutput) -> SynthesisOutput:
+_VERDICT_ACTION_MAP: dict = {
+    "bullish":      "Add {company}",
+    "constructive": "Add {company} on weakness",
+    "neutral":      "Hold {company} for now",
+    "cautious":     "Be cautious with {company} here",
+    "bearish":      "Avoid {company} at current levels",
+    "mixed":        "Hold {company} for now",
+}
+
+
+def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
+    """Construct a non-generic verdict_reasoning when the model returns an empty one.
+
+    Uses real signals from the synthesis to produce a company-specific, readable
+    sentence rather than a bare verdict word or generic placeholder text.
+    """
+    co = company.strip() if company and company.strip() else "this company"
+    verdict_word = (synthesis.final_verdict or "neutral").lower().strip()
+    action_template = _VERDICT_ACTION_MAP.get(verdict_word, "Hold {company} for now")
+    action = action_template.format(company=co)
+
+    parts: List[str] = [f"{action}."]
+
+    driver = next(
+        (d.strip() for d in (synthesis.key_drivers_ranked or []) if d and d.strip()),
+        None,
+    )
+    risk = next(
+        (r.strip() for r in (synthesis.key_risks_ranked or []) if r and r.strip()),
+        None,
+    )
+
+    if driver:
+        # Truncate to ~120 chars and strip trailing punctuation for clean sentence
+        short_driver = driver[:120].rstrip(".,;: ")
+        parts.append(f"{short_driver} is a key driver of this view.")
+    if risk:
+        short_risk = risk[:120].rstrip(".,;: ")
+        parts.append(f"The primary risk: {short_risk[:1].lower()}{short_risk[1:]}.")
+
+    if not driver and not risk:
+        parts.append(
+            f"Review the listed drivers and risks for {co} before acting."
+        )
+
+    return " ".join(parts)
+
+
+def _normalize_synthesis(synthesis: SynthesisOutput, company: str = "") -> SynthesisOutput:
     """Normalize synthesis output fields before returning to the caller.
 
     1. Trims final_verdict to at most 2 sentences.
     2. Ranks, merges near-duplicates, and caps ranked signal lists at 5.
     3. Derives stance and confidence_level from the normalized signals.
     4. Derives what_would_change_this_view from signals + stance.
+    5. Guarantees verdict_reasoning is always non-empty.
     The SynthesisOutput schema is not structurally altered.
     """
     # 1. Trim final_verdict to max 2 sentences
@@ -683,6 +732,10 @@ def _normalize_synthesis(synthesis: SynthesisOutput) -> SynthesisOutput:
 
     # 4. Derive causal change triggers from the finalized signals + stance
     synthesis.what_would_change_this_view = _derive_change_triggers(synthesis)
+
+    # 5. Guarantee verdict_reasoning is always non-empty
+    if not synthesis.verdict_reasoning or not synthesis.verdict_reasoning.strip():
+        synthesis.verdict_reasoning = _build_fallback_reasoning(synthesis, company)
 
     return synthesis
 
@@ -899,7 +952,7 @@ def analyze_company(
                                      "error": str(exc), "request_id": request_id}))
             synthesis = SynthesisOutput()  # type: ignore[name-defined]
 
-    synthesis = _normalize_synthesis(synthesis)
+    synthesis = _normalize_synthesis(synthesis, company)
 
     # Signal ranking (unchanged)
     try:
@@ -987,6 +1040,10 @@ def analyze_company(
     logger.info(json.dumps({"event": "analysis_complete", "request_id": request_id,
                             "company": company, "agents_used": selected_agents,
                             "routing": routing_decision}))
+
+    # ── Debug: confirm synthesis fields before response is returned ──────────
+    print(f"FINAL VERDICT: {synthesis.final_verdict!r}")
+    print(f"VERDICT REASONING: {synthesis.verdict_reasoning!r}")
 
     return AnalysisResponse(
         company    = company,
