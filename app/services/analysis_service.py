@@ -727,41 +727,35 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
 
     # ── Sentence 2: Key driver ────────────────────────────────────────────────
     # key_drivers_ranked signals are already full sentences — use them directly.
-    # When falling back to bull_case, strip trailing punctuation then re-terminate.
+    # Company name only appears in S1; S2 leads with the signal, not the company.
     if driver:
         d_text = driver.strip().rstrip(".,;: ")
-        # Ensure first character is upper-case (signal may start with lower-case)
         s2 = d_text[0].upper() + d_text[1:] + "."
     else:
-        # Generic — stance-appropriate, no banned phrases
+        # Generic — stance-appropriate, no company name repetition, contractions used
         if stance in ("bullish", "constructive"):
-            s2 = (f"The evidence across equity, macro, and operational signals points "
-                  f"toward a positive setup for {co}.")
+            s2 = "Right now, the signals across equity, macro, and operations point to a positive setup."
         elif stance in ("bearish", "cautious"):
-            s2 = (f"The current evidence for {co} points to meaningful headwinds "
-                  f"that make adding new exposure difficult to justify.")
+            s2 = "Right now, the evidence points to meaningful headwinds — it's hard to justify adding new exposure here."
         else:  # neutral / mixed
-            s2 = (f"The current evidence for {co} does not yet give a strong enough "
-                  f"reason to add more exposure at this point.")
+            s2 = "Right now, the evidence doesn't clearly support adding more exposure."
 
-    # ── Sentence 3: Key risk (the complication — leads with 'but' / 'however') ─
+    # ── Sentence 3: Key risk (connects with 'but' / 'however') ──────────────
     # key_risks_ranked signals are already full sentences — use them directly.
     if risk:
         r_text = risk.strip().rstrip(".,;: ")
         r_lower = r_text[0].lower() + r_text[1:]
-        s3 = f"However, {r_lower}, and this is the key risk to watch."
+        s3 = f"However, {r_lower} — that's the key risk to watch."
     else:
         if stance in ("bullish", "constructive"):
-            s3 = (f"That said, any deterioration in {co}'s fundamentals or a shift "
-                  f"in macro conditions could limit the upside.")
+            s3 = "That said, any deterioration in the fundamentals or a shift in macro conditions could limit the upside."
         elif stance in ("bearish", "cautious"):
-            s3 = (f"Until there is clear evidence of improvement in the fundamentals, "
-                  f"the downside risk outweighs the potential upside for {co}.")
+            s3 = "Until there's clear evidence of improvement, the downside risk outweighs the potential upside here."
         else:
-            s3 = (f"The stock needs clearer confirmation from earnings, margins, or "
-                  f"key operating metrics before the case becomes more compelling.")
+            s3 = "The stock still needs stronger confirmation from earnings, margins, or key operating metrics before the case becomes more compelling."
 
     # ── Sentence 4: Practical guidance ───────────────────────────────────────
+    # Use 'it' instead of company name; contractions where natural.
     if monitor:
         m = _clean(monitor, max_chars=120)
     else:
@@ -769,28 +763,28 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
 
     if stance == "bullish":
         s4 = (
-            f"Given this setup, adding on any pullback makes sense"
-            + (f" — keep an eye on {m}." if m else f" — size the position conservatively until the thesis confirms.")
+            "Given this setup, adding on any pullback makes sense"
+            + (f" — keep an eye on {m}." if m else " — just size it conservatively until the thesis confirms.")
         )
     elif stance == "constructive":
         s4 = (
-            f"At this point, adding on any weakness makes sense"
-            + (f" — watch {m} before committing more." if m else f" — but keep the position small until there is more confirmation.")
+            "At this point, adding on any weakness makes sense"
+            + (f" — watch {m} before committing more." if m else " — keep the position small until there's more confirmation.")
         )
     elif stance == "bearish":
         s4 = (
-            f"At this point, avoiding new exposure is the prudent move"
-            + (f" — watch {m} for any sign of a turn." if m else f" until the fundamental picture improves.")
+            "At this point, staying out makes sense"
+            + (f" — watch {m} for any sign of a turn." if m else " until the fundamental picture improves.")
         )
     elif stance == "cautious":
         s4 = (
-            f"For now, holding lightly and avoiding new exposure is the safer move"
-            + (f" — {m} needs to improve before adding." if m else f" until the fundamentals stabilize.")
+            "For now, holding lightly is the safer move"
+            + (f" — don't add until {m} improves." if m else " — don't add until things stabilize.")
         )
     else:  # neutral / mixed
         s4 = (
-            f"If you already own {co}, holding is reasonable"
-            + (f" — watch {m} before adding more." if m else f" — but wait for stronger evidence before buying more.")
+            "If you already own it, holding makes sense"
+            + (f" — watch {m} before adding more." if m else " — but it's worth waiting for stronger evidence before buying more.")
         )
 
     return " ".join([s1, s2, s3, s4])
