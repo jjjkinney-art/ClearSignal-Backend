@@ -732,13 +732,14 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
         d_text = driver.strip().rstrip(".,;: ")
         s2 = d_text[0].upper() + d_text[1:] + "."
     else:
-        # Generic — stance-appropriate, no company name repetition, contractions used
+        # Generic — stance-appropriate, no company name repetition, contractions used.
+        # Opener varies by stance so repeated analyses don't all read identically.
         if stance in ("bullish", "constructive"):
             s2 = "Right now, the signals across equity, macro, and operations point to a positive setup."
         elif stance in ("bearish", "cautious"):
-            s2 = "Right now, the evidence points to meaningful headwinds — it's hard to justify adding new exposure here."
+            s2 = "At the moment, the evidence points to meaningful headwinds — it's hard to justify adding new exposure here."
         else:  # neutral / mixed
-            s2 = "Right now, the evidence doesn't clearly support adding more exposure."
+            s2 = "As things stand, the evidence doesn't clearly support adding more exposure."
 
     # ── Sentence 3: Key risk (connects with 'but' / 'however') ──────────────
     # key_risks_ranked signals are already full sentences — use them directly.
