@@ -732,19 +732,52 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
         d_text = driver.strip().rstrip(".,;: ")
         s2 = d_text[0].upper() + d_text[1:] + "."
     else:
-        # Generic fallback — each stance gets a distinct opener so back-to-back
-        # analyses don't read identically.  Three natural openers are spread
-        # across the six stances; same opener never appears in adjacent groups.
-        if stance == "bullish":
-            s2 = "Right now, the signals across equity, macro, and operations point to a positive setup."
-        elif stance == "constructive":
-            s2 = "At the moment, the weight of evidence leans positive — though conviction isn't yet strong enough to be aggressive."
-        elif stance == "bearish":
-            s2 = "At the moment, the evidence points to meaningful headwinds — it's hard to justify adding new exposure here."
-        elif stance == "cautious":
-            s2 = "As things stand, the risk/reward doesn't clearly favour adding here."
-        else:  # neutral / mixed
-            s2 = "Right now, the evidence is balanced enough that neither adding nor reducing makes obvious sense."
+        # No driver signal — build s2 from stance + confidence tier.
+        # Three sentence variants per stance, driven by confidence_score so the
+        # phrasing reflects how strong the evidence is.  Sentences lead with the
+        # evidence itself; temporal openers ("Right now", "At the moment") are
+        # used only where they genuinely improve the sentence, not by default.
+        score = synthesis.confidence_score or 0.0
+        if score >= 0.65:
+            tier = "high"
+        elif score >= 0.35:
+            tier = "medium"
+        else:
+            tier = "low"
+
+        _s2: dict[str, dict[str, str]] = {
+            "bullish": {
+                "high":   "The signals across equity, macro, and operations are lining up — this is a genuinely positive setup.",
+                "medium": "Evidence across the key drivers leans positive, though the case isn't fully confirmed yet.",
+                "low":    "There are encouraging signals, but they're not consistent enough yet to make this a confident call.",
+            },
+            "constructive": {
+                "high":   "The weight of evidence is positive — enough to justify exposure, though not enough to be aggressive.",
+                "medium": "Recent data across the key drivers looks encouraging, even if conviction is still building.",
+                "low":    "Some positive signals are emerging, but they're not uniform — the direction is right, the strength isn't there yet.",
+            },
+            "bearish": {
+                "high":   "The evidence points to meaningful headwinds across multiple fronts — the case for adding is hard to make.",
+                "medium": "Current signals are tilting toward more risk than reward — the fundamentals don't support new exposure here.",
+                "low":    "The picture is challenging, though not uniformly negative — at the moment, the weight of evidence still leans toward staying out.",
+            },
+            "cautious": {
+                "high":   "The risk/reward here doesn't justify adding — headwinds are real and the margin of error is thin.",
+                "medium": "The setup is harder than it looks — there are meaningful risks that aren't fully reflected in the headline.",
+                "low":    "Conditions are mixed, but the downside risks deserve more weight than the upsides right now.",
+            },
+            "neutral": {
+                "high":   "The evidence is genuinely balanced — there's no clear signal strong enough to push the case in either direction.",
+                "medium": "Signals are pulling in different directions here, which makes this a harder call than it first appears.",
+                "low":    "As things stand, conviction in either direction is low — the picture is unclear and the signals are contradicting each other.",
+            },
+            "mixed": {
+                "high":   "The evidence pulls in two directions — some things are working, others aren't, and the net read is roughly flat.",
+                "medium": "There's a real tug-of-war between the positives and the negatives here — neither side has a clear edge.",
+                "low":    "At the moment, the signals are too mixed to draw a clean conclusion — more clarity is needed before acting.",
+            },
+        }
+        s2 = _s2.get(stance, _s2["neutral"])[tier]
 
     # ── Sentence 3: Key risk (connects with 'but' / 'however') ──────────────
     # key_risks_ranked signals are already full sentences — use them directly.
