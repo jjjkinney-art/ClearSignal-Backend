@@ -660,11 +660,11 @@ def _derive_stance_and_confidence(synthesis: SynthesisOutput) -> tuple:
 
 
 _VERDICT_ACTION_MAP: dict = {
-    "bullish":      "Add {company}",
-    "constructive": "Add {company} on weakness",
+    "bullish":      "Buy {company}",
+    "constructive": "Buy {company} on any dip",
     "neutral":      "Hold {company} for now",
-    "cautious":     "Be cautious with {company} here",
-    "bearish":      "Avoid {company} at current levels",
+    "cautious":     "Hold {company} — but don't add here",
+    "bearish":      "Avoid {company}",
     "mixed":        "Hold {company} for now",
 }
 
@@ -747,34 +747,34 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
 
         _s2: dict[str, dict[str, str]] = {
             "bullish": {
-                "high":   "The signals across equity, macro, and operations are lining up — this is a genuinely positive setup.",
-                "medium": "Evidence across the key drivers leans positive, though the case isn't fully confirmed yet.",
-                "low":    "There are encouraging signals, but they're not consistent enough yet to make this a confident call.",
+                "high":   "Most indicators are pointing in the right direction — this is one of the clearer buy cases you'll see.",
+                "medium": "Most of the signals point in a positive direction, though not every piece has confirmed yet.",
+                "low":    "There are real positives here, but they're not consistent enough across the board to be fully confident.",
             },
             "constructive": {
-                "high":   "The weight of evidence is positive — enough to justify exposure, though not enough to be aggressive.",
-                "medium": "Recent data across the key drivers looks encouraging, even if conviction is still building.",
-                "low":    "Some positive signals are emerging, but they're not uniform — the direction is right, the strength isn't there yet.",
+                "high":   "The evidence is mostly positive — enough to justify owning it, though not enough to go all-in yet.",
+                "medium": "Most of the data looks encouraging, even if the case hasn't completely solidified.",
+                "low":    "A few things are moving in the right direction, but the picture is still patchy — promising, not yet confirmed.",
             },
             "bearish": {
-                "high":   "The evidence points to meaningful headwinds across multiple fronts — the case for adding is hard to make.",
-                "medium": "Current signals are tilting toward more risk than reward — the fundamentals don't support new exposure here.",
-                "low":    "The picture is challenging, though not uniformly negative — at the moment, the weight of evidence still leans toward staying out.",
+                "high":   "Multiple things are working against it right now — there's no clear path to strong returns from here.",
+                "medium": "More signals point to downside than upside — buying here means going against the current trend.",
+                "low":    "The picture isn't great, even if it's not a disaster — the negatives outweigh the positives for now.",
             },
             "cautious": {
-                "high":   "The risk/reward here doesn't justify adding — headwinds are real and the margin of error is thin.",
-                "medium": "The setup is harder than it looks — there are meaningful risks that aren't fully reflected in the headline.",
-                "low":    "Conditions are mixed, but the downside risks deserve more weight than the upsides right now.",
+                "high":   "The risks are real and the potential upside doesn't justify taking them on right now.",
+                "medium": "There are real concerns that aren't obvious from the headline numbers — more patience is the right call.",
+                "low":    "The outlook is mixed, but the downside risks are more concrete than the upside potential.",
             },
             "neutral": {
-                "high":   "The evidence is genuinely balanced — there's no clear signal strong enough to push the case in either direction.",
-                "medium": "Signals are pulling in different directions here, which makes this a harder call than it first appears.",
-                "low":    "As things stand, conviction in either direction is low — the picture is unclear and the signals are contradicting each other.",
+                "high":   "The positives and negatives are roughly equal — there's no clear reason to buy more or sell right now.",
+                "medium": "The signals are going in different directions, which makes this a genuinely difficult call.",
+                "low":    "There isn't enough clarity right now to have strong conviction either way.",
             },
             "mixed": {
-                "high":   "The evidence pulls in two directions — some things are working, others aren't, and the net read is roughly flat.",
-                "medium": "There's a real tug-of-war between the positives and the negatives here — neither side has a clear edge.",
-                "low":    "At the moment, the signals are too mixed to draw a clean conclusion — more clarity is needed before acting.",
+                "high":   "Some things are working well and some aren't — the net result is roughly flat.",
+                "medium": "There's a genuine split in the evidence — real positives on one side, real problems on the other.",
+                "low":    "The signals are too contradictory right now to draw a clean conclusion.",
             },
         }
         s2 = _s2.get(stance, _s2["neutral"])[tier]
@@ -787,11 +787,11 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
         s3 = f"However, {r_lower} — that's the key risk to watch."
     else:
         if stance in ("bullish", "constructive"):
-            s3 = "That said, any deterioration in the fundamentals or a shift in macro conditions could limit the upside."
+            s3 = "That said, a sudden drop in earnings or a broader market selloff could change the picture quickly."
         elif stance in ("bearish", "cautious"):
-            s3 = "Until there's clear evidence of improvement, the downside risk outweighs the potential upside here."
+            s3 = "Until the business shows clear signs of improvement, the downside is bigger than the upside."
         else:
-            s3 = "The stock still needs stronger confirmation from earnings, margins, or key operating metrics before the case becomes more compelling."
+            s3 = "The stock needs stronger evidence — better earnings, improving margins, or a clear growth catalyst — before the case becomes clearer."
 
     # ── Sentence 4: Practical guidance ───────────────────────────────────────
     # Use 'it' instead of company name; contractions where natural.
@@ -802,28 +802,28 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
 
     if stance == "bullish":
         s4 = (
-            "Given this setup, adding on any pullback makes sense"
-            + (f" — keep an eye on {m}." if m else " — just size it conservatively until the thesis confirms.")
+            "Buying on any pullback is a reasonable move"
+            + (f" — keep an eye on {m}." if m else " — just keep the position size manageable until the story fully plays out.")
         )
     elif stance == "constructive":
         s4 = (
-            "At this point, adding on any weakness makes sense"
-            + (f" — watch {m} before committing more." if m else " — keep the position small until there's more confirmation.")
+            "Buying on any dip is a reasonable approach"
+            + (f" — watch {m} before buying more." if m else " — keep the position small until the case is more clearly confirmed.")
         )
     elif stance == "bearish":
         s4 = (
-            "At this point, staying out makes sense"
-            + (f" — watch {m} for any sign of a turn." if m else " until the fundamental picture improves.")
+            "Staying out is the right move for now"
+            + (f" — watch {m} for any sign the picture is improving." if m else " — wait for clear signs the business is turning around before reconsidering.")
         )
     elif stance == "cautious":
         s4 = (
-            "For now, holding lightly is the safer move"
-            + (f" — don't add until {m} improves." if m else " — don't add until things stabilize.")
+            "If you own it, holding is fine for now — but don't buy more"
+            + (f" until {m} improves." if m else " until conditions stabilize.")
         )
     else:  # neutral / mixed
         s4 = (
             "If you already own it, holding makes sense"
-            + (f" — watch {m} before adding more." if m else " — but it's worth waiting for stronger evidence before buying more.")
+            + (f" — watch {m} before buying more." if m else " — wait for stronger evidence before buying more.")
         )
 
     return " ".join([s1, s2, s3, s4])
