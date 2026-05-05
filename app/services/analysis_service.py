@@ -756,8 +756,17 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
     if risk:
         r_text = risk.strip().rstrip(".,;: ")
         r_lower = r_text[0].lower() + r_text[1:]
-        s3 = (f"The main thing to watch: {r_lower}." if stance in ("bullish", "constructive")
-              else f"That said, {r_lower}.")
+        # Connector is chosen by stance — tone varies naturally without randomness.
+        if stance == "bullish":
+            s3 = f"The main thing to watch: {r_lower}."
+        elif stance == "constructive":
+            s3 = f"One thing to keep an eye on: {r_lower}."
+        elif stance == "bearish":
+            s3 = f"That said, {r_lower}."
+        elif stance == "cautious":
+            s3 = f"Worth noting: {r_lower}."
+        else:  # neutral / mixed
+            s3 = f"The main uncertainty here: {r_lower}."
     else:
         if stance in ("bullish", "constructive"):
             s3 = "A reversal in earnings or a broader market move could change the picture quickly."
