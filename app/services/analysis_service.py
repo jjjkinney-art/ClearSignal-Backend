@@ -682,15 +682,19 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
     """Build a 4-sentence verdict_reasoning when the LLM returns empty.
 
     Sentence structure:
-      1. Decision + company name (verdict-mapped opener)
-      2. Key driver — what is working (or why the case is uncertain)
-      3. Key risk — the complication (using 'but' / 'however')
-      4. Practical guidance for a beginner investor with a concrete watchpoint
+      1. Decision + company name  (Buy / Hold / Avoid — always explicit)
+      2. Main reasoning           (driver signal if available; brief stance prose otherwise)
+      3. Key risk                 (risk signal if available; short factual fallback otherwise)
+      4. Practical guidance       (monitor signal if available; one clear action sentence)
 
-    Sources (in priority order):
-      - key_drivers_ranked / key_risks_ranked  (already ranked by _normalize_synthesis)
-      - bull_case / bear_case                  (fallback when ranked lists are empty)
-      - Generic stanced sentences              (last resort — no banned phrases)
+    Signal sources (priority order):
+      key_drivers_ranked / key_risks_ranked → bull_case / bear_case → brief generic prose
+
+    Design intent:
+      Sentences 2–4 are driven by real signal data when it exists.  Generic paths are
+      kept intentionally short — one or two options per broad group (positive / negative /
+      uncertain), not a pre-written sentence bank.  The goal is natural language that
+      reads like a human explanation, not a template selection.
     """
     co = company.strip() if company and company.strip() else "this company"
 
@@ -725,106 +729,61 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
     action_template = _VERDICT_ACTION_MAP.get(stance, "Hold {company} for now")
     s1 = action_template.format(company=co) + "."
 
-    # ── Sentence 2: Key driver ────────────────────────────────────────────────
-    # key_drivers_ranked signals are already full sentences — use them directly.
-    # Company name only appears in S1; S2 leads with the signal, not the company.
+    # ── Sentence 2: Main reasoning ────────────────────────────────────────────
+    # When a driver signal is available, use it directly — it's already natural
+    # language ranked by importance.  Generic path is intentionally brief; the
+    # signal data should do the work, not a pre-written sentence bank.
+    score = synthesis.confidence_score or 0.0
     if driver:
         d_text = driver.strip().rstrip(".,;: ")
         s2 = d_text[0].upper() + d_text[1:] + "."
     else:
-        # No driver signal — build s2 from stance + confidence tier.
-        # Three sentence variants per stance, driven by confidence_score so the
-        # phrasing reflects how strong the evidence is.  Sentences lead with the
-        # evidence itself; temporal openers ("Right now", "At the moment") are
-        # used only where they genuinely improve the sentence, not by default.
-        score = synthesis.confidence_score or 0.0
-        if score >= 0.65:
-            tier = "high"
-        elif score >= 0.35:
-            tier = "medium"
+        positive = stance in ("bullish", "constructive")
+        negative = stance in ("bearish", "cautious")
+        if positive:
+            s2 = ("Most of what matters here is moving in the right direction." if score >= 0.65
+                  else "The picture is mostly positive, though not every piece is confirmed yet.")
+        elif negative:
+            s2 = ("Several things are working against it right now." if score >= 0.65
+                  else "The concerns outweigh the positives at this point.")
         else:
-            tier = "low"
+            s2 = ("The case for and against are close enough that it's hard to have a strong view." if score >= 0.5
+                  else "There isn't enough to go on right now to have a clear view either way.")
 
-        _s2: dict[str, dict[str, str]] = {
-            "bullish": {
-                "high":   "Most indicators are pointing in the right direction — this is one of the clearer buy cases you'll see.",
-                "medium": "Most of the signals point in a positive direction, though not every piece has confirmed yet.",
-                "low":    "There are real positives here, but they're not consistent enough across the board to be fully confident.",
-            },
-            "constructive": {
-                "high":   "The evidence is mostly positive — enough to justify owning it, though not enough to go all-in yet.",
-                "medium": "Most of the data looks encouraging, even if the case hasn't completely solidified.",
-                "low":    "A few things are moving in the right direction, but the picture is still patchy — promising, not yet confirmed.",
-            },
-            "bearish": {
-                "high":   "Multiple things are working against it right now — there's no clear path to strong returns from here.",
-                "medium": "More signals point to downside than upside — buying here means going against the current trend.",
-                "low":    "The picture isn't great, even if it's not a disaster — the negatives outweigh the positives for now.",
-            },
-            "cautious": {
-                "high":   "The risks are real and the potential upside doesn't justify taking them on right now.",
-                "medium": "There are real concerns that aren't obvious from the headline numbers — more patience is the right call.",
-                "low":    "The outlook is mixed, but the downside risks are more concrete than the upside potential.",
-            },
-            "neutral": {
-                "high":   "The positives and negatives are roughly equal — there's no clear reason to buy more or sell right now.",
-                "medium": "The signals are going in different directions, which makes this a genuinely difficult call.",
-                "low":    "There isn't enough clarity right now to have strong conviction either way.",
-            },
-            "mixed": {
-                "high":   "Some things are working well and some aren't — the net result is roughly flat.",
-                "medium": "There's a genuine split in the evidence — real positives on one side, real problems on the other.",
-                "low":    "The signals are too contradictory right now to draw a clean conclusion.",
-            },
-        }
-        s2 = _s2.get(stance, _s2["neutral"])[tier]
-
-    # ── Sentence 3: Key risk (connects with 'but' / 'however') ──────────────
-    # key_risks_ranked signals are already full sentences — use them directly.
+    # ── Sentence 3: Key risk ──────────────────────────────────────────────────
+    # Use the top risk signal when available.  Connector is chosen to read
+    # naturally after S2 — no forced closing phrase.
     if risk:
         r_text = risk.strip().rstrip(".,;: ")
         r_lower = r_text[0].lower() + r_text[1:]
-        s3 = f"However, {r_lower} — that's the key risk to watch."
+        s3 = (f"The main thing to watch: {r_lower}." if stance in ("bullish", "constructive")
+              else f"That said, {r_lower}.")
     else:
         if stance in ("bullish", "constructive"):
-            s3 = "That said, a sudden drop in earnings or a broader market selloff could change the picture quickly."
+            s3 = "A reversal in earnings or a broader market move could change the picture quickly."
         elif stance in ("bearish", "cautious"):
-            s3 = "Until the business shows clear signs of improvement, the downside is bigger than the upside."
+            s3 = "It would take clear improvement in results before this view changes."
         else:
-            s3 = "The stock needs stronger evidence — better earnings, improving margins, or a clear growth catalyst — before the case becomes clearer."
+            s3 = "Watch for earnings or business updates that tip it one way or the other."
 
     # ── Sentence 4: Practical guidance ───────────────────────────────────────
-    # Use 'it' instead of company name; contractions where natural.
-    if monitor:
-        m = _clean(monitor, max_chars=120)
-    else:
-        m = None
+    m = _clean(monitor, max_chars=120) if monitor else None
 
     if stance == "bullish":
-        s4 = (
-            "Buying on any pullback is a reasonable move"
-            + (f" — keep an eye on {m}." if m else " — just keep the position size manageable until the story fully plays out.")
-        )
+        s4 = (f"Any pullback is worth using — keep an eye on {m}." if m
+              else "Buying on dips is reasonable — just don't oversize it before the story plays out.")
     elif stance == "constructive":
-        s4 = (
-            "Buying on any dip is a reasonable approach"
-            + (f" — watch {m} before buying more." if m else " — keep the position small until the case is more clearly confirmed.")
-        )
+        s4 = (f"Dips are worth buying into — watch {m} before adding more." if m
+              else "Buying on weakness makes sense — keep it modest until confidence builds.")
     elif stance == "bearish":
-        s4 = (
-            "Staying out is the right move for now"
-            + (f" — watch {m} for any sign the picture is improving." if m else " — wait for clear signs the business is turning around before reconsidering.")
-        )
+        s4 = (f"Stay out for now — watch {m} for any real sign the picture is improving." if m
+              else "Stay on the sidelines and wait for clear evidence the business is turning around.")
     elif stance == "cautious":
-        s4 = (
-            "If you own it, holding is fine for now — but don't buy more"
-            + (f" until {m} improves." if m else " until conditions stabilize.")
-        )
+        s4 = (f"Hold what you have — don't add more until {m} shows improvement." if m
+              else "Hold if you own it, but don't add more until things stabilize.")
     else:  # neutral / mixed
-        s4 = (
-            "If you already own it, holding makes sense"
-            + (f" — watch {m} before buying more." if m else " — wait for stronger evidence before buying more.")
-        )
+        s4 = (f"If you own it, hold for now and watch {m} before making any moves." if m
+              else "If you already own it, hold — wait for stronger signals before adding more.")
 
     return " ".join([s1, s2, s3, s4])
 
