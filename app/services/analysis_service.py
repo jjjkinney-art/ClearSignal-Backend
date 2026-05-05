@@ -756,17 +756,27 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
     if risk:
         r_text = risk.strip().rstrip(".,;: ")
         r_lower = r_text[0].lower() + r_text[1:]
-        # Connector is chosen by stance — tone varies naturally without randomness.
+        # Two connectors per stance — chosen by risk text length.
+        # Short risks (≤ 45 chars) read as noun phrases and suit "X is {risk}" patterns.
+        # Longer risks read as clauses and suit prefix-only connectors.
+        # Both options are grammatically safe at any length; length is just the
+        # most reliable content-driven signal available without semantic parsing.
+        short = len(r_lower) <= 45
         if stance == "bullish":
-            s3 = f"The main thing to watch: {r_lower}."
+            s3 = (f"A key risk here is {r_lower}." if short
+                  else f"Still, {r_lower}.")
         elif stance == "constructive":
-            s3 = f"One thing to keep an eye on: {r_lower}."
+            s3 = (f"One thing to keep an eye on is {r_lower}." if short
+                  else f"That said, {r_lower}.")
         elif stance == "bearish":
-            s3 = f"That said, {r_lower}."
+            s3 = (f"A major concern is {r_lower}." if short
+                  else f"A significant concern: {r_lower}.")
         elif stance == "cautious":
-            s3 = f"Worth noting: {r_lower}."
+            s3 = (f"Worth noting: {r_lower}." if short
+                  else f"It's worth noting that {r_lower}.")
         else:  # neutral / mixed
-            s3 = f"The main uncertainty here: {r_lower}."
+            s3 = (f"One area to watch is {r_lower}." if short
+                  else f"The main uncertainty here: {r_lower}.")
     else:
         if stance in ("bullish", "constructive"):
             s3 = "A reversal in earnings or a broader market move could change the picture quickly."
