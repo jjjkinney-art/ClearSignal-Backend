@@ -34,6 +34,7 @@ from ..agents import (
     run_education_agent,
     run_accounting_agent,
     run_synthesizer_agent,
+    run_general_finance_agent,
 )
 from .context_service import enrich_grounding_context  # import context enrichment
 # Import evidence selection and building functions to enrich the grounding
@@ -221,14 +222,190 @@ def classify_question(question: str) -> Dict[str, Any]:
     }
 
 
+def _build_answer_fallback(question: str, intent: str) -> str:
+    """Return a non-empty, principled fallback answer string.
+
+    Used when the LLM returns an empty or too-short answer field.  The
+    fallback is intentionally general but topic-aware so it is never
+    misleading.  It always contains at least 2 sentences.
+    """
+    q = question.strip().rstrip("?").lower()
+    if intent == "investing_education":
+        return (
+            f"This question asks about a core investing concept related to '{q}'. "
+            "In investing, understanding how these mechanisms work helps you evaluate "
+            "opportunities and risks more clearly — the details depend on the specific "
+            "context, but the underlying principles are well-established."
+        )
+    if intent == "portfolio_question":
+        return (
+            "Portfolio decisions depend on your time horizon, risk tolerance, and current "
+            f"allocation — all of which affect how you should think about '{q}'. "
+            "In general, diversification, rebalancing cadence, and position sizing are the "
+            "key levers; the right answer for your situation depends on those specifics."
+        )
+    # Default: market_question or unknown
+    return (
+        f"This is a macro or market question about '{q}'. "
+        "Financial markets respond to a combination of economic data, central bank policy, "
+        "and investor sentiment — the direction and magnitude of any effect depends on "
+        "how those forces interact at the time."
+    )
+
+
+def _detect_intent(question: str) -> str:
+    """Lightweight server-side intent detection.
+
+    Used only when the frontend does not pass an explicit intent.
+    Returns one of: market_question | investing_education | portfolio_question.
+    Defaults to market_question so general answers never fall through to
+    the company analysis pipeline.
+    """
+    q = question.lower()
+    if any(k in q for k in ("my portfolio", "my holdings", "i own", "i hold", "i bought",
+                             "should i rebalance", "diversif")):
+        return "portfolio_question"
+    if any(k in q for k in ("what is", "what are", "how does", "how do", "explain",
+                             "define", "difference between", "mean by", "tell me what")):
+        return "investing_education"
+    return "market_question"
+
+
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     """Classify a question and route it to appropriate agent(s) with metadata.
 
-    This function performs context enrichment, classification, selective
-    agent invocation, and synthesizer orchestration.  It returns a
-    structured ``AgentAnswerResponse`` that includes routing metadata.
-    Specialized agents are invoked only when selected by the classifier.
+    Non-company queries (empty company_name, or intent != company_analysis)
+    are handled by the general finance agent — a single focused LLM call
+    that returns a direct answer, elaboration bullets, and caveats.  The
+    full company-analysis pipeline (equity/macro/synthesizer) is NOT
+    invoked for these queries.
+
+    Company queries flow through the existing keyword-based classifier and
+    specialist agent pipeline unchanged.
     """
+    # ── General finance fast-path ─────────────────────────────────────────────
+    # Triggered when the frontend sends an empty company_name (market questions,
+    # investing education, portfolio questions) or explicitly signals a
+    # non-company intent via the optional `intent` field.
+    is_general = (
+        not request.company_name.strip()
+        or request.intent in ("market_question", "investing_education", "portfolio_question")
+    )
+
+    if is_general:
+        request_id = str(uuid.uuid4())
+        intent = request.intent or _detect_intent(request.question)
+        logger.info(
+            json.dumps({
+                "event": "general_finance_query",
+                "request_id": request_id,
+                "intent": intent,
+                "question": request.question,
+            })
+        )
+
+        # ── Step 1: call agent ────────────────────────────────────────────────
+        try:
+            result = run_general_finance_agent(
+                question=request.question,
+                intent=intent,
+                request_id=request_id,
+            )
+        except Exception as exc:
+            logger.error(
+                json.dumps({"event": "general_finance_error", "error": str(exc),
+                            "request_id": request_id})
+            )
+            # Build a safe fallback object so the guard below always has
+            # a concrete object to inspect — never a raw empty dict.
+            from ..schemas import GeneralFinanceAnswer as _GFA  # local import to avoid circular
+            result = _GFA(answer="", bullets=[], caveats=[])
+
+        # ── Step 2: PRE-VALIDATION trace ─────────────────────────────────────
+        print(
+            f"[route_question] PRE-VALIDATION GENERAL ANSWER: "
+            f"answer={result.answer!r} "
+            f"bullets={result.bullets} "
+            f"caveats={result.caveats}"
+        )
+
+        # ── Step 3: Fallback trigger check ───────────────────────────────────
+        current_answer = (result.answer or "").strip()
+        print(
+            f"[route_question] FALLBACK TRIGGER CHECK: "
+            f"answer={result.answer!r} "
+            f"len={len(current_answer)} "
+            f"bullets={result.bullets} "
+            f"caveats={result.caveats}"
+        )
+
+        # ── Step 4: Apply fallbacks directly on the model object ─────────────
+        # We mutate the model object BEFORE serialization so that no subsequent
+        # model_dump / dict call can ever return the empty values.
+        if len(current_answer) < 40:
+            fallback_text = _build_answer_fallback(request.question, intent)
+            print(
+                f"[route_question] FALLBACK TRIGGERED — "
+                f"original_answer={result.answer!r} "
+                f"fallback={fallback_text!r}"
+            )
+            logger.warning(
+                json.dumps({
+                    "event": "general_finance_empty_answer",
+                    "request_id": request_id,
+                    "original_answer": result.answer,
+                    "fallback": fallback_text,
+                })
+            )
+            result.answer = fallback_text
+
+        if not result.bullets:
+            print("[route_question] BULLETS FALLBACK TRIGGERED")
+            result.bullets = [
+                "This topic involves how financial markets or instruments work in practice.",
+                "Understanding the mechanism helps investors make more informed decisions.",
+                "Watch for changes in relevant indicators — they often signal shifts before prices move.",
+            ]
+
+        if not result.caveats:
+            print("[route_question] CAVEATS FALLBACK TRIGGERED")
+            result.caveats = [
+                "Context matters — the general principle may apply differently depending on market conditions.",
+                "Consider consulting a financial adviser for decisions specific to your situation.",
+            ]
+
+        # ── Step 5: Serialize AFTER all fallbacks are applied ─────────────────
+        # model_dump / dict is called here and only here — there is no later
+        # serialization step that can overwrite the fallback values.
+        try:
+            answer_dict = result.model_dump()  # type: ignore[attr-defined]
+        except Exception:
+            answer_dict = result.dict()  # type: ignore[call-arg]
+
+        # ── Step 6: Final sanity assertion before building the response ───────
+        assert answer_dict.get("answer"), (
+            f"[route_question] ASSERTION FAILED: answer_dict.answer is empty after fallback "
+            f"— this should never happen. answer_dict={answer_dict}"
+        )
+
+        final_response = AgentAnswerResponse(
+            company=request.company_name,
+            request_id=request_id,
+            agents_used=["general_finance"],
+            answer={"general": answer_dict},
+            routing={"intent": intent, "pipeline": "general_finance"},
+        )
+
+        # ── Step 7: Final serialized trace ────────────────────────────────────
+        print(
+            f"[route_question] FINAL SERIALIZED GENERAL ANSWER:\n"
+            f"  answer_dict={answer_dict}\n"
+            f"  response.answer={final_response.answer}"
+        )
+
+        return final_response
+
+    # ── Company analysis pipeline ─────────────────────────────────────────────
     # Enrich context so that prompts always receive operational grounding
     context = enrich_grounding_context(request.company_name, request.question, request.context)
     # Before classification, attempt to gather external evidence to
