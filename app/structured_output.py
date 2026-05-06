@@ -176,11 +176,20 @@ def get_structured_response(
                     "attempt": attempt,
                 })
             )
-            # Backoff before retrying the model call
             time.sleep(backoff_factor * (2 ** (attempt - 1)))
             continue
-        # Extract potential JSON block
+
+        # ── TRACE: raw LLM output ────────────────────────────────────────────
+        print(
+            f"[get_structured_response] schema={schema.__name__} attempt={attempt} "
+            f"raw_text_len={len(raw_text) if raw_text else 0}\n"
+            f"[get_structured_response] RAW TEXT: {raw_text!r:.800}"
+        )
+
         candidate = extract_json_candidate(raw_text)
+
+        print(f"[get_structured_response] CANDIDATE JSON: {candidate!r:.600}")
+
         try:
             data = json.loads(candidate)
         except json.JSONDecodeError:
@@ -191,7 +200,6 @@ def get_structured_response(
                     "attempt": attempt,
                 })
             )
-            # Attempt to find a JSON-like dict in the text using regex
             m = re.search(r"\{.*\}", raw_text, re.DOTALL)
             if m:
                 try:
@@ -200,16 +208,21 @@ def get_structured_response(
                     data = None
             else:
                 data = None
+
+        print(f"[get_structured_response] PARSED DATA: {data}")
+
         if data is None:
-            # Backoff and retry
             time.sleep(backoff_factor * (2 ** (attempt - 1)))
             continue
+
         # Attempt validation.  Use model_validate when available (pydantic v2)
         try:
             if hasattr(schema, 'model_validate'):  # pydantic v2
-                return schema.model_validate(data)  # type: ignore[attr-defined]
+                result = schema.model_validate(data)  # type: ignore[attr-defined]
             else:
-                return schema.parse_obj(data)  # type: ignore[call-arg]
+                result = schema.parse_obj(data)  # type: ignore[call-arg]
+            print(f"[get_structured_response] VALIDATED RESULT: {result}")
+            return result
         except ValidationError as ve:
             logger.warning(
                 json.dumps({
@@ -218,22 +231,25 @@ def get_structured_response(
                     "attempt": attempt,
                 })
             )
-            # Attempt repair
             repaired = repair_data(data, schema)
+            print(f"[get_structured_response] REPAIRED DATA: {repaired}")
             try:
                 if hasattr(schema, 'model_validate'):  # pydantic v2
-                    return schema.model_validate(repaired)  # type: ignore[attr-defined]
+                    result = schema.model_validate(repaired)  # type: ignore[attr-defined]
                 else:
-                    return schema.parse_obj(repaired)  # type: ignore[call-arg]
+                    result = schema.parse_obj(repaired)  # type: ignore[call-arg]
+                print(f"[get_structured_response] REPAIRED RESULT: {result}")
+                return result
             except ValidationError:
-                # continue to next attempt
                 time.sleep(backoff_factor * (2 ** (attempt - 1)))
                 continue
-    # If all attempts fail, return fallback instance
+
+    # All attempts failed — return default empty instance
     logger.error(
         json.dumps({
             "event": "structured_response_fallback",
             "schema": schema.__name__,
         })
     )
+    print(f"[get_structured_response] FALLBACK: returning empty {schema.__name__}()")
     return schema()  # type: ignore

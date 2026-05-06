@@ -20,6 +20,7 @@ from .prompts import (
     education_prompt,
     accounting_prompt,
     synthesizer_prompt,
+    general_finance_prompt,
 )
 from .schemas import (
     GroundingContext,
@@ -30,6 +31,7 @@ from .schemas import (
     EducationAnalysis,
     AccountingAnalysis,
     SynthesisOutput,
+    GeneralFinanceAnswer,
 )
 from .structured_output import get_structured_response
 from .model_client import model_client
@@ -160,6 +162,73 @@ def run_accounting_agent(
         system_prompt=SYSTEM_PROMPT,
         request_id=request_id,
     )
+
+
+def run_general_finance_agent(
+    question: str,
+    intent: Optional[str] = None,
+    request_id: Optional[str] = None,
+) -> GeneralFinanceAnswer:
+    """Execute the general finance Q&A agent.
+
+    Used for non-company intents: market_question, investing_education,
+    and portfolio_question.  The agent receives a purpose-built prompt
+    that is intent-aware and returns a structured answer with a direct
+    response paragraph, elaboration bullets, and honest caveats.
+
+    The company analysis pipeline (equity, macro, synthesizer) is NOT
+    invoked by this agent.  No Buy/Hold/Avoid is produced.
+    """
+    print(f"[run_general_finance_agent] question={question!r} intent={intent!r}")
+
+    # ── HARDCODED TRACE BYPASS ────────────────────────────────────────────────
+    # Temporary: if the question mentions "interest rates", return a known-good
+    # response so we can confirm the full pipeline (parse → serialize → frontend)
+    # works before blaming the LLM.  Remove once the root cause is confirmed.
+    if "interest rate" in question.lower():
+        hardcoded = GeneralFinanceAnswer(
+            answer=(
+                "Higher interest rates tend to pressure tech stocks because future earnings "
+                "become less valuable when discounted at higher rates — and tech companies "
+                "derive most of their value from profits expected years from now."
+            ),
+            bullets=[
+                "The mechanism: rising rates increase the discount rate used to value future "
+                "cash flows. A dollar of profit in year 5 is worth less today at 6% than at "
+                "2% — and growth stocks have more of their value tied to distant earnings.",
+                "In practice: rate rises often trigger rotation from high-multiple tech into "
+                "banks, energy, and value stocks that earn more of their profits now.",
+                "Watch the 10-year Treasury yield and Fed forward guidance — markets price "
+                "rate expectations weeks before the actual decision.",
+            ],
+            caveats=[
+                "Profitable tech companies with strong current cash flows (Apple, Alphabet) "
+                "hold up better than unprofitable high-growth names during rate cycles.",
+                "Rate fears can reverse quickly: when the Fed signals a pause, growth stocks "
+                "often recover fast, so timing matters.",
+            ],
+        )
+        print(f"[run_general_finance_agent] HARDCODED BYPASS answer={hardcoded.answer[:60]!r}...")
+        return hardcoded
+
+    prompt = general_finance_prompt(question, intent=intent)
+    result = get_structured_response(
+        prompt,
+        GeneralFinanceAnswer,
+        model_client,
+        max_retries=settings.model_max_retries,
+        backoff_factor=settings.model_backoff_factor,
+        system_prompt=SYSTEM_PROMPT,
+        request_id=request_id,
+    )
+
+    print(
+        f"[run_general_finance_agent] LLM RAW GENERAL ANSWER: "
+        f"answer={result.answer!r:.120} "
+        f"bullets_count={len(result.bullets)} "
+        f"caveats_count={len(result.caveats)}"
+    )
+    return result
 
 
 def run_synthesizer_agent(

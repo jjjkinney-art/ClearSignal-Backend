@@ -292,11 +292,37 @@ class AnalysisResponse(BaseModel):
     debug_verdict_reasoning: str = Field(default="")
 
 
+class GeneralFinanceAnswer(BaseModel):
+    """Structured answer for general finance questions (non-company intents).
+
+    Returned by the general finance agent for market_question,
+    investing_education, and portfolio_question intents.  The ``answer``
+    field holds a direct 1–2 sentence response; ``bullets`` expand it
+    with mechanism, context, and a practical takeaway; ``caveats`` note
+    what could change or what the user should watch.
+    """
+
+    answer: str = Field(default="", description="Direct 1–2 sentence answer to the question")
+    bullets: List[str] = Field(
+        default_factory=list,
+        description="3–4 elaboration points: mechanism, context, what to watch, takeaway",
+    )
+    caveats: List[str] = Field(
+        default_factory=list,
+        description="1–2 honest caveats: what could change this view or what to watch",
+    )
+
+
 class QuestionRequest(BaseModel):
     """Schema for routing questions to appropriate agents."""
 
     company_name: str = Field(..., description="Company name or ticker relevant to the question")
     question: str = Field(..., description="User question to route to the appropriate agent")
+    intent: Optional[str] = Field(
+        None,
+        description="Optional intent hint from the frontend classifier: "
+                    "market_question | investing_education | portfolio_question | company_analysis",
+    )
     context: Optional[GroundingContext] = Field(
         None, description="Optional context to ground the question and classification")
 
