@@ -35,6 +35,7 @@ from ..agents import (
     run_accounting_agent,
     run_synthesizer_agent,
     run_general_finance_agent,
+    run_general_fallback_agent,
 )
 from .context_service import enrich_grounding_context  # import context enrichment
 # Import evidence selection and building functions to enrich the grounding
@@ -244,6 +245,13 @@ def _build_answer_fallback(question: str, intent: str) -> str:
             "In general, diversification, rebalancing cadence, and position sizing are the "
             "key levers; the right answer for your situation depends on those specifics."
         )
+    if intent == "general_fallback":
+        return (
+            f"'{q.capitalize()}' is a broad question that touches on economics, markets, "
+            "or business fundamentals. "
+            "The answer depends on context, but the underlying principles are "
+            "well-understood — the key is knowing which forces are dominant at any given time."
+        )
     # Default: market_question or unknown
     return (
         f"This is a macro or market question about '{q}'. "
@@ -257,17 +265,55 @@ def _detect_intent(question: str) -> str:
     """Lightweight server-side intent detection.
 
     Used only when the frontend does not pass an explicit intent.
-    Returns one of: market_question | investing_education | portfolio_question.
-    Defaults to market_question so general answers never fall through to
-    the company analysis pipeline.
+    Returns one of:
+      market_question | investing_education | portfolio_question | general_fallback
+
+    Detection order:
+      1. Personal portfolio signals → portfolio_question
+      2. Finance keyword gate — if no finance term is present → general_fallback
+         (broad/interdisciplinary questions that do not belong in the finance pipeline)
+      3. Education signals within finance context → investing_education
+      4. Everything else that IS finance-related → market_question
+
+    This ensures that clearly non-finance questions (e.g. "How does AI affect
+    productivity?") are not forced into the finance agents, while finance
+    questions that happen to use broad language still reach the right pipeline.
     """
     q = question.lower()
+
+    # ── 1. Personal portfolio ─────────────────────────────────────────────────
     if any(k in q for k in ("my portfolio", "my holdings", "i own", "i hold", "i bought",
                              "should i rebalance", "diversif")):
         return "portfolio_question"
+
+    # ── 2. Finance keyword gate ───────────────────────────────────────────────
+    # If none of these core finance terms appear, the question is too broad or
+    # off-topic for the specialist finance agents — route to general_fallback.
+    _FINANCE_KEYWORDS = (
+        "stock", "stocks", "market", "markets", "invest", "investing", "investment",
+        "fund", "funds", "bond", "bonds", "equity", "equities", "rate", "rates",
+        "inflation", "economic", "economy", "financial", "finance", "company",
+        "revenue", "earnings", "dividend", "dividends", "crypto", "currency",
+        "trade", "trading", "fiscal", "monetary", "bank", "banking", "fed",
+        "federal reserve", "yield", "yields", "price", "valuation", "asset",
+        "assets", "return", "returns", "portfolio", "sector", "index", "indices",
+        "bull", "bear", "recession", "gdp", "employment", "interest", "shares",
+        "share", "nasdaq", "s&p", "dow", "etf", "hedge", "short", "long",
+        "options", "futures", "derivatives", "ipo", "dividend", "earnings per",
+        "p/e", "pe ratio", "cash flow", "balance sheet", "income statement",
+    )
+    is_finance = any(k in q for k in _FINANCE_KEYWORDS)
+
+    if not is_finance:
+        return "general_fallback"
+
+    # ── 3. Education signals within finance context ───────────────────────────
     if any(k in q for k in ("what is", "what are", "how does", "how do", "explain",
-                             "define", "difference between", "mean by", "tell me what")):
+                             "define", "difference between", "mean by", "tell me what",
+                             "like i'm new", "for beginners", "simple terms", "simply")):
         return "investing_education"
+
+    # ── 4. Finance market question (default for finance-tagged questions) ─────
     return "market_question"
 
 
@@ -289,7 +335,9 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     # non-company intent via the optional `intent` field.
     is_general = (
         not request.company_name.strip()
-        or request.intent in ("market_question", "investing_education", "portfolio_question")
+        or request.intent in (
+            "market_question", "investing_education", "portfolio_question", "general_fallback"
+        )
     )
 
     if is_general:
@@ -305,12 +353,20 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         )
 
         # ── Step 1: call agent ────────────────────────────────────────────────
+        # general_fallback → open-ended LLM agent that answers any question
+        # all other intents → specialist finance agent with intent-aware framing
         try:
-            result = run_general_finance_agent(
-                question=request.question,
-                intent=intent,
-                request_id=request_id,
-            )
+            if intent == "general_fallback":
+                result = run_general_fallback_agent(
+                    question=request.question,
+                    request_id=request_id,
+                )
+            else:
+                result = run_general_finance_agent(
+                    question=request.question,
+                    intent=intent,
+                    request_id=request_id,
+                )
         except Exception as exc:
             logger.error(
                 json.dumps({"event": "general_finance_error", "error": str(exc),
@@ -388,12 +444,13 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             f"— this should never happen. answer_dict={answer_dict}"
         )
 
+        pipeline_label = "general_fallback" if intent == "general_fallback" else "general_finance"
         final_response = AgentAnswerResponse(
             company=request.company_name,
             request_id=request_id,
-            agents_used=["general_finance"],
+            agents_used=[pipeline_label],
             answer={"general": answer_dict},
-            routing={"intent": intent, "pipeline": "general_finance"},
+            routing={"intent": intent, "pipeline": pipeline_label},
         )
 
         # ── Step 7: Final serialized trace ────────────────────────────────────

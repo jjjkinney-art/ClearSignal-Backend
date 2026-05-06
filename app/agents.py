@@ -21,6 +21,7 @@ from .prompts import (
     accounting_prompt,
     synthesizer_prompt,
     general_finance_prompt,
+    general_fallback_prompt,
 )
 from .schemas import (
     GroundingContext,
@@ -225,6 +226,47 @@ def run_general_finance_agent(
     print(
         f"[run_general_finance_agent] LLM RAW GENERAL ANSWER: "
         f"answer={result.answer!r:.120} "
+        f"bullets_count={len(result.bullets)} "
+        f"caveats_count={len(result.caveats)}"
+    )
+    return result
+
+
+def run_general_fallback_agent(
+    question: str,
+    request_id: Optional[str] = None,
+) -> GeneralFinanceAnswer:
+    """Execute the general fallback agent for unclassified questions.
+
+    Used when a question does not clearly match any of the known finance
+    intents (company_analysis, market_question, investing_education,
+    portfolio_question).  Typical examples: broad economic questions,
+    interdisciplinary questions ("How does AI affect productivity?"),
+    historical/factual questions ("How often does the Fed meet?"), or
+    conceptual questions ("What makes a company valuable?").
+
+    The agent calls the LLM with an open-ended prompt that answers the
+    question directly without forcing a finance frame, but connects back to
+    investing context in the bullets where natural.
+
+    Returns a GeneralFinanceAnswer so the same rendering and fallback
+    enforcement logic applies as for run_general_finance_agent.
+    """
+    print(f"[run_general_fallback_agent] question={question!r}")
+
+    prompt = general_fallback_prompt(question)
+    result = get_structured_response(
+        prompt,
+        GeneralFinanceAnswer,
+        model_client,
+        max_retries=settings.model_max_retries,
+        backoff_factor=settings.model_backoff_factor,
+        system_prompt=SYSTEM_PROMPT,
+        request_id=request_id,
+    )
+
+    print(
+        f"[run_general_fallback_agent] answer={result.answer!r:.120} "
         f"bullets_count={len(result.bullets)} "
         f"caveats_count={len(result.caveats)}"
     )

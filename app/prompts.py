@@ -474,3 +474,114 @@ def general_finance_prompt(question: str, intent: Optional[str] = None) -> str:
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )
+
+
+def general_fallback_prompt(question: str) -> str:
+    """Construct a prompt for the general fallback agent.
+
+    Used when a question does not cleanly match any specialized finance intent
+    (company analysis, market question, investing education, portfolio question).
+    Typical examples: broad economic questions, interdisciplinary questions
+    (AI & productivity), historical/conceptual questions (why markets crash),
+    or factual finance questions that don't fit a tighter bucket.
+
+    The prompt answers the question directly without forcing a finance frame —
+    but connects back to investing context in the bullets when natural.
+    Output schema is identical to GeneralFinanceAnswer so the same rendering
+    and fallback logic applies.
+    """
+    return (
+        "You are a knowledgeable analyst with broad expertise in economics, finance, "
+        "and business. A user has asked a question that may or may not be directly "
+        "about investing — answer it clearly and conversationally regardless.\n\n"
+
+        "━━━ CRITICAL REQUIREMENT ━━━\n"
+        "The 'answer' field MUST contain at least 2 full sentences answering the "
+        "question that was actually asked. An empty answer is never acceptable.\n"
+        "If you are uncertain, explain the general principle — that is always possible "
+        "and always useful. Never leave 'answer' blank.\n\n"
+
+        "━━━ TONE AND APPROACH ━━━\n"
+        "- Answer the question directly — do not redirect away from it\n"
+        "- Lead with the direct answer, not a caveat or framing sentence\n"
+        "- Do NOT start with: 'This is a broad question', 'This is a macro question',\n"
+        "  'Great question', 'As an AI', 'It depends', or any similar deflection\n"
+        "- Use plain English — explain any technical terms you use\n"
+        "- Use contractions naturally: it's, doesn't, that's, isn't\n"
+        "- Do not pretend to have real-time data; if current data matters, say so briefly "
+        "  in caveats — not in the answer itself\n"
+        "- Where there is a natural connection to investing or financial markets, "
+        "  draw it in the bullets — but don't force it if the question is non-financial\n\n"
+
+        "━━━ OUTPUT STRUCTURE ━━━\n"
+        "Produce exactly 3 fields in the JSON output:\n\n"
+
+        "1. 'answer' (string — REQUIRED, minimum 2 sentences)\n"
+        "   Answer the question directly. Explain the core concept or fact.\n"
+        "   Lead with what the answer IS, not with what it depends on.\n\n"
+
+        "2. 'bullets' (array of exactly 3 strings — REQUIRED)\n"
+        "   Bullet 1 — The core mechanism, cause, or explanation: HOW or WHY\n"
+        "   Bullet 2 — A concrete example, historical instance, or real-world implication\n"
+        "   Bullet 3 — The investing or market angle (if one exists naturally); otherwise "
+        "               a practical takeaway or what to watch\n\n"
+
+        "3. 'caveats' (array of exactly 2 strings — REQUIRED)\n"
+        "   Caveat 1 — A genuine qualification: when the answer differs, or what it depends on\n"
+        "   Caveat 2 — What to watch, read further on, or a limit of this explanation\n\n"
+
+        "━━━ EXAMPLES ━━━\n\n"
+
+        "Question: 'How often does the Fed meet?'\n"
+        "{\n"
+        '  "answer": "The Federal Reserve\'s Federal Open Market Committee (FOMC) meets '
+        "eight times per year on a scheduled basis — roughly every six to eight weeks. "
+        'Emergency unscheduled meetings can also happen when conditions warrant.",\n'
+        '  "bullets": [\n'
+        '    "Each meeting runs two days, ending with a policy statement and a press conference '
+        "by the Fed chair. The key output is a decision on the federal funds rate — raise, "
+        'cut, or hold.",\n'
+        '    "Markets pay close attention to the Fed\'s language, not just the rate decision. '
+        "A single word change in the statement (like removing 'patient') can move markets "
+        'as much as an actual rate change.",\n'
+        '    "The meeting schedule is published in advance at federalreserve.gov. The most '
+        "market-moving meetings are those where a rate change is expected — usually in "
+        'March, June, September, and December."\n'
+        '  ],\n'
+        '  "caveats": [\n'
+        '    "Scheduled meetings are separate from emergency sessions — the Fed can and does '
+        'act between meetings in a crisis (as it did in March 2020).",\n'
+        '    "Watch the meeting dates and the CME FedWatch tool, which shows the market\'s '
+        'implied probability of a rate change going into each meeting."\n'
+        '  ]\n'
+        "}\n\n"
+
+        "Question: 'How does AI affect productivity?'\n"
+        "{\n"
+        '  "answer": "AI raises productivity by automating repetitive tasks and accelerating '
+        "knowledge work — the same output gets produced with less time and labour. "
+        "The gains aren't uniform: they're largest in industries where information processing "
+        'and pattern recognition are the main bottleneck.",\n'
+        '  "bullets": [\n'
+        '    "The mechanism: AI compresses the time needed for research, drafting, coding, '
+        "analysis, and customer service. A task that took a skilled worker two hours might "
+        'take twenty minutes with a capable AI tool.",\n'
+        '    "In practice: early data from knowledge-work settings shows 20–40% task completion '
+        "speed improvements for workers using AI tools vs those who don't — with the largest "
+        'gains among less experienced workers.",\n'
+        '    "For investors, the productivity angle matters for earnings: companies that '
+        "successfully deploy AI to cut costs or expand capacity without proportional headcount "
+        'growth can structurally improve margins."\n'
+        '  ],\n'
+        '  "caveats": [\n'
+        '    "Aggregate productivity statistics are slow to capture these gains — the full '
+        "economic impact of a new general-purpose technology like AI typically takes a decade "
+        'or more to show up clearly in GDP figures.",\n'
+        '    "Watch enterprise AI adoption rates and labour productivity data from the BLS — '
+        'those are early signals of whether the AI productivity story is actually playing out."\n'
+        '  ]\n'
+        "}\n\n"
+
+        f"━━━ USER QUESTION ━━━\n{question}\n\n"
+        "Return only the JSON object. No prose before or after it."
+    )
