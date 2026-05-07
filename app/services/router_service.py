@@ -402,98 +402,104 @@ _TOPIC_FALLBACKS = [
     ),
 ]
 
-# Phrases that signal a generic, un-useful answer — used by the quality guard
+# Phrases that signal a generic, template-generated answer — used by the quality guard.
+# Checked as startswith matches on the lowercased answer and as substring matches
+# within the first 160 characters (typically the first two sentences).
 _GENERIC_ANSWER_PREFIXES = (
     "this is a macro",
     "this is a market",
     "this topic involves",
     "financial markets respond to",
-    "this question asks about a core investing concept",
+    "this question asks about",
     "portfolio decisions depend on",
     "this is a broad question",
     "this question touches on",
     "the answer depends on context",
     "financial markets respond",
     "markets respond to a combination",
+    "understanding the underlying mechanism",
+    "understanding how these mechanisms",
+)
+
+# Substring fragments banned anywhere in the first 160 chars of the answer.
+# Catches template-insertion patterns like "X is an important concept..."
+# that may not appear at the very start.
+_GENERIC_ANSWER_FRAGMENTS = (
+    "this is a macro",
+    "this is a market",
+    "this topic involves",
+    "financial markets respond",
+    "this question asks",
+    "is an important concept",
+    "is a key concept",
+    "helps investors understand",
+    "understanding the mechanism",
+    "market participants",
+    "related indicators",
+    "this factor",
+    "any effect depends on",
+    "the direction and magnitude",
 )
 
 
 def _is_generic_answer(text: str) -> bool:
-    """Return True if the answer contains generic category-label language.
+    """Return True if the answer contains generic template-generated language.
 
-    Checks for the banned openers that indicate the LLM (or a previous
-    fallback) produced a category description instead of a direct answer.
-    Also catches cases where the answer is shorter than two sentences or
-    uses deflecting language.
+    Two checks:
+      1. Banned opener — the answer starts with a known deflection phrase.
+      2. Banned fragment — a template-insertion pattern appears in the first
+         160 characters (covering the opening 1–2 sentences).
+
+    Either check firing means the LLM produced a category description or
+    template sentence rather than a direct answer.
     """
     lower = text.strip().lower()
     if any(lower.startswith(prefix) for prefix in _GENERIC_ANSWER_PREFIXES):
         return True
-    # Also reject answers that contain the banned phrases anywhere in the
-    # first 80 characters — that is typically the opening sentence.
-    opening = lower[:80]
-    banned_fragments = (
-        "this is a macro",
-        "this is a market",
-        "this topic involves",
-        "financial markets respond",
-        "this question asks",
-    )
-    return any(frag in opening for frag in banned_fragments)
+    opening = lower[:160]
+    return any(frag in opening for frag in _GENERIC_ANSWER_FRAGMENTS)
 
 
-def _topic_aware_fallback(
-    question: str,
-) -> tuple:
+def _topic_aware_fallback(question: str) -> tuple:
     """Return (answer, bullets, caveats) for the best-matching topic.
 
     Checks the question against _TOPIC_FALLBACKS in order and returns the
-    first match.  Falls back to a question-specific sentence that at least
-    mentions the question's key noun phrase rather than a generic category
-    label.
+    first match.  When no topic keyword matches, returns a fixed analytical
+    response written in natural analyst language — no template string
+    insertion, no concept extraction.
     """
     q = question.lower()
     for keywords, answer, bullets, caveats in _TOPIC_FALLBACKS:
         if any(kw in q for kw in keywords):
             return answer, bullets, caveats
 
-    # No topic matched — build a minimal specific fallback that at least
-    # names the concept the user asked about, not a generic category.
-    # Strip common question words iteratively (longest match first so
-    # "how does" is removed before "how").
-    stripped = q
-    for pattern in (
-        r"^(how often|how does|how do|how will|how can|how should|how would)\s+",
-        r"^(what is|what are|what makes|what causes|what drives)\s+",
-        r"^(why does|why do|why did|why would|why is|why are)\s+",
-        r"^(when does|when do|when will|when is)\s+",
-        r"^(how|why|what|when|does|do|is|are|will|can|should)\s+",
-        r"^(explain|define|describe|tell me about|tell me)\s+",
-    ):
-        stripped = re.sub(pattern, "", stripped, flags=re.IGNORECASE).strip()
-    stripped = stripped.rstrip("?., ")
-
-    concept = stripped if stripped else question.strip().rstrip("?")
-
+    # No topic matched.
+    # Return a genuinely useful general response written in natural language.
+    # Nothing is inserted from the question — the text is fixed and reads
+    # like an analyst explaining how financial markets work.
     answer = (
-        f"{concept.capitalize()} is an important concept in financial markets that "
-        "affects how investors think about risk, return, and valuation. "
-        "Understanding the underlying mechanism helps you evaluate opportunities "
-        "and anticipate how market conditions might shift."
+        "Most market outcomes trace back to three forces: where interest rates "
+        "are heading, whether corporate earnings are growing or shrinking, and "
+        "how much risk investors are willing to take on. When any of these shifts "
+        "more than the market expected, asset prices reprice — sometimes sharply."
     )
     bullets = [
-        f"The core mechanism: {concept} directly influences how investors price "
-        "assets by changing their assumptions about future cash flows or risk.",
-        "In practice: when this factor shifts, it often triggers reallocation "
-        "across asset classes as investors adjust their return expectations.",
-        "Watch for changes in related indicators — they often signal a shift in "
-        f"{concept} before it shows up clearly in price action.",
+        "Prices reflect expectations, not current conditions — markets move when "
+        "reality diverges from what was already priced in, not simply when "
+        "conditions change.",
+        "Leverage amplifies both directions: when prices fall, margin calls force "
+        "selling regardless of fundamentals; when they rise, momentum attracts "
+        "more capital and pushes them higher still.",
+        "The macro backdrop reframes every signal — the same earnings miss reads "
+        "very differently at 2% rates than at 5% rates, or when credit spreads "
+        "are tight versus when they are widening.",
     ]
     caveats = [
-        "Context matters — the same force can have different effects depending on "
-        "whether the broader economy is expanding or contracting.",
-        "Consider how this factor interacts with current interest rates, earnings "
-        "expectations, and investor sentiment before drawing conclusions.",
+        "A more specific question will get a more precise answer — the general "
+        "framework applies broadly, but the details depend on the asset class, "
+        "time horizon, and current market regime.",
+        "Being right about the direction isn't enough: timing matters, and markets "
+        "can stay mispriced longer than most investors expect.",
     ]
     return answer, bullets, caveats
 
