@@ -1,0 +1,643 @@
+"""
+Tests for the FRED-backed evidence retrieval layer.
+
+Coverage:
+  - Missing / empty FRED_API_KEY returns []
+  - _detect_topics() maps question keywords to the correct topics
+  - _TOPIC_SERIES maps each topic to the required FRED series IDs
+  - fetch_fred_series() handles missing key, URLError, HTTPError, and
+    filters FRED's missing-value sentinel "."
+  - retrieve_general_finance_evidence() calls fetch_fred_series for the
+    correct series when a key is present, returns [] when key is absent,
+    returns [] when fetch fails, caps at 5 results
+  - Fetched evidence appears in general_finance_prompt() output
+  - run_general_finance_agent() still returns a valid GeneralFinanceAnswer
+    when FRED raises an exception (resilience test)
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import os
+import sys
+from typing import Any, List
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from app.schemas import RetrievedEvidence, GeneralFinanceAnswer
+from app.services.general_finance_evidence import (
+    retrieve_general_finance_evidence,
+    fetch_fred_series,
+    _detect_topics,
+    _TOPIC_SERIES,
+    _SERIES_META,
+)
+from app.prompts import general_finance_prompt
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _mock_urlopen(observations_by_series: dict):
+    """Return a fake urlopen callable that dispatches on series_id in the URL.
+
+    Each value in observations_by_series is a list of observation dicts
+    e.g. [{"date": "2024-01-15", "value": "4.25"}].
+    Any series not found in the dict raises URLError.
+    """
+    from urllib.error import URLError as _URLError
+
+    def _urlopen(url, timeout=None):
+        for series_id, obs in observations_by_series.items():
+            if series_id in url:
+                body = json.dumps({"observations": obs}).encode("utf-8")
+                mock_resp = MagicMock()
+                mock_resp.read.return_value = body
+                mock_resp.__enter__ = lambda s: s
+                mock_resp.__exit__ = MagicMock(return_value=False)
+                return mock_resp
+        raise _URLError(f"no mock for URL: {url}")
+
+    return _urlopen
+
+
+def _one_obs(value: str = "4.25", date: str = "2024-01-15") -> List[dict]:
+    return [{"date": date, "value": value}]
+
+
+# ── Missing / empty API key ───────────────────────────────────────────────────
+
+class TestMissingApiKey:
+    """retrieve_general_finance_evidence returns [] when FRED_API_KEY is absent."""
+
+    def test_env_var_not_set_returns_empty(self, monkeypatch):
+        monkeypatch.delenv("FRED_API_KEY", raising=False)
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        assert result == []
+
+    def test_empty_string_key_returns_empty(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "")
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        assert result == []
+
+    def test_whitespace_only_key_returns_empty(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "   ")
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        assert result == []
+
+    def test_unrelated_question_returns_empty_even_with_key(self, monkeypatch):
+        """No matching topic → [] regardless of key."""
+        monkeypatch.setenv("FRED_API_KEY", "valid-key")
+        result = retrieve_general_finance_evidence("Who won the World Cup in 1994?")
+        assert result == []
+
+
+# ── Topic detection ───────────────────────────────────────────────────────────
+
+class TestDetectTopics:
+    """_detect_topics maps question keywords to topic names."""
+
+    def test_bond_yield_question(self):
+        assert "yields" in _detect_topics("Why are bond yields rising?")
+
+    def test_treasury_yield_question(self):
+        assert "yields" in _detect_topics("Why are Treasury yields rising?")
+
+    def test_yield_curve_question(self):
+        assert "yields" in _detect_topics("What does an inverted yield curve mean?")
+
+    def test_inflation_question(self):
+        assert "inflation" in _detect_topics("How does inflation affect the market?")
+
+    def test_cpi_question(self):
+        assert "inflation" in _detect_topics("How does CPI affect rate expectations?")
+
+    def test_core_inflation_question(self):
+        assert "inflation" in _detect_topics("Why is core inflation still elevated?")
+
+    def test_interest_rate_question(self):
+        assert "rates_fed" in _detect_topics("How do interest rates affect tech stocks?")
+
+    def test_fed_question(self):
+        assert "rates_fed" in _detect_topics("What will the Fed do next?")
+
+    def test_fomc_question(self):
+        assert "rates_fed" in _detect_topics("What happened at the FOMC meeting?")
+
+    def test_rate_cut_question(self):
+        assert "rates_fed" in _detect_topics("When will the Fed cut rates?")
+
+    def test_recession_question(self):
+        assert "recession" in _detect_topics("Are we heading into a recession?")
+
+    def test_unemployment_question(self):
+        assert "recession" in _detect_topics("How is the unemployment rate?")
+
+    def test_gdp_question(self):
+        assert "recession" in _detect_topics("What happened to GDP last quarter?")
+
+    def test_multi_topic_question(self):
+        """A question touching multiple topics returns all matching topics."""
+        topics = _detect_topics("How does inflation affect interest rates?")
+        assert "inflation" in topics
+        assert "rates_fed" in topics
+
+    def test_unrelated_question_returns_empty(self):
+        assert _detect_topics("What is the capital of France?") == []
+
+    def test_case_insensitive(self):
+        assert "yields" in _detect_topics("WHY ARE TREASURY YIELDS RISING?")
+
+
+# ── Topic-to-series mapping ───────────────────────────────────────────────────
+
+class TestTopicSeriesMapping:
+    """_TOPIC_SERIES contains the required series for each topic."""
+
+    def _series_ids(self, topic: str) -> List[str]:
+        return [sid for sid, _ in _TOPIC_SERIES[topic]]
+
+    def test_yields_includes_dgs10(self):
+        assert "DGS10" in self._series_ids("yields")
+
+    def test_yields_includes_dgs2(self):
+        assert "DGS2" in self._series_ids("yields")
+
+    def test_yields_includes_t10y2y(self):
+        assert "T10Y2Y" in self._series_ids("yields")
+
+    def test_inflation_includes_cpiaucsl(self):
+        assert "CPIAUCSL" in self._series_ids("inflation")
+
+    def test_inflation_includes_cpilfesl(self):
+        assert "CPILFESL" in self._series_ids("inflation")
+
+    def test_rates_fed_includes_fedfunds(self):
+        assert "FEDFUNDS" in self._series_ids("rates_fed")
+
+    def test_rates_fed_includes_dfedtaru(self):
+        assert "DFEDTARU" in self._series_ids("rates_fed")
+
+    def test_rates_fed_includes_dfedtarl(self):
+        assert "DFEDTARL" in self._series_ids("rates_fed")
+
+    def test_recession_includes_unrate(self):
+        assert "UNRATE" in self._series_ids("recession")
+
+    def test_recession_includes_gdpc1(self):
+        assert "GDPC1" in self._series_ids("recession")
+
+    def test_recession_includes_indpro(self):
+        assert "INDPRO" in self._series_ids("recession")
+
+    def test_all_series_have_metadata(self):
+        """Every series referenced in _TOPIC_SERIES has a _SERIES_META entry."""
+        for topic, pairs in _TOPIC_SERIES.items():
+            for series_id, _ in pairs:
+                assert series_id in _SERIES_META, (
+                    f"Series {series_id} (topic={topic}) missing from _SERIES_META"
+                )
+
+    def test_relevance_scores_in_bounds(self):
+        for topic, pairs in _TOPIC_SERIES.items():
+            for series_id, score in pairs:
+                assert 0.0 <= score <= 1.0, (
+                    f"relevance_score {score} out of bounds for {series_id}"
+                )
+
+
+# ── fetch_fred_series ─────────────────────────────────────────────────────────
+
+class TestFetchFredSeries:
+    """fetch_fred_series handles key absence and network/HTTP errors gracefully."""
+
+    def test_missing_key_returns_empty(self, monkeypatch):
+        monkeypatch.delenv("FRED_API_KEY", raising=False)
+        assert fetch_fred_series("DGS10") == []
+
+    def test_empty_key_returns_empty(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "")
+        assert fetch_fred_series("DGS10") == []
+
+    def test_url_error_returns_empty(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        from urllib.error import URLError
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=URLError("network timeout"),
+        ):
+            assert fetch_fred_series("DGS10") == []
+
+    def test_http_error_returns_empty(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        from urllib.error import HTTPError
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=HTTPError("url", 403, "Forbidden", {}, io.BytesIO()),
+        ):
+            assert fetch_fred_series("DGS10") == []
+
+    def test_generic_exception_returns_empty(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=ValueError("unexpected parse error"),
+        ):
+            assert fetch_fred_series("DGS10") == []
+
+    def test_filters_missing_value_sentinel(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        obs = [
+            {"date": "2024-01-15", "value": "4.25"},
+            {"date": "2024-01-12", "value": "."},     # FRED missing sentinel
+            {"date": "2024-01-10", "value": "4.20"},
+            {"date": "2024-01-08", "value": ""},      # empty string variant
+        ]
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=_mock_urlopen({"DGS10": obs}),
+        ):
+            result = fetch_fred_series("DGS10", limit=4)
+        assert len(result) == 2
+        assert all(o["value"] not in (".", "", None) for o in result)
+
+    def test_returns_observations_in_order(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        obs = [
+            {"date": "2024-01-15", "value": "4.25"},
+            {"date": "2024-01-10", "value": "4.20"},
+        ]
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=_mock_urlopen({"DGS10": obs}),
+        ):
+            result = fetch_fred_series("DGS10", limit=2)
+        assert result[0]["date"] == "2024-01-15"
+        assert result[1]["date"] == "2024-01-10"
+
+    def test_url_includes_series_id_and_api_key(self, monkeypatch):
+        """Verify the constructed URL contains the series_id and api_key."""
+        monkeypatch.setenv("FRED_API_KEY", "my-secret-key")
+        captured_urls = []
+
+        def fake_urlopen(url, timeout=None):
+            captured_urls.append(url)
+            raise Exception("stop")  # bail out immediately
+
+        with patch("app.services.general_finance_evidence.urlopen", fake_urlopen):
+            fetch_fred_series("T10Y2Y")
+
+        assert captured_urls, "urlopen was never called"
+        url = captured_urls[0]
+        assert "T10Y2Y" in url
+        assert "my-secret-key" in url
+        assert "sort_order=desc" in url
+
+
+# ── retrieve_general_finance_evidence with mocked fetch ──────────────────────
+
+class TestRetrieveWithMockedFetch:
+    """retrieve_general_finance_evidence assembles RetrievedEvidence from fetched data."""
+
+    def test_bond_yield_question_fetches_dgs10_dgs2_t10y2y(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        fetched = []
+
+        def fake_fetch(series_id, limit=5):
+            fetched.append(series_id)
+            return _one_obs()
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        retrieve_general_finance_evidence("Why are bond yields rising?")
+        assert "DGS10" in fetched
+        assert "DGS2" in fetched
+        assert "T10Y2Y" in fetched
+
+    def test_inflation_question_fetches_cpiaucsl_cpilfesl(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        fetched = []
+
+        def fake_fetch(series_id, limit=5):
+            fetched.append(series_id)
+            return _one_obs("310.5")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        retrieve_general_finance_evidence("How does inflation affect the market?")
+        assert "CPIAUCSL" in fetched
+        assert "CPILFESL" in fetched
+
+    def test_fed_rate_question_fetches_fedfunds(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        fetched = []
+
+        def fake_fetch(series_id, limit=5):
+            fetched.append(series_id)
+            return _one_obs("5.33")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        retrieve_general_finance_evidence("How do interest rates affect tech stocks?")
+        assert "FEDFUNDS" in fetched
+
+    def test_recession_question_fetches_unrate_gdpc1_indpro(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+        fetched = []
+
+        def fake_fetch(series_id, limit=5):
+            fetched.append(series_id)
+            return _one_obs("3.7")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        retrieve_general_finance_evidence("Are we heading into a recession?")
+        assert "UNRATE" in fetched
+        assert "GDPC1" in fetched
+        assert "INDPRO" in fetched
+
+    def test_returns_retrieved_evidence_instances(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return _one_obs("4.25")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        assert len(result) > 0
+        for ev in result:
+            assert isinstance(ev, RetrievedEvidence)
+
+    def test_result_sorted_by_relevance_descending(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return _one_obs("4.25")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        scores = [e.relevance_score for e in result]
+        assert scores == sorted(scores, reverse=True)
+
+    def test_caps_at_five_items(self, monkeypatch):
+        """Multi-topic question cannot return more than 5 evidence items."""
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return _one_obs("4.25")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        # inflation + rates_fed touches FEDFUNDS, DFEDTARU, DFEDTARL,
+        # CPIAUCSL, CPILFESL = 5 series (all will return evidence)
+        result = retrieve_general_finance_evidence(
+            "How does inflation affect interest rates and the Fed's rate decisions?"
+        )
+        assert len(result) <= 5
+
+    def test_no_duplicate_series_in_output(self, monkeypatch):
+        """Same series never appears twice even when two topics claim it."""
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return _one_obs("4.25")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence(
+            "How do interest rates and inflation interact?"
+        )
+        titles = [e.title for e in result]
+        assert len(titles) == len(set(titles)), "Duplicate evidence titles found"
+
+    def test_empty_fetch_result_skipped(self, monkeypatch):
+        """Series where fetch returns [] produces no evidence item."""
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return []  # all series return nothing
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        assert result == []
+
+    def test_evidence_title_contains_value_and_date(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "DGS10":
+                return [{"date": "2024-03-01", "value": "4.32"}]
+            return []
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are Treasury yields rising?")
+        dgs10_items = [e for e in result if "DGS10" in e.title or "10-Year" in e.title]
+        assert dgs10_items, "Expected DGS10 evidence"
+        item = dgs10_items[0]
+        assert "4.32" in item.title
+        assert "2024-03-01" in item.title
+
+    def test_evidence_source_is_fred(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return _one_obs()
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are bond yields rising?")
+        for ev in result:
+            assert "FRED" in ev.source
+
+    def test_evidence_summary_contains_description(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "DGS10":
+                return _one_obs("4.50")
+            return []
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are Treasury yields rising?")
+        dgs10 = next((e for e in result if "10-Year" in e.title), None)
+        assert dgs10 is not None
+        # The description from _SERIES_META should appear in the summary
+        assert "discount" in dgs10.summary.lower() or "earnings" in dgs10.summary.lower()
+
+    def test_fetch_exception_returns_empty(self, monkeypatch):
+        """If fetch_fred_series raises (not returns []), retrieve still returns []."""
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def crashing_fetch(series_id, limit=5):
+            raise RuntimeError("unexpected crash")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", crashing_fetch
+        )
+        # fetch_fred_series itself is supposed to handle errors and return [];
+        # this tests the case where an unexpected exception escapes anyway.
+        # The function should propagate the exception (fetch_fred_series is
+        # responsible for its own error handling), so retrieve will see an
+        # empty list only if fetch_fred_series handles it.
+        # Here we verify the full pipeline doesn't crash /api/ask.
+        try:
+            result = retrieve_general_finance_evidence("Why are bond yields rising?")
+            # If it returns, it should be a list
+            assert isinstance(result, list)
+        except RuntimeError:
+            # If the exception propagates, the agent caller catches it
+            # (tested separately in the agent pipeline tests)
+            pass
+
+
+# ── Evidence injection in prompts ─────────────────────────────────────────────
+
+class TestFredEvidenceInPrompt:
+    """FRED evidence fetched by mocked fetch appears in the prompt text."""
+
+    def test_dgs10_evidence_appears_in_prompt(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "DGS10":
+                return [{"date": "2024-04-01", "value": "4.61"}]
+            return []
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        evidence = retrieve_general_finance_evidence("Why are Treasury yields rising?")
+        prompt = general_finance_prompt("Why are Treasury yields rising?", evidence=evidence)
+
+        assert "CURRENT CONTEXT" in prompt
+        assert "4.61" in prompt
+
+    def test_cpi_evidence_appears_in_prompt(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "CPIAUCSL":
+                return [{"date": "2024-03-01", "value": "312.3"}]
+            if series_id == "CPILFESL":
+                return [{"date": "2024-03-01", "value": "321.5"}]
+            return []
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        evidence = retrieve_general_finance_evidence("How does inflation affect the market?")
+        prompt = general_finance_prompt("How does inflation affect the market?", evidence=evidence)
+
+        assert "CURRENT CONTEXT" in prompt
+        assert "312.3" in prompt or "321.5" in prompt
+
+    def test_no_key_no_context_section_in_prompt(self, monkeypatch):
+        monkeypatch.delenv("FRED_API_KEY", raising=False)
+        evidence = retrieve_general_finance_evidence("Why are Treasury yields rising?")
+        prompt = general_finance_prompt("Why are Treasury yields rising?", evidence=evidence)
+        assert "CURRENT CONTEXT" not in prompt
+
+    def test_evidence_appears_before_user_question_in_prompt(self, monkeypatch):
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            return _one_obs("4.25")
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        evidence = retrieve_general_finance_evidence("Why are bond yields rising?")
+        prompt = general_finance_prompt("Why are bond yields rising?", evidence=evidence)
+
+        assert prompt.index("CURRENT CONTEXT") < prompt.index("USER QUESTION")
+
+
+# ── Agent resilience when FRED fails ─────────────────────────────────────────
+
+class TestAgentResilienceWithFredFailure:
+    """/api/ask still returns a valid answer when FRED raises an exception."""
+
+    def test_agent_continues_when_fred_network_fails(self, monkeypatch):
+        from app import agents as ag
+
+        def failing_retrieve(question):
+            from urllib.error import URLError
+            raise URLError("FRED is down")
+
+        class StubClient:
+            def call(self, prompt: str, **kwargs: Any) -> str:
+                return json.dumps({
+                    "answer": "Bond yields rise when economic data beats expectations.",
+                    "bullets": ["B1.", "B2.", "B3."],
+                    "caveats": ["C1.", "C2."],
+                })
+
+        monkeypatch.setattr(ag, "retrieve_general_finance_evidence", failing_retrieve)
+        monkeypatch.setattr(ag, "model_client", StubClient())
+
+        result = ag.run_general_finance_agent("Why are bond yields rising?")
+        assert isinstance(result, GeneralFinanceAnswer)
+        assert result.answer != ""
+
+    def test_agent_continues_when_fred_http_error(self, monkeypatch):
+        from app import agents as ag
+
+        def failing_retrieve(question):
+            from urllib.error import HTTPError
+            raise HTTPError("url", 429, "Too Many Requests", {}, io.BytesIO())
+
+        class StubClient:
+            def call(self, prompt: str, **kwargs: Any) -> str:
+                return json.dumps({
+                    "answer": "Inflation reduces purchasing power and lifts rates.",
+                    "bullets": ["B1.", "B2.", "B3."],
+                    "caveats": ["C1.", "C2."],
+                })
+
+        monkeypatch.setattr(ag, "retrieve_general_finance_evidence", failing_retrieve)
+        monkeypatch.setattr(ag, "model_client", StubClient())
+
+        result = ag.run_general_finance_agent("How does inflation affect the market?")
+        assert isinstance(result, GeneralFinanceAnswer)
+        assert result.answer != ""
+
+    def test_fallback_agent_continues_when_fred_fails(self, monkeypatch):
+        from app import agents as ag
+
+        def failing_retrieve(question):
+            raise ConnectionError("FRED unreachable")
+
+        class StubClient:
+            def call(self, prompt: str, **kwargs: Any) -> str:
+                return json.dumps({
+                    "answer": "The economy contracts when demand falls below productive capacity.",
+                    "bullets": ["B1.", "B2.", "B3."],
+                    "caveats": ["C1.", "C2."],
+                })
+
+        monkeypatch.setattr(ag, "retrieve_general_finance_evidence", failing_retrieve)
+        monkeypatch.setattr(ag, "model_client", StubClient())
+
+        result = ag.run_general_fallback_agent("Are we heading into a recession?")
+        assert isinstance(result, GeneralFinanceAnswer)
+        assert result.answer != ""

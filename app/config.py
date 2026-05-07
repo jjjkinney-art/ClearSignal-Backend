@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     # empty to perform unauthenticated requests (subject to rate limits).
     fmp_api_key: str = ""
 
+    # Optional API key for the St. Louis Fed FRED API.  When set, the
+    # general finance evidence layer (app/services/general_finance_evidence.py)
+    # will fetch live macro data (Treasury yields, CPI, Fed funds rate, etc.)
+    # and inject it into the LLM prompt as grounding context.  Leave empty
+    # to fall back to conceptual reasoning only — /api/ask continues to work
+    # without this key.
+    fred_api_key: str = ""
+
     # User agent string for SEC EDGAR requests.  The SEC requires that
     # programmatic requests identify the caller and include a contact
     # email.  Customize this value when enabling data retrieval.
