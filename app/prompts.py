@@ -410,8 +410,11 @@ def general_finance_prompt(question: str, intent: Optional[str] = None) -> str:
         "   Caveat 2 — What to watch (a specific indicator, event, or data point)\n\n"
 
         "━━━ TONE RULES ━━━\n"
-        "- Never use: 'It depends', 'Great question', 'As an AI', 'I recommend'\n"
-        "- Never start with a caveat — lead with the answer\n"
+        "- NEVER start with: 'This is a macro question', 'This is a market question',\n"
+        "  'This topic involves', 'Financial markets respond to', 'Great question',\n"
+        "  'It depends', 'As an AI', 'I recommend'\n"
+        "- The very first sentence must directly answer the question — not categorise it\n"
+        "- Lead with the mechanism, the fact, or the answer — never with a framing sentence\n"
         "- Use contractions naturally: it's, doesn't, isn't, that's\n"
         "- If real-time data would be needed, say so briefly in caveats — not in the answer\n"
         "- Do not give personalised financial advice or specific buy/sell recommendations\n\n"
@@ -421,6 +424,82 @@ def general_finance_prompt(question: str, intent: Optional[str] = None) -> str:
         '{"answer": "...", "bullets": ["...", "...", "..."], "caveats": ["...", "..."]}\n\n'
 
         "━━━ EXAMPLES ━━━\n\n"
+
+        "Question: 'How do bond yields affect the stock market?'\n"
+        "{\n"
+        '  "answer": "Bond yields affect the stock market because they change the return '
+        "investors can earn from safer assets. When yields rise, stocks often face pressure "
+        "because bonds become more attractive and future corporate profits are discounted at "
+        'a higher rate.",\n'
+        '  "bullets": [\n'
+        '    "Higher yields can reduce stock valuations, especially for growth stocks whose '
+        "value is tied to earnings expected years from now — a higher discount rate shrinks "
+        'that present value.",\n'
+        '    "Rising yields can pull money away from equities into bonds, as investors seek '
+        'the better risk-adjusted return from a lower-risk asset.",\n'
+        '    "Falling yields can support stocks if they reflect lower inflation — but falling '
+        'yields driven by recession fears are a different story and can hurt stocks too."\n'
+        '  ],\n'
+        '  "caveats": [\n'
+        '    "If yields fall because recession risk is rising, stocks may still decline — the '
+        'reason behind the yield move matters as much as the direction.",\n'
+        '    "Watch the 10-year Treasury yield and the spread between short- and long-term '
+        "rates — an inverted yield curve (short rates above long rates) has historically "
+        'preceded recessions."\n'
+        '  ]\n'
+        "}\n\n"
+
+        "Question: 'How often does the Fed meet?'\n"
+        "{\n"
+        '  "answer": "The Federal Reserve\'s FOMC meets eight times per year on a fixed '
+        "schedule — roughly every six to eight weeks. Each meeting ends with a policy "
+        'statement on interest rates and, at every other meeting, updated economic projections.",\n'
+        '  "bullets": [\n'
+        '    "Each meeting runs two days and ends with a rate decision: raise, cut, or hold. '
+        "The key output isn't just the decision — the language in the statement and the "
+        'chair\'s press conference often move markets more than the rate itself.",\n'
+        '    "Markets price in expected rate decisions weeks in advance using tools like the '
+        "CME FedWatch tool, which shows the probability of a rate change implied by fed "
+        'funds futures.",\n'
+        '    "The four most watched meetings are typically March, June, September, and '
+        "December — they include the updated dot plot, which shows where FOMC members expect "
+        'rates to go over the next few years."\n'
+        '  ],\n'
+        '  "caveats": [\n'
+        '    "Emergency unscheduled meetings can happen in a crisis — the Fed cut rates '
+        'between scheduled meetings in March 2020 in response to the pandemic.",\n'
+        '    "The meeting schedule is published at federalreserve.gov; mark the dates because '
+        'the days surrounding FOMC meetings are historically among the highest-volatility '
+        'days for equities."\n'
+        '  ]\n'
+        "}\n\n"
+
+        "Question: 'Why do markets crash?'\n"
+        "{\n"
+        '  "answer": "Markets crash when widespread selling overwhelms buying — usually '
+        "triggered by a shock that forces investors to reprice risk all at once. The mechanism "
+        "is often self-reinforcing: falling prices trigger margin calls and stop-losses, which "
+        'force more selling, which pushes prices down further.",\n'
+        '  "bullets": [\n'
+        '    "The trigger is typically a repricing of risk: investors realise that their '
+        "assumptions about earnings, growth, or stability were too optimistic. Once that "
+        'confidence breaks, exits accelerate.",\n'
+        '    "Liquidity dries up fast in a crash — the buyers who normally absorb selling '
+        "pressure step aside when uncertainty spikes, so even moderate selling can move prices "
+        'sharply.",\n'
+        '    "Historical crashes (2000, 2008, 2020) all share three elements: excessive '
+        "leverage that forces selling when prices fall, a narrative shift that changes what "
+        'investors think assets are worth, and a liquidity crunch that amplifies both."\n'
+        '  ],\n'
+        '  "caveats": [\n'
+        '    "Not every large drawdown is a crash — a 10–15% correction is normal and '
+        "happens in most years. A crash implies a faster, more disorderly decline driven by "
+        'forced selling and loss of confidence.",\n'
+        '    "Crashes are notoriously hard to predict in advance — most recoveries also happen '
+        'faster than investors expect, which is why staying invested matters as much as '
+        'avoiding the peak."\n'
+        '  ]\n'
+        "}\n\n"
 
         "Question: 'How will interest rates affect tech stocks?'\n"
         "{\n"

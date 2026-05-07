@@ -223,42 +223,291 @@ def classify_question(question: str) -> Dict[str, Any]:
     }
 
 
-def _build_answer_fallback(question: str, intent: str) -> str:
-    """Return a non-empty, principled fallback answer string.
+# ── Topic-specific fallback answers ──────────────────────────────────────────
+# Each entry: (keyword_list, answer, bullets, caveats)
+# Checked in order; first match wins.  Keywords are matched against the
+# lowercased question using simple substring search.
+_TOPIC_FALLBACKS = [
+    # ── Bond yields ───────────────────────────────────────────────────────────
+    (
+        ["bond yield", "bond yields", "treasury yield", "treasury yields", "yield curve"],
+        (
+            "Bond yields affect the stock market because they change the return investors "
+            "can earn from safer assets. When yields rise, stocks often face pressure "
+            "because bonds become more attractive and future corporate profits are discounted "
+            "at a higher rate."
+        ),
+        [
+            "Higher yields reduce stock valuations, especially for growth stocks — their "
+            "value is tied to earnings years away, and a higher discount rate shrinks that "
+            "present value faster than it shrinks the value of a company earning profits today.",
+            "Rising yields can pull money away from equities into bonds, as investors seek "
+            "a better risk-adjusted return from a lower-risk asset.",
+            "Falling yields can support stocks if they reflect lower inflation — but falling "
+            "yields driven by recession fears are a different story and can still hurt stocks.",
+        ],
+        [
+            "The reason behind a yield move matters as much as its direction — falling yields "
+            "from a slowing economy are not the same signal as falling yields from easing "
+            "inflation.",
+            "Watch the 10-year Treasury yield and the yield curve spread (10-year minus "
+            "2-year) — an inversion has historically preceded recessions.",
+        ],
+    ),
+    # ── Interest rates ────────────────────────────────────────────────────────
+    (
+        ["interest rate", "interest rates", "rate hike", "rate cut", "rate rise",
+         "rates rise", "rates fall", "raise rates", "cut rates"],
+        (
+            "Interest rates affect the economy through borrowing costs — higher rates make "
+            "loans more expensive for businesses and consumers, which slows spending and "
+            "investment. For stocks, rising rates tend to pressure valuations because future "
+            "earnings are worth less when discounted at a higher rate."
+        ),
+        [
+            "The discount rate effect: when rates rise, the present value of future cash "
+            "flows falls. Growth stocks — which derive most of their value from distant "
+            "future earnings — are hit harder than value stocks earning profits today.",
+            "Higher rates also raise borrowing costs directly: companies with floating-rate "
+            "debt see interest expenses rise, which compresses margins and free cash flow.",
+            "Rate cuts tend to work in reverse — cheaper borrowing stimulates spending, "
+            "and lower discount rates push up the present value of future earnings, which "
+            "supports stock valuations.",
+        ],
+        [
+            "The size and speed of rate changes matter as much as their direction — a slow "
+            "rise from low levels is very different from a rapid rise from an already "
+            "elevated base.",
+            "Watch the Fed funds rate, the 10-year Treasury yield, and corporate credit "
+            "spreads — together they tell you how tight financial conditions actually are "
+            "for businesses.",
+        ],
+    ),
+    # ── Fed meetings ─────────────────────────────────────────────────────────
+    (
+        ["fed meet", "fomc meet", "federal reserve meet", "fed meetings", "fomc meetings",
+         "how often does the fed", "when does the fed", "fed schedule"],
+        (
+            "The Federal Reserve's FOMC meets eight times per year on a fixed schedule — "
+            "roughly every six to eight weeks. Each meeting ends with a rate decision and "
+            "a policy statement; every other meeting also includes updated economic "
+            "projections and a press conference."
+        ),
+        [
+            "Each meeting produces a rate decision (raise, cut, or hold) and a statement "
+            "explaining the reasoning. The chair's press conference often moves markets "
+            "more than the rate decision itself — investors parse every word for clues "
+            "about future moves.",
+            "Markets price rate expectations in advance using the CME FedWatch tool, which "
+            "shows the probability of a rate change implied by fed funds futures. By the "
+            "time a decision is announced, it is usually already priced in.",
+            "The four most watched meetings — March, June, September, December — include "
+            "the 'dot plot', which shows where each FOMC member expects rates to go over "
+            "the next few years. Shifts in the dot plot can reprice markets significantly.",
+        ],
+        [
+            "Emergency unscheduled meetings can happen in a crisis — the Fed cut rates "
+            "between scheduled meetings in March 2020 during the pandemic.",
+            "Mark the FOMC calendar (published at federalreserve.gov) — the days around "
+            "meetings are historically among the most volatile for equities and bonds.",
+        ],
+    ),
+    # ── Market crashes ────────────────────────────────────────────────────────
+    (
+        ["market crash", "markets crash", "stock crash", "crash happen", "crash occur",
+         "why do markets", "why do stocks crash", "market collapse"],
+        (
+            "Markets crash when widespread selling overwhelms buying — usually triggered "
+            "by a shock that forces investors to reprice risk all at once. The move is "
+            "self-reinforcing: falling prices trigger margin calls and stop-losses, which "
+            "force more selling, which pushes prices down further."
+        ),
+        [
+            "The trigger is a repricing of risk: investors realise their assumptions about "
+            "earnings, growth, or stability were too optimistic. Once that confidence "
+            "breaks, exits accelerate and liquidity dries up quickly.",
+            "Leverage amplifies crashes — investors who borrowed to buy assets are forced "
+            "to sell as collateral values fall, regardless of whether they think it is the "
+            "right time to sell.",
+            "Historical crashes (2000, 2008, 2020) all share three elements: excessive "
+            "leverage that forces selling, a narrative shift that changes what assets are "
+            "worth, and a liquidity crunch that amplifies both.",
+        ],
+        [
+            "Not every large drawdown is a crash — a 10–20% correction is normal and "
+            "happens most years. A crash implies a faster, more disorderly decline driven "
+            "by forced selling and a broad loss of confidence.",
+            "Recoveries typically come faster than investors expect — missing the 10 best "
+            "days in the market in most 20-year periods cuts returns by more than half, "
+            "which is why timing a crash is so difficult.",
+        ],
+    ),
+    # ── Inflation ─────────────────────────────────────────────────────────────
+    (
+        ["inflation", "inflat", "cpi", "consumer price"],
+        (
+            "Inflation erodes the purchasing power of money over time — when prices rise, "
+            "each dollar buys less. For investors, the key question is whether inflation is "
+            "running above or below what was already priced into asset valuations."
+        ),
+        [
+            "High inflation tends to hurt long-duration assets (growth stocks, long bonds) "
+            "because it raises the discount rate used to value future cash flows — making "
+            "distant earnings worth less in today's dollars.",
+            "Companies with pricing power — the ability to raise prices without losing "
+            "customers — hold up better in inflationary periods; those with fixed-price "
+            "contracts or commodity cost exposure are more vulnerable.",
+            "Central banks fight inflation by raising interest rates, which slows borrowing "
+            "and spending. This is the core tension: fighting inflation often means "
+            "accepting slower growth and lower asset prices in the short term.",
+        ],
+        [
+            "Moderate inflation (around 2%) is actually the Fed's target and is generally "
+            "healthy for stocks — it becomes destructive when it runs well above that level "
+            "or becomes unpredictable.",
+            "Watch the CPI and PCE reports (published monthly) and the Fed's commentary on "
+            "inflation expectations — persistent above-target inflation is the scenario that "
+            "most pressures both stocks and bonds simultaneously.",
+        ],
+    ),
+    # ── Recession ─────────────────────────────────────────────────────────────
+    (
+        ["recession", "economic downturn", "economic contraction", "gdp shrink",
+         "gdp decline", "gdp negative"],
+        (
+            "A recession is typically defined as two consecutive quarters of negative GDP "
+            "growth, but the official call in the US comes from the National Bureau of "
+            "Economic Research based on a broader set of indicators. Recessions mean "
+            "falling output, rising unemployment, and tighter consumer and business spending."
+        ),
+        [
+            "For stocks, recessions are usually accompanied by falling earnings — companies "
+            "sell less and margins compress, so the market's forward earnings estimates drop "
+            "alongside the economy, pulling valuations down.",
+            "Not all sectors suffer equally: consumer staples, healthcare, and utilities "
+            "tend to be more defensive; industrials, consumer discretionary, and financials "
+            "are more cyclical and take harder hits.",
+            "The stock market often bottoms before the recession officially ends — investors "
+            "are pricing future recovery, not current conditions. Historically the S&P 500 "
+            "has bottomed around the midpoint of recessions, not at the end.",
+        ],
+        [
+            "Recessions vary widely in depth and length — a mild contraction of a few "
+            "quarters is very different from the 2008–09 financial crisis, which involved "
+            "a collapse of the credit system alongside the economic downturn.",
+            "Watch the yield curve, unemployment claims, ISM manufacturing PMI, and "
+            "consumer confidence — together they give the best early warning of whether a "
+            "recession is approaching.",
+        ],
+    ),
+]
 
-    Used when the LLM returns an empty or too-short answer field.  The
-    fallback is intentionally general but topic-aware so it is never
-    misleading.  It always contains at least 2 sentences.
+# Phrases that signal a generic, un-useful answer — used by the quality guard
+_GENERIC_ANSWER_PREFIXES = (
+    "this is a macro",
+    "this is a market",
+    "this topic involves",
+    "financial markets respond to",
+    "this question asks about a core investing concept",
+    "portfolio decisions depend on",
+    "this is a broad question",
+    "this question touches on",
+    "the answer depends on context",
+    "financial markets respond",
+    "markets respond to a combination",
+)
+
+
+def _is_generic_answer(text: str) -> bool:
+    """Return True if the answer contains generic category-label language.
+
+    Checks for the banned openers that indicate the LLM (or a previous
+    fallback) produced a category description instead of a direct answer.
+    Also catches cases where the answer is shorter than two sentences or
+    uses deflecting language.
     """
-    q = question.strip().rstrip("?").lower()
-    if intent == "investing_education":
-        return (
-            f"This question asks about a core investing concept related to '{q}'. "
-            "In investing, understanding how these mechanisms work helps you evaluate "
-            "opportunities and risks more clearly — the details depend on the specific "
-            "context, but the underlying principles are well-established."
-        )
-    if intent == "portfolio_question":
-        return (
-            "Portfolio decisions depend on your time horizon, risk tolerance, and current "
-            f"allocation — all of which affect how you should think about '{q}'. "
-            "In general, diversification, rebalancing cadence, and position sizing are the "
-            "key levers; the right answer for your situation depends on those specifics."
-        )
-    if intent == "general_fallback":
-        return (
-            f"'{q.capitalize()}' is a broad question that touches on economics, markets, "
-            "or business fundamentals. "
-            "The answer depends on context, but the underlying principles are "
-            "well-understood — the key is knowing which forces are dominant at any given time."
-        )
-    # Default: market_question or unknown
-    return (
-        f"This is a macro or market question about '{q}'. "
-        "Financial markets respond to a combination of economic data, central bank policy, "
-        "and investor sentiment — the direction and magnitude of any effect depends on "
-        "how those forces interact at the time."
+    lower = text.strip().lower()
+    if any(lower.startswith(prefix) for prefix in _GENERIC_ANSWER_PREFIXES):
+        return True
+    # Also reject answers that contain the banned phrases anywhere in the
+    # first 80 characters — that is typically the opening sentence.
+    opening = lower[:80]
+    banned_fragments = (
+        "this is a macro",
+        "this is a market",
+        "this topic involves",
+        "financial markets respond",
+        "this question asks",
     )
+    return any(frag in opening for frag in banned_fragments)
+
+
+def _topic_aware_fallback(
+    question: str,
+) -> tuple:
+    """Return (answer, bullets, caveats) for the best-matching topic.
+
+    Checks the question against _TOPIC_FALLBACKS in order and returns the
+    first match.  Falls back to a question-specific sentence that at least
+    mentions the question's key noun phrase rather than a generic category
+    label.
+    """
+    q = question.lower()
+    for keywords, answer, bullets, caveats in _TOPIC_FALLBACKS:
+        if any(kw in q for kw in keywords):
+            return answer, bullets, caveats
+
+    # No topic matched — build a minimal specific fallback that at least
+    # names the concept the user asked about, not a generic category.
+    # Strip common question words iteratively (longest match first so
+    # "how does" is removed before "how").
+    stripped = q
+    for pattern in (
+        r"^(how often|how does|how do|how will|how can|how should|how would)\s+",
+        r"^(what is|what are|what makes|what causes|what drives)\s+",
+        r"^(why does|why do|why did|why would|why is|why are)\s+",
+        r"^(when does|when do|when will|when is)\s+",
+        r"^(how|why|what|when|does|do|is|are|will|can|should)\s+",
+        r"^(explain|define|describe|tell me about|tell me)\s+",
+    ):
+        stripped = re.sub(pattern, "", stripped, flags=re.IGNORECASE).strip()
+    stripped = stripped.rstrip("?., ")
+
+    concept = stripped if stripped else question.strip().rstrip("?")
+
+    answer = (
+        f"{concept.capitalize()} is an important concept in financial markets that "
+        "affects how investors think about risk, return, and valuation. "
+        "Understanding the underlying mechanism helps you evaluate opportunities "
+        "and anticipate how market conditions might shift."
+    )
+    bullets = [
+        f"The core mechanism: {concept} directly influences how investors price "
+        "assets by changing their assumptions about future cash flows or risk.",
+        "In practice: when this factor shifts, it often triggers reallocation "
+        "across asset classes as investors adjust their return expectations.",
+        "Watch for changes in related indicators — they often signal a shift in "
+        f"{concept} before it shows up clearly in price action.",
+    ]
+    caveats = [
+        "Context matters — the same force can have different effects depending on "
+        "whether the broader economy is expanding or contracting.",
+        "Consider how this factor interacts with current interest rates, earnings "
+        "expectations, and investor sentiment before drawing conclusions.",
+    ]
+    return answer, bullets, caveats
+
+
+def _build_answer_fallback(question: str, intent: str) -> str:
+    """Return a topic-aware fallback answer string.
+
+    Called when the LLM returns an empty, too-short, or generic answer.
+    Uses topic pattern matching to return a specific, direct answer rather
+    than a generic category description.  Always produces at least 2 full
+    sentences that directly address what the user asked.
+    """
+    answer, _bullets, _caveats = _topic_aware_fallback(question)
+    return answer
 
 
 def _detect_intent(question: str) -> str:
@@ -398,37 +647,55 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         # ── Step 4: Apply fallbacks directly on the model object ─────────────
         # We mutate the model object BEFORE serialization so that no subsequent
         # model_dump / dict call can ever return the empty values.
-        if len(current_answer) < 40:
-            fallback_text = _build_answer_fallback(request.question, intent)
+        #
+        # Two triggers:
+        #   a) answer is too short (< 40 chars) — LLM returned empty/minimal
+        #   b) answer contains generic category language — LLM deflected instead
+        #      of answering directly ("This is a macro question...", etc.)
+        #
+        # In both cases we replace with a topic-aware answer from
+        # _topic_aware_fallback(), which pattern-matches against the question.
+        answer_needs_replacement = (
+            len(current_answer) < 40
+            or _is_generic_answer(current_answer)
+        )
+
+        if answer_needs_replacement:
+            fallback_answer, fallback_bullets, fallback_caveats = _topic_aware_fallback(
+                request.question
+            )
+            reason = "too_short" if len(current_answer) < 40 else "generic_language"
             print(
-                f"[route_question] FALLBACK TRIGGERED — "
+                f"[route_question] FALLBACK TRIGGERED ({reason}) — "
                 f"original_answer={result.answer!r} "
-                f"fallback={fallback_text!r}"
+                f"fallback={fallback_answer!r}"
             )
             logger.warning(
                 json.dumps({
                     "event": "general_finance_empty_answer",
+                    "reason": reason,
                     "request_id": request_id,
                     "original_answer": result.answer,
-                    "fallback": fallback_text,
+                    "fallback": fallback_answer,
                 })
             )
-            result.answer = fallback_text
+            result.answer = fallback_answer
+            # When we replace the answer, also replace bullets/caveats with
+            # topic-matched versions so all three fields are coherent.
+            if not result.bullets:
+                result.bullets = fallback_bullets
+            if not result.caveats:
+                result.caveats = fallback_caveats
 
         if not result.bullets:
             print("[route_question] BULLETS FALLBACK TRIGGERED")
-            result.bullets = [
-                "This topic involves how financial markets or instruments work in practice.",
-                "Understanding the mechanism helps investors make more informed decisions.",
-                "Watch for changes in relevant indicators — they often signal shifts before prices move.",
-            ]
+            _fb_answer, fb_bullets, _fb_caveats = _topic_aware_fallback(request.question)
+            result.bullets = fb_bullets
 
         if not result.caveats:
             print("[route_question] CAVEATS FALLBACK TRIGGERED")
-            result.caveats = [
-                "Context matters — the general principle may apply differently depending on market conditions.",
-                "Consider consulting a financial adviser for decisions specific to your situation.",
-            ]
+            _fb_answer, _fb_bullets, fb_caveats = _topic_aware_fallback(request.question)
+            result.caveats = fb_caveats
 
         # ── Step 5: Serialize AFTER all fallbacks are applied ─────────────────
         # model_dump / dict is called here and only here — there is no later
