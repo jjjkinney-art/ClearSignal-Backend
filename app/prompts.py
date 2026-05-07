@@ -13,10 +13,10 @@ details.
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 import json
 
-from .schemas import GroundingContext
+from .schemas import GroundingContext, RetrievedEvidence
 
 
 def _context_section(context: Optional[GroundingContext]) -> str:
@@ -45,6 +45,44 @@ def _context_section(context: Optional[GroundingContext]) -> str:
         for sn in context.source_notes:
             lines.append(f"- {sn}")
     return "\n".join(lines)
+
+
+def _format_evidence_section(evidence: Optional[List[RetrievedEvidence]]) -> str:
+    """Render retrieved evidence as a prompt section.
+
+    Returns an empty string when evidence is None or empty so that callers
+    can unconditionally concatenate the result — no if-guards needed at the
+    call site.
+
+    Evidence items are sorted by relevance_score descending before rendering
+    so the most relevant item always appears first regardless of retrieval order.
+    """
+    if not evidence:
+        return ""
+
+    sorted_ev = sorted(evidence, key=lambda e: e.relevance_score, reverse=True)
+
+    lines: List[str] = [
+        "\n━━━ CURRENT CONTEXT ━━━",
+        "The following evidence was retrieved for this question.",
+        "Rules for using it:",
+        "  - Prioritize this evidence over generic abstractions or training memory.",
+        "  - Explain WHY each piece matters — don't just restate it.",
+        "  - Synthesize it into causal reasoning: what happened, why, and what it means.",
+        "  - If the evidence is thin or dated, note the limitation in caveats.",
+        "",
+    ]
+    for i, ev in enumerate(sorted_ev, 1):
+        lines.append(f"[{i}] {ev.title}")
+        lines.append(
+            f"    Source: {ev.source} | Date: {ev.timestamp} | "
+            f"Relevance: {ev.relevance_score:.2f}"
+        )
+        lines.append(f"    {ev.summary}")
+        lines.append("")
+
+    lines.append("Use this context to make the answer specific and current.")
+    return "\n".join(lines) + "\n"
 
 
 def equity_prompt(company: str, context: Optional[GroundingContext] = None, user_question: Optional[str] = None) -> str:
@@ -347,7 +385,11 @@ _DEFAULT_INTENT_BLOCK = (
 )
 
 
-def general_finance_prompt(question: str, intent: Optional[str] = None) -> str:
+def general_finance_prompt(
+    question: str,
+    intent: Optional[str] = None,
+    evidence: Optional[List[RetrievedEvidence]] = None,
+) -> str:
     """Construct a prompt for the general finance Q&A agent.
 
     This prompt is used for non-company queries: market questions, investing
@@ -356,6 +398,15 @@ def general_finance_prompt(question: str, intent: Optional[str] = None) -> str:
 
     The prompt is intent-aware so each category gets appropriate framing
     without changing the output schema.
+
+    Parameters
+    ----------
+    question : str   The user's question.
+    intent   : str   Optional intent hint for framing (market_question, etc.).
+    evidence : list  Optional retrieved evidence from retrieve_general_finance_evidence().
+                     When provided, a "Current Context" section is injected into
+                     the prompt so the model can produce current-aware answers.
+                     When None or empty, the prompt falls back to conceptual reasoning.
     """
     intent_block = _INTENT_BLOCKS.get(intent or "", _DEFAULT_INTENT_BLOCK)
 
@@ -558,12 +609,13 @@ def general_finance_prompt(question: str, intent: Optional[str] = None) -> str:
         '  ]\n'
         "}\n\n"
 
+        f"{_format_evidence_section(evidence)}"
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )
 
 
-def general_fallback_prompt(question: str) -> str:
+def general_fallback_prompt(question: str, evidence: Optional[List[RetrievedEvidence]] = None) -> str:
     """Construct a prompt for the general fallback agent.
 
     Used when a question does not cleanly match any specialized finance intent
@@ -576,6 +628,12 @@ def general_fallback_prompt(question: str) -> str:
     but connects back to investing context in the bullets when natural.
     Output schema is identical to GeneralFinanceAnswer so the same rendering
     and fallback logic applies.
+
+    Parameters
+    ----------
+    question : str   The user's question.
+    evidence : list  Optional retrieved evidence; injected as "Current Context"
+                     when provided.  Falls back to conceptual reasoning when empty.
     """
     return (
         "You are a knowledgeable analyst with broad expertise in economics, finance, "
@@ -669,6 +727,7 @@ def general_fallback_prompt(question: str) -> str:
         '  ]\n'
         "}\n\n"
 
+        f"{_format_evidence_section(evidence)}"
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )

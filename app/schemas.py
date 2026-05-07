@@ -31,6 +31,37 @@ except ImportError:  # pragma: no cover - pydantic v1
 # data such as company profiles, market snapshots, financial statements and
 # filings metadata.
 
+
+class RetrievedEvidence(BaseModel):
+    """A single piece of retrieved evidence for a general finance question.
+
+    Produced by retrieve_general_finance_evidence() and injected into the
+    general finance and fallback prompts as grounding context.  The LLM
+    is instructed to prioritize this evidence over generic abstractions and
+    to explain WHY each piece matters for the question asked.
+
+    Fields
+    ------
+    title       Short headline or title of the source article/data point.
+    source      Publication, API, or data provider name.
+    summary     1-3 sentence summary of the relevant finding.
+    timestamp   ISO-8601 date string (YYYY-MM-DD) of when the data was published.
+    relevance_score  0.0–1.0 relevance of this evidence to the question.
+                     Scored by the retrieval layer; higher → more relevant.
+    """
+
+    title: str = Field(..., description="Short headline or title of the evidence item")
+    source: str = Field(..., description="Publication or data provider name")
+    summary: str = Field(..., description="1-3 sentence summary of the relevant finding")
+    timestamp: str = Field(..., description="Publication date (YYYY-MM-DD)")
+    relevance_score: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Relevance score 0.0–1.0; higher items are shown first in the prompt",
+    )
+
+
 class CompanyProfile(BaseModel):
     """Basic company profile information.
 
