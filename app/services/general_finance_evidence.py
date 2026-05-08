@@ -45,6 +45,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
 from typing import List
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -167,19 +168,27 @@ _TOPIC_SERIES: dict = {
 
 
 # ── Topic keyword patterns ────────────────────────────────────────────────────
-# All keywords are lowercase; detection compares against question.lower().
+# All keywords are lowercase; detection runs against normalize_macro_query()
+# output, not the raw question.
 
 _TOPIC_KEYWORDS: dict = {
     "rates_fed": [
         "interest rate", "fed rate", "fed funds", "federal reserve", "fomc",
-        "rate cut", "cut rate",          # "rate cut" and "cut rates" both covered
+        "rate cut", "cut rate",          # covers both "rate cut" and "cut rates"
         "rate hike", "rate increase", "rate decrease",
         "monetary policy", "hiking", "cutting rate", "powell",
-        " fed ",                          # "the Fed", "when the Fed", "what Fed"
+        " fed ",                          # "the Fed", "when the Fed"
     ],
     "yields": [
-        "yield", "treasury", "bond yield", "10-year", "2-year",
-        "yield curve", "t10y2y", "sovereign", "bond market",
+        # canonical forms produced by normalize_macro_query
+        "treasury yield", "treasury yields",
+        "bond yield", "bond yields",
+        "10-year yield", "10 year yield",
+        "2-year yield", "2 year yield",
+        # raw terms that survive normalization unchanged
+        "yield curve", "t10y2y", "sovereign",
+        "bond market", "government bond",
+        "long-term rate", "long term rate",
     ],
     "inflation": [
         "inflation", "cpi", "consumer price", "deflation", "disinflation",
@@ -192,6 +201,77 @@ _TOPIC_KEYWORDS: dict = {
         "slowdown", "downturn", "economy",
     ],
 }
+
+# ── Phrase normalization table ────────────────────────────────────────────────
+# Applied left-to-right after lowercasing + punctuation removal.
+# Order matters: more specific phrases appear before their substrings.
+# Each entry is (pattern_to_replace, replacement).
+
+_NORMALIZATIONS: list = [
+    # ── Treasury / yields conflations ────────────────────────────────────────
+    ("treasury rates yields",       "treasury yields"),
+    ("treasury rate yields",        "treasury yields"),
+    ("treasury rates yield",        "treasury yields"),
+    ("treasury bond rates",         "treasury yields"),
+    ("treasury bond yield",         "treasury yields"),
+    ("government bond rates",       "treasury yields"),
+    ("government bond yields",      "treasury yields"),
+    ("bond rates",                  "bond yields"),
+    ("bond market rates",           "bond yields"),
+    # ── Spelled-out maturities ────────────────────────────────────────────────
+    # Hyphen variants ("10-year treasury") are intentionally omitted: the
+    # treasury co-occurrence rule in _detect_topics handles them without
+    # cascading replacements.
+    ("ten year treasury",           "10-year treasury yield"),
+    ("ten-year treasury",           "10-year treasury yield"),
+    ("10 year treasury",            "10-year treasury yield"),
+    ("two year treasury",           "2-year treasury yield"),
+    ("two-year treasury",           "2-year treasury yield"),
+    ("2 year treasury",             "2-year treasury yield"),
+    # ── Long / short term ────────────────────────────────────────────────────
+    ("long term rates",             "long-term rate"),
+    ("long-term rates",             "long-term rate"),
+    ("short term rates",            "2-year treasury yield"),
+    ("short-term rates",            "2-year treasury yield"),
+    # ── Colloquial "rates going up / ripping" ────────────────────────────────
+    ("rates ripping",               "yields rising"),
+    ("rates going up",              "yields rising"),
+    ("rates moving higher",         "yields rising"),
+    ("rates rising",                "yields rising"),
+]
+
+
+def normalize_macro_query(question: str) -> str:
+    """Return a normalised version of *question* for FRED topic detection.
+
+    Steps
+    -----
+    1. Lowercase.
+    2. Remove punctuation (everything except letters, digits, spaces, hyphens).
+    3. Collapse multiple whitespace characters to a single space and strip.
+    4. Apply the phrase-substitution table ``_NORMALIZATIONS`` left-to-right.
+
+    The result is only used for keyword matching — the original question is
+    preserved for the LLM prompt.
+
+    Parameters
+    ----------
+    question : str
+        Raw user question.
+
+    Returns
+    -------
+    str
+        Normalised string suitable for substring keyword matching.
+    """
+    q = question.lower()
+    # Keep letters, digits, spaces, and hyphens; strip everything else
+    q = re.sub(r"[^\w\s-]", " ", q)
+    # Collapse runs of whitespace (including newlines, tabs)
+    q = re.sub(r"\s+", " ", q).strip()
+    for src, dst in _NORMALIZATIONS:
+        q = q.replace(src, dst)
+    return q
 
 
 # ── FRED HTTP client ──────────────────────────────────────────────────────────
@@ -254,23 +334,45 @@ def fetch_fred_series(series_id: str, limit: int = 5) -> List[dict]:
 def _detect_topics(question: str) -> List[str]:
     """Return FRED topic names whose keywords appear in the question.
 
+    The question is first passed through ``normalize_macro_query`` so that
+    messy phrasings like "treasury rates yields" or "ten year treasury" still
+    match the canonical keyword list.
+
+    A treasury co-occurrence rule supplements keyword matching: if the
+    normalised query contains "treasury" together with any of "rate", "yield",
+    "bond", or "10-year", the ``yields`` topic is always included.
+
     Parameters
     ----------
     question : str
-        The user's question (case-insensitive keyword matching).
+        The user's question (raw, any casing / punctuation).
 
     Returns
     -------
     List[str]
-        Matching topic names (subset of ``_TOPIC_SERIES`` keys).
-        Returns ``[]`` when no macro topic is detected.
+        Matching topic names (subset of ``_TOPIC_SERIES`` keys), deduplicated,
+        preserving insertion order.  Returns ``[]`` when no topic is detected.
     """
-    q = question.lower()
-    return [
+    q = normalize_macro_query(question)
+
+    topics: List[str] = [
         topic
         for topic, keywords in _TOPIC_KEYWORDS.items()
         if any(kw in q for kw in keywords)
     ]
+
+    # ── Treasury co-occurrence rule ───────────────────────────────────────────
+    # If the question mentions "treasury" alongside any yield/rate/bond signal,
+    # force the yields topic regardless of exact phrase matching.
+    _TREASURY_COMPANIONS = ("rate", "yield", "bond", "10-year", "2-year")
+    if (
+        "treasury" in q
+        and any(c in q for c in _TREASURY_COMPANIONS)
+        and "yields" not in topics
+    ):
+        topics.append("yields")
+
+    return topics
 
 
 # ── Public entry point ────────────────────────────────────────────────────────
