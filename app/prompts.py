@@ -56,6 +56,10 @@ def _format_evidence_section(evidence: Optional[List[RetrievedEvidence]]) -> str
 
     Evidence items are sorted by relevance_score descending before rendering
     so the most relevant item always appears first regardless of retrieval order.
+
+    The synthesis instructions that tell the model HOW to use this evidence
+    are in _evidence_synthesis_block(), which is injected separately between
+    this section and the USER QUESTION line.
     """
     if not evidence:
         return ""
@@ -64,12 +68,7 @@ def _format_evidence_section(evidence: Optional[List[RetrievedEvidence]]) -> str
 
     lines: List[str] = [
         "\n━━━ CURRENT CONTEXT ━━━",
-        "The following evidence was retrieved for this question.",
-        "Rules for using it:",
-        "  - Prioritize this evidence over generic abstractions or training memory.",
-        "  - Explain WHY each piece matters — don't just restate it.",
-        "  - Synthesize it into causal reasoning: what happened, why, and what it means.",
-        "  - If the evidence is thin or dated, note the limitation in caveats.",
+        "Real data retrieved for this question. Use it to ground your answer.",
         "",
     ]
     for i, ev in enumerate(sorted_ev, 1):
@@ -81,7 +80,94 @@ def _format_evidence_section(evidence: Optional[List[RetrievedEvidence]]) -> str
         lines.append(f"    {ev.summary}")
         lines.append("")
 
-    lines.append("Use this context to make the answer specific and current.")
+    return "\n".join(lines)
+
+
+# Temporal keywords that signal the user expects a current-conditions answer,
+# not a timeless conceptual explanation.
+_TEMPORAL_MARKERS = frozenset(
+    ("today", "right now", "currently", "latest", "this week",
+     "this month", "at the moment", "right now", "now")
+)
+
+
+def _evidence_synthesis_block(
+    question: str,
+    evidence: Optional[List[RetrievedEvidence]],
+) -> str:
+    """Return synthesis instructions to be injected after the evidence section.
+
+    Returns an empty string when no evidence is provided, so callers can
+    unconditionally concatenate without if-guards.
+
+    When evidence is present the block:
+    1. Mandates evidence-first synthesis in the 'answer' field.
+    2. Adds a quality guard when the question contains temporal markers
+       ('today', 'right now', 'currently', etc.).
+    3. Provides a worked Treasury-yield example of what good synthesis looks like.
+    4. Closes with the canonical rule: evidence first, concepts second.
+    """
+    if not evidence:
+        return ""
+
+    q_lower = question.lower()
+    is_temporal = any(m in q_lower for m in _TEMPORAL_MARKERS)
+
+    lines: List[str] = [
+        "",
+        "━━━ SYNTHESIS REQUIREMENTS — APPLY BECAUSE CURRENT CONTEXT EXISTS ━━━",
+        "",
+        "MANDATORY — your 'answer' field MUST follow this structure:",
+        "  1. OPEN with evidence synthesis: what is driving the move or trend RIGHT NOW?",
+        "     Name the specific event, data point, or level from the CURRENT CONTEXT above.",
+        "     BAD:  'Bond yields generally rise when inflation is elevated...'",
+        "     GOOD: 'Treasury yields are rising because [specific driver from the evidence above]...'",
+        "  2. Explain the causal chain: what changed → how markets responded → what is being priced.",
+        "  3. ONLY THEN provide timeless mechanism — as supporting context, not the opening.",
+        "  4. Use specific values from the evidence (e.g. a rate level, a date) when helpful.",
+        "  5. If evidence is thin or dated, note the limitation briefly in caveats — still lead with it.",
+        "",
+    ]
+
+    if is_temporal:
+        lines += [
+            "QUALITY GUARD — this question asks about current conditions.",
+            "A conceptual answer that ignores the CURRENT CONTEXT above FAILS this question.",
+            "The retrieved evidence tells you what is happening now — lead with it.",
+            "Synthesize the evidence first. Explain the mechanism second.",
+            "",
+        ]
+
+    lines += [
+        "WORKED EXAMPLE — what a good evidence-grounded answer looks like:",
+        "",
+        "  CURRENT CONTEXT provided:",
+        "    [1] 10-Year Treasury yield: 4.61% (as of 2024-04-01)",
+        "    [2] Non-farm payrolls beat estimates by 80k jobs — Fed cut expectations pushed back",
+        "    [3] CME FedWatch: March cut probability fell from 73% to 48%",
+        "",
+        "  Question: 'Why are Treasury yields rising today?'",
+        "",
+        "  GOOD answer (evidence-first, then mechanism):",
+        '  "Treasury yields are rising because investors are pushing back expectations for',
+        "  Federal Reserve rate cuts after stronger-than-expected jobs data and persistent",
+        "  inflation signals. When markets believe rates will stay higher for longer, bond",
+        "  investors demand higher yields to compensate for the extended wait — and that",
+        '  repricing is what is driving the move right now."',
+        "",
+        "  Then bullets cover: (1) jobs/data driver, (2) inflation persistence,",
+        "  (3) ripple into equities via higher discount rates.",
+        "",
+        "  BAD answer (conceptual, evidence ignored — REJECT THIS PATTERN):",
+        '  "Bond yields rise when investors expect higher inflation or stronger economic growth.',
+        "  This is because bond prices and yields move in opposite directions...",
+        '  This answer ignores the retrieved evidence and explains a timeless concept instead.",',
+        "",
+        "When CURRENT CONTEXT is provided, answer using the evidence first.",
+        "Do not fall back to timeless educational explanations unless the evidence is insufficient.",
+        "",
+    ]
+
     return "\n".join(lines) + "\n"
 
 
@@ -610,6 +696,7 @@ def general_finance_prompt(
         "}\n\n"
 
         f"{_format_evidence_section(evidence)}"
+        f"{_evidence_synthesis_block(question, evidence)}"
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )
@@ -728,6 +815,7 @@ def general_fallback_prompt(question: str, evidence: Optional[List[RetrievedEvid
         "}\n\n"
 
         f"{_format_evidence_section(evidence)}"
+        f"{_evidence_synthesis_block(question, evidence)}"
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )
