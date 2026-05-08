@@ -62,6 +62,7 @@ def _format_evidence_section(evidence: Optional[List[RetrievedEvidence]]) -> str
     this section and the USER QUESTION line.
     """
     if not evidence:
+        print("[DIAG] 6. CURRENT CONTEXT BLOCK: not injected (no evidence)")
         return ""
 
     sorted_ev = sorted(evidence, key=lambda e: e.relevance_score, reverse=True)
@@ -80,7 +81,10 @@ def _format_evidence_section(evidence: Optional[List[RetrievedEvidence]]) -> str
         lines.append(f"    {ev.summary}")
         lines.append("")
 
-    return "\n".join(lines)
+    result = "\n".join(lines)
+    # ── [6] CURRENT CONTEXT BLOCK LENGTH ──────────────────────────────────────
+    print(f"[DIAG] 6. CURRENT CONTEXT BLOCK LENGTH: {len(result)} chars  ({len(evidence)} evidence item(s))")
+    return result
 
 
 # Temporal keywords that signal the user expects a current-conditions answer,
@@ -108,10 +112,23 @@ def _evidence_synthesis_block(
     4. Closes with the canonical rule: evidence first, concepts second.
     """
     if not evidence:
+        # ── [7] SYNTHESIS BLOCK ────────────────────────────────────────────────
+        print("[DIAG] 7. SYNTHESIS BLOCK: NOT activated (no evidence)")
         return ""
 
     q_lower = question.lower()
     is_temporal = any(m in q_lower for m in _TEMPORAL_MARKERS)
+
+    # ── [7] SYNTHESIS BLOCK ────────────────────────────────────────────────────
+    print("[DIAG] 7. SYNTHESIS BLOCK: ACTIVATED")
+
+    # ── [8] TEMPORAL QUALITY GUARD ────────────────────────────────────────────
+    if is_temporal:
+        matched_markers = [m for m in _TEMPORAL_MARKERS if m in q_lower]
+        print(f"[DIAG] 8. TEMPORAL QUALITY GUARD: ACTIVATED — matched markers: {matched_markers}")
+        print("[DIAG] *** EVIDENCE-FIRST SYNTHESIS REQUIRED ***")
+    else:
+        print("[DIAG] 8. TEMPORAL QUALITY GUARD: not activated (no temporal markers detected)")
 
     lines: List[str] = [
         "",

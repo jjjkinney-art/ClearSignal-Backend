@@ -402,15 +402,48 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
     List[RetrievedEvidence]
         Ranked list, highest relevance first, ready for prompt injection.
     """
+    # ── DIAGNOSTIC HEADER ─────────────────────────────────────────────────────
+    print("\n" + "=" * 60)
+    print("[DIAG] EVIDENCE RETRIEVAL PIPELINE — START")
+    print("=" * 60)
+
     api_key = os.environ.get("FRED_API_KEY", "").strip()
     if not api_key:
         logger.debug("FRED_API_KEY not set — evidence retrieval skipped")
+        print("[DIAG] FRED_API_KEY: NOT SET — retrieval skipped")
+        print("=" * 60 + "\n")
         return []
 
+    print(f"[DIAG] FRED_API_KEY: SET (len={len(api_key)})")
+
+    # ── [1] NORMALIZED QUERY ──────────────────────────────────────────────────
+    normalized = normalize_macro_query(question)
+    print(f"[DIAG] 1. NORMALIZED QUERY:  {normalized!r}")
+
+    # ── [2] DETECTED TOPICS ───────────────────────────────────────────────────
     topics = _detect_topics(question)
+    print(f"[DIAG] 2. DETECTED TOPICS:   {topics}")
+
     if not topics:
         logger.debug("No FRED topics matched for question: %r", question)
+        print("[DIAG]    → no topics matched — retrieval returns []")
+        print("=" * 60 + "\n")
         return []
+
+    # ── [3] MATCHED FRED SERIES IDS ───────────────────────────────────────────
+    matched_series = [
+        series_id
+        for topic in topics
+        for series_id, _ in _TOPIC_SERIES.get(topic, [])
+    ]
+    # Deduplicate while preserving order (mirrors the seen-set logic below)
+    seen_preview: set = set()
+    unique_series = []
+    for sid in matched_series:
+        if sid not in seen_preview:
+            seen_preview.add(sid)
+            unique_series.append(sid)
+    print(f"[DIAG] 3. MATCHED FRED SERIES IDs: {unique_series}")
 
     evidence: List[RetrievedEvidence] = []
     seen: set = set()
@@ -422,6 +455,13 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
             seen.add(series_id)
 
             observations = fetch_fred_series(series_id, limit=3)
+
+            # ── [4] RAW FRED OBSERVATIONS COUNT ──────────────────────────────
+            print(
+                f"[DIAG] 4. RAW FRED OBSERVATIONS — {series_id}: "
+                f"{len(observations)} observation(s)"
+            )
+
             if not observations:
                 continue
 
@@ -454,7 +494,15 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
             )
 
     evidence.sort(key=lambda e: e.relevance_score, reverse=True)
-    return evidence[:5]
+    final = evidence[:5]
+
+    # ── [5] FINAL RETRIEVED EVIDENCE OBJECTS ──────────────────────────────────
+    print(f"[DIAG] 5. FINAL RETRIEVED EVIDENCE OBJECTS: {len(final)} item(s)")
+    for i, ev in enumerate(final, 1):
+        print(f"[DIAG]    [{i}] {ev.title}  (relevance={ev.relevance_score:.2f})")
+
+    print("=" * 60 + "\n")
+    return final
 
 
 # ── Test / development helpers ────────────────────────────────────────────────
