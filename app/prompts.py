@@ -106,10 +106,10 @@ def _evidence_synthesis_block(
 
     When evidence is present the block:
     1. Mandates evidence-first synthesis in the 'answer' field.
-    2. Adds a quality guard when the question contains temporal markers
-       ('today', 'right now', 'currently', etc.).
-    3. Provides a worked Treasury-yield example of what good synthesis looks like.
-    4. Closes with the canonical rule: evidence first, concepts second.
+    2. Requires at least one named evidence term in the first paragraph.
+    3. Adds a quality guard + first-sentence rule for temporal questions.
+    4. Provides a worked Treasury-yield example of what good synthesis looks like.
+    5. Closes with the canonical rule: evidence first, concepts second.
     """
     if not evidence:
         # ── [7] SYNTHESIS BLOCK ────────────────────────────────────────────────
@@ -144,6 +144,15 @@ def _evidence_synthesis_block(
         "  4. Use specific values from the evidence (e.g. a rate level, a date) when helpful.",
         "  5. If evidence is thin or dated, note the limitation briefly in caveats — still lead with it.",
         "",
+        "HARD RULE — EVIDENCE REFERENCE REQUIRED:",
+        "Your 'answer' field MUST directly name at least one piece of evidence from",
+        "CURRENT CONTEXT. Acceptable terms (use these words):",
+        "  10-year Treasury  |  2-year Treasury  |  yield curve  |  2s10s spread",
+        "  Fed funds rate  |  federal funds rate  |  CPI  |  consumer price",
+        "  unemployment rate  |  GDP  |  industrial production",
+        "An answer that describes bond yield mechanics without naming any of these",
+        "does NOT satisfy this requirement — it will be treated as a failed response.",
+        "",
     ]
 
     if is_temporal:
@@ -152,6 +161,12 @@ def _evidence_synthesis_block(
             "A conceptual answer that ignores the CURRENT CONTEXT above FAILS this question.",
             "The retrieved evidence tells you what is happening now — lead with it.",
             "Synthesize the evidence first. Explain the mechanism second.",
+            "",
+            "FIRST SENTENCE RULE — applies because this is a temporal question:",
+            "Your very first sentence MUST state what current drivers are pushing the move.",
+            "It must NOT explain a general mechanism.",
+            "❌ WRONG first sentence: 'Bond yields rise when investors expect higher inflation...'",
+            "✅ RIGHT first sentence: 'Treasury yields are rising because [specific current driver]...'",
             "",
         ]
 
@@ -523,7 +538,17 @@ def general_finance_prompt(
         f'That is still a complete, useful answer. An empty answer is never acceptable.'
     )
 
+    # Evidence and synthesis instructions appear FIRST so they are never buried
+    # below examples and tone rules that the model may weight more heavily.
+    evidence_section = _format_evidence_section(evidence)
+    synthesis_block  = _evidence_synthesis_block(question, evidence)
+
     return (
+        # ── Evidence context at the very top — model reads this first ────────
+        f"{evidence_section}"
+        f"{synthesis_block}"
+
+        # ── Identity and critical floor ───────────────────────────────────────
         "You are a senior financial analyst explaining finance to a smart, curious person "
         "who is not a professional investor.\n\n"
 
@@ -712,8 +737,6 @@ def general_finance_prompt(
         '  ]\n'
         "}\n\n"
 
-        f"{_format_evidence_section(evidence)}"
-        f"{_evidence_synthesis_block(question, evidence)}"
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )
@@ -739,7 +762,15 @@ def general_fallback_prompt(question: str, evidence: Optional[List[RetrievedEvid
     evidence : list  Optional retrieved evidence; injected as "Current Context"
                      when provided.  Falls back to conceptual reasoning when empty.
     """
+    # Evidence and synthesis instructions appear FIRST (same pattern as general_finance_prompt).
+    evidence_section = _format_evidence_section(evidence)
+    synthesis_block  = _evidence_synthesis_block(question, evidence)
+
     return (
+        # ── Evidence context at the very top — model reads this first ────────
+        f"{evidence_section}"
+        f"{synthesis_block}"
+
         "You are a knowledgeable analyst with broad expertise in economics, finance, "
         "and business. A user has asked a question that may or may not be directly "
         "about investing — answer it clearly and conversationally regardless.\n\n"
@@ -831,8 +862,6 @@ def general_fallback_prompt(question: str, evidence: Optional[List[RetrievedEvid
         '  ]\n'
         "}\n\n"
 
-        f"{_format_evidence_section(evidence)}"
-        f"{_evidence_synthesis_block(question, evidence)}"
         f"━━━ USER QUESTION ━━━\n{question}\n\n"
         "Return only the JSON object. No prose before or after it."
     )

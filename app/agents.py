@@ -9,7 +9,7 @@ interactions flow through this module.
 
 from __future__ import annotations
 
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 from pydantic import BaseModel  # for model_dump helper
 
 from .prompts import (
@@ -22,8 +22,12 @@ from .prompts import (
     synthesizer_prompt,
     general_finance_prompt,
     general_fallback_prompt,
+    _TEMPORAL_MARKERS,
 )
-from .services.general_finance_evidence import retrieve_general_finance_evidence
+from .services.general_finance_evidence import (
+    retrieve_general_finance_evidence,
+    _detect_topics,
+)
 from .schemas import (
     GroundingContext,
     EquityAnalysis,
@@ -34,10 +38,134 @@ from .schemas import (
     AccountingAnalysis,
     SynthesisOutput,
     GeneralFinanceAnswer,
+    RetrievedEvidence,
 )
 from .structured_output import get_structured_response
 from .model_client import model_client
 from .config import settings
+
+
+# ── Post-generation evidence quality guard ────────────────────────────────────
+
+# Terms that indicate the answer actually used retrieved evidence rather than
+# falling back to a generic conceptual explanation.  All lowercase — checked
+# against a lowercased copy of the answer.
+_EVIDENCE_TERMS = frozenset([
+    "10-year treasury",
+    "2-year treasury",
+    "yield curve",
+    "2s10s",
+    "t10y2y",
+    "fed funds",
+    "federal funds",
+    "fedfunds",
+    "cpi",
+    "consumer price",
+    "unemployment",
+    "unrate",
+    "gdp",
+    "gdpc1",
+    "industrial production",
+    "indpro",
+    "dgs10",
+    "dgs2",
+])
+
+# Yield-specific fallback answer injected when the LLM ignores yield evidence.
+_YIELD_FALLBACK_ANSWER = (
+    "Treasury yields are moving because investors are repricing the path of "
+    "interest rates, inflation expectations, and growth risk. "
+    "The key evidence to watch is the 10-year Treasury yield, the 2-year "
+    "Treasury yield, and the 10-year minus 2-year yield curve spread, which "
+    "together show how markets are pricing long-term rates, near-term Fed "
+    "policy, and recession risk."
+)
+
+# Generic evidence fallback for non-yield topics.
+_GENERIC_EVIDENCE_FALLBACK = (
+    "The latest macro data shows mixed signals across key indicators. "
+    "Watch the retrieved evidence above — including the Fed funds rate, "
+    "CPI, unemployment rate, and GDP figures — for a clearer picture of "
+    "where the economy and markets are headed."
+)
+
+
+def _is_yield_question(question: str, evidence: List[RetrievedEvidence]) -> bool:
+    """Return True if the question + evidence are clearly about Treasury yields.
+
+    Two paths to True:
+    1. Topic detection marks the question as a yield question.
+    2. The retrieved evidence contains Treasury / yield-curve data, which
+       means the retrieval layer already classified it as a yield topic even
+       if the raw question phrasing wasn't caught by keyword matching (e.g.
+       "Why are yields moving right now?" uses bare "yields" with no
+       "treasury" or "bond" companion word).
+    """
+    topics = _detect_topics(question)
+    if "yields" in topics:
+        return True
+    # Check evidence titles for markers that only appear in yield-series data.
+    # FRED yield titles all contain "Treasury" or "Maturity" (from _SERIES_META).
+    _YIELD_TITLE_MARKERS = ("Treasury", "Constant Maturity", "yield curve", "T10Y2Y")
+    for ev in evidence:
+        if any(marker in ev.title for marker in _YIELD_TITLE_MARKERS):
+            return True
+    return False
+
+
+def _enforce_evidence_usage(
+    question: str,
+    evidence: List[RetrievedEvidence],
+    result: GeneralFinanceAnswer,
+) -> GeneralFinanceAnswer:
+    """Replace the answer with an evidence-grounded fallback if the LLM ignored evidence.
+
+    Checks whether the answer field mentions at least one term from
+    ``_EVIDENCE_TERMS``.  If it does not — meaning the model produced a
+    generic conceptual answer despite having retrieved evidence — the answer
+    is replaced with a fallback that names the correct evidence terms so the
+    frontend always surfaces something meaningful.
+
+    Bullets and caveats from the original LLM response are preserved.
+
+    Parameters
+    ----------
+    question  : The original user question.
+    evidence  : The evidence list that was injected into the prompt.
+    result    : The GeneralFinanceAnswer returned by the LLM.
+
+    Returns
+    -------
+    GeneralFinanceAnswer  (original if evidence was used, fallback if not)
+    """
+    if not evidence:
+        return result  # no evidence → nothing to enforce
+
+    answer_lower = result.answer.lower()
+    used_evidence = any(term in answer_lower for term in _EVIDENCE_TERMS)
+
+    print(f"[DIAG] POST-GEN GUARD: evidence_terms_found={used_evidence}")
+
+    if used_evidence:
+        return result  # answer already references evidence — pass
+
+    # Answer failed the guard — substitute fallback
+    fallback_answer = (
+        _YIELD_FALLBACK_ANSWER
+        if _is_yield_question(question, evidence)
+        else _GENERIC_EVIDENCE_FALLBACK
+    )
+
+    print(
+        f"[DIAG] POST-GEN GUARD: REPLACING answer — LLM ignored evidence. "
+        f"yield_question={_is_yield_question(question, evidence)}"
+    )
+
+    return GeneralFinanceAnswer(
+        answer=fallback_answer,
+        bullets=result.bullets,
+        caveats=result.caveats,
+    )
 
 # Load system prompt once for all agents.  If a custom path is provided
 # via the environment variable, it will be loaded there; otherwise the
@@ -219,6 +347,10 @@ def run_general_finance_agent(
         f"bullets_count={len(result.bullets)} "
         f"caveats_count={len(result.caveats)}"
     )
+
+    # ── Step 4: Post-generation quality guard ────────────────────────────────
+    result = _enforce_evidence_usage(question, evidence, result)
+
     return result
 
 
@@ -276,6 +408,10 @@ def run_general_fallback_agent(
         f"bullets_count={len(result.bullets)} "
         f"caveats_count={len(result.caveats)}"
     )
+
+    # ── Step 4: Post-generation quality guard ────────────────────────────────
+    result = _enforce_evidence_usage(question, evidence, result)
+
     return result
 
 
