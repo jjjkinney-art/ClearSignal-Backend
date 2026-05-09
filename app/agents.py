@@ -351,6 +351,14 @@ def run_general_finance_agent(
     # ── Step 4: Post-generation quality guard ────────────────────────────────
     result = _enforce_evidence_usage(question, evidence, result)
 
+    # ── Step 5: Stamp evidence count for the router ───────────────────────────
+    # route_question reads this to decide whether the generic-language fallback
+    # gate should apply.  Set it AFTER the quality guard so it always reflects
+    # how many FRED items were actually retrieved, regardless of whether the
+    # guard replaced the answer.
+    result.evidence_count = len(evidence)
+    print(f"[run_general_finance_agent] evidence_count stamped on result: {result.evidence_count}")
+
     return result
 
 
@@ -411,6 +419,10 @@ def run_general_fallback_agent(
 
     # ── Step 4: Post-generation quality guard ────────────────────────────────
     result = _enforce_evidence_usage(question, evidence, result)
+
+    # ── Step 5: Stamp evidence count for the router ───────────────────────────
+    result.evidence_count = len(evidence)
+    print(f"[run_general_fallback_agent] evidence_count stamped on result: {result.evidence_count}")
 
     return result
 

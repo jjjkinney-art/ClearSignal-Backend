@@ -678,53 +678,57 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         # We mutate the model object BEFORE serialization so that no subsequent
         # model_dump / dict call can ever return the empty values.
         #
-        # Evidence-bypass rule: if the answer already references real retrieved
-        # evidence (e.g. "10-year Treasury", "CPI", "yield curve") we must NOT
-        # discard it with a static fallback — the live FRED data is more useful
-        # than any canned text.  We only apply the generic-language check when
-        # there is no evidence signal in the answer.
+        # Evidence-gate rule (definitive):
+        #   The agent stamps result.evidence_count with the number of FRED
+        #   items it retrieved.  When evidence_count > 0 the LLM had real data
+        #   in its prompt, so its answer is always kept UNLESS it is empty or
+        #   shorter than 40 chars.  The generic-language gate (_is_generic_answer)
+        #   is ONLY applied when evidence_count == 0 — i.e. when the agent fell
+        #   back to pure conceptual reasoning with no live data.
         #
-        # Three triggers (checked in order):
-        #   a) answer is too short (< 40 chars) — always replace, even if it
-        #      contains an evidence term (a 10-char answer is useless)
-        #   b) answer references evidence terms → SKIP generic-language check;
-        #      treat the answer as good
-        #   c) answer contains generic category language and no evidence terms
-        #      → replace with topic-aware fallback
+        # Trigger matrix:
+        #   answer empty / len < 40          → always replace (too_short)
+        #   evidence_count > 0, len ≥ 40     → keep answer  (evidence_backed)
+        #   evidence_count == 0, generic txt → replace      (generic_language)
+        #   evidence_count == 0, ok text     → keep answer  (ok)
 
-        answer_lower = current_answer.lower()
-        answer_has_evidence = any(
-            term in answer_lower for term in _ROUTER_EVIDENCE_TERMS
-        )
+        evidence_count: int = getattr(result, "evidence_count", 0)
+        has_evidence: bool = evidence_count > 0
+
         print(
-            f"[route_question] EVIDENCE BYPASS CHECK: "
-            f"answer_has_evidence={answer_has_evidence} "
-            f"len={len(current_answer)}"
+            f"[DIAG] ROUTER FALLBACK DECISION "
+            f"evidence_count={evidence_count} "
+            f"has_evidence={has_evidence} "
+            f"answer_len={len(current_answer)}"
         )
 
         answer_needs_replacement: bool
-        if len(current_answer) < 40:
-            # Always replace a near-empty answer.
+        if not current_answer or len(current_answer) < 40:
             answer_needs_replacement = True
             reason = "too_short"
-        elif answer_has_evidence:
-            # Answer used real evidence — keep it, skip generic-language gate.
+        elif has_evidence:
+            # Agent had real FRED data — trust its answer unconditionally.
             answer_needs_replacement = False
-            reason = "evidence_present"
+            reason = "evidence_backed"
         else:
-            # No evidence terms found — apply the generic-language check.
+            # No evidence retrieved — apply the generic-language gate.
             answer_needs_replacement = _is_generic_answer(current_answer)
             reason = "generic_language" if answer_needs_replacement else "ok"
 
+        print(
+            f"[DIAG] ROUTER FALLBACK DECISION "
+            f"evidence_count={evidence_count} "
+            f"has_evidence={has_evidence} "
+            f"reason={reason}"
+        )
+
         if answer_needs_replacement:
-            # When evidence exists in the answer but it's still too short
-            # (len < 40), OR when no evidence and generic language is detected,
-            # choose the best fallback:
+            # Choose the best fallback answer:
             #   • yield question → _YIELD_FALLBACK_ANSWER (mentions specific
             #     FRED series: 10-Year, 2-Year, yield curve spread)
             #   • other topic   → _topic_aware_fallback() static text
             topics = _detect_topics(request.question)
-            # Also handle bare "yields" queries whose normalized form contains
+            # Also catch bare "yields" queries whose normalized form contains
             # "yields" as a standalone token but doesn't match any compound
             # phrase in _TOPIC_KEYWORDS (e.g. "Why are yields rising?").
             _nq = _normalize_macro_query(request.question)

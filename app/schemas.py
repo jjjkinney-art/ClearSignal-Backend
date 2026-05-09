@@ -342,6 +342,14 @@ class GeneralFinanceAnswer(BaseModel):
         default_factory=list,
         description="1–2 honest caveats: what could change this view or what to watch",
     )
+    # Internal routing metadata — set by the agent after evidence retrieval so
+    # route_question can gate the generic-language fallback on whether real FRED
+    # data was available.  Not part of the user-facing API contract; the
+    # frontend ignores unknown fields.
+    evidence_count: int = Field(
+        default=0,
+        description="Number of FRED evidence items retrieved for this answer (routing metadata)",
+    )
 
 
 class QuestionRequest(BaseModel):
