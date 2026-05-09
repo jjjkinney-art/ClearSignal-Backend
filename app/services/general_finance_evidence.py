@@ -16,10 +16,11 @@ When the environment variable FRED_API_KEY is set, this service fetches
 live macro data from the St. Louis Fed FRED API and converts it to
 RetrievedEvidence objects:
 
-  Interest rates / Fed policy  →  FEDFUNDS, DFEDTARU, DFEDTARL
+  Interest rates / Fed policy  →  FEDFUNDS, DFEDTARU, DFEDTARL, DGS2, DGS10
   Treasury / bond yields       →  DGS10, DGS2, T10Y2Y
-  Inflation                    →  CPIAUCSL, CPILFESL
-  Recession / economy          →  UNRATE, GDPC1, INDPRO
+  Inflation                    →  CPIAUCSL, CPILFESL, PCEPILFE
+  Recession / economy          →  T10Y2Y, UNRATE, A191RL1Q225SBEA, INDPRO
+  Market conditions            →  VIXCLS, BAMLH0A0HYM2, BAMLC0A0CM
 
 If FRED_API_KEY is absent, topics don't match, or any network/API error
 occurs, retrieve_general_finance_evidence() returns [] so the prompt
@@ -137,6 +138,41 @@ _SERIES_META: dict = {
         "mining, and utilities. Sustained declines signal contraction in "
         "goods-producing sectors ahead of broader slowdowns.",
     ),
+    "PCEPILFE": (
+        "Core PCE Price Index (Excl. Food & Energy)",
+        "",
+        "Core PCE is the Federal Reserve's preferred inflation gauge, stripping "
+        "out volatile food and energy prices to reveal underlying price pressure. "
+        "The Fed targets 2% core PCE; readings persistently above that delay rate cuts.",
+    ),
+    "A191RL1Q225SBEA": (
+        "Real GDP Growth Rate (Quarterly, SAAR %)",
+        "%",
+        "Real GDP growth shows whether the economy is expanding or contracting on "
+        "a seasonally adjusted annualised basis. Two consecutive negative quarters "
+        "meet the informal recession definition.",
+    ),
+    "VIXCLS": (
+        "CBOE Volatility Index (VIX)",
+        "",
+        "The VIX measures expected 30-day S&P 500 volatility implied by options prices. "
+        "Readings above 20 signal elevated uncertainty; above 30 indicate fear-driven "
+        "de-risking; spikes above 40 reflect crisis-level stress.",
+    ),
+    "BAMLH0A0HYM2": (
+        "ICE BofA US High Yield Option-Adjusted Spread",
+        " pp",
+        "The high-yield OAS measures the extra yield investors demand over Treasuries "
+        "to hold sub-investment-grade bonds. Widening spreads signal rising default risk "
+        "and credit-market stress; tightening reflects improving risk appetite.",
+    ),
+    "BAMLC0A0CM": (
+        "ICE BofA US Corporate Bond Option-Adjusted Spread",
+        " pp",
+        "The investment-grade corporate OAS tracks the risk premium over Treasuries "
+        "for IG credit. Widening signals credit stress even before a default cycle; "
+        "tightening reflects easy financial conditions and strong demand for credit.",
+    ),
 }
 
 
@@ -146,23 +182,32 @@ _SERIES_META: dict = {
 
 _TOPIC_SERIES: dict = {
     "rates_fed": [
-        ("FEDFUNDS", 0.95),
-        ("DFEDTARU", 0.88),
-        ("DFEDTARL", 0.85),
+        ("FEDFUNDS",  0.95),   # effective fed funds rate
+        ("DFEDTARU",  0.88),   # target upper bound
+        ("DFEDTARL",  0.85),   # target lower bound
+        ("DGS2",      0.80),   # 2-yr Treasury tracks near-term policy expectations
+        ("DGS10",     0.72),   # 10-yr for broader rate environment context
     ],
     "yields": [
-        ("DGS10", 0.95),
-        ("DGS2", 0.88),
+        ("DGS10",  0.95),
+        ("DGS2",   0.88),
         ("T10Y2Y", 0.80),
     ],
     "inflation": [
-        ("CPIAUCSL", 0.95),
-        ("CPILFESL", 0.90),
+        ("CPIAUCSL",  0.95),   # headline CPI
+        ("CPILFESL",  0.90),   # core CPI (excl. food & energy)
+        ("PCEPILFE",  0.85),   # core PCE — the Fed's preferred gauge
     ],
     "recession": [
-        ("UNRATE", 0.90),
-        ("GDPC1", 0.85),
-        ("INDPRO", 0.80),
+        ("T10Y2Y",           0.92),  # yield curve — leading recession signal
+        ("UNRATE",           0.88),  # unemployment rate
+        ("A191RL1Q225SBEA",  0.84),  # real GDP growth rate (quarterly SAAR %)
+        ("INDPRO",           0.78),  # industrial production
+    ],
+    "market_conditions": [
+        ("VIXCLS",        0.92),  # CBOE VIX — fear/volatility gauge
+        ("BAMLH0A0HYM2",  0.88),  # high-yield credit spread
+        ("BAMLC0A0CM",    0.82),  # investment-grade credit spread
     ],
 }
 
@@ -174,10 +219,14 @@ _TOPIC_SERIES: dict = {
 _TOPIC_KEYWORDS: dict = {
     "rates_fed": [
         "interest rate", "fed rate", "fed funds", "federal reserve", "fomc",
-        "rate cut", "cut rate",          # covers both "rate cut" and "cut rates"
+        "rate cut", "cut rate",           # covers both "rate cut" and "cut rates"
         "rate hike", "rate increase", "rate decrease",
         "monetary policy", "hiking", "cutting rate", "powell",
-        " fed ",                          # "the Fed", "when the Fed"
+        " fed ",                           # "the Fed", "when the Fed"
+        # colloquial Fed-action phrases (see _NORMALIZATIONS for canonical forms)
+        "fed cut", "fed hike", "fed cuts", "fed hikes",
+        "fed pivot", "fed pause", "fed hold",
+        "rate cuts", "rate reduction",
     ],
     "yields": [
         # canonical forms produced by normalize_macro_query
@@ -192,13 +241,32 @@ _TOPIC_KEYWORDS: dict = {
     ],
     "inflation": [
         "inflation", "cpi", "consumer price", "deflation", "disinflation",
-        "price level", "purchasing power", "pce", "core inflation",
+        "price level", "purchasing power", "pce", "core inflation", "core pce",
         "price increase", "price rise",
+        # additional colloquials
+        "inflation rising", "inflation falling", "inflation higher", "inflation lower",
+        "sticky inflation", "price pressures", "price pressure", "inflationary",
+        "pce inflation", "pce price",
     ],
     "recession": [
         "recession", "unemployment", "gdp", "economic growth", "contraction",
         "industrial production", "jobs report", "labor market",
         "slowdown", "downturn", "economy",
+        # additional recession-risk phrases
+        "recession risk", "growth risk", "hard landing", "soft landing",
+        "economic slowdown", "economic contraction", "negative growth",
+        # yield-curve inversion phrasing (supplement to yields topic)
+        "inverted yield", "yield curve invert", "curve inversion",
+        "inversion", "2s10s",
+    ],
+    "market_conditions": [
+        "vix", "market volatility", "volatility spike", "volatility index",
+        "credit spread", "credit spreads", "high yield spread",
+        "junk bond spread", "junk bond", "high yield",
+        "risk off", "risk-off", "risk appetite",
+        "spreads widening", "spread widening", "spreads widen",
+        "financial conditions", "financial stress", "market stress",
+        "credit stress", "flight to quality", "flight to safety",
     ],
 }
 
@@ -238,6 +306,26 @@ _NORMALIZATIONS: list = [
     ("rates going up",              "yields rising"),
     ("rates moving higher",         "yields rising"),
     ("rates rising",                "yields rising"),
+    # ── Colloquial Fed-action phrases → canonical keyword forms ───────────────
+    # More specific phrases must come before shorter substrings (e.g.
+    # "fed cuts rates" before "fed cuts") so they match first.
+    ("fed cuts rates",              "rate cut"),
+    ("fed hikes rates",             "rate hike"),
+    ("fed cutting rates",           "rate cut"),
+    ("fed hiking rates",            "rate hike"),
+    ("fed is cutting",              "rate cut"),
+    ("fed is hiking",               "rate hike"),
+    ("fed are cutting",             "rate cut"),
+    ("fed are hiking",              "rate hike"),
+    # ── Yield-curve inversion colloquials → canonical "yield curve" ───────────
+    ("inverted yield curve",        "yield curve"),
+    ("yield curve inverted",        "yield curve"),
+    ("yield curve inversion",       "yield curve"),
+    ("curve is inverted",           "yield curve"),
+    # ── Credit / volatility colloquials ──────────────────────────────────────
+    ("credit spreads are widening", "credit spreads widening"),
+    ("spreads are widening",        "credit spreads widening"),
+    ("spreads blowing out",         "credit spreads widening"),
 ]
 
 
@@ -406,6 +494,18 @@ def _detect_topics(question: str) -> List[str]:
     ):
         topics.append("yields")
 
+    # ── Inversion / 2s10s rule ────────────────────────────────────────────────
+    # "inverted yield curve" and related phrases should pull both the yields
+    # topic (for current rate data) and the recession topic (for context on
+    # what an inversion historically signals).  After normalisation "yield curve"
+    # covers the yields side; this rule ensures recession is also included.
+    _INVERSION_SIGNALS = ("yield curve", "inverted yield", "2s10s", "curve inversion")
+    if (
+        any(sig in q for sig in _INVERSION_SIGNALS)
+        and "recession" not in topics
+    ):
+        topics.append("recession")
+
     return topics
 
 
@@ -421,7 +521,7 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
     3. For each matching topic, fetch the associated FRED series.
     4. Convert each observation into a RetrievedEvidence object with a
        human-readable title and summary from ``_SERIES_META``.
-    5. Deduplicate, sort by relevance_score descending, return top 5.
+    5. Deduplicate, sort by relevance_score descending, return top 6.
 
     On any error (missing key, network failure, bad JSON, …) the function
     returns ``[]`` so the prompt degrades gracefully to conceptual reasoning.
@@ -528,7 +628,7 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
             )
 
     evidence.sort(key=lambda e: e.relevance_score, reverse=True)
-    final = evidence[:5]
+    final = evidence[:6]   # cap at 6 — gives room for multi-topic coverage
 
     # ── [5] FINAL RETRIEVED EVIDENCE OBJECTS ──────────────────────────────────
     print(f"[DIAG] 5. FINAL RETRIEVED EVIDENCE OBJECTS: {len(final)} item(s)")

@@ -190,8 +190,10 @@ class TestTopicSeriesMapping:
     def test_recession_includes_unrate(self):
         assert "UNRATE" in self._series_ids("recession")
 
-    def test_recession_includes_gdpc1(self):
-        assert "GDPC1" in self._series_ids("recession")
+    def test_recession_includes_gdp_growth_rate(self):
+        # GDPC1 (level) was replaced by A191RL1Q225SBEA (quarterly growth rate),
+        # which is more useful for recession detection.
+        assert "A191RL1Q225SBEA" in self._series_ids("recession")
 
     def test_recession_includes_indpro(self):
         assert "INDPRO" in self._series_ids("recession")
@@ -350,7 +352,9 @@ class TestRetrieveWithMockedFetch:
         retrieve_general_finance_evidence("How do interest rates affect tech stocks?")
         assert "FEDFUNDS" in fetched
 
-    def test_recession_question_fetches_unrate_gdpc1_indpro(self, monkeypatch):
+    def test_recession_question_fetches_core_series(self, monkeypatch):
+        # GDPC1 (level) was replaced by A191RL1Q225SBEA (GDP growth rate) and
+        # T10Y2Y (yield curve) was added as the leading recession indicator.
         monkeypatch.setenv("FRED_API_KEY", "test-key")
         fetched = []
 
@@ -363,8 +367,9 @@ class TestRetrieveWithMockedFetch:
         )
         retrieve_general_finance_evidence("Are we heading into a recession?")
         assert "UNRATE" in fetched
-        assert "GDPC1" in fetched
+        assert "A191RL1Q225SBEA" in fetched   # GDP growth rate (replaces GDPC1 level)
         assert "INDPRO" in fetched
+        assert "T10Y2Y" in fetched            # yield curve — leading recession indicator
 
     def test_returns_retrieved_evidence_instances(self, monkeypatch):
         monkeypatch.setenv("FRED_API_KEY", "test-key")
@@ -393,8 +398,10 @@ class TestRetrieveWithMockedFetch:
         scores = [e.relevance_score for e in result]
         assert scores == sorted(scores, reverse=True)
 
-    def test_caps_at_five_items(self, monkeypatch):
-        """Multi-topic question cannot return more than 5 evidence items."""
+    def test_caps_at_six_items(self, monkeypatch):
+        """Multi-topic question cannot return more than 6 evidence items.
+        The cap was raised from 5 → 6 to give better coverage when multiple
+        topics match (e.g. rates_fed + inflation together have 8 series)."""
         monkeypatch.setenv("FRED_API_KEY", "test-key")
 
         def fake_fetch(series_id, limit=5):
@@ -403,12 +410,12 @@ class TestRetrieveWithMockedFetch:
         monkeypatch.setattr(
             "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
         )
-        # inflation + rates_fed touches FEDFUNDS, DFEDTARU, DFEDTARL,
-        # CPIAUCSL, CPILFESL = 5 series (all will return evidence)
+        # inflation + rates_fed now touches FEDFUNDS, DFEDTARU, DFEDTARL,
+        # DGS2, DGS10, CPIAUCSL, CPILFESL, PCEPILFE = 8 series; cap → 6
         result = retrieve_general_finance_evidence(
             "How does inflation affect interest rates and the Fed's rate decisions?"
         )
-        assert len(result) <= 5
+        assert len(result) <= 6
 
     def test_no_duplicate_series_in_output(self, monkeypatch):
         """Same series never appears twice even when two topics claim it."""
