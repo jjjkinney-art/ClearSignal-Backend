@@ -301,14 +301,32 @@ def fetch_fred_series(series_id: str, limit: int = 5) -> List[dict]:
     if not api_key:
         return []
 
-    params = urlencode({
+    # Build the request params in the order the FRED API docs specify.
+    # sort_order=desc returns the most recent observations first so we can
+    # take observations[0] as the latest value without slicing.
+    req_params: dict = {
         "series_id": series_id,
         "api_key": api_key,
+        "file_type": "json",
         "sort_order": "desc",
         "limit": str(limit),
+    }
+    url = f"{_FRED_BASE}/series/observations?{urlencode(req_params)}"
+
+    # ── Diagnostic: log the request with a masked API key ─────────────────────
+    # Show only the first 4 characters so the real key never appears in logs.
+    key_hint = (api_key[:4] + "...") if len(api_key) >= 4 else "***"
+    safe_params = urlencode({
+        "series_id": series_id,
+        "api_key": key_hint,
         "file_type": "json",
+        "sort_order": "desc",
+        "limit": str(limit),
     })
-    url = f"{_FRED_BASE}/series/observations?{params}"
+    print(
+        f"[DIAG] FRED REQUEST — {_FRED_BASE}/series/observations?{safe_params} "
+        f"(key_len={len(api_key)})"
+    )
 
     try:
         with urlopen(url, timeout=8) as resp:
@@ -319,13 +337,29 @@ def fetch_fred_series(series_id: str, limit: int = 5) -> List[dict]:
             if o.get("value") not in (".", None, "")
         ]
     except HTTPError as exc:
-        logger.warning("FRED HTTP error for %s: %d %s", series_id, exc.code, exc.reason)
+        # Read the error body — FRED includes a human-readable reason for 400s
+        # (e.g. "Bad Request. Variable api_key is not correctly formatted.").
+        error_body = ""
+        try:
+            error_body = exc.read().decode("utf-8", errors="replace")
+        except Exception:
+            pass
+        logger.warning(
+            "FRED HTTP %d for %s: %s | body: %s",
+            exc.code, series_id, exc.reason, error_body[:500],
+        )
+        print(
+            f"[DIAG] FRED HTTP {exc.code} for {series_id}: {exc.reason!r} "
+            f"| body: {error_body[:500]!r}"
+        )
         return []
     except URLError as exc:
         logger.warning("FRED network error for %s: %r", series_id, exc.reason)
+        print(f"[DIAG] FRED NETWORK ERROR for {series_id}: {exc.reason!r}")
         return []
     except Exception as exc:
         logger.warning("FRED unexpected error for %s: %r", series_id, exc)
+        print(f"[DIAG] FRED UNEXPECTED ERROR for {series_id}: {exc!r}")
         return []
 
 

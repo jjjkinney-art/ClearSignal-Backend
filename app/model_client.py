@@ -56,6 +56,25 @@ class ModelClient:
         self._client: Optional[Any] = None
         if _OPENAI_AVAILABLE and api_key:
             self._client = OpenAI(api_key=api_key, timeout=timeout)
+        else:
+            if not _OPENAI_AVAILABLE:
+                print(
+                    "[MODEL_CLIENT] WARNING: openai package is not installed — "
+                    "ModelClient._client=None; all LLM calls will fail."
+                )
+                logger.warning("openai package not installed — ModelClient unavailable")
+            else:
+                # openai is installed but no key was supplied at construction time.
+                # The most likely cause is OPENAI_API_KEY not set in the environment.
+                print(
+                    "[MODEL_CLIENT] CRITICAL: OPENAI_API_KEY is not set or empty — "
+                    "ModelClient._client=None.  Every call to /api/ask will raise "
+                    "RuntimeError until OPENAI_API_KEY is added to the environment."
+                )
+                logger.warning(
+                    "OPENAI_API_KEY is empty — ModelClient._client is None; "
+                    "all LLM calls will raise RuntimeError"
+                )
 
     def call(self, prompt: str, system_prompt: str = "", request_id: Optional[str] = None) -> str:
         """Call the OpenAI chat completions API and return the response text.
@@ -87,8 +106,10 @@ class ModelClient:
 
         if self._client is None:
             raise RuntimeError(
-                "OpenAI client is not available. "
-                "Ensure openai>=1.0 is installed and OPENAI_API_KEY is set."
+                "OPENAI_API_KEY IS MISSING OR EMPTY — cannot make model call. "
+                "Set OPENAI_API_KEY in the environment or .env file and restart "
+                "the server.  Check [STARTUP] and [MODEL_CLIENT] log lines for "
+                "the key-presence status recorded at startup."
             )
 
         messages: List[Dict[str, str]] = []

@@ -13,6 +13,9 @@ Coverage:
   - Fetched evidence appears in general_finance_prompt() output
   - run_general_finance_agent() still returns a valid GeneralFinanceAnswer
     when FRED raises an exception (resilience test)
+  - FRED request URL and params are correctly formed (TestFredRequestParams)
+  - 400 HTTPError reads response body for diagnostics (TestFredRequestParams)
+  - Startup diagnostic helper prints key presence (TestStartupDiagnostics)
 """
 
 from __future__ import annotations
@@ -641,3 +644,246 @@ class TestAgentResilienceWithFredFailure:
         result = ag.run_general_fallback_agent("Are we heading into a recession?")
         assert isinstance(result, GeneralFinanceAnswer)
         assert result.answer != ""
+
+
+# ── FRED request URL / params ─────────────────────────────────────────────────
+
+class TestFredRequestParams:
+    """Verify the exact URL and query parameters sent to the FRED API.
+
+    These tests patch urllib.request.urlopen at the module level and capture
+    the URL argument so we can assert on its structure without making real
+    network calls.
+    """
+
+    def _capturing_urlopen(self, captured_urls: list, observations=None):
+        """Return a fake urlopen that records the request URL."""
+        obs = observations if observations is not None else [
+            {"date": "2024-01-01", "value": "4.25"}
+        ]
+
+        def _urlopen(url, timeout=None):
+            captured_urls.append(url)
+            body = json.dumps({"observations": obs}).encode("utf-8")
+            mock_resp = MagicMock()
+            mock_resp.read.return_value = body
+            mock_resp.__enter__ = lambda s: s
+            mock_resp.__exit__ = MagicMock(return_value=False)
+            return mock_resp
+
+        return _urlopen
+
+    def test_request_goes_to_fred_observations_endpoint(self, monkeypatch):
+        """URL must point to the FRED series/observations endpoint."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        assert len(captured) == 1
+        assert "api.stlouisfed.org/fred/series/observations" in captured[0]
+
+    def test_request_contains_series_id(self, monkeypatch):
+        """URL must include the requested series_id as a query param."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        assert "series_id=DGS10" in captured[0]
+
+    def test_request_contains_different_series_id(self, monkeypatch):
+        """series_id param must reflect the argument, not a hardcoded value."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("CPIAUCSL")
+        assert "series_id=CPIAUCSL" in captured[0]
+        assert "series_id=DGS10" not in captured[0]
+
+    def test_request_contains_sort_order_desc(self, monkeypatch):
+        """URL must include sort_order=desc so the latest observation is first."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        assert "sort_order=desc" in captured[0]
+
+    def test_request_contains_file_type_json(self, monkeypatch):
+        """URL must include file_type=json to get a parseable response."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        assert "file_type=json" in captured[0]
+
+    def test_request_contains_limit_param(self, monkeypatch):
+        """URL must include the limit query param."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10", limit=3)
+        assert "limit=3" in captured[0]
+
+    def test_request_limit_default_is_five(self, monkeypatch):
+        """Default limit must be 5."""
+        monkeypatch.setenv("FRED_API_KEY", "testkey1234")
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        assert "limit=5" in captured[0]
+
+    def test_request_contains_api_key(self, monkeypatch):
+        """URL must contain the api_key parameter."""
+        key = "my_test_fred_key_xyz"
+        monkeypatch.setenv("FRED_API_KEY", key)
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        assert f"api_key={key}" in captured[0]
+
+    def test_api_key_stripped_of_whitespace(self, monkeypatch):
+        """Leading/trailing whitespace in FRED_API_KEY must be stripped."""
+        key = "  cleankey123  "
+        monkeypatch.setenv("FRED_API_KEY", key)
+        captured: list = []
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen(captured),
+        )
+        fetch_fred_series("DGS10")
+        # The stripped key must be in the URL; the padded version must not
+        assert "api_key=cleankey123" in captured[0]
+        assert "api_key=++cleankey123++" not in captured[0]
+
+    def test_diagnostic_print_masks_api_key(self, monkeypatch, capsys):
+        """Diagnostic output must NOT expose the full API key."""
+        full_key = "supersecretfredapikey99"
+        monkeypatch.setenv("FRED_API_KEY", full_key)
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.urlopen",
+            self._capturing_urlopen([]),
+        )
+        fetch_fred_series("DGS10")
+        out = capsys.readouterr().out
+        # Full key must not appear in stdout
+        assert full_key not in out
+        # But a masked version (first 4 chars) should appear
+        assert "supe..." in out
+
+    def test_400_error_reads_response_body(self, monkeypatch, capsys):
+        """When FRED returns 400, the response body must be printed for diagnosis."""
+        monkeypatch.setenv("FRED_API_KEY", "badkey")
+        error_payload = b'{"error_code":400,"error_message":"Bad api_key."}'
+        from urllib.error import HTTPError
+
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=HTTPError(
+                "url", 400, "Bad Request", {}, io.BytesIO(error_payload)
+            ),
+        ):
+            result = fetch_fred_series("DGS10")
+
+        assert result == []  # still returns [] gracefully
+        out = capsys.readouterr().out
+        # The 400 status and the error body must be visible in diagnostic output
+        assert "400" in out
+        assert "Bad Request" in out or "Bad api_key" in out
+
+    def test_400_does_not_crash(self, monkeypatch):
+        """A 400 response must be handled gracefully — no exception propagation."""
+        monkeypatch.setenv("FRED_API_KEY", "anykey")
+        from urllib.error import HTTPError
+
+        with patch(
+            "app.services.general_finance_evidence.urlopen",
+            side_effect=HTTPError(
+                "url", 400, "Bad Request", {}, io.BytesIO(b'{"error_code":400}')
+            ),
+        ):
+            result = fetch_fred_series("DGS10")  # must not raise
+
+        assert result == []
+
+
+# ── Startup diagnostics ───────────────────────────────────────────────────────
+
+class TestStartupDiagnostics:
+    """_print_startup_diagnostics reports key presence without leaking values."""
+
+    def test_both_keys_present(self, monkeypatch, capsys):
+        monkeypatch.setenv("FRED_API_KEY",   "fred-key-abc")
+        monkeypatch.setenv("OPENAI_API_KEY", "openai-key-xyz")
+        from app.startup import print_startup_diagnostics as _print_startup_diagnostics
+        _print_startup_diagnostics()
+        out = capsys.readouterr().out
+        assert "FRED_API_KEY present:   True" in out
+        assert "OPENAI_API_KEY present: True" in out
+        # Actual key values must not appear
+        assert "fred-key-abc"   not in out
+        assert "openai-key-xyz" not in out
+
+    def test_both_keys_absent(self, monkeypatch, capsys):
+        monkeypatch.delenv("FRED_API_KEY",   raising=False)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        from app.startup import print_startup_diagnostics as _print_startup_diagnostics
+        _print_startup_diagnostics()
+        out = capsys.readouterr().out
+        assert "FRED_API_KEY present:   False" in out
+        assert "OPENAI_API_KEY present: False" in out
+
+    def test_fred_missing_prints_warning(self, monkeypatch, capsys):
+        monkeypatch.delenv("FRED_API_KEY", raising=False)
+        monkeypatch.setenv("OPENAI_API_KEY", "some-key")
+        from app.startup import print_startup_diagnostics as _print_startup_diagnostics
+        _print_startup_diagnostics()
+        out = capsys.readouterr().out
+        assert "WARNING" in out
+        assert "FRED_API_KEY" in out
+
+    def test_openai_missing_prints_critical(self, monkeypatch, capsys):
+        monkeypatch.setenv("FRED_API_KEY",   "some-key")
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        from app.startup import print_startup_diagnostics as _print_startup_diagnostics
+        _print_startup_diagnostics()
+        out = capsys.readouterr().out
+        assert "CRITICAL" in out
+        assert "OPENAI_API_KEY" in out
+
+    def test_no_keys_does_not_crash(self, monkeypatch):
+        monkeypatch.delenv("FRED_API_KEY",   raising=False)
+        monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+        from app.startup import print_startup_diagnostics as _print_startup_diagnostics
+        _print_startup_diagnostics()  # must not raise
+
+    def test_key_length_reported(self, monkeypatch, capsys):
+        monkeypatch.setenv("FRED_API_KEY",   "abc123")
+        monkeypatch.setenv("OPENAI_API_KEY", "xyz789long")
+        from app.startup import print_startup_diagnostics as _print_startup_diagnostics
+        _print_startup_diagnostics()
+        out = capsys.readouterr().out
+        assert "len=6"  in out   # len("abc123")
+        assert "len=10" in out   # len("xyz789long")
