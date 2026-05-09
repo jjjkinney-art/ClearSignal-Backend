@@ -45,6 +45,8 @@ from .context_service import enrich_grounding_context  # import context enrichme
 # and ensures that both /ask and /analyze endpoints operate on
 # a provider‑backed GroundingContext.
 from .evidence_service import select_evidence_sources, build_evidence
+from .general_finance_evidence import _detect_topics, normalize_macro_query as _normalize_macro_query
+from ..agents import _YIELD_FALLBACK_ANSWER, _GENERIC_EVIDENCE_FALLBACK
 
 # Set up a module-level logger for structured logging.  This logger will
 # emit JSON-formatted messages about routing decisions.  The FastAPI
@@ -221,6 +223,28 @@ def classify_question(question: str) -> Dict[str, Any]:
         "reasons": reasons,
         "confidence": confidence,
     }
+
+
+# ── Evidence-aware answer-quality guard ──────────────────────────────────────
+# When the LLM answer already references real retrieved evidence, we must NOT
+# replace it with a static fallback — that would discard live FRED data.
+# This frozenset covers all the terms that can only appear in an answer when
+# actual evidence was used.  It is intentionally broader than the per-agent
+# _EVIDENCE_TERMS so that surface variants ("treasury yields" vs "treasury
+# yield") are both caught.
+_ROUTER_EVIDENCE_TERMS: frozenset = frozenset([
+    # Treasury / yield curve
+    "10-year treasury", "2-year treasury", "treasury yield", "treasury yields",
+    "yield curve", "2s10s", "t10y2y", "dgs10", "dgs2",
+    "constant maturity",
+    # Fed / monetary policy
+    "fed funds", "federal funds", "fedfunds", "fomc",
+    # Inflation
+    "cpi", "consumer price", "pce",
+    # Labour / real economy
+    "unemployment", "unrate", "nonfarm payroll",
+    "gdp", "gdpc1", "industrial production", "indpro",
+])
 
 
 # ── Topic-specific fallback answers ──────────────────────────────────────────
@@ -654,23 +678,70 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         # We mutate the model object BEFORE serialization so that no subsequent
         # model_dump / dict call can ever return the empty values.
         #
-        # Two triggers:
-        #   a) answer is too short (< 40 chars) — LLM returned empty/minimal
-        #   b) answer contains generic category language — LLM deflected instead
-        #      of answering directly ("This is a macro question...", etc.)
+        # Evidence-bypass rule: if the answer already references real retrieved
+        # evidence (e.g. "10-year Treasury", "CPI", "yield curve") we must NOT
+        # discard it with a static fallback — the live FRED data is more useful
+        # than any canned text.  We only apply the generic-language check when
+        # there is no evidence signal in the answer.
         #
-        # In both cases we replace with a topic-aware answer from
-        # _topic_aware_fallback(), which pattern-matches against the question.
-        answer_needs_replacement = (
-            len(current_answer) < 40
-            or _is_generic_answer(current_answer)
+        # Three triggers (checked in order):
+        #   a) answer is too short (< 40 chars) — always replace, even if it
+        #      contains an evidence term (a 10-char answer is useless)
+        #   b) answer references evidence terms → SKIP generic-language check;
+        #      treat the answer as good
+        #   c) answer contains generic category language and no evidence terms
+        #      → replace with topic-aware fallback
+
+        answer_lower = current_answer.lower()
+        answer_has_evidence = any(
+            term in answer_lower for term in _ROUTER_EVIDENCE_TERMS
+        )
+        print(
+            f"[route_question] EVIDENCE BYPASS CHECK: "
+            f"answer_has_evidence={answer_has_evidence} "
+            f"len={len(current_answer)}"
         )
 
+        answer_needs_replacement: bool
+        if len(current_answer) < 40:
+            # Always replace a near-empty answer.
+            answer_needs_replacement = True
+            reason = "too_short"
+        elif answer_has_evidence:
+            # Answer used real evidence — keep it, skip generic-language gate.
+            answer_needs_replacement = False
+            reason = "evidence_present"
+        else:
+            # No evidence terms found — apply the generic-language check.
+            answer_needs_replacement = _is_generic_answer(current_answer)
+            reason = "generic_language" if answer_needs_replacement else "ok"
+
         if answer_needs_replacement:
-            fallback_answer, fallback_bullets, fallback_caveats = _topic_aware_fallback(
-                request.question
+            # When evidence exists in the answer but it's still too short
+            # (len < 40), OR when no evidence and generic language is detected,
+            # choose the best fallback:
+            #   • yield question → _YIELD_FALLBACK_ANSWER (mentions specific
+            #     FRED series: 10-Year, 2-Year, yield curve spread)
+            #   • other topic   → _topic_aware_fallback() static text
+            topics = _detect_topics(request.question)
+            # Also handle bare "yields" queries whose normalized form contains
+            # "yields" as a standalone token but doesn't match any compound
+            # phrase in _TOPIC_KEYWORDS (e.g. "Why are yields rising?").
+            _nq = _normalize_macro_query(request.question)
+            _is_yield_q = (
+                "yields" in topics
+                or "yields" in _nq.split()
+                or "yield" in _nq.split()
             )
-            reason = "too_short" if len(current_answer) < 40 else "generic_language"
+            if _is_yield_q:
+                fallback_answer = _YIELD_FALLBACK_ANSWER
+                _fb_a, fallback_bullets, fallback_caveats = _topic_aware_fallback(
+                    request.question
+                )
+            else:
+                fallback_answer, fallback_bullets, fallback_caveats = _topic_aware_fallback(
+                    request.question
+                )
             print(
                 f"[route_question] FALLBACK TRIGGERED ({reason}) — "
                 f"original_answer={result.answer!r} "
