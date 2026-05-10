@@ -192,6 +192,20 @@ _CORRECTION_INVERTED = (
     "a pattern that has historically preceded U.S. recessions by 12–18 months. "
 )
 
+# State-consistent bullets and caveats injected when the not-inverted
+# correction fires — replacing any bullets that described inversion effects.
+_BULLETS_NOT_INVERTED: List[str] = [
+    "The 10-year Treasury yield exceeds the 2-year yield (positive 2s10s spread).",
+    "The yield curve is positively sloped — the classic inversion signal is not present.",
+    "The curve is not currently sending the classic inversion recession signal.",
+    "Watch whether the 2s10s spread narrows toward zero or turns negative — "
+    "that would be the first sign of renewed inversion risk.",
+]
+_CAVEATS_NOT_INVERTED: List[str] = [
+    "FRED T10Y2Y data may lag by one business day; check live quotes for intraday moves.",
+    "Spread levels can shift quickly; monitor for any narrowing toward zero.",
+]
+
 # Sentence boundary: ". " or ".\n" (handles both paragraph and single-line answers).
 _SENTENCE_END_RE = re.compile(r'\.\s')
 
@@ -253,6 +267,16 @@ def _answer_claims_not_inverted(answer: str) -> bool:
     )
 
 
+def _bullets_claim_inversion(bullets: List[str]) -> bool:
+    """Return True if any bullet asserts the yield curve is currently inverted.
+
+    Uses the same negation logic as ``_answer_claims_inversion``: a bullet
+    that contains "not inverted", "no longer inverted", or "positively sloped"
+    is treated as NOT claiming inversion even if "inverted" appears in it.
+    """
+    return any(_answer_claims_inversion(b) for b in bullets)
+
+
 def _strip_opening_paragraph(answer: str) -> str:
     """Remove the first paragraph from *answer* and return the remainder.
 
@@ -294,6 +318,12 @@ def _correct_yield_curve_contradiction(
     - Curve state is "flat" (ambiguous; no correction applied).
     - Answer already agrees with the evidence state.
 
+    When ``curve_state == "not_inverted"`` and a contradiction is detected,
+    the function also replaces bullets and caveats with state-consistent
+    hard-coded lists (``_BULLETS_NOT_INVERTED`` / ``_CAVEATS_NOT_INVERTED``).
+    This prevents bullets from continuing to describe inversion effects after
+    the opening paragraph has been corrected.
+
     Parameters
     ----------
     question  : Forwarded for logging only (may be used by future sub-rules).
@@ -305,7 +335,7 @@ def _correct_yield_curve_contradiction(
     -------
     GeneralFinanceAnswer
         Original result if no contradiction detected; corrected result otherwise.
-        Bullets, caveats, and evidence_count are always preserved.
+        evidence_count is always preserved unchanged.
     """
     if not evidence:
         return result
@@ -321,20 +351,31 @@ def _correct_yield_curve_contradiction(
     answer = result.answer
     contradiction = False
     correction_prefix = ""
+    new_bullets = result.bullets
+    new_caveats = result.caveats
 
     if curve_state == "not_inverted" and _answer_claims_inversion(answer):
         contradiction = True
         correction_prefix = _CORRECTION_NOT_INVERTED
+        # Replace bullets/caveats that describe inversion effects.
+        # Even if only some bullets are wrong, swap the whole set for
+        # consistency — mixing corrected and uncorrected bullets is confusing.
+        new_bullets = _BULLETS_NOT_INVERTED
+        new_caveats = _CAVEATS_NOT_INVERTED
         print(
             "[DIAG] YIELD CURVE CONTRADICTION GUARD: "
-            "evidence=not_inverted but answer claims inversion — correcting"
+            "evidence=not_inverted but answer claims inversion — "
+            "correcting answer + replacing bullets/caveats"
         )
     elif curve_state == "inverted" and _answer_claims_not_inverted(answer):
         contradiction = True
         correction_prefix = _CORRECTION_INVERTED
+        # Bullets for the inverted case are left to the LLM — they are
+        # typically accurate (recession signal, historical precedent) even
+        # when the opening paragraph is wrong.
         print(
             "[DIAG] YIELD CURVE CONTRADICTION GUARD: "
-            "evidence=inverted but answer claims not_inverted — correcting"
+            "evidence=inverted but answer claims not_inverted — correcting answer"
         )
     else:
         print(
@@ -348,10 +389,15 @@ def _correct_yield_curve_contradiction(
     rest = _strip_opening_paragraph(answer)
     new_answer = (correction_prefix + rest).strip() if rest else correction_prefix.rstrip()
 
+    print(
+        f"[DIAG] YIELD CURVE CONTRADICTION GUARD: "
+        f"bullets_replaced={new_bullets is not result.bullets}"
+    )
+
     return GeneralFinanceAnswer(
         answer=new_answer,
-        bullets=result.bullets,
-        caveats=result.caveats,
+        bullets=new_bullets,
+        caveats=new_caveats,
         evidence_count=result.evidence_count,
     )
 

@@ -14,6 +14,7 @@ Coverage
 _read_curve_state        — extracts slope direction from evidence titles
 _answer_claims_inversion — detects assertive inversion claims in answer text
 _answer_claims_not_inverted — detects explicit non-inversion claims
+_bullets_claim_inversion — detects inversion claims across a list of bullets
 _strip_opening_paragraph — paragraph removal strategy (blank-line / newline / sentence)
 _correct_yield_curve_contradiction — end-to-end guard logic
 
@@ -36,10 +37,13 @@ from app.agents import (
     _read_curve_state,
     _answer_claims_inversion,
     _answer_claims_not_inverted,
+    _bullets_claim_inversion,
     _strip_opening_paragraph,
     _correct_yield_curve_contradiction,
     _CORRECTION_NOT_INVERTED,
     _CORRECTION_INVERTED,
+    _BULLETS_NOT_INVERTED,
+    _CAVEATS_NOT_INVERTED,
 )
 from app.schemas import GeneralFinanceAnswer, RetrievedEvidence
 
@@ -360,17 +364,43 @@ class TestCorrectYieldCurveContradiction:
 
     # ── metadata preservation ─────────────────────────────────────────────────
 
-    def test_bullets_preserved_after_correction(self):
+    def test_bullets_replaced_with_prescribed_set_on_not_inverted_correction(self):
+        """When the not-inverted guard fires, bullets are replaced with the
+        prescribed state-consistent set — original inversion bullets are discarded."""
         ev = _t10y2y_not_inverted()
         bullets = ["Yield spread: +0.49 pp", "Fed funds: 5.33%"]
         res = _result("The yield curve is inverted.", bullets=bullets)
         out = _correct_yield_curve_contradiction("?", [ev], res)
-        assert out.bullets == bullets
+        # Bullets are now the prescribed not-inverted set, not the originals
+        assert out.bullets == _BULLETS_NOT_INVERTED
 
-    def test_caveats_preserved_after_correction(self):
+    def test_caveats_replaced_with_prescribed_set_on_not_inverted_correction(self):
+        """When the not-inverted guard fires, caveats are replaced."""
         ev = _t10y2y_not_inverted()
         caveats = ["FRED data may lag by one business day."]
         res = _result("The yield curve is inverted.", caveats=caveats)
+        out = _correct_yield_curve_contradiction("?", [ev], res)
+        assert out.caveats == _CAVEATS_NOT_INVERTED
+
+    def test_bullets_preserved_on_passthrough(self):
+        """When the guard does NOT fire (answer agrees), original bullets are kept."""
+        ev = _t10y2y_not_inverted()
+        bullets = ["10-year yield: 4.41%", "2-year yield: 3.92%"]
+        res = _result(
+            "The yield curve is not currently inverted — 10-year exceeds 2-year.",
+            bullets=bullets,
+        )
+        out = _correct_yield_curve_contradiction("?", [ev], res)
+        assert out.bullets == bullets
+
+    def test_caveats_preserved_on_passthrough(self):
+        """When the guard does NOT fire, original caveats are kept."""
+        ev = _t10y2y_not_inverted()
+        caveats = ["FRED data may lag by one business day."]
+        res = _result(
+            "The yield curve is not currently inverted.",
+            caveats=caveats,
+        )
         out = _correct_yield_curve_contradiction("?", [ev], res)
         assert out.caveats == caveats
 
@@ -436,3 +466,158 @@ class TestCorrectYieldCurveContradiction:
         assert "Federal Reserve" in out.answer or "spread" in out.answer.lower()
         # Evidence count must be untouched
         assert out.evidence_count == 4
+
+
+# ── _bullets_claim_inversion ──────────────────────────────────────────────────
+
+class TestBulletsClaimInversion:
+
+    def test_bullet_with_inverted_returns_true(self):
+        assert _bullets_claim_inversion(["The yield curve is inverted."]) is True
+
+    def test_multiple_bullets_one_inverted_returns_true(self):
+        assert _bullets_claim_inversion([
+            "Fed funds rate: 5.33%",
+            "Curve is currently inverted — 2-year above 10-year",
+            "Unemployment at 4.1%",
+        ]) is True
+
+    def test_bullet_with_not_inverted_returns_false(self):
+        assert _bullets_claim_inversion([
+            "The yield curve is not inverted.",
+            "10-year exceeds 2-year yield.",
+        ]) is False
+
+    def test_empty_bullet_list_returns_false(self):
+        assert _bullets_claim_inversion([]) is False
+
+    def test_bullets_with_no_yield_curve_mention_returns_false(self):
+        assert _bullets_claim_inversion([
+            "CPI at 3.2% year-over-year.",
+            "Fed funds rate at 5.33%.",
+        ]) is False
+
+    def test_bullet_positively_sloped_returns_false(self):
+        assert _bullets_claim_inversion(["Curve is positively sloped."]) is False
+
+
+# ── Bullet / caveat replacement on not-inverted correction ───────────────────
+
+class TestBulletReplacementOnNotInvertedCorrection:
+    """When the not-inverted contradiction fires, bullets and caveats must be
+    replaced with the prescribed state-consistent hard-coded lists.
+    No bullet in the corrected output may assert current inversion."""
+
+    def _run(self, bullets: list, caveats: list | None = None):
+        ev = _t10y2y_not_inverted()
+        res = _result(
+            "The yield curve is currently inverted.",
+            bullets=bullets,
+            caveats=caveats or ["watch for more rate hikes"],
+        )
+        return _correct_yield_curve_contradiction("?", [ev], res)
+
+    # ── prescribed bullets appear ─────────────────────────────────────────────
+
+    def test_prescribed_bullets_present_after_correction(self):
+        out = self._run(["Inversion signals recession.", "2-year above 10-year."])
+        assert out.bullets == _BULLETS_NOT_INVERTED
+
+    def test_prescribed_caveats_present_after_correction(self):
+        out = self._run(["Inversion signals recession."])
+        assert out.caveats == _CAVEATS_NOT_INVERTED
+
+    # ── no inversion claims remain in bullets ─────────────────────────────────
+
+    def test_no_bullet_claims_current_inversion(self):
+        out = self._run([
+            "Yield curve is inverted, signalling recession.",
+            "2-year yield above 10-year.",
+            "Historical inversions precede recession by 12–18 months.",
+        ])
+        assert not _bullets_claim_inversion(out.bullets)
+
+    def test_no_bullet_says_2yr_above_10yr_assertively(self):
+        """After correction, no bullet should assert the 2-year exceeds the 10-year."""
+        out = self._run(["2-year Treasury yield sits above the 10-year yield."])
+        for bullet in out.bullets:
+            low = bullet.lower()
+            # The prescribed bullets say "10-year exceeds 2-year", not the reverse
+            assert "2-year treasury yield exceeds" not in low
+            assert "2-year sits above" not in low
+
+    def test_prescribed_bullets_contain_required_content(self):
+        """The four prescribed bullet points cover the required topics."""
+        out = self._run(["Inversion signals recession."])
+        joined = " ".join(out.bullets).lower()
+        assert "10-year" in joined and "2-year" in joined        # spread direction
+        assert "positively sloped" in joined                      # slope label
+        assert "recession signal" in joined or "inversion" in joined  # signal status
+        assert "narrows" in joined or "turns negative" in joined  # watch metric
+
+    # ── passthrough: no correction means original bullets kept ────────────────
+
+    def test_original_bullets_kept_when_answer_agrees(self):
+        """If the LLM answer already says 'not inverted', bullets must not be touched."""
+        ev = _t10y2y_not_inverted()
+        original_bullets = ["10-year yield: 4.41%", "2-year yield: 3.92%"]
+        res = _result(
+            "The yield curve is not currently inverted — 10-year exceeds 2-year.",
+            bullets=original_bullets,
+        )
+        out = _correct_yield_curve_contradiction("?", [ev], res)
+        assert out.bullets == original_bullets
+
+    def test_original_caveats_kept_when_answer_agrees(self):
+        ev = _t10y2y_not_inverted()
+        original_caveats = ["Data from FRED may lag one business day."]
+        res = _result(
+            "The yield curve is not inverted.",
+            caveats=original_caveats,
+        )
+        out = _correct_yield_curve_contradiction("?", [ev], res)
+        assert out.caveats == original_caveats
+
+    def test_inverted_correction_does_not_replace_bullets(self):
+        """The inverted correction path leaves bullets to the LLM (they're usually correct)."""
+        ev = _t10y2y_inverted()
+        original_bullets = [
+            "Fed has kept rates elevated.",
+            "2-year at 4.8%, 10-year at 4.3% — spread is -0.52 pp.",
+        ]
+        res = _result(
+            "The yield curve is no longer inverted — the 10-year exceeds the 2-year.",
+            bullets=original_bullets,
+        )
+        out = _correct_yield_curve_contradiction("?", [ev], res)
+        # Inverted path corrects the answer but keeps original bullets
+        assert out.bullets == original_bullets
+
+    # ── bullet replacement fires even when only some bullets are wrong ────────
+
+    def test_partial_inversion_bullet_still_triggers_full_replacement(self):
+        """Even one bad bullet → whole set is replaced for consistency."""
+        out = self._run([
+            "Fed policy is restrictive.",               # fine
+            "Yield curve is inverted — recession ahead.",  # wrong
+            "10-year Treasury at 4.41%.",               # fine
+        ])
+        assert out.bullets == _BULLETS_NOT_INVERTED
+
+    def test_all_clean_bullets_with_inversion_in_answer_still_replaced(self):
+        """Bullets are replaced whenever the answer contradiction fires, even if
+        the original bullets happen to be clean — ensures full consistency."""
+        out = self._run([
+            "10-year yield at 4.41%.",
+            "2-year yield at 3.92%.",
+        ])
+        # Guard fires (answer says "inverted") → bullets replaced with prescribed set
+        assert out.bullets == _BULLETS_NOT_INVERTED
+
+    # ── evidence_count always preserved ──────────────────────────────────────
+
+    def test_evidence_count_preserved_after_bullet_replacement(self):
+        ev = _t10y2y_not_inverted()
+        res = _result("The yield curve is inverted.", evidence_count=6)
+        out = _correct_yield_curve_contradiction("?", [ev], res)
+        assert out.evidence_count == 6
