@@ -9,6 +9,7 @@ interactions flow through this module.
 
 from __future__ import annotations
 
+import re
 from typing import Dict, Any, List, Optional
 from pydantic import BaseModel  # for model_dump helper
 
@@ -166,6 +167,194 @@ def _enforce_evidence_usage(
         bullets=result.bullets,
         caveats=result.caveats,
     )
+
+# ── Yield-curve contradiction guard ──────────────────────────────────────────
+#
+# Problem: even when T10Y2Y evidence clearly says "+0.49 pp — NOT inverted",
+# the LLM sometimes follows the user's (false) premise ("why is the curve
+# inverted?") and asserts inversion in its answer.
+#
+# Solution: after synthesis, deterministically read the slope direction from
+# the T10Y2Y evidence title and compare it to what the answer claims.
+# If there is a contradiction, replace the opening paragraph with a hard-coded
+# correction.  This is not a heuristic — it reads the same explicit text
+# that _build_t10y2y_evidence() stamped into the evidence object.
+
+# Hard-coded correction sentences used when the answer contradicts evidence.
+_CORRECTION_NOT_INVERTED = (
+    "The yield curve is not currently inverted. "
+    "The 10-year Treasury yield exceeds the 2-year yield, "
+    "meaning the curve is positively sloped. "
+)
+_CORRECTION_INVERTED = (
+    "The yield curve is currently inverted. "
+    "The 2-year Treasury yield exceeds the 10-year yield — "
+    "a pattern that has historically preceded U.S. recessions by 12–18 months. "
+)
+
+# Sentence boundary: ". " or ".\n" (handles both paragraph and single-line answers).
+_SENTENCE_END_RE = re.compile(r'\.\s')
+
+
+def _read_curve_state(evidence: List[RetrievedEvidence]) -> Optional[str]:
+    """Return the T10Y2Y slope direction encoded in evidence titles.
+
+    Returns
+    -------
+    "not_inverted"
+        The T10Y2Y title contains "NOT inverted" — curve is positively sloped.
+    "inverted"
+        The T10Y2Y title contains "INVERTED" without "NOT" — curve is inverted.
+    "flat"
+        The T10Y2Y title contains "flat" alongside "Minus 2-Year".
+    None
+        No T10Y2Y evidence is present; guard should not fire.
+    """
+    for ev in evidence:
+        title = ev.title
+        # "NOT inverted" must be checked before bare "INVERTED" (substring match order)
+        if "NOT inverted" in title:
+            return "not_inverted"
+        # "INVERTED" without "NOT" immediately preceding it
+        if re.search(r'(?<!NOT )INVERTED', title):
+            return "inverted"
+        if "flat" in title.lower() and "Minus 2-Year" in title:
+            return "flat"
+    return None
+
+
+def _answer_claims_inversion(answer: str) -> bool:
+    """Return True if the answer asserts the yield curve is currently inverted.
+
+    Returns False if the answer contains any explicit negation phrase such as
+    "not inverted", "no longer inverted", or "positively sloped" — these
+    indicate the answer already has the correct slope direction.
+    """
+    low = answer.lower()
+    # Explicit negations trump everything
+    if (
+        "not inverted" in low
+        or "not currently inverted" in low
+        or "no longer inverted" in low
+        or "positively sloped" in low
+    ):
+        return False
+    return "inverted" in low
+
+
+def _answer_claims_not_inverted(answer: str) -> bool:
+    """Return True if the answer explicitly asserts the curve is NOT inverted."""
+    low = answer.lower()
+    return (
+        "not inverted" in low
+        or "not currently inverted" in low
+        or "no longer inverted" in low
+        or "positively sloped" in low
+    )
+
+
+def _strip_opening_paragraph(answer: str) -> str:
+    """Remove the first paragraph from *answer* and return the remainder.
+
+    Tries, in order:
+    1. Blank-line break (``\\n\\n``) — most common in multi-paragraph answers.
+    2. Single newline — single-paragraph answers split across lines.
+    3. First sentence boundary (``". "``) — single-block answers.
+    4. Total replacement — last resort; returns ``""`` so the caller uses
+       only the correction prefix.
+    """
+    if "\n\n" in answer:
+        _, _, rest = answer.partition("\n\n")
+        return rest.strip()
+    if "\n" in answer:
+        _, _, rest = answer.partition("\n")
+        return rest.strip()
+    m = _SENTENCE_END_RE.search(answer)
+    if m:
+        return answer[m.end():].strip()
+    return ""  # full replacement
+
+
+def _correct_yield_curve_contradiction(
+    question: str,
+    evidence: List[RetrievedEvidence],
+    result: GeneralFinanceAnswer,
+) -> GeneralFinanceAnswer:
+    """Replace the answer's opening paragraph when it contradicts T10Y2Y evidence.
+
+    This is a **deterministic** post-generation guard — it does not rely on
+    the LLM to self-correct.  It reads the slope direction that
+    ``_build_t10y2y_evidence()`` stamped explicitly into the evidence title,
+    compares it to what the synthesised answer claims, and fixes the opening
+    paragraph if there is a mismatch.
+
+    Passthrough conditions (no change):
+    - No evidence supplied.
+    - No T10Y2Y item in evidence.
+    - Curve state is "flat" (ambiguous; no correction applied).
+    - Answer already agrees with the evidence state.
+
+    Parameters
+    ----------
+    question  : Forwarded for logging only (may be used by future sub-rules).
+    evidence  : The evidence list injected into the LLM prompt.
+    result    : The GeneralFinanceAnswer returned by the LLM (after the
+                evidence-usage quality guard).
+
+    Returns
+    -------
+    GeneralFinanceAnswer
+        Original result if no contradiction detected; corrected result otherwise.
+        Bullets, caveats, and evidence_count are always preserved.
+    """
+    if not evidence:
+        return result
+
+    curve_state = _read_curve_state(evidence)
+    if curve_state is None or curve_state == "flat":
+        print(
+            f"[DIAG] YIELD CURVE CONTRADICTION GUARD: "
+            f"curve_state={curve_state!r} — passthrough"
+        )
+        return result
+
+    answer = result.answer
+    contradiction = False
+    correction_prefix = ""
+
+    if curve_state == "not_inverted" and _answer_claims_inversion(answer):
+        contradiction = True
+        correction_prefix = _CORRECTION_NOT_INVERTED
+        print(
+            "[DIAG] YIELD CURVE CONTRADICTION GUARD: "
+            "evidence=not_inverted but answer claims inversion — correcting"
+        )
+    elif curve_state == "inverted" and _answer_claims_not_inverted(answer):
+        contradiction = True
+        correction_prefix = _CORRECTION_INVERTED
+        print(
+            "[DIAG] YIELD CURVE CONTRADICTION GUARD: "
+            "evidence=inverted but answer claims not_inverted — correcting"
+        )
+    else:
+        print(
+            f"[DIAG] YIELD CURVE CONTRADICTION GUARD: "
+            f"curve_state={curve_state!r} answer consistent — passthrough"
+        )
+
+    if not contradiction:
+        return result
+
+    rest = _strip_opening_paragraph(answer)
+    new_answer = (correction_prefix + rest).strip() if rest else correction_prefix.rstrip()
+
+    return GeneralFinanceAnswer(
+        answer=new_answer,
+        bullets=result.bullets,
+        caveats=result.caveats,
+        evidence_count=result.evidence_count,
+    )
+
 
 # Load system prompt once for all agents.  If a custom path is provided
 # via the environment variable, it will be loaded there; otherwise the
@@ -351,6 +540,11 @@ def run_general_finance_agent(
     # ── Step 4: Post-generation quality guard ────────────────────────────────
     result = _enforce_evidence_usage(question, evidence, result)
 
+    # ── Step 4b: Yield-curve contradiction guard ──────────────────────────────
+    # Deterministic: if T10Y2Y evidence says "not inverted" but the LLM answer
+    # claims inversion (or vice-versa), replace the opening paragraph.
+    result = _correct_yield_curve_contradiction(question, evidence, result)
+
     # ── Step 5: Stamp evidence count for the router ───────────────────────────
     # route_question reads this to decide whether the generic-language fallback
     # gate should apply.  Set it AFTER the quality guard so it always reflects
@@ -419,6 +613,9 @@ def run_general_fallback_agent(
 
     # ── Step 4: Post-generation quality guard ────────────────────────────────
     result = _enforce_evidence_usage(question, evidence, result)
+
+    # ── Step 4b: Yield-curve contradiction guard ──────────────────────────────
+    result = _correct_yield_curve_contradiction(question, evidence, result)
 
     # ── Step 5: Stamp evidence count for the router ───────────────────────────
     result.evidence_count = len(evidence)
