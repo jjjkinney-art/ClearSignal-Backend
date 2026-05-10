@@ -509,6 +509,92 @@ def _detect_topics(question: str) -> List[str]:
     return topics
 
 
+# ── T10Y2Y evidence builder ───────────────────────────────────────────────────
+
+def _build_t10y2y_evidence(value_str: str, date_str: str) -> tuple:
+    """Build an explicit (title, summary) pair for the T10Y2Y spread.
+
+    The generic title/summary template does not encode whether the yield
+    curve is inverted or positively sloped, which causes LLMs to guess
+    (and frequently guess wrong).  This builder parses the numeric value
+    and stamps the correct slope direction directly into the evidence text.
+
+    T10Y2Y is defined as 10-year Treasury yield MINUS 2-year Treasury yield:
+      - Positive value → 10-year > 2-year → curve is positively sloped, NOT inverted.
+      - Negative value → 2-year > 10-year → curve is INVERTED.
+      - Zero             → flat curve.
+
+    Parameters
+    ----------
+    value_str : str   FRED observation value (e.g. "0.49" or "-0.52").
+    date_str  : str   Observation date (e.g. "2024-11-15").
+
+    Returns
+    -------
+    tuple[str, str]   (title, summary) ready for RetrievedEvidence.
+    """
+    try:
+        val = float(value_str)
+    except (ValueError, TypeError):
+        # Unparseable — fall back to neutral wording, don't crash.
+        title = (
+            f"10-Year Minus 2-Year Treasury Spread: {value_str} pp "
+            f"(as of {date_str})"
+        )
+        summary = (
+            f"The 2s10s spread (10-year minus 2-year Treasury yield) is "
+            f"{value_str} pp as of {date_str}. "
+            "The 2s10s spread measures the slope of the yield curve. "
+            "A negative spread (inverted curve) has historically preceded "
+            "U.S. recessions by 12–18 months."
+        )
+        return title, summary
+
+    sign = "+" if val >= 0 else ""
+
+    if val > 0:
+        slope_label = "NOT inverted — positively sloped"
+        direction = (
+            f"The 10-year Treasury yield exceeds the 2-year Treasury yield "
+            f"by {val:.2f} pp. The curve is positively sloped and is NOT inverted."
+        )
+        recession_note = (
+            "Historically, the yield curve inverts (spread turns negative) "
+            "12–18 months before a U.S. recession; the current positive spread "
+            "does not signal imminent recession on this measure."
+        )
+    elif val < 0:
+        slope_label = "INVERTED"
+        direction = (
+            f"The 2-year Treasury yield exceeds the 10-year Treasury yield "
+            f"by {abs(val):.2f} pp. The curve is inverted."
+        )
+        recession_note = (
+            "An inverted yield curve has historically preceded U.S. recessions "
+            "by 12–18 months."
+        )
+    else:  # val == 0
+        slope_label = "flat"
+        direction = (
+            "The 10-year and 2-year Treasury yields are equal — the curve is flat."
+        )
+        recession_note = (
+            "A flat curve is transitional; inversion (negative spread) has "
+            "historically preceded U.S. recessions by 12–18 months."
+        )
+
+    title = (
+        f"10-Year Minus 2-Year Treasury Spread: {sign}{val:.2f} pp "
+        f"— yield curve is {slope_label} (as of {date_str})"
+    )
+    summary = (
+        f"The 2s10s spread (10-year minus 2-year Treasury yield) is "
+        f"{sign}{val:.2f} pp as of {date_str}. "
+        f"{direction} {recession_note}"
+    )
+    return title, summary
+
+
 # ── Public entry point ────────────────────────────────────────────────────────
 
 def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
@@ -611,11 +697,18 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
                     series_id, "", f"FRED series {series_id}."
                 )
 
-            title = f"{display_title}: {value}{unit} (as of {date_str})"
-            summary = (
-                f"The most recent reading for {display_title} is "
-                f"{value}{unit} (as of {date_str}). {description}"
-            )
+            # ── T10Y2Y special case: encode slope direction explicitly ─────────
+            # The generic template does not state whether the curve is inverted
+            # or positively sloped, so LLMs frequently misread the sign.
+            # Build the title and summary from the numeric value directly.
+            if series_id == "T10Y2Y":
+                title, summary = _build_t10y2y_evidence(value, date_str)
+            else:
+                title = f"{display_title}: {value}{unit} (as of {date_str})"
+                summary = (
+                    f"The most recent reading for {display_title} is "
+                    f"{value}{unit} (as of {date_str}). {description}"
+                )
 
             evidence.append(
                 RetrievedEvidence(

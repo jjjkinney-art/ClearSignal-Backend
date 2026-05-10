@@ -894,3 +894,192 @@ class TestStartupDiagnostics:
         out = capsys.readouterr().out
         assert "len=6"  in out   # len("abc123")
         assert "len=10" in out   # len("xyz789long")
+
+
+# ── _build_t10y2y_evidence ────────────────────────────────────────────────────
+
+class TestBuildT10y2yEvidence:
+    """Unit tests for the T10Y2Y special-case evidence builder.
+
+    Requirement: T10Y2Y is defined as 10-year minus 2-year Treasury yield.
+      positive value → 10-year > 2-year → NOT inverted
+      negative value → 2-year > 10-year → INVERTED
+    The builder must encode slope direction explicitly in both title and
+    summary so the LLM cannot misinterpret the sign.
+    """
+
+    from app.services.general_finance_evidence import _build_t10y2y_evidence
+
+    # ── positive spread ───────────────────────────────────────────────────────
+
+    def test_positive_spread_title_says_not_inverted(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, _ = _build_t10y2y_evidence("0.49", "2024-11-15")
+        assert "NOT inverted" in title or "not inverted" in title.lower()
+
+    def test_positive_spread_title_contains_plus_sign(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, _ = _build_t10y2y_evidence("0.49", "2024-11-15")
+        assert "+0.49" in title
+
+    def test_positive_spread_summary_says_10yr_exceeds_2yr(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("0.49", "2024-11-15")
+        low = summary.lower()
+        assert "10-year" in low and "2-year" in low
+        # Must state 10-year is higher (exceeds), not the other way round
+        assert "10-year treasury yield exceeds" in low or "10-year" in low
+
+    def test_positive_spread_summary_does_not_claim_inversion(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("0.49", "2024-11-15")
+        low = summary.lower()
+        # Must NOT claim the curve is currently inverted
+        assert "curve is not inverted" in low or "not inverted" in low or "positively sloped" in low
+
+    def test_positive_spread_summary_includes_date(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("0.49", "2024-11-15")
+        assert "2024-11-15" in summary
+
+    def test_positive_spread_notes_future_inversion_risk(self):
+        """Summary should still mention that inversion precedes recessions for context."""
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("0.49", "2024-11-15")
+        assert "invert" in summary.lower() or "recession" in summary.lower()
+
+    # ── negative spread ───────────────────────────────────────────────────────
+
+    def test_negative_spread_title_says_inverted(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, _ = _build_t10y2y_evidence("-0.52", "2024-03-01")
+        assert "INVERTED" in title or "inverted" in title.lower()
+
+    def test_negative_spread_title_contains_minus_value(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, _ = _build_t10y2y_evidence("-0.52", "2024-03-01")
+        assert "-0.52" in title
+
+    def test_negative_spread_summary_says_2yr_exceeds_10yr(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("-0.52", "2024-03-01")
+        low = summary.lower()
+        assert "2-year" in low and "10-year" in low
+        # Must not claim the 10-year exceeds the 2-year
+        assert "2-year treasury yield exceeds" in low or "inverted" in low
+
+    def test_negative_spread_summary_mentions_recession_signal(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("-0.52", "2024-03-01")
+        assert "recession" in summary.lower()
+
+    def test_negative_spread_summary_includes_date(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        _, summary = _build_t10y2y_evidence("-0.52", "2024-03-01")
+        assert "2024-03-01" in summary
+
+    # ── flat / zero spread ────────────────────────────────────────────────────
+
+    def test_zero_spread_title_says_flat(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, _ = _build_t10y2y_evidence("0.00", "2024-06-01")
+        assert "flat" in title.lower()
+
+    def test_zero_spread_title_not_inverted_label(self):
+        """A flat curve must not be labelled 'INVERTED'."""
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, _ = _build_t10y2y_evidence("0.00", "2024-06-01")
+        assert "INVERTED" not in title
+
+    # ── unparseable value ─────────────────────────────────────────────────────
+
+    def test_unparseable_value_does_not_raise(self):
+        from app.services.general_finance_evidence import _build_t10y2y_evidence
+        title, summary = _build_t10y2y_evidence("N/A", "2024-11-15")
+        assert isinstance(title, str) and len(title) > 0
+        assert isinstance(summary, str) and len(summary) > 0
+
+    # ── end-to-end: positive spread in retrieve pipeline ─────────────────────
+
+    def test_positive_spread_reaches_evidence_list(self, monkeypatch):
+        """When T10Y2Y returns a positive value, the evidence object's
+        title and summary must say 'not inverted'."""
+        from app.services.general_finance_evidence import retrieve_general_finance_evidence
+
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "T10Y2Y":
+                return [{"date": "2024-11-15", "value": "0.49"}]
+            return [{"date": "2024-11-15", "value": "4.25"}]
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Why are Treasury yields rising?")
+        t10y2y_items = [ev for ev in result if "T10Y2Y" in ev.title or "2-Year" in ev.title]
+        # At least one item must cover the spread
+        spread_items = [
+            ev for ev in result
+            if "Minus 2-Year" in ev.title or "2s10s" in ev.title.lower()
+        ]
+        assert spread_items, "No T10Y2Y evidence item found in result"
+        ev = spread_items[0]
+        assert "not inverted" in ev.title.lower() or "NOT inverted" in ev.title
+        assert "not inverted" in ev.summary.lower() or "positively sloped" in ev.summary.lower()
+
+    def test_negative_spread_reaches_evidence_list(self, monkeypatch):
+        """When T10Y2Y returns a negative value, the evidence object must say 'INVERTED'."""
+        from app.services.general_finance_evidence import retrieve_general_finance_evidence
+
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "T10Y2Y":
+                return [{"date": "2024-03-01", "value": "-0.52"}]
+            return [{"date": "2024-03-01", "value": "4.25"}]
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        result = retrieve_general_finance_evidence("Is the yield curve inverted?")
+        spread_items = [
+            ev for ev in result
+            if "Minus 2-Year" in ev.title or "2s10s" in ev.title.lower()
+        ]
+        assert spread_items, "No T10Y2Y evidence item found in result"
+        ev = spread_items[0]
+        assert "inverted" in ev.title.lower()
+        assert "inverted" in ev.summary.lower()
+
+    def test_positive_spread_corrects_false_inversion_premise(self, monkeypatch):
+        """User asks 'why is the yield curve inverted?' but evidence shows
+        a positive spread.  The evidence text itself must state the curve is
+        NOT inverted so the LLM can correct the user's premise politely."""
+        from app.services.general_finance_evidence import retrieve_general_finance_evidence
+
+        monkeypatch.setenv("FRED_API_KEY", "test-key")
+
+        def fake_fetch(series_id, limit=5):
+            if series_id == "T10Y2Y":
+                return [{"date": "2024-11-15", "value": "0.49"}]
+            return [{"date": "2024-11-15", "value": "4.25"}]
+
+        monkeypatch.setattr(
+            "app.services.general_finance_evidence.fetch_fred_series", fake_fetch
+        )
+        # Question asserts inversion — evidence should contradict it
+        result = retrieve_general_finance_evidence(
+            "Why is the yield curve inverted right now?"
+        )
+        spread_items = [
+            ev for ev in result
+            if "Minus 2-Year" in ev.title or "2s10s" in ev.title.lower()
+        ]
+        assert spread_items, "No T10Y2Y evidence item found in result"
+        ev = spread_items[0]
+        # The evidence text must give the LLM the correct fact
+        assert "not inverted" in ev.title.lower() or "NOT inverted" in ev.title
+        assert "not inverted" in ev.summary.lower() or "positively sloped" in ev.summary.lower()
+        # And must NOT say the curve is currently inverted (in the title)
+        assert "INVERTED" not in ev.title
