@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from ..schemas import CompanyContext, ValuationView, RetrievedEvidence
+from ..schemas import CompanyContext, ValuationView, RetrievedEvidence, CompanyKnowledgeProfile
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
@@ -18,17 +18,11 @@ logger = logging.getLogger(__name__)
 _AGENT_NAME = "valuation_agent"
 
 _EVIDENCE_KEYWORDS = [
-    "income",
-    "revenue",
-    "earnings",
-    "eps",
-    "p/e",
-    "margin",
-    "profitability",
-    "financial",
-    "fmp",
-    "price change",
-    "stock price",
+    "income", "revenue", "earnings", "eps", "p/e", "pe ratio",
+    "margin", "profitability", "financial", "fmp",
+    "price change", "stock price", "valuation", "multiple",
+    "ev/ebitda", "forward pe", "growth rate", "guidance",
+    "beat", "miss", "fiscal", "quarter", "annual",
 ]
 
 
@@ -79,7 +73,11 @@ def _empty_output(reason: str = "") -> ValuationView:
     )
 
 
-def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) -> str:
+def _build_prompt(
+    company: CompanyContext,
+    evidence: List[RetrievedEvidence],
+    profile: Optional[CompanyKnowledgeProfile] = None,
+) -> str:
     """Build the valuation agent prompt."""
     evidence_block = "\n".join(
         f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
@@ -89,9 +87,33 @@ def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) ->
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
 
+    if profile is not None:
+        company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
+Business model: {profile.business_model}
+Primary revenue drivers: {', '.join(profile.primary_revenue_drivers)}
+Valuation style: {profile.valuation_style}
+Key metrics to anchor on: {', '.join(profile.key_metrics)}
+Competitive advantages (inform premium/discount): {'; '.join(profile.competitive_advantages[:3])}
+Business model keywords you MUST reference: {', '.join(profile.business_model_keywords[:8])}
+
+MANDATORY SPECIFICITY RULES:
+- Every analytical sentence MUST reference a specific {company.company_name} business segment, product, metric, or competitive dynamic.
+- FORBIDDEN generic phrases: "higher rates hurt growth stocks", "the company faces headwinds", "like many tech companies", "as a growth stock"
+- REQUIRED: Name specific {company.ticker} revenue lines, products, or structural advantages in every claim.
+- Do NOT write sector-level analysis — write exclusively about {company.company_name}.
+
+VALUATION SPECIFICITY REQUIRED:
+- Cite the actual valuation style: {profile.valuation_style}
+- Reference specific revenue drivers when assessing growth assumptions
+- Name specific margin lines (not "margins declined" — which margins?)
+"""
+    else:
+        company_context_block = ""
+
     return f"""You are a specialist valuation analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
+{company_context_block}
 EVIDENCE:
 {evidence_block}
 
@@ -116,6 +138,7 @@ def run_valuation_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> ValuationView:
     """Run the valuation specialist agent.
 
@@ -132,7 +155,7 @@ def run_valuation_agent(
     if not relevant:
         return _empty_output("No valuation-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant)
+    prompt = _build_prompt(company, relevant, profile)
     try:
         result: ValuationView = get_structured_response(
             prompt,

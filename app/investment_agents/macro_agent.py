@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from ..schemas import CompanyContext, MacroSensitivity, RetrievedEvidence
+from ..schemas import CompanyContext, MacroSensitivity, RetrievedEvidence, CompanyKnowledgeProfile
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
@@ -18,20 +18,11 @@ logger = logging.getLogger(__name__)
 _AGENT_NAME = "macro_agent"
 
 _EVIDENCE_KEYWORDS = [
-    "fred",
-    "treasury",
-    "yield",
-    "inflation",
-    "cpi",
-    "pce",
-    "fed funds",
-    "federal reserve",
-    "recession",
-    "gdp",
-    "vix",
-    "credit spread",
-    "t10y2y",
-    "dgs",
+    "fred", "treasury", "yield", "inflation", "cpi", "pce",
+    "fed funds", "federal reserve", "recession", "gdp", "vix",
+    "credit spread", "t10y2y", "dgs", "interest rate",
+    "monetary policy", "quantitative", "rate hike", "rate cut",
+    "10-year", "2-year", "spread",
 ]
 
 
@@ -81,7 +72,11 @@ def _empty_output(reason: str = "") -> MacroSensitivity:
     )
 
 
-def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) -> str:
+def _build_prompt(
+    company: CompanyContext,
+    evidence: List[RetrievedEvidence],
+    profile: Optional[CompanyKnowledgeProfile] = None,
+) -> str:
     """Build the macro agent prompt."""
     evidence_block = "\n".join(
         f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
@@ -91,9 +86,31 @@ def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) ->
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
 
+    if profile is not None:
+        company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
+Business model: {profile.business_model}
+Rate sensitivity: {profile.rate_sensitivity_note}
+Inflation pass-through: {profile.inflation_pass_through}
+Recession behavior: {profile.recession_behavior}
+Business model keywords you MUST reference: {', '.join(profile.business_model_keywords[:8])}
+
+MANDATORY SPECIFICITY RULES:
+- Every analytical sentence MUST reference a specific {company.company_name} business segment, product, metric, or competitive dynamic.
+- FORBIDDEN generic phrases: "higher rates hurt growth stocks", "the company faces headwinds", "like many tech companies", "as a growth stock"
+- REQUIRED: Name specific {company.ticker} revenue lines, products, or structural advantages in every claim.
+- Do NOT write sector-level analysis — write exclusively about {company.company_name}.
+
+MACRO SPECIFICITY REQUIRED:
+- Trace rate changes through {company.ticker}'s SPECIFIC revenue lines (not "rates hurt growth stocks")
+- Explain the transmission mechanism: rate → [specific cost/demand/multiple effect] → [specific P&L line]
+"""
+    else:
+        company_context_block = ""
+
     return f"""You are a specialist macro analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
+{company_context_block}
 EVIDENCE:
 {evidence_block}
 
@@ -124,6 +141,7 @@ def run_macro_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> MacroSensitivity:
     """Run the macro specialist agent.
 
@@ -140,7 +158,7 @@ def run_macro_agent(
     if not relevant:
         return _empty_output("No macro-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant)
+    prompt = _build_prompt(company, relevant, profile)
     try:
         result: MacroSensitivity = get_structured_response(
             prompt,

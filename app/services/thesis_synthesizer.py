@@ -42,6 +42,7 @@ from typing import List, Optional
 
 from ..schemas import (
     CompanyContext,
+    CompanyKnowledgeProfile,
     InvestmentThesis,
     MacroSensitivity,
     MarketContext,
@@ -53,6 +54,7 @@ from ..schemas import (
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
+from .depth_guard import check_synthesis_depth
 
 logger = logging.getLogger(__name__)
 
@@ -104,6 +106,7 @@ def _build_synthesis_prompt(
     market: MarketContext,
     quality: QualityAssessment,
     evidence: List[RetrievedEvidence],
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> str:
     agent_summaries = "\n\n".join([
         _agent_block("Valuation", valuation.overall, valuation.confidence),
@@ -117,11 +120,34 @@ def _build_synthesis_prompt(
     catalysts_txt = "\n".join(f"- {c}" for c in market.recent_catalysts) or "None identified."
     ev_block = _evidence_block(evidence)
 
+    ticker = company.ticker
+
+    # ── Optional: company business model section ──────────────────────────────
+    if profile is not None:
+        biz_model_section = f"""
+=== COMPANY BUSINESS MODEL (ground every claim in this) ===
+Business model: {profile.business_model}
+Primary revenue drivers: {', '.join(profile.primary_revenue_drivers)}
+Recurring revenue: {', '.join(profile.recurring_revenue_sources)}
+Valuation style: {profile.valuation_style}
+Key metrics: {', '.join(profile.key_metrics)}
+Competitive advantages: {'; '.join(profile.competitive_advantages)}
+Rate sensitivity: {profile.rate_sensitivity_note}
+"""
+        profile_keywords_hint = (
+            f"Required terms include: {', '.join(profile.business_model_keywords[:8])}."
+            if profile.business_model_keywords
+            else ""
+        )
+    else:
+        biz_model_section = ""
+        profile_keywords_hint = ""
+
     return f"""You are a senior investment analyst producing an institutional-quality thesis.
 
-COMPANY: {company.company_name} ({company.ticker})
+COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
-
+{biz_model_section}
 === SPECIALIST AGENT OUTPUTS ===
 {agent_summaries}
 
@@ -134,22 +160,45 @@ Recent Catalysts:
 === SUPPORTING EVIDENCE ===
 {ev_block}
 
+=== AGENT CONFLICT ANALYSIS ===
+Before synthesising, identify any disagreements between agents:
+- Does valuation say 'cheap' while risk says 'high debt'? (value trap risk)
+- Does macro say 'rate cuts imminent' while quality says 'margin pressures building'?
+- Does market say 'bullish catalysts' while risk says 'near-term headwinds'?
+Explicitly address each conflict in your bull/bear thesis.
+
 === TASK ===
-Synthesise the agent outputs into a balanced InvestmentThesis. Requirements:
-1. bull_thesis: 2-3 sentence bull case grounded in valuation, quality, and catalysts.
-2. bear_thesis: 2-3 sentence bear case grounded in risks and macro headwinds.
-3. key_drivers: exactly 4 value drivers as bullet strings.
-4. key_risks: exactly 4 investment risks as bullet strings.
-5. valuation_view: 1-2 sentence valuation summary.
-6. macro_sensitivity: 1-2 sentence macro sensitivity summary.
+Synthesise the agent outputs into an institutional-quality InvestmentThesis.
+Requirements:
+1. bull_thesis: 2-3 sentences. MUST cite: (a) at least one specific {company.company_name} business \
+segment or product, (b) at least one agent-identified driver, (c) a valuation anchor.
+2. bear_thesis: 2-3 sentences. MUST cite: (a) a specific company-level risk, (b) a \
+macro headwind's actual transmission mechanism to {ticker}'s earnings/margins.
+3. key_drivers: exactly 4 drivers, ranked by importance, phrased as "{ticker}-specific: X"
+4. key_risks: exactly 4 risks, ranked by severity, with company-specific transmission.
+5. valuation_view: 1-2 sentences citing actual multiple or metric (not generic).
+6. macro_sensitivity: 1-2 sentences on how the SPECIFIC macro environment hits \
+{company.company_name}'s SPECIFIC revenue lines and cost structure.
 7. confidence_score: 0.0-1.0. Penalise for low-confidence agent inputs and sparse evidence.
-8. confidence_reasoning: Why this confidence level?
-9. what_changes_the_thesis: exactly 4 events/data-points that would materially change the view.
-10. conclusion: one concise paragraph synthesising the overall investment merit.
+8. confidence_reasoning: Why this confidence level? Cite agent confidence levels.
+9. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
+10. conclusion: Institutional-quality paragraph. Must NOT contain generic phrases \
+like "the company faces headwinds" or "as a growth stock". MUST name specific \
+{ticker} revenue drivers, risks, and valuation factors.
+
+Agent reconciliation rules:
+- If agents DISAGREE on direction (e.g. bullish vs bearish), explicitly say WHY \
+the stronger argument wins and what would flip you the other way.
+- Rank key_drivers and key_risks by importance — put the most impactful first.
+- Every claim must trace back to a specific agent output or evidence item number.
+
+Company specificity rules (MANDATORY):
+- You MUST mention {company.company_name}'s actual business segments/products.
+- FORBIDDEN: Generic phrases like "tech companies face headwinds", "as a growth stock".
+- REQUIRED: Specific {ticker} terms. {profile_keywords_hint}
 
 Rules:
 - Be specific — cite ticker, sector, and evidence numbers where relevant.
-- Avoid generic phrases like "the company faces headwinds" without specifics.
 - If evidence is sparse, say so explicitly in confidence_reasoning.
 - Do NOT fabricate financial figures not present in the evidence."""
 
@@ -266,11 +315,13 @@ def synthesize_thesis(
     quality: QualityAssessment,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
     Runs the LLM synthesis then applies deterministic Phase 4 governance
-    checks.  Degrades gracefully if the LLM call fails.
+    checks and Phase 5 depth enforcement.  Degrades gracefully if the LLM
+    call fails.
 
     Parameters
     ----------
@@ -282,10 +333,13 @@ def synthesize_thesis(
     quality   : Output from run_quality_agent().
     evidence  : Full evidence list (all agents' inputs combined).
     request_id: Optional trace ID forwarded to model client.
+    profile   : Optional CompanyKnowledgeProfile; enables richer prompting
+                and depth-guard checks when supplied.
 
     Returns
     -------
-    InvestmentThesis with consistency_warnings populated by governance layer.
+    InvestmentThesis with consistency_warnings populated by governance and
+    depth-guard layers.
     """
     print(
         f"[thesis_synthesizer] synthesising for {company.ticker} "
@@ -307,7 +361,7 @@ def synthesize_thesis(
         return _empty_thesis(company, "No agent outputs or evidence available.")
 
     prompt = _build_synthesis_prompt(
-        company, valuation, macro, risk, market, quality, evidence
+        company, valuation, macro, risk, market, quality, evidence, profile
     )
 
     try:
@@ -331,6 +385,11 @@ def synthesize_thesis(
 
     # ── Phase 4: governance / consistency checks ──────────────────────────────
     warnings = _run_governance_checks(company, valuation, macro, risk, thesis, evidence)
+
+    # ── Phase 5: depth enforcement ────────────────────────────────────────────
+    depth_warnings = check_synthesis_depth(thesis, company, profile)
+    warnings = warnings + depth_warnings
+
     thesis.consistency_warnings = warnings
 
     if warnings:
@@ -340,6 +399,7 @@ def synthesize_thesis(
     print(
         f"[thesis_synthesizer] done for {company.ticker}: "
         f"confidence={thesis.confidence_score:.2f} "
-        f"warnings={len(warnings)}"
+        f"warnings={len(warnings)} "
+        f"(governance={len(warnings) - len(depth_warnings)}, depth={len(depth_warnings)})"
     )
     return thesis

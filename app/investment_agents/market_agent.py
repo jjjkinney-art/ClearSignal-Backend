@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from ..schemas import CompanyContext, MarketContext, RetrievedEvidence
+from ..schemas import CompanyContext, MarketContext, RetrievedEvidence, CompanyKnowledgeProfile
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
@@ -18,19 +18,11 @@ logger = logging.getLogger(__name__)
 _AGENT_NAME = "market_agent"
 
 _EVIDENCE_KEYWORDS = [
-    "news",
-    "newsapi",
-    "bloomberg",
-    "reuters",
-    "cnbc",
-    "catalyst",
-    "guidance",
-    "earnings beat",
-    "earnings miss",
-    "analyst",
-    "upgrade",
-    "downgrade",
-    "price change",
+    "news", "newsapi", "bloomberg", "reuters", "cnbc", "wsj",
+    "catalyst", "guidance", "earnings beat", "earnings miss",
+    "analyst", "upgrade", "downgrade", "price target", "buy", "sell",
+    "momentum", "sentiment", "positioning", "flow",
+    "announcement", "launch", "partnership", "contract",
 ]
 
 
@@ -80,7 +72,11 @@ def _empty_output(reason: str = "") -> MarketContext:
     )
 
 
-def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) -> str:
+def _build_prompt(
+    company: CompanyContext,
+    evidence: List[RetrievedEvidence],
+    profile: Optional[CompanyKnowledgeProfile] = None,
+) -> str:
     """Build the market context agent prompt."""
     evidence_block = "\n".join(
         f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
@@ -90,9 +86,30 @@ def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) ->
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
 
+    if profile is not None:
+        company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
+Business model: {profile.business_model}
+Primary revenue drivers (catalysts should trace to these): {', '.join(profile.primary_revenue_drivers)}
+Key metrics analysts watch: {', '.join(profile.key_metrics)}
+Business model keywords you MUST reference: {', '.join(profile.business_model_keywords[:8])}
+
+MANDATORY SPECIFICITY RULES:
+- Every analytical sentence MUST reference a specific {company.company_name} business segment, product, metric, or competitive dynamic.
+- FORBIDDEN generic phrases: "higher rates hurt growth stocks", "the company faces headwinds", "like many tech companies", "as a growth stock"
+- REQUIRED: Name specific {company.ticker} revenue lines, products, or structural advantages in every claim.
+- Do NOT write sector-level analysis — write exclusively about {company.company_name}.
+
+CATALYST SPECIFICITY REQUIRED:
+- Catalysts must link to specific {company.ticker} revenue events or operational milestones.
+- Analyst sentiment must reference specific estimates (e.g., Services ASP, GPU shipment volumes).
+"""
+    else:
+        company_context_block = ""
+
     return f"""You are a specialist market analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
+{company_context_block}
 EVIDENCE (recent news, price data, analyst commentary):
 {evidence_block}
 
@@ -123,6 +140,7 @@ def run_market_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> MarketContext:
     """Run the market context specialist agent.
 
@@ -139,7 +157,7 @@ def run_market_agent(
     if not relevant:
         return _empty_output("No market-context-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant)
+    prompt = _build_prompt(company, relevant, profile)
     try:
         result: MarketContext = get_structured_response(
             prompt,

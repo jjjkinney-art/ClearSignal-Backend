@@ -835,3 +835,100 @@ class AlertEvent(BaseModel):
     direction: str
     triggered_at: str = Field(description="ISO-8601 UTC timestamp")
     message: str = Field(description="Human-readable alert message")
+
+
+class CompanyKnowledgeProfile(BaseModel):
+    """Curated business-intelligence profile for a specific publicly-traded company.
+
+    Stored in the company knowledge database and injected into every
+    specialist agent prompt to force company-specific, non-generic reasoning.
+    Also used by the depth guard to verify that synthesised theses reference
+    actual business-model terms rather than sector-level clichés.
+
+    Design
+    ------
+    - ``business_model``: 1-2 sentence plain-English description.
+    - ``primary_revenue_drivers``: ordered from largest to smallest (e.g.
+      for Apple: iPhone, Services, Mac, …).
+    - ``recurring_revenue_sources``: specific recurring/subscription lines.
+    - ``rate_sensitivity_note``: a precise paragraph about how interest-rate
+      moves hit *this* company's earnings and valuation — not a generic
+      "growth stocks are rate-sensitive" statement.
+    - ``inflation_pass_through``: pricing power and cost-pass-through ability.
+    - ``recession_behavior``: what actually happens to revenue and margins
+      when the economy contracts.
+    - ``major_risks``: company-specific risk factors (not sector clichés).
+    - ``valuation_style``: how the market values this company (P/E, DCF,
+      EV/Sales, sum-of-parts, etc.) and why.
+    - ``key_metrics``: the handful of data points analysts track most closely.
+    - ``competitive_advantages``: specific moat sources (not "strong brand").
+    - ``business_model_keywords``: used by the depth guard — if fewer than
+      3 of these appear in the synthesised thesis, a depth warning is emitted.
+    """
+
+    ticker: str = Field(..., description="Ticker symbol (uppercase)")
+    company_name: str = Field(..., description="Full canonical company name")
+
+    # ── Business model ────────────────────────────────────────────────────────
+    business_model: str = Field(
+        ..., description="1-2 sentence description of how the company earns money"
+    )
+    primary_revenue_drivers: List[str] = Field(
+        default_factory=list,
+        description="Revenue segments ordered largest to smallest",
+    )
+    recurring_revenue_sources: List[str] = Field(
+        default_factory=list,
+        description="Specific subscription/contracted/recurring revenue lines",
+    )
+
+    # ── Macro sensitivity ─────────────────────────────────────────────────────
+    rate_sensitivity_note: str = Field(
+        default="",
+        description=(
+            "Company-specific paragraph on how interest-rate moves affect "
+            "earnings, valuation multiple, and balance sheet"
+        ),
+    )
+    inflation_pass_through: str = Field(
+        default="",
+        description="Pricing power and cost-pass-through ability for this company",
+    )
+    recession_behavior: str = Field(
+        default="",
+        description="What happens to revenue and margins when GDP contracts",
+    )
+
+    # ── Risk ─────────────────────────────────────────────────────────────────
+    major_risks: List[str] = Field(
+        default_factory=list,
+        description="Company-specific risk factors (not generic sector risks)",
+    )
+
+    # ── Valuation ────────────────────────────────────────────────────────────
+    valuation_style: str = Field(
+        default="",
+        description=(
+            "How the market prices this company (P/E, DCF, EV/Sales, "
+            "sum-of-parts) and the key assumptions that drive the multiple"
+        ),
+    )
+    key_metrics: List[str] = Field(
+        default_factory=list,
+        description="KPIs analysts track most closely for this company",
+    )
+
+    # ── Quality / moat ───────────────────────────────────────────────────────
+    competitive_advantages: List[str] = Field(
+        default_factory=list,
+        description="Specific moat sources — not generic phrases",
+    )
+
+    # ── Depth guard ──────────────────────────────────────────────────────────
+    business_model_keywords: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Company-specific nouns the depth guard requires in synthesised "
+            "theses (e.g. 'iPhone', 'CUDA', 'Azure')"
+        ),
+    )

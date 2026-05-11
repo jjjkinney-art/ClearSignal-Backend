@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from ..schemas import CompanyContext, QualityAssessment, RetrievedEvidence
+from ..schemas import CompanyContext, QualityAssessment, RetrievedEvidence, CompanyKnowledgeProfile
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
@@ -19,20 +19,11 @@ logger = logging.getLogger(__name__)
 _AGENT_NAME = "quality_agent"
 
 _EVIDENCE_KEYWORDS = [
-    "profile",
-    "company profile",
-    "fmp",
-    "business",
-    "revenue",
-    "free cash flow",
-    "fcf",
-    "buyback",
-    "dividend",
-    "r&d",
-    "research",
-    "intellectual property",
-    "subscription",
-    "recurring",
+    "profile", "company profile", "fmp", "business",
+    "free cash flow", "fcf", "buyback", "repurchase",
+    "dividend", "r&d", "research", "intellectual property",
+    "subscription", "recurring", "moat", "ecosystem",
+    "retention", "churn", "installed base", "switching cost",
 ]
 
 
@@ -82,7 +73,11 @@ def _empty_output(reason: str = "") -> QualityAssessment:
     )
 
 
-def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) -> str:
+def _build_prompt(
+    company: CompanyContext,
+    evidence: List[RetrievedEvidence],
+    profile: Optional[CompanyKnowledgeProfile] = None,
+) -> str:
     """Build the quality agent prompt."""
     evidence_block = "\n".join(
         f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
@@ -92,9 +87,31 @@ def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) ->
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
 
+    if profile is not None:
+        company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
+Business model: {profile.business_model}
+Competitive advantages: {'; '.join(profile.competitive_advantages)}
+Recurring revenue sources: {', '.join(profile.recurring_revenue_sources)}
+Capital allocation style: {profile.valuation_style} — infer buyback/dividend discipline from this context.
+Business model keywords you MUST reference: {', '.join(profile.business_model_keywords[:8])}
+
+MANDATORY SPECIFICITY RULES:
+- Every analytical sentence MUST reference a specific {company.company_name} business segment, product, metric, or competitive dynamic.
+- FORBIDDEN generic phrases: "higher rates hurt growth stocks", "the company faces headwinds", "like many tech companies", "as a growth stock"
+- REQUIRED: Name specific {company.ticker} revenue lines, products, or structural advantages in every claim.
+- Do NOT write sector-level analysis — write exclusively about {company.company_name}.
+
+QUALITY SPECIFICITY REQUIRED:
+- Moat assessment must reference specific structural barriers ({company.ticker}'s ecosystem, patents, switching costs, etc.)
+- FCF assessment must reference specific business lines that generate or consume cash.
+"""
+    else:
+        company_context_block = ""
+
     return f"""You are a specialist business quality analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
+{company_context_block}
 EVIDENCE (company profile, financial quality indicators):
 {evidence_block}
 
@@ -126,6 +143,7 @@ def run_quality_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> QualityAssessment:
     """Run the quality specialist agent.
 
@@ -143,7 +161,7 @@ def run_quality_agent(
     if not relevant:
         return _empty_output("No quality-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant)
+    prompt = _build_prompt(company, relevant, profile)
     try:
         result: QualityAssessment = get_structured_response(
             prompt,

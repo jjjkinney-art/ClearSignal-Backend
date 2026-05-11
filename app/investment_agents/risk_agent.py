@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from ..schemas import CompanyContext, RiskProfile, RetrievedEvidence
+from ..schemas import CompanyContext, RiskProfile, RetrievedEvidence, CompanyKnowledgeProfile
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
@@ -18,18 +18,11 @@ logger = logging.getLogger(__name__)
 _AGENT_NAME = "risk_agent"
 
 _EVIDENCE_KEYWORDS = [
-    "sec",
-    "edgar",
-    "10-k",
-    "10-q",
-    "annual report",
-    "quarterly report",
-    "filing",
-    "debt",
-    "balance sheet",
-    "liability",
-    "leverage",
-    "risk",
+    "sec", "edgar", "10-k", "10-q", "annual report", "quarterly report",
+    "filing", "debt", "balance sheet", "liability", "leverage",
+    "risk", "risk factor", "regulation", "lawsuit", "litigation",
+    "refinancing", "credit rating", "covenant", "supply chain",
+    "exposure", "concentration",
 ]
 
 
@@ -79,7 +72,11 @@ def _empty_output(reason: str = "") -> RiskProfile:
     )
 
 
-def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) -> str:
+def _build_prompt(
+    company: CompanyContext,
+    evidence: List[RetrievedEvidence],
+    profile: Optional[CompanyKnowledgeProfile] = None,
+) -> str:
     """Build the risk agent prompt."""
     evidence_block = "\n".join(
         f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
@@ -89,9 +86,31 @@ def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) ->
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
 
+    if profile is not None:
+        major_risks_block = "\n".join(f"  - {r}" for r in profile.major_risks)
+        company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
+Business model: {profile.business_model}
+Known major risks (validate and expand from evidence):
+{major_risks_block}
+Business model keywords you MUST reference: {', '.join(profile.business_model_keywords[:8])}
+
+MANDATORY SPECIFICITY RULES:
+- Every analytical sentence MUST reference a specific {company.company_name} business segment, product, metric, or competitive dynamic.
+- FORBIDDEN generic phrases: "higher rates hurt growth stocks", "the company faces headwinds", "like many tech companies", "as a growth stock"
+- REQUIRED: Name specific {company.ticker} revenue lines, products, or structural advantages in every claim.
+- Do NOT write sector-level analysis — write exclusively about {company.company_name}.
+
+RISK SPECIFICITY REQUIRED:
+- Each risk must name the specific {company.ticker} revenue line, customer segment, or competitive dynamic at stake.
+- Do NOT list sector-level risks without tracing them to {company.ticker}'s specific situation.
+"""
+    else:
+        company_context_block = ""
+
     return f"""You are a specialist risk analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
+{company_context_block}
 EVIDENCE (SEC filings, balance-sheet data, and related sources):
 {evidence_block}
 
@@ -124,6 +143,7 @@ def run_risk_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
+    profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> RiskProfile:
     """Run the risk specialist agent.
 
@@ -141,7 +161,7 @@ def run_risk_agent(
     if not relevant:
         return _empty_output("No risk-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant)
+    prompt = _build_prompt(company, relevant, profile)
     try:
         result: RiskProfile = get_structured_response(
             prompt,
