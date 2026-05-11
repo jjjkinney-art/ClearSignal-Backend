@@ -576,3 +576,262 @@ class SignalProfileModel(BaseModel):
     dominant_outcome: str
     outcome_behavior_summary: str
     behavior_policy: str  # highest priority / medium-high priority / medium priority / reduced priority
+
+
+# =============================================================================
+# Investment Intelligence schemas — company-aware multi-agent thesis layer
+# =============================================================================
+
+class CompanyContext(BaseModel):
+    """Normalised company identity resolved from a user query.
+
+    Produced by company_detection.detect_company() and consumed by every
+    investment agent and the thesis synthesiser.  Carries both the canonical
+    ticker and human-readable metadata needed to scope evidence retrieval and
+    label outputs correctly.
+    """
+
+    ticker: str = Field(..., description="Exchange ticker symbol, e.g. 'AAPL'")
+    company_name: str = Field(..., description="Canonical company name")
+    sector: Optional[str] = Field(None, description="GICS sector (e.g. 'Technology')")
+    industry: Optional[str] = Field(None, description="GICS industry group")
+    aliases: List[str] = Field(
+        default_factory=list,
+        description="Input aliases that resolved to this company",
+    )
+
+
+class ValuationView(BaseModel):
+    """Structured output of the valuation specialist agent.
+
+    All text fields default to '' so the model can be constructed safely
+    even when LLM synthesis is skipped (graceful degradation path).
+    ``evidence_used`` lists the titles of evidence items the agent consumed,
+    enabling downstream citation tracking.
+    """
+
+    pe_assessment: str = Field(default="", description="P/E vs sector and history")
+    growth_view: str = Field(default="", description="Revenue and EPS growth trajectory")
+    margin_trend: str = Field(default="", description="Operating and net margin trend")
+    discount_sensitivity: str = Field(
+        default="", description="Valuation sensitivity to discount-rate moves"
+    )
+    relative_value: str = Field(
+        default="", description="Relative value vs sector peers"
+    )
+    overall: str = Field(default="", description="Summary valuation assessment")
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_used: List[str] = Field(
+        default_factory=list, description="Evidence titles consumed by this agent"
+    )
+
+
+class MacroSensitivity(BaseModel):
+    """Structured output of the macro specialist agent.
+
+    Captures how a company's fundamentals and valuation respond to macro
+    regimes — rates, inflation, recession, and cyclical turning points.
+    """
+
+    rate_sensitivity: str = Field(
+        default="", description="Impact of rate moves on valuation and earnings"
+    )
+    inflation_sensitivity: str = Field(
+        default="", description="Pricing power and cost-pass-through ability"
+    )
+    recession_risk: str = Field(
+        default="", description="Revenue and margin vulnerability in a downturn"
+    )
+    cyclicality: str = Field(
+        default="", description="Cyclical vs defensive revenue mix"
+    )
+    overall: str = Field(default="", description="Summary macro sensitivity view")
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_used: List[str] = Field(default_factory=list)
+
+
+class RiskProfile(BaseModel):
+    """Structured output of the risk specialist agent.
+
+    Draws primarily on SEC filing evidence and balance-sheet metrics to
+    quantify and characterise the key risks an investor faces.
+    """
+
+    debt_risk: str = Field(
+        default="", description="Leverage, interest coverage, and refinancing risk"
+    )
+    competitive_risk: str = Field(
+        default="", description="Competitive moat erosion and market-share threats"
+    )
+    regulatory_risk: str = Field(
+        default="", description="Regulatory exposure and compliance burden"
+    )
+    concentration_risk: str = Field(
+        default="", description="Customer, supplier, or geography concentration"
+    )
+    key_risks: List[str] = Field(
+        default_factory=list, description="Top 3-5 risks in bullet form"
+    )
+    overall: str = Field(default="", description="Summary risk assessment")
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_used: List[str] = Field(default_factory=list)
+
+
+class MarketContext(BaseModel):
+    """Structured output of the market specialist agent.
+
+    Captures near-term catalysts, sentiment, and price dynamics from
+    recent news and price-change evidence.
+    """
+
+    recent_catalysts: List[str] = Field(
+        default_factory=list, description="Key catalysts from recent news"
+    )
+    momentum: str = Field(
+        default="", description="Price momentum and technical positioning"
+    )
+    sentiment: str = Field(
+        default="", description="Analyst and market sentiment"
+    )
+    positioning: str = Field(
+        default="", description="Institutional and retail positioning signals"
+    )
+    overall: str = Field(default="", description="Summary market context")
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_used: List[str] = Field(default_factory=list)
+
+
+class QualityAssessment(BaseModel):
+    """Structured output of the quality specialist agent.
+
+    Assesses business durability — competitive moat, management track record,
+    capital-allocation discipline, and revenue quality.
+    """
+
+    moat: str = Field(
+        default="", description="Competitive advantages and their durability"
+    )
+    management: str = Field(
+        default="", description="Management quality and track record"
+    )
+    capital_allocation: str = Field(
+        default="", description="Buybacks, dividends, R&D, and M&A discipline"
+    )
+    revenue_durability: str = Field(
+        default="", description="Recurring vs one-time revenue; customer stickiness"
+    )
+    operating_quality: str = Field(
+        default="", description="Margin consistency, FCF conversion, asset intensity"
+    )
+    overall: str = Field(default="", description="Summary quality assessment")
+    confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_used: List[str] = Field(default_factory=list)
+
+
+class InvestmentThesis(BaseModel):
+    """Synthesised investment thesis produced by the thesis synthesiser.
+
+    Combines outputs from all five specialist agents into a balanced,
+    evidence-grounded thesis with explicit bull and bear cases, confidence
+    scoring, and a deterministic list of what would change the view.
+
+    Distinct from ``SynthesisOutput`` (which is the legacy company-analysis
+    synthesis): ``InvestmentThesis`` is the output of the new multi-agent
+    investment intelligence pipeline.
+    """
+
+    ticker: str = Field(..., description="Ticker symbol")
+    company_name: str = Field(..., description="Canonical company name")
+    bull_thesis: str = Field(default="", description="Bull case narrative")
+    bear_thesis: str = Field(default="", description="Bear case narrative")
+    key_drivers: List[str] = Field(
+        default_factory=list, description="Top 3-5 value drivers"
+    )
+    key_risks: List[str] = Field(
+        default_factory=list, description="Top 3-5 investment risks"
+    )
+    valuation_view: str = Field(
+        default="", description="Valuation summary from the valuation agent"
+    )
+    macro_sensitivity: str = Field(
+        default="", description="Macro sensitivity summary"
+    )
+    confidence_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    confidence_reasoning: str = Field(
+        default="", description="Why the confidence level was assigned"
+    )
+    what_changes_the_thesis: List[str] = Field(
+        default_factory=list,
+        description="Events or data that would materially change this view",
+    )
+    conclusion: str = Field(
+        default="", description="One-paragraph investment conclusion"
+    )
+    evidence_count: int = Field(
+        default=0, description="Total evidence items consumed across all agents"
+    )
+    generated_at: str = Field(
+        default="", description="ISO-8601 UTC timestamp of generation"
+    )
+    # Governance flags set by the consistency checker
+    consistency_warnings: List[str] = Field(
+        default_factory=list,
+        description="Deterministic contradictions flagged by the governance layer",
+    )
+
+
+class AlertCondition(BaseModel):
+    """A condition to watch that triggers an alert when its threshold is crossed.
+
+    Used by the monitoring layer to evaluate live readings against declared
+    thresholds.  Completely distinct from the existing ``Alert`` model (which
+    represents a triggered alert); ``AlertCondition`` is the *rule* while
+    ``Alert`` is the *event*.
+    """
+
+    condition_id: str = Field(
+        default="", description="Unique identifier for this condition"
+    )
+    type: str = Field(
+        ...,
+        description=(
+            "Condition type, e.g. 'yield_curve_reinversion', "
+            "'margin_compression', 'debt_increase', 'guidance_weakness', "
+            "'volatility_spike'"
+        ),
+    )
+    threshold: float = Field(
+        default=0.0, description="Numeric threshold value"
+    )
+    direction: str = Field(
+        default="crosses",
+        description="'above', 'below', or 'crosses' (triggers on sign change)",
+    )
+    ticker: Optional[str] = Field(
+        None, description="Company ticker scope (None = macro condition)"
+    )
+    topic: Optional[str] = Field(
+        None, description="FRED topic scope, e.g. 'yields', 'inflation'"
+    )
+    description: str = Field(
+        default="", description="Human-readable description of this condition"
+    )
+
+
+class AlertEvent(BaseModel):
+    """A triggered alert event produced when an AlertCondition is met.
+
+    Carries the current value, threshold, condition metadata, and a
+    human-readable message so consumers can act without re-reading the
+    original condition.
+    """
+
+    condition_id: str = Field(default="")
+    type: str
+    ticker: Optional[str] = None
+    topic: Optional[str] = None
+    current_value: float
+    threshold: float
+    direction: str
+    triggered_at: str = Field(description="ISO-8601 UTC timestamp")
+    message: str = Field(description="Human-readable alert message")

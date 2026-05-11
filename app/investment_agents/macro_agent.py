@@ -1,0 +1,161 @@
+"""Macro specialist agent.
+
+Focuses on interest-rate sensitivity, inflation pass-through, recession
+risk, and cyclical exposure for a given company under current macro conditions.
+"""
+from __future__ import annotations
+
+import logging
+from typing import List, Optional
+
+from ..schemas import CompanyContext, MacroSensitivity, RetrievedEvidence
+from ..structured_output import get_structured_response
+from ..model_client import model_client
+from ..config import settings
+
+logger = logging.getLogger(__name__)
+
+_AGENT_NAME = "macro_agent"
+
+_EVIDENCE_KEYWORDS = [
+    "fred",
+    "treasury",
+    "yield",
+    "inflation",
+    "cpi",
+    "pce",
+    "fed funds",
+    "federal reserve",
+    "recession",
+    "gdp",
+    "vix",
+    "credit spread",
+    "t10y2y",
+    "dgs",
+]
+
+
+def _filter_evidence(
+    evidence: List[RetrievedEvidence],
+    company: CompanyContext,
+) -> List[RetrievedEvidence]:
+    """Return evidence items relevant to this agent's macro domain.
+
+    Matches on title OR source containing any keyword (case-insensitive).
+    Evidence whose title contains the company ticker or name is always included
+    to capture company-specific macro commentary.
+    """
+    ticker_lower = company.ticker.lower()
+    name_lower = company.company_name.lower()
+    alias_lowers = [a.lower() for a in company.aliases]
+
+    relevant: List[RetrievedEvidence] = []
+    seen_titles: set = set()
+
+    for ev in evidence:
+        title_lower = ev.title.lower()
+        source_lower = ev.source.lower()
+
+        is_company_match = (
+            ticker_lower in title_lower
+            or name_lower in title_lower
+            or any(alias in title_lower for alias in alias_lowers)
+        )
+
+        is_keyword_match = any(
+            kw in title_lower or kw in source_lower
+            for kw in _EVIDENCE_KEYWORDS
+        )
+
+        if (is_company_match or is_keyword_match) and ev.title not in seen_titles:
+            relevant.append(ev)
+            seen_titles.add(ev.title)
+
+    return relevant
+
+
+def _empty_output(reason: str = "") -> MacroSensitivity:
+    return MacroSensitivity(
+        overall=f"Insufficient evidence for macro sensitivity analysis. {reason}".strip(),
+        confidence=0.0,
+    )
+
+
+def _build_prompt(company: CompanyContext, evidence: List[RetrievedEvidence]) -> str:
+    """Build the macro agent prompt."""
+    evidence_block = "\n".join(
+        f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
+        for i, ev in enumerate(evidence)
+    )
+    sector_line = f"Sector: {company.sector}" if company.sector else ""
+    industry_line = f"Industry: {company.industry}" if company.industry else ""
+    context_lines = "\n".join(filter(None, [sector_line, industry_line]))
+
+    return f"""You are a specialist macro analyst. Analyse {company.company_name} ({company.ticker}).
+{context_lines}
+
+EVIDENCE:
+{evidence_block}
+
+Using the macro evidence above, answer the following for this company:
+- How do current interest-rate levels and trajectory affect this company's earnings and valuation?
+- What is its pricing power and ability to pass through inflation to customers?
+- How vulnerable are revenues and margins if the economy enters a recession?
+- Is this company cyclical or defensive — how correlated is its business with the economic cycle?
+- What yield-curve or credit-spread signals are relevant?
+
+Produce a JSON object matching the MacroSensitivity schema with these fields:
+- rate_sensitivity: Impact of rate moves on valuation and earnings
+- inflation_sensitivity: Pricing power and cost-pass-through ability
+- recession_risk: Revenue and margin vulnerability in a downturn
+- cyclicality: Cyclical vs defensive revenue mix and economic correlation
+- overall: One concise paragraph summarising macro sensitivity
+- confidence: 0.0-1.0 based on evidence completeness
+
+Rules:
+- Cite evidence numbers (e.g. [1], [2]) in your text.
+- Be specific — no generic placeholders or invented figures.
+- Return ONLY valid JSON, no markdown fences or prose outside the JSON object.
+
+JSON:"""
+
+
+def run_macro_agent(
+    company: CompanyContext,
+    evidence: List[RetrievedEvidence],
+    request_id: Optional[str] = None,
+) -> MacroSensitivity:
+    """Run the macro specialist agent.
+
+    Filters evidence to macro-relevant items, builds a focused prompt,
+    calls the LLM via get_structured_response, and returns a MacroSensitivity.
+    Degrades gracefully if evidence is empty or the LLM call fails.
+    """
+    relevant = _filter_evidence(evidence, company)
+    print(
+        f"[DIAG] [{_AGENT_NAME}] ticker={company.ticker} "
+        f"relevant_evidence={len(relevant)}/{len(evidence)}"
+    )
+
+    if not relevant:
+        return _empty_output("No macro-relevant evidence available.")
+
+    prompt = _build_prompt(company, relevant)
+    try:
+        result: MacroSensitivity = get_structured_response(
+            prompt,
+            MacroSensitivity,
+            model_client,
+            max_retries=settings.model_max_retries,
+            backoff_factor=settings.model_backoff_factor,
+        )
+        result.evidence_used = [ev.title[:70] for ev in relevant]
+        return result
+    except Exception as exc:
+        logger.warning(
+            "[%s] LLM call failed for %s: %r",
+            _AGENT_NAME,
+            company.ticker,
+            exc,
+        )
+        return _empty_output(f"LLM error: {exc}")

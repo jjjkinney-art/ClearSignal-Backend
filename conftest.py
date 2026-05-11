@@ -166,6 +166,11 @@ for _svc_name in (
     "app.services.monitoring_service",
     "app.services.alert_service",
     "app.services.learning",
+    # timeline_store must be imported here (before test_history_inversion.py and
+    # test_meaning_native.py replace sys.modules["pydantic"] with a stub at collection
+    # time).  Without this early import, TimelineEntry would be constructed with the
+    # stub pydantic.BaseModel and its default_factory fields would produce None.
+    "app.services.timeline_store",
 ):
     try:
         __import__(_svc_name)
