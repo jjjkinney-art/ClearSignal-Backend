@@ -912,6 +912,30 @@ class InvestmentThesis(BaseModel):
         default=None,
         description="Compressed decision-intelligence view for meaning-first UI rendering",
     )
+    # ── Temporal intelligence (Refinement 4) ──────────────────────────────────
+    # Extension points for timeline memory. When no prior thesis exists all three
+    # fields default safely so existing rendering is unaffected.
+    what_changed: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Specific changes from the prior thesis for this ticker, if one exists. "
+            "Empty list when no prior thesis is available."
+        ),
+    )
+    thesis_trend: str = Field(
+        default="unclear",
+        description=(
+            "strengthening | weakening | stable | unclear — direction of the thesis "
+            "relative to the prior version. 'unclear' when no prior thesis exists."
+        ),
+    )
+    change_drivers: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Company-specific events or data that are driving the thesis trend. "
+            "Empty list when no prior thesis is available."
+        ),
+    )
 
 
 class AlertCondition(BaseModel):

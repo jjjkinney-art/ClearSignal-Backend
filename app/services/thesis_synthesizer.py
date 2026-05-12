@@ -57,7 +57,14 @@ from ..structured_output import get_structured_response, extract_json_candidate,
 from ..model_client import model_client
 from ..config import settings
 from .depth_guard import check_synthesis_depth
-from .signal_ranker import rank_signals, compress_thesis as _compress_thesis, check_forbidden_phrases, RankedSignalSet
+from .signal_ranker import (
+    rank_signals,
+    compress_thesis as _compress_thesis,
+    check_forbidden_phrases,
+    propagate_evidence_refs,
+    RankedSignalSet,
+)
+from .thesis_polisher import polish_thesis
 
 logger = logging.getLogger(__name__)
 
@@ -679,6 +686,15 @@ def synthesize_thesis(
         thesis.top_risks = ranked.top_risks
         thesis.secondary_signals = ranked.secondary_signals
 
+    # ── Refinement 3: Evidence reference propagation ──────────────────────────
+    # Infer evidence_refs on signals that the LLM did not explicitly annotate,
+    # using keyword overlap against the full evidence pool.
+    try:
+        thesis.top_signals = propagate_evidence_refs(thesis.top_signals, evidence)
+        thesis.top_risks   = propagate_evidence_refs(thesis.top_risks,   evidence)
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] evidence propagation failed: %r", exc)
+
     # ── Phase 4: governance / consistency checks ──────────────────────────────
     warnings = _run_governance_checks(company, valuation, macro, risk, thesis, evidence)
 
@@ -703,6 +719,12 @@ def synthesize_thesis(
             thesis.one_sentence_thesis = thesis.compressed_thesis.one_sentence_thesis
         except Exception as exc:
             logger.warning("[thesis_synthesizer] compression failed: %r", exc)
+
+    # ── Refinement 1+2+4: Concision, redundancy suppression, temporal defaults ─
+    try:
+        thesis = polish_thesis(thesis)
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] thesis_polisher failed: %r — skipping", exc)
 
     print(
         f"[thesis_synthesizer] done for {company.ticker}: "

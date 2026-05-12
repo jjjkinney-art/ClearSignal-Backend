@@ -42,6 +42,7 @@ from ..schemas import (
     MacroSensitivity,
     MarketContext,
     QualityAssessment,
+    RetrievedEvidence,
     RiskProfile,
     Signal,
     ValuationView,
@@ -458,3 +459,81 @@ def check_forbidden_phrases(thesis: InvestmentThesis) -> List[str]:
                 + " — replace with causal, company-specific language."
             )
     return warnings
+
+
+# ── Evidence reference propagation ────────────────────────────────────────────
+
+def _ref_label(ev: RetrievedEvidence) -> str:
+    """Format an evidence item as a short reference label for evidence_refs.
+
+    Format: "[{source}] {title[:60]}"
+    Preserved as a structured string so the frontend can parse source type.
+    """
+    return f"[{ev.source}] {ev.title[:60]}"
+
+
+def propagate_evidence_refs(
+    signals: List[Signal],
+    evidence: List[RetrievedEvidence],
+    min_overlap: int = 2,
+) -> List[Signal]:
+    """Infer evidence_refs for signals that have none.
+
+    For each signal with an empty evidence_refs list, tokenizes the signal
+    text and checks every evidence item (title + summary) for keyword overlap.
+    When at least *min_overlap* non-stopword tokens match, the evidence
+    item's reference label is added to the signal's evidence_refs.
+
+    Signals that already have evidence_refs set by the LLM are left untouched
+    (the LLM's explicit citation is more precise than keyword inference).
+
+    Modifies signals in-place (returns the same list for convenience).
+
+    Parameters
+    ----------
+    signals    : List of Signal objects to annotate.
+    evidence   : Full pool of RetrievedEvidence from the pipeline.
+    min_overlap: Minimum shared-token count to count as a match (default 2).
+
+    Returns
+    -------
+    The same list with evidence_refs populated on previously-empty signals.
+    """
+    if not evidence:
+        return signals
+
+    # Pre-tokenise each evidence item once for efficiency
+    ev_tokens: List[Tuple[RetrievedEvidence, Set[str]]] = []
+    for ev in evidence:
+        combined = f"{ev.title} {ev.summary}"
+        tokens = _tokenize(combined)
+        ev_tokens.append((ev, tokens))
+
+    updated: List[Signal] = []
+    for sig in signals:
+        if sig.evidence_refs:
+            # LLM already populated refs — honour them
+            updated.append(sig)
+            continue
+
+        sig_tokens = _tokenize(sig.signal)
+        if not sig_tokens:
+            updated.append(sig)
+            continue
+
+        inferred_refs: List[str] = []
+        for ev, ev_toks in ev_tokens:
+            overlap = len(sig_tokens & ev_toks)
+            if overlap >= min_overlap:
+                inferred_refs.append(_ref_label(ev))
+
+        if inferred_refs:
+            # Build a new Signal with evidence_refs populated
+            if hasattr(sig, "model_copy"):
+                sig = sig.model_copy(update={"evidence_refs": inferred_refs})
+            else:
+                sig = sig.copy(update={"evidence_refs": inferred_refs})  # type: ignore[attr-defined]
+
+        updated.append(sig)
+
+    return updated
