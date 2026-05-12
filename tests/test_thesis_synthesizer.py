@@ -1,9 +1,12 @@
 """
 Tests for app.services.thesis_synthesizer.
 
-No real LLM calls are made — get_structured_response is mocked throughout.
+No real LLM calls are made — model_client.call is mocked throughout.
+synthesize_thesis no longer calls get_structured_response; it calls
+model_client.call directly via _call_with_json_enforcement.
 """
 
+import json
 import pytest
 from unittest.mock import patch
 
@@ -75,6 +78,27 @@ def _mock_thesis(ticker="AAPL", name="Apple Inc."):
     )
 
 
+def _mock_thesis_json(ticker="AAPL", name="Apple Inc.", extra: dict = None) -> str:
+    """Return a valid InvestmentThesis JSON string for mocking model_client.call."""
+    data = {
+        "ticker": ticker,
+        "company_name": name,
+        "bull_thesis": "Strong growth and moat.",
+        "bear_thesis": "Valuation risk.",
+        "key_drivers": ["Services growth", "iPhone cycle", "AI integration", "Margin expansion"],
+        "key_risks": ["Regulation", "Competition", "Rates", "China exposure"],
+        "valuation_view": "Fairly valued.",
+        "macro_sensitivity": "Low rate sensitivity.",
+        "confidence_score": 0.75,
+        "confidence_reasoning": "Solid evidence coverage.",
+        "what_changes_the_thesis": ["Revenue miss", "Rate spike", "Regulation", "New competitor"],
+        "conclusion": "Attractive risk/reward at current levels.",
+    }
+    if extra:
+        data.update(extra)
+    return json.dumps(data)
+
+
 # ── TestSynthesizeThesisNoLLM ─────────────────────────────────────────────────
 
 class TestSynthesizeThesisNoLLM:
@@ -113,27 +137,27 @@ class TestSynthesizeThesisWithMockedLLM:
         valuation, macro, risk, market, quality = _full_agents()
         evidence = [_ev(), _ev("AAPL News"), _ev("FRED T10Y2Y")]
 
-        mock_thesis = _mock_thesis()
         with patch(
-            "app.services.thesis_synthesizer.get_structured_response",
-            return_value=mock_thesis,
-        ) as mock_call:
+            "app.services.thesis_synthesizer.model_client"
+        ) as mock_client:
+            mock_client.call.return_value = _mock_thesis_json()
             result = synthesize_thesis(company, valuation, macro, risk, market, quality, evidence)
 
-        mock_call.assert_called_once()
+        mock_client.call.assert_called_once()
         assert isinstance(result, InvestmentThesis)
         assert result.ticker == "AAPL"
         assert result.evidence_count == 3
         assert result.generated_at != ""
 
     def test_synthesize_thesis_stamps_ticker_and_name(self):
+        # synthesizer overwrites ticker/company_name returned by LLM with ground-truth values
         company = _company(ticker="NVDA", name="NVIDIA Corporation")
         valuation, macro, risk, market, quality = _full_agents()
-        mock_thesis = _mock_thesis(ticker="AAPL", name="Wrong Name")  # synthesizer should overwrite
         with patch(
-            "app.services.thesis_synthesizer.get_structured_response",
-            return_value=mock_thesis,
-        ):
+            "app.services.thesis_synthesizer.model_client"
+        ) as mock_client:
+            # LLM returns wrong ticker — synthesizer must overwrite
+            mock_client.call.return_value = _mock_thesis_json(ticker="AAPL", name="Wrong Name")
             result = synthesize_thesis(company, valuation, macro, risk, market, quality, [_ev()])
         assert result.ticker == "NVDA"
         assert result.company_name == "NVIDIA Corporation"
@@ -142,11 +166,10 @@ class TestSynthesizeThesisWithMockedLLM:
         company = _company()
         valuation, macro, risk, market, quality = _full_agents()
         evidence = [_ev() for _ in range(6)]
-        mock_thesis = _mock_thesis()
         with patch(
-            "app.services.thesis_synthesizer.get_structured_response",
-            return_value=mock_thesis,
-        ):
+            "app.services.thesis_synthesizer.model_client"
+        ) as mock_client:
+            mock_client.call.return_value = _mock_thesis_json()
             result = synthesize_thesis(company, valuation, macro, risk, market, quality, evidence)
         assert result.evidence_count == 6
 
@@ -160,9 +183,9 @@ class TestLLMFailureDegradation:
         company = _company()
         valuation, macro, risk, market, quality = _full_agents()
         with patch(
-            "app.services.thesis_synthesizer.get_structured_response",
-            side_effect=RuntimeError("LLM down"),
-        ):
+            "app.services.thesis_synthesizer.model_client"
+        ) as mock_client:
+            mock_client.call.side_effect = RuntimeError("LLM down")
             result = synthesize_thesis(company, valuation, macro, risk, market, quality, [_ev()])
         assert isinstance(result, InvestmentThesis)
         assert result.confidence_score == 0.0
@@ -288,14 +311,20 @@ class TestRunGovernanceChecks:
         valuation, macro, risk, market, quality = _full_agents(
             macro_overall="Rate cuts benefit the bank significantly."
         )
-        mock_thesis = _mock_thesis(ticker="JPM", name="JPMorgan Chase")
-        mock_thesis.bull_thesis = "rate cuts benefit JPM"
-        mock_thesis.macro_sensitivity = "rate cuts help"
+        # LLM returns a thesis that asserts rate cuts benefit JPM (a bank)
+        thesis_json = _mock_thesis_json(
+            ticker="JPM",
+            name="JPMorgan Chase",
+            extra={
+                "bull_thesis": "rate cuts benefit JPM significantly",
+                "macro_sensitivity": "rate cuts help NIM expansion",
+            },
+        )
         evidence = [_ev()]
         with patch(
-            "app.services.thesis_synthesizer.get_structured_response",
-            return_value=mock_thesis,
-        ):
+            "app.services.thesis_synthesizer.model_client"
+        ) as mock_client:
+            mock_client.call.return_value = thesis_json
             result = synthesize_thesis(company, valuation, macro, risk, market, quality, evidence)
         # Governance should have flagged the bank+rate-cut contradiction
         assert isinstance(result.consistency_warnings, list)

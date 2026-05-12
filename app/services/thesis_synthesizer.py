@@ -36,9 +36,11 @@ Usage
 
 from __future__ import annotations
 
+import json
 import logging
+import re
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from ..schemas import (
     CompanyContext,
@@ -51,7 +53,7 @@ from ..schemas import (
     RiskProfile,
     ValuationView,
 )
-from ..structured_output import get_structured_response
+from ..structured_output import get_structured_response, extract_json_candidate, repair_data
 from ..model_client import model_client
 from ..config import settings
 from .depth_guard import check_synthesis_depth
@@ -80,6 +82,26 @@ _RATE_CUT_BENEFIT_PHRASES = (
     "benefits from lower rates",
 )
 
+# InvestmentThesis fields the LLM must populate (used in prompt + recovery).
+# Ordered to match the schema's logical reading order.
+_THESIS_FIELDS = (
+    "ticker",
+    "company_name",
+    "bull_thesis",
+    "bear_thesis",
+    "key_drivers",
+    "key_risks",
+    "valuation_view",
+    "macro_sensitivity",
+    "confidence_score",
+    "confidence_reasoning",
+    "what_changes_the_thesis",
+    "conclusion",
+)
+
+# Markdown heading patterns used for recovery detection
+_MD_HEADING_RE = re.compile(r"^#{1,6}\s+", re.MULTILINE)
+
 
 # ── Evidence summary builders ─────────────────────────────────────────────────
 
@@ -93,7 +115,29 @@ def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> s
 
 
 def _agent_block(label: str, overall: str, confidence: float) -> str:
-    return f"### {label} (confidence {confidence:.0%})\n{overall or 'No analysis available.'}"
+    """Format one agent output as a plain-text block (no markdown headings)."""
+    return (
+        f"{label.upper()} AGENT (confidence {confidence:.0%}):\n"
+        f"{overall or 'No analysis available.'}"
+    )
+
+
+# ── JSON field schema description (injected into prompt) ─────────────────────
+
+_THESIS_SCHEMA_DESCRIPTION = """\
+Required JSON fields (all must be present):
+  "ticker"                  : string — the company ticker symbol (e.g. "AAPL")
+  "company_name"            : string — canonical company name (e.g. "Apple Inc.")
+  "bull_thesis"             : string — 2-3 sentence bull case narrative
+  "bear_thesis"             : string — 2-3 sentence bear case narrative
+  "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
+  "key_risks"               : array of 4 strings — top investment risks, ranked by severity
+  "valuation_view"          : string — 1-2 sentence valuation summary with specific multiple/metric
+  "macro_sensitivity"       : string — 1-2 sentence macro sensitivity with specific transmission
+  "confidence_score"        : number between 0.0 and 1.0
+  "confidence_reasoning"    : string — why this confidence level was assigned
+  "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
+  "conclusion"              : string — institutional-quality one-paragraph conclusion"""
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────
@@ -108,6 +152,7 @@ def _build_synthesis_prompt(
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
 ) -> str:
+    # Plain-text agent summaries — NO markdown headings to avoid bleeding into output
     agent_summaries = "\n\n".join([
         _agent_block("Valuation", valuation.overall, valuation.confidence),
         _agent_block("Macro Sensitivity", macro.overall, macro.confidence),
@@ -122,18 +167,18 @@ def _build_synthesis_prompt(
 
     ticker = company.ticker
 
-    # ── Optional: company business model section ──────────────────────────────
+    # Optional company business model section
     if profile is not None:
-        biz_model_section = f"""
-=== COMPANY BUSINESS MODEL (ground every claim in this) ===
-Business model: {profile.business_model}
-Primary revenue drivers: {', '.join(profile.primary_revenue_drivers)}
-Recurring revenue: {', '.join(profile.recurring_revenue_sources)}
-Valuation style: {profile.valuation_style}
-Key metrics: {', '.join(profile.key_metrics)}
-Competitive advantages: {'; '.join(profile.competitive_advantages)}
-Rate sensitivity: {profile.rate_sensitivity_note}
-"""
+        biz_model_section = (
+            f"COMPANY BUSINESS MODEL (ground every claim in this):\n"
+            f"Business model: {profile.business_model}\n"
+            f"Primary revenue drivers: {', '.join(profile.primary_revenue_drivers)}\n"
+            f"Recurring revenue: {', '.join(profile.recurring_revenue_sources)}\n"
+            f"Valuation style: {profile.valuation_style}\n"
+            f"Key metrics: {', '.join(profile.key_metrics)}\n"
+            f"Competitive advantages: {'; '.join(profile.competitive_advantages)}\n"
+            f"Rate sensitivity: {profile.rate_sensitivity_note}\n"
+        )
         profile_keywords_hint = (
             f"Required terms include: {', '.join(profile.business_model_keywords[:8])}."
             if profile.business_model_keywords
@@ -143,12 +188,21 @@ Rate sensitivity: {profile.rate_sensitivity_note}
         biz_model_section = ""
         profile_keywords_hint = ""
 
-    return f"""You are a senior investment analyst producing an institutional-quality thesis.
+    return f"""You are a senior investment analyst producing an institutional-quality investment thesis.
+
+CRITICAL OUTPUT RULES — READ FIRST:
+- You MUST return ONLY a single valid JSON object.
+- Do NOT write any markdown headings, prose, or text outside the JSON.
+- Do NOT use markdown code fences (no ```json or ```).
+- Do NOT write "Investment Thesis for...", "Bull Case:", "Bear Case:" or any other headings.
+- Your ENTIRE response must start with {{ and end with }}.
+- Any non-JSON output will cause a parse failure.
 
 COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
+
 {biz_model_section}
-=== SPECIALIST AGENT OUTPUTS ===
+SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
 Key Risks Identified:
@@ -157,23 +211,21 @@ Key Risks Identified:
 Recent Catalysts:
 {catalysts_txt}
 
-=== SUPPORTING EVIDENCE ===
+SUPPORTING EVIDENCE:
 {ev_block}
 
-=== AGENT CONFLICT ANALYSIS ===
+AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
-- Does valuation say 'cheap' while risk says 'high debt'? (value trap risk)
-- Does macro say 'rate cuts imminent' while quality says 'margin pressures building'?
-- Does market say 'bullish catalysts' while risk says 'near-term headwinds'?
-Explicitly address each conflict in your bull/bear thesis.
+- Does valuation say cheap while risk says high debt? (value trap risk)
+- Does macro say rate cuts imminent while quality says margin pressures building?
+- Does market say bullish catalysts while risk says near-term headwinds?
+Explicitly address each conflict in your bull/bear thesis text.
 
-=== TASK ===
-Synthesise the agent outputs into an institutional-quality InvestmentThesis.
-Requirements:
-1. bull_thesis: 2-3 sentences. MUST cite: (a) at least one specific {company.company_name} business \
-segment or product, (b) at least one agent-identified driver, (c) a valuation anchor.
-2. bear_thesis: 2-3 sentences. MUST cite: (a) a specific company-level risk, (b) a \
-macro headwind's actual transmission mechanism to {ticker}'s earnings/margins.
+TASK — produce a JSON object with exactly these fields:
+1. bull_thesis: 2-3 sentences. MUST cite: (a) at least one specific {company.company_name} \
+business segment or product, (b) at least one agent-identified driver, (c) a valuation anchor.
+2. bear_thesis: 2-3 sentences. MUST cite: (a) a specific company-level risk, (b) a macro \
+headwind's actual transmission mechanism to {ticker}'s earnings/margins.
 3. key_drivers: exactly 4 drivers, ranked by importance, phrased as "{ticker}-specific: X"
 4. key_risks: exactly 4 risks, ranked by severity, with company-specific transmission.
 5. valuation_view: 1-2 sentences citing actual multiple or metric (not generic).
@@ -187,8 +239,8 @@ like "the company faces headwinds" or "as a growth stock". MUST name specific \
 {ticker} revenue drivers, risks, and valuation factors.
 
 Agent reconciliation rules:
-- If agents DISAGREE on direction (e.g. bullish vs bearish), explicitly say WHY \
-the stronger argument wins and what would flip you the other way.
+- If agents DISAGREE on direction, explicitly say WHY the stronger argument wins and \
+what would flip you the other way.
 - Rank key_drivers and key_risks by importance — put the most impactful first.
 - Every claim must trace back to a specific agent output or evidence item number.
 
@@ -197,10 +249,45 @@ Company specificity rules (MANDATORY):
 - FORBIDDEN: Generic phrases like "tech companies face headwinds", "as a growth stock".
 - REQUIRED: Specific {ticker} terms. {profile_keywords_hint}
 
-Rules:
-- Be specific — cite ticker, sector, and evidence numbers where relevant.
-- If evidence is sparse, say so explicitly in confidence_reasoning.
-- Do NOT fabricate financial figures not present in the evidence."""
+{_THESIS_SCHEMA_DESCRIPTION}
+
+Return ONLY valid JSON, no markdown fences or prose outside the JSON object.
+
+JSON:"""
+
+
+# ── Markdown stripping recovery ───────────────────────────────────────────────
+
+def _strip_markdown_to_json(raw: str) -> Optional[str]:
+    """Attempt to recover a JSON object from a markdown-prose response.
+
+    When the LLM ignores the JSON-only instruction and returns markdown headings
+    and paragraphs, this function:
+      1. Detects markdown heading patterns.
+      2. Strips all heading lines (##, ###, etc.) and code fences.
+      3. Tries to find a JSON object in the cleaned text.
+      4. Returns the JSON string if found, or None.
+
+    This is a best-effort recovery — it does not reconstruct JSON from prose.
+    """
+    if not _MD_HEADING_RE.search(raw):
+        return None  # Not a markdown response — caller handles normally
+
+    print(f"[DIAG] THESIS SYNTHESIS MARKDOWN DETECTED — attempting markdown strip recovery")
+
+    # Remove fenced code blocks
+    cleaned = re.sub(r"```[a-zA-Z]*\n?", "", raw)
+    cleaned = cleaned.replace("```", "")
+
+    # Remove markdown heading lines
+    cleaned = _MD_HEADING_RE.sub("", cleaned)
+
+    # Try to extract a JSON object from the cleaned text
+    candidate = extract_json_candidate(cleaned)
+    if candidate and candidate.strip().startswith("{"):
+        return candidate
+
+    return None
 
 
 # ── Deterministic governance checks (Phase 4) ────────────────────────────────
@@ -304,6 +391,124 @@ def _empty_thesis(company: CompanyContext, reason: str = "") -> InvestmentThesis
     )
 
 
+# ── JSON-only LLM call with markdown recovery ─────────────────────────────────
+
+def _call_with_json_enforcement(
+    prompt: str,
+    ticker: str,
+    max_retries: int,
+    backoff_factor: float,
+    request_id: Optional[str] = None,
+) -> Optional[InvestmentThesis]:
+    """Call the model and enforce JSON-only output for InvestmentThesis.
+
+    Wraps get_structured_response with thesis-specific diagnostics and a
+    pre-validation markdown-stripping recovery path.  Returns a validated
+    InvestmentThesis or None if all attempts fail.
+    """
+    import time
+
+    for attempt in range(1, max_retries + 1):
+        # ── Model call ────────────────────────────────────────────────────────
+        try:
+            call_kwargs: Dict[str, Any] = {}
+            if request_id:
+                call_kwargs["request_id"] = request_id
+            raw = model_client.call(prompt, **call_kwargs)
+        except Exception as exc:
+            logger.warning("[thesis_synthesizer] model call failed attempt=%d: %r", attempt, exc)
+            time.sleep(backoff_factor * (2 ** (attempt - 1)))
+            continue
+
+        raw_len = len(raw) if raw else 0
+        print(
+            f"[DIAG] THESIS SYNTHESIS RAW "
+            f"ticker={ticker} attempt={attempt} len={raw_len}\n"
+            f"[DIAG] THESIS SYNTHESIS RAW TEXT: {raw!r:.1000}"
+        )
+
+        # ── Markdown recovery (before JSON extraction) ────────────────────────
+        if raw and _MD_HEADING_RE.search(raw):
+            recovered = _strip_markdown_to_json(raw)
+            if recovered:
+                print(
+                    f"[DIAG] THESIS SYNTHESIS PARSED "
+                    f"ticker={ticker} attempt={attempt} source=markdown_recovery "
+                    f"candidate={recovered!r:.400}"
+                )
+                try:
+                    data = json.loads(recovered)
+                except json.JSONDecodeError:
+                    data = None
+            else:
+                print(
+                    f"[DIAG] THESIS SYNTHESIS PARSED "
+                    f"ticker={ticker} attempt={attempt} source=markdown_recovery_failed"
+                )
+                data = None
+        else:
+            # Normal JSON extraction path
+            candidate = extract_json_candidate(raw) if raw else ""
+            print(
+                f"[DIAG] THESIS SYNTHESIS PARSED "
+                f"ticker={ticker} attempt={attempt} source=json_extract "
+                f"candidate={candidate!r:.400}"
+            )
+            try:
+                data = json.loads(candidate)
+            except (json.JSONDecodeError, TypeError):
+                data = None
+
+        if data is None:
+            logger.warning(
+                "[thesis_synthesizer] JSON parse failed attempt=%d ticker=%s",
+                attempt, ticker,
+            )
+            time.sleep(backoff_factor * (2 ** (attempt - 1)))
+            continue
+
+        # ── Schema validation ─────────────────────────────────────────────────
+        from pydantic import ValidationError
+        try:
+            if hasattr(InvestmentThesis, "model_validate"):
+                result = InvestmentThesis.model_validate(data)
+            else:
+                result = InvestmentThesis.parse_obj(data)
+            print(
+                f"[DIAG] THESIS SYNTHESIS VALIDATED "
+                f"ticker={ticker} attempt={attempt} "
+                f"confidence={result.confidence_score} "
+                f"bull_len={len(result.bull_thesis)} "
+                f"bear_len={len(result.bear_thesis)}"
+            )
+            return result
+        except ValidationError as ve:
+            logger.warning(
+                "[thesis_synthesizer] validation failed attempt=%d: %s", attempt, ve
+            )
+            # Attempt repair
+            repaired = repair_data(data, InvestmentThesis)
+            try:
+                if hasattr(InvestmentThesis, "model_validate"):
+                    result = InvestmentThesis.model_validate(repaired)
+                else:
+                    result = InvestmentThesis.parse_obj(repaired)
+                print(
+                    f"[DIAG] THESIS SYNTHESIS VALIDATED "
+                    f"ticker={ticker} attempt={attempt} source=repaired "
+                    f"confidence={result.confidence_score}"
+                )
+                return result
+            except ValidationError:
+                time.sleep(backoff_factor * (2 ** (attempt - 1)))
+                continue
+
+    logger.error(
+        "[thesis_synthesizer] all %d attempts failed for %s", max_retries, ticker
+    )
+    return None
+
+
 # ── Public entry point ────────────────────────────────────────────────────────
 
 def synthesize_thesis(
@@ -319,9 +524,9 @@ def synthesize_thesis(
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
-    Runs the LLM synthesis then applies deterministic Phase 4 governance
-    checks and Phase 5 depth enforcement.  Degrades gracefully if the LLM
-    call fails.
+    Runs the LLM synthesis with strict JSON-only enforcement, then applies
+    deterministic Phase 4 governance checks and Phase 5 depth enforcement.
+    Degrades gracefully if the LLM call fails.
 
     Parameters
     ----------
@@ -364,18 +569,18 @@ def synthesize_thesis(
         company, valuation, macro, risk, market, quality, evidence, profile
     )
 
-    try:
-        thesis = get_structured_response(
-            prompt,
-            InvestmentThesis,
-            model_client,
-            max_retries=settings.model_max_retries,
-            backoff_factor=settings.model_backoff_factor,
-            request_id=request_id,
-        )
-    except Exception as exc:
-        logger.warning("thesis_synthesizer LLM failed for %s: %r", company.ticker, exc)
-        return _empty_thesis(company, f"LLM synthesis error: {exc}")
+    # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
+    thesis = _call_with_json_enforcement(
+        prompt=prompt,
+        ticker=company.ticker,
+        max_retries=settings.model_max_retries,
+        backoff_factor=settings.model_backoff_factor,
+        request_id=request_id,
+    )
+
+    if thesis is None:
+        logger.warning("[thesis_synthesizer] synthesis failed for %s", company.ticker)
+        return _empty_thesis(company, "LLM synthesis error: retries exhausted.")
 
     # Stamp metadata
     thesis.ticker = company.ticker
