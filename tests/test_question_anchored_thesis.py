@@ -417,3 +417,65 @@ class TestEmptyThesisDirectAnswer:
 
         assert result.direct_answer == ""
         assert result.confidence_score == 0.0
+
+
+# ── 6. Backend serialisation contract ─────────────────────────────────────────
+
+class TestModelDumpSnakeCaseContract:
+    """model_dump() must use snake_case keys — frontend reads t.direct_answer."""
+
+    def test_model_dump_uses_direct_answer_snake_case(self):
+        thesis = InvestmentThesis(
+            ticker="AAPL",
+            company_name="Apple Inc.",
+            direct_answer="Higher rates compress AAPL's multiple.",
+        )
+        try:
+            d = thesis.model_dump()
+        except AttributeError:
+            d = thesis.dict()
+
+        assert "direct_answer" in d, (
+            "model_dump() must use snake_case 'direct_answer' — "
+            "frontend extractInvestmentThesis() reads t.direct_answer"
+        )
+        assert "directAnswer" not in d, (
+            "model_dump() must not produce camelCase 'directAnswer' — "
+            "that would break the frontend mapping"
+        )
+        assert d["direct_answer"] == "Higher rates compress AAPL's multiple."
+
+    def test_investment_thesis_api_payload_contains_direct_answer(self, monkeypatch):
+        """The dict packed into answer['investment_thesis'] must have direct_answer."""
+        company = _company()
+        valuation, macro, risk, market, quality = _full_agents()
+        evidence = _evidence()
+
+        with patch("app.services.thesis_synthesizer.model_client") as mock_client:
+            mock_client.call.return_value = _thesis_json()
+            thesis = synthesize_thesis(
+                company, valuation, macro, risk, market, quality, evidence,
+                original_user_question=APPLE_RATES_QUESTION,
+            )
+
+        try:
+            payload = thesis.model_dump()
+        except AttributeError:
+            payload = thesis.dict()
+
+        # This is exactly what router_service packs into answer["investment_thesis"]
+        assert "direct_answer" in payload
+        assert payload["direct_answer"] != "", (
+            "direct_answer must be non-empty when LLM returns it"
+        )
+
+    def test_empty_direct_answer_field_still_present_in_dump(self):
+        """Even when direct_answer='', the key must be in model_dump() output."""
+        thesis = InvestmentThesis(ticker="AAPL", company_name="Apple Inc.")
+        try:
+            d = thesis.model_dump()
+        except AttributeError:
+            d = thesis.dict()
+
+        assert "direct_answer" in d
+        assert d["direct_answer"] == ""
