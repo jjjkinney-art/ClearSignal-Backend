@@ -17,13 +17,15 @@ Ranking formula
             × agent_confidence
             × type_priority
             × direction_weight
-            × (1 + recurrence_bonus)
+            × thesis_sensitivity_weight
 
 Where:
-    agent_confidence  = the source agent's confidence field
-    type_priority     = per-type weight (structural=1.0 … noise=0.0)
-    direction_weight  = bullish/bearish=1.1, neutral=0.85
-    recurrence_bonus  = 0.2 per additional agent that raised the same concept
+    agent_confidence         = the source agent's confidence field
+    type_priority            = per-type weight (structural=1.0 … noise=0.0)
+    direction_weight         = bullish/bearish=1.1, neutral=0.85
+    thesis_sensitivity_weight= 0.70–1.25 based on stock-impact vs. descriptive content
+                               (replaces the old recurrence_bonus, which is now folded
+                               into impact_score during deduplication via _merge)
 
 All scoring is deterministic — no LLM calls in this module.
 """
@@ -32,7 +34,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple, Pattern
 
 from ..schemas import (
     CompanyContext,
@@ -76,6 +78,53 @@ _STOPWORDS: frozenset = frozenset({
     "has", "have", "had", "will", "would", "may", "might", "could", "should",
     "its", "it", "this", "that", "as", "not", "no",
 })
+
+# ── Thesis-sensitivity scoring constants ──────────────────────────────────────
+# Keywords that indicate a signal DIRECTLY affects stock price — via valuation,
+# earnings, or macro transmission mechanisms.  Two or more hits → boost score.
+_STOCK_IMPACT_KEYWORDS: frozenset = frozenset({
+    "compress", "compression", "expansion", "multiple", "p/e", "pe",
+    "earnings", "eps", "ebitda", "ebit", "margin", "margins",
+    "rate", "rates", "discount rate", "interest rate",
+    "fcf", "free cash flow", "buyback", "repurchase",
+    "guidance", "revision", "estimate",
+    "catalyst", "inflect", "derating", "rerating",
+    "accelerat", "decelerat", "tariff",
+    "pricing power", "yield", "duration",
+    "leverage", "refinanc", "liquidity",
+    "thesis", "valuation", "sensitivity",
+    "revenue growth", "earnings growth",
+    "dcf", "fair value", "price target",
+    "beat", "miss", "headwind", "tailwind",
+})
+
+# Regex patterns that indicate a signal is a STATIC DESCRIPTIVE FACT rather
+# than a stock-moving driver.  Presence of one or more → penalise score.
+_DESCRIPTIVE_PHRASE_PATTERNS: List = [
+    # "52% of revenue/sales/income" — revenue breakdown without impact
+    re.compile(r'\b\d+\s*%\s+of\b', re.IGNORECASE),
+    # "is/are/remains the [world's] largest/leading/major..." — generic market position
+    # Uses [^\s]+ to allow qualifiers like "world's" between "the" and the adjective
+    re.compile(
+        r'\b(is|are|remains?)\s+(?:(?:a|an|the)\s+){1,2}(?:[^\s]+\s+){0,2}'
+        r'(largest|leading|major|primary|key|dominant|top)\b',
+        re.IGNORECASE,
+    ),
+    # "has been a leader/player/pioneer..." — historical position claim
+    re.compile(
+        r'\b(has|have)\s+(been|a|an|the)\s+(leader|player|pioneer|company)\b',
+        re.IGNORECASE,
+    ),
+    # "founded/established/headquartered in..." — corporate background
+    re.compile(r'\b(founded|established|headquartered)\s+in\b', re.IGNORECASE),
+    # "operates in 175 countries" — scale fact
+    re.compile(
+        r'\boperates?\s+(in|across)\s+\d+\s+(countries|markets|regions)\b',
+        re.IGNORECASE,
+    ),
+    # "employs 160,000" — headcount fact
+    re.compile(r'\b(employs?|workforce\s+of)\s+[\d,]+\b', re.IGNORECASE),
+]
 
 # ── Forbidden phrases (Phase 5) ───────────────────────────────────────────────
 FORBIDDEN_PHRASES: frozenset = frozenset({
@@ -163,10 +212,76 @@ def _merge(primary: Signal, secondary: Signal, recurrence_bonus: float) -> Signa
 # ── Score computation ─────────────────────────────────────────────────────────
 
 def _score(signal: Signal, agent_confidence: float) -> float:
-    """Compute a composite ranking score for a single signal."""
-    type_w  = _TYPE_PRIORITY.get(signal.signal_type, 0.5)
-    dir_w   = _DIRECTION_WEIGHT.get(signal.direction, 0.85)
-    return signal.impact_score * agent_confidence * type_w * dir_w
+    """Compute a composite ranking score for a single signal.
+
+    Formula
+    -------
+        score = impact_score
+                × agent_confidence
+                × type_priority
+                × direction_weight
+                × thesis_sensitivity_weight
+
+    thesis_sensitivity_weight is 0.70–1.25 based on whether the signal text
+    contains stock-moving mechanisms (earnings, multiple compression, macro
+    transmission) vs. static descriptive facts (revenue breakdowns, generic
+    market-position claims).  This ensures that "higher rates compress AAPL's
+    P/E multiple" ranks above "iPhone is 52% of revenue" even when both carry
+    the same LLM-assigned impact_score.
+    """
+    type_w    = _TYPE_PRIORITY.get(signal.signal_type, 0.5)
+    dir_w     = _DIRECTION_WEIGHT.get(signal.direction, 0.85)
+    thesis_w  = _thesis_sensitivity_score(signal.signal)
+    return signal.impact_score * agent_confidence * type_w * dir_w * thesis_w
+
+
+# ── Thesis-sensitivity scoring ────────────────────────────────────────────────
+
+def _thesis_sensitivity_score(signal_text: str) -> float:
+    """Return a thesis-sensitivity multiplier for a signal's text.
+
+    Signals that directly affect stock price via valuation, earnings, or
+    macro transmission mechanisms receive a multiplier > 1.0.  Static
+    descriptive facts that are informative but do not directly move the
+    stock receive a multiplier < 1.0.
+
+    The multiplier is applied inside ``_score()`` so that thesis-sensitive
+    signals rank above same-type descriptive signals regardless of the
+    LLM's raw ``impact_score`` assignment.
+
+    Multiplier table
+    ----------------
+    ≥ 2 stock-impact keyword hits                  → 1.25  (strong boost)
+    1 stock-impact hit, 0 descriptive pattern hits → 1.10  (moderate boost)
+    0 hits on either side                          → 1.00  (neutral)
+    1 descriptive hit, 0 impact hits               → 0.85  (mild penalty)
+    ≥ 2 descriptive pattern hits                   → 0.70  (strong penalty)
+
+    Returns a value in [0.70, 1.25].
+    """
+    if not signal_text:
+        return 1.0
+
+    lower = signal_text.lower()
+
+    # Count stock-impact keyword hits (substring match, case-insensitive via lower())
+    impact_hits = sum(1 for kw in _STOCK_IMPACT_KEYWORDS if kw in lower)
+
+    # Count descriptive-pattern hits
+    descriptive_hits = sum(
+        1 for p in _DESCRIPTIVE_PHRASE_PATTERNS if p.search(signal_text)
+    )
+
+    if impact_hits >= 2:
+        return 1.25   # Strong stock-impact signal — boost
+    elif impact_hits == 1 and descriptive_hits == 0:
+        return 1.10   # Moderate stock-impact — slight boost
+    elif descriptive_hits >= 2:
+        return 0.70   # Strongly descriptive — penalise
+    elif descriptive_hits == 1 and impact_hits == 0:
+        return 0.85   # Somewhat descriptive — mild penalty
+    else:
+        return 1.00   # Neutral or mixed
 
 
 # ── Forbidden phrase detection ────────────────────────────────────────────────
@@ -459,6 +574,185 @@ def check_forbidden_phrases(thesis: InvestmentThesis) -> List[str]:
                 + " — replace with causal, company-specific language."
             )
     return warnings
+
+
+# ── Signal overlap detection ──────────────────────────────────────────────────
+
+def detect_signal_overlap(
+    ranked: RankedSignalSet,
+    threshold: float = 0.45,
+) -> List[str]:
+    """Detect semantically overlapping signals that survived deduplication.
+
+    Checks all non-noise signals (top_signals + top_risks + secondary_signals)
+    for pairs that express the same underlying idea but were not merged — e.g.
+    because they ended up in opposite directional pools.
+
+    Parameters
+    ----------
+    ranked    : Output of rank_signals().
+    threshold : Jaccard similarity above which signals are considered overlapping.
+                Default 0.45 matches the deduplication threshold.
+
+    Returns
+    -------
+    List of [OVERLAP] warning strings, one per detected pair.  Empty list if no
+    overlap is found.
+    """
+    all_sigs = ranked.top_signals + ranked.top_risks + ranked.secondary_signals
+    warnings: List[str] = []
+
+    for i in range(len(all_sigs)):
+        for j in range(i + 1, len(all_sigs)):
+            s1, s2 = all_sigs[i], all_sigs[j]
+            sim = _jaccard(s1.signal, s2.signal)
+            if sim >= threshold:
+                warnings.append(
+                    f"[OVERLAP] Signal similarity={sim:.2f}: "
+                    f"'{s1.signal[:55]}…' ({s1.signal_type}/{s1.direction}) "
+                    f"vs '{s2.signal[:55]}…' ({s2.signal_type}/{s2.direction}) "
+                    f"— consider merging these concepts."
+                )
+
+    return warnings
+
+
+# ── Confidence reasoning builder ──────────────────────────────────────────────
+
+def build_confidence_reasoning(
+    agent_confidences: Dict[str, float],
+    ranked: Optional[RankedSignalSet],
+    evidence_count: int,
+    original_reasoning: str = "",
+) -> str:
+    """Build a causal, specific confidence reasoning string.
+
+    Replaces generic ``"High agent confidence…"`` language with specific
+    reasoning that cites which agents agree or disagree, why uncertainty
+    exists, and what evidence or signals drive the confidence level.
+
+    Output examples
+    ---------------
+    GOOD:
+      "Confidence is reduced because macro and risk agents register lower
+       conviction (52%) versus valuation agents (81%), indicating disagreement
+       on the rate-sensitivity mechanism.  Signals are mixed (3 bullish vs 4
+       bearish), suggesting meaningful two-sided uncertainty."
+
+    GOOD:
+      "Evidence base is solid (11 items).  Confidence is elevated because
+       valuation, macro, and risk agents independently converge on the same
+       thesis direction (each ≥70% confidence).  Signal direction is 78%
+       bearish (2 bullish vs 7 bearish) across 9 ranked signals."
+
+    BAD (never generated by this function):
+      "High agent confidence…"
+
+    Parameters
+    ----------
+    agent_confidences : Mapping of agent name → confidence float (0.0–1.0).
+    ranked            : Ranked signal set from rank_signals(); may be None.
+    evidence_count    : Total evidence items feeding the synthesis.
+    original_reasoning: LLM-generated reasoning to fall back on when no
+                        causal explanation can be constructed.
+
+    Returns
+    -------
+    A 1–3 sentence causal confidence explanation.
+    """
+    if not agent_confidences:
+        return (
+            original_reasoning
+            or "Confidence could not be assessed — no agent outputs available."
+        )
+
+    confs = list(agent_confidences.values())
+    mean_conf = sum(confs) / len(confs)
+    conf_range = max(confs) - min(confs) if len(confs) > 1 else 0.0
+
+    # Identify high / low confidence agents
+    high_agents: List[str] = [n for n, c in agent_confidences.items() if c >= 0.70]
+    low_agents:  List[str] = [n for n, c in agent_confidences.items() if c < 0.55]
+
+    def _fmt(names: List[str]) -> str:
+        return " and ".join(n.replace("_", " ") for n in names[:2])
+
+    # Signal direction analysis
+    all_sigs = (ranked.all_ranked if ranked and ranked.all_ranked else [])
+    bullish_n = sum(1 for s in all_sigs if s.direction == "bullish")
+    bearish_n = sum(1 for s in all_sigs if s.direction == "bearish")
+    total_n   = len(all_sigs)
+    dir_share = max(bullish_n, bearish_n) / total_n if total_n > 0 else 0.5
+
+    parts: List[str] = []
+
+    # ── Evidence coverage ─────────────────────────────────────────────────────
+    if evidence_count < 3:
+        parts.append(
+            f"Evidence coverage is thin ({evidence_count} "
+            f"item{'s' if evidence_count != 1 else ''}), limiting conviction."
+        )
+    elif evidence_count >= 8:
+        parts.append(f"Evidence base is solid ({evidence_count} items).")
+
+    # ── Agent agreement / disagreement ────────────────────────────────────────
+    if conf_range >= 0.30 and low_agents:
+        lo_val   = min(confs)
+        hi_val   = max(confs)
+        low_str  = _fmt(low_agents)
+        high_str = _fmt(high_agents) if high_agents else "other agents"
+        parts.append(
+            f"Confidence is reduced because {low_str} agents register lower "
+            f"conviction ({lo_val:.0%}) versus {high_str} agents ({hi_val:.0%}), "
+            f"indicating disagreement on a key mechanism."
+        )
+    elif len(high_agents) >= 3:
+        high_str = ", ".join(n.replace("_", " ") for n in high_agents[:3])
+        parts.append(
+            f"Confidence is elevated because {high_str} agents independently "
+            f"converge on the same thesis direction (each ≥70% confidence)."
+        )
+    elif conf_range < 0.15:
+        # All agents similar confidence — cite average
+        parts.append(
+            f"Agent consensus is consistent (average {mean_conf:.0%} across "
+            f"{len(agent_confidences)} specialists, range < 15pp)."
+        )
+    else:
+        parts.append(
+            f"Agent confidence is moderate, averaging {mean_conf:.0%} across "
+            f"{len(agent_confidences)} specialists."
+        )
+
+    # ── Signal direction consensus ────────────────────────────────────────────
+    if total_n >= 3:
+        dominant_dir = "bullish" if bullish_n >= bearish_n else "bearish"
+        if dir_share >= 0.75:
+            parts.append(
+                f"Signal direction is {dir_share:.0%} {dominant_dir} "
+                f"({bullish_n} bullish vs {bearish_n} bearish) "
+                f"across {total_n} ranked signals."
+            )
+        elif dir_share < 0.60:
+            parts.append(
+                f"Signals show meaningful two-sided uncertainty "
+                f"({bullish_n} bullish vs {bearish_n} bearish) — "
+                f"thesis could inflect either way."
+            )
+
+    # ── Missing coverage ──────────────────────────────────────────────────────
+    expected = {"valuation", "macro", "risk", "market", "quality"}
+    missing  = expected - set(agent_confidences.keys())
+    if missing:
+        parts.append(
+            f"Coverage gaps: {', '.join(sorted(missing))} analysis absent."
+        )
+
+    if not parts:
+        return original_reasoning or f"Overall agent confidence averages {mean_conf:.0%}."
+
+    # Cap at 3 sentences — evidence + agent consensus + signal direction
+    return " ".join(parts[:3])
 
 
 # ── Evidence reference propagation ────────────────────────────────────────────

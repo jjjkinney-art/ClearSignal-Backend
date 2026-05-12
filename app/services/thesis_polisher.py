@@ -33,13 +33,16 @@ from ..schemas import InvestmentThesis
 
 # ── Sentence limits (refinement 1) ────────────────────────────────────────────
 # Maps InvestmentThesis field name → maximum number of sentences to keep.
+# Targets are tighter than before: supporting sections (bull/bear, valuation,
+# macro) must add only incremental information not already in direct_answer or
+# the ranked signals, so shorter prose forces higher signal density.
 _SENTENCE_LIMITS: Dict[str, int] = {
     "direct_answer":    2,
-    "conclusion":       3,
-    "bull_thesis":      3,
-    "bear_thesis":      3,
-    "valuation_view":   2,
-    "macro_sensitivity": 2,
+    "conclusion":       2,   # tightened from 3 — one causal sentence + so-what
+    "bull_thesis":      2,   # tightened from 3 — strongest driver + valuation anchor
+    "bear_thesis":      2,   # tightened from 3 — primary risk + transmission mechanism
+    "valuation_view":   1,   # tightened from 2 — one specific multiple/metric sentence
+    "macro_sensitivity": 1,  # tightened from 2 — one specific transmission sentence
 }
 
 # ── Filler opener patterns (refinement 1) ─────────────────────────────────────
@@ -217,6 +220,7 @@ def _suppress_redundant_sentences(
     sections: Dict[str, str],
     priority: Tuple[str, ...],
     threshold: float = _DEDUP_THRESHOLD,
+    pre_committed: Optional[List[str]] = None,
 ) -> Dict[str, str]:
     """Remove redundant sentences from lower-priority sections.
 
@@ -230,15 +234,18 @@ def _suppress_redundant_sentences(
 
     Parameters
     ----------
-    sections : Mapping from field name to prose text.
-    priority : Ordered tuple of field names, highest-priority first.
-    threshold: Jaccard threshold above which a sentence is considered redundant.
+    sections      : Mapping from field name to prose text.
+    priority      : Ordered tuple of field names, highest-priority first.
+    threshold     : Jaccard threshold above which a sentence is redundant.
+    pre_committed : Optional list of sentences already "committed" before this
+                    pass starts.  Used to inject signal text so that supporting
+                    prose sections do not repeat signal concepts.
 
     Returns
     -------
     Dict with the same keys, values replaced by de-duplicated prose.
     """
-    committed: List[str] = []      # Sentences kept so far, across all sections
+    committed: List[str] = list(pre_committed) if pre_committed else []
     result: Dict[str, str] = {}
 
     for field_name in priority:
@@ -284,28 +291,66 @@ def _suppress_redundant_sentences(
 def suppress_redundancy(thesis: InvestmentThesis) -> InvestmentThesis:
     """Remove cross-section repeated concepts from an InvestmentThesis.
 
-    Walks sections in priority order (direct_answer → conclusion → bull_thesis
-    → bear_thesis → valuation_view → macro_sensitivity).  Sentences that
-    express an idea already stated in a higher-priority section are dropped
-    from the lower-priority section.
+    Two-pass signal-aware redundancy suppression:
+
+    Pass 1 — primary sections (direct_answer, conclusion):
+      Processed against each other in priority order.  No pre-committed
+      context, so direct_answer is fully protected.
+
+    Pass 2 — supporting sections (bull_thesis, bear_thesis, valuation_view,
+      macro_sensitivity): Processed against a pre-committed pool that
+      combines Pass-1 sentences PLUS the text of the top ranked signals.
+      This ensures supporting prose adds only incremental information not
+      already captured in direct_answer, conclusion, or the ranked signals.
 
     At least one sentence per section is always preserved.
     """
-    # Build the sections dict for prose fields
-    prose_fields = list(_SECTION_PRIORITY)
-    sections: Dict[str, str] = {
-        f: (getattr(thesis, f, "") or "")
-        for f in prose_fields
+    _PRIMARY   = ("direct_answer", "conclusion")
+    _SUPPORTING = ("bull_thesis", "bear_thesis", "valuation_view", "macro_sensitivity")
+
+    # ── Pass 1: primary sections ──────────────────────────────────────────────
+    primary_sections: Dict[str, str] = {
+        f: (getattr(thesis, f, "") or "") for f in _PRIMARY
     }
+    primary_result = _suppress_redundant_sentences(primary_sections, _PRIMARY)
 
-    cleaned = _suppress_redundant_sentences(sections, _SECTION_PRIORITY)
+    # Collect committed sentences from pass 1 for use in pass 2
+    pass1_committed: List[str] = []
+    for f in _PRIMARY:
+        pass1_committed.extend(_split_sentences(primary_result.get(f, "") or ""))
 
+    # ── Signal context for pass 2 ─────────────────────────────────────────────
+    # Inject top signal text so supporting sections don't repeat signal concepts
+    signal_committed: List[str] = []
+    for sig in (getattr(thesis, "top_signals", None) or [])[:3]:
+        if getattr(sig, "signal", None):
+            signal_committed.append(sig.signal)
+    for sig in (getattr(thesis, "top_risks", None) or [])[:3]:
+        if getattr(sig, "signal", None):
+            signal_committed.append(sig.signal)
+
+    # ── Pass 2: supporting sections ───────────────────────────────────────────
+    supporting_sections: Dict[str, str] = {
+        f: (getattr(thesis, f, "") or "") for f in _SUPPORTING
+    }
+    supporting_result = _suppress_redundant_sentences(
+        supporting_sections,
+        _SUPPORTING,
+        pre_committed=pass1_committed + signal_committed,
+    )
+
+    # ── Build updates ─────────────────────────────────────────────────────────
     updates: Dict[str, str] = {}
-    for field_name in prose_fields:
-        original = sections[field_name]
-        polished = cleaned.get(field_name, original)
+    for f in _PRIMARY:
+        original = primary_sections[f]
+        polished = primary_result.get(f, original)
         if polished != original:
-            updates[field_name] = polished
+            updates[f] = polished
+    for f in _SUPPORTING:
+        original = supporting_sections[f]
+        polished = supporting_result.get(f, original)
+        if polished != original:
+            updates[f] = polished
 
     if not updates:
         return thesis

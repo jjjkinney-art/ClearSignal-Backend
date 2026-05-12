@@ -62,6 +62,8 @@ from .signal_ranker import (
     compress_thesis as _compress_thesis,
     check_forbidden_phrases,
     propagate_evidence_refs,
+    detect_signal_overlap,
+    build_confidence_reasoning,
     RankedSignalSet,
 )
 from .thesis_polisher import polish_thesis
@@ -270,6 +272,28 @@ Recent Catalysts:
 
 SUPPORTING EVIDENCE:
 {ev_block}
+
+STOCK-MOVEMENT ORIENTATION — MANDATORY FOR ALL SECTIONS:
+Every sentence must answer "What moves the stock?" — NOT "What describes the company?"
+
+REQUIRED in bull_thesis, bear_thesis, valuation_view, macro_sensitivity:
+- Explicit mechanism: X factor → Y stock effect (name the transmission)
+- Earnings/EPS/FCF impact quantified wherever possible
+- Valuation multiple pressure named (compression or expansion, with current multiple)
+- Catalyst specificity: name the event that triggers or proves the thesis
+
+BANNED across ALL prose sections:
+- Encyclopedic company descriptions ("Apple designs and sells iPhones…")
+- Static revenue facts without impact ("iPhone is 52% of revenue")
+- Generic moat language ("wide moat", "durable competitive advantage")
+- Descriptive superlatives without mechanism ("Apple is the world's most valuable…")
+- Filler assessments ("well-positioned", "strong company", "industry leader")
+
+TRANSFORM this way:
+  BAD: "Apple's iPhone segment represents 52% of total revenue."
+  GOOD: "iPhone demand elasticity means a 5-point unit decline compresses blended EPS by ~8%."
+  BAD: "Apple has a robust ecosystem."
+  GOOD: "iOS switching costs anchor 95%+ upgrade retention, sustaining Services ARPU at $10+/month."
 
 LANGUAGE RULES — MANDATORY:
 FORBIDDEN (replace with causal mechanisms):
@@ -686,6 +710,29 @@ def synthesize_thesis(
         thesis.top_risks = ranked.top_risks
         thesis.secondary_signals = ranked.secondary_signals
 
+    # ── Refinement 2: causal confidence reasoning ─────────────────────────────
+    # Replace LLM-generated generic confidence text with specific causal
+    # reasoning that cites agent agreement/disagreement, evidence coverage,
+    # and signal direction consensus.
+    try:
+        agent_confidences = {
+            "valuation": valuation.confidence,
+            "macro":     macro.confidence,
+            "risk":      risk.confidence,
+            "market":    market.confidence,
+            "quality":   quality.confidence,
+        }
+        causal_reasoning = build_confidence_reasoning(
+            agent_confidences=agent_confidences,
+            ranked=ranked,
+            evidence_count=len(evidence),
+            original_reasoning=thesis.confidence_reasoning or "",
+        )
+        if causal_reasoning:
+            thesis.confidence_reasoning = causal_reasoning
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] confidence_reasoning build failed: %r", exc)
+
     # ── Refinement 3: Evidence reference propagation ──────────────────────────
     # Infer evidence_refs on signals that the LLM did not explicitly annotate,
     # using keyword overlap against the full evidence pool.
@@ -697,6 +744,18 @@ def synthesize_thesis(
 
     # ── Phase 4: governance / consistency checks ──────────────────────────────
     warnings = _run_governance_checks(company, valuation, macro, risk, thesis, evidence)
+
+    # ── Refinement 5: signal overlap detection ────────────────────────────────
+    if ranked is not None:
+        try:
+            overlap_warnings = detect_signal_overlap(ranked)
+            if overlap_warnings:
+                print(f"[DIAG] SIGNAL OVERLAP: {len(overlap_warnings)} overlap(s) detected")
+                for w in overlap_warnings:
+                    print(w)
+            warnings = warnings + overlap_warnings
+        except Exception as exc:
+            logger.warning("[thesis_synthesizer] overlap detection failed: %r", exc)
 
     # ── Phase 5: depth enforcement ────────────────────────────────────────────
     depth_warnings = check_synthesis_depth(thesis, company, profile)
@@ -726,12 +785,14 @@ def synthesize_thesis(
     except Exception as exc:
         logger.warning("[thesis_synthesizer] thesis_polisher failed: %r — skipping", exc)
 
+    overlap_count = sum(1 for w in warnings if w.startswith("[OVERLAP]"))
+    gov_count = len(warnings) - len(depth_warnings) - len(quality_warnings) - overlap_count
     print(
         f"[thesis_synthesizer] done for {company.ticker}: "
         f"confidence={thesis.confidence_score:.2f} "
         f"warnings={len(warnings)} "
-        f"(governance={len(warnings) - len(depth_warnings) - len(quality_warnings)}, "
-        f"depth={len(depth_warnings)}, quality={len(quality_warnings)}) "
+        f"(governance={gov_count}, depth={len(depth_warnings)}, "
+        f"quality={len(quality_warnings)}, overlap={overlap_count}) "
         f"top_signals={len(thesis.top_signals)} "
         f"top_risks={len(thesis.top_risks)}"
     )
