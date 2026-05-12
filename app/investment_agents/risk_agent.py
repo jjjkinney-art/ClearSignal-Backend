@@ -129,6 +129,13 @@ Produce a JSON object matching the RiskProfile schema with these fields:
 - key_risks: Array of top 3-5 risks in concise bullet form (each a string)
 - overall: One concise paragraph summarising the risk profile
 - confidence: 0.0-1.0 based on evidence completeness
+- signals: array of 2-3 risk signals. Each signal object must have:
+    - signal: string — specific risk with transmission mechanism (e.g. "China revenue ~19% of AAPL total faces $10B+ tariff exposure")
+    - direction: "bearish" (risks are bearish by default)
+    - signal_type: "risk" | "cyclical" | "structural"
+    - impact_score: 0.0-1.0 (severity)
+    - time_horizon: "short_term" | "medium_term" | "long_term"
+    - importance_reason: string — why this risk is the most thesis-threatening
 
 Rules:
 - Cite evidence numbers (e.g. [1], [2]) in your text.

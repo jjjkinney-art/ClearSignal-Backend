@@ -601,6 +601,103 @@ class CompanyContext(BaseModel):
     )
 
 
+class Signal(BaseModel):
+    """A single ranked investment signal extracted from specialist agent analysis.
+
+    Signals are the atomic unit of the decision-intelligence layer.  They
+    capture *what matters* in a normalized, comparable form so that the
+    signal ranker can deduplicate, merge, and prioritize across all five
+    specialist agents before synthesis.
+
+    signal_type values:
+        structural  — durable competitive advantage or structural headwind
+        cyclical    — business-cycle-driven effect (hardware upgrade, ad spend)
+        risk        — specific downside risk with transmission mechanism
+        catalyst    — near-term event or data point that moves the thesis
+        valuation   — multiple, DCF, or relative-value observation
+        macro       — macro regime effect on this specific company
+        quality     — FCF conversion, management, capital allocation signal
+        noise       — generic or non-actionable — will be filtered out
+
+    time_horizon values: short_term | medium_term | long_term
+    direction values:    bullish | bearish | neutral
+    """
+
+    signal: str = Field(..., description="1-2 sentence specific signal statement")
+    explanation: str = Field(
+        default="",
+        description="Causal explanation: mechanism → specific P&L/multiple effect",
+    )
+    impact_score: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="Estimated impact on the investment thesis (0=negligible, 1=thesis-defining)",
+    )
+    confidence: float = Field(
+        default=0.5, ge=0.0, le=1.0,
+        description="Confidence in this signal given available evidence",
+    )
+    signal_type: str = Field(
+        default="structural",
+        description="structural|cyclical|risk|catalyst|valuation|macro|quality|noise",
+    )
+    time_horizon: str = Field(
+        default="medium_term",
+        description="short_term|medium_term|long_term",
+    )
+    direction: str = Field(
+        default="neutral",
+        description="bullish|bearish|neutral",
+    )
+    source_agent: str = Field(
+        default="",
+        description="Agent that produced this signal (valuation/macro/risk/market/quality)",
+    )
+    evidence_refs: List[str] = Field(
+        default_factory=list,
+        description="Evidence item titles or numbers that support this signal",
+    )
+    importance_reason: str = Field(
+        default="",
+        description="Why this signal matters more than others for the investment decision",
+    )
+
+
+class CompressedThesis(BaseModel):
+    """Compressed decision-intelligence view of an investment thesis.
+
+    Designed for meaning-first, signal-first rendering.  The frontend
+    should display this *above* the long-form bull/bear prose.
+
+    Fields are ordered by rendering priority:
+      1. direct_answer       — answers the user's exact question
+      2. top_signals         — 3 highest-impact signals (signal cards)
+      3. one_sentence_thesis — single-sentence position statement
+      4. why_it_matters      — causal paragraph explaining stakes
+      5. what_changes_this_view — 4 thesis-flipping triggers
+    """
+
+    direct_answer: str = Field(
+        default="",
+        description="2-3 sentences directly answering the user's question with specific mechanisms",
+    )
+    top_signals: List[Signal] = Field(
+        default_factory=list,
+        description="Top 3 highest-impact signals ranked by the signal ranker",
+    )
+    one_sentence_thesis: str = Field(
+        default="",
+        description="Single sentence capturing the investment position and primary driver",
+    )
+    why_it_matters: str = Field(
+        default="",
+        description="1-2 sentences explaining why the top signal is the dominant factor",
+    )
+    what_changes_this_view: List[str] = Field(
+        default_factory=list,
+        description="4 company-specific triggers that would materially flip the thesis",
+    )
+
+
 class ValuationView(BaseModel):
     """Structured output of the valuation specialist agent.
 
@@ -623,6 +720,10 @@ class ValuationView(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(
         default_factory=list, description="Evidence titles consumed by this agent"
+    )
+    signals: List[Signal] = Field(
+        default_factory=list,
+        description="Structured signals extracted by this agent",
     )
 
 
@@ -648,6 +749,7 @@ class MacroSensitivity(BaseModel):
     overall: str = Field(default="", description="Summary macro sensitivity view")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(default_factory=list)
+    signals: List[Signal] = Field(default_factory=list)
 
 
 class RiskProfile(BaseModel):
@@ -675,6 +777,7 @@ class RiskProfile(BaseModel):
     overall: str = Field(default="", description="Summary risk assessment")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(default_factory=list)
+    signals: List[Signal] = Field(default_factory=list)
 
 
 class MarketContext(BaseModel):
@@ -699,6 +802,7 @@ class MarketContext(BaseModel):
     overall: str = Field(default="", description="Summary market context")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(default_factory=list)
+    signals: List[Signal] = Field(default_factory=list)
 
 
 class QualityAssessment(BaseModel):
@@ -726,6 +830,7 @@ class QualityAssessment(BaseModel):
     overall: str = Field(default="", description="Summary quality assessment")
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(default_factory=list)
+    signals: List[Signal] = Field(default_factory=list)
 
 
 class InvestmentThesis(BaseModel):
@@ -785,6 +890,27 @@ class InvestmentThesis(BaseModel):
     consistency_warnings: List[str] = Field(
         default_factory=list,
         description="Deterministic contradictions flagged by the governance layer",
+    )
+    # Signal prioritization layer (Phase 1-4)
+    top_signals: List[Signal] = Field(
+        default_factory=list,
+        description="Top 3 highest-impact signals ranked across all agents — render above prose",
+    )
+    top_risks: List[Signal] = Field(
+        default_factory=list,
+        description="Top risk-direction signals ranked by severity",
+    )
+    secondary_signals: List[Signal] = Field(
+        default_factory=list,
+        description="Secondary signals (lower impact, but informative)",
+    )
+    one_sentence_thesis: str = Field(
+        default="",
+        description="Single sentence capturing the core investment position",
+    )
+    compressed_thesis: Optional[CompressedThesis] = Field(
+        default=None,
+        description="Compressed decision-intelligence view for meaning-first UI rendering",
     )
 
 

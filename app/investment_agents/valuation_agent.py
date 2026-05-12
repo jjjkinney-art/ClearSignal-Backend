@@ -8,7 +8,7 @@ from __future__ import annotations
 import logging
 from typing import List, Optional
 
-from ..schemas import CompanyContext, ValuationView, RetrievedEvidence, CompanyKnowledgeProfile
+from ..schemas import CompanyContext, ValuationView, RetrievedEvidence, CompanyKnowledgeProfile, Signal
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
@@ -125,6 +125,18 @@ Produce a JSON object matching the ValuationView schema with these fields:
 - relative_value: Relative value vs sector peers
 - overall: One concise paragraph summarising the valuation
 - confidence: 0.0-1.0 based on evidence completeness
+- signals: array of 2-4 extracted signals. Each signal object must have:
+    - signal: string — 1-2 sentences naming the specific driver (NOT generic)
+    - direction: "bullish" | "bearish" | "neutral"
+    - signal_type: "valuation" | "structural" | "cyclical" | "catalyst" | "macro" | "quality" | "risk"
+    - impact_score: 0.0-1.0 (how much does this move the thesis?)
+    - time_horizon: "short_term" | "medium_term" | "long_term"
+    - importance_reason: string — why this signal outweighs others
+
+Signal quality rules:
+- BAD: "Apple has strong revenue" (generic description)
+- GOOD: "Services segment at 72% gross margin offsets hardware P/E compression" (causal mechanism)
+- Each signal must name a specific {company.ticker} product, segment, or metric
 
 Rules:
 - Cite evidence numbers (e.g. [1], [2]) in your text.

@@ -130,6 +130,13 @@ Produce a JSON object matching the QualityAssessment schema with these fields:
 - operating_quality: Margin consistency, FCF conversion, asset intensity
 - overall: One concise paragraph summarising business quality
 - confidence: 0.0-1.0 based on evidence completeness
+- signals: array of 2-3 quality signals. Each signal object must have:
+    - signal: string — specific quality driver (e.g. "95% FCF conversion and $90B annual buyback provide durable shareholder return regardless of revenue mix")
+    - direction: "bullish" | "bearish" | "neutral"
+    - signal_type: "quality" | "structural" | "risk"
+    - impact_score: 0.0-1.0
+    - time_horizon: "short_term" | "medium_term" | "long_term"
+    - importance_reason: string — why this quality factor differentiates this company
 
 Rules:
 - Cite evidence numbers (e.g. [1], [2]) in your text.

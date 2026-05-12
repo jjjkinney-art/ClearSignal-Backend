@@ -120,12 +120,19 @@ Based on the news and market evidence above, assess the following:
 - What do positioning signals (short interest, institutional flows, options activity) suggest?
 
 Produce a JSON object matching the MarketContext schema with these fields:
-- recent_catalysts: Array of key catalysts from recent news (each a concise string)
+- recent_catalysts: Array of key catalysts from recent news (each a concise string; use [] if none)
 - momentum: Price momentum and technical positioning assessment
 - sentiment: Analyst and market sentiment summary
 - positioning: Institutional and retail positioning signals
 - overall: One concise paragraph summarising the current market context
 - confidence: 0.0-1.0 based on evidence completeness
+- signals: array of 2-3 catalyst or market signals. Each signal object must have:
+    - signal: string — specific catalyst or sentiment driver (e.g. "AAPL Services guidance raise by $1.2B signals accelerating flywheel")
+    - direction: "bullish" | "bearish" | "neutral"
+    - signal_type: "catalyst" | "structural" | "cyclical" | "risk"
+    - impact_score: 0.0-1.0
+    - time_horizon: "short_term" | "medium_term" | "long_term"
+    - importance_reason: string — why this catalyst is thesis-moving
 
 Rules:
 - Cite evidence numbers (e.g. [1], [2]) in your text.

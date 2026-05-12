@@ -57,6 +57,7 @@ from ..structured_output import get_structured_response, extract_json_candidate,
 from ..model_client import model_client
 from ..config import settings
 from .depth_guard import check_synthesis_depth
+from .signal_ranker import rank_signals, compress_thesis as _compress_thesis, check_forbidden_phrases, RankedSignalSet
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,7 @@ def _build_synthesis_prompt(
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
     original_user_question: Optional[str] = None,
+    ranked: Optional[RankedSignalSet] = None,
 ) -> str:
     # Plain-text agent summaries — NO markdown headings to avoid bleeding into output
     agent_summaries = "\n\n".join([
@@ -172,6 +174,26 @@ def _build_synthesis_prompt(
     ev_block = _evidence_block(evidence)
 
     ticker = company.ticker
+
+    # Build the ranked-signals injection block
+    if ranked is not None and (ranked.top_signals or ranked.top_risks):
+        signal_lines = []
+        for i, sig in enumerate(ranked.top_signals[:3], 1):
+            signal_lines.append(
+                f"  SIGNAL {i} [{sig.signal_type.upper()}/{sig.direction.upper()}"
+                f"/impact={sig.impact_score:.1f}]: {sig.signal}"
+            )
+        for i, sig in enumerate(ranked.top_risks[:3], 1):
+            signal_lines.append(
+                f"  RISK {i} [RISK/BEARISH/impact={sig.impact_score:.1f}]: {sig.signal}"
+            )
+        ranked_signals_section = (
+            "PRE-RANKED SIGNALS (prioritize these — ranked by composite importance):\n"
+            + "\n".join(signal_lines)
+            + "\nYour synthesis MUST address each of these signals explicitly.\n"
+        )
+    else:
+        ranked_signals_section = ""
 
     # Optional company business model section
     if profile is not None:
@@ -229,7 +251,8 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-{question_anchor_block}SPECIALIST AGENT OUTPUTS:
+{question_anchor_block}{ranked_signals_section}
+SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
 Key Risks Identified:
@@ -240,6 +263,17 @@ Recent Catalysts:
 
 SUPPORTING EVIDENCE:
 {ev_block}
+
+LANGUAGE RULES — MANDATORY:
+FORBIDDEN (replace with causal mechanisms):
+- "well positioned" → say HOW the position creates value
+- "strong company" → cite FCF conversion %, credit rating, or specific metric
+- "industry leader" → name the specific market share %, product, or advantage
+- "robust ecosystem" → name the specific lock-in mechanism and switching cost
+- "faces challenges" → name the specific challenge and its P&L transmission
+- "investors should monitor" → name the specific data point and threshold
+
+REQUIRED language: causal chains, mechanisms, specific metrics, asymmetry analysis.
 
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
@@ -603,9 +637,21 @@ def synthesize_thesis(
         print(f"[thesis_synthesizer] all agents empty + no evidence — skipping LLM call")
         return _empty_thesis(company, "No agent outputs or evidence available.")
 
+    # ── Phase 3: Signal ranking (pre-synthesis) ───────────────────────────────
+    # Run before the LLM call so ranked signals can be injected into the prompt.
+    try:
+        ranked = rank_signals(
+            valuation, macro, risk, market, quality,
+            company=company, profile=profile,
+        )
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] signal_ranker failed: %r — continuing", exc)
+        ranked = None
+
     prompt = _build_synthesis_prompt(
         company, valuation, macro, risk, market, quality, evidence, profile,
         original_user_question=original_user_question,
+        ranked=ranked,
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
@@ -627,6 +673,12 @@ def synthesize_thesis(
     thesis.evidence_count = len(evidence)
     thesis.generated_at = datetime.now(timezone.utc).isoformat()
 
+    # ── Attach ranked signals to thesis ──────────────────────────────────────
+    if ranked is not None:
+        thesis.top_signals = ranked.top_signals
+        thesis.top_risks = ranked.top_risks
+        thesis.secondary_signals = ranked.secondary_signals
+
     # ── Phase 4: governance / consistency checks ──────────────────────────────
     warnings = _run_governance_checks(company, valuation, macro, risk, thesis, evidence)
 
@@ -634,16 +686,31 @@ def synthesize_thesis(
     depth_warnings = check_synthesis_depth(thesis, company, profile)
     warnings = warnings + depth_warnings
 
+    # ── Phase 5+: forbidden phrase quality check ──────────────────────────────
+    quality_warnings = check_forbidden_phrases(thesis)
+    warnings = warnings + quality_warnings
+
     thesis.consistency_warnings = warnings
 
     if warnings:
         for w in warnings:
             print(w)
 
+    # ── Phase 4: thesis compression ───────────────────────────────────────────
+    if ranked is not None:
+        try:
+            thesis.compressed_thesis = _compress_thesis(thesis, ranked)
+            thesis.one_sentence_thesis = thesis.compressed_thesis.one_sentence_thesis
+        except Exception as exc:
+            logger.warning("[thesis_synthesizer] compression failed: %r", exc)
+
     print(
         f"[thesis_synthesizer] done for {company.ticker}: "
         f"confidence={thesis.confidence_score:.2f} "
         f"warnings={len(warnings)} "
-        f"(governance={len(warnings) - len(depth_warnings)}, depth={len(depth_warnings)})"
+        f"(governance={len(warnings) - len(depth_warnings) - len(quality_warnings)}, "
+        f"depth={len(depth_warnings)}, quality={len(quality_warnings)}) "
+        f"top_signals={len(thesis.top_signals)} "
+        f"top_risks={len(thesis.top_risks)}"
     )
     return thesis
