@@ -87,6 +87,7 @@ _RATE_CUT_BENEFIT_PHRASES = (
 _THESIS_FIELDS = (
     "ticker",
     "company_name",
+    "direct_answer",
     "bull_thesis",
     "bear_thesis",
     "key_drivers",
@@ -128,6 +129,10 @@ _THESIS_SCHEMA_DESCRIPTION = """\
 Required JSON fields (all must be present):
   "ticker"                  : string — the company ticker symbol (e.g. "AAPL")
   "company_name"            : string — canonical company name (e.g. "Apple Inc.")
+  "direct_answer"           : string — 2-3 sentences that directly answer the user's exact \
+question. MUST open with the mechanism (e.g. "Higher rates pressure AAPL via multiple \
+compression because…"). MUST name at least one company-specific offset or amplifier. \
+MUST NOT open with a generic company overview.
   "bull_thesis"             : string — 2-3 sentence bull case narrative
   "bear_thesis"             : string — 2-3 sentence bear case narrative
   "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
@@ -151,6 +156,7 @@ def _build_synthesis_prompt(
     quality: QualityAssessment,
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
+    original_user_question: Optional[str] = None,
 ) -> str:
     # Plain-text agent summaries — NO markdown headings to avoid bleeding into output
     agent_summaries = "\n\n".join([
@@ -188,6 +194,27 @@ def _build_synthesis_prompt(
         biz_model_section = ""
         profile_keywords_hint = ""
 
+    # Build the question-anchor block (injected only when a question is present)
+    if original_user_question:
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"QUESTION-ANCHORED DIRECT ANSWER RULES (mandatory for \"direct_answer\" field):\n"
+            f"- Sentence 1: State the PRIMARY mechanism by which this factor affects "
+            f"{company.company_name} ({ticker}). Be concrete and specific "
+            f'(e.g. "Higher rates compress {ticker}\'s ~28x P/E multiple because '
+            f'long-duration cash flows are discounted at a higher rate.").\n'
+            f"- Sentence 2: Name at least one {ticker}-specific offset, amplifier, or nuance "
+            f"(e.g. Services recurring revenue, buyback program, net-cash balance sheet, "
+            f"installed base, iPhone demand elasticity).\n"
+            f"- FORBIDDEN: Opening with a generic company description "
+            f'("Apple is a technology company…" or "Apple Inc. is a leading…").\n'
+            f"- FORBIDDEN: Answering a different question than the one asked.\n"
+            f"- REQUIRED: The mechanism must trace directly to {ticker}'s actual "
+            f"business model and the macro/sector factor in the question.\n\n"
+        )
+    else:
+        question_anchor_block = ""
+
     return f"""You are a senior investment analyst producing an institutional-quality investment thesis.
 
 CRITICAL OUTPUT RULES — READ FIRST:
@@ -202,7 +229,7 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-SPECIALIST AGENT OUTPUTS:
+{question_anchor_block}SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
 Key Risks Identified:
@@ -222,6 +249,8 @@ Before synthesising, identify any disagreements between agents:
 Explicitly address each conflict in your bull/bear thesis text.
 
 TASK — produce a JSON object with exactly these fields:
+0. direct_answer: 2-3 sentences that directly answer the user's exact question (see above).
+   MUST open with the mechanism. MUST NOT open with a generic company overview.
 1. bull_thesis: 2-3 sentences. MUST cite: (a) at least one specific {company.company_name} \
 business segment or product, (b) at least one agent-identified driver, (c) a valuation anchor.
 2. bear_thesis: 2-3 sentences. MUST cite: (a) a specific company-level risk, (b) a macro \
@@ -378,10 +407,15 @@ def _run_governance_checks(
 
 # ── Graceful empty thesis ─────────────────────────────────────────────────────
 
-def _empty_thesis(company: CompanyContext, reason: str = "") -> InvestmentThesis:
+def _empty_thesis(
+    company: CompanyContext,
+    reason: str = "",
+    original_user_question: Optional[str] = None,
+) -> InvestmentThesis:
     return InvestmentThesis(
         ticker=company.ticker,
         company_name=company.company_name,
+        direct_answer="",
         bull_thesis="Insufficient evidence to build a bull thesis.",
         bear_thesis="Insufficient evidence to build a bear thesis.",
         conclusion=f"Analysis incomplete. {reason}".strip(),
@@ -521,6 +555,7 @@ def synthesize_thesis(
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
+    original_user_question: Optional[str] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -530,16 +565,19 @@ def synthesize_thesis(
 
     Parameters
     ----------
-    company   : Normalised company identity.
-    valuation : Output from run_valuation_agent().
-    macro     : Output from run_macro_agent().
-    risk      : Output from run_risk_agent().
-    market    : Output from run_market_agent().
-    quality   : Output from run_quality_agent().
-    evidence  : Full evidence list (all agents' inputs combined).
-    request_id: Optional trace ID forwarded to model client.
-    profile   : Optional CompanyKnowledgeProfile; enables richer prompting
-                and depth-guard checks when supplied.
+    company               : Normalised company identity.
+    valuation             : Output from run_valuation_agent().
+    macro                 : Output from run_macro_agent().
+    risk                  : Output from run_risk_agent().
+    market                : Output from run_market_agent().
+    quality               : Output from run_quality_agent().
+    evidence              : Full evidence list (all agents' inputs combined).
+    request_id            : Optional trace ID forwarded to model client.
+    profile               : Optional CompanyKnowledgeProfile; enables richer prompting
+                            and depth-guard checks when supplied.
+    original_user_question: The user's verbatim question. When supplied the synthesiser
+                            produces a ``direct_answer`` field that specifically addresses
+                            the question before the broader thesis.
 
     Returns
     -------
@@ -566,7 +604,8 @@ def synthesize_thesis(
         return _empty_thesis(company, "No agent outputs or evidence available.")
 
     prompt = _build_synthesis_prompt(
-        company, valuation, macro, risk, market, quality, evidence, profile
+        company, valuation, macro, risk, market, quality, evidence, profile,
+        original_user_question=original_user_question,
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────

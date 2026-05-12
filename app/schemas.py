@@ -764,6 +764,14 @@ class InvestmentThesis(BaseModel):
         default_factory=list,
         description="Events or data that would materially change this view",
     )
+    direct_answer: str = Field(
+        default="",
+        description=(
+            "Direct answer to the user's exact question (1-3 sentences). "
+            "Must be populated when original_user_question is supplied. "
+            "Rendered above the broader conclusion in the UI."
+        ),
+    )
     conclusion: str = Field(
         default="", description="One-paragraph investment conclusion"
     )

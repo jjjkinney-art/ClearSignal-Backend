@@ -738,6 +738,7 @@ def _run_investment_pipeline(
             quality=quality,
             evidence=evidence,
             profile=profile,
+            original_user_question=question,
         )
     except Exception as exc:
         logger.warning("[router] synthesize_thesis failed for %s: %r", ticker, exc)
