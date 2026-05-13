@@ -9,6 +9,7 @@ specialist agent's output as well as the synthesizer's final summary.
 
 from __future__ import annotations
 
+import uuid as _uuid
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
@@ -1089,4 +1090,291 @@ class CompanyKnowledgeProfile(BaseModel):
             "Company-specific nouns the depth guard requires in synthesised "
             "theses (e.g. 'iPhone', 'CUDA', 'Azure')"
         ),
+    )
+
+
+# =============================================================================
+# WATCHLIST + THESIS MEMORY FOUNDATION
+# =============================================================================
+
+
+class ThesisSnapshot(BaseModel):
+    """Point-in-time snapshot of an InvestmentThesis for comparison and history.
+
+    Stored in the timeline layer keyed by ticker.  Every time a new thesis is
+    generated for a watchlisted company, a snapshot is saved so the diff engine
+    can compare consecutive versions and detect material changes.
+
+    Hashes are deterministic fingerprints of the signal and risk lists — if
+    either hash changes between snapshots the corresponding dimension has moved.
+    """
+
+    snapshot_id: str = Field(
+        default_factory=lambda: str(_uuid.uuid4()),
+        description="UUID for this snapshot",
+    )
+    ticker: str = Field(..., description="Ticker symbol (uppercase)")
+    company_name: str = Field(default="", description="Canonical company name")
+    timestamp: str = Field(
+        default="",
+        description="ISO-8601 UTC timestamp of generation (auto-set when empty)",
+    )
+
+    # ── Core thesis fields ────────────────────────────────────────────────────
+    one_sentence_thesis: str = Field(default="", description="Hero thesis sentence")
+    direct_answer: str = Field(default="", description="Direct answer to user's question")
+    bull_thesis: str = Field(default="", description="Bull case narrative")
+    bear_thesis: str = Field(default="", description="Bear case narrative")
+    conclusion: str = Field(default="", description="Investment conclusion paragraph")
+
+    # ── Ranked signals ────────────────────────────────────────────────────────
+    top_signals: List["Signal"] = Field(
+        default_factory=list,
+        description="Top bullish/neutral signals at snapshot time",
+    )
+    top_risks: List["Signal"] = Field(
+        default_factory=list,
+        description="Top risk signals at snapshot time",
+    )
+    key_drivers: List[str] = Field(
+        default_factory=list,
+        description="Ranked investment drivers at snapshot time",
+    )
+    key_risks_text: List[str] = Field(
+        default_factory=list,
+        description="Plain-text risk descriptions at snapshot time",
+    )
+
+    # ── Confidence ────────────────────────────────────────────────────────────
+    confidence_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    confidence_reasoning: str = Field(default="")
+
+    # ── Temporal intelligence ─────────────────────────────────────────────────
+    thesis_trend: str = Field(
+        default="unclear",
+        description="strengthening | weakening | stable | inflecting | unclear",
+    )
+    change_drivers: List[str] = Field(
+        default_factory=list,
+        description="Drivers of the thesis trend at snapshot time",
+    )
+    what_changed: List[str] = Field(
+        default_factory=list,
+        description="Changes from the prior snapshot",
+    )
+
+    # ── Fingerprints (deterministic) ─────────────────────────────────────────
+    signal_hash: str = Field(
+        default="",
+        description="SHA-256 of sorted top_signals descriptions — changes when signal set moves",
+    )
+    risk_hash: str = Field(
+        default="",
+        description="SHA-256 of sorted top_risks descriptions — changes when risk set moves",
+    )
+
+
+class WatchlistEntry(BaseModel):
+    """A tracked ticker in the persistent watchlist.
+
+    Stores lightweight metadata and pointers to the latest snapshot so the
+    watchlist view can render a full Bloomberg-lite row without loading the
+    entire snapshot history.
+    """
+
+    ticker: str = Field(..., description="Ticker symbol (uppercase)")
+    company_name: str = Field(default="", description="Canonical company name")
+    added_at: str = Field(
+        default="",
+        description="ISO-8601 UTC timestamp when ticker was added to watchlist",
+    )
+    last_updated: Optional[str] = Field(
+        default=None,
+        description="ISO-8601 UTC timestamp of the most recent snapshot save",
+    )
+    snapshot_count: int = Field(
+        default=0,
+        description="Total number of snapshots stored for this ticker",
+    )
+    has_material_change: bool = Field(
+        default=False,
+        description="True when the most recent diff flagged a material change",
+    )
+
+    # ── Latest snapshot summary (denormalised for fast rendering) ─────────────
+    latest_thesis_trend: str = Field(
+        default="unclear",
+        description="Thesis trend from the most recent diff",
+    )
+    latest_confidence: float = Field(
+        default=0.0,
+        description="Confidence score from the most recent snapshot",
+    )
+    latest_one_sentence: str = Field(
+        default="",
+        description="Hero thesis from the most recent snapshot",
+    )
+    dominant_signal: str = Field(
+        default="",
+        description="Label of the #1 ranked signal in the most recent snapshot",
+    )
+    dominant_risk: str = Field(
+        default="",
+        description="Label of the #1 ranked risk in the most recent snapshot",
+    )
+    notes: str = Field(default="", description="Optional analyst notes")
+
+
+class ThesisDiff(BaseModel):
+    """Structured diff between two consecutive ThesisSnapshot objects.
+
+    Produced by ``thesis_memory_service.compare_thesis_snapshots()``.
+    All fields default to safe empties so callers can safely access any
+    attribute even when no meaningful change was detected.
+    """
+
+    # ── Change narrative ──────────────────────────────────────────────────────
+    what_changed: List[str] = Field(
+        default_factory=list,
+        description="Plain-English descriptions of what moved between snapshots",
+    )
+    thesis_trend: str = Field(
+        default="unclear",
+        description=(
+            "strengthening | weakening | stable | inflecting | unclear — "
+            "direction of the thesis relative to the prior snapshot"
+        ),
+    )
+    change_drivers: List[str] = Field(
+        default_factory=list,
+        description="Specific factors driving the detected trend",
+    )
+
+    # ── Material shift ────────────────────────────────────────────────────────
+    material_shift_detected: bool = Field(
+        default=False,
+        description="True when the diff meets at least one material-change threshold",
+    )
+    severity: str = Field(
+        default="low",
+        description="high | medium | low — overall severity of the detected changes",
+    )
+
+    # ── Confidence delta ──────────────────────────────────────────────────────
+    confidence_change: float = Field(
+        default=0.0,
+        description="Current confidence minus previous confidence (positive = stronger)",
+    )
+
+    # ── Signal-level changes ──────────────────────────────────────────────────
+    new_risks: List[str] = Field(
+        default_factory=list,
+        description="Risk descriptions present in current but not in previous snapshot",
+    )
+    removed_risks: List[str] = Field(
+        default_factory=list,
+        description="Risk descriptions present in previous but not in current snapshot",
+    )
+    strengthening_signals: List[str] = Field(
+        default_factory=list,
+        description="Signals that gained rank or appeared in current snapshot",
+    )
+    weakening_signals: List[str] = Field(
+        default_factory=list,
+        description="Signals that lost rank or disappeared in current snapshot",
+    )
+    top_signal_replaced: bool = Field(
+        default=False,
+        description="True when the #1 ranked signal changed between snapshots",
+    )
+    trend_flipped: bool = Field(
+        default=False,
+        description="True when thesis_trend reversed vs the previous snapshot's trend",
+    )
+
+    # ── Snapshot references ───────────────────────────────────────────────────
+    previous_snapshot_id: Optional[str] = Field(default=None)
+    current_snapshot_id: Optional[str] = Field(default=None)
+
+
+class MaterialChangeEvent(BaseModel):
+    """A detected material change in an investment thesis.
+
+    Emitted by ``thesis_memory_service.detect_material_change()`` when a
+    ThesisDiff crosses at least one severity threshold.  Stored in the
+    timeline layer as entry_type="material_change".
+    """
+
+    event_id: str = Field(
+        default_factory=lambda: str(_uuid.uuid4()),
+        description="UUID for this event",
+    )
+    ticker: str = Field(..., description="Ticker symbol")
+    severity: str = Field(
+        ...,
+        description="high | medium | low",
+    )
+    summary: str = Field(..., description="One-sentence description of the change")
+    drivers: List[str] = Field(
+        default_factory=list,
+        description="Specific drivers identified in the diff",
+    )
+    timestamp: str = Field(
+        ...,
+        description="ISO-8601 UTC timestamp of detection",
+    )
+    change_type: str = Field(
+        ...,
+        description=(
+            "thesis_weakened | thesis_strengthened | new_structural_risk | "
+            "confidence_collapse | trend_flip | top_signal_replaced | stable"
+        ),
+    )
+
+    # ── Snapshot references ───────────────────────────────────────────────────
+    previous_snapshot_id: Optional[str] = Field(default=None)
+    current_snapshot_id: Optional[str] = Field(default=None)
+
+    # ── Quantitative context ──────────────────────────────────────────────────
+    confidence_change: float = Field(
+        default=0.0,
+        description="Confidence delta that triggered (or contributed to) this event",
+    )
+    thesis_trend_changed: bool = Field(
+        default=False,
+        description="True when the thesis_trend direction changed in this diff",
+    )
+
+
+class AlertRule(BaseModel):
+    """A declarative alert rule evaluated against a ThesisDiff.
+
+    Rules are pure-function conditions: given a diff, return True if the
+    condition is met.  No production infrastructure is required — rules are
+    evaluated in-process and the caller decides what to do with the result.
+
+    condition_key maps to a registered evaluator in
+    ``thesis_memory_service.ALERT_RULE_EVALUATORS``.
+    """
+
+    rule_id: str = Field(..., description="Unique rule identifier")
+    name: str = Field(..., description="Human-readable rule name")
+    description: str = Field(
+        default="", description="What this rule watches for"
+    )
+    condition_key: str = Field(
+        ...,
+        description=(
+            "Key into ALERT_RULE_EVALUATORS: "
+            "thesis_weakens | confidence_collapses | new_structural_risk | "
+            "trend_flip | top_signal_replaced | thesis_strengthens"
+        ),
+    )
+    threshold: Optional[float] = Field(
+        default=None,
+        description="Optional numeric threshold (e.g. 0.10 for 10pp confidence drop)",
+    )
+    severity: str = Field(
+        default="medium",
+        description="high | medium | low — severity of alerts fired by this rule",
     )

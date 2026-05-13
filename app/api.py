@@ -18,9 +18,19 @@ from typing import Optional
 import requests as _requests
 from fastapi import APIRouter, HTTPException, Query, Request
 
-from .schemas import AnalysisRequest, AnalysisResponse, QuestionRequest, AgentAnswerResponse
+from .schemas import (
+    AnalysisRequest,
+    AnalysisResponse,
+    QuestionRequest,
+    AgentAnswerResponse,
+    WatchlistEntry,
+    ThesisSnapshot,
+    ThesisDiff,
+    MaterialChangeEvent,
+)
 from .services.analysis_service import analyze_company
 from .services.router_service import route_question
+from .services.watchlist_service import watchlist_service
 
 logger = logging.getLogger(__name__)
 
@@ -217,3 +227,119 @@ async def market_resolve(
             if pe              is not None: result["peRatio"]          = pe
 
     return result
+
+
+# =============================================================================
+# WATCHLIST ENDPOINTS
+# =============================================================================
+
+
+@router.get(
+    "/watchlist",
+    response_model=list,
+    summary="List all watchlisted tickers",
+    tags=["watchlist"],
+)
+async def get_watchlist() -> list:
+    """Return all watchlist entries sorted by most-recently-added."""
+    return [e.model_dump() for e in watchlist_service.get_watchlist()]
+
+
+@router.post(
+    "/watchlist/{ticker}",
+    response_model=dict,
+    summary="Add a ticker to the watchlist",
+    tags=["watchlist"],
+)
+async def add_to_watchlist(
+    ticker:       str,
+    company_name: str = Query(default="", description="Optional canonical company name"),
+) -> dict:
+    """Add *ticker* to the watchlist.  Idempotent — safe to call multiple times."""
+    entry = watchlist_service.add_ticker(ticker, company_name)
+    return entry.model_dump()
+
+
+@router.delete(
+    "/watchlist/{ticker}",
+    response_model=dict,
+    summary="Remove a ticker from the watchlist",
+    tags=["watchlist"],
+)
+async def remove_from_watchlist(ticker: str) -> dict:
+    """Remove *ticker* from the watchlist.  Returns {removed: bool}."""
+    removed = watchlist_service.remove_ticker(ticker)
+    return {"ticker": ticker.upper(), "removed": removed}
+
+
+@router.get(
+    "/watchlist/{ticker}/snapshots",
+    response_model=list,
+    summary="Get thesis snapshot history for a ticker",
+    tags=["watchlist"],
+)
+async def get_snapshots(
+    ticker: str,
+    limit:  int = Query(default=20, ge=1, le=200, description="Max snapshots to return"),
+) -> list:
+    """Return the thesis snapshot history for *ticker*, newest-first."""
+    snaps = watchlist_service.get_snapshots(ticker, limit=limit)
+    return [s.model_dump() for s in snaps]
+
+
+@router.get(
+    "/watchlist/{ticker}/diff",
+    response_model=dict,
+    summary="Get the latest thesis diff for a ticker",
+    tags=["watchlist"],
+)
+async def get_latest_diff(ticker: str) -> dict:
+    """Return the diff between the two most recent snapshots for *ticker*.
+
+    Returns {available: false} when fewer than two snapshots exist.
+    """
+    diff = watchlist_service.get_latest_diff(ticker)
+    if diff is None:
+        return {"available": False, "ticker": ticker.upper()}
+    return {"available": True, "ticker": ticker.upper(), **diff.model_dump()}
+
+
+@router.get(
+    "/watchlist/changes/material",
+    response_model=list,
+    summary="Get material change events across all watchlisted tickers",
+    tags=["watchlist"],
+)
+async def get_material_changes(
+    limit: int = Query(default=50, ge=1, le=500, description="Max events to return"),
+) -> list:
+    """Return the most recent material change events across the entire watchlist."""
+    events = watchlist_service.get_material_changes(limit=limit)
+    return [e.model_dump() for e in events]
+
+
+@router.get(
+    "/watchlist/{ticker}/changes",
+    response_model=list,
+    summary="Get material change events for a specific ticker",
+    tags=["watchlist"],
+)
+async def get_ticker_changes(
+    ticker: str,
+    limit:  int = Query(default=20, ge=1, le=200),
+) -> list:
+    """Return material change events for *ticker*, newest-first."""
+    events = watchlist_service.get_material_changes(ticker=ticker, limit=limit)
+    return [e.model_dump() for e in events]
+
+
+@router.post(
+    "/watchlist/{ticker}/acknowledge",
+    response_model=dict,
+    summary="Clear the material-change flag for a ticker",
+    tags=["watchlist"],
+)
+async def acknowledge_change(ticker: str) -> dict:
+    """Mark the material-change alert as reviewed for *ticker*."""
+    watchlist_service.clear_material_change_flag(ticker)
+    return {"ticker": ticker.upper(), "acknowledged": True}
