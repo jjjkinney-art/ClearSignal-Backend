@@ -170,6 +170,12 @@ FORBIDDEN_PHRASES: frozenset = frozenset({
     "offsets pressure",
     "indicates strength",
     "strategically positioned",
+    # Refinement 3 — elite phrase substitutions (final language quality pass)
+    "provides a buffer",
+    "strong margins",
+    "impacting revenue",
+    "premium valuation",
+    "pricing power",
 })
 
 # ── Causal language scoring modifiers (Refinement 4) ──────────────────────────

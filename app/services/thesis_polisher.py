@@ -140,6 +140,13 @@ _FILLER_OPENERS: Tuple[str, ...] = (
     r"Furthermore,\s+",
     r"Additionally,\s+",
     r"Moreover,\s+",
+    # Refinement 4 — conclusion summary phrases that restate rather than add
+    r"Overall,\s+",
+    r"On balance,\s+",
+    r"Taken together,\s+",
+    r"All in all,\s+",
+    r"In light of (?:the above|this),\s+",
+    r"To sum (?:up|it up),\s+",
 )
 
 # Pre-compiled filler regexes (case-insensitive, anchored to start of sentence)
@@ -508,6 +515,26 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bindicates?\s+strength\b',            re.IGNORECASE), "signals strength"),
     (re.compile(r'\bstrategically\s+positioned\b',       re.IGNORECASE), "positioned"),
 
+    # Refinement 3 — Elite institutional phrase substitutions
+    # Each replaces educational/generic finance language with PM-memo density.
+    # Ordered to avoid cascading conflicts: more-specific patterns first.
+    (re.compile(r'\bhigh-margin\s+segment\b',            re.IGNORECASE),
+     "recurring high-margin revenue"),
+    (re.compile(r'\bhigh\s+gross\s+margin\b',            re.IGNORECASE),
+     "structurally high margin"),
+    (re.compile(r'\bstrong\s+margins?\b',                re.IGNORECASE), "margin durability"),
+    (re.compile(r'\bprovides?\s+(?:a\s+)?buffer\b',      re.IGNORECASE), "cushions downside"),
+    (re.compile(r'\bsupports?\s+(?:its\s+)?resilience\b', re.IGNORECASE), "cushions downside"),
+    (re.compile(r'\bpremium\s+valuation\b',              re.IGNORECASE), "premium multiple"),
+    (re.compile(r'\bpricing\s+power\b',                  re.IGNORECASE), "demand resilience"),
+    (re.compile(r'\bimpacting\s+revenue\b',              re.IGNORECASE), "pressuring earnings"),
+    # "supports valuation" → "stabilizes valuation" (upgrade from prior phase's replacement)
+    (re.compile(r'\bsupports?\s+valuation\b',            re.IGNORECASE), "stabilizes valuation"),
+
+    # Refinement 4 — Conclusion cadence: "However" at sentence start → "Yet"
+    # "However," is a generic transition that slows prose; "Yet" is tighter.
+    (re.compile(r'^However,\s+', re.IGNORECASE), "Yet "),
+
     # Trailing temporal filler (remove)
     (re.compile(r',?\s+(?:going|moving)\s+forward[.,]?$', re.IGNORECASE), "."),
     (re.compile(r',?\s+in\s+the\s+(?:long|near|medium)\s+(?:run|term)[.,]?$', re.IGNORECASE), "."),
@@ -568,7 +595,7 @@ _HERO_COMPRESSION_RES: List[Tuple[re.Pattern, str]] = [
 ]
 
 
-def compress_hero_thesis(text: str, max_words: int = 22) -> str:
+def compress_hero_thesis(text: str, max_words: int = 18) -> str:
     """Compress a verbose hero-thesis string to terminal-grade density.
 
     Targets ``one_sentence_thesis`` specifically.  Strips confidence-score
@@ -588,7 +615,7 @@ def compress_hero_thesis(text: str, max_words: int = 22) -> str:
     Parameters
     ----------
     text     : Raw hero-thesis string (may include confidence bracket).
-    max_words: Target maximum word count (default 22 — Bloomberg headline density).
+    max_words: Target maximum word count (default 18 — Bloomberg/PM-note density).
 
     Returns
     -------
@@ -763,6 +790,112 @@ def naturalize_confidence_prose(text: str) -> str:
     return text.strip()
 
 
+# ── Confidence humanization (Refinement 1) ───────────────────────────────────
+# Strips system-visible signal counts and mechanics from confidence_reasoning.
+# Called as the THIRD and final pass on confidence text, after
+# naturalize_confidence() and naturalize_confidence_prose() have already
+# removed mechanical % citations and agent-name references.
+#
+# Target: investment-committee language — no counts, no system artifacts.
+
+_BULL_BEAR_DIRECTION_RE = re.compile(
+    r"(?P<n1>\d+)\s+(?P<d1>bullish|bearish)\s+vs\s+(?P<n2>\d+)\s+(?P<d2>bullish|bearish)",
+    re.IGNORECASE,
+)
+
+
+def _replace_bull_bear_counts(m: "re.Match[str]") -> str:  # type: ignore[type-arg]
+    """Convert 'N bullish vs M bearish' to qualitative direction language.
+
+    Used as a re.sub() callable — receives the Match object and returns a
+    replacement string that expresses the signal split in PM-note prose.
+    """
+    try:
+        n1, d1 = int(m.group("n1")), m.group("d1").lower()
+        n2      =  int(m.group("n2"))
+        bull    = n1 if d1 == "bullish" else n2
+        bear    = n1 if d1 == "bearish" else n2
+        total   = bull + bear
+        if total == 0:
+            return "directionally mixed"
+        bull_share = bull / total
+        if bull_share >= 0.70:
+            return "predominantly constructive"
+        elif bull_share <= 0.30:
+            return "predominantly cautious"
+        else:
+            return "directionally mixed"
+    except (ValueError, AttributeError):
+        return "directionally mixed"
+
+
+# Patterns for stripping count-bearing phrases.
+# Order matters: parenthesized direction blocks stripped FIRST so the bare
+# direction regex doesn't replace inside parens and then get re-stripped.
+_HUMANIZE_SIGNAL_STRIP_RES: List[re.Pattern] = [
+    # Parenthesized direction counts "(4 bullish vs 1 bearish)" → remove entirely.
+    # The surrounding sentence already expresses the direction qualitatively.
+    re.compile(r"\s*\(\d+\s+(?:bullish|bearish)\s+vs\s+\d+\s+(?:bullish|bearish)\)",
+               re.IGNORECASE),
+    # Parenthesized evidence count: "(11 items)" / "(2 item)"
+    re.compile(r"\s*\(\d+\s+items?\)", re.IGNORECASE),
+    # "across N ranked signals"
+    re.compile(r"\s+across\s+\d+\s+ranked\s+signals?", re.IGNORECASE),
+    # "across N specialists"
+    re.compile(r"\s+across\s+\d+\s+specialists?", re.IGNORECASE),
+]
+
+
+def humanize_confidence_reasoning(text: str) -> str:
+    """Final humanization pass: strip signal counts and system mechanics.
+
+    Two-step approach:
+
+    Step 1 — Strip parenthesized direction count blocks
+      ``"(4 bullish vs 1 bearish)"`` → removed entirely.  The surrounding
+      sentence (e.g., "Signal direction leans bullish" or "two-sided uncertainty")
+      already expresses the direction qualitatively.
+
+    Step 2 — Replace any remaining bare direction counts
+      ``"4 bullish vs 1 bearish"`` (not in parens) → ``"predominantly constructive"``.
+
+    Step 3 — Strip all remaining count-bearing phrases
+      ``"(11 items)"`` → removed; ``"across 5 ranked signals"`` → removed.
+
+    Examples
+    --------
+    Before: ``"Signal direction leans bullish (4 bullish vs 1 bearish) across 5 signals."``
+    After:  ``"Signal direction leans bullish."``
+
+    Before: ``"Evidence base is solid (11 items)."``
+    After:  ``"Evidence base is solid."``
+
+    Before: ``"Agent consensus is broadly aligned across 5 specialists."``
+    After:  ``"Agent consensus is broadly aligned."``
+
+    Called AFTER ``naturalize_confidence()`` and ``naturalize_confidence_prose()``
+    have already stripped percentages and mechanical agent-name citations.
+    """
+    if not text:
+        return text
+
+    # Step 1 — strip parenthesized direction count blocks FIRST
+    for pattern in _HUMANIZE_SIGNAL_STRIP_RES:
+        text = pattern.sub("", text)
+
+    # Step 2 — replace any remaining BARE "N bullish vs M bearish" (not in parens)
+    text = _BULL_BEAR_DIRECTION_RE.sub(_replace_bull_bear_counts, text)
+
+    # Step 3 — cleanup artefacts left by stripping
+    text = re.sub(r"\s{2,}", " ", text)           # collapse double spaces
+    text = re.sub(r"\s+([,;.])", r"\1", text)     # fix orphaned punctuation
+    text = re.sub(r"([,;])\s*\.", ".", text)      # ", ." → "."
+    text = re.sub(r"—\s*\.", ".", text)           # "— ." → "."
+    text = re.sub(r"\(\s*\)", "", text)           # empty parens "()"
+    text = re.sub(r"^[,;\s]+", "", text)          # leading junk
+    return text.strip()
+
+
 def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
     """Apply institutional phrase rewrites and confidence naturalization.
 
@@ -787,10 +920,13 @@ def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
 
     conf_text: str = thesis.confidence_reasoning or ""
     if conf_text:
-        # Stage 1: strip mechanical citation patterns (agent names, raw "X% confidence")
+        # Stage 1: strip mechanical citation patterns (agent names, "X% confidence")
         naturalized = naturalize_confidence(conf_text)
         # Stage 2: strip ALL remaining percentage values for frontend delivery
         naturalized = naturalize_confidence_prose(naturalized)
+        # Stage 3: strip signal counts ("8 bullish vs 4 bearish", "11 items",
+        #          "across 5 ranked signals") — replaces counts with qualitative prose
+        naturalized = humanize_confidence_reasoning(naturalized)
         if naturalized != conf_text:
             updates["confidence_reasoning"] = naturalized
 

@@ -330,12 +330,28 @@ REQUIRED language: causal chains, specific metrics, named transmission mechanism
 asymmetry analysis, stock-price relevance in every sentence.
 
 TERMINAL DENSITY — MANDATORY:
-Write at Bloomberg/hedge-fund memo density. Remove ALL of the following:
+Write at Bloomberg terminal / hedge-fund IC-memo density. Remove ALL of the following:
 - Explanatory transitions ("This means that…", "In other words…", "It follows that…")
 - Educational framing ("It is worth understanding that…", "An important factor to consider…")
 - Introductory padding ("One of the key factors is…", "It should be noted that…")
+- Summary restaters ("Overall,", "On balance,", "Taken together,", "In conclusion,")
+- Weak hedges that repeat prior content ("It is also worth noting that X already mentioned…")
 Each sentence MUST convey a mechanism AND imply stock impact AND compress interpretation.
 No sentence may exist solely to introduce or summarise another sentence.
+
+PM-GRADE LANGUAGE — MANDATORY:
+Prefer compressed institutional phrasing over educational finance terms:
+- "strong margins" → "margin durability"
+- "pricing power" → "demand resilience"
+- "provides a buffer" → "cushions downside"
+- "premium valuation" → "premium multiple"
+- "high gross margin" → "structurally high margin"
+- "supports valuation" → "stabilizes valuation"
+- "impacting revenue" → "pressuring earnings"
+confidence_reasoning MUST read like an investment committee note — no signal counts,
+no "N bullish vs M bearish", no model artefacts. Example:
+  BAD:  "8 bullish vs 4 bearish signals across 12 ranked signals."
+  GOOD: "Evidence is directionally constructive; macro and regulatory uncertainty remain unresolved."
 
 STRUCTURAL VARIETY — MANDATORY:
 Never use the same opening sentence template across more than one section.
