@@ -525,11 +525,17 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bstrong\s+margins?\b',                re.IGNORECASE), "margin durability"),
     (re.compile(r'\bprovides?\s+(?:a\s+)?buffer\b',      re.IGNORECASE), "cushions downside"),
     (re.compile(r'\bsupports?\s+(?:its\s+)?resilience\b', re.IGNORECASE), "cushions downside"),
-    (re.compile(r'\bpremium\s+valuation\b',              re.IGNORECASE), "premium multiple"),
+    (re.compile(r'\bpremium\s+valuation\b',              re.IGNORECASE), "elevated valuation multiple"),
+    (re.compile(r'\bpremium\s+multiple\b',               re.IGNORECASE), "elevated valuation multiple"),
     (re.compile(r'\bpricing\s+power\b',                  re.IGNORECASE), "demand resilience"),
     (re.compile(r'\bimpacting\s+revenue\b',              re.IGNORECASE), "pressuring earnings"),
     # "supports valuation" → "stabilizes valuation" (upgrade from prior phase's replacement)
     (re.compile(r'\bsupports?\s+valuation\b',            re.IGNORECASE), "stabilizes valuation"),
+    # Banned institutional clichés — replace with specific mechanism language
+    (re.compile(r'\binvestors?\s+should\s+monitor\b',    re.IGNORECASE), "watch for"),
+    (re.compile(r'\bsupports?\s+structural\s+P/?E\s+expansion\b', re.IGNORECASE),
+     "expands the earnings multiple"),
+    (re.compile(r'\bresilient\s+against\b',              re.IGNORECASE), "absorbs pressure from"),
 
     # Refinement 4 — Conclusion cadence: "However" at sentence start → "Yet"
     # "However," is a generic transition that slows prose; "Yet" is tighter.
