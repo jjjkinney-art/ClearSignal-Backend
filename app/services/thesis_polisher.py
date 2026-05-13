@@ -31,6 +31,81 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from ..schemas import InvestmentThesis
 
+# ── Financial mechanism taxonomy (Refinement 1 upgrade) ──────────────────────
+# Maps mechanism tag → frozenset of keyword tokens that signal its presence.
+# Mechanisms represent causal drivers; sentences sharing mechanisms express
+# the same analytical idea even when worded differently.
+_MECHANISM_TAXONOMY: Dict[str, frozenset] = {
+    "valuation_multiple": frozenset({
+        "pe", "p/e", "multiple", "forward", "trailing", "premium",
+        "discount", "ev", "ebitda", "28x", "30x", "25x", "valuation",
+    }),
+    "dcf_rate_sensitivity": frozenset({
+        "dcf", "discount", "rate", "wacc", "duration", "cash", "flow",
+        "compress", "expand", "basis", "bps", "terminal",
+    }),
+    "margin_dynamics": frozenset({
+        "margin", "gross", "operating", "net", "profitability",
+        "expansion", "compression", "cost", "opex", "leverage",
+    }),
+    "revenue_quality": frozenset({
+        "recurring", "subscription", "arr", "saas", "services",
+        "contract", "retention", "churn", "sticky", "durable",
+    }),
+    "capital_return": frozenset({
+        "buyback", "repurchase", "dividend", "yield", "share",
+        "count", "dilution", "shrink", "shareholder", "capital",
+    }),
+    "rate_macro": frozenset({
+        "rate", "fed", "federal", "reserve", "yield", "treasury",
+        "interest", "monetary", "hike", "cut", "pause",
+    }),
+    "geopolitical_risk": frozenset({
+        "china", "tariff", "supply", "chain", "export", "restriction",
+        "ban", "geopolitic", "trade", "war", "sanction",
+    }),
+    "regulatory_risk": frozenset({
+        "regulation", "antitrust", "compliance", "enforcement",
+        "investigation", "doj", "ftc", "probe", "lawsuit",
+    }),
+    "growth_earnings": frozenset({
+        "growth", "revenue", "earnings", "eps", "beat", "guidance",
+        "revision", "estimate", "accelerat", "decelerat",
+    }),
+    "debt_leverage": frozenset({
+        "debt", "leverage", "credit", "refinanc", "covenant",
+        "rating", "liquidity", "solvency", "balance", "sheet",
+    }),
+    "hardware_cyclical": frozenset({
+        "hardware", "device", "upgrade", "consumer", "demand",
+        "cycle", "shipment", "unit", "asp", "volume",
+    }),
+    "competitive_moat": frozenset({
+        "ecosystem", "switching", "lock", "network", "effect",
+        "brand", "patent", "moat", "barrier", "differentiat",
+    }),
+}
+
+# Concept-level dedup: lower Jaccard required when mechanism overlap fires.
+# Catches paraphrases that pure Jaccard would miss (e.g., "Services offsets
+# rate pressure" ≈ "Recurring cash flows buffer multiple compression").
+_CONCEPT_JACCARD_FLOOR: float = 0.28
+
+
+def extract_core_mechanisms(text: str) -> Set[str]:
+    """Return set of mechanism tags found in *text*.
+
+    Tokenises *text* and checks each token against ``_MECHANISM_TAXONOMY``.
+    Returns a set of tag names (e.g. {'valuation_multiple', 'rate_macro'})
+    that are present — empty set if the text has no recognisable mechanism.
+    """
+    tokens = _tokenize(text)
+    found: Set[str] = set()
+    for tag, keywords in _MECHANISM_TAXONOMY.items():
+        if tokens & keywords:
+            found.add(tag)
+    return found
+
 # ── Sentence limits (refinement 1) ────────────────────────────────────────────
 # Maps InvestmentThesis field name → maximum number of sentences to keep.
 # Targets are tighter than before: supporting sections (bull/bear, valuation,
@@ -246,6 +321,11 @@ def _suppress_redundant_sentences(
     Dict with the same keys, values replaced by de-duplicated prose.
     """
     committed: List[str] = list(pre_committed) if pre_committed else []
+    # Track mechanism tags of all committed sentences for concept-level dedup
+    committed_mechanisms: Set[str] = set()
+    for s in committed:
+        committed_mechanisms.update(extract_core_mechanisms(s))
+
     result: Dict[str, str] = {}
 
     for field_name in priority:
@@ -262,21 +342,34 @@ def _suppress_redundant_sentences(
             if not committed:
                 kept.append(sent)
                 committed.append(sent)
+                committed_mechanisms.update(extract_core_mechanisms(sent))
                 continue
 
             max_sim = max(_jaccard(sent, c) for c in committed)
-            if max_sim >= threshold:
+
+            # Concept-level check: suppress if mechanisms are fully contained
+            # in committed pool AND sentence has a baseline lexical overlap.
+            # This catches paraphrases that pure Jaccard under-weights.
+            sent_mechs = extract_core_mechanisms(sent)
+            is_concept_redundant = (
+                bool(sent_mechs)
+                and sent_mechs.issubset(committed_mechanisms)
+                and max_sim >= _CONCEPT_JACCARD_FLOOR
+            )
+
+            if max_sim >= threshold or is_concept_redundant:
                 suppressed.append((max_sim, sent))
             else:
                 kept.append(sent)
                 committed.append(sent)
+                committed_mechanisms.update(sent_mechs)
 
         # Safety: never leave a section fully empty
         if not kept and suppressed:
-            # Keep the least-redundant suppressed sentence
             least_redundant = min(suppressed, key=lambda x: x[0])[1]
             kept.append(least_redundant)
             committed.append(least_redundant)
+            committed_mechanisms.update(extract_core_mechanisms(least_redundant))
 
         result[field_name] = _join_sentences(kept)
 
@@ -360,6 +453,141 @@ def suppress_redundancy(thesis: InvestmentThesis) -> InvestmentThesis:
     return thesis.copy(update=updates)  # type: ignore[attr-defined]
 
 
+# ── Institutional language rewriter (Refinement 2) ───────────────────────────
+# Applied per-sentence after concision enforcement.  Each rule is (pattern, replacement).
+# Rules are ordered: most specific first.  Only safe, high-confidence rewrites included —
+# no rule changes meaning, only removes robotic syntax or AI compression artifacts.
+_INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
+    # Robotic sentence starters → analyst phrasing
+    (re.compile(r'^This\s+indicates?\s+that\s+', re.IGNORECASE),  "The evidence suggests "),
+    (re.compile(r'^This\s+indicates?\s+',         re.IGNORECASE),  "The evidence suggests "),
+    (re.compile(r'^This\s+shows?\s+that\s+',      re.IGNORECASE),  "The data reflects "),
+    (re.compile(r'^This\s+demonstrates?\s+that\s+', re.IGNORECASE), "This reflects "),
+    (re.compile(r'^This\s+demonstrates?\s+',      re.IGNORECASE),  "This reflects "),
+    (re.compile(r'^This\s+suggests?\s+that\s+',   re.IGNORECASE),  "This points to "),
+
+    # Corporate stall verbs
+    (re.compile(r'\bThe\s+company\s+remains\b',   re.IGNORECASE),  "The stock maintains"),
+    (re.compile(r'\bThe\s+company\s+continues\b', re.IGNORECASE),  "The company"),
+    (re.compile(r'\bpoised\s+to\b',               re.IGNORECASE),  "positioned to"),
+
+    # Trailing temporal filler (remove)
+    (re.compile(r',?\s+(?:going|moving)\s+forward[.,]?$', re.IGNORECASE), "."),
+    (re.compile(r',?\s+in\s+the\s+(?:long|near|medium)\s+(?:run|term)[.,]?$', re.IGNORECASE), "."),
+    (re.compile(r',?\s+over\s+time[.,]?$',        re.IGNORECASE),  "."),
+]
+
+
+def institutional_phrase_rewriter(text: str) -> str:
+    """Apply institutional language rewrites to a prose string.
+
+    Processes sentence by sentence, applying each rewrite rule to every
+    sentence.  Strips trailing whitespace and normalises terminal punctuation
+    after each rewrite pass.
+
+    Rules are conservative — each targets a specific, reliably improvable
+    pattern.  No rule changes the information content of a sentence.
+    """
+    if not text or not text.strip():
+        return text
+
+    sentences = _split_sentences(text)
+    rewritten: List[str] = []
+
+    for sent in sentences:
+        for pattern, replacement in _INSTITUTIONAL_REWRITES:
+            sent = pattern.sub(replacement, sent).strip()
+        # Normalise terminal punctuation after rewrites
+        if sent and sent[-1] not in ".!?":
+            sent += "."
+        rewritten.append(sent)
+
+    return " ".join(rewritten)
+
+
+# ── Confidence naturalization (Refinement 3) ──────────────────────────────────
+# Strips mechanical confidence-score citations from confidence_reasoning text.
+# Converts agent-name + percentage references to analyst-style qualitative prose.
+
+# Patterns that betray mechanical LLM confidence citation
+_CONFIDENCE_STRIP_RES: List[re.Pattern] = [
+    # "X% confidence" / "confidence of X%"
+    re.compile(r'\b\d+(?:\.\d+)?%\s+confidence\b',          re.IGNORECASE),
+    re.compile(r'\bconfidence\s+(?:score\s+)?of\s+\d+(?:\.\d+)?%?\b', re.IGNORECASE),
+    re.compile(r'\bat\s+\d+(?:\.\d+)?(?:%|)\s*confidence\b', re.IGNORECASE),
+    # "register X%" / "at X confidence"
+    re.compile(r'\bregister\s+\d+(?:\.\d+)?%\b',             re.IGNORECASE),
+]
+
+# Agent-name patterns — replace with generic reference
+_AGENT_NAME_RE = re.compile(
+    r'\b(?:the\s+)?(valuation|macro|risk|market|quality)\s+agent\b',
+    re.IGNORECASE,
+)
+_AGENT_PLURAL_RE = re.compile(
+    r'\bagents?\s+(register|show|indicate|signal)\b',
+    re.IGNORECASE,
+)
+
+
+def naturalize_confidence(text: str) -> str:
+    """Convert mechanical confidence citations to analyst-style prose.
+
+    Strips patterns like "macro agents register 30% confidence" and agent-name
+    references, leaving the surrounding analytical framing intact.  The result
+    reads like a PM commentary note rather than an automated scoring report.
+    """
+    if not text:
+        return text
+
+    for pattern in _CONFIDENCE_STRIP_RES:
+        text = pattern.sub("", text)
+
+    text = _AGENT_NAME_RE.sub(r"\1 analysis", text)
+    text = _AGENT_PLURAL_RE.sub(r"evidence \1s", text)
+
+    # Clean up orphaned punctuation and double spaces
+    text = re.sub(r'\s{2,}', ' ', text)
+    text = re.sub(r'\s+([,;.])', r'\1', text)
+    text = re.sub(r'^[,;\s]+', '', text)
+    return text.strip()
+
+
+def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
+    """Apply institutional phrase rewrites and confidence naturalization.
+
+    Processes all prose fields through ``institutional_phrase_rewriter()``
+    and passes ``confidence_reasoning`` through ``naturalize_confidence()``.
+    Returns an updated copy; never mutates the input.
+    """
+    _PROSE_FIELDS = (
+        "direct_answer", "bull_thesis", "bear_thesis",
+        "conclusion", "valuation_view", "macro_sensitivity",
+    )
+    updates: Dict[str, str] = {}
+
+    for field_name in _PROSE_FIELDS:
+        original: str = getattr(thesis, field_name, "") or ""
+        if not original.strip():
+            continue
+        rewritten = institutional_phrase_rewriter(original)
+        if rewritten != original:
+            updates[field_name] = rewritten
+
+    conf_text: str = thesis.confidence_reasoning or ""
+    if conf_text:
+        naturalized = naturalize_confidence(conf_text)
+        if naturalized != conf_text:
+            updates["confidence_reasoning"] = naturalized
+
+    if not updates:
+        return thesis
+
+    if hasattr(thesis, "model_copy"):
+        return thesis.model_copy(update=updates)
+    return thesis.copy(update=updates)  # type: ignore[attr-defined]
+
+
 # ── Temporal defaults (Refinement 4) ─────────────────────────────────────────
 
 def apply_temporal_defaults(thesis: InvestmentThesis) -> InvestmentThesis:
@@ -395,14 +623,16 @@ def polish_thesis(thesis: InvestmentThesis) -> InvestmentThesis:
 
     Order of operations
     -------------------
-    1. enforce_concision      — trim prose to sentence-count targets, strip fillers
-    2. suppress_redundancy    — remove repeated ideas from lower-priority sections
-    3. apply_temporal_defaults — enforce valid thesis_trend value
+    1. enforce_concision           — trim prose to sentence-count targets, strip fillers
+    2. suppress_redundancy         — remove repeated ideas (sentence + concept level)
+    3. _apply_institutional_language — rewrite robotic patterns; naturalize confidence
+    4. apply_temporal_defaults     — enforce valid thesis_trend value
 
     Returns a new InvestmentThesis (immutable update pattern); the input is
     never mutated.
     """
     thesis = enforce_concision(thesis)
     thesis = suppress_redundancy(thesis)
+    thesis = _apply_institutional_language(thesis)
     thesis = apply_temporal_defaults(thesis)
     return thesis

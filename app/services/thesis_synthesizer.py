@@ -295,16 +295,39 @@ TRANSFORM this way:
   BAD: "Apple has a robust ecosystem."
   GOOD: "iOS switching costs anchor 95%+ upgrade retention, sustaining Services ARPU at $10+/month."
 
-LANGUAGE RULES — MANDATORY:
-FORBIDDEN (replace with causal mechanisms):
-- "well positioned" → say HOW the position creates value
-- "strong company" → cite FCF conversion %, credit rating, or specific metric
-- "industry leader" → name the specific market share %, product, or advantage
-- "robust ecosystem" → name the specific lock-in mechanism and switching cost
-- "faces challenges" → name the specific challenge and its P&L transmission
-- "investors should monitor" → name the specific data point and threshold
+INSTITUTIONAL TONE — MANDATORY:
+Write every sentence as a buy-side analyst memo, not a company overview or AI summary.
+Hedge fund memo tone: compressed, causal, mechanism-first.
 
-REQUIRED language: causal chains, mechanisms, specific metrics, asymmetry analysis.
+SENTENCE STRUCTURE: Mechanism → Specific data point → So-what for {ticker}'s P&L or valuation.
+  BAD: "Apple Services margin offsets compression."
+  GOOD: "Recurring Services cash flows (72% gross margin, ~$100B ARR) partially absorb \
+rate-driven P/E multiple pressure on the lower-margin hardware segment."
+
+  BAD: "The company remains well positioned in its key markets."
+  GOOD: "{ticker}'s $165B net-cash position and $90B annual buyback sustain EPS even \
+as hardware revenue faces credit-cycle headwinds."
+
+  BAD: "This indicates positive momentum going forward."
+  GOOD: "The acceleration in Services attach rates since iOS 17 signals upsell runway \
+that sell-side estimates have not yet captured."
+
+FORBIDDEN PHRASES — remove every instance:
+- "well positioned", "well-positioned" → say specifically HOW
+- "strong company", "solid fundamentals" → cite the actual metric
+- "industry leader" → cite market share % or competitive mechanism
+- "robust ecosystem" → name the specific lock-in and switching cost estimate
+- "faces challenges" → name the challenge and its P&L transmission mechanism
+- "investors should monitor" → name the exact data point and threshold
+- "going forward", "moving forward" → remove; state the mechanism directly
+- "this indicates", "this shows" → replace with the specific inference
+- "the company remains" → replace with stock-level framing ("the stock maintains")
+- "continues to benefit" → explain HOW and WHY the benefit accrues
+- "poised to", "positioned for" → replace with specific catalyst or trigger
+- "a testament to", "speaks to the" → replace with direct causal statement
+
+REQUIRED language: causal chains, specific metrics, named transmission mechanisms,
+asymmetry analysis, stock-price relevance in every sentence.
 
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
@@ -326,7 +349,15 @@ headwind's actual transmission mechanism to {ticker}'s earnings/margins.
 6. macro_sensitivity: 1-2 sentences on how the SPECIFIC macro environment hits \
 {company.company_name}'s SPECIFIC revenue lines and cost structure.
 7. confidence_score: 0.0-1.0. Penalise for low-confidence agent inputs and sparse evidence.
-8. confidence_reasoning: Why this confidence level? Cite agent confidence levels.
+8. confidence_reasoning: Analyst-style uncertainty framing — 1-2 sentences explaining what \
+the evidence IS and IS NOT conclusive about. Do NOT cite agent confidence percentages or \
+agent names ("macro agent at 30%"). Instead write like a PM note:
+   BAD: "Macro agents register 30% confidence. Risk agent at 75% confidence."
+   GOOD: "Evidence is directionally constructive on valuation and quality; macro and \
+regulatory headwinds remain harder to size without forward guidance clarity."
+   BAD: "Overall confidence of 0.68 reflects mixed signals."
+   GOOD: "Conviction is moderate — valuation and quality signals are conclusive, but \
+rate timing and China regulatory developments remain unresolved."
 9. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
 10. conclusion: Institutional-quality paragraph. Must NOT contain generic phrases \
 like "the company faces headwinds" or "as a growth stock". MUST name specific \

@@ -126,8 +126,10 @@ _DESCRIPTIVE_PHRASE_PATTERNS: List = [
     re.compile(r'\b(employs?|workforce\s+of)\s+[\d,]+\b', re.IGNORECASE),
 ]
 
-# ── Forbidden phrases (Phase 5) ───────────────────────────────────────────────
+# ── Forbidden phrases (Phase 5, extended) ─────────────────────────────────────
+# Terminal language that signals generic, non-analytical prose.
 FORBIDDEN_PHRASES: frozenset = frozenset({
+    # Original set
     "well positioned",
     "strong company",
     "industry leader",
@@ -139,7 +141,82 @@ FORBIDDEN_PHRASES: frozenset = frozenset({
     "broadly diversified",
     "key player",
     "wide moat company",
+    # Extended: corporate / AI-compressed patterns (Refinement 5)
+    "this indicates",
+    "the company remains",
+    "strong positioning",
+    "well-positioned",
+    "continues to benefit",
+    "going forward",
+    "moving forward",
+    "in the long run",
+    "it is clear that",
+    "demonstrates the ability",
+    "a testament to",
+    "speaks to the",
+    "headwinds and tailwinds",
+    "remains well",
+    "poised to benefit",
+    "poised for growth",
+    "solid fundamentals",
+    "continues to grow",
+    "positioned for",
 })
+
+# ── Causal language scoring modifiers (Refinement 4) ──────────────────────────
+# Signals with explicit causal verbs are more analytically useful than
+# purely descriptive signals and score higher in the ranking engine.
+_CAUSAL_VERBS: frozenset = frozenset({
+    "compress", "compresses", "compressed",
+    "drive", "drives", "drove",
+    "expand", "expands", "expanded",
+    "threaten", "threatens", "threatened",
+    "erode", "erodes", "eroded",
+    "support", "supports", "supported",
+    "amplify", "amplifies", "amplified",
+    "accelerate", "accelerates", "accelerated",
+    "reduce", "reduces", "reduced",
+    "increase", "increases", "increased",
+    "impact", "impacts", "impacted",
+    "weigh", "weighs", "weighed",
+    "squeeze", "squeezes", "squeezed",
+    "boost", "boosts", "boosted",
+    "limit", "limits", "limited",
+    "pressure", "pressures", "pressured",
+    "offset", "offsets", "offsetting",
+    "constrain", "constrains", "constrained",
+    "widen", "widens", "widened",
+    "narrow", "narrows", "narrowed",
+})
+
+# Descriptive-stall verbs that signal generic/background statements rather than
+# causal mechanisms.  Penalised slightly in scoring.
+_DESCRIPTIVE_STALLS: frozenset = frozenset({
+    "remains", "maintain", "maintains",
+    "continues", "is considered", "has been",
+    "has historically", "positioned", "known for",
+    "recognized", "is known",
+})
+
+
+def _causal_score_modifier(signal: "Signal") -> float:  # type: ignore[name-defined]
+    """Return a 0.88–1.12 multiplier based on causal language presence.
+
+    Signals with specific causal verbs (compresses, drives, threatens…) receive
+    a 12% boost because they express a mechanism → P&L transmission chain.
+    Purely descriptive signals (remains, maintains, positioned…) without any
+    causal verb receive an 12% penalty.
+    """
+    text_lower = signal.signal.lower()
+    words = set(re.findall(r"\b\w+\b", text_lower))
+    has_causal      = bool(words & _CAUSAL_VERBS)
+    has_descriptive = bool(words & _DESCRIPTIVE_STALLS)
+
+    if has_causal and not has_descriptive:
+        return 1.12   # Reward: explicit causal mechanism
+    if has_descriptive and not has_causal:
+        return 0.88   # Penalise: purely descriptive
+    return 1.00       # Neutral: mixed or neither
 
 
 # ── Dataclass for ranked output ───────────────────────────────────────────────
@@ -232,7 +309,8 @@ def _score(signal: Signal, agent_confidence: float) -> float:
     type_w    = _TYPE_PRIORITY.get(signal.signal_type, 0.5)
     dir_w     = _DIRECTION_WEIGHT.get(signal.direction, 0.85)
     thesis_w  = _thesis_sensitivity_score(signal.signal)
-    return signal.impact_score * agent_confidence * type_w * dir_w * thesis_w
+    causal_w  = _causal_score_modifier(signal)
+    return signal.impact_score * agent_confidence * type_w * dir_w * thesis_w * causal_w
 
 
 # ── Thesis-sensitivity scoring ────────────────────────────────────────────────
