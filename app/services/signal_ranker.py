@@ -161,6 +161,15 @@ FORBIDDEN_PHRASES: frozenset = frozenset({
     "solid fundamentals",
     "continues to grow",
     "positioned for",
+    # Refinement 6 — synthetic construction filter (final pass)
+    "remains compelling",
+    "continues to expand",
+    "continues to benefit",
+    "supports higher valuation",
+    "contributes to growth",
+    "offsets pressure",
+    "indicates strength",
+    "strategically positioned",
 })
 
 # ── Causal language scoring modifiers (Refinement 4) ──────────────────────────

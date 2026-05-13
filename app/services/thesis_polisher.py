@@ -471,6 +471,43 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bThe\s+company\s+continues\b', re.IGNORECASE),  "The company"),
     (re.compile(r'\bpoised\s+to\b',               re.IGNORECASE),  "positioned to"),
 
+    # Refinement 2 — "continues to X" → conjugated verb (removes helper-verb padding)
+    # Ordered longest-match first to avoid partial matches.
+    (re.compile(r'\bcontinues\s+to\s+outperform\b', re.IGNORECASE), "outperforms"),
+    (re.compile(r'\bcontinues\s+to\s+strengthen\b',  re.IGNORECASE), "strengthens"),
+    (re.compile(r'\bcontinues\s+to\s+dominate\b',    re.IGNORECASE), "dominates"),
+    (re.compile(r'\bcontinues\s+to\s+generate\b',    re.IGNORECASE), "generates"),
+    (re.compile(r'\bcontinues\s+to\s+compress\b',    re.IGNORECASE), "compresses"),
+    (re.compile(r'\bcontinues\s+to\s+pressure\b',    re.IGNORECASE), "pressures"),
+    (re.compile(r'\bcontinues\s+to\s+increase\b',    re.IGNORECASE), "increases"),
+    (re.compile(r'\bcontinues\s+to\s+provide\b',     re.IGNORECASE), "provides"),
+    (re.compile(r'\bcontinues\s+to\s+deliver\b',     re.IGNORECASE), "delivers"),
+    (re.compile(r'\bcontinues\s+to\s+support\b',     re.IGNORECASE), "supports"),
+    (re.compile(r'\bcontinues\s+to\s+benefit\b',     re.IGNORECASE), "benefits"),
+    (re.compile(r'\bcontinues\s+to\s+expand\b',      re.IGNORECASE), "expands"),
+    (re.compile(r'\bcontinues\s+to\s+weigh\b',       re.IGNORECASE), "weighs"),
+    (re.compile(r'\bcontinues\s+to\s+trade\b',       re.IGNORECASE), "trades"),
+    (re.compile(r'\bcontinues\s+to\s+drive\b',       re.IGNORECASE), "drives"),
+    (re.compile(r'\bcontinues\s+to\s+face\b',        re.IGNORECASE), "faces"),
+    (re.compile(r'\bcontinues\s+to\s+grow\b',        re.IGNORECASE), "grows"),
+
+    # Refinement 6 — final synthetic construction filter
+    # Each pattern targets a specific "AI finance" turn of phrase and replaces
+    # it with a tighter institutional equivalent.
+    (re.compile(r'\bremains\s+compelling\b',           re.IGNORECASE),
+     "offers asymmetric risk/reward"),
+    (re.compile(
+        r'\bsupports?\s+(?:a\s+)?higher\s+(?:blended\s+)?(?:P/E\s+)?multiple\b',
+        re.IGNORECASE,
+    ), "sustains valuation multiple"),
+    (re.compile(r'\bsupports?\s+(?:a\s+)?higher\s+valuation\b', re.IGNORECASE),
+     "supports valuation"),
+    (re.compile(r'\bcontributes?\s+to\s+(?:overall\s+)?growth\b', re.IGNORECASE),
+     "drives growth"),
+    (re.compile(r'\boffsets?\s+(?:the\s+)?pressure\b',  re.IGNORECASE), "absorbs pressure"),
+    (re.compile(r'\bindicates?\s+strength\b',            re.IGNORECASE), "signals strength"),
+    (re.compile(r'\bstrategically\s+positioned\b',       re.IGNORECASE), "positioned"),
+
     # Trailing temporal filler (remove)
     (re.compile(r',?\s+(?:going|moving)\s+forward[.,]?$', re.IGNORECASE), "."),
     (re.compile(r',?\s+in\s+the\s+(?:long|near|medium)\s+(?:run|term)[.,]?$', re.IGNORECASE), "."),
@@ -503,6 +540,96 @@ def institutional_phrase_rewriter(text: str) -> str:
         rewritten.append(sent)
 
     return " ".join(rewritten)
+
+
+# ── Hero-thesis compression (Refinement 1) ────────────────────────────────────
+# Applied to one_sentence_thesis to strip verbose structural patterns and
+# truncate to terminal-grade word count.  Pairs with the institutional rewrites
+# above — by the time compress_hero_thesis() is called, "continues to expand"
+# has already been contracted to "expands" by institutional_phrase_rewriter().
+_HERO_COMPRESSION_RES: List[Tuple[re.Pattern, str]] = [
+    # "[high conviction, 75%]" / "[moderate conviction, 62%]" confidence bracket
+    (re.compile(r'\s*\[(?:high|moderate|low)\s+conviction[^\]]*\]', re.IGNORECASE), ''),
+    # ", with its [phrase]," — parenthetical elaboration mid-sentence
+    (re.compile(r',\s+with\s+its\s+[^,]+,', re.IGNORECASE), ','),
+    # ", which [clause]," — relative clause elaboration
+    (re.compile(r',\s+which\s+[^,]+,', re.IGNORECASE), ','),
+    # trailing ", offsetting X [and supporting Y]" — use \.? to consume trailing period
+    (re.compile(r',\s+offsetting\s+[^.]*\.?\s*$', re.IGNORECASE), ''),
+    # trailing ", [and] supporting [a higher] X"
+    (re.compile(r',\s+(?:and\s+)?supporting\s+(?:a\s+)?(?:higher\s+)?[^.]*\.?\s*$',
+                re.IGNORECASE), ''),
+    # trailing ", contributing X"
+    (re.compile(r',\s+contributing\s+[^.]*\.?\s*$', re.IGNORECASE), ''),
+    # double-comma artefacts: ",," → ","
+    (re.compile(r',\s*,'), ','),
+    # comma-period artefacts: ",." → "."
+    (re.compile(r',\s*\.'), '.'),
+]
+
+
+def compress_hero_thesis(text: str, max_words: int = 22) -> str:
+    """Compress a verbose hero-thesis string to terminal-grade density.
+
+    Targets ``one_sentence_thesis`` specifically.  Strips confidence-score
+    brackets (``[high conviction, 75%]``), parenthetical elaborations
+    (``"with its…"``), and trailing gerund chains
+    (``"…offsetting X and supporting Y"``).  Truncates at *max_words* when
+    the sentence remains too long after structural stripping.
+
+    Rules
+    -----
+    - First sentence only (hero thesis is one sentence by design).
+    - Strip ``[high/moderate/low conviction, X%]`` qualifier.
+    - Remove ``", with its [phrase],"`` parentheticals.
+    - Remove trailing ``"offsetting X [and supporting Y]"`` chains.
+    - Truncate at *max_words* at the last clause boundary (comma / conjunction).
+
+    Parameters
+    ----------
+    text     : Raw hero-thesis string (may include confidence bracket).
+    max_words: Target maximum word count (default 22 — Bloomberg headline density).
+
+    Returns
+    -------
+    Compressed single-sentence string ending with terminal punctuation.
+    """
+    if not text or not text.strip():
+        return text
+
+    # Take first sentence only
+    sentences = _split_sentences(text)
+    if not sentences:
+        return text
+    sent = sentences[0]
+
+    # Apply hero compression patterns sequentially
+    for pattern, replacement in _HERO_COMPRESSION_RES:
+        sent = pattern.sub(replacement, sent).strip()
+
+    # Collapse double spaces introduced by stripping
+    sent = re.sub(r'\s+', ' ', sent).strip()
+
+    # Truncate to max_words at the last natural clause boundary
+    words = sent.split()
+    if len(words) > max_words:
+        candidate = ' '.join(words[:max_words])
+        # Prefer to cut at last comma within the candidate for clean grammar
+        last_comma = candidate.rfind(',')
+        if last_comma > len(candidate) // 2:
+            candidate = candidate[:last_comma]
+        # Drop trailing conjunction if we cut mid-coordination
+        candidate = re.sub(
+            r'\s+(?:and|but|or|while|despite|though|although)\s*$',
+            '', candidate, flags=re.IGNORECASE,
+        ).strip()
+        sent = candidate
+
+    # Ensure terminal punctuation
+    if sent and sent[-1] not in '.!?':
+        sent += '.'
+
+    return sent
 
 
 # ── Confidence naturalization (Refinement 3) ──────────────────────────────────
@@ -553,6 +680,89 @@ def naturalize_confidence(text: str) -> str:
     return text.strip()
 
 
+# ── Confidence prose de-numericalization (Refinement 3 — frontend pass) ──────
+# Frontend-facing confidence_reasoning MUST never expose raw percentages.
+# naturalize_confidence_prose() is a second, stronger pass that strips ALL
+# remaining percentage values after naturalize_confidence() has already
+# removed the most mechanical citation patterns.
+
+# Pre-rewrites: convert percentage-qualified phrases to qualitative equivalents
+# BEFORE the bare-number strip, so we produce meaningful replacements.
+_CONF_PROSE_REWRITES_PRE: List[Tuple[re.Pattern, str]] = [
+    # "is X% bullish/bearish" → "leans bullish/bearish"
+    (re.compile(r'\bis\s+\d+(?:\.\d+)?%\s+(bullish|bearish)\b', re.IGNORECASE),
+     r'leans \1'),
+    # "averaging X% across" → "broadly aligned across"
+    (re.compile(r'\baveraging\s+\d+(?:\.\d+)?%\s+across\b', re.IGNORECASE),
+     'broadly aligned across'),
+    # "(each ≥70% confidence)" → strip the entire parens block
+    (re.compile(r'\s*\(each\s+[≥≤><=]+\s*\d+%[^)]*\)', re.IGNORECASE), ''),
+    # "average X% across N specialists" → "broadly consistent across N specialists"
+    (re.compile(
+        r'\baverage\s+\d+(?:\.\d+)?%\s+across\s+(\d+\s+specialists?)\b',
+        re.IGNORECASE,
+    ), r'broadly consistent across \1'),
+]
+
+# Strip any remaining percentage values (bare numbers after the pre-rewrites).
+# Note: % is NOT a \w character so \b does not work after %; use (?!\w) or
+# (?=\s|[,;.)]|$) as the trailing boundary instead.
+_CONF_PROSE_STRIP_RES: List[re.Pattern] = [
+    # Parenthesized: "(52%)" or "(52% confidence)" → remove
+    re.compile(r'\s*\(\d+(?:\.\d+)?%[^)]*\)', re.IGNORECASE),
+    # "at 52%" (trailing boundary: non-word or end)
+    re.compile(r'\s+at\s+\d+(?:\.\d+)?%(?!\w)', re.IGNORECASE),
+    # Comparison operator + number + %: "≥70%", ">80%"
+    re.compile(r'[≥≤><]=?\s*\d+(?:\.\d+)?%(?!\w)'),
+    # Bare "N%" anywhere remaining — word-start required, no \b after %
+    re.compile(r'(?<!\w)\d+(?:\.\d+)?%(?!\w)', re.IGNORECASE),
+    # "range < 15pp" — artefact from de-numericalization of range expressions
+    re.compile(r',?\s+range\s+<\s+\d+pp(?!\w)', re.IGNORECASE),
+]
+
+
+def naturalize_confidence_prose(text: str) -> str:
+    """Strip ALL percentage values from frontend-facing confidence reasoning.
+
+    Converts quantitative agent-confidence citations
+    (``"lower conviction (52%) vs valuation agents (81%)"``) to purely
+    qualitative analyst prose.  The output contains no raw percentages —
+    relative conviction and signal direction are expressed in words, not
+    numbers.
+
+    This is a stronger filter than ``naturalize_confidence()``, which only
+    strips the most mechanical citation patterns.  Call this function on
+    ``confidence_reasoning`` as a second pass so the frontend never sees
+    raw percentage figures.
+
+    Parameters
+    ----------
+    text : Raw confidence_reasoning string (may contain percentages).
+
+    Returns
+    -------
+    Confidence reasoning with all percentage values removed and qualitative
+    rewrites applied to the most common percentage-qualified phrases.
+    """
+    if not text:
+        return text
+
+    # Phase 1: targeted qualitative rewrites (must run before bare % strip)
+    for pattern, replacement in _CONF_PROSE_REWRITES_PRE:
+        text = pattern.sub(replacement, text)
+
+    # Phase 2: strip any remaining percentage values
+    for pattern in _CONF_PROSE_STRIP_RES:
+        text = pattern.sub('', text)
+
+    # Phase 3: cleanup after stripping
+    text = re.sub(r'\s{2,}', ' ', text)           # collapse multiple spaces
+    text = re.sub(r'\s+([,;.])', r'\1', text)      # fix orphaned punctuation
+    text = re.sub(r'([.!?])\s+([,;])', r'\1', text)  # fix double terminal
+    text = re.sub(r'^[,;\s]+', '', text)           # remove leading junk
+    return text.strip()
+
+
 def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
     """Apply institutional phrase rewrites and confidence naturalization.
 
@@ -563,6 +773,7 @@ def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
     _PROSE_FIELDS = (
         "direct_answer", "bull_thesis", "bear_thesis",
         "conclusion", "valuation_view", "macro_sensitivity",
+        "one_sentence_thesis",  # hero thesis gets institutional rewrites too
     )
     updates: Dict[str, str] = {}
 
@@ -576,9 +787,68 @@ def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
 
     conf_text: str = thesis.confidence_reasoning or ""
     if conf_text:
+        # Stage 1: strip mechanical citation patterns (agent names, raw "X% confidence")
         naturalized = naturalize_confidence(conf_text)
+        # Stage 2: strip ALL remaining percentage values for frontend delivery
+        naturalized = naturalize_confidence_prose(naturalized)
         if naturalized != conf_text:
             updates["confidence_reasoning"] = naturalized
+
+    if not updates:
+        return thesis
+
+    if hasattr(thesis, "model_copy"):
+        return thesis.model_copy(update=updates)
+    return thesis.copy(update=updates)  # type: ignore[attr-defined]
+
+
+# ── Structural variety enforcement (Refinement 5) ────────────────────────────
+# Detects when two or more prose sections open with the same rhetorical template
+# and rotates sentence order in the second occurrence so each section leads with
+# a distinct framing.  Conservative — only fires on the specific
+# "X [support/provide/…] Y" template to avoid unexpected re-ordering.
+
+_SUPPORT_DESPITE_RE = re.compile(
+    r"^\S+(?:'s)?\s+"
+    r"(?:\S+\s+){0,3}"         # allow 0–3 middle words (e.g. "buyback program")
+    r"(?:supports?|provides?|enables?|delivers?|anchors?|sustains?|limits?|constrains?)\b",
+    re.IGNORECASE,
+)
+
+
+def _enforce_structural_variety(thesis: InvestmentThesis) -> InvestmentThesis:
+    """Rotate sentence order in sections that duplicate the opening template.
+
+    Checks ``bull_thesis``, ``bear_thesis``, and ``conclusion`` in that order.
+    When two or more of those sections start with the same support/provide/
+    enable template (``"X supports Y despite Z"``), the second occurrence is
+    rotated so the second sentence leads instead.
+
+    Conservative rules
+    ------------------
+    - Only fires on the specific "X [support-class verb] Y" template.
+    - Never removes sentences — only changes order within a section.
+    - Requires ≥ 2 sentences in the rotated section (otherwise no-op).
+    - Returns the thesis unchanged when no template collision is detected.
+    """
+    _CHECKED_FIELDS = ("bull_thesis", "bear_thesis", "conclusion")
+    template_seen = False
+    updates: Dict[str, str] = {}
+
+    for field_name in _CHECKED_FIELDS:
+        text = getattr(thesis, field_name, "") or ""
+        sentences = _split_sentences(text)
+        if not sentences:
+            continue
+
+        starts_with_template = bool(_SUPPORT_DESPITE_RE.match(sentences[0]))
+
+        if starts_with_template and template_seen and len(sentences) >= 2:
+            # Rotate: second sentence leads, first sentence follows
+            rotated = _join_sentences([sentences[1]] + [sentences[0]] + sentences[2:])
+            updates[field_name] = rotated
+        elif starts_with_template:
+            template_seen = True
 
     if not updates:
         return thesis
@@ -623,10 +893,15 @@ def polish_thesis(thesis: InvestmentThesis) -> InvestmentThesis:
 
     Order of operations
     -------------------
-    1. enforce_concision           — trim prose to sentence-count targets, strip fillers
-    2. suppress_redundancy         — remove repeated ideas (sentence + concept level)
-    3. _apply_institutional_language — rewrite robotic patterns; naturalize confidence
-    4. apply_temporal_defaults     — enforce valid thesis_trend value
+    1. enforce_concision              — trim prose to sentence-count targets, strip fillers
+    2. suppress_redundancy            — remove repeated ideas (sentence + concept level)
+    3. _apply_institutional_language  — rewrite robotic patterns; naturalize confidence
+                                        (also strips ALL percentages from confidence_reasoning
+                                        via naturalize_confidence_prose for frontend delivery)
+    4. _enforce_structural_variety    — rotate repeated opening templates across sections
+    5. apply_temporal_defaults        — enforce valid thesis_trend value
+    6. compress_hero_thesis           — trim one_sentence_thesis to ≤22 words,
+                                        strip verbose parentheticals + gerund chains
 
     Returns a new InvestmentThesis (immutable update pattern); the input is
     never mutated.
@@ -634,5 +909,15 @@ def polish_thesis(thesis: InvestmentThesis) -> InvestmentThesis:
     thesis = enforce_concision(thesis)
     thesis = suppress_redundancy(thesis)
     thesis = _apply_institutional_language(thesis)
+    thesis = _enforce_structural_variety(thesis)
     thesis = apply_temporal_defaults(thesis)
+    # Hero thesis compression — applied last so all prior rewrites are captured
+    hero = getattr(thesis, "one_sentence_thesis", "") or ""
+    if hero:
+        compressed = compress_hero_thesis(hero)
+        if compressed != hero:
+            if hasattr(thesis, "model_copy"):
+                thesis = thesis.model_copy(update={"one_sentence_thesis": compressed})
+            else:
+                thesis = thesis.copy(update={"one_sentence_thesis": compressed})  # type: ignore[attr-defined]
     return thesis

@@ -329,6 +329,25 @@ FORBIDDEN PHRASES — remove every instance:
 REQUIRED language: causal chains, specific metrics, named transmission mechanisms,
 asymmetry analysis, stock-price relevance in every sentence.
 
+TERMINAL DENSITY — MANDATORY:
+Write at Bloomberg/hedge-fund memo density. Remove ALL of the following:
+- Explanatory transitions ("This means that…", "In other words…", "It follows that…")
+- Educational framing ("It is worth understanding that…", "An important factor to consider…")
+- Introductory padding ("One of the key factors is…", "It should be noted that…")
+Each sentence MUST convey a mechanism AND imply stock impact AND compress interpretation.
+No sentence may exist solely to introduce or summarise another sentence.
+
+STRUCTURAL VARIETY — MANDATORY:
+Never use the same opening sentence template across more than one section.
+- BAD (bull_thesis AND conclusion both open with): "[Ticker]'s Services supports valuation despite rate pressure."
+- REQUIRED: Vary subject position, causal framing, and emphasis across sections:
+  bull_thesis      → lead with the upside mechanism or asymmetry
+  bear_thesis      → lead with the transmission mechanism (NOT "the risk is…")
+  conclusion       → lead with the inflection condition or current positioning
+  valuation_view   → state the multiple first, then the scenario it implies
+  macro_sensitivity → state the specific sensitivity channel first, then magnitude
+FORBIDDEN: the same subject+verb pattern used to open more than two prose sections.
+
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
 - Does valuation say cheap while risk says high debt? (value trap risk)
