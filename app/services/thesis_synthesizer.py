@@ -139,20 +139,45 @@ _THESIS_SCHEMA_DESCRIPTION = """\
 Required JSON fields (all must be present):
   "ticker"                  : string — the company ticker symbol (e.g. "AAPL")
   "company_name"            : string — canonical company name (e.g. "Apple Inc.")
-  "direct_answer"           : string — 2-3 sentences that directly answer the user's exact \
-question. MUST open with the mechanism (e.g. "Higher rates pressure AAPL via multiple \
-compression because…"). MUST name at least one company-specific offset or amplifier. \
+  "direct_answer"           : string — 2 sentences that directly answer the user's exact \
+question. MUST open with the mechanism. MUST name one company-specific offset or amplifier. \
 MUST NOT open with a generic company overview.
-  "bull_thesis"             : string — 2-3 sentence bull case narrative
-  "bear_thesis"             : string — 2-3 sentence bear case narrative
+  "bull_thesis"             : string — 3-4 sentence institutional bull case. \
+Sentence 1: primary upside driver with economic transmission mechanism. \
+Sentence 2: operating leverage, margin structure, or capital allocation effect that amplifies it. \
+Sentence 3: valuation anchor — what multiple is fair if the bull case plays out and why. \
+Sentence 4 (optional): the specific event or data point that confirms the thesis.
+  "bear_thesis"             : string — 3-4 sentence institutional bear case. \
+Sentence 1: primary risk with HOW it breaks the thesis (transmission mechanism to EPS/FCF). \
+Sentence 2: second-order effect (e.g. buyback ROI falls as rates rise, OR channel inventory \
+builds as demand softens, compounding margin pressure). \
+Sentence 3: realistic downside pathway — what multiple/EPS scenario materialises and why. \
+Sentence 4 (optional): the specific catalyst that triggers the bear case.
   "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
   "key_risks"               : array of 4 strings — top investment risks, ranked by severity
-  "valuation_view"          : string — 1-2 sentence valuation summary with specific multiple/metric
-  "macro_sensitivity"       : string — 1-2 sentence macro sensitivity with specific transmission
+  "valuation_view"          : string — 2 sentences on valuation structure. \
+Sentence 1: state the current or target multiple, vs historical range and peers, and what the \
+market is implicitly pricing in (growth rate, margin trajectory, or terminal value assumption). \
+Sentence 2: segment economics or sensitivity — how the blended multiple could expand or compress \
+and what has to be true for each scenario.
+  "macro_sensitivity"       : string — 2 sentences on macro transmission. \
+Sentence 1: primary transmission pathway with direction and channel \
+(e.g. rates → discount rate → DCF impact on long-duration cash flows; \
+FX → international revenue mix → reported EPS). \
+Sentence 2: magnitude and directional bias — quantify the sensitivity where possible \
+(100bps rate move ≈ X% P/E compression; 10% USD appreciation ≈ Y% revenue headwind \
+on international segment).
   "confidence_score"        : number between 0.0 and 1.0
-  "confidence_reasoning"    : string — why this confidence level was assigned
+  "confidence_reasoning"    : string — 2-3 sentences of analyst-style uncertainty. \
+Do NOT cite agent names or percentages. Write like an IC note: name the SPECIFIC evidence \
+that IS conclusive, the SPECIFIC mechanism that is NOT resolved, and the tension between \
+cyclical and structural forces if present. \
+GOOD: "Services margin trajectory and buyback accretion are well-evidenced; rate timing \
+and China regulatory path remain unquantifiable, keeping the bear case alive even at \
+current multiples."
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
-  "conclusion"              : string — institutional-quality one-paragraph conclusion"""
+  "conclusion"              : string — institutional-quality 2-sentence conclusion. \
+MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases."""
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────
@@ -276,11 +301,21 @@ SUPPORTING EVIDENCE:
 STOCK-MOVEMENT ORIENTATION — MANDATORY FOR ALL SECTIONS:
 Every sentence must answer "What moves the stock?" — NOT "What describes the company?"
 
+HIERARCHICAL DENSITY REQUIREMENT:
+- direct_answer, conclusion → ultra-compressed, 2 sentences, mechanism + so-what only
+- bull_thesis, bear_thesis → analytical depth layer: explain WHY the thesis works / breaks
+  economically. Include operating leverage, capital structure, and second-order effects.
+  Do NOT compress these to assertion-level. A 3-4 sentence analytical paragraph is correct.
+- valuation_view, macro_sensitivity → 2 sentences each: state the structure and the
+  sensitivity logic. Not a one-liner assertion — a complete analytical thought.
+
 REQUIRED in bull_thesis, bear_thesis, valuation_view, macro_sensitivity:
 - Explicit mechanism: X factor → Y stock effect (name the transmission)
 - Earnings/EPS/FCF impact quantified wherever possible
 - Valuation multiple pressure named (compression or expansion, with current multiple)
 - Catalyst specificity: name the event that triggers or proves the thesis
+- Second-order effects in bear_thesis (what compounds the primary risk)
+- What the market is implicitly pricing in valuation_view
 
 BANNED across ALL prose sections:
 - Encyclopedic company descriptions ("Apple designs and sells iPhones…")
@@ -372,31 +407,73 @@ Before synthesising, identify any disagreements between agents:
 Explicitly address each conflict in your bull/bear thesis text.
 
 TASK — produce a JSON object with exactly these fields:
-0. direct_answer: 2-3 sentences that directly answer the user's exact question (see above).
-   MUST open with the mechanism. MUST NOT open with a generic company overview.
-1. bull_thesis: 2-3 sentences. MUST cite: (a) at least one specific {company.company_name} \
-business segment or product, (b) at least one agent-identified driver, (c) a valuation anchor.
-2. bear_thesis: 2-3 sentences. MUST cite: (a) a specific company-level risk, (b) a macro \
-headwind's actual transmission mechanism to {ticker}'s earnings/margins.
+
+0. direct_answer: 2 sentences — mechanism + company-specific offset (see QUESTION-ANCHORED
+   DIRECT ANSWER RULES above). Ultra-compressed. No elaboration.
+
+1. bull_thesis: 3-4 sentences of institutional bull reasoning.
+   Sentence 1 — UPSIDE MECHANISM: Lead with the primary driver and its economic transmission
+   (e.g. "Services gross margin mix expanding to ~35% of revenue inflects blended operating
+   leverage, driving EPS growth that is structurally decoupled from hardware unit cycles.").
+   Sentence 2 — AMPLIFIER: Name the operating leverage, capital allocation, or cost structure
+   effect that makes the bull case self-reinforcing (e.g. "$90B buyback on declining share
+   count amplifies EPS even at zero revenue growth.").
+   Sentence 3 — VALUATION ANCHOR: What multiple is justified if the bull case plays out, and
+   what has to be true (e.g. "At 25-28x forward P/E the stock is fairly valued IF Services
+   ARR sustains double-digit growth.").
+   Sentence 4 (OPTIONAL) — CONFIRMATION: The specific data point or event that proves the bull
+   case is on track.
+   MUST cite at least one named {company.company_name} segment or product. MUST include a
+   specific multiple or financial metric. Do NOT open with "The company…" or "[Ticker]'s
+   [noun phrase] provides…" — lead with the economic mechanism.
+
+2. bear_thesis: 3-4 sentences of institutional bear reasoning.
+   Sentence 1 — TRANSMISSION: Lead with HOW the primary risk breaks the thesis — name the
+   specific transmission mechanism to EPS or FCF (e.g. "A sustained 100bps rate increase
+   compresses {ticker}'s 28x P/E to ~22-24x via DCF discount-rate expansion, a ~15-20%
+   valuation headwind even with earnings unchanged.").
+   Sentence 2 — SECOND-ORDER EFFECT: Name the compounding force (e.g. "As rates rise, the
+   $90B buyback ROI deteriorates relative to debt service costs, blunting EPS support at
+   exactly the point multiple compression requires it.").
+   Sentence 3 — DOWNSIDE PATHWAY: The realistic magnitude and sequence (e.g. "If hardware
+   demand softens simultaneously — a plausible outcome at higher consumer credit costs —
+   blended EPS could compress 10-15%, producing a double headwind on a compressed multiple.").
+   Sentence 4 (OPTIONAL) — CATALYST: The specific event that triggers the bear case.
+   MUST name a specific risk mechanism. Do NOT open with "The risk is…" or "There is a
+   risk that…" — lead with the transmission.
+
 3. key_drivers: exactly 4 drivers, ranked by importance, phrased as "{ticker}-specific: X"
 4. key_risks: exactly 4 risks, ranked by severity, with company-specific transmission.
-5. valuation_view: 1-2 sentences citing actual multiple or metric (not generic).
-6. macro_sensitivity: 1-2 sentences on how the SPECIFIC macro environment hits \
-{company.company_name}'s SPECIFIC revenue lines and cost structure.
+
+5. valuation_view: 2 sentences on valuation structure — not generic.
+   Sentence 1: State current or target multiple vs historical range / peers, and what the
+   market is implicitly pricing (growth rate, margin trajectory, or terminal FCF assumption).
+   Sentence 2: Explain how the blended multiple could move — which segments drive expansion
+   or compression, and what has to be true for each scenario.
+
+6. macro_sensitivity: 2 sentences on specific macro transmission pathways.
+   Sentence 1: Primary channel with direction (rates → discount rate → DCF impact on
+   long-duration FCF; FX → international revenue conversion → EPS; consumer demand →
+   ASP/unit volumes → blended margin). Name the SPECIFIC {ticker} revenue lines affected.
+   Sentence 2: Magnitude — quantify sensitivity where possible (100bps move ≈ X% impact
+   on P/E; 10% USD move ≈ Y% revenue headwind on international segment).
+
 7. confidence_score: 0.0-1.0. Penalise for low-confidence agent inputs and sparse evidence.
-8. confidence_reasoning: Analyst-style uncertainty framing — 1-2 sentences explaining what \
-the evidence IS and IS NOT conclusive about. Do NOT cite agent confidence percentages or \
-agent names ("macro agent at 30%"). Instead write like a PM note:
-   BAD: "Macro agents register 30% confidence. Risk agent at 75% confidence."
-   GOOD: "Evidence is directionally constructive on valuation and quality; macro and \
-regulatory headwinds remain harder to size without forward guidance clarity."
-   BAD: "Overall confidence of 0.68 reflects mixed signals."
-   GOOD: "Conviction is moderate — valuation and quality signals are conclusive, but \
-rate timing and China regulatory developments remain unresolved."
+
+8. confidence_reasoning: 2-3 sentences of real analytical uncertainty — IC-note style.
+   Name SPECIFICALLY: (a) what evidence IS conclusive and why, (b) what IS NOT resolved
+   and the mechanism creating the uncertainty, (c) the cyclical vs structural tension if one
+   exists. Do NOT cite agent names or percentages. Do NOT write generic hedges.
+   BAD: "Evidence is directionally constructive but headwinds remain."
+   GOOD: "Services margin trajectory and buyback-driven EPS accretion are well-evidenced
+   by trailing results; rate timing and China regulatory path remain unquantifiable — two
+   forces that affect the multiple in opposite directions, keeping conviction below high."
+
 9. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
-10. conclusion: Institutional-quality paragraph. Must NOT contain generic phrases \
-like "the company faces headwinds" or "as a growth stock". MUST name specific \
-{ticker} revenue drivers, risks, and valuation factors.
+10. conclusion: 2 institutional sentences. MUST name specific {ticker} revenue drivers,
+    risks, and valuation factors. Must NOT contain generic phrases like "the company faces
+    headwinds" or "as a growth stock". Lead with the inflection condition or current
+    positioning, not a summary of what was said above.
 
 Agent reconciliation rules:
 - If agents DISAGREE on direction, explicitly say WHY the stronger argument wins and \

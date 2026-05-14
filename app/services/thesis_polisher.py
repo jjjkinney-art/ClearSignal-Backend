@@ -112,12 +112,18 @@ def extract_core_mechanisms(text: str) -> Set[str]:
 # macro) must add only incremental information not already in direct_answer or
 # the ranked signals, so shorter prose forces higher signal density.
 _SENTENCE_LIMITS: Dict[str, int] = {
-    "direct_answer":    2,
-    "conclusion":       2,   # tightened from 3 — one causal sentence + so-what
-    "bull_thesis":      2,   # tightened from 3 — strongest driver + valuation anchor
-    "bear_thesis":      2,   # tightened from 3 — primary risk + transmission mechanism
-    "valuation_view":   1,   # tightened from 2 — one specific multiple/metric sentence
-    "macro_sensitivity": 1,  # tightened from 2 — one specific transmission sentence
+    # ── Top-level (stay compressed — terminal-density hero layer) ──────────────
+    "direct_answer":    2,   # mechanism + company-specific offset — stays tight
+    "conclusion":       2,   # inflection condition + positioning — stays tight
+    # ── Analytical depth layer (hierarchically richer than top-level) ──────────
+    # These sections MUST explain WHY the thesis works / breaks, not just assert it.
+    # Prompt asks for 3-4 sentences; polisher allows up to 4 so the LLM's third
+    # and fourth analytical sentence (operating leverage, second-order effects,
+    # downside pathway) survive to the frontend.
+    "bull_thesis":      4,   # driver + mechanism + leverage/capital effect + confirmation trigger
+    "bear_thesis":      4,   # risk transmission + second-order effect + downside pathway + catalyst
+    "valuation_view":   2,   # multiple structure/implicit pricing + sensitivity/segment contribution
+    "macro_sensitivity": 2,  # primary channel + magnitude / directional bias
 }
 
 # ── Filler opener patterns (refinement 1) ─────────────────────────────────────
@@ -269,14 +275,15 @@ def enforce_concision(thesis: InvestmentThesis) -> InvestmentThesis:
     sentence targets.  Non-prose fields (key_drivers, key_risks, etc.) are
     unchanged.
 
-    Sentence targets
-    ----------------
-    direct_answer    : 2 sentences
-    conclusion       : 3 sentences
-    bull_thesis      : 3 sentences
-    bear_thesis      : 3 sentences
-    valuation_view   : 2 sentences
-    macro_sensitivity: 2 sentences
+    Sentence targets (hierarchical — top-level stays compressed, analytical depth
+    sections allow more sentences so operating leverage / second-order effects survive)
+    ---------------------------------------------------------------------------------
+    direct_answer    : 2 sentences  — mechanism + offset (ultra-compressed hero layer)
+    conclusion       : 2 sentences  — inflection condition + positioning
+    bull_thesis      : 4 sentences  — driver + mechanism + leverage/capital + confirmation
+    bear_thesis      : 4 sentences  — transmission + second-order + downside path + catalyst
+    valuation_view   : 2 sentences  — multiple structure + sensitivity/segment logic
+    macro_sensitivity: 2 sentences  — primary channel + magnitude quantification
     """
     updates: Dict[str, str] = {}
     for field_name, max_sents in _SENTENCE_LIMITS.items():
@@ -303,6 +310,7 @@ def _suppress_redundant_sentences(
     priority: Tuple[str, ...],
     threshold: float = _DEDUP_THRESHOLD,
     pre_committed: Optional[List[str]] = None,
+    concept_floor: float = _CONCEPT_JACCARD_FLOOR,
 ) -> Dict[str, str]:
     """Remove redundant sentences from lower-priority sections.
 
@@ -322,6 +330,12 @@ def _suppress_redundant_sentences(
     pre_committed : Optional list of sentences already "committed" before this
                     pass starts.  Used to inject signal text so that supporting
                     prose sections do not repeat signal concepts.
+    concept_floor : Minimum Jaccard similarity required (in addition to full
+                    mechanism containment) for concept-level suppression.
+                    Raise this for analytical sections so that mechanistically-
+                    related elaborations (which share mechanism tags with the
+                    top-level but add new operating-leverage or pathway detail)
+                    are kept rather than suppressed.
 
     Returns
     -------
@@ -357,11 +371,15 @@ def _suppress_redundant_sentences(
             # Concept-level check: suppress if mechanisms are fully contained
             # in committed pool AND sentence has a baseline lexical overlap.
             # This catches paraphrases that pure Jaccard under-weights.
+            # For supporting analytical sections a higher concept_floor is passed
+            # so that mechanistically-related elaborations (operating leverage,
+            # downside pathways, sensitivity logic) survive even when they share
+            # mechanism tags with the already-committed direct_answer/conclusion.
             sent_mechs = extract_core_mechanisms(sent)
             is_concept_redundant = (
                 bool(sent_mechs)
                 and sent_mechs.issubset(committed_mechanisms)
-                and max_sim >= _CONCEPT_JACCARD_FLOOR
+                and max_sim >= concept_floor
             )
 
             if max_sim >= threshold or is_concept_redundant:
@@ -430,6 +448,11 @@ def suppress_redundancy(thesis: InvestmentThesis) -> InvestmentThesis:
             signal_committed.append(sig.signal)
 
     # ── Pass 2: supporting sections ───────────────────────────────────────────
+    # Use a higher concept_floor (0.45 vs the global 0.28) so that analytical
+    # elaboration sentences in bull/bear/valuation/macro survive dedup even when
+    # they share mechanism tags with the top-level direct_answer or conclusion.
+    # The whole purpose of these sections IS to explain WHY/HOW via the same
+    # mechanisms — we only want to suppress near-verbatim repetition, not depth.
     supporting_sections: Dict[str, str] = {
         f: (getattr(thesis, f, "") or "") for f in _SUPPORTING
     }
@@ -437,6 +460,7 @@ def suppress_redundancy(thesis: InvestmentThesis) -> InvestmentThesis:
         supporting_sections,
         _SUPPORTING,
         pre_committed=pass1_committed + signal_committed,
+        concept_floor=0.45,  # raise from global 0.28 → keep analytical elaborations
     )
 
     # ── Build updates ─────────────────────────────────────────────────────────
