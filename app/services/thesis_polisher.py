@@ -546,12 +546,12 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
      "recurring high-margin revenue"),
     (re.compile(r'\bhigh\s+gross\s+margin\b',            re.IGNORECASE),
      "structurally high margin"),
-    (re.compile(r'\bstrong\s+margins?\b',                re.IGNORECASE), "margin durability"),
-    (re.compile(r'\bprovides?\s+(?:a\s+)?buffer\b',      re.IGNORECASE), "cushions downside"),
-    (re.compile(r'\bsupports?\s+(?:its\s+)?resilience\b', re.IGNORECASE), "cushions downside"),
-    (re.compile(r'\bpremium\s+valuation\b',              re.IGNORECASE), "elevated valuation multiple"),
-    (re.compile(r'\bpremium\s+multiple\b',               re.IGNORECASE), "elevated valuation multiple"),
-    (re.compile(r'\bpricing\s+power\b',                  re.IGNORECASE), "demand resilience"),
+    (re.compile(r'\bstrong\s+margins?\b',                re.IGNORECASE), "stable margins"),
+    (re.compile(r'\bprovides?\s+(?:a\s+)?buffer\b',      re.IGNORECASE), "limits downside"),
+    (re.compile(r'\bsupports?\s+(?:its\s+)?resilience\b', re.IGNORECASE), "limits downside"),
+    (re.compile(r'\bpremium\s+valuation\b',              re.IGNORECASE), "full valuation"),
+    (re.compile(r'\bpremium\s+multiple\b',               re.IGNORECASE), "full valuation"),
+    (re.compile(r'\bpricing\s+power\b',                  re.IGNORECASE), "pricing discipline"),
     (re.compile(r'\bimpacting\s+revenue\b',              re.IGNORECASE), "pressuring earnings"),
     # "supports valuation" → "stabilizes valuation" (upgrade from prior phase's replacement)
     (re.compile(r'\bsupports?\s+valuation\b',            re.IGNORECASE), "stabilizes valuation"),
@@ -569,6 +569,34 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r',?\s+(?:going|moving)\s+forward[.,]?$', re.IGNORECASE), "."),
     (re.compile(r',?\s+in\s+the\s+(?:long|near|medium)\s+(?:run|term)[.,]?$', re.IGNORECASE), "."),
     (re.compile(r',?\s+over\s+time[.,]?$',        re.IGNORECASE),  "."),
+
+    # Refinement 7 — AI-synthetic institutional jargon → human analyst prose
+    # These are machine-assembled "institutional" phrases that trained buy-side analysts
+    # would not naturally write.  Replace with direct, understated equivalents that pass
+    # the "did an experienced PM write this?" test.  Also catches prior-pass replacements
+    # that themselves landed in synthetic territory.
+    (re.compile(r'\bdirectionally\s+constructive\b',      re.IGNORECASE), "broadly supportive"),
+    (re.compile(r'\bstructurally\s+repriced\b',           re.IGNORECASE), "repriced"),
+    (re.compile(r'\bself-reinforcing\b',                  re.IGNORECASE), "compounding"),
+    (re.compile(r'\bstabilizing\s+offset\b',              re.IGNORECASE), "partial offset"),
+    (re.compile(r'\bconstructive\s+setup\b',              re.IGNORECASE), "reasonable setup"),
+    (re.compile(r'\basymmetric\s+upside\b',               re.IGNORECASE), "favorable risk/reward"),
+    (re.compile(r'\bfavorable\s+backdrop\b',              re.IGNORECASE), "supportive backdrop"),
+    (re.compile(r'\bdurable\s+growth\s+vector\b',         re.IGNORECASE), "durable growth driver"),
+    (re.compile(r'\bvaluation\s+support\b',               re.IGNORECASE), "multiple support"),
+    (re.compile(r'\boperating\s+leverage\s+inflection\b', re.IGNORECASE), "earnings mix shift"),
+    (re.compile(r'\bpremiumization\s+dynamic\b',          re.IGNORECASE), "trade-up behavior"),
+    (re.compile(r'\bkeeps?\s+conviction\s+below\s+high\b', re.IGNORECASE), "limits conviction"),
+    (re.compile(r'\bconviction\s+below\s+high\b',         re.IGNORECASE), "moderate conviction"),
+    (re.compile(r'\binflects\s+blended\b',                re.IGNORECASE), "shifts the blended"),
+    (re.compile(r'\binflects\s+(?:the\s+)?earnings?\s+mix\b', re.IGNORECASE), "shifts the earnings mix"),
+    # Catch prior-pass replacements that also sound synthetic
+    (re.compile(r'\belevated\s+valuation\s+multiple\b',   re.IGNORECASE), "full valuation"),
+    (re.compile(r'\bmargin\s+durability\b',               re.IGNORECASE), "stable margins"),
+    (re.compile(r'\bcushions\s+downside\b',               re.IGNORECASE), "limits downside"),
+    (re.compile(r'\bdemand\s+resilience\b',               re.IGNORECASE), "pricing discipline"),
+    (re.compile(r'\bexpands\s+the\s+earnings\s+multiple\b', re.IGNORECASE), "expands the multiple"),
+    (re.compile(r'\boffers\s+asymmetric\s+risk/reward\b', re.IGNORECASE), "offers reasonable risk/reward"),
 ]
 
 

@@ -169,12 +169,14 @@ Sentence 2: magnitude and directional bias — quantify the sensitivity where po
 on international segment).
   "confidence_score"        : number between 0.0 and 1.0
   "confidence_reasoning"    : string — 2-3 sentences of analyst-style uncertainty. \
-Do NOT cite agent names or percentages. Write like an IC note: name the SPECIFIC evidence \
-that IS conclusive, the SPECIFIC mechanism that is NOT resolved, and the tension between \
-cyclical and structural forces if present. \
-GOOD: "Services margin trajectory and buyback accretion are well-evidenced; rate timing \
-and China regulatory path remain unquantifiable, keeping the bear case alive even at \
-current multiples."
+Do NOT cite agent names or percentages. Sound like someone who read the filings, not a model \
+summarizing signals. Name what IS established, what IS NOT resolved, and why it matters. \
+Understated — do not oversell uncertainty or conviction symmetrically. \
+GOOD: "Services margin trajectory is well-evidenced by trailing results; China regulatory \
+risk and rate timing remain hard to size, which is where most downside optionality lives." \
+GOOD: "The capital return story is clear; the question is whether Services growth justifies \
+the current multiple — trailing data supports it, forward guidance has not been tested at \
+higher rates."
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
   "conclusion"              : string — institutional-quality 2-sentence conclusion. \
 MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases."""
@@ -375,18 +377,36 @@ Each sentence MUST convey a mechanism AND imply stock impact AND compress interp
 No sentence may exist solely to introduce or summarise another sentence.
 
 PM-GRADE LANGUAGE — MANDATORY:
-Prefer compressed institutional phrasing over educational finance terms:
-- "strong margins" → "margin durability"
-- "pricing power" → "demand resilience"
-- "provides a buffer" → "cushions downside"
-- "premium valuation" → "premium multiple"
+Replace educational finance terms with direct, understated analyst phrasing:
+- "strong margins" → "stable margins" or "the margin structure holds"
+- "pricing power" → "pricing discipline" or name the specific mechanism
+- "provides a buffer" → "limits downside" or "provides cover"
+- "premium valuation" → "full valuation" or "trades at a premium to peers"
 - "high gross margin" → "structurally high margin"
-- "supports valuation" → "stabilizes valuation"
+- "supports valuation" → "supports the multiple"
 - "impacting revenue" → "pressuring earnings"
-confidence_reasoning MUST read like an investment committee note — no signal counts,
-no "N bullish vs M bearish", no model artefacts. Example:
-  BAD:  "8 bullish vs 4 bearish signals across 12 ranked signals."
-  GOOD: "Evidence is directionally constructive; macro and regulatory uncertainty remain unresolved."
+
+AVOID these AI-synthetic phrases — they sound machine-assembled, not analyst-written:
+- "directionally constructive" → say what is specifically positive
+- "structurally repriced" → "repriced"
+- "self-reinforcing" → "compounding" or describe the flywheel concretely
+- "asymmetric upside" → "favorable risk/reward" or state the actual asymmetry
+- "favorable backdrop" → name the actual macro condition
+- "durable growth vector" → "growth driver"
+- "constructive setup" → describe specifically why the setup is favorable
+- "inflects operating leverage" → "shifts the earnings mix" or be direct
+- "stabilizing offset" → "partial offset"
+- "keeps conviction below high" → "limits conviction"
+- "affect the multiple in opposite directions" → describe specifically what each force does
+
+confidence_reasoning MUST read like a PM note, not a scoring report.
+No signal counts, no agent names, no generic hedges, no symmetrical framing.
+  BAD: "8 bullish vs 4 bearish signals across 12 ranked signals."
+  BAD: "Evidence is directionally constructive but headwinds remain."
+  GOOD: "The valuation case is clear at these earnings; what is harder to call is
+         whether rate sensitivity matters enough at current multiples to compress the stock."
+  GOOD: "Services margin trajectory is well-evidenced by trailing results; China regulatory
+         risk remains genuinely hard to size — which is where most downside optionality lives."
 
 STRUCTURAL VARIETY — MANDATORY:
 Never use the same opening sentence template across more than one section.
@@ -398,6 +418,30 @@ Never use the same opening sentence template across more than one section.
   valuation_view   → state the multiple first, then the scenario it implies
   macro_sensitivity → state the specific sensitivity channel first, then magnitude
 FORBIDDEN: the same subject+verb pattern used to open more than two prose sections.
+
+SECTION ASYMMETRY — MANDATORY:
+Do not develop every section equally. Allocate depth to the mechanism that matters most.
+- If macro is the primary driver (e.g. rate impact on a rate-sensitive stock): deepen
+  macro_sensitivity; valuation_view can be one crisp sentence stating the multiple
+- If valuation is the core thesis (e.g. cheap vs. peers): deepen valuation_view; macro
+  can be stated in one sentence
+- If one risk clearly dominates: bear_thesis should be your most specific, detailed section
+- Secondary or weaker factors: state briefly — do not pad them to match the dominant section
+A well-written IC memo is naturally asymmetric. Equal section length signals AI writing.
+
+NATURALNESS — MANDATORY:
+Sound like an experienced analyst writing for a PM, not an AI generating institutional prose.
+- Vary sentence length: not every sentence needs to be maximally dense
+- Allow plain-English when it is more precise than jargon:
+    "The earnings are straightforward" > "Evidence base is conclusive"
+    "This is where the real risk is" > "This represents the primary downside catalyst"
+    "The multiple looks full here" > "Valuation appears elevated at current levels"
+    "Risk/reward looks reasonable" > "Asymmetric upside opportunity"
+- Experienced PMs are understated — they do not oversell their own theses
+- Avoid: "compelling opportunity", "significant upside potential", "strong conviction"
+- Prefer: "risk/reward looks reasonable if…", "conviction sits at moderate"
+- DO NOT produce sentences that exist solely to sound institutional
+FORBIDDEN: Any phrase that sounds engineered to impress rather than to inform.
 
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
@@ -460,14 +504,17 @@ TASK — produce a JSON object with exactly these fields:
 
 7. confidence_score: 0.0-1.0. Penalise for low-confidence agent inputs and sparse evidence.
 
-8. confidence_reasoning: 2-3 sentences of real analytical uncertainty — IC-note style.
-   Name SPECIFICALLY: (a) what evidence IS conclusive and why, (b) what IS NOT resolved
-   and the mechanism creating the uncertainty, (c) the cyclical vs structural tension if one
-   exists. Do NOT cite agent names or percentages. Do NOT write generic hedges.
+8. confidence_reasoning: 2-3 sentences of analyst-style uncertainty — PM note, not scoring report.
+   Name: (a) what evidence IS established and why it's reliable, (b) what IS NOT resolved
+   and what makes it genuinely uncertain, (c) any cyclical vs structural tension if real.
+   Sound understated and experienced — like someone who has read the filings, not a model
+   symmetrically hedging both sides. Do NOT cite agent names, percentages, or signal counts.
    BAD: "Evidence is directionally constructive but headwinds remain."
-   GOOD: "Services margin trajectory and buyback-driven EPS accretion are well-evidenced
-   by trailing results; rate timing and China regulatory path remain unquantifiable — two
-   forces that affect the multiple in opposite directions, keeping conviction below high."
+   BAD: "Two forces affect the multiple in opposite directions, keeping conviction below high."
+   GOOD: "The valuation case is clear at these earnings; what is harder to call is whether
+   rate sensitivity matters enough at current multiples to compress the stock near-term."
+   GOOD: "Services margin trajectory is well-evidenced; the China regulatory path and rate
+   duration are harder to size — which is where the bear case lives, not in the core thesis."
 
 9. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
 10. conclusion: 2 institutional sentences. MUST name specific {ticker} revenue drivers,
