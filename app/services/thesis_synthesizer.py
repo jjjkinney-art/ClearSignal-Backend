@@ -64,6 +64,8 @@ from .signal_ranker import (
     propagate_evidence_refs,
     detect_signal_overlap,
     build_confidence_reasoning,
+    compute_confidence_realism_cap,
+    _get_signal_dimension,
     RankedSignalSet,
 )
 from .thesis_polisher import polish_thesis
@@ -98,6 +100,7 @@ _THESIS_FIELDS = (
     "ticker",
     "company_name",
     "direct_answer",
+    "core_debate",
     "bull_thesis",
     "bear_thesis",
     "key_drivers",
@@ -112,6 +115,100 @@ _THESIS_FIELDS = (
 
 # Markdown heading patterns used for recovery detection
 _MD_HEADING_RE = re.compile(r"^#{1,6}\s+", re.MULTILINE)
+
+
+# ── Dominant dimension detection (Refinement 2: Analytical Asymmetry) ─────────
+
+_DIMENSION_KEYWORDS: Dict[str, List[str]] = {
+    "macro":              ["rate", "rates", "fed", "inflation", "macro", "yield",
+                           "duration", "currency", "fx", "monetary", "recession"],
+    "valuation":          ["multiple", "p/e", "dcf", "fair value", "premium",
+                           "discount", "cheap", "expensive", "priced"],
+    "regulatory":         ["antitrust", "regulatory", "regulation", "legal",
+                           "probe", "ftc", "doj", "government", "policy"],
+    "capital_allocation": ["buyback", "repurchase", "dividend", "debt",
+                           "leverage", "fcf", "cash", "balance sheet"],
+    "operational":        ["margin", "revenue", "earnings", "guidance",
+                           "volume", "units", "growth", "segment"],
+}
+
+_DEPTH_DIRECTIVES: Dict[str, str] = {
+    "macro": (
+        "DOMINANT DIMENSION — MACRO: Macro transmission IS the central thesis debate. "
+        "macro_sensitivity should be your most specific, quantified section — name the exact channel "
+        "(rates → discount rate, FX → revenue conversion, etc.) and magnitude. "
+        "valuation_view can be one crisp sentence stating the current multiple and what it implies. "
+        "Allocate depth to macro; compress operational discussion."
+    ),
+    "valuation": (
+        "DOMINANT DIMENSION — VALUATION: Valuation IS the central debate. "
+        "valuation_view should be your deepest section — state the current multiple, historical range, "
+        "what the market is pricing in, and what has to be true for re-rating. "
+        "macro_sensitivity can be one sentence on the primary channel. "
+        "Do not pad operational discussion to match valuation depth."
+    ),
+    "regulatory": (
+        "DOMINANT DIMENSION — REGULATORY: Regulatory risk IS the primary investment debate. "
+        "bear_thesis should be your most specific section — name the mechanism by which regulatory "
+        "action affects revenue, margins, or multiple. Bull case should acknowledge the risk explicitly. "
+        "Compress secondary factors; the regulatory risk should dominate the risk section."
+    ),
+    "capital_allocation": (
+        "DOMINANT DIMENSION — CAPITAL ALLOCATION: Capital return mechanics are central. "
+        "Quantify the buyback/dividend program relative to earnings and FCF yield. "
+        "Compress macro and operational sections; focus depth on the capital structure and what it "
+        "implies for EPS trajectory and shareholder return."
+    ),
+    "operational": (
+        "DOMINANT DIMENSION — OPERATIONAL: Business mechanics and margin structure are the debate. "
+        "bull_thesis and bear_thesis should anchor on revenue, margin, and earnings trajectory. "
+        "Quantify the specific line item that matters most. Compress macro if it is not the primary driver."
+    ),
+}
+
+
+def _detect_dominant_dimension(
+    macro:   "MacroSensitivity",  # type: ignore[name-defined]
+    risk:    "RiskProfile",       # type: ignore[name-defined]
+    valuation: "ValuationView",   # type: ignore[name-defined]
+    ranked:  Optional["RankedSignalSet"] = None,  # type: ignore[name-defined]
+) -> str:
+    """Detect the dominant analytical dimension for this thesis.
+
+    Uses a keyword-hit scoring approach across agent overalls and top risk signals.
+    Returns the dimension name for injection into the synthesis prompt.
+    Falls back to "operational" when no clear winner emerges.
+    """
+    scores: Dict[str, float] = {dim: 0.0 for dim in _DIMENSION_KEYWORDS}
+
+    combined_text = " ".join([
+        macro.overall or "",
+        risk.overall  or "",
+        valuation.overall or "",
+        " ".join(risk.key_risks or []),
+    ]).lower()
+
+    for dim, keywords in _DIMENSION_KEYWORDS.items():
+        hits = sum(1 for kw in keywords if kw in combined_text)
+        scores[dim] = float(hits)
+
+    # Boost dimension when the macro or risk agent has low confidence
+    # (unresolved uncertainty is itself the dominant issue)
+    if macro.confidence < 0.58:
+        scores["macro"] += 2.0
+    if valuation.confidence < 0.55:
+        scores["valuation"] += 1.5
+
+    # Boost from top signal dimensions
+    if ranked and ranked.top_signals:
+        for sig in ranked.top_signals[:3]:
+            dim = _get_signal_dimension(sig.signal)
+            if dim in scores:
+                scores[dim] += 0.5
+
+    best_dim = max(scores, key=lambda d: scores[d])
+    # If the winning score is < 2 the signal is too weak — fall back
+    return best_dim if scores[best_dim] >= 2.0 else "operational"
 
 
 # ── Evidence summary builders ─────────────────────────────────────────────────
@@ -139,6 +236,13 @@ _THESIS_SCHEMA_DESCRIPTION = """\
 Required JSON fields (all must be present):
   "ticker"                  : string — the company ticker symbol (e.g. "AAPL")
   "company_name"            : string — canonical company name (e.g. "Apple Inc.")
+  "core_debate"             : string — ONE sentence capturing the central analytical \
+question the market is currently debating for this stock. Everything else in the thesis \
+should orbit this. This is NOT a summary — it is the active debate. \
+Examples: "Can Services growth absorb multiple compression as rates stay higher for longer?" \
+/ "Is AI capex demand durable or a one-cycle pull-forward?" \
+/ "Does the regulatory overhang now outweigh the earnings trajectory?" \
+Do NOT write a statement — write the debate as an open question.
   "direct_answer"           : string — 2 sentences that directly answer the user's exact \
 question. MUST open with the mechanism. MUST name one company-specific offset or amplifier. \
 MUST NOT open with a generic company overview.
@@ -167,16 +271,22 @@ FX → international revenue mix → reported EPS). \
 Sentence 2: magnitude and directional bias — quantify the sensitivity where possible \
 (100bps rate move ≈ X% P/E compression; 10% USD appreciation ≈ Y% revenue headwind \
 on international segment).
-  "confidence_score"        : number between 0.0 and 1.0
-  "confidence_reasoning"    : string — 2-3 sentences of analyst-style uncertainty. \
-Do NOT cite agent names or percentages. Sound like someone who read the filings, not a model \
-summarizing signals. Name what IS established, what IS NOT resolved, and why it matters. \
-Understated — do not oversell uncertainty or conviction symmetrically. \
-GOOD: "Services margin trajectory is well-evidenced by trailing results; China regulatory \
-risk and rate timing remain hard to size, which is where most downside optionality lives." \
-GOOD: "The capital return story is clear; the question is whether Services growth justifies \
-the current multiple — trailing data supports it, forward guidance has not been tested at \
-higher rates."
+  "confidence_score"        : number between 0.0 and 1.0. Be genuinely conservative: \
+score 0.80+ ONLY when macro, risk, AND evidence all clearly agree. If macro or regulatory \
+uncertainty is real and unresolved, cap yourself at 0.72. If evidence is sparse, cap at 0.65. \
+The score should reflect what you could defend in an IC meeting, not an optimistic read.
+  "confidence_reasoning"    : string — 2-3 sentences of honest analyst-style uncertainty. \
+Name what IS clear and WHY, then name specifically what is NOT resolved and why it matters \
+for the investment decision. Do NOT: cite agent names, percentages, or signal counts. \
+Do NOT produce symmetrical hedging — experienced analysts anchor on the dominant uncertainty, \
+not a balanced list. Do NOT say "confidence is high" or "conviction remains strong". \
+GOOD: "The operational case is clear at current margins; what is harder to call is whether \
+rate duration pressure resolves before the multiple needs to reflect it." \
+GOOD: "Services margin trajectory is well-evidenced; the China regulatory path and the rate \
+path are both genuinely hard to size — that is where the bear case lives, not in the core thesis." \
+GOOD: "The earnings are straightforward. The risk is in how the market reprices duration \
+at higher rates — and that is not yet resolved." \
+BAD: "Confidence is high." / "Conviction remains strong." / "Evidence is directionally constructive."
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
   "conclusion"              : string — institutional-quality 2-sentence conclusion. \
 MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases."""
@@ -251,6 +361,10 @@ def _build_synthesis_prompt(
     else:
         biz_model_section = ""
         profile_keywords_hint = ""
+
+    # Detect dominant analytical dimension for asymmetric depth allocation (R2)
+    dominant_dim       = _detect_dominant_dimension(macro, risk, valuation, ranked)
+    dominant_dim_block = _DEPTH_DIRECTIVES.get(dominant_dim, "")
 
     # Build the question-anchor block (injected only when a question is present)
     if original_user_question:
@@ -443,6 +557,26 @@ Sound like an experienced analyst writing for a PM, not an AI generating institu
 - DO NOT produce sentences that exist solely to sound institutional
 FORBIDDEN: Any phrase that sounds engineered to impress rather than to inform.
 
+WRITING RHYTHM — MANDATORY:
+Vary sentence length and structure within and across sections.
+- Not every sentence must be maximally dense or long.
+- Use short, blunt sentences to land key analytical judgments:
+    "The earnings are clean." / "The multiple looks full." / "China risk is real and unresolved."
+- Mix: [short blunt claim] + [longer mechanism sentence] + [short so-what].
+- Never write three consecutive sentences of the same approximate length and structure.
+- Experienced analysts are understated — do NOT end every section with an emphatic assertion.
+- A good bear_thesis often ends on a simple, understated note: "The timing is the question."
+- A good bull_thesis often ends with a concrete confirmation signal, not a sweeping conclusion.
+
+TEMPORAL REALISM — MANDATORY:
+Reason about what is already priced in vs what is genuinely new or unresolved:
+- What recent development (last 30-90 days) has the market NOT fully priced in yet?
+- What catalyst or data point is the current active market debate — and which side is more likely?
+- Separate near-term stock movement (6-12m) from long-term value creation (3-5yr) when they diverge.
+- Avoid claims that are always or perpetually true — anchor on what has CHANGED or is CHANGING.
+- "The multiple already reflects X" is a valid and useful claim when it is true — make it.
+- "The market is debating Y" names the live controversy — name it explicitly in core_debate.
+
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
 - Does valuation say cheap while risk says high debt? (value trap risk)
@@ -450,12 +584,22 @@ Before synthesising, identify any disagreements between agents:
 - Does market say bullish catalysts while risk says near-term headwinds?
 Explicitly address each conflict in your bull/bear thesis text.
 
+{dominant_dim_block}
+
 TASK — produce a JSON object with exactly these fields:
 
-0. direct_answer: 2 sentences — mechanism + company-specific offset (see QUESTION-ANCHORED
+0. core_debate: ONE sentence — the single central analytical question the market is currently
+   debating for {ticker}. Write it as an OPEN QUESTION, not a statement. This is the lens
+   through which everything else should be read. Examples:
+   "Can Services growth absorb multiple compression as rates stay higher for longer?"
+   "Is AI capex demand durable or a one-cycle pull-forward?"
+   "Does the regulatory overhang now outweigh the earnings trajectory?"
+   NOT: "Apple faces rate headwinds." (statement) — MUST be an open question.
+
+1. direct_answer: 2 sentences — mechanism + company-specific offset (see QUESTION-ANCHORED
    DIRECT ANSWER RULES above). Ultra-compressed. No elaboration.
 
-1. bull_thesis: 3-4 sentences of institutional bull reasoning.
+2. bull_thesis: 3-4 sentences of institutional bull reasoning.
    Sentence 1 — UPSIDE MECHANISM: Lead with the primary driver and its economic transmission
    (e.g. "Services gross margin mix expanding to ~35% of revenue inflects blended operating
    leverage, driving EPS growth that is structurally decoupled from hardware unit cycles.").
@@ -471,7 +615,7 @@ TASK — produce a JSON object with exactly these fields:
    specific multiple or financial metric. Do NOT open with "The company…" or "[Ticker]'s
    [noun phrase] provides…" — lead with the economic mechanism.
 
-2. bear_thesis: 3-4 sentences of institutional bear reasoning.
+3. bear_thesis: 3-4 sentences of institutional bear reasoning.
    Sentence 1 — TRANSMISSION: Lead with HOW the primary risk breaks the thesis — name the
    specific transmission mechanism to EPS or FCF (e.g. "A sustained 100bps rate increase
    compresses {ticker}'s 28x P/E to ~22-24x via DCF discount-rate expansion, a ~15-20%
@@ -486,25 +630,25 @@ TASK — produce a JSON object with exactly these fields:
    MUST name a specific risk mechanism. Do NOT open with "The risk is…" or "There is a
    risk that…" — lead with the transmission.
 
-3. key_drivers: exactly 4 drivers, ranked by importance, phrased as "{ticker}-specific: X"
-4. key_risks: exactly 4 risks, ranked by severity, with company-specific transmission.
+4. key_drivers: exactly 4 drivers, ranked by importance, phrased as "{ticker}-specific: X"
+5. key_risks: exactly 4 risks, ranked by severity, with company-specific transmission.
 
-5. valuation_view: 2 sentences on valuation structure — not generic.
+6. valuation_view: 2 sentences on valuation structure — not generic.
    Sentence 1: State current or target multiple vs historical range / peers, and what the
    market is implicitly pricing (growth rate, margin trajectory, or terminal FCF assumption).
    Sentence 2: Explain how the blended multiple could move — which segments drive expansion
    or compression, and what has to be true for each scenario.
 
-6. macro_sensitivity: 2 sentences on specific macro transmission pathways.
+7. macro_sensitivity: 2 sentences on specific macro transmission pathways.
    Sentence 1: Primary channel with direction (rates → discount rate → DCF impact on
    long-duration FCF; FX → international revenue conversion → EPS; consumer demand →
    ASP/unit volumes → blended margin). Name the SPECIFIC {ticker} revenue lines affected.
    Sentence 2: Magnitude — quantify sensitivity where possible (100bps move ≈ X% impact
    on P/E; 10% USD move ≈ Y% revenue headwind on international segment).
 
-7. confidence_score: 0.0-1.0. Penalise for low-confidence agent inputs and sparse evidence.
+8. confidence_score: 0.0-1.0. Penalise for low-confidence agent inputs and sparse evidence.
 
-8. confidence_reasoning: 2-3 sentences of analyst-style uncertainty — PM note, not scoring report.
+9. confidence_reasoning: 2-3 sentences of analyst-style uncertainty — PM note, not scoring report.
    Name: (a) what evidence IS established and why it's reliable, (b) what IS NOT resolved
    and what makes it genuinely uncertain, (c) any cyclical vs structural tension if real.
    Sound understated and experienced — like someone who has read the filings, not a model
@@ -516,8 +660,8 @@ TASK — produce a JSON object with exactly these fields:
    GOOD: "Services margin trajectory is well-evidenced; the China regulatory path and rate
    duration are harder to size — which is where the bear case lives, not in the core thesis."
 
-9. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
-10. conclusion: 2 institutional sentences. MUST name specific {ticker} revenue drivers,
+10. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
+11. conclusion: 2 institutional sentences. MUST name specific {ticker} revenue drivers,
     risks, and valuation factors. Must NOT contain generic phrases like "the company faces
     headwinds" or "as a growth stock". Lead with the inflection condition or current
     positioning, not a summary of what was said above.
@@ -893,6 +1037,28 @@ def synthesize_thesis(
     thesis.company_name = company.company_name
     thesis.evidence_count = len(evidence)
     thesis.generated_at = datetime.now(timezone.utc).isoformat()
+
+    # ── R1: Deterministic confidence realism cap ──────────────────────────────
+    # Applied immediately after LLM output so the post-synthesis chain sees
+    # a properly conservative confidence score throughout.
+    try:
+        adjusted_conf, cap_triggers = compute_confidence_realism_cap(
+            raw_score=thesis.confidence_score,
+            macro_conf=macro.confidence,
+            risk_conf=risk.confidence,
+            quality_conf=quality.confidence,
+            evidence_count=len(evidence),
+            ranked=ranked,
+        )
+        if adjusted_conf < thesis.confidence_score:
+            print(
+                f"[thesis_synthesizer] confidence capped: "
+                f"{thesis.confidence_score:.2f} → {adjusted_conf:.2f} "
+                f"triggers={cap_triggers}"
+            )
+            thesis.confidence_score = adjusted_conf
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] confidence realism cap failed: %r", exc)
 
     # ── Attach ranked signals to thesis ──────────────────────────────────────
     if ranked is not None:

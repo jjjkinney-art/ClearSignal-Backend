@@ -597,6 +597,31 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bdemand\s+resilience\b',               re.IGNORECASE), "pricing discipline"),
     (re.compile(r'\bexpands\s+the\s+earnings\s+multiple\b', re.IGNORECASE), "expands the multiple"),
     (re.compile(r'\boffers\s+asymmetric\s+risk/reward\b', re.IGNORECASE), "offers reasonable risk/reward"),
+
+    # Refinement 8 — new AI cadence patterns caught in cognition refinement phase
+    # Each replaces a pattern that sounds machine-assembled or over-synthesised.
+    (re.compile(r'\bcompelling\s+opportunity\b',          re.IGNORECASE), "reasonable opportunity"),
+    (re.compile(r'\bcompelling\s+risk/reward\b',          re.IGNORECASE), "reasonable risk/reward"),
+    (re.compile(r'\bsignificant\s+upside\s+potential\b',  re.IGNORECASE), "upside if the thesis holds"),
+    (re.compile(r'\bsubstantial\s+upside\s+potential\b',  re.IGNORECASE), "upside if the thesis holds"),
+    (re.compile(r'\bconfidence\s+remains?\s+high\b',      re.IGNORECASE), "conviction is moderate"),
+    (re.compile(r'\bconfidence\s+is\s+high\b',            re.IGNORECASE), "conviction sits at moderate"),
+    (re.compile(r'\bhigh\s+conviction\b',                 re.IGNORECASE), "moderate conviction"),
+    (re.compile(r'\bvalidates?\s+the\s+(?:investment\s+)?view\b', re.IGNORECASE), "supports the thesis"),
+    (re.compile(r'\bunderpins?\s+the\s+(?:investment\s+)?thesis\b', re.IGNORECASE), "supports the thesis"),
+    (re.compile(r'\bsupports?\s+the\s+narrative\b',       re.IGNORECASE), "supports the thesis"),
+    (re.compile(r'\bcreates?\s+a\s+favorable\s+(?:setup|backdrop|environment)\b', re.IGNORECASE),
+     "improves the setup"),
+    # "significant upside" alone (without "potential") → "meaningful upside"
+    (re.compile(r'\bsignificant\s+upside\b',              re.IGNORECASE), "meaningful upside"),
+    # "strong conviction" → "moderate conviction"
+    (re.compile(r'\bstrong\s+conviction\b',               re.IGNORECASE), "moderate conviction"),
+    # "highly confident" → "reasonably confident"
+    (re.compile(r'\bhighly\s+confident\b',                re.IGNORECASE), "reasonably confident"),
+    # "exceptionally well-positioned" → "positioned"
+    (re.compile(r'\bexceptionally\s+well-positioned\b',   re.IGNORECASE), "positioned"),
+    # "creates significant value" → "drives value"
+    (re.compile(r'\bcreates?\s+significant\s+value\b',    re.IGNORECASE), "drives value"),
 ]
 
 

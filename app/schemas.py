@@ -938,6 +938,18 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Cognition quality fields ───────────────────────────────────────────────
+    core_debate: str = Field(
+        default="",
+        description=(
+            "The single central analytical question the market is debating for this ticker. "
+            "Everything else in the thesis should orbit around this. "
+            "Example: 'Can Services growth offset duration pressure at current multiples?' "
+            "Example: 'Is AI demand already fully priced, or is the runway underestimated?' "
+            "Example: 'Does regulatory risk now matter more than the growth trajectory?'"
+        ),
+    )
+
 
 class AlertCondition(BaseModel):
     """A condition to watch that triggers an alert when its threshold is crossed.

@@ -126,7 +126,7 @@ _DESCRIPTIVE_PHRASE_PATTERNS: List = [
     re.compile(r'\b(employs?|workforce\s+of)\s+[\d,]+\b', re.IGNORECASE),
 ]
 
-# ── Forbidden phrases (Phase 5, extended) ─────────────────────────────────────
+# ── Forbidden phrases (Phase 5 + cognition refinements) ──────────────────────
 # Terminal language that signals generic, non-analytical prose.
 FORBIDDEN_PHRASES: frozenset = frozenset({
     # Original set
@@ -176,6 +176,24 @@ FORBIDDEN_PHRASES: frozenset = frozenset({
     "impacting revenue",
     "premium valuation",
     "pricing power",
+    # Cognition refinement — AI cadence + over-synthesised patterns
+    "directionally constructive",
+    "structurally repriced",
+    "favorable backdrop",
+    "asymmetric upside",
+    "compelling opportunity",
+    "significant upside potential",
+    "constructive setup",
+    "durable growth vector",
+    "self-reinforcing",
+    "stabilizing offset",
+    "creates a favorable",
+    "supports the narrative",
+    "underpins the thesis",
+    "validates the view",
+    "confidence remains high",
+    "confidence is high",
+    "high conviction",
 })
 
 # ── Causal language scoring modifiers (Refinement 4) ──────────────────────────
@@ -212,6 +230,92 @@ _DESCRIPTIVE_STALLS: frozenset = frozenset({
     "has historically", "positioned", "known for",
     "recognized", "is known",
 })
+
+
+# ── Causal dimension system (Refinement 3: signal orthogonality) ──────────────
+# Each signal is classified into a causal dimension.  Top signals that share
+# a dimension express the same underlying mechanism and should be collapsed.
+# This ensures top_signals represent genuinely different causal forces.
+
+_SIGNAL_CAUSAL_DIMENSIONS: Dict[str, List[str]] = {
+    "valuation":          ["multiple", "p/e", "pe", "dcf", "fair value", "price target",
+                           "valuation", "discount", "premium", "multiples", "rerating",
+                           "derating", "priced in", "priced at"],
+    "macro":              ["rate", "rates", "fed", "inflation", "gdp", "macro", "yield",
+                           "duration", "currency", "fx", "monetary", "fiscal", "recession",
+                           "cycle", "credit", "spread", "treasury"],
+    "regulatory":         ["antitrust", "regulatory", "regulation", "legal", "eu", "ftc",
+                           "doj", "probe", "lawsuit", "compliance", "policy", "government",
+                           "legislation", "tax"],
+    "operational":        ["margin", "revenue", "earnings", "eps", "ebitda", "guidance",
+                           "unit", "volume", "sales", "growth", "operating", "segment",
+                           "product", "service", "launch", "cycle"],
+    "capital_allocation": ["buyback", "repurchase", "dividend", "debt", "leverage", "cash",
+                           "fcf", "free cash flow", "balance sheet", "capital return",
+                           "refinanc", "net cash", "net debt"],
+    "competitive":        ["market share", "competition", "competitor", "moat", "switching",
+                           "lock-in", "ecosystem", "platform", "network effect"],
+    "behavioral":         ["sentiment", "institutional", "positioning", "momentum",
+                           "short", "retail", "flows", "options"],
+}
+
+_DIMENSION_ORDER: List[str] = [
+    "valuation", "macro", "regulatory", "operational",
+    "capital_allocation", "competitive", "behavioral",
+]
+
+
+def _get_signal_dimension(signal_text: str) -> str:
+    """Classify a signal into its primary causal dimension.
+
+    Returns the first matching dimension from ``_SIGNAL_CAUSAL_DIMENSIONS``,
+    following ``_DIMENSION_ORDER`` priority.  Falls back to "operational" when
+    no keywords match (operational mechanics are the default analytical frame).
+    """
+    lower = signal_text.lower()
+    for dim in _DIMENSION_ORDER:
+        keywords = _SIGNAL_CAUSAL_DIMENSIONS[dim]
+        if any(kw in lower for kw in keywords):
+            return dim
+    return "operational"
+
+
+def _enforce_signal_orthogonality(signals: List["Signal"]) -> List["Signal"]:  # type: ignore[name-defined]
+    """Ensure top signals represent different causal dimensions.
+
+    When two or more signals share the same causal dimension, keeps only the
+    highest-scored one from each dimension.  This prevents the top signal
+    list from restating the same mechanism (e.g. three Services-margin signals
+    rephrased differently).
+
+    The output list preserves the original score ordering within allowed slots.
+    Expects input already sorted highest-score first.
+    """
+    seen_dimensions: Dict[str, int] = {}  # dimension → count
+    result: List["Signal"] = []           # type: ignore[name-defined]
+
+    for sig in signals:
+        dim = _get_signal_dimension(sig.signal)
+        count = seen_dimensions.get(dim, 0)
+        # Allow at most 1 signal per dimension in top positions
+        if count < 1:
+            result.append(sig)
+            seen_dimensions[dim] = count + 1
+        # Skip: same dimension already represented
+
+    return result
+
+
+def _are_same_dimension_duplicates(s1: "Signal", s2: "Signal") -> bool:  # type: ignore[name-defined]
+    """Return True when two signals share a dimension AND have moderate overlap.
+
+    Uses a lower Jaccard threshold (0.30 vs default 0.45) for same-dimension
+    signals, since they are more likely to restate the same mechanism even with
+    different surface wording.
+    """
+    if _get_signal_dimension(s1.signal) != _get_signal_dimension(s2.signal):
+        return False
+    return _jaccard(s1.signal, s2.signal) >= 0.30
 
 
 def _causal_score_modifier(signal: "Signal") -> float:  # type: ignore[name-defined]
@@ -446,13 +550,18 @@ def _deduplicate(
 ) -> List[Tuple[Signal, float]]:
     """Merge duplicate signals and apply recurrence bonus.
 
-    Two signals are duplicates when their Jaccard similarity ≥ 0.45.
-    The higher-scoring signal is kept as primary; the lower-scoring one
-    is merged in (boosting impact_score and unioning evidence_refs).
+    Two signals are duplicates when:
+    - Jaccard similarity ≥ 0.45 (standard threshold), OR
+    - They share a causal dimension AND Jaccard ≥ 0.30 (same-dimension merging)
+
+    The lower threshold for same-dimension signals ensures that "Services margins
+    expand," "Services recurring margin profile," and "Services margin durability"
+    collapse into a single structural mechanism rather than appearing as three
+    separate top signals.
 
     Returns
     -------
-    Deduplicated list of (Signal, agent_confidence) pairs, longest first.
+    Deduplicated list of (Signal, agent_confidence) pairs.
     """
     if not pairs:
         return []
@@ -464,7 +573,7 @@ def _deduplicate(
     for sig, conf in scored:
         matched = False
         for i, (existing, existing_conf) in enumerate(merged):
-            if _are_duplicates(sig, existing):
+            if _are_duplicates(sig, existing) or _are_same_dimension_duplicates(sig, existing):
                 # Merge into existing (primary), boosting its score
                 merged[i] = (_merge(existing, sig, recurrence_bonus), existing_conf)
                 matched = True
@@ -549,10 +658,13 @@ def rank_signals(
     bearish_risk    = [s for s in all_ranked if s.direction == "bearish"
                        or s.signal_type == "risk"]
 
-    # top_signals: up to 3 from bullish/neutral pool
-    top_signals = bullish_neutral[:3]
+    # top_signals: up to 3 from bullish/neutral pool, enforcing causal orthogonality
+    # Orthogonality pass: draw from a wider candidate pool (up to 6) so we can
+    # find signals from genuinely different causal dimensions after filtering.
+    top_signals_candidates = bullish_neutral[:6]
+    top_signals = _enforce_signal_orthogonality(top_signals_candidates)[:3]
 
-    # top_risks: up to 4 from bearish/risk pool
+    # top_risks: up to 4 from bearish/risk pool (orthogonality applied at 2 per dim)
     top_risks = bearish_risk[:4]
 
     # secondary_signals: everything else, up to 6
@@ -846,6 +958,86 @@ def build_confidence_reasoning(
 
     # Cap at 3 sentences — evidence + agent consensus + signal direction
     return " ".join(parts[:3])
+
+
+# ── Confidence realism cap (Refinement 1) ────────────────────────────────────
+
+def compute_confidence_realism_cap(
+    raw_score:      float,
+    macro_conf:     float,
+    risk_conf:      float,
+    quality_conf:   float,
+    evidence_count: int,
+    ranked:         Optional[RankedSignalSet] = None,
+) -> Tuple[float, List[str]]:
+    """Apply conservative confidence caps based on uncertainty flags.
+
+    Real institutional conviction accounts for unresolved variables.
+    An 80% confidence score is only defensible when macro, risk, AND
+    the evidence base all point clearly in one direction.
+
+    Cap table (applied cumulatively — the tightest binding cap wins):
+    ─────────────────────────────────────────────────────────────────
+    macro_conf < 0.50           → cap at 0.72   (macro uncertain)
+    risk_conf < 0.50            → cap at 0.72   (downside exposure unresolved)
+    macro AND risk both < 0.55  → cap at 0.68   (double uncertainty)
+    evidence_count < 3          → cap at 0.65   (thin evidence base)
+    cross-agent spread ≥ 0.35   → cap at 0.74   (agents disagree)
+    signal direction split       → cap at 0.73   (directional ambiguity)
+
+    Returns
+    -------
+    (adjusted_score, list_of_uncertainty_factors_that_triggered)
+    """
+    score = float(raw_score)
+    caps:  List[Tuple[float, str]] = []
+
+    # ── Macro uncertainty ─────────────────────────────────────────────────────
+    if macro_conf < 0.50:
+        caps.append((0.72, "macro outlook uncertain"))
+    elif macro_conf < 0.60:
+        caps.append((0.76, "macro environment unclear"))
+
+    # ── Risk uncertainty ──────────────────────────────────────────────────────
+    if risk_conf < 0.50:
+        caps.append((0.72, "downside exposure unresolved"))
+    elif risk_conf < 0.60:
+        caps.append((0.76, "risk profile partially uncertain"))
+
+    # ── Double uncertainty: macro + risk both weak ────────────────────────────
+    if macro_conf < 0.55 and risk_conf < 0.55:
+        caps.append((0.68, "macro and risk uncertainty compound"))
+
+    # ── Sparse evidence ───────────────────────────────────────────────────────
+    if evidence_count < 3:
+        caps.append((0.65, "evidence base too thin to underwrite"))
+    elif evidence_count < 5:
+        caps.append((0.74, "limited evidence coverage"))
+
+    # ── Cross-agent spread ────────────────────────────────────────────────────
+    if quality_conf < 0.50:
+        caps.append((0.74, "business quality uncertain"))
+
+    # ── Signal direction split ────────────────────────────────────────────────
+    if ranked is not None and ranked.all_ranked:
+        all_sigs  = ranked.all_ranked
+        bullish_n = sum(1 for s in all_sigs if s.direction == "bullish")
+        bearish_n = sum(1 for s in all_sigs if s.direction == "bearish")
+        total_n   = max(len(all_sigs), 1)
+        # Split: neither side > 60% = genuinely ambiguous
+        dominant_share = max(bullish_n, bearish_n) / total_n
+        if dominant_share < 0.60:
+            caps.append((0.73, "signal direction is genuinely split"))
+
+    if not caps:
+        return score, []
+
+    # Take the tightest applicable cap
+    effective_cap = min(c for c, _ in caps)
+    triggered     = [reason for c, reason in caps if c == effective_cap]
+
+    adjusted = min(score, effective_cap)
+    return round(adjusted, 4), triggered
 
 
 # ── Evidence reference propagation ────────────────────────────────────────────
