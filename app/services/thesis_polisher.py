@@ -622,6 +622,58 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bexceptionally\s+well-positioned\b',   re.IGNORECASE), "positioned"),
     # "creates significant value" → "drives value"
     (re.compile(r'\bcreates?\s+significant\s+value\b',    re.IGNORECASE), "drives value"),
+
+    # Refinement 9 — Mechanism-first + hidden-process elimination (Realism Phase)
+    # Replaces mechanism abstractions with direct language, and strips hidden-process
+    # narration that exposes internal analytical scaffolding rather than conclusions.
+
+    # Mechanism abstractions → direct mechanism language
+    (re.compile(r'\benhances?\s+profitability\b',         re.IGNORECASE), "expands margins"),
+    (re.compile(r'\benhances?\s+(?:the\s+)?(?:investment\s+)?(?:case|thesis|outlook)\b',
+                re.IGNORECASE), "strengthens the case"),
+    (re.compile(r'\bsupports?\s+(?:business\s+)?resilience\b', re.IGNORECASE), "limits downside"),
+    (re.compile(r'\bremains?\s+resilient\b',              re.IGNORECASE), "holds up"),
+    (re.compile(r'\bdurable\s+growth\s+(?:profile|trajectory|path)\b', re.IGNORECASE),
+     "sustained growth"),
+    (re.compile(r'\bpricing\s+discipline\b',              re.IGNORECASE), "pricing discipline"),  # already good
+    # "stabilizes/stabilizing the valuation multiple" / "stabilizing the multiple" → "steadies the multiple"
+    # Note: the rule `supports valuation → stabilizes valuation` (no "the", no "multiple") must
+    # remain as its terminal output — so we only match forms that include "multiple" after
+    # valuation, OR use "the" before multiple/stock, OR are the gerund form.
+    # Pattern: stabiliz(ing|es?) [the]? (valuation multiple | multiple | stock)
+    (re.compile(r'\bstabiliz(?:ing|e[sd]?)\s+(?:the\s+)?(?:valuation\s+multiple|multiple|stock)\b',
+                re.IGNORECASE), "steadies the multiple"),
+    (re.compile(r'\bstabilizing\s+(?:the\s+)?valuation\b',
+                re.IGNORECASE), "steadying the multiple"),
+
+    # Hidden-process narration → direct analytical conclusions
+    (re.compile(r'\bsignals?\s+converge\b',               re.IGNORECASE), "the picture is consistent"),
+    (re.compile(r'\bevidence\s+supports?\s+(?:the\s+)?thesis\b', re.IGNORECASE),
+     "the evidence is consistent with the thesis"),
+    (re.compile(r'\banalysis\s+indicates?\b',             re.IGNORECASE), "the data shows"),
+    (re.compile(r'\bmultiple\s+factors?\s+suggest\b',     re.IGNORECASE), "the dominant driver"),
+    (re.compile(r'\bconviction\s+remains?\s+elevated\b',  re.IGNORECASE), "conviction is moderate"),
+    (re.compile(r'\bdirectional\s+alignment\b',           re.IGNORECASE), "consistent direction"),
+    (re.compile(r'\bbroadly\s+aligned\b',                 re.IGNORECASE), "broadly consistent"),
+    (re.compile(r'\bpoint(?:s?)\s+in\s+the\s+same\s+direction\b', re.IGNORECASE),
+     "are consistent"),
+    (re.compile(r'\bleaving\s+limited\s+room\s+for\s+analytical\s+disagreement\b', re.IGNORECASE),
+     ""),
+    (re.compile(r'\bannalytically\s+constructive\b',      re.IGNORECASE), "positive"),
+    (re.compile(r'\bconstructive\s+signal\b',             re.IGNORECASE), "positive signal"),
+    (re.compile(r'\bkey\s+analytical\b',                  re.IGNORECASE), "key"),
+    (re.compile(r'\bagent\s+consensus\b',                 re.IGNORECASE), "the analytical picture"),
+    (re.compile(r'\bagents?\s+(?:agree|register|show)\b', re.IGNORECASE), "the framework"),
+    (re.compile(r'\bcross-agent\b',                       re.IGNORECASE), "cross-framework"),
+    (re.compile(r'\bremains?\s+elevated\b',               re.IGNORECASE), "remains"),
+
+    # Confidence-language alignment — strip overstated conviction phrases
+    (re.compile(r'\belevated\s+conviction\b',             re.IGNORECASE), "conviction"),
+    (re.compile(r'\bwell-supported\s+thesis\b',           re.IGNORECASE), "defensible thesis"),
+    (re.compile(r'\bhighly\s+constructive\b',             re.IGNORECASE), "constructive"),
+    (re.compile(r'\bstrongly\s+constructive\b',           re.IGNORECASE), "constructive"),
+    (re.compile(r'\bconfidence\s+remains?\s+elevated\b',  re.IGNORECASE), "conviction is moderate"),
+    (re.compile(r'\bwell-supported\b',                    re.IGNORECASE), "defensible"),
 ]
 
 

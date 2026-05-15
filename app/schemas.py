@@ -949,6 +949,19 @@ class InvestmentThesis(BaseModel):
             "Example: 'Does regulatory risk now matter more than the growth trajectory?'"
         ),
     )
+    core_market_debate: str = Field(
+        default="",
+        description=(
+            "The live, unresolved market positioning question for this ticker — "
+            "phrased as a PM would frame it in an IC meeting. "
+            "Focuses on what the market has/has not priced, consensus vs non-consensus, "
+            "and what would change positioning. NOT explanatory or academic. "
+            "Example: 'Is Services growth durable enough to offset hardware cyclicality?' "
+            "Example: 'Is Nvidia demand structural or peak-cycle behavior?' "
+            "Example: 'Can Meta sustain margin discipline while reaccelerating capex?' "
+            "Example: 'Is the market underestimating rate duration risk for Apple?'"
+        ),
+    )
 
 
 class AlertCondition(BaseModel):

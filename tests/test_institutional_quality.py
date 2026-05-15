@@ -446,15 +446,17 @@ class TestBuildConfidenceReasoning:
         ), f"High-dispersion case should cite disagreement: {result!r}"
 
     def test_high_agreement_mentions_convergence(self):
-        """When all agents ≥0.75 → convergence cited."""
+        """When all agents ≥0.75 → output reflects a clean, directionally clear investment case.
+        New PM-note style: no convergence boilerplate; instead expresses that the mechanism
+        is consistent and residual uncertainty is timing-based rather than directional."""
         confs = {"valuation": 0.82, "macro": 0.78, "risk": 0.80, "market": 0.75, "quality": 0.76}
         result = build_confidence_reasoning(confs, None, 10)
         assert (
-            "converge" in result.lower()
-            or "elevated" in result.lower()
-            or "independently" in result.lower()
-            or "≥70%" in result
-        ), f"High-agreement case should cite convergence: {result!r}"
+            "reads cleanly" in result.lower()
+            or "timing, not direction" in result.lower()
+            or "mechanism is consistent" in result.lower()
+            or "investment case" in result.lower()
+        ), f"High-agreement case should reflect a clean directional read: {result!r}"
 
     def test_thin_evidence_mentioned(self):
         """When evidence_count < 3 → thin coverage cited."""
@@ -466,15 +468,20 @@ class TestBuildConfidenceReasoning:
         ), f"Thin-evidence case should mention limited coverage: {result!r}"
 
     def test_solid_evidence_mentioned(self):
-        """When evidence_count ≥ 8 → solid coverage cited."""
+        """When evidence_count ≥ 8 and confs are healthy → output reflects a clean, confident read.
+        New PM-note style: no raw evidence counts; instead expresses directional clarity."""
         result = build_confidence_reasoning(self._confs(), None, evidence_count=12)
         assert (
-            "solid" in result.lower()
-            or "12 item" in result.lower()
-        ), f"Solid evidence case should mention it: {result!r}"
+            "reads cleanly" in result.lower()
+            or "timing, not direction" in result.lower()
+            or "mechanism is consistent" in result.lower()
+            or "investment case" in result.lower()
+        ), f"Solid-evidence / high-confidence case should reflect a clean read: {result!r}"
 
     def test_bullish_signal_consensus_cited(self):
-        """When signals are 80%+ bullish → consensus mentioned."""
+        """When signals are 80%+ bullish and confs are healthy → output reflects directional clarity.
+        New PM-note style: no raw direction counts; instead expresses that direction is resolved
+        and residual uncertainty is about timing, not the direction of the call."""
         sigs = [
             _signal("Bull signal one.", direction="bullish"),
             _signal("Bull signal two.", direction="bullish"),
@@ -485,10 +492,11 @@ class TestBuildConfidenceReasoning:
         ranked = _ranked_set(all_ranked=sigs)
         result = build_confidence_reasoning(self._confs(), ranked, evidence_count=8)
         assert (
-            "bullish" in result.lower()
-            or "80%" in result
-            or "4" in result
-        ), f"Bullish consensus should be cited: {result!r}"
+            "timing, not direction" in result.lower()
+            or "reads cleanly" in result.lower()
+            or "directional" in result.lower()
+            or "investment case" in result.lower()
+        ), f"Bullish consensus should reflect directional confidence: {result!r}"
 
     def test_mixed_signals_cited_as_two_sided(self):
         """When bull/bear split is close → two-sided uncertainty cited."""
