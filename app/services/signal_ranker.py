@@ -231,6 +231,32 @@ FORBIDDEN_PHRASES: frozenset = frozenset({
     "analytically constructive",
     "constructive signal",
     "key analytical",
+    # Phase D — Orchestration leakage (new): scoring/process language masquerading as analysis
+    "signals are split",
+    "signals diverge",
+    "directional disagreement",
+    "analytical disagreement",
+    "confidence reduced because",
+    "constructive vs cautious",
+    "two forces affect",
+    "affect the multiple in opposite",
+    "in opposite directions",
+    "evidence count",
+    # Phase D — Completeness bias: symmetric conditional endings that avoid taking a view
+    "depending on which scenario",
+    "whichever prevails",
+    "whichever dominates",
+    "either scenario",
+    # Phase D — Understated confidence bans: overselling language that fails the PM test
+    "highly compelling",
+    "strongly bullish",
+    "strongly bearish",
+    "high-conviction opportunity",
+    "exceptional opportunity",
+    "exceptional investment case",
+    "robust thesis",
+    "unambiguously bullish",
+    "unambiguously positive",
 })
 
 # ── Causal language scoring modifiers (Refinement 4) ──────────────────────────

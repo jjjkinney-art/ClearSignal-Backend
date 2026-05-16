@@ -136,64 +136,91 @@ _DIMENSION_KEYWORDS: Dict[str, List[str]] = {
 _DEPTH_DIRECTIVES: Dict[str, str] = {
     "macro": (
         "DOMINANT DIMENSION — MACRO: Macro transmission IS the central thesis debate.\n"
-        "SECTION PRIORITY SCORE for this analysis:\n"
-        "  macro_sensitivity : DEEP (3 sentences — exact channel, magnitude, second-order)\n"
-        "  bear_thesis       : DEEP (4 sentences — rate transmission pathway in full)\n"
-        "  bull_thesis       : MEDIUM (3 sentences — name the offset mechanism)\n"
-        "  valuation_view    : COMPRESSED (1 crisp sentence — state multiple only)\n"
-        "  conclusion        : COMPRESSED (2 sentences — rate path + positioning)\n"
-        "macro_sensitivity is your anchor section. Name the exact transmission channel "
-        "(rates → discount rate magnitude, FX → revenue conversion %, etc.) and quantify it. "
-        "valuation_view states only the current multiple and what it implies for the rate scenario. "
-        "Do NOT pad operational discussion to match macro depth."
+        "SECTION PRIORITY SCORE — HARD CAPS (enforce strictly, no exceptions):\n"
+        "  macro_sensitivity : DEEP — 3+ sentences REQUIRED. Name the exact transmission "
+        "channel with magnitude (e.g. '100bps rate move → ~15-20% P/E compression via DCF "
+        "discount rate expansion'). Include second-order effect on buyback ROI and EPS support. "
+        "Anchor on the CURRENT rate level and what has changed since the last rate move. "
+        "This is your anchor section — it must be more analytically substantive than any other.\n"
+        "  bear_thesis       : DEEP — 4 sentences. Full rate transmission pathway. "
+        "Name the specific timing scenario that breaks the thesis. End with the trigger, "
+        "not with a balanced counterpoint.\n"
+        "  bull_thesis       : MEDIUM — 3 sentences. Name the specific offset mechanism. "
+        "Do NOT use 'Services offsets' without naming the FCF yield, ARR, or duration mismatch "
+        "that actually absorbs the pressure.\n"
+        "  valuation_view    : COMPRESSED — 1 sentence HARD CAP. "
+        "Format: '[ticker] trades at ~[multiple]x, implying [what rate scenario the market prices].' "
+        "NOTHING ELSE. Do NOT explain rate mechanics here — that belongs in macro_sensitivity. "
+        "If you write more than 1 sentence in valuation_view, you have failed the asymmetry requirement.\n"
+        "  conclusion        : COMPRESSED — 2 sentences HARD CAP. Rate path + positioning only.\n"
+        "CRITICAL ENFORCEMENT: valuation_view is a one-line footnote in a macro-dominant thesis. "
+        "Intellectual weight belongs in macro_sensitivity and bear_thesis, nowhere else."
     ),
     "valuation": (
         "DOMINANT DIMENSION — VALUATION: Valuation IS the central debate.\n"
-        "SECTION PRIORITY SCORE for this analysis:\n"
-        "  valuation_view    : DEEP (3 sentences — multiple, range, implied scenario, sensitivity)\n"
-        "  bull_thesis       : DEEP (4 sentences — re-rating path and what has to be true)\n"
-        "  bear_thesis       : MEDIUM (3 sentences — derating mechanism and trigger)\n"
-        "  macro_sensitivity : COMPRESSED (1 sentence — primary macro channel only)\n"
-        "  conclusion        : COMPRESSED (2 sentences — valuation entry + risk)\n"
-        "valuation_view is your anchor section. State current multiple vs historical range, "
-        "what the market is implicitly pricing, and what has to be true for re-rating. "
-        "macro_sensitivity is one sentence only. Do not pad operational discussion."
+        "SECTION PRIORITY SCORE — HARD CAPS (enforce strictly, no exceptions):\n"
+        "  valuation_view    : DEEP — 3 sentences REQUIRED. Current multiple vs historical range "
+        "and peers. What the multiple ALREADY IMPLIES (growth rate, margin durability, terminal "
+        "value assumption). What has to be true for re-rating — name the specific scenario and "
+        "what price target follows from it.\n"
+        "  bull_thesis       : DEEP — 4 sentences. Re-rating path and what has to happen. "
+        "Name the catalyst and the multiple target if the bull case plays out.\n"
+        "  bear_thesis       : MEDIUM — 3 sentences. Derating mechanism and trigger.\n"
+        "  macro_sensitivity : COMPRESSED — 1 sentence HARD CAP. "
+        "Primary macro channel only. Format: '[channel] drives [impact] on [metric].' "
+        "No elaboration. If you write 2 sentences, you have failed the asymmetry requirement.\n"
+        "  conclusion        : COMPRESSED — 2 sentences. Valuation entry point + positioning.\n"
+        "CRITICAL ENFORCEMENT: macro_sensitivity is a one-liner in a valuation-dominant thesis. "
+        "Do NOT develop macro beyond one sentence here."
     ),
     "regulatory": (
         "DOMINANT DIMENSION — REGULATORY: Regulatory risk IS the primary investment debate.\n"
-        "SECTION PRIORITY SCORE for this analysis:\n"
-        "  bear_thesis       : DEEP (4 sentences — mechanism, revenue impact, timeline, trigger)\n"
-        "  bull_thesis       : MEDIUM (3 sentences — probability-weighted upside if risk resolves)\n"
-        "  valuation_view    : MEDIUM (2 sentences — multiple discount for regulatory overhang)\n"
-        "  macro_sensitivity : COMPRESSED (1 sentence — macro is secondary here)\n"
-        "  conclusion        : COMPRESSED (2 sentences — regulatory path + positioning)\n"
-        "bear_thesis is your anchor section. Name the specific mechanism by which regulatory "
-        "action transmits to revenue, margins, or multiple. Name probability and timeline. "
-        "The regulatory risk should dominate key_risks."
+        "SECTION PRIORITY SCORE — HARD CAPS (enforce strictly, no exceptions):\n"
+        "  bear_thesis       : DEEP — 4 sentences REQUIRED. Mechanism + revenue impact "
+        "+ timeline + trigger. Quantify the potential revenue or earnings impact in dollar or % terms. "
+        "Name the specific regulatory body, the type of action, and the realistic timeline. "
+        "End with the specific trigger that confirms the risk is materializing.\n"
+        "  bull_thesis       : MEDIUM — 3 sentences. Probability-weighted upside if risk resolves. "
+        "Name what 'resolution' looks like concretely and what the multiple re-rates to.\n"
+        "  valuation_view    : MEDIUM — 2 sentences. Multiple discount for regulatory overhang. "
+        "What is the stock worth if risk resolves vs what if it materializes?\n"
+        "  macro_sensitivity : COMPRESSED — 1 sentence HARD CAP. "
+        "Macro is secondary in a regulatory-dominant thesis — one sentence only.\n"
+        "  conclusion        : COMPRESSED — 2 sentences. Regulatory path + positioning.\n"
+        "CRITICAL ENFORCEMENT: regulatory risk must dominate key_risks. "
+        "bear_thesis is your most specific, most detailed section."
     ),
     "capital_allocation": (
         "DOMINANT DIMENSION — CAPITAL ALLOCATION: Capital return mechanics are central.\n"
-        "SECTION PRIORITY SCORE for this analysis:\n"
-        "  bull_thesis       : DEEP (4 sentences — quantify buyback EPS amplification, FCF yield)\n"
-        "  valuation_view    : MEDIUM (2 sentences — EPS trajectory + FCF yield to support multiple)\n"
-        "  bear_thesis       : MEDIUM (3 sentences — what breaks the capital return story)\n"
-        "  macro_sensitivity : COMPRESSED (1 sentence — how rates affect buyback ROI)\n"
-        "  conclusion        : COMPRESSED (2 sentences — capital return math + positioning)\n"
-        "Quantify the buyback/dividend program relative to earnings and FCF yield. "
-        "bull_thesis should calculate the EPS amplification from the shrinking share count. "
-        "macro_sensitivity states only how rate changes affect buyback relative cost."
+        "SECTION PRIORITY SCORE — HARD CAPS (enforce strictly, no exceptions):\n"
+        "  bull_thesis       : DEEP — 4 sentences REQUIRED. Quantify buyback EPS amplification: "
+        "shares outstanding reduction rate (% per year), EPS accretion at zero revenue growth, "
+        "FCF yield vs cost of capital. Name the specific annual commitment amount and its "
+        "ROI relative to current rates.\n"
+        "  valuation_view    : MEDIUM — 2 sentences. EPS trajectory + FCF yield to support multiple.\n"
+        "  bear_thesis       : MEDIUM — 3 sentences. What specifically breaks the capital return "
+        "story: higher rates → lower buyback ROI? Debt refinancing risk? FCF compression? Name one.\n"
+        "  macro_sensitivity : COMPRESSED — 1 sentence HARD CAP. "
+        "State only: how rates affect buyback ROI or debt service cost. "
+        "If you write more than 1 sentence, you have failed the asymmetry requirement.\n"
+        "  conclusion        : COMPRESSED — 2 sentences. Capital return math + positioning.\n"
+        "CRITICAL ENFORCEMENT: macro_sensitivity is a one-line footnote in a capital-allocation thesis."
     ),
     "operational": (
         "DOMINANT DIMENSION — OPERATIONAL: Business mechanics and margin structure are the debate.\n"
-        "SECTION PRIORITY SCORE for this analysis:\n"
-        "  bull_thesis       : DEEP (4 sentences — margin expansion, operating leverage, unit econ)\n"
-        "  bear_thesis       : DEEP (4 sentences — what breaks the margin or revenue model)\n"
-        "  valuation_view    : MEDIUM (2 sentences — multiple supported by earnings trajectory)\n"
-        "  macro_sensitivity : COMPRESSED (1 sentence — macro impact on the key operating metric)\n"
-        "  conclusion        : COMPRESSED (2 sentences — operating inflection + risk)\n"
-        "bull_thesis and bear_thesis anchor on the specific revenue line and margin structure "
-        "that drives the investment case. Quantify the specific line item that matters most. "
-        "Compress macro unless it directly drives the operating metric."
+        "SECTION PRIORITY SCORE — HARD CAPS (enforce strictly, no exceptions):\n"
+        "  bull_thesis       : DEEP — 4 sentences REQUIRED. Margin expansion, operating leverage, "
+        "unit economics. Name the specific revenue line and margin trajectory with numbers. "
+        "Quantify EPS sensitivity to the operating lever that matters most.\n"
+        "  bear_thesis       : DEEP — 4 sentences REQUIRED. What breaks the margin or revenue "
+        "model — name the specific cost driver or revenue headwind and its P&L pathway. "
+        "End with the trigger, not with a balancing counterpoint.\n"
+        "  valuation_view    : MEDIUM — 2 sentences. Multiple justified by earnings trajectory.\n"
+        "  macro_sensitivity : COMPRESSED — 1 sentence HARD CAP. "
+        "Only: macro impact on the key operating metric. No elaboration. One sentence.\n"
+        "  conclusion        : COMPRESSED — 2 sentences. Operating inflection point + risk.\n"
+        "CRITICAL ENFORCEMENT: Both bull_thesis and bear_thesis anchor on specific "
+        "revenue/margin mechanics. macro_sensitivity is a one-liner."
     ),
 }
 
@@ -639,7 +666,7 @@ Sound like an experienced analyst writing for a PM, not an AI generating institu
 - DO NOT produce sentences that exist solely to sound institutional
 FORBIDDEN: Any phrase that sounds engineered to impress rather than to inform.
 
-WRITING RHYTHM — MANDATORY:
+WRITING RHYTHM AND CADENCE VARIATION — MANDATORY:
 Vary sentence length and structure within and across sections.
 - Not every sentence must be maximally dense or long.
 - Use short, blunt sentences to land key analytical judgments:
@@ -649,6 +676,17 @@ Vary sentence length and structure within and across sections.
 - Experienced analysts are understated — do NOT end every section with an emphatic assertion.
 - A good bear_thesis often ends on a simple, understated note: "The timing is the question."
 - A good bull_thesis often ends with a concrete confirmation signal, not a sweeping conclusion.
+CADENCE_VARIATION — specific requirements:
+- bull_thesis MUST contain at least one sentence ≤ 12 words (forces compression somewhere).
+- bear_thesis MUST NOT end with a conjunctive clause ("which means...", "and therefore...").
+- conclusion MUST NOT begin with "[Ticker]'s [noun phrase] provides/supports/sustains/enables..."
+- A section CAN end with a blunt one-liner if the point is already made.
+- Sections should feel uneven — not every section builds to a tidy multi-clause conclusion.
+GOOD CADENCE EXAMPLES (study the rhythm — varied lengths, abrupt endings):
+  "Rates matter more than consensus expects. The 28x multiple assumes a normalization path that has not started. That is the risk."
+  "The operating story holds. Services mix shifts toward recurring cash flows, and the buyback absorbs what hardware cannot. The question is whether the market reprices duration before the next print."
+  "Nothing is broken yet. The bear case requires both a hardware cycle AND rate re-acceleration. That overlap is the tail risk."
+BAD CADENCE: Three consecutive long mechanism sentences all ending with "...which supports valuation."
 
 TEMPORAL REALISM — MANDATORY:
 Reason about what is already priced in vs what is genuinely new or unresolved:
@@ -658,6 +696,27 @@ Reason about what is already priced in vs what is genuinely new or unresolved:
 - Avoid claims that are always or perpetually true — anchor on what has CHANGED or is CHANGING.
 - "The multiple already reflects X" is a valid and useful claim when it is true — make it.
 - "The market is debating Y" names the live controversy — name it explicitly in core_market_debate.
+TEMPORAL ANCHORING — write as if this memo was produced this week, not as a reference document:
+- Use grounding language where appropriate: "recently", "over the last quarter", "since rates repriced",
+  "this cycle", "right now", "at current levels", "over the last 90 days", "since [event]"
+- BAD (timeless): "Apple faces rate sensitivity as a high-duration growth stock."
+- GOOD (time-anchored): "Since the rate path repriced, duration pressure has reasserted on AAPL's ~28x multiple."
+- Use 2-3 temporal markers across the thesis — not uniformly in every sentence.
+
+PRICED_IN_REASONING — MANDATORY:
+Every major thesis element must answer: "Is this already priced in, or would this move the stock?"
+Specifically in valuation_view and bull_thesis:
+- State what the current multiple ALREADY IMPLIES (growth rate, margin durability, rate scenario)
+- Name one thing the market has already priced (consensus view)
+- Name one thing the market has NOT yet fully priced (where positioning could change)
+REQUIRED phrases to use where analytically true (pick 2-3 across the thesis):
+- "The stock already prices in X" / "At ~[multiple]x, the market is paying for Y"
+- "Incremental upside requires Z, not just X" / "The market has not yet resolved X"
+- "Consensus already assumes X — the differentiated call is Y"
+GOOD: "At ~28x, the stock already prices Services durability — incremental upside requires margin acceleration, not merely stability."
+GOOD: "The multiple implies a soft landing; any rate re-acceleration would be unpriced and de-rating."
+BAD: "Strong Services margins support the valuation." (timeless, no priced/unpriced distinction)
+BAD: "The stock is attractively valued." (states no view on what's in the price)
 
 MECHANISM_PRIORITY — MANDATORY:
 Every causal claim must name the TRANSMISSION PATH, not the outcome abstraction.
@@ -670,6 +729,27 @@ BANNED mechanism abstractions (replace with the actual transmission):
 - "pricing power" → name the specific ASP/volume/take-rate mechanism that enables it
 - "durable growth" → WHY is it durable? name the structural driver (lock-in, switching cost, contract length)
 Every sentence must trace X → Y → stock impact. No abstraction layer.
+
+IMPLICATION_COMPRESSION — MANDATORY:
+Stop writing once the analytical implication is obvious. Real PMs trust their readers.
+BANNED completeness patterns (remove the symmetric balancing clause):
+- "The multiple could expand if X, but compress if Y" → pick the more probable scenario:
+  "At ~28x, the market already prices X" — STOP THERE.
+- "Either X or Y depending on which scenario materializes" → state the more likely outcome.
+- Any sentence that adds a balanced counterpoint to an already-clear directional statement.
+- Trailing ", which could affect the multiple in either direction" → cut before this.
+STOP WRITING (these are complete sentences — do not add a balancing clause after them):
+  "The risk is duration. Everything else is secondary."
+  "At ~28x, execution has to be exceptional."
+  "Nothing is broken yet."
+  "China matters more than investors admit."
+  "The market still has not priced the demand normalization question."
+  "That is what the multiple is paying for."
+BAD (adds a hedge after a clear point):
+  "Services ARR supports the multiple, but could compress if regulatory pressure intensifies."
+BETTER: "Services ARR supports the multiple. Regulatory overhang is the separate unpriced risk."
+(Two clean statements beat one hedged compound sentence.)
+Brevity signals conviction. Symmetric completeness signals AI-generated analysis.
 
 HIDDEN-PROCESS BAN — MANDATORY:
 You are an analyst writing a MEMO, not narrating your reasoning process.
@@ -687,6 +767,16 @@ BANNED (these expose internal process, not analytical conclusions):
 GOOD: "The earnings path still holds unless rates remain structurally restrictive."
 GOOD: "The market is paying for durability, not near-term growth — and durability is hard to prove."
 GOOD: "The bear case only matters if hardware weakness becomes cyclical rather than temporary."
+Additional orchestration leakage — BANNED (Phase D extensions):
+- "signals are split" → "the picture is genuinely two-sided"
+- "signals diverge" → name which forces diverge and what that means for the thesis
+- "directional disagreement" → "the bull and bear cases are both defensible here"
+- "analytical disagreement" → name the specific unresolved question
+- "confidence is reduced because" → name the uncertainty: "the macro path is unresolved"
+- "constructive vs cautious" → state which view is dominant and what flips it
+- "evidence count" → never reference counts; reference what the evidence shows
+- "two forces affect the multiple in opposite directions" → name each force separately with its net effect
+- "depending on which scenario" → pick the more probable scenario and name it
 
 CONFIDENCE LANGUAGE ALIGNMENT — MANDATORY:
 This thesis has an estimated confidence tier: {conf_lang_tier}
@@ -695,6 +785,20 @@ DO NOT use "high conviction" or "strong conviction" unless confidence_score ≥ 
 DO NOT end confidence_reasoning with an upbeat conclusion that contradicts a low score.
 If you assign confidence_score < 0.70, the prose MUST name what is genuinely uncertain.
 The writing must match the score. A 0.65 that says "the thesis is well-supported" is a contradiction.
+UNDERSTATED CONFIDENCE — MANDATORY (applies even when bullish):
+Even at high confidence, use measured language. The mechanism sells the thesis — not the adjective.
+BANNED regardless of confidence_score:
+- "highly compelling" → say what makes the risk/reward reasonable
+- "strongly bullish" → "constructive" or state the mechanism
+- "exceptional opportunity" → "reasonable opportunity if X holds"
+- "robust thesis" → "defensible thesis"
+- "exceptional investment case" → name the specific mechanism that makes it work
+GOOD understated bullish language (study these):
+  "The thesis still works."  /  "The setup remains constructive."  /  "Nothing is broken yet."
+  "Risk/reward looks reasonable here if the rate path cooperates."
+  "At these levels, if Services ARR holds, the stock works."
+An experienced PM who is genuinely bullish does not say "highly compelling" — they name the mechanism
+and let the math speak. Emphatic conviction language is the hallmark of AI-generated finance prose.
 
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:

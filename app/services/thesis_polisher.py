@@ -674,6 +674,60 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     (re.compile(r'\bstrongly\s+constructive\b',           re.IGNORECASE), "constructive"),
     (re.compile(r'\bconfidence\s+remains?\s+elevated\b',  re.IGNORECASE), "conviction is moderate"),
     (re.compile(r'\bwell-supported\b',                    re.IGNORECASE), "defensible"),
+
+    # Refinement 10 — Phase D: Orchestration leakage → direct analytical language
+    # These expose internal process reasoning rather than PM-memo conclusions.
+    (re.compile(r'\bsignals?\s+(?:are\s+)?split\b',       re.IGNORECASE), "the picture is two-sided"),
+    (re.compile(r'\bsignals?\s+diverge\b',                re.IGNORECASE), "views diverge"),
+    (re.compile(r'\bdirectional\s+disagreement\b',        re.IGNORECASE), "genuine divergence"),
+    (re.compile(r'\banalytical\s+disagreement\b',         re.IGNORECASE), "genuine divergence"),
+    (re.compile(r'\bconstructive\s+vs\s+cautious\b',      re.IGNORECASE), "mixed"),
+    (re.compile(r'\bconfidence\s+has\s+been\s+reduced\b', re.IGNORECASE), "conviction is lower"),
+    (re.compile(r'\bevidence\s+suggests?\s+that\b',       re.IGNORECASE), "the data points to"),
+    (re.compile(r'\bevidence\s+suggests?\b',              re.IGNORECASE), "the data shows"),
+    # "depending on which scenario" → name the scenario
+    (re.compile(r'\bdepending\s+on\s+which\s+scenario\b', re.IGNORECASE), "in the more likely scenario"),
+    (re.compile(r'\bwhichever\s+(?:prevails?|dominates?|occurs?)\b', re.IGNORECASE), ""),
+    # "two forces affect the multiple in opposite directions" → say what each does
+    (re.compile(r'\btwo\s+forces\s+affect\s+the\s+multiple\b', re.IGNORECASE), "both forces pressure the multiple"),
+    (re.compile(r'\bin\s+opposite\s+directions\b',        re.IGNORECASE), ""),
+
+    # Refinement 10 — Phase D: Understated confidence — PM language over superlatives
+    # Even when the investment case is strong, language must stay measured.
+    (re.compile(r'\bhighly\s+compelling\b',               re.IGNORECASE), "reasonable"),
+    (re.compile(r'\bstrongly\s+bullish\b',                re.IGNORECASE), "constructive"),
+    (re.compile(r'\bstrongly\s+bearish\b',                re.IGNORECASE), "cautious"),
+    (re.compile(r'\bhigh-conviction\s+opportunity\b',     re.IGNORECASE), "defensible opportunity"),
+    (re.compile(r'\brobust\s+investment\s+thesis\b',      re.IGNORECASE), "defensible investment thesis"),
+    (re.compile(r'\brobust\s+thesis\b',                   re.IGNORECASE), "defensible thesis"),
+    (re.compile(r'\bexceptional\s+(?:investment\s+)?opportunity\b', re.IGNORECASE), "reasonable opportunity"),
+    (re.compile(r'\bcompelling\s+investment\s+thesis\b',  re.IGNORECASE), "defensible investment thesis"),
+    (re.compile(r'\bunambiguously\s+(?:bullish|positive|constructive)\b', re.IGNORECASE), "constructive"),
+    # "very compelling" → "reasonable" / "compelling case" → "reasonable case"
+    (re.compile(r'\bvery\s+compelling\b',                 re.IGNORECASE), "reasonable"),
+    (re.compile(r'\bcompelling\s+case\b',                 re.IGNORECASE), "reasonable case"),
+    # "extremely high confidence" → "solid conviction"
+    (re.compile(r'\bextremely\s+(?:high|strong)\s+conviction\b', re.IGNORECASE), "solid conviction"),
+    # "outstanding risk/reward" → "favorable risk/reward"
+    (re.compile(r'\boutstanding\s+risk/reward\b',         re.IGNORECASE), "favorable risk/reward"),
+
+    # Refinement 10 — Phase D: Completeness bias → implication compression
+    # Strip the symmetric "but could X if Y" clause after a clear directional statement.
+    # Only fires at end-of-sentence (using lookahead) to avoid mid-sentence destruction.
+    # These leave the clear directional claim intact and drop the academic balancing hedge.
+    (re.compile(
+        r',?\s+but\s+could\s+compress\s+if\s+\S+(?:\s+\S+){0,10}(?=\.)(?=\s*$)',
+        re.IGNORECASE
+    ), ""),
+    (re.compile(
+        r',?\s+but\s+may\s+compress\s+if\s+\S+(?:\s+\S+){0,10}(?=\.)(?=\s*$)',
+        re.IGNORECASE
+    ), ""),
+    # "either X or Y depending on Z" at end of sentence
+    (re.compile(
+        r',?\s+(?:either\s+\S+\s+or\s+\S+\s+)?depending\s+on\s+(?:which|whether|how)\b[^.]*(?=\.)(?=\s*$)',
+        re.IGNORECASE
+    ), ""),
 ]
 
 
