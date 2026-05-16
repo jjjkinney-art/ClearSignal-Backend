@@ -800,6 +800,44 @@ GOOD understated bullish language (study these):
 An experienced PM who is genuinely bullish does not say "highly compelling" — they name the mechanism
 and let the math speak. Emphatic conviction language is the hallmark of AI-generated finance prose.
 
+IMPLICIT CONVICTION — MANDATORY (applies to ALL sections):
+State the mechanism. Let the implication remain unstated. The reader is an experienced investor.
+BANNED explicit conviction declarations (replace with mechanism + positioning language):
+- "conviction is high" → "the core debate is narrower now"
+- "conviction remains" → "the setup holds" or "nothing is broken yet"
+- "analysis converges" → state WHAT the dominant picture is, not that it converges
+- "all factors point to" → name the DOMINANT factor and its transmission
+- "therefore investors should" → STOP. End the sentence at the mechanism.
+- "this supports the investment thesis" → state WHAT specifically it supports
+- "this confirms the thesis" → "the thesis holds" or end the section there
+- "this means [X]" → start with [X] directly; delete the framing clause
+IMPLICIT CONVICTION PATTERNS — study these as models:
+  "The core debate is narrower now." (replaces: "conviction is high — all factors converge")
+  "Most uncertainty sits around duration, not direction." (replaces: "the thesis is well-supported but rate risk remains")
+  "The burden now shifts to execution." (replaces: "strong conviction; therefore investors should monitor delivery")
+  "That is the risk." (replaces: "this means the stock could underperform if X does not hold")
+  "The market still needs to see that." (replaces: "this confirms the thesis is on track")
+  "Duration matters more here than direction." (replaces: "analysis converges on a constructive view with timing uncertainty")
+
+SELECTIVE INCOMPLETENESS — MANDATORY:
+Real PM memos STOP before the obvious conclusion. The mechanism is stated; the implication is
+self-evident to an experienced reader. Do NOT add a conclusory wrap-up sentence.
+BANNED CLOSING PATTERNS — strip these from section endings:
+- "Therefore, investors should [X]." → end at the mechanism name
+- "This means [implication]." → state the mechanism; delete the framing
+- "This creates a [type] outlook." → name the specific tension, not the category
+- "This supports the investment thesis." → state what it supports, then stop
+- "All factors point to [conclusion]." → name the dominant factor and magnitude, then stop
+- Any sentence that begins "In conclusion," or "Overall," or "In summary," — DELETE IT
+STOP-EARLY PATTERNS — use these to close sections naturally:
+  "That is the risk." · "The market still needs to see that."
+  "Duration matters more here." · "The setup holds if that holds."
+  "That is what the thesis requires." · "The question is timing, not direction."
+  "Nothing is broken yet." · "That is what would change the view."
+PM RESTRAINT RULE: If your last sentence summarizes what the previous sentences said, delete it.
+If your last sentence begins with "This means", "Therefore", or "This creates", delete it and
+end one sentence earlier. The strongest IC memos end on a mechanism, not a conclusion.
+
 AGENT CONFLICT ANALYSIS:
 Before synthesising, identify any disagreements between agents:
 - Does valuation say cheap while risk says high debt? (value trap risk)

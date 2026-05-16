@@ -711,6 +711,40 @@ _INSTITUTIONAL_REWRITES: List[Tuple[re.Pattern, str]] = [
     # "outstanding risk/reward" → "favorable risk/reward"
     (re.compile(r'\boutstanding\s+risk/reward\b',         re.IGNORECASE), "favorable risk/reward"),
 
+    # Refinement 11 — Phase E: Explicit conviction language → implicit PM restraint
+    # These phrases announce conviction rather than demonstrating it.  A PM states
+    # the mechanism; the implication is self-evident.
+    # "conviction is high" / "conviction is elevated" → "the case is defensible"
+    (re.compile(r'\bconviction\s+is\s+(?:high|elevated)\b', re.IGNORECASE), "the case is defensible"),
+    # "conviction remains [high/elevated/strong]" → "the setup holds"
+    (re.compile(r'\bconviction\s+remains\s+(?:high|elevated|strong|intact)\b', re.IGNORECASE), "the setup holds"),
+    # "analysis converges [on]" → "the picture is consistent"
+    (re.compile(r'\banalysis\s+converges(?:\s+on)?\b', re.IGNORECASE), "the picture is consistent"),
+    # "all factors point [to]" → strip the framing, state the direction
+    (re.compile(r'\ball\s+factors?\s+point(?:\s+to)?\b', re.IGNORECASE), "the dominant factor is"),
+    # "all signals point [to]" → same
+    (re.compile(r'\ball\s+signals?\s+point(?:\s+to)?\b', re.IGNORECASE), "the dominant signal is"),
+    # "therefore investors should" → "The question is"
+    (re.compile(r'\btherefore\s+investors?\s+should\b', re.IGNORECASE), "the question is whether"),
+    # "this creates a mixed outlook" → "the picture here is genuinely two-sided"
+    (re.compile(r'\bthis\s+creates?\s+a\s+mixed\s+outlook\b', re.IGNORECASE), "the picture is genuinely two-sided"),
+    # "this supports the investment thesis" → "the mechanism holds"
+    (re.compile(r'\bthis\s+supports?\s+the\s+investment\s+thesis\b', re.IGNORECASE), "the mechanism holds"),
+    # "this confirms the thesis" → "the thesis holds"
+    (re.compile(r'\bthis\s+confirms?\s+the\s+thesis\b', re.IGNORECASE), "the thesis holds"),
+    # "this validates the thesis/view" → strip or minimal replacement
+    (re.compile(r'\bthis\s+validates?\s+the\s+(?:thesis|view|case)\b', re.IGNORECASE), "that holds"),
+    # "the thesis is well-supported" → "the thesis holds"
+    (re.compile(r'\bthe\s+thesis\s+is\s+well-?supported\b', re.IGNORECASE), "the thesis holds"),
+    # "the investment case is strong" → "the investment case is intact"
+    (re.compile(r'\bthe\s+investment\s+case\s+is\s+strong\b', re.IGNORECASE), "the investment case is intact"),
+    # STOP-EARLY: "this means the stock [will/should/is]" → strip the conclusory wrapper
+    (re.compile(r'\bthis\s+means\s+the\s+stock\s+(?:will|should|is|could|may)\b', re.IGNORECASE), "the stock"),
+    # "therefore the stock" → "the stock"
+    (re.compile(r'\btherefore,?\s+the\s+stock\b', re.IGNORECASE), "the stock"),
+    # "this means that" at sentence start → strip framing, leave content
+    (re.compile(r'\bthis\s+means\s+that\b', re.IGNORECASE), ""),
+
     # Refinement 10 — Phase D: Completeness bias → implication compression
     # Strip the symmetric "but could X if Y" clause after a clear directional statement.
     # Only fires at end-of-sentence (using lookahead) to avoid mid-sentence destruction.

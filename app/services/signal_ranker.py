@@ -257,6 +257,23 @@ FORBIDDEN_PHRASES: frozenset = frozenset({
     "robust thesis",
     "unambiguously bullish",
     "unambiguously positive",
+    # Phase E — Explicit conviction language bans: implicit PM restraint over stated conviction
+    "conviction is high",
+    "conviction is elevated",
+    "analysis converges",
+    "analysis converges on",
+    "all factors point",
+    "all signals point",
+    "therefore investors should",
+    "this creates a mixed outlook",
+    "this supports the investment thesis",
+    "this confirms the thesis",
+    "this validates the thesis",
+    "the thesis is well-supported",
+    "the thesis is supported",
+    "the investment case is strong",
+    "this means the stock",
+    "therefore the stock",
 })
 
 # ── Causal language scoring modifiers (Refinement 4) ──────────────────────────
