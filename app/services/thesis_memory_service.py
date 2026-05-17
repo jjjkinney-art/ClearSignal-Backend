@@ -168,6 +168,9 @@ def snapshot_from_thesis(thesis: InvestmentThesis) -> ThesisSnapshot:
         what_changed         = list(thesis.what_changed or []),
         signal_hash          = _signal_hash(top_signals),
         risk_hash            = _risk_hash(top_risks),
+        dominant_dimension   = getattr(thesis, "dominant_dimension", "") or "",
+        core_debate          = getattr(thesis, "core_debate", "") or "",
+        core_market_debate   = getattr(thesis, "core_market_debate", "") or "",
     )
 
 
@@ -284,7 +287,7 @@ def compare_thesis_snapshots(
     if not what_changed:
         what_changed.append("No significant changes detected since prior snapshot.")
 
-    return ThesisDiff(
+    base_diff = ThesisDiff(
         what_changed         = what_changed,
         thesis_trend         = thesis_trend,
         change_drivers       = change_drivers,
@@ -300,6 +303,9 @@ def compare_thesis_snapshots(
         previous_snapshot_id = previous.snapshot_id,
         current_snapshot_id  = current.snapshot_id,
     )
+    # Classify extended drift state (7-state taxonomy)
+    base_diff.drift_state = _classify_drift_state(base_diff, previous, current)
+    return base_diff
 
 
 def _classify_thesis_trend(
@@ -381,6 +387,142 @@ def _compute_severity(
     return "low"
 
 
+def _classify_drift_state(
+    diff: ThesisDiff,
+    prev: ThesisSnapshot,
+    curr: ThesisSnapshot,
+) -> str:
+    """Classify thesis evolution into a 7-state drift taxonomy.
+
+    States (first match wins):
+        strengthening — confidence materially up, no new structural risks
+        weakening     — confidence materially down OR new risks + falling conviction
+        bifurcating   — new risks emerged while signals also strengthened (asymmetric)
+        repricing     — dominant dimension shifted without fundamental change
+        transition    — top signal replaced + trend reversal (old thesis breaking)
+        unchanged     — all deltas within noise bounds, no signal changes
+        unclear       — default when state cannot be determined
+    """
+    conf_delta = diff.confidence_change
+    new_risks_count = len(diff.new_risks)
+    sig_added_count = len(diff.strengthening_signals)
+
+    # Strengthening: conviction clearly up, no new downside introduced
+    if conf_delta >= CONFIDENCE_MINOR_THRESHOLD and new_risks_count == 0:
+        return "strengthening"
+
+    # Weakening: conviction materially down
+    if conf_delta <= -CONFIDENCE_MATERIAL_THRESHOLD:
+        return "weakening"
+
+    # Bifurcating: bull AND bear both developing — new risks while signals also gained
+    if new_risks_count >= 1 and sig_added_count >= 1 and abs(conf_delta) < CONFIDENCE_MATERIAL_THRESHOLD:
+        return "bifurcating"
+
+    # Transition: top signal replaced + trend reversal (old thesis breaking, new one forming)
+    if diff.top_signal_replaced and diff.trend_flipped:
+        return "transition"
+
+    # Repricing: dominant dimension changed without material confidence swing
+    prev_dim = getattr(prev, "dominant_dimension", "") or ""
+    curr_dim = getattr(curr, "dominant_dimension", "") or ""
+    if prev_dim and curr_dim and prev_dim != curr_dim and abs(conf_delta) < CONFIDENCE_MATERIAL_THRESHOLD:
+        return "repricing"
+
+    # Unchanged: all within noise bounds
+    if (
+        abs(conf_delta) < CONFIDENCE_MINOR_THRESHOLD
+        and new_risks_count == 0
+        and not diff.top_signal_replaced
+        and sig_added_count == 0
+    ):
+        return "unchanged"
+
+    # Weakening (secondary): new risks + any negative delta
+    if new_risks_count >= NEW_STRUCTURAL_RISK_COUNT and conf_delta < 0:
+        return "weakening"
+
+    return "unclear"
+
+
+def build_pm_change_narrative(
+    diff: ThesisDiff,
+    prev: ThesisSnapshot,
+    curr: ThesisSnapshot,
+) -> str:
+    """Generate a PM-quality single-sentence narrative of what changed.
+
+    Uses diff dimensions + snapshot context to produce mechanism-first language.
+    NEVER references internal scoring, agent names, or percentages.
+
+    Design invariant: returns a single sentence ending in '.'.
+    """
+    drift = _classify_drift_state(diff, prev, curr)
+    conf_delta = diff.confidence_change
+    prev_dim = getattr(prev, "dominant_dimension", "") or ""
+    curr_dim = getattr(curr, "dominant_dimension", "") or ""
+
+    # ── Dimension shift → repricing narrative ────────────────────────────────
+    if drift == "repricing" and prev_dim and curr_dim and prev_dim != curr_dim:
+        return (
+            f"The debate shifted from {prev_dim.replace('_', ' ')} toward "
+            f"{curr_dim.replace('_', ' ')} — the original setup no longer frames the risk."
+        )
+
+    # ── Transition: old thesis breaking ─────────────────────────────────────
+    if drift == "transition":
+        return (
+            "The original thesis mechanism is weakening before a new one is confirmed — "
+            "the setup is in transition."
+        )
+
+    # ── Bifurcating: both bull and bear developing ───────────────────────────
+    if drift == "bifurcating":
+        if diff.new_risks:
+            risk_label = diff.new_risks[0].split(":")[0].strip()
+            return f"The bull/bear asymmetry is widening — {risk_label} moved into the bear case while the upside catalyst remains intact."
+        return "Bull/bear asymmetry is widening — both the upside case and the downside risk are developing simultaneously."
+
+    # ── Trend flip ───────────────────────────────────────────────────────────
+    if diff.trend_flipped:
+        if conf_delta < 0:
+            return "The burden shifted — the setup that supported the original thesis is no longer intact."
+        return "The setup improved materially — the prior overhang has cleared."
+
+    # ── Confidence collapse ───────────────────────────────────────────────────
+    if conf_delta <= -CONFIDENCE_COLLAPSE_THRESHOLD:
+        if diff.new_risks:
+            return f"The original assumption no longer holds — {diff.new_risks[0].split(':')[0].strip()} moved to the center of the bear case."
+        return "The original thesis mechanism is weakening — conviction collapsed on the current evidence."
+
+    # ── Thesis weakened ───────────────────────────────────────────────────────
+    if drift == "weakening":
+        if diff.new_risks and curr_dim:
+            return f"{curr_dim.replace('_', ' ').title()} pressure increased — {diff.new_risks[0].split(':')[0].strip()} is now the primary constraint."
+        if diff.new_risks:
+            return f"The risk profile shifted — {diff.new_risks[0].split(':')[0].strip()} emerged as a new structural concern."
+        if curr_dim == "macro":
+            return "Macro conditions now conflict with the original setup — rate and growth assumptions need revisiting."
+        return "Valuation support weakened against the current macro and risk profile."
+
+    # ── Thesis strengthened ───────────────────────────────────────────────────
+    if drift == "strengthening":
+        if diff.strengthening_signals:
+            return f"The setup improved — {diff.strengthening_signals[0].split(':')[0].strip()} added durability to the thesis."
+        return "The core thesis mechanism held — conviction improved as the evidence picture clarified."
+
+    # ── New structural risk (no broad trend shift) ────────────────────────────
+    if diff.new_risks and not drift == "strengthening":
+        return f"{diff.new_risks[0].split(':')[0].strip()} moved into the risk profile — the market still needs to price this."
+
+    # ── Top signal replaced ───────────────────────────────────────────────────
+    if diff.top_signal_replaced:
+        return "The primary thesis driver rotated — the original signal no longer leads the investment case."
+
+    # ── Stable / unchanged ────────────────────────────────────────────────────
+    return "No material thesis change — the core debate and positioning remain intact."
+
+
 # ---------------------------------------------------------------------------
 # Phase 6: detect_material_change
 # ---------------------------------------------------------------------------
@@ -446,17 +588,29 @@ def _classify_change_type(diff: ThesisDiff) -> str:
 
 
 def _build_event_summary(change_type: str, diff: ThesisDiff, ticker: str) -> str:
-    """Build a concise one-sentence summary for a MaterialChangeEvent."""
+    """Build a PM-quality one-sentence alert summary for a MaterialChangeEvent.
+
+    Uses mechanism-first language. No internal scoring references, no agent names.
+    """
+    top_new_risk = diff.new_risks[0].split(":")[0].strip() if diff.new_risks else ""
+
     _TEMPLATES: Dict[str, str] = {
-        "confidence_collapse":  f"{ticker}: conviction collapsed ({diff.confidence_change*100:+.0f}pp)",
-        "thesis_weakened":      f"{ticker}: thesis weakened ({diff.confidence_change*100:+.0f}pp confidence)",
-        "thesis_strengthened":  f"{ticker}: thesis strengthened ({diff.confidence_change*100:+.0f}pp confidence)",
-        "trend_flip":           f"{ticker}: trend reversed to {diff.thesis_trend}",
-        "new_structural_risk":  f"{ticker}: new structural risk — {diff.new_risks[0] if diff.new_risks else 'risk surfaced'}",
-        "top_signal_replaced":  f"{ticker}: primary signal replaced",
-        "stable":               f"{ticker}: no material change detected",
+        "confidence_collapse":
+            f"{ticker}: The original thesis mechanism is weakening — conviction dropped sharply on the current evidence.",
+        "thesis_weakened":
+            f"{ticker}: Valuation support weakened — the risk/reward has narrowed on the current setup.",
+        "thesis_strengthened":
+            f"{ticker}: The setup improved — the core thesis mechanism is holding and conviction increased.",
+        "trend_flip":
+            f"{ticker}: The burden shifted — the thesis trend reversed to {diff.thesis_trend}.",
+        "new_structural_risk":
+            f"{ticker}: {top_new_risk + ' moved into the primary bear case.' if top_new_risk else 'A new structural risk entered the thesis.'}",
+        "top_signal_replaced":
+            f"{ticker}: The primary thesis driver rotated — the leading investment signal changed.",
+        "stable":
+            f"{ticker}: No material thesis change — the core debate remains intact.",
     }
-    return _TEMPLATES.get(change_type, f"{ticker}: thesis change detected")
+    return _TEMPLATES.get(change_type, f"{ticker}: Thesis change detected — review the updated analysis.")
 
 
 # ---------------------------------------------------------------------------

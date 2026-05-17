@@ -399,6 +399,7 @@ def _build_synthesis_prompt(
     profile: Optional[CompanyKnowledgeProfile] = None,
     original_user_question: Optional[str] = None,
     ranked: Optional[RankedSignalSet] = None,
+    prior_snapshot=None,  # Optional[ThesisSnapshot] — avoid circular import
 ) -> str:
     # Plain-text agent summaries — NO markdown headings to avoid bleeding into output
     agent_summaries = "\n\n".join([
@@ -475,6 +476,44 @@ def _build_synthesis_prompt(
     else:
         conf_lang_tier = "low conviction | genuinely uncertain | hard to call"
 
+    # Build historical reasoning block (injected when a prior thesis snapshot exists)
+    if prior_snapshot is not None:
+        prev_confidence = getattr(prior_snapshot, "confidence_score", 0.0) or 0.0
+        prev_thesis     = getattr(prior_snapshot, "one_sentence_thesis", "") or ""
+        prev_bull       = getattr(prior_snapshot, "bull_thesis", "") or ""
+        prev_conclusion = getattr(prior_snapshot, "conclusion", "") or ""
+        prev_debate     = getattr(prior_snapshot, "core_debate", "") or ""
+        prev_risks_txt  = "; ".join((getattr(prior_snapshot, "key_risks_text", []) or [])[:3])
+        prev_ts         = (getattr(prior_snapshot, "timestamp", "") or "prior analysis")[:10]
+        historical_reasoning_block = (
+            f"\nHISTORICAL CONTEXT — PRIOR THESIS (as of {prev_ts}):\n"
+            f"Prior thesis: {prev_thesis or prev_conclusion[:120] or '(none recorded)'}\n"
+            f"Prior bull thesis (first sentence): {prev_bull[:150] or '(none)'}\n"
+            f"Prior core debate: {prev_debate or '(none)'}\n"
+            f"Prior confidence: {prev_confidence:.0%}\n"
+            f"Prior top risks: {prev_risks_txt or '(none)'}\n\n"
+            f"HISTORICAL REASONING — MANDATORY:\n"
+            f"You have access to the prior thesis. You MUST reason over what changed.\n"
+            f"In your conclusion and confidence_reasoning, address:\n"
+            f"  1. Whether the operating story changed (new information) or the market repriced "
+            f"the same thesis (rate/macro shift without fundamental change).\n"
+            f"  2. Whether the core debate evolved, narrowed, or intensified.\n"
+            f"  3. Whether the original thesis mechanism still holds, weakened, or broke.\n"
+            f"GOOD HISTORICAL LANGUAGE (use these patterns):\n"
+            f'  "The operating story is largely unchanged — the repricing came from rates."\n'
+            f'  "The thesis weakened because the original margin assumption no longer holds."\n'
+            f'  "The debate narrowed from [X] toward [Y] — the market resolved the prior ambiguity."\n'
+            f'  "The burden shifted — [prior mechanism] is no longer the dominant driver."\n'
+            f'  "Consensus already adjusted for [prior bear case]. The residual risk is [new concern]."\n'
+            f"BANNED HISTORICAL LANGUAGE:\n"
+            f'  "confidence decreased" → state what changed and why\n'
+            f'  "signals diverged" → name which forces diverged and what that means\n'
+            f'  "analysis changed" → state the specific mechanism that moved\n'
+            f'  "thesis updated" → explain the actual analytical shift\n\n'
+        )
+    else:
+        historical_reasoning_block = ""
+
     # Build the question-anchor block (injected only when a question is present)
     if original_user_question:
         question_anchor_block = (
@@ -510,7 +549,7 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-{question_anchor_block}{ranked_signals_section}
+{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
 SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
@@ -1226,6 +1265,7 @@ def synthesize_thesis(
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
     original_user_question: Optional[str] = None,
+    prior_snapshot=None,  # Optional[ThesisSnapshot] — avoids circular import at module level
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -1284,10 +1324,12 @@ def synthesize_thesis(
         logger.warning("[thesis_synthesizer] signal_ranker failed: %r — continuing", exc)
         ranked = None
 
+    dominant_dim_for_thesis = _detect_dominant_dimension(macro, risk, valuation, ranked)
     prompt = _build_synthesis_prompt(
         company, valuation, macro, risk, market, quality, evidence, profile,
         original_user_question=original_user_question,
         ranked=ranked,
+        prior_snapshot=prior_snapshot,
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
@@ -1312,6 +1354,9 @@ def synthesize_thesis(
     # Guard: core_market_debate must be non-empty; fall back to core_debate if LLM omitted it
     if not getattr(thesis, "core_market_debate", ""):
         thesis.core_market_debate = getattr(thesis, "core_debate", "")
+
+    # Stamp dominant analytical dimension (deterministic, pre-LLM)
+    thesis.dominant_dimension = dominant_dim_for_thesis
 
     # ── R1: Deterministic confidence realism cap ──────────────────────────────
     # Applied immediately after LLM output so the post-synthesis chain sees

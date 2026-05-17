@@ -49,6 +49,7 @@ from .thesis_memory_service import (
     compare_thesis_snapshots,
     detect_material_change,
     snapshot_from_thesis,
+    build_pm_change_narrative,
 )
 from .timeline_store import JsonFileTimelineStore, TimelineEntry
 
@@ -275,6 +276,9 @@ class WatchlistService:
                 or ""
             )[:80]
 
+        rec["dominant_dimension"] = getattr(snapshot, "dominant_dimension", "") or ""
+        rec["core_debate"] = (getattr(snapshot, "core_debate", "") or "")[:200]
+
         index[t] = rec
         self._save_index(index)
         return snapshot.snapshot_id
@@ -430,6 +434,17 @@ class WatchlistService:
                 "WatchlistService: material change for %s — %s (%s)",
                 ticker, event.change_type, event.severity,
             )
+
+        # Generate PM-quality change narrative
+        pm_narrative = build_pm_change_narrative(diff, previous_snap, current_snap)
+        drift_state  = getattr(diff, "drift_state", "unclear") or "unclear"
+
+        # Update watchlist entry with thesis intelligence
+        index = self._load_index()
+        if ticker in index:
+            index[ticker]["what_changed_summary"] = pm_narrative
+            index[ticker]["drift_state"]          = drift_state
+            self._save_index(index)
 
         return event
 

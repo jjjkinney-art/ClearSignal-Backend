@@ -343,3 +343,55 @@ async def acknowledge_change(ticker: str) -> dict:
     """Mark the material-change alert as reviewed for *ticker*."""
     watchlist_service.clear_material_change_flag(ticker)
     return {"ticker": ticker.upper(), "acknowledged": True}
+
+
+@router.get(
+    "/alerts",
+    response_model=list,
+    summary="Get real-time thesis alerts from material change events",
+    tags=["watchlist"],
+)
+async def get_alerts(
+    limit: int = Query(default=30, ge=1, le=200, description="Max alerts to return"),
+) -> list:
+    """Return material change events formatted as analyst alerts, newest-first.
+
+    Each alert includes: ticker, headline, summary, severity, timestamp, change_type.
+    Backed by the persistent MaterialChangeEvent store — only returns real events
+    from actual thesis analyses. Returns empty list when no events exist.
+    """
+    events = watchlist_service.get_material_changes(limit=limit)
+    alerts = []
+    for ev in events:
+        # Format timestamp for display
+        try:
+            from datetime import datetime, timezone
+            dt = datetime.fromisoformat(ev.timestamp.replace("Z", "+00:00"))
+            ts_display = dt.strftime("%b %d · %H:%M")
+        except Exception:
+            ts_display = ev.timestamp[:16] if ev.timestamp else "—"
+
+        alerts.append({
+            "id":          ev.event_id,
+            "ticker":      ev.ticker,
+            "headline":    ev.summary,
+            "summary":     _build_alert_body(ev),
+            "severity":    ev.severity,
+            "timestamp":   ts_display,
+            "change_type": ev.change_type,
+        })
+    return alerts
+
+
+def _build_alert_body(ev) -> str:
+    """Build a contextual alert body from a MaterialChangeEvent."""
+    parts = []
+    if ev.drivers:
+        # First driver as context
+        parts.append(ev.drivers[0])
+    if ev.confidence_change and abs(ev.confidence_change) >= 0.04:
+        direction = "improved" if ev.confidence_change > 0 else "weakened"
+        parts.append(f"Conviction {direction} since the prior analysis.")
+    if not parts:
+        parts.append("Review the updated thesis for full context.")
+    return " ".join(parts)

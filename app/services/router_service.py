@@ -62,6 +62,7 @@ from ..investment_agents import (
     run_quality_agent,
 )
 from .thesis_synthesizer import synthesize_thesis
+from .watchlist_service import watchlist_service
 
 # Set up a module-level logger for structured logging.  This logger will
 # emit JSON-formatted messages about routing decisions.  The FastAPI
@@ -728,6 +729,13 @@ def _run_investment_pipeline(
     print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: agents_run={agents_run}")
 
     # ── Thesis synthesis ──────────────────────────────────────────────────────
+    # Load prior snapshot for historical reasoning (fire-and-forget on failure)
+    prior_snapshot = None
+    try:
+        prior_snapshot = watchlist_service.get_latest_snapshot(ticker)
+    except Exception as exc:
+        logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
+
     try:
         thesis = synthesize_thesis(
             company=company,
@@ -739,6 +747,7 @@ def _run_investment_pipeline(
             evidence=evidence,
             profile=profile,
             original_user_question=question,
+            prior_snapshot=prior_snapshot,
         )
     except Exception as exc:
         logger.warning("[router] synthesize_thesis failed for %s: %r", ticker, exc)
@@ -753,6 +762,14 @@ def _run_investment_pipeline(
             key_drivers=[],
             key_risks=[],
         )
+
+    # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
+    # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
+    # Fire-and-forget: failure here must NEVER fail the API response.
+    try:
+        watchlist_service.process_new_thesis(thesis)
+    except Exception as exc:
+        logger.warning("[router] process_new_thesis failed for %s: %r", ticker, exc)
 
     try:
         thesis_dict = thesis.model_dump()

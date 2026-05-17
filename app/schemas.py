@@ -962,6 +962,10 @@ class InvestmentThesis(BaseModel):
             "Example: 'Is the market underestimating rate duration risk for Apple?'"
         ),
     )
+    dominant_dimension: str = Field(
+        default="",
+        description="Dominant analytical frame for this thesis (macro/valuation/regulatory/operational/capital_allocation/competitive/behavioral)",
+    )
 
 
 class AlertCondition(BaseModel):
@@ -1198,6 +1202,15 @@ class ThesisSnapshot(BaseModel):
         description="SHA-256 of sorted top_risks descriptions — changes when risk set moves",
     )
 
+    # ── Analytical frame ──────────────────────────────────────────────────────
+    dominant_dimension: str = Field(default="", description="Dominant analytical dimension at snapshot time")
+    core_debate: str = Field(default="", description="Central market debate at snapshot time")
+    core_market_debate: str = Field(default="", description="Live positioning question at snapshot time")
+    drift_state: str = Field(
+        default="",
+        description="strengthening | weakening | unchanged | bifurcating | repricing | transition | unclear",
+    )
+
 
 class WatchlistEntry(BaseModel):
     """A tracked ticker in the persistent watchlist.
@@ -1248,6 +1261,24 @@ class WatchlistEntry(BaseModel):
         description="Label of the #1 ranked risk in the most recent snapshot",
     )
     notes: str = Field(default="", description="Optional analyst notes")
+
+    # ── Thesis intelligence (denormalised for fast rendering) ────────────────
+    what_changed_summary: str = Field(
+        default="",
+        description="PM-language summary of what changed since the prior thesis",
+    )
+    drift_state: str = Field(
+        default="",
+        description="strengthening | weakening | unchanged | bifurcating | repricing | transition | unclear",
+    )
+    dominant_dimension: str = Field(
+        default="",
+        description="Dominant analytical frame from the most recent snapshot",
+    )
+    core_debate: str = Field(
+        default="",
+        description="Central market debate from the most recent snapshot",
+    )
 
 
 class ThesisDiff(BaseModel):
@@ -1315,6 +1346,10 @@ class ThesisDiff(BaseModel):
     trend_flipped: bool = Field(
         default=False,
         description="True when thesis_trend reversed vs the previous snapshot's trend",
+    )
+    drift_state: str = Field(
+        default="unclear",
+        description="Extended thesis drift classification: strengthening | weakening | unchanged | bifurcating | repricing | transition | unclear",
     )
 
     # ── Snapshot references ───────────────────────────────────────────────────
