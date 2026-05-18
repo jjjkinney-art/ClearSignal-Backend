@@ -50,7 +50,7 @@ from .general_finance_evidence import _detect_topics, normalize_macro_query as _
 from ..agents import _YIELD_FALLBACK_ANSWER, _GENERIC_EVIDENCE_FALLBACK
 
 # ── Company detection + investment pipeline imports ───────────────────────────
-from .company_detection import detect_company
+from .company_detection import detect_company, resolve_entity
 from .company_knowledge import get_profile_for_company
 from .evidence_partitioner import partition_evidence
 from .providers import retrieve_market_evidence
@@ -818,15 +818,40 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     # Run BEFORE the is_general gate so that questions like
     # "How would higher rates affect Apple stock?" route correctly even when
     # the frontend sends an empty company_name field.
+    #
+    # Uses resolve_entity() for structured confidence + observability:
+    #   • high confidence (>= 0.72) → invest pipeline
+    #   • not found but has candidates → graceful "Did you mean?" response
+    #   • not found, no candidates → fall through to general finance
     _text_detected_company: Optional[CompanyContext] = None
+    _entity_resolution = None
     if not request.company_name.strip():
         # Only run text detection when the frontend did not supply a company.
-        # If a company_name was explicitly supplied, the existing pipeline below
-        # handles it correctly without text detection.
         try:
-            _text_detected_company = detect_company(request.question)
+            _entity_resolution = resolve_entity(request.question)
+            logger.info(
+                json.dumps({
+                    "event": "entity_resolution",
+                    "raw_query": request.question[:120],
+                    "entity": _entity_resolution.context.ticker if _entity_resolution.context else None,
+                    "confidence": _entity_resolution.confidence,
+                    "method": _entity_resolution.method,
+                    "matched_text": _entity_resolution.matched_text,
+                    "candidates": [t for t, _, _ in (_entity_resolution.candidates or [])],
+                })
+            )
+            if _entity_resolution.context is not None and _entity_resolution.confidence >= 0.72:
+                _text_detected_company = _entity_resolution.context
+                if _entity_resolution.confidence < 0.90:
+                    logger.warning(
+                        "[router] medium-confidence entity resolution: %s (%.2f via %s) "
+                        "— proceeding with investment pipeline",
+                        _entity_resolution.context.ticker,
+                        _entity_resolution.confidence,
+                        _entity_resolution.method,
+                    )
         except Exception as _det_exc:
-            logger.warning("[router] company detection failed: %r", _det_exc)
+            logger.warning("[router] entity resolution failed: %r", _det_exc)
             _text_detected_company = None
 
     _detected_ticker = (
@@ -834,29 +859,25 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     )
     _has_intent = _has_investment_intent(request.question)
 
-    print(
-        f"[DIAG] COMPANY ROUTE CHECK "
-        f"frontend_company={request.company_name!r} "
-        f"detected_company={_text_detected_company.ticker if _text_detected_company else None!r} "
-        f"has_investment_intent={_has_intent}"
+    logger.debug(
+        "[router] route_check frontend_company=%r detected=%r conf=%.2f has_intent=%s",
+        request.company_name,
+        _detected_ticker,
+        _entity_resolution.confidence if _entity_resolution else 0.0,
+        _has_intent,
     )
 
     # Route to full investment pipeline when a company is detected from question
-    # text AND the question has investment intent.  Macro-only questions
-    # ("Why are Treasury yields rising?") will NOT match _has_investment_intent
-    # when they contain no company name, so they fall through to general finance.
+    # text AND the question has investment intent.
     if _text_detected_company is not None and _has_intent:
         request_id = str(uuid.uuid4())
-        print(
-            f"[DIAG] COMPANY ROUTE CHECK "
-            f"selected_route=investment_thesis "
-            f"agents_run=valuation,macro,risk,market,quality,thesis_synthesizer"
-        )
         logger.info(
             json.dumps({
                 "event": "company_route_detected",
                 "request_id": request_id,
                 "detected_ticker": _text_detected_company.ticker,
+                "resolution_method": _entity_resolution.method if _entity_resolution else "unknown",
+                "resolution_confidence": _entity_resolution.confidence if _entity_resolution else 1.0,
                 "question": request.question,
             })
         )
@@ -864,6 +885,49 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             company=_text_detected_company,
             question=request.question,
             request_id=request_id,
+        )
+
+    # ── Graceful "Did you mean?" fallback ────────────────────────────────────
+    # When entity resolution failed (confidence 0.0) but we have candidate
+    # matches, return a structured suggestion response instead of falling
+    # silently to a generic general-finance answer.
+    if (
+        _entity_resolution is not None
+        and _entity_resolution.context is None
+        and _entity_resolution.candidates
+        and _has_intent
+    ):
+        request_id = str(uuid.uuid4())
+        candidates = _entity_resolution.candidates[:3]
+        suggestion_text = " or ".join(
+            f"{name} ({ticker})" for ticker, name, _ in candidates
+        )
+        logger.info(
+            json.dumps({
+                "event": "entity_resolution_suggestions",
+                "request_id": request_id,
+                "question": request.question,
+                "suggestions": [(t, n) for t, n, _ in candidates],
+            })
+        )
+        from ..schemas import GeneralFinanceAnswer as _GFA
+        did_you_mean = _GFA(
+            answer=(
+                f"The company name wasn't recognised with high confidence. "
+                f"Did you mean {suggestion_text}? "
+                f"Try entering the exact company name or ticker symbol."
+            ),
+            bullets=[
+                f"{name} — ticker: {ticker}" for ticker, name, _ in candidates
+            ],
+            caveats=[],
+        )
+        return AgentAnswerResponse(
+            company=request.company_name,
+            request_id=request_id,
+            agents_used=["entity_resolution_fallback"],
+            answer={"general": did_you_mean.model_dump()},
+            routing={"intent": "company_analysis", "pipeline": "entity_suggestion"},
         )
 
     # ── General finance fast-path ─────────────────────────────────────────────
