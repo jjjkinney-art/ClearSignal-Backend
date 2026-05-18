@@ -841,8 +841,9 @@ class TestProcessNewThesis:
     def test_first_thesis_no_event(self, tmp_watchlist_service):
         svc = tmp_watchlist_service
         thesis = _make_thesis(ticker="AAPL", confidence=0.70)
-        event = svc.process_new_thesis(thesis)
+        event, diff = svc.process_new_thesis(thesis)
         assert event is None  # First snapshot — no diff possible
+        assert diff is None
 
     def test_auto_adds_ticker(self, tmp_watchlist_service):
         svc = tmp_watchlist_service
@@ -863,7 +864,7 @@ class TestProcessNewThesis:
         svc.process_new_thesis(thesis1)
         # Second thesis: collapsed confidence
         thesis2 = _make_thesis(ticker="AAPL", confidence=0.60)
-        event = svc.process_new_thesis(thesis2)
+        event, _diff = svc.process_new_thesis(thesis2)
         assert event is not None
         assert event.severity == "high"
 
@@ -873,7 +874,7 @@ class TestProcessNewThesis:
         thesis1 = _make_thesis(ticker="MSFT", confidence=0.70)
         thesis2 = _make_thesis(ticker="MSFT", confidence=0.71)  # within noise
         svc.process_new_thesis(thesis1)
-        event = svc.process_new_thesis(thesis2)
+        event, _diff = svc.process_new_thesis(thesis2)
         assert event is None
 
     def test_updates_entry_metadata(self, tmp_watchlist_service):
@@ -1092,7 +1093,7 @@ class TestEndToEndPipeline:
                 _signal("China export controls", 0.8),
             ],
         )
-        event = svc.process_new_thesis(t2)
+        event, _diff = svc.process_new_thesis(t2)
         assert event is not None
         assert event.severity == "high"
         assert event.ticker == "NVDA"
@@ -1126,7 +1127,7 @@ class TestEndToEndPipeline:
             confidence=0.72,
             top_risks=[],
         )
-        event = svc.process_new_thesis(t2)
+        event, _diff = svc.process_new_thesis(t2)
         # Confidence gained 10pp with no new risks — medium or high event
         # (strengthening can produce medium event if above material threshold)
         if event is not None:

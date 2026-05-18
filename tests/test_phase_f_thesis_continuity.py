@@ -537,6 +537,124 @@ class TestRouterWatchlistWiring:
         src = self._read_router()
         assert "prior_snapshot=prior_snapshot" in src
 
+    def test_router_unpacks_diff_tuple(self):
+        """router_service must unpack the (event, diff) tuple from process_new_thesis."""
+        src = self._read_router()
+        # Tuple unpacking: "_change_event, _diff" or similar
+        assert "_diff" in src, "Router must capture the ThesisDiff from process_new_thesis"
+
+    def test_router_backfills_thesis_trend(self):
+        """router_service must write diff.thesis_trend back onto the thesis object."""
+        src = self._read_router()
+        assert "thesis.thesis_trend" in src, "Router must backfill thesis_trend from diff"
+
+    def test_router_backfills_what_changed(self):
+        """router_service must write diff.what_changed back onto the thesis object."""
+        src = self._read_router()
+        assert "thesis.what_changed" in src, "Router must backfill what_changed from diff"
+
+    def test_router_backfills_change_drivers(self):
+        """router_service must write diff.change_drivers back onto the thesis object."""
+        src = self._read_router()
+        assert "thesis.change_drivers" in src, "Router must backfill change_drivers from diff"
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# 8b. WATCHLIST SERVICE — process_new_thesis returns tuple
+# ════════════════════════════════════════════════════════════════════════════
+
+class TestProcessNewThesisTuple:
+    """process_new_thesis() must return (event, diff) tuple — not just event."""
+
+    def test_first_snapshot_returns_none_none(self, tmp_path):
+        """On first snapshot, both elements are None (no prior to diff against)."""
+        from app.services.watchlist_service import WatchlistService
+        svc = WatchlistService(
+            data_dir=str(tmp_path / "wl"),
+            timeline_dir=str(tmp_path / "tl"),
+        )
+        thesis = _make_thesis(ticker="XTEST")
+        result = svc.process_new_thesis(thesis)
+        assert isinstance(result, tuple), "process_new_thesis must return a tuple"
+        event, diff = result
+        assert event is None
+        assert diff is None
+
+    def test_second_snapshot_returns_diff(self, tmp_path):
+        """On second snapshot, diff is a ThesisDiff instance."""
+        from app.services.watchlist_service import WatchlistService
+        svc = WatchlistService(
+            data_dir=str(tmp_path / "wl"),
+            timeline_dir=str(tmp_path / "tl"),
+        )
+        # First snapshot
+        thesis1 = _make_thesis(ticker="XTEST2", confidence=0.70)
+        svc.process_new_thesis(thesis1)
+        # Second snapshot
+        thesis2 = _make_thesis(ticker="XTEST2", confidence=0.82)
+        event, diff = svc.process_new_thesis(thesis2)
+        assert diff is not None, "Second snapshot must return a ThesisDiff"
+        assert hasattr(diff, "thesis_trend")
+        assert hasattr(diff, "what_changed")
+        assert hasattr(diff, "change_drivers")
+
+    def test_second_snapshot_strengthening_trend(self, tmp_path):
+        """Significant confidence increase → thesis_trend is strengthening."""
+        from app.services.watchlist_service import WatchlistService
+        svc = WatchlistService(
+            data_dir=str(tmp_path / "wl"),
+            timeline_dir=str(tmp_path / "tl"),
+        )
+        svc.process_new_thesis(_make_thesis(ticker="XTEST3", confidence=0.60))
+        _, diff = svc.process_new_thesis(_make_thesis(ticker="XTEST3", confidence=0.75))
+        assert diff is not None
+        assert diff.thesis_trend == "strengthening"
+
+    def test_second_snapshot_weakening_trend(self, tmp_path):
+        """Significant confidence drop → thesis_trend is weakening."""
+        from app.services.watchlist_service import WatchlistService
+        svc = WatchlistService(
+            data_dir=str(tmp_path / "wl"),
+            timeline_dir=str(tmp_path / "tl"),
+        )
+        svc.process_new_thesis(_make_thesis(ticker="XTEST4", confidence=0.80))
+        _, diff = svc.process_new_thesis(_make_thesis(ticker="XTEST4", confidence=0.65))
+        assert diff is not None
+        assert diff.thesis_trend == "weakening"
+
+    def test_what_changed_entries_no_pp_language(self, tmp_path):
+        """what_changed list entries must not expose internal 'pp' scoring language."""
+        from app.services.watchlist_service import WatchlistService
+        svc = WatchlistService(
+            data_dir=str(tmp_path / "wl"),
+            timeline_dir=str(tmp_path / "tl"),
+        )
+        svc.process_new_thesis(_make_thesis(ticker="XTEST5", confidence=0.80))
+        _, diff = svc.process_new_thesis(_make_thesis(ticker="XTEST5", confidence=0.62))
+        assert diff is not None
+        for entry in diff.what_changed:
+            assert "pp" not in entry, f"'pp' found in what_changed entry: {entry!r}"
+            assert "%" not in entry, f"'%' found in what_changed entry: {entry!r}"
+
+    def test_thesis_trend_backfill_from_diff(self, tmp_path):
+        """Simulates what router_service does: backfill diff onto thesis object."""
+        from app.services.watchlist_service import WatchlistService
+        from app.schemas import InvestmentThesis
+        svc = WatchlistService(
+            data_dir=str(tmp_path / "wl"),
+            timeline_dir=str(tmp_path / "tl"),
+        )
+        svc.process_new_thesis(_make_thesis(ticker="XTEST6", confidence=0.60))
+        thesis2 = _make_thesis(ticker="XTEST6", confidence=0.76)
+        _, diff = svc.process_new_thesis(thesis2)
+        # Simulate router backfill
+        if diff is not None:
+            thesis2.thesis_trend   = diff.thesis_trend or "unclear"
+            thesis2.what_changed   = list(diff.what_changed or [])
+            thesis2.change_drivers = list(diff.change_drivers or [])
+        assert thesis2.thesis_trend == "strengthening"
+        assert len(thesis2.what_changed) > 0
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # 9. FRONTEND — watchlist store and page source checks

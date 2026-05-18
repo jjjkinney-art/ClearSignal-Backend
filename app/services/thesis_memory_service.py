@@ -202,14 +202,13 @@ def compare_thesis_snapshots(
     # ── 1. Confidence delta ───────────────────────────────────────────────────
     conf_delta = float(current.confidence_score) - float(previous.confidence_score)
     if abs(conf_delta) >= CONFIDENCE_MINOR_THRESHOLD:
-        direction = "improved" if conf_delta > 0 else "weakened"
-        pct       = abs(conf_delta) * 100
+        direction  = "improved" if conf_delta > 0 else "weakened"
+        severity_q = "materially " if abs(conf_delta) >= CONFIDENCE_MATERIAL_THRESHOLD else ""
         what_changed.append(
-            f"Conviction {direction} by {pct:.0f}pp "
-            f"({previous.confidence_score:.0%} → {current.confidence_score:.0%})"
+            f"Thesis conviction {severity_q}{direction} vs prior analysis"
         )
         change_drivers.append(
-            f"Confidence {'increase' if conf_delta > 0 else 'decrease'} of {pct:.0f}pp"
+            f"Conviction {'improvement' if conf_delta > 0 else 'deterioration'}"
         )
 
     # ── 2. Top signal replaced ────────────────────────────────────────────────

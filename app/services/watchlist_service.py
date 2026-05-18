@@ -36,7 +36,7 @@ import logging
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from ..schemas import (
     InvestmentThesis,
@@ -390,18 +390,25 @@ class WatchlistService:
     def process_new_thesis(
         self,
         thesis: InvestmentThesis,
-    ) -> Optional[MaterialChangeEvent]:
+    ) -> Tuple[Optional[MaterialChangeEvent], Optional[ThesisDiff]]:
         """Auto-add ticker, save snapshot, diff, emit MaterialChangeEvent if material.
 
         Call this immediately after generating a new InvestmentThesis.
-        Returns a MaterialChangeEvent when a material change was detected,
-        otherwise None.
+        Returns ``(MaterialChangeEvent | None, ThesisDiff | None)``.
+        The ThesisDiff is ``None`` only on the very first snapshot (no prior to
+        compare against).  Callers should backfill the diff onto the thesis:
+
+            event, diff = watchlist_service.process_new_thesis(thesis)
+            if diff is not None:
+                thesis.thesis_trend   = diff.thesis_trend or "unclear"
+                thesis.what_changed   = list(diff.what_changed or [])
+                thesis.change_drivers = list(diff.change_drivers or [])
 
         Side-effects:
             - Adds ticker to watchlist if not already tracked.
             - Saves snapshot to timeline store.
             - Saves MaterialChangeEvent to timeline store if material.
-            - Updates watchlist entry metadata.
+            - Updates watchlist entry metadata (what_changed_summary, drift_state).
         """
         ticker = _ticker_upper(thesis.ticker)
 
@@ -421,7 +428,7 @@ class WatchlistService:
         if previous_snap is None:
             # First snapshot — no diff possible
             logger.info("WatchlistService.process_new_thesis: first snapshot for %s", ticker)
-            return None
+            return None, None
 
         # Compute diff
         diff = compare_thesis_snapshots(previous_snap, current_snap)
@@ -446,7 +453,7 @@ class WatchlistService:
             index[ticker]["drift_state"]          = drift_state
             self._save_index(index)
 
-        return event
+        return event, diff
 
     # ------------------------------------------------------------------
     # Diff access (Phase 5 / Phase 8 timeline)

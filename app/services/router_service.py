@@ -765,9 +765,15 @@ def _run_investment_pipeline(
 
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
+    # Backfill diff results onto thesis so the API response carries thesis_trend,
+    # what_changed, and change_drivers for the frontend "What Changed" section.
     # Fire-and-forget: failure here must NEVER fail the API response.
     try:
-        watchlist_service.process_new_thesis(thesis)
+        _change_event, _diff = watchlist_service.process_new_thesis(thesis)
+        if _diff is not None:
+            thesis.thesis_trend   = _diff.thesis_trend or "unclear"
+            thesis.what_changed   = list(_diff.what_changed or [])
+            thesis.change_drivers = list(_diff.change_drivers or [])
     except Exception as exc:
         logger.warning("[router] process_new_thesis failed for %s: %r", ticker, exc)
 

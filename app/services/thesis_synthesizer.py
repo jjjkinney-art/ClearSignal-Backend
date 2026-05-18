@@ -487,29 +487,34 @@ def _build_synthesis_prompt(
         prev_ts         = (getattr(prior_snapshot, "timestamp", "") or "prior analysis")[:10]
         historical_reasoning_block = (
             f"\nHISTORICAL CONTEXT — PRIOR THESIS (as of {prev_ts}):\n"
-            f"Prior thesis: {prev_thesis or prev_conclusion[:120] or '(none recorded)'}\n"
+            f"Prior one-sentence thesis: {prev_thesis or prev_conclusion[:120] or '(none recorded)'}\n"
             f"Prior bull thesis (first sentence): {prev_bull[:150] or '(none)'}\n"
             f"Prior core debate: {prev_debate or '(none)'}\n"
-            f"Prior confidence: {prev_confidence:.0%}\n"
             f"Prior top risks: {prev_risks_txt or '(none)'}\n\n"
             f"HISTORICAL REASONING — MANDATORY:\n"
-            f"You have access to the prior thesis. You MUST reason over what changed.\n"
-            f"In your conclusion and confidence_reasoning, address:\n"
-            f"  1. Whether the operating story changed (new information) or the market repriced "
-            f"the same thesis (rate/macro shift without fundamental change).\n"
-            f"  2. Whether the core debate evolved, narrowed, or intensified.\n"
-            f"  3. Whether the original thesis mechanism still holds, weakened, or broke.\n"
+            f"You have a prior thesis above. Compare it EXPLICITLY to the current evidence.\n"
+            f"You MUST do all three of the following in your conclusion and confidence_reasoning:\n"
+            f"  1. STATE whether the operating story changed (new fundamentals) or the market merely\n"
+            f"     repriced the same thesis (rate/macro shift, sentiment, multiple compression).\n"
+            f"     Be specific: 'The operating story is unchanged — the move came from rates, not earnings.'\n"
+            f"  2. STATE whether the core debate evolved, narrowed, or intensified vs the prior view.\n"
+            f"     Name what the prior debate was and what it is now.\n"
+            f"  3. STATE whether the original bull thesis mechanism still holds, weakened, or broke.\n"
+            f"     Quote or paraphrase the prior bull thesis and explain what happened to it.\n\n"
             f"GOOD HISTORICAL LANGUAGE (use these patterns):\n"
-            f'  "The operating story is largely unchanged — the repricing came from rates."\n'
-            f'  "The thesis weakened because the original margin assumption no longer holds."\n'
-            f'  "The debate narrowed from [X] toward [Y] — the market resolved the prior ambiguity."\n'
+            f'  "The operating story is largely unchanged — the repricing came from rates, not fundamentals."\n'
+            f'  "The prior bull thesis on [mechanism] held — [what confirmed it]."\n'
+            f'  "The original margin assumption no longer holds — [what broke it]."\n'
+            f'  "The debate narrowed from [prior X] toward [current Y] — the market resolved the prior ambiguity."\n'
             f'  "The burden shifted — [prior mechanism] is no longer the dominant driver."\n'
             f'  "Consensus already adjusted for [prior bear case]. The residual risk is [new concern]."\n'
+            f'  "The setup is repricing, not deteriorating — the underlying thesis is intact."\n\n'
             f"BANNED HISTORICAL LANGUAGE:\n"
             f'  "confidence decreased" → state what changed and why\n'
             f'  "signals diverged" → name which forces diverged and what that means\n'
             f'  "analysis changed" → state the specific mechanism that moved\n'
-            f'  "thesis updated" → explain the actual analytical shift\n\n'
+            f'  "thesis updated" → explain the actual analytical shift\n'
+            f'  DO NOT say "No prior thesis available" — you have the prior thesis above.\n\n'
         )
     else:
         historical_reasoning_block = ""
