@@ -286,6 +286,25 @@ def compare_thesis_snapshots(
     if not what_changed:
         what_changed.append("No significant changes detected since prior snapshot.")
 
+    # ── 8. Core debate shift detection ────────────────────────────────────────
+    # Compare core_debate text between snapshots using difflib ratio.
+    # Ratio < 0.50 → the fulcrum variable changed materially (debate shifted).
+    import difflib as _difflib
+    prev_debate = (getattr(previous, "core_debate", "") or "").strip().lower()
+    curr_debate = (getattr(current, "core_debate", "") or "").strip().lower()
+    core_debate_shifted = False
+    if prev_debate and curr_debate:
+        debate_ratio = _difflib.SequenceMatcher(None, prev_debate, curr_debate).ratio()
+        if debate_ratio < 0.50:
+            core_debate_shifted = True
+            what_changed.append(
+                f"Core debate shifted: '{previous.core_debate[:80]}' → '{current.core_debate[:80]}'"
+            )
+            change_drivers.append("Core market debate changed")
+            if not material_shift:
+                material_shift = True
+                severity = max(severity, "medium") if severity != "high" else severity
+
     base_diff = ThesisDiff(
         what_changed         = what_changed,
         thesis_trend         = thesis_trend,
@@ -301,6 +320,9 @@ def compare_thesis_snapshots(
         trend_flipped        = trend_flipped,
         previous_snapshot_id = previous.snapshot_id,
         current_snapshot_id  = current.snapshot_id,
+        core_debate_shifted  = core_debate_shifted,
+        prev_core_debate     = previous.core_debate if core_debate_shifted else "",
+        curr_core_debate     = current.core_debate if core_debate_shifted else "",
     )
     # Classify extended drift state (7-state taxonomy)
     base_diff.drift_state = _classify_drift_state(base_diff, previous, current)
@@ -499,6 +521,25 @@ def build_pm_change_narrative(
     prev_dim = getattr(prev, "dominant_dimension", "") or ""
     curr_dim = getattr(curr, "dominant_dimension", "") or ""
 
+    # ── Core debate shifted ───────────────────────────────────────────────────
+    # Check FIRST: a debate shift is the most analytically significant event.
+    # It means the fulcrum variable changed — not just the risk weighting.
+    if getattr(diff, "core_debate_shifted", False):
+        prev_debate = getattr(diff, "prev_core_debate", "") or prev_dim.replace("_", " ")
+        curr_debate = getattr(diff, "curr_core_debate", "") or curr_dim.replace("_", " ")
+        if prev_debate and curr_debate:
+            # Compress to 50 chars each
+            prev_short = prev_debate[:50].rstrip("?. ")
+            curr_short = curr_debate[:50].rstrip("?. ")
+            return (
+                f"The debate shifted from '{prev_short}' toward '{curr_short}' — "
+                f"the fulcrum variable changed, not just the risk weighting."
+            )
+        return (
+            "The core market debate changed — what the market is pricing is no longer "
+            "the same question as the prior analysis."
+        )
+
     # ── Market repriced, thesis intact ───────────────────────────────────────
     # Check this FIRST — repricing is the most common case and should produce
     # explicit "operating story unchanged" language, not generic weakening language.
@@ -643,15 +684,20 @@ def detect_material_change(
         mat_score += min(len(diff.new_risks) * 0.12, 0.25)
     if diff.top_signal_replaced:
         mat_score += 0.15
+    if getattr(diff, "core_debate_shifted", False):
+        mat_score += 0.25  # debate shift is analytically significant
     mat_score = min(mat_score, 1.0)
 
     # ── Classify change_category (human-facing) ────────────────────────────
     is_repricing = _is_market_repricing(diff, prev, current)
     is_broke = _is_thesis_broke(diff)
+    is_debate_shift = getattr(diff, "core_debate_shifted", False)
     if is_broke and diff.trend_flipped:
         change_category = "thesis_broke"
     elif is_broke:
         change_category = "thesis_broke"
+    elif is_debate_shift:
+        change_category = "core_debate_shift"
     elif is_repricing and diff.confidence_change >= CONFIDENCE_MINOR_THRESHOLD:
         change_category = "thesis_strengthened"
     elif is_repricing:
@@ -693,6 +739,8 @@ def _classify_change_type(diff: ThesisDiff) -> str:
         return "thesis_weakened"
     if diff.confidence_change >= CONFIDENCE_MATERIAL_THRESHOLD:
         return "thesis_strengthened"
+    if getattr(diff, "core_debate_shifted", False):
+        return "core_debate_shift"
     if diff.new_risks:
         return "new_structural_risk"
     if diff.top_signal_replaced:
@@ -711,6 +759,21 @@ def _build_event_summary(change_type: str, diff: ThesisDiff, ticker: str) -> str
     """
     top_new_risk = diff.new_risks[0].split(":")[0].strip() if diff.new_risks else ""
 
+    # Build debate-shift summary from prev/curr debate text when available
+    prev_debate = getattr(diff, "prev_core_debate", "") or ""
+    curr_debate = getattr(diff, "curr_core_debate", "") or ""
+    if prev_debate and curr_debate:
+        # Compress to first 60 chars each for readability
+        prev_short = prev_debate[:60].rstrip("?. ") + "…"
+        curr_short = curr_debate[:60].rstrip("?. ") + "…"
+        debate_shift_summary = (
+            f"{ticker}: The debate shifted — from '{prev_short}' toward '{curr_short}'."
+        )
+    else:
+        debate_shift_summary = (
+            f"{ticker}: The core market debate changed — the fulcrum variable rotated between analyses."
+        )
+
     _TEMPLATES: Dict[str, str] = {
         "confidence_collapse":
             f"{ticker}: The original thesis mechanism is weakening — conviction dropped sharply on the current evidence.",
@@ -724,6 +787,7 @@ def _build_event_summary(change_type: str, diff: ThesisDiff, ticker: str) -> str
             f"{ticker}: {top_new_risk + ' moved into the primary bear case.' if top_new_risk else 'A new structural risk entered the thesis.'}",
         "top_signal_replaced":
             f"{ticker}: The primary thesis driver rotated — the leading investment signal changed.",
+        "core_debate_shift": debate_shift_summary,
         "stable":
             f"{ticker}: No material thesis change — the core debate remains intact.",
     }
@@ -772,6 +836,16 @@ def _eval_thesis_strengthens(diff: ThesisDiff, threshold: Optional[float]) -> bo
     return diff.confidence_change >= t
 
 
+def _eval_core_debate_shift(diff: ThesisDiff, threshold: Optional[float]) -> bool:
+    """Fires when the core market debate changed between snapshots.
+
+    The fulcrum variable — the single question investors are debating — rotated.
+    This is analytically more significant than confidence moves alone.
+    Threshold is unused (debate shift is binary based on text similarity).
+    """
+    return bool(getattr(diff, "core_debate_shifted", False))
+
+
 ALERT_RULE_EVALUATORS: Dict[str, AlertRuleEvaluator] = {
     "thesis_weakens":       _eval_thesis_weakens,
     "confidence_collapses": _eval_confidence_collapses,
@@ -779,6 +853,7 @@ ALERT_RULE_EVALUATORS: Dict[str, AlertRuleEvaluator] = {
     "trend_flip":           _eval_trend_flip,
     "top_signal_replaced":  _eval_top_signal_replaced,
     "thesis_strengthens":   _eval_thesis_strengthens,
+    "core_debate_shift":    _eval_core_debate_shift,
 }
 
 # ── Built-in default rules ─────────────────────────────────────────────────

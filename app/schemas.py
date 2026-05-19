@@ -1367,6 +1367,23 @@ class ThesisDiff(BaseModel):
         description="Extended thesis drift classification: strengthening | weakening | unchanged | bifurcating | repricing | transition | unclear",
     )
 
+    # ── Core debate tracking (Phase G — Market Debate Hierarchy) ──────────────
+    core_debate_shifted: bool = Field(
+        default=False,
+        description=(
+            "True when the core_market_debate question materially changed between snapshots. "
+            "A debate shift means the fulcrum variable changed, not just the risk weighting."
+        ),
+    )
+    prev_core_debate: str = Field(
+        default="",
+        description="core_debate from the previous snapshot (populated when core_debate_shifted is True)",
+    )
+    curr_core_debate: str = Field(
+        default="",
+        description="core_debate from the current snapshot (populated when core_debate_shifted is True)",
+    )
+
     # ── Snapshot references ───────────────────────────────────────────────────
     previous_snapshot_id: Optional[str] = Field(default=None)
     current_snapshot_id: Optional[str] = Field(default=None)

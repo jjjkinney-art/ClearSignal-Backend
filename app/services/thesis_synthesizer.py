@@ -225,6 +225,177 @@ _DEPTH_DIRECTIVES: Dict[str, str] = {
 }
 
 
+def _classify_debate_type(
+    dominant_dim: str,
+    original_user_question: Optional[str] = None,
+) -> str:
+    """Classify the debate into a PM-facing category for hierarchy injection.
+
+    Returns one of: valuation | product_competition | regulatory | margin | macro
+    Used to drive section depth allocation and conclusion framing.
+    """
+    q = (original_user_question or "").lower()
+    dim = dominant_dim.lower()
+
+    # Question-level overrides (strongest signal)
+    _QUESTION_PATTERNS: List[tuple] = [
+        (["margin", "profitab", "cost", "operating leverage", "fcf"], "margin"),
+        (["multiple", "p/e", "valuation", "cheap", "expensive", "priced", "pe "], "valuation"),
+        (["compet", "market share", "moat", "product", "demand", "adoption", "launch"], "product_competition"),
+        (["regulat", "antitrust", "doj", "ftc", "government", "policy", "legal"], "regulatory"),
+        (["rate", "inflation", "macro", "yield", "fed", "cycle", "recession"], "macro"),
+    ]
+    for keywords, category in _QUESTION_PATTERNS:
+        if any(kw in q for kw in keywords):
+            return category
+
+    # Dimension-level mapping (secondary signal)
+    _DIM_MAP: Dict[str, str] = {
+        "valuation":          "valuation",
+        "macro":              "macro",
+        "regulatory":         "regulatory",
+        "capital_allocation": "valuation",
+        "operational":        "margin",
+    }
+    return _DIM_MAP.get(dim, "product_competition")
+
+
+def _build_core_debate_mandate_block(
+    company_name: str,
+    ticker: str,
+    dominant_dim: str,
+    debate_type: str,
+    original_user_question: Optional[str] = None,
+    prior_snapshot=None,
+) -> str:
+    """Build the mandatory CORE MARKET DEBATE block for the synthesis prompt.
+
+    This block:
+    1. Forces isolation of the single fulcrum variable
+    2. Maps debate type to section depth hierarchy
+    3. Enforces conclusion to restate the fulcrum
+    4. Adds historical debate-shift comparison when prior snapshot exists
+    """
+    # Debate-type specific examples and depth instruction
+    _DEBATE_EXAMPLES: Dict[str, Dict[str, str]] = {
+        "valuation": {
+            "examples": (
+                '"Can the current multiple hold if rates stay restrictive longer than consensus expects?"\n'
+                '"Is the re-rating already complete, or does earnings execution still support expansion?"\n'
+                '"At current levels, is the market paying for growth or paying for quality?"'
+            ),
+            "depth_directive": (
+                "Since this is a VALUATION debate, valuation_view is your anchor section — "
+                "it must be 3 sentences: current multiple, what it implies, and what moves it. "
+                "Macro is a one-liner. Bull thesis names the re-rating catalyst."
+            ),
+        },
+        "product_competition": {
+            "examples": (
+                '"Can the platform moat hold as competition accelerates, or is market share already at risk?"\n'
+                '"Is the new product cycle durable, or is this a one-period pull-forward?"\n'
+                '"Does the competitive advantage justify the current multiple?"'
+            ),
+            "depth_directive": (
+                "Since this is a PRODUCT/COMPETITION debate, bull_thesis and bear_thesis are your "
+                "anchor sections — both need competitive durability mechanics. "
+                "Name specific products, market share data, and switching cost estimates. "
+                "Valuation view anchors on the multiple justified if the moat holds vs breaks."
+            ),
+        },
+        "regulatory": {
+            "examples": (
+                '"Does the regulatory overhang now outweigh the earnings trajectory?"\n'
+                '"Is the enforcement risk already priced, or does the market still underestimate the timeline?"\n'
+                '"Can the business model survive structural regulatory change?"'
+            ),
+            "depth_directive": (
+                "Since this is a REGULATORY debate, bear_thesis is your most specific section — "
+                "name the regulatory body, action type, realistic timeline, and revenue impact. "
+                "what_changes_the_thesis must prioritize regulatory events."
+            ),
+        },
+        "margin": {
+            "examples": (
+                '"Is margin expansion sustainable, or is it a one-period cost discipline story?"\n'
+                '"Can operating leverage absorb investment spending without compressing the multiple?"\n'
+                '"Is incremental margin improvement already in the price?"'
+            ),
+            "depth_directive": (
+                "Since this is a MARGIN debate, both bull_thesis and bear_thesis anchor on "
+                "specific margin lines, operating leverage, and EPS sensitivity. "
+                "valuation_view must connect the margin trajectory to the specific multiple it supports."
+            ),
+        },
+        "macro": {
+            "examples": (
+                '"Can earnings durability offset duration-driven multiple compression?"\n'
+                '"Is the macro headwind already priced, or does the market still underestimate sensitivity?"\n'
+                '"Does the business model have enough cyclical insulation to hold the multiple?"'
+            ),
+            "depth_directive": (
+                "Since this is a MACRO debate, macro_sensitivity is your anchor section — "
+                "name the exact transmission channel, magnitude, and second-order effect. "
+                "valuation_view is a one-liner anchoring the multiple to the macro scenario."
+            ),
+        },
+    }
+
+    ex = _DEBATE_EXAMPLES.get(debate_type, _DEBATE_EXAMPLES["product_competition"])
+    examples_txt = ex["examples"]
+    depth_directive = ex["depth_directive"]
+
+    # Historical debate comparison (only when prior snapshot available)
+    if prior_snapshot is not None:
+        prev_debate = (getattr(prior_snapshot, "core_debate", "") or "").strip()
+        prev_mkt_debate = (getattr(prior_snapshot, "core_market_debate", "") or "").strip()
+        prior_debate_line = prev_debate or prev_mkt_debate
+        if prior_debate_line:
+            historical_debate_block = (
+                f"\nPRIOR CORE DEBATE (from previous analysis): '{prior_debate_line[:100]}'\n"
+                f"MANDATORY — compare the prior and current debate in confidence_reasoning or conclusion:\n"
+                f"  - 'Core debate unchanged — only risk weighting changed.' OR\n"
+                f"  - 'Core debate shifted from [X] toward [Y] — the fulcrum variable rotated.' OR\n"
+                f"  - 'Market debate narrowed from [broad X] to [specific Y] — prior ambiguity resolved.'\n"
+            )
+        else:
+            historical_debate_block = ""
+    else:
+        historical_debate_block = ""
+
+    return f"""
+CORE MARKET DEBATE — MANDATORY (the highest-priority analytical task):
+Identify the SINGLE live question investors are actually debating for {company_name} ({ticker}) today.
+This is the fulcrum variable: the one thing that, if resolved differently, would flip the investment decision.
+
+REQUIREMENTS for core_debate and core_market_debate:
+- ONE sentence, phrased as an open question — NOT a statement, NOT a summary
+- Must ISOLATE the fulcrum variable — not enumerate all pros and cons
+- Must be specific to {ticker}'s actual situation — not a generic sector question
+- Must name the mechanism that makes this THE debate (not just a factor to watch)
+{historical_debate_block}
+GOOD examples (study the isolation technique):
+{examples_txt}
+
+BAD examples (rejected):
+  "{ticker} has strong growth but faces valuation risks." — statement, not debate
+  "There are several factors affecting {ticker}." — not isolated
+  "The market is debating whether {ticker} is well-positioned." — generic, no mechanism
+  Anything starting with "The market is debating whether..." — BANNED
+
+SECTION DEPTH HIERARCHY — driven by the debate type:
+{depth_directive}
+
+CONCLUSION REQUIREMENT — mandatory fulcrum restatement:
+The conclusion MUST do ONE of the following:
+  (a) Restate the fulcrum: "The debate reduces to whether X holds — if it does, the stock works."
+  (b) Name what must happen next: "The thesis requires Y — everything else is secondary."
+  (c) Explain the mis/repricing: "At current multiples, the market is underpricing X / still overpricing Y."
+FORBIDDEN in conclusion: generic summaries, restating what was said above, "the company faces headwinds."
+
+"""
+
+
 def _build_section_priority_block(dominant_dim: str) -> str:
     """Return a terse section-priority reminder for the prompt task list.
 
@@ -447,7 +618,19 @@ CONFIDENCE LANGUAGE ALIGNMENT — MANDATORY:
   The PROSE must match the SCORE — a 0.68 score that says "high conviction" is a contradiction.
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
   "conclusion"              : string — institutional-quality 2-sentence conclusion. \
-MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases."""
+MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases. \
+MANDATORY FULCRUM RESTATEMENT: the conclusion MUST do ONE of the following: \
+(a) Restate the fulcrum from core_market_debate — "The debate reduces to whether X holds." \
+(b) Identify what must happen from here — "The thesis works if X — the question is timing." \
+(c) Explain the mis/repricing — "At current multiples, the market is underpricing X." \
+FORBIDDEN: Generic summaries. Opening with "[Ticker]'s [noun phrase] provides/supports/enables". \
+Restating what was already said in bull_thesis or bear_thesis. "The company faces headwinds." \
+GOOD: "The debate reduces to whether Cloud margin expansion outpaces Search deceleration — \
+if it does, the stock re-rates; if it does not, the multiple compression has further to run." \
+GOOD: "The thesis requires Services ARR to sustain double-digit growth into rising rates — \
+the multiple already assumes it; the risk is when it does not arrive on schedule." \
+BAD: "The company remains well-positioned despite headwinds." \
+BAD: "[Ticker]'s strong fundamentals support a positive outlook going forward." """
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────
@@ -528,6 +711,17 @@ def _build_synthesis_prompt(
 
     # Build market regime context block from evidence (Phase G)
     market_regime_block = _build_market_regime_block(evidence)
+
+    # Build core market debate mandate block (Phase G — Market Debate Hierarchy)
+    debate_type = _classify_debate_type(dominant_dim, original_user_question)
+    core_debate_mandate_block = _build_core_debate_mandate_block(
+        company_name          = company.company_name,
+        ticker                = company.ticker,
+        dominant_dim          = dominant_dim,
+        debate_type           = debate_type,
+        original_user_question= original_user_question,
+        prior_snapshot        = prior_snapshot,
+    )
 
     # Confidence language alignment tag — surfaces the right qualifier tier in prompt
     conf_avg = (
@@ -621,7 +815,7 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-{market_regime_block}{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
+{market_regime_block}{core_debate_mandate_block}{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
 SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
