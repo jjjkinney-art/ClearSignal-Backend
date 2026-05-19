@@ -982,6 +982,33 @@ class InvestmentThesis(BaseModel):
         description="Dominant analytical frame for this thesis (macro/valuation/regulatory/operational/capital_allocation/competitive/behavioral)",
     )
 
+    # ── Phase J — Institutional Clarity ──────────────────────────────────────────
+    core_takeaway: str = Field(
+        default="",
+        description=(
+            "1-2 sentences that make the core thesis instantly understandable "
+            "to an intelligent but non-institutional investor. NOT a simplification — "
+            "the same analytical depth, expressed without assuming institutional vocabulary. "
+            "NO educational tone, NO 'this means that' explanations. "
+            "Good: 'The market already expects strong Services growth. The debate is whether "
+            "that growth can continue fast enough to offset higher interest rates.' "
+            "Good: 'The stock now depends more on margin expansion than revenue growth.' "
+            "Bad: 'Apple is a strong company with risks and opportunities.'"
+        ),
+    )
+    dominant_driver: str = Field(
+        default="",
+        description=(
+            "The single most important mechanism currently driving or threatening the thesis. "
+            "5-15 words max. A concise phrase, not a sentence. "
+            "Good: 'Services margin expansion offsetting hardware cyclicality' "
+            "Good: 'Rate duration compression on long-dated FCF multiples' "
+            "Good: 'China tariff impact on iPhone supply chain economics' "
+            "Bad: 'Multiple factors are influencing the investment case.' "
+            "Bad: 'Strong fundamentals with macro headwinds.'"
+        ),
+    )
+
 
 class AlertCondition(BaseModel):
     """A condition to watch that triggers an alert when its threshold is crossed.
@@ -1221,6 +1248,8 @@ class ThesisSnapshot(BaseModel):
     dominant_dimension: str = Field(default="", description="Dominant analytical dimension at snapshot time")
     core_debate: str = Field(default="", description="Central market debate at snapshot time")
     core_market_debate: str = Field(default="", description="Live positioning question at snapshot time")
+    core_takeaway: str = Field(default="", description="Accessible plain-language core insight at snapshot time")
+    dominant_driver: str = Field(default="", description="Single dominant mechanism at snapshot time")
     drift_state: str = Field(
         default="",
         description="strengthening | weakening | unchanged | bifurcating | repricing | transition | unclear",

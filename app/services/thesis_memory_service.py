@@ -171,6 +171,8 @@ def snapshot_from_thesis(thesis: InvestmentThesis) -> ThesisSnapshot:
         dominant_dimension   = getattr(thesis, "dominant_dimension", "") or "",
         core_debate          = getattr(thesis, "core_debate", "") or "",
         core_market_debate   = getattr(thesis, "core_market_debate", "") or "",
+        core_takeaway        = getattr(thesis, "core_takeaway", "") or "",
+        dominant_driver      = getattr(thesis, "dominant_driver", "") or "",
     )
 
 

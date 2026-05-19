@@ -892,6 +892,23 @@ CONFIDENCE LANGUAGE ALIGNMENT — MANDATORY:
   "confidence remains high", "elevated conviction", "well-supported thesis"
   The PROSE must match the SCORE — a 0.68 score that says "high conviction" is a contradiction.
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
+  "core_takeaway"           : string — 1-2 sentences that make the thesis INSTANTLY CLEAR to \
+an intelligent but non-institutional investor. Same analytical depth, accessible language. \
+NOT educational. NOT simplified reasoning. Just clear expression of what matters. \
+MUST answer: "What is the single most important thing to understand here?" \
+GOOD: "The market already expects strong Services growth. The debate is whether that growth \
+can continue fast enough to offset higher interest rates." \
+GOOD: "The stock now depends more on margin expansion than revenue growth." \
+BAD: "Apple is a strong company with risks and opportunities." \
+BAD: "There are several factors to consider when evaluating this investment." \
+Length: 1-2 sentences. Tone: intelligent, calm, clear. No jargon overload.
+  "dominant_driver"         : string — 5-15 words max naming the SINGLE most important \
+mechanism currently driving or threatening the thesis. A phrase, not a sentence. \
+GOOD: "Services margin expansion offsetting hardware cyclicality" \
+GOOD: "Rate duration compression on long-dated FCF multiples" \
+GOOD: "China tariff impact on iPhone supply chain economics" \
+BAD: "Multiple factors are influencing the investment case." \
+This should be the answer to: "If you had to name ONE thing that matters most right now, what is it?"
   "conclusion"              : string — institutional-quality 2-sentence conclusion. \
 MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases. \
 MANDATORY FULCRUM RESTATEMENT: the conclusion MUST do ONE of the following: \
@@ -1492,6 +1509,14 @@ TASK — produce a JSON object with exactly these fields:
    "Is the market underestimating rate duration risk for Apple?"
    BAD: "The market is debating whether..." — lead directly with the question.
 
+0.6. core_takeaway: 1-2 sentences — state what matters most in clear, direct language. Not a
+   summary. The one thing an intelligent person needs to understand about this investment right
+   now. After writing it, ask: "Would someone who doesn't know finance jargon understand what
+   matters?" If not, revise.
+
+0.7. dominant_driver: ≤15 words — name the single most important mechanism. Choose between:
+   the #1 upside driver OR the #1 structural risk, whichever is more market-relevant right now.
+
 1. direct_answer: 2 sentences — mechanism + company-specific offset (see QUESTION-ANCHORED
    DIRECT ANSWER RULES above). Ultra-compressed. No elaboration.
 
@@ -1940,6 +1965,24 @@ def synthesize_thesis(
     # Guard: core_market_debate must be non-empty; fall back to core_debate if LLM omitted it
     if not getattr(thesis, "core_market_debate", ""):
         thesis.core_market_debate = getattr(thesis, "core_debate", "")
+
+    if not getattr(thesis, "core_takeaway", ""):
+        # Fallback: construct from core_debate and direct_answer
+        cda = getattr(thesis, "core_debate", "") or ""
+        da = getattr(thesis, "direct_answer", "") or ""
+        if cda:
+            thesis.core_takeaway = cda
+        elif da:
+            thesis.core_takeaway = da[:200] if len(da) > 200 else da
+
+    if not getattr(thesis, "dominant_driver", ""):
+        # Fallback: use #1 key_driver or top signal label
+        kd = getattr(thesis, "key_drivers", []) or []
+        ts = getattr(thesis, "top_signals", []) or []
+        if ts and hasattr(ts[0], "label"):
+            thesis.dominant_driver = ts[0].label[:80]
+        elif kd:
+            thesis.dominant_driver = kd[0][:80]
 
     # Stamp dominant analytical dimension (deterministic, pre-LLM)
     thesis.dominant_dimension = dominant_dim_for_thesis
