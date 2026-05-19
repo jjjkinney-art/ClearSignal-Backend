@@ -776,20 +776,20 @@ def _build_event_summary(change_type: str, diff: ThesisDiff, ticker: str) -> str
 
     _TEMPLATES: Dict[str, str] = {
         "confidence_collapse":
-            f"{ticker}: The original thesis mechanism is weakening — conviction dropped sharply on the current evidence.",
+            f"{ticker}: The original thesis mechanism deteriorated — the operating story no longer supports the prior setup.",
         "thesis_weakened":
-            f"{ticker}: Valuation support weakened — the risk/reward has narrowed on the current setup.",
+            f"{ticker}: Risk/reward narrowed — the burden shifts to execution as the thesis loses valuation support.",
         "thesis_strengthened":
-            f"{ticker}: The setup improved — the core thesis mechanism is holding and conviction increased.",
+            f"{ticker}: The setup improved — conviction increased as the operating story clarified against the current regime.",
         "trend_flip":
-            f"{ticker}: The burden shifted — the thesis trend reversed to {diff.thesis_trend}.",
+            f"{ticker}: Thesis direction reversed to '{diff.thesis_trend}' — repricing or fundamental break, review the updated analysis.",
         "new_structural_risk":
-            f"{ticker}: {top_new_risk + ' moved into the primary bear case.' if top_new_risk else 'A new structural risk entered the thesis.'}",
+            f"{ticker}: {top_new_risk + ' entered the primary risk case — the market still needs to price this.' if top_new_risk else 'A new structural risk emerged — the investment bar is now higher.'}",
         "top_signal_replaced":
-            f"{ticker}: The primary thesis driver rotated — the leading investment signal changed.",
+            f"{ticker}: Primary investment driver rotated — the original thesis anchor is no longer the leading variable.",
         "core_debate_shift": debate_shift_summary,
         "stable":
-            f"{ticker}: No material thesis change — the core debate remains intact.",
+            f"{ticker}: Core debate stable — no material thesis change on the current evidence.",
     }
     return _TEMPLATES.get(change_type, f"{ticker}: Thesis change detected — review the updated analysis.")
 

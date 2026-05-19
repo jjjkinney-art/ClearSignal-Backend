@@ -36,6 +36,7 @@ Usage
 
 from __future__ import annotations
 
+import datetime as _dt
 import json
 import logging
 import re
@@ -461,13 +462,99 @@ def _detect_dominant_dimension(
 
 # ── Evidence summary builders ─────────────────────────────────────────────────
 
+# Evidence type labels mapped from title/source keywords
+_EVIDENCE_TYPE_KEYWORDS: Dict[str, List[str]] = {
+    "earnings":    ["earnings", "eps", "quarterly", "fiscal", "q1", "q2", "q3", "q4", "beat", "miss", "results"],
+    "guidance":    ["guidance", "outlook", "forecast", "raised", "lowered", "revised", "estimates"],
+    "macro":       ["fed", "rate", "inflation", "gdp", "unemployment", "fomc", "yield", "monetary"],
+    "regulatory":  ["regulatory", "antitrust", "doj", "ftc", "sec", "probe", "investigation", "ruling"],
+    "product":     ["launch", "product", "announced", "unveil", "release", "ai", "model"],
+    "analyst":     ["upgrade", "downgrade", "target", "price target", "rating", "analyst"],
+    "market":      ["stock", "share", "rally", "decline", "trading", "volume", "short"],
+}
+
+
+def _classify_evidence_type(ev: RetrievedEvidence) -> str:
+    """Classify evidence into a category label for display."""
+    text = (ev.title + " " + ev.source).lower()
+    for ev_type, keywords in _EVIDENCE_TYPE_KEYWORDS.items():
+        if any(kw in text for kw in keywords):
+            return ev_type
+    return "research"
+
+
+def _evidence_recency_weight(ev: RetrievedEvidence, reference_ts: str) -> float:
+    """Compute a recency multiplier relative to the most recent evidence date.
+
+    Recent items (≤30 days from reference) get 1.5x boost.
+    Items 30-60 days get 1.2x.
+    Items 60-90 days get 1.0x (no change).
+    Items >90 days get 0.80x decay.
+    Returns 1.0 on any parse failure (safe default).
+    """
+    try:
+        ref = _dt.date.fromisoformat(reference_ts[:10])
+        ev_date = _dt.date.fromisoformat(ev.timestamp[:10])
+        days_old = (ref - ev_date).days
+        if days_old <= 0:
+            return 1.5
+        if days_old <= 30:
+            return 1.5
+        if days_old <= 60:
+            return 1.2
+        if days_old <= 90:
+            return 1.0
+        return 0.80
+    except Exception:
+        return 1.0
+
+
+def _composite_evidence_score(ev: RetrievedEvidence, reference_ts: str) -> float:
+    """Composite score = relevance × recency_weight, with type-based bonus."""
+    recency = _evidence_recency_weight(ev, reference_ts)
+    base = float(ev.relevance_score) * recency
+    # Earnings and guidance get +0.1 bonus (highest signal value)
+    ev_type = _classify_evidence_type(ev)
+    if ev_type in ("earnings", "guidance"):
+        base += 0.1
+    return base
+
+
 def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> str:
-    """Format top-N evidence items as a numbered block for the synthesis prompt."""
-    top = sorted(evidence, key=lambda e: e.relevance_score, reverse=True)[:max_items]
-    return "\n".join(
-        f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
-        for i, ev in enumerate(top)
-    )
+    """Format top-N evidence items with composite recency+relevance scoring.
+
+    Evidence is ranked by: relevance_score × recency_weight + type_bonus.
+    Most recent earnings/guidance items surface to the top even if raw
+    relevance score is slightly lower.
+    """
+    if not evidence:
+        return "No evidence available."
+
+    # Reference date = most recent timestamp in the set
+    try:
+        reference_ts = max(
+            (ev.timestamp for ev in evidence if ev.timestamp),
+            key=lambda ts: ts[:10],
+            default="2025-01-01",
+        )
+    except Exception:
+        reference_ts = "2025-01-01"
+
+    scored = sorted(
+        evidence,
+        key=lambda e: _composite_evidence_score(e, reference_ts),
+        reverse=True,
+    )[:max_items]
+
+    lines = []
+    for i, ev in enumerate(scored):
+        ev_type = _classify_evidence_type(ev)
+        lines.append(
+            f"[{i + 1}] [{ev_type.upper()}] {ev.title}\n"
+            f"    Source: {ev.source} ({ev.timestamp[:7] if ev.timestamp else 'n/a'})\n"
+            f"    {ev.summary}"
+        )
+    return "\n".join(lines)
 
 
 def _build_market_regime_block(evidence: List[RetrievedEvidence]) -> str:
@@ -526,6 +613,194 @@ def _build_market_regime_block(evidence: List[RetrievedEvidence]) -> str:
         "'at current multiples', 'over the last quarter', 'right now'."
     )
     return "\n".join(lines) + "\n\n"
+
+
+def _extract_recent_events(evidence: List[RetrievedEvidence]) -> str:
+    """Extract 3-4 most significant recent events from evidence for synthesis injection.
+
+    Prioritizes: earnings beats/misses, guidance changes, macro shifts, regulatory events.
+    Returns a RECENT MARKET EVENTS block or '' if nothing significant found.
+    """
+    _HIGH_SIGNAL_TERMS = {
+        "beat", "miss", "exceeded", "fell short", "raised guidance", "lowered guidance",
+        "revised", "cut guidance", "raised outlook", "earnings", "revenue beat",
+        "guidance", "rate hike", "rate cut", "fomc", "tariff", "antitrust",
+        "launched", "unveiled", "announced", "partnership", "acquisition",
+        "margin expansion", "margin compression", "layoffs", "restructuring",
+        "upgrade", "downgrade", "price target",
+    }
+
+    if not evidence:
+        return ""
+
+    try:
+        reference_ts = max(
+            (ev.timestamp for ev in evidence if ev.timestamp),
+            key=lambda ts: ts[:10],
+            default="2025-01-01",
+        )
+    except Exception:
+        reference_ts = "2025-01-01"
+
+    # Score: recency weight × relevance × high-signal keyword presence
+    def _signal_score(ev: RetrievedEvidence) -> float:
+        recency = _evidence_recency_weight(ev, reference_ts)
+        text = (ev.title + " " + ev.summary).lower()
+        keyword_bonus = 0.3 if any(kw in text for kw in _HIGH_SIGNAL_TERMS) else 0.0
+        return float(ev.relevance_score) * recency + keyword_bonus
+
+    top_events = sorted(evidence, key=_signal_score, reverse=True)[:4]
+
+    # Only include items that actually have high-signal keywords
+    significant = [
+        ev for ev in top_events
+        if any(kw in (ev.title + " " + ev.summary).lower() for kw in _HIGH_SIGNAL_TERMS)
+    ]
+
+    if not significant:
+        return ""
+
+    lines = ["RECENT MARKET EVENTS — anchor your temporal analysis to these:"]
+    for ev in significant[:3]:
+        ts_short = ev.timestamp[:7] if ev.timestamp else ""
+        ev_type = _classify_evidence_type(ev)
+        lines.append(f"  [{ev_type.upper()}{' ' + ts_short if ts_short else ''}] {ev.title}: {ev.summary[:90].rstrip('.')}.")
+    lines.append(
+        "Reference these events using language like: 'following the recent earnings', "
+        "'after the guidance revision', 'since the macro shift', 'post-announcement'."
+    )
+    return "\n".join(lines) + "\n\n"
+
+
+def _build_expectation_delta_block(
+    company_name: str,
+    ticker: str,
+    debate_type: str,
+) -> str:
+    """Build the EXPECTATION_DELTA mandatory block for synthesis prompt injection.
+
+    Forces the LLM to explicitly reason about what's priced in vs what would
+    surprise. Complementary to (but distinct from) PRICED_IN_REASONING which
+    addresses valuation; this block addresses market psychology more broadly.
+    """
+    # Debate-type specific expectation framing
+    _EXPECTATION_FRAMING: Dict[str, str] = {
+        "valuation": (
+            "Current consensus is most likely anchored on the existing multiple — "
+            "the differentiated call is whether the multiple can hold, expand, or must compress. "
+            "Name what growth rate / margin assumption the multiple ALREADY EMBEDS."
+        ),
+        "product_competition": (
+            "Current consensus is likely tracking market share and product cycle. "
+            "The differentiated call is durability — whether competitive advantage persists "
+            "beyond the current product cycle. Name the specific moat that consensus may be underweighting."
+        ),
+        "regulatory": (
+            "Current consensus likely underestimates regulatory timeline risk. "
+            "The differentiated call is probability-weighted revenue impact and resolution timeline. "
+            "Name what a base-case regulatory outcome looks like vs what the market prices."
+        ),
+        "margin": (
+            "Current consensus is likely tracking the most recent margin print. "
+            "The differentiated call is sustainability — whether the current margin rate "
+            "reflects structural improvement or one-period cost discipline. Name the specific driver."
+        ),
+        "macro": (
+            "Current consensus is anchored on the prevailing rate/macro path. "
+            "The differentiated call is duration sensitivity — whether the company's earnings "
+            "durability outweighs multiple pressure. Name what rate scenario the stock currently prices."
+        ),
+    }
+
+    framing = _EXPECTATION_FRAMING.get(debate_type, _EXPECTATION_FRAMING["valuation"])
+
+    return f"""
+EXPECTATION DELTA — MANDATORY:
+Every significant thesis claim must answer: "Is this already consensus, or would this move the stock?"
+{framing}
+
+REQUIRED — address ALL THREE of these in your thesis sections:
+1. CONSENSUS ASSUMPTION: What does the market currently expect from {company_name} ({ticker})?
+   (e.g. "Consensus assumes sustained Services growth — the bar is already high.")
+2. POTENTIAL SURPRISE: What would most surprise investors — on the upside OR the downside?
+   (e.g. "A margin miss on the next print would be unpriced at ~28x.")
+3. REPRICING CHECK: Has recent price action already baked in the current narrative?
+   (e.g. "Post-earnings rerating already captured the beat — incremental upside requires guidance raise.")
+
+REQUIRED LANGUAGE PATTERNS (use 2-3 across valuation_view, bull_thesis, conclusion):
+- "Consensus already expects X — the differentiated call is Y"
+- "The stock already prices in X — incremental upside requires Z"
+- "A X would be unpriced at current multiples"
+- "The debate is no longer X — it is now Y"
+- "The burden shifts to [execution / margin expansion / monetization / guidance delivery]"
+- "The setup is [less one-sided / becoming a harder timing call / cleaner than it looks]"
+
+BANNED TIMELESS ASSERTIONS (replace with expectation framing):
+- "Revenue growth is strong" → "Consensus already prices double-digit growth — the question is durability"
+- "The company has good fundamentals" → "At ~[X]x, fundamentals are in the price; execution is the open variable"
+- "The stock could perform well" → "The stock works if X holds — the market has not yet tested that assumption"
+
+"""
+
+
+def _build_narrative_state_block(
+    prior_snapshot,  # Optional[ThesisSnapshot]
+    dominant_dim: str,
+    debate_type: str,
+) -> str:
+    """Build a NARRATIVE STATE block tracking regime and narrative transitions.
+
+    Only injected when a prior snapshot exists — captures whether the investment
+    narrative is stable, transitioning, or repricing.
+    """
+    if prior_snapshot is None:
+        return ""
+
+    prev_dim = (getattr(prior_snapshot, "dominant_dimension", "") or "").lower()
+    curr_dim = dominant_dim.lower()
+
+    _NARRATIVE_TRANSITIONS: Dict[str, Dict[str, str]] = {
+        "valuation": {
+            "macro":              "The market focus is transitioning from valuation support toward macro sensitivity.",
+            "regulatory":         "The narrative is rotating from valuation to regulatory risk.",
+            "operational":        "The debate moved from valuation toward margin execution.",
+            "capital_allocation": "Market attention shifted from valuation to capital return mechanics.",
+        },
+        "macro": {
+            "valuation":          "The narrative rotated from macro sensitivity toward valuation support — rate path expectations may have shifted.",
+            "operational":        "Focus is transitioning from macro conditions toward operating execution.",
+            "regulatory":         "Macro concern is giving way to regulatory risk as the primary investment question.",
+        },
+        "operational": {
+            "valuation":          "The narrative transitioned from margin/growth execution toward valuation sustainability.",
+            "macro":              "Operating story is being overshadowed by macro regime conditions.",
+            "regulatory":         "Business execution concerns are giving way to regulatory risk as the dominant lens.",
+        },
+        "regulatory": {
+            "valuation":          "Regulatory overhang is easing — the debate is rotating back toward valuation.",
+            "operational":        "Regulatory focus is rotating toward operating execution as the primary variable.",
+            "macro":              "Regulatory risk is becoming secondary to macro sensitivity.",
+        },
+    }
+
+    transition_line = ""
+    if prev_dim and curr_dim and prev_dim != curr_dim:
+        transition_line = (
+            _NARRATIVE_TRANSITIONS.get(prev_dim, {}).get(curr_dim, "")
+            or f"The dominant investment lens shifted from {prev_dim.replace('_', ' ')} toward {curr_dim.replace('_', ' ')}."
+        )
+
+    if not transition_line and prev_dim == curr_dim:
+        transition_line = f"The {curr_dim.replace('_', ' ')} narrative is stable — the market debate is unchanged in its framing."
+
+    if not transition_line:
+        return ""
+
+    return (
+        f"NARRATIVE STATE — use this to frame repricing vs thesis language:\n"
+        f"  {transition_line}\n"
+        f"  Reference this in confidence_reasoning or conclusion where analytically relevant.\n\n"
+    )
 
 
 def _agent_block(label: str, overall: str, confidence: float) -> str:
@@ -723,6 +998,23 @@ def _build_synthesis_prompt(
         prior_snapshot        = prior_snapshot,
     )
 
+    # Build recent events block (Phase H)
+    recent_events_block = _extract_recent_events(evidence)
+
+    # Build expectation delta block (Phase H)
+    expectation_delta_block = _build_expectation_delta_block(
+        company_name=company.company_name,
+        ticker=company.ticker,
+        debate_type=debate_type,
+    )
+
+    # Build narrative state block (Phase H — only when prior snapshot available)
+    narrative_state_block = _build_narrative_state_block(
+        prior_snapshot=prior_snapshot,
+        dominant_dim=dominant_dim,
+        debate_type=debate_type,
+    )
+
     # Confidence language alignment tag — surfaces the right qualifier tier in prompt
     conf_avg = (
         valuation.confidence + macro.confidence + risk.confidence
@@ -815,7 +1107,7 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-{market_regime_block}{core_debate_mandate_block}{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
+{market_regime_block}{recent_events_block}{narrative_state_block}{core_debate_mandate_block}{expectation_delta_block}{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
 SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
@@ -1055,6 +1347,34 @@ BAD (adds a hedge after a clear point):
 BETTER: "Services ARR supports the multiple. Regulatory overhang is the separate unpriced risk."
 (Two clean statements beat one hedged compound sentence.)
 Brevity signals conviction. Symmetric completeness signals AI-generated analysis.
+
+MARKET-NATIVE COMPRESSION — MANDATORY:
+Write at Bloomberg Intelligence / PM meeting note density. Not AI essay density.
+Every section should read like an experienced PM summarizing to another PM — not explaining to a beginner.
+
+BANNED verbose patterns → required compressed equivalents:
+- "The company may face increasing competitive pressures in the future" → "The setup is less one-sided now."
+- "There are both bullish and bearish considerations to weigh" → "This is becoming a harder timing call."
+- "Growth remains positive but risks and uncertainties exist" → "The burden shifts to execution."
+- "The stock could perform well if conditions are favorable" → "The stock works if X holds."
+- "Investors should consider the potential impact of..." → "X is the unpriced risk here."
+- "The company continues to benefit from..." → name the specific mechanism and its current rate of change
+- "The valuation appears reasonable given..." → "At ~[X]x, the market is paying for Y — Z is the open variable."
+- "The stock has shown resilience" → name what it held and why that matters for the investment
+- "Macro environment remains uncertain" → "The rate path is unresolved — that is where duration risk lives."
+- "The sector faces headwinds" → name the specific headwind, its transmission, and why it matters NOW
+
+GOOD PM SHORTHAND (study these — understated, mechanism-first, timing-aware):
+  "Nothing is broken yet." — complete statement, no elaboration needed
+  "The setup is cleaner than it looks." — implies the bear case is less acute than priced
+  "The bar is higher now." — implies the next print has to beat a raised consensus
+  "The market still needs to see that." — implies execution has not yet proved the thesis
+  "That is what the thesis requires." — closes the analytical loop without summarizing
+  "This is a timing call more than a direction call." — compresses the uncertainty cleanly
+  "The debate is not X — it is Y." — reframes without building to a conclusion
+  "At these levels, if X holds, the stock works." — conditional entry logic in one sentence
+  "Duration matters more here than direction." — rate sensitivity framing, compressed
+  "Consensus is already long the good news." — implies upside is limited without saying so
 
 HIDDEN-PROCESS BAN — MANDATORY:
 You are an analyst writing a MEMO, not narrating your reasoning process.
