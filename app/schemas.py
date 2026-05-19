@@ -661,6 +661,21 @@ class Signal(BaseModel):
         default="",
         description="Why this signal matters more than others for the investment decision",
     )
+    evidence_origin: str = Field(
+        default="",
+        description=(
+            "Human-readable source of this signal: "
+            "'earnings call', 'SEC filing', 'macro rates context', "
+            "'estimate revisions', 'news', 'market data'"
+        ),
+    )
+    source_category: str = Field(
+        default="",
+        description=(
+            "Categorical source type: "
+            "earnings|filing|macro|news|research|estimate_revision|market_data"
+        ),
+    )
 
 
 class CompressedThesis(BaseModel):
@@ -1403,6 +1418,24 @@ class MaterialChangeEvent(BaseModel):
     thesis_trend_changed: bool = Field(
         default=False,
         description="True when the thesis_trend direction changed in this diff",
+    )
+    materiality_score: float = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "0.0–1.0 composite materiality score. "
+            "≥0.7 = high structural change, 0.4–0.7 = medium, <0.4 = cosmetic/wording. "
+            "Drives alert suppression for noise-level changes."
+        ),
+    )
+    change_category: str = Field(
+        default="",
+        description=(
+            "Human-readable change category: "
+            "'market_repriced' | 'thesis_broke' | 'thesis_strengthened' | "
+            "'new_risk_emerged' | 'cosmetic' — PM-facing classification."
+        ),
     )
 
 

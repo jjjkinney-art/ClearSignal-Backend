@@ -299,6 +299,64 @@ def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> s
     )
 
 
+def _build_market_regime_block(evidence: List[RetrievedEvidence]) -> str:
+    """Extract current market regime context from evidence for synthesis prompt injection.
+
+    Scans the top evidence items for rate/valuation/macro signals and returns
+    a compact block that anchors temporal language in the synthesis output.
+    Returns an empty string when no regime signals are detectable.
+    """
+    _RATE_TERMS = {
+        "rate", "rates", "fed", "federal reserve", "yield", "yields",
+        "inflation", "tightening", "easing", "hike", "cut", "bps",
+        "basis points", "fomc", "monetary policy", "rate path",
+    }
+    _VAL_TERMS = {
+        "multiple", "p/e", "pe ratio", "forward pe", "ev/ebitda", "valuation",
+        "premium", "discount", "expensive", "cheap", "overvalued", "undervalued",
+        "trading at", "priced at", "multiple compression", "re-rating",
+    }
+    _MACRO_TERMS = {
+        "gdp", "recession", "economic growth", "unemployment", "jobs report",
+        "consumer spending", "credit", "slowdown", "expansion", "soft landing",
+        "hard landing", "macro", "economy", "cyclical",
+    }
+
+    rate_signal: str = ""
+    val_signal: str = ""
+    macro_signal: str = ""
+
+    top_ev = sorted(evidence, key=lambda e: e.relevance_score, reverse=True)[:10]
+    for ev in top_ev:
+        text = (ev.title + " " + ev.summary).lower()
+        if not rate_signal and any(t in text for t in _RATE_TERMS):
+            rate_signal = ev.summary[:110].strip()
+        elif not val_signal and any(t in text for t in _VAL_TERMS):
+            val_signal = ev.summary[:110].strip()
+        elif not macro_signal and any(t in text for t in _MACRO_TERMS):
+            macro_signal = ev.summary[:110].strip()
+        if rate_signal and val_signal and macro_signal:
+            break
+
+    if not any([rate_signal, val_signal, macro_signal]):
+        return ""
+
+    lines = [
+        "CURRENT MARKET REGIME — anchor all temporal claims to these conditions:"
+    ]
+    if rate_signal:
+        lines.append(f"  Rate environment: {rate_signal}")
+    if val_signal:
+        lines.append(f"  Valuation context: {val_signal}")
+    if macro_signal:
+        lines.append(f"  Macro backdrop: {macro_signal}")
+    lines.append(
+        "Use these to drive language like: 'this cycle', 'since rates repriced', "
+        "'at current multiples', 'over the last quarter', 'right now'."
+    )
+    return "\n".join(lines) + "\n\n"
+
+
 def _agent_block(label: str, overall: str, confidence: float) -> str:
     """Format one agent output as a plain-text block (no markdown headings)."""
     return (
@@ -346,10 +404,16 @@ Sentence 4 (optional): the specific catalyst that triggers the bear case.
   "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
   "key_risks"               : array of 4 strings — top investment risks, ranked by severity
   "valuation_view"          : string — 2 sentences on valuation structure. \
-Sentence 1: state the current or target multiple, vs historical range and peers, and what the \
-market is implicitly pricing in (growth rate, margin trajectory, or terminal value assumption). \
-Sentence 2: segment economics or sensitivity — how the blended multiple could expand or compress \
-and what has to be true for each scenario.
+Sentence 1: state the SPECIFIC current multiple (e.g. "~28x forward earnings"), what growth rate \
+or margin trajectory the market is ALREADY PRICING IN at that level, and whether that assumption \
+is achievable, generous, or stretched relative to current evidence. \
+MANDATORY: use "the stock already prices in" / "at ~[X]x, the market is paying for" language. \
+Sentence 2: what would cause the multiple to expand or compress — name the specific trigger and \
+which scenario is more likely given current rate/macro conditions. \
+EXAMPLE GOOD: "At ~28x forward earnings, the stock already prices sustained double-digit Services \
+growth — incremental upside requires margin acceleration beyond what consensus assumes, not just \
+stability." \
+EXAMPLE BAD: "Apple trades at a premium multiple due to its strong brand and ecosystem."
   "macro_sensitivity"       : string — 2 sentences on macro transmission. \
 Sentence 1: primary transmission pathway with direction and channel \
 (e.g. rates → discount rate → DCF impact on long-duration cash flows; \
@@ -462,6 +526,9 @@ def _build_synthesis_prompt(
     dominant_dim_block   = _DEPTH_DIRECTIVES.get(dominant_dim, "")
     section_priority_tag = _build_section_priority_block(dominant_dim)
 
+    # Build market regime context block from evidence (Phase G)
+    market_regime_block = _build_market_regime_block(evidence)
+
     # Confidence language alignment tag — surfaces the right qualifier tier in prompt
     conf_avg = (
         valuation.confidence + macro.confidence + risk.confidence
@@ -554,7 +621,7 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
+{market_regime_block}{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
 SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 

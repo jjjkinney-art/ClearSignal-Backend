@@ -126,17 +126,34 @@ Produce a JSON object matching the ValuationView schema with these fields:
 - overall: One concise paragraph summarising the valuation
 - confidence: 0.0-1.0 based on evidence completeness
 - signals: array of 2-4 extracted signals. Each signal object must have:
-    - signal: string — 1-2 sentences naming the specific driver (NOT generic)
+    - signal: string — 1-2 sentences naming the specific driver, with priced-in language (NOT generic)
     - direction: "bullish" | "bearish" | "neutral"
     - signal_type: "valuation" | "structural" | "cyclical" | "catalyst" | "macro" | "quality" | "risk"
     - impact_score: 0.0-1.0 (how much does this move the thesis?)
     - time_horizon: "short_term" | "medium_term" | "long_term"
     - importance_reason: string — why this signal outweighs others
+    - evidence_origin: string — human-readable source (e.g. "earnings call", "SEC filing", "estimate revisions")
+    - source_category: string — one of: earnings|filing|macro|news|research|estimate_revision|market_data
 
 Signal quality rules:
 - BAD: "Apple has strong revenue" (generic description)
 - GOOD: "Services segment at 72% gross margin offsets hardware P/E compression" (causal mechanism)
 - Each signal must name a specific {company.ticker} product, segment, or metric
+
+PRICED-IN ANALYSIS — MANDATORY for every valuation signal:
+Each signal MUST answer: "Is this already priced in, or would this move the stock?"
+- State what the current multiple implies is already embedded in the price
+- Name one thing the market has NOT yet fully priced (where positioning could shift)
+- Use language: "the stock already prices X", "at ~[multiple]x, the market is paying for Y",
+  "incremental upside requires Z, not merely X", "consensus already assumes X — the differentiated call is Y"
+- GOOD signal: "At ~28x forward earnings, the multiple already prices Services durability — upside
+  requires margin acceleration above consensus, not just stability. [1]"
+- BAD signal: "Strong Services margins support valuation." (no priced/unpriced distinction)
+
+For evidence_origin and source_category fields in each signal object:
+- evidence_origin: human-readable source label (e.g. "earnings call", "SEC filing", "estimate revisions", "news", "macro rates context")
+- source_category: one of earnings|filing|macro|news|research|estimate_revision|market_data
+  Derive these from the evidence items you cite.
 
 Rules:
 - Cite evidence numbers (e.g. [1], [2]) in your text.

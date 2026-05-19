@@ -444,6 +444,43 @@ def _classify_drift_state(
     return "unclear"
 
 
+def _is_market_repricing(diff: ThesisDiff, prev: ThesisSnapshot, curr: ThesisSnapshot) -> bool:
+    """True when the market moved but the operating thesis is intact.
+
+    Repricing = the dominant dimension rotated (macro/rate/sentiment) without
+    fundamental operating deterioration (no new structural risks, no trend flip,
+    no confidence collapse).
+    """
+    drift = _classify_drift_state(diff, prev, curr)
+    prev_dim = getattr(prev, "dominant_dimension", "") or ""
+    curr_dim = getattr(curr, "dominant_dimension", "") or ""
+    dim_rotated = prev_dim and curr_dim and prev_dim != curr_dim
+
+    if drift in ("repricing", "unchanged"):
+        return True
+    # Dimension rotated to macro without structural breaks → market repriced
+    if dim_rotated and curr_dim in ("macro", "rates") and not diff.new_risks and not diff.trend_flipped:
+        return True
+    # Small confidence move with no new risks → noise-level rerating, not thesis break
+    if (
+        abs(diff.confidence_change) < CONFIDENCE_MATERIAL_THRESHOLD
+        and not diff.new_risks
+        and not diff.trend_flipped
+        and not diff.top_signal_replaced
+    ):
+        return True
+    return False
+
+
+def _is_thesis_broke(diff: ThesisDiff) -> bool:
+    """True when the thesis mechanism itself deteriorated, not just the market price."""
+    return (
+        diff.trend_flipped
+        or diff.confidence_change <= -CONFIDENCE_COLLAPSE_THRESHOLD
+        or (diff.confidence_change <= -CONFIDENCE_MATERIAL_THRESHOLD and len(diff.new_risks) >= 1)
+    )
+
+
 def build_pm_change_narrative(
     diff: ThesisDiff,
     prev: ThesisSnapshot,
@@ -452,6 +489,7 @@ def build_pm_change_narrative(
     """Generate a PM-quality single-sentence narrative of what changed.
 
     Uses diff dimensions + snapshot context to produce mechanism-first language.
+    Explicitly distinguishes 'market repriced, thesis intact' from 'thesis itself broke'.
     NEVER references internal scoring, agent names, or percentages.
 
     Design invariant: returns a single sentence ending in '.'.
@@ -461,58 +499,98 @@ def build_pm_change_narrative(
     prev_dim = getattr(prev, "dominant_dimension", "") or ""
     curr_dim = getattr(curr, "dominant_dimension", "") or ""
 
-    # ── Dimension shift → repricing narrative ────────────────────────────────
+    # ── Market repriced, thesis intact ───────────────────────────────────────
+    # Check this FIRST — repricing is the most common case and should produce
+    # explicit "operating story unchanged" language, not generic weakening language.
+    if _is_market_repricing(diff, prev, curr):
+        if prev_dim and curr_dim and prev_dim != curr_dim:
+            return (
+                f"The operating story is unchanged — the move came from "
+                f"{curr_dim.replace('_', ' ')} conditions, not fundamentals."
+            )
+        if drift == "unchanged":
+            return "No material thesis change — the core debate and positioning remain intact."
+        return (
+            "The operating story held — the repricing came from the market, not the thesis."
+        )
+
+    # ── Thesis broke: confidence collapse ────────────────────────────────────
+    if _is_thesis_broke(diff):
+        if diff.trend_flipped and conf_delta < 0:
+            if diff.new_risks:
+                risk = diff.new_risks[0].split(":")[0].strip()
+                return f"The original bull thesis broke — {risk} is now the dominant constraint, not a secondary risk."
+            return "The burden shifted — the original thesis mechanism no longer holds on the current evidence."
+        if conf_delta <= -CONFIDENCE_COLLAPSE_THRESHOLD:
+            if diff.new_risks:
+                risk = diff.new_risks[0].split(":")[0].strip()
+                return f"The original assumption no longer holds — {risk} moved to the center of the bear case."
+            return "The original thesis mechanism deteriorated — the operating story is no longer intact."
+        if diff.new_risks:
+            risk = diff.new_risks[0].split(":")[0].strip()
+            return f"Thesis conviction weakened on new evidence — {risk} is now a structural constraint, not a tail risk."
+
+    # ── Dimension shift → repricing (with material confidence move) ──────────
     if drift == "repricing" and prev_dim and curr_dim and prev_dim != curr_dim:
         return (
             f"The debate shifted from {prev_dim.replace('_', ' ')} toward "
             f"{curr_dim.replace('_', ' ')} — the original setup no longer frames the risk."
         )
 
-    # ── Transition: old thesis breaking ─────────────────────────────────────
+    # ── Transition: old thesis breaking, new one not yet confirmed ───────────
     if drift == "transition":
         return (
-            "The original thesis mechanism is weakening before a new one is confirmed — "
-            "the setup is in transition."
+            "The original thesis mechanism is breaking before a replacement is confirmed — "
+            "the setup is in transition, not repricing."
         )
 
-    # ── Bifurcating: both bull and bear developing ───────────────────────────
+    # ── Bifurcating: both bull and bear developing simultaneously ────────────
     if drift == "bifurcating":
         if diff.new_risks:
             risk_label = diff.new_risks[0].split(":")[0].strip()
-            return f"The bull/bear asymmetry is widening — {risk_label} moved into the bear case while the upside catalyst remains intact."
-        return "Bull/bear asymmetry is widening — both the upside case and the downside risk are developing simultaneously."
+            return (
+                f"The bull/bear asymmetry is widening — {risk_label} entered the bear case "
+                f"while the upside catalyst remains intact."
+            )
+        return (
+            "Bull/bear asymmetry is widening — both the upside driver and the downside risk "
+            "are developing simultaneously."
+        )
 
-    # ── Trend flip ───────────────────────────────────────────────────────────
-    if diff.trend_flipped:
-        if conf_delta < 0:
-            return "The burden shifted — the setup that supported the original thesis is no longer intact."
-        return "The setup improved materially — the prior overhang has cleared."
+    # ── Trend flip (positive) ─────────────────────────────────────────────────
+    if diff.trend_flipped and conf_delta >= 0:
+        return "The setup improved materially — the prior overhang cleared and the thesis is reaccelerating."
 
-    # ── Confidence collapse ───────────────────────────────────────────────────
-    if conf_delta <= -CONFIDENCE_COLLAPSE_THRESHOLD:
-        if diff.new_risks:
-            return f"The original assumption no longer holds — {diff.new_risks[0].split(':')[0].strip()} moved to the center of the bear case."
-        return "The original thesis mechanism is weakening — conviction collapsed on the current evidence."
-
-    # ── Thesis weakened ───────────────────────────────────────────────────────
+    # ── Thesis weakened (no collapse, no flip) ────────────────────────────────
     if drift == "weakening":
         if diff.new_risks and curr_dim:
-            return f"{curr_dim.replace('_', ' ').title()} pressure increased — {diff.new_risks[0].split(':')[0].strip()} is now the primary constraint."
+            return (
+                f"{curr_dim.replace('_', ' ').title()} pressure increased — "
+                f"{diff.new_risks[0].split(':')[0].strip()} is now the primary constraint."
+            )
         if diff.new_risks:
-            return f"The risk profile shifted — {diff.new_risks[0].split(':')[0].strip()} emerged as a new structural concern."
+            return (
+                f"The risk profile shifted — "
+                f"{diff.new_risks[0].split(':')[0].strip()} emerged as a new structural concern."
+            )
         if curr_dim == "macro":
-            return "Macro conditions now conflict with the original setup — rate and growth assumptions need revisiting."
+            return (
+                "Macro conditions now conflict with the original setup — "
+                "rate and growth assumptions need revisiting."
+            )
         return "Valuation support weakened against the current macro and risk profile."
 
     # ── Thesis strengthened ───────────────────────────────────────────────────
     if drift == "strengthening":
         if diff.strengthening_signals:
-            return f"The setup improved — {diff.strengthening_signals[0].split(':')[0].strip()} added durability to the thesis."
+            sig = diff.strengthening_signals[0].split(":")[0].strip()
+            return f"The setup improved — {sig} added durability to the thesis."
         return "The core thesis mechanism held — conviction improved as the evidence picture clarified."
 
     # ── New structural risk (no broad trend shift) ────────────────────────────
-    if diff.new_risks and not drift == "strengthening":
-        return f"{diff.new_risks[0].split(':')[0].strip()} moved into the risk profile — the market still needs to price this."
+    if diff.new_risks:
+        risk = diff.new_risks[0].split(":")[0].strip()
+        return f"{risk} moved into the risk profile — the market still needs to price this."
 
     # ── Top signal replaced ───────────────────────────────────────────────────
     if diff.top_signal_replaced:
@@ -547,6 +625,44 @@ def detect_material_change(
     # ── Classify change_type ──────────────────────────────────────────────────
     change_type = _classify_change_type(diff)
 
+    # ── Compute materiality score (0.0–1.0) ────────────────────────────────
+    # Drives alert suppression for cosmetic/wording changes:
+    #   ≥ 0.70 → high structural change (thesis broke or trend flipped)
+    #   0.40–0.69 → medium (new risk, top signal replaced, material confidence drop)
+    #   < 0.40 → cosmetic/noise (small moves without mechanism change)
+    mat_score = 0.0
+    if diff.trend_flipped:
+        mat_score += 0.40
+    if diff.confidence_change <= -CONFIDENCE_COLLAPSE_THRESHOLD:
+        mat_score += 0.35
+    elif diff.confidence_change <= -CONFIDENCE_MATERIAL_THRESHOLD:
+        mat_score += 0.20
+    elif abs(diff.confidence_change) <= CONFIDENCE_MINOR_THRESHOLD:
+        mat_score += 0.05
+    if diff.new_risks:
+        mat_score += min(len(diff.new_risks) * 0.12, 0.25)
+    if diff.top_signal_replaced:
+        mat_score += 0.15
+    mat_score = min(mat_score, 1.0)
+
+    # ── Classify change_category (human-facing) ────────────────────────────
+    is_repricing = _is_market_repricing(diff, prev, current)
+    is_broke = _is_thesis_broke(diff)
+    if is_broke and diff.trend_flipped:
+        change_category = "thesis_broke"
+    elif is_broke:
+        change_category = "thesis_broke"
+    elif is_repricing and diff.confidence_change >= CONFIDENCE_MINOR_THRESHOLD:
+        change_category = "thesis_strengthened"
+    elif is_repricing:
+        change_category = "market_repriced"
+    elif diff.new_risks:
+        change_category = "new_risk_emerged"
+    elif mat_score < 0.20:
+        change_category = "cosmetic"
+    else:
+        change_category = "market_repriced"
+
     # ── Build summary ─────────────────────────────────────────────────────────
     summary = _build_event_summary(change_type, diff, ticker)
 
@@ -561,6 +677,8 @@ def detect_material_change(
         current_snapshot_id  = diff.current_snapshot_id,
         confidence_change    = diff.confidence_change,
         thesis_trend_changed = diff.trend_flipped,
+        materiality_score    = mat_score,
+        change_category      = change_category,
     )
 
 
