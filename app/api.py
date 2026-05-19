@@ -395,3 +395,77 @@ def _build_alert_body(ev) -> str:
     if not parts:
         parts.append("Review the updated thesis for full context.")
     return " ".join(parts)
+
+
+# =============================================================================
+# PHASE I ENDPOINTS
+# =============================================================================
+
+
+@router.get(
+    "/morning-brief",
+    response_model=dict,
+    summary="Generate a morning brief from current watchlist state",
+    tags=["intelligence"],
+)
+async def get_morning_brief() -> dict:
+    """Generate a PM-style morning brief from current watchlist state.
+
+    Includes a compressed narrative, top movers, attention-required tickers,
+    and a market regime note.  Deterministic — no LLM calls.
+    """
+    from .services.morning_brief_service import generate_morning_brief
+
+    entries  = watchlist_service.get_watchlist()
+    changes  = watchlist_service.get_material_changes(limit=100)
+    brief    = generate_morning_brief(
+        watchlist_entries=entries,
+        recent_material_changes=changes,
+        recent_alerts=[],
+    )
+    return brief.model_dump()
+
+
+@router.get(
+    "/timeline-events/{ticker}",
+    response_model=list,
+    summary="Get structured timeline events for a ticker",
+    tags=["intelligence"],
+)
+async def get_timeline_events(
+    ticker: str,
+    limit: int = Query(default=50, ge=1, le=200),
+) -> list:
+    """Return structured TimelineEvent objects for *ticker*, newest-first.
+
+    Converts stored material change events and thesis diffs into
+    frontend-ready timeline entries.
+    """
+    from .services.timeline_event_service import get_ticker_timeline
+
+    events = get_ticker_timeline(ticker, limit=limit)
+    return [e.model_dump() for e in events]
+
+
+@router.get(
+    "/alert-priority/{ticker}",
+    response_model=dict,
+    summary="Get the priority level of the most recent alert for a ticker",
+    tags=["intelligence"],
+)
+async def get_alert_priority(ticker: str) -> dict:
+    """Return the AlertPriority for the most recent thesis diff for *ticker*.
+
+    Returns {available: false} when no diff exists.
+    """
+    from .services.alert_prioritizer import alert_priority_score
+
+    diff         = watchlist_service.get_latest_diff(ticker)
+    latest_event = watchlist_service.get_material_changes(ticker=ticker, limit=1)
+    event        = latest_event[0] if latest_event else None
+
+    if diff is None:
+        return {"available": False, "ticker": ticker.upper()}
+
+    ap = alert_priority_score(diff, event)
+    return {"available": True, "ticker": ticker.upper(), **ap.model_dump()}

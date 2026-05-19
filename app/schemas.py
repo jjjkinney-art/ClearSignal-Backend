@@ -1295,6 +1295,32 @@ class WatchlistEntry(BaseModel):
         description="Central market debate from the most recent snapshot",
     )
 
+    # ── Alert intelligence (Phase I) ─────────────────────────────────────────
+    recent_alert_count: int = Field(
+        default=0,
+        description="Number of alerts in the last 7 days",
+    )
+    materiality_level: str = Field(
+        default="",
+        description="high | medium | low | none — from most recent MaterialChangeEvent",
+    )
+    thesis_stability: str = Field(
+        default="stable",
+        description="stable | drifting | shifting | breaking — derived from recent diffs",
+    )
+    latest_change_narrative: str = Field(
+        default="",
+        description="PM-language 1-sentence description of latest change (not a percentage)",
+    )
+    debate_focus: str = Field(
+        default="",
+        description="valuation | product_competition | regulatory | margin | macro — current debate type",
+    )
+    alert_priority: str = Field(
+        default="",
+        description="critical | high | medium | ignore — highest priority of recent alerts",
+    )
+
 
 class ThesisDiff(BaseModel):
     """Structured diff between two consecutive ThesisSnapshot objects.
@@ -1454,6 +1480,32 @@ class MaterialChangeEvent(BaseModel):
             "'new_risk_emerged' | 'cosmetic' — PM-facing classification."
         ),
     )
+
+
+class TimelineEvent(BaseModel):
+    """A structured timeline event for thesis history visualization."""
+
+    event_id: str = Field(default_factory=lambda: str(_uuid.uuid4()))
+    ticker: str
+    event_type: str  # thesis_shift | market_repriced | earnings_event | new_risk | regime_change | narrative_transition | catalyst_confirmed | catalyst_failed
+    title: str       # Short display title (≤60 chars)
+    body: str        # 1-2 sentence description in PM language
+    severity: str = Field(default="medium")  # critical | high | medium | low
+    timestamp: str
+    metadata: Dict[str, Any] = Field(default_factory=dict)  # extra context
+    # optional references
+    source_material_change_id: Optional[str] = Field(default=None)
+    source_snapshot_id: Optional[str] = Field(default=None)
+
+
+class AlertPriority(BaseModel):
+    """Alert priority classification."""
+
+    alert_id: str
+    ticker: str
+    priority: str   # critical | high | medium | ignore
+    priority_score: float  # 0.0-1.0 composite
+    reason: str     # Why this priority level
 
 
 class AlertRule(BaseModel):

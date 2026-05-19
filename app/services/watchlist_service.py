@@ -473,3 +473,140 @@ class WatchlistService:
 # ---------------------------------------------------------------------------
 
 watchlist_service: WatchlistService = WatchlistService()
+
+
+# ---------------------------------------------------------------------------
+# Phase I: Watchlist intelligence enrichment
+# ---------------------------------------------------------------------------
+
+def enrich_watchlist_intelligence(
+    entries: List[WatchlistEntry],
+    days_lookback: int = 7,
+) -> List[WatchlistEntry]:
+    """Enrich WatchlistEntry objects with Phase I alert intelligence fields.
+
+    Populates: recent_alert_count, materiality_level, thesis_stability,
+    latest_change_narrative, debate_focus, alert_priority.
+
+    Parameters
+    ----------
+    entries:
+        List of WatchlistEntry objects from the watchlist.
+    days_lookback:
+        Number of days to look back when counting recent alerts (default 7).
+
+    Returns
+    -------
+    List[WatchlistEntry]
+        Enriched copies; original objects are NOT mutated.
+    """
+    if not entries:
+        return []
+
+    from datetime import datetime, timezone, timedelta
+    from .alert_prioritizer import alert_priority_score
+
+    cutoff = datetime.now(timezone.utc) - timedelta(days=days_lookback)
+
+    enriched: List[WatchlistEntry] = []
+
+    for entry in entries:
+        try:
+            ticker = _ticker_upper(entry.ticker)
+
+            # Load recent material changes from the change store
+            raw_changes = watchlist_service.get_material_changes(ticker=ticker, limit=50)
+
+            # Filter to lookback window
+            recent: List[MaterialChangeEvent] = []
+            for ev in raw_changes:
+                try:
+                    ev_dt = datetime.fromisoformat(ev.timestamp.replace("Z", "+00:00"))
+                    if ev_dt >= cutoff:
+                        recent.append(ev)
+                except Exception:
+                    pass
+
+            # recent_alert_count
+            recent_alert_count = len(recent)
+
+            # materiality_level: from most recent change overall
+            materiality_level = ""
+            if raw_changes:
+                latest_change = raw_changes[0]  # newest-first
+                ms = latest_change.materiality_score
+                if ms >= 0.7:
+                    materiality_level = "high"
+                elif ms >= 0.4:
+                    materiality_level = "medium"
+                elif ms > 0:
+                    materiality_level = "low"
+                else:
+                    materiality_level = "none"
+
+            # thesis_stability: derived from drift_state and recent changes
+            drift = (entry.drift_state or "").lower()
+            thesis_stability = "stable"
+            if drift in ("breaking",) or any(
+                ev.change_category == "thesis_broke" for ev in recent
+            ):
+                thesis_stability = "breaking"
+            elif drift in ("shifting", "transition") or any(
+                ev.change_category == "new_risk_emerged" for ev in recent
+            ):
+                thesis_stability = "shifting"
+            elif drift in ("drifting", "weakening", "bifurcating", "repricing") or (
+                entry.latest_thesis_trend in ("weakening", "inflecting")
+            ):
+                thesis_stability = "drifting"
+            else:
+                thesis_stability = "stable"
+
+            # latest_change_narrative: best PM narrative from recent changes
+            latest_change_narrative = ""
+            if recent:
+                latest_change_narrative = recent[0].summary or ""
+            elif entry.what_changed_summary:
+                latest_change_narrative = entry.what_changed_summary
+
+            # debate_focus: infer from core_debate text keyword heuristics
+            debate_focus = ""
+            debate_text = (entry.core_debate or "").lower()
+            if any(k in debate_text for k in ("valuation", "multiple", "pe ", "p/e", "price-to")):
+                debate_focus = "valuation"
+            elif any(k in debate_text for k in ("competition", "market share", "competitive", "product")):
+                debate_focus = "product_competition"
+            elif any(k in debate_text for k in ("regulation", "regulatory", "antitrust", "legal")):
+                debate_focus = "regulatory"
+            elif any(k in debate_text for k in ("margin", "cost", "opex", "gross profit")):
+                debate_focus = "margin"
+            elif any(k in debate_text for k in ("macro", "rate", "fed", "inflation", "gdp", "recession")):
+                debate_focus = "macro"
+
+            # alert_priority: score the most recent diff if available
+            alert_priority_str = ""
+            try:
+                diff = watchlist_service.get_latest_diff(ticker)
+                if diff is not None:
+                    latest_event = raw_changes[0] if raw_changes else None
+                    ap = alert_priority_score(diff, latest_event)
+                    alert_priority_str = ap.priority
+            except Exception:
+                pass
+
+            # Build enriched entry (Pydantic v2 model_copy)
+            enriched_entry = entry.model_copy(update={
+                "recent_alert_count":     recent_alert_count,
+                "materiality_level":      materiality_level,
+                "thesis_stability":       thesis_stability,
+                "latest_change_narrative": latest_change_narrative,
+                "debate_focus":           debate_focus,
+                "alert_priority":         alert_priority_str,
+            })
+            enriched.append(enriched_entry)
+
+        except Exception as exc:
+            logger.warning("enrich_watchlist_intelligence: error enriching %s: %s", entry.ticker, exc)
+            enriched.append(entry)
+
+    return enriched
