@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 FastAPI routes for the AI analyst backend.
 
@@ -469,3 +471,49 @@ async def get_alert_priority(ticker: str) -> dict:
 
     ap = alert_priority_score(diff, event)
     return {"available": True, "ticker": ticker.upper(), **ap.model_dump()}
+
+
+# ── History ───────────────────────────────────────────────────────────────────
+
+@router.get("/history", tags=["history"])
+async def get_history(
+    ticker: Optional[str] = None,
+    limit: int = 50,
+) -> list:
+    """Return analysis history, optionally filtered by ticker."""
+    from .services.history_service import get_analysis_history
+    try:
+        entries = get_analysis_history(ticker=ticker, limit=limit)
+        return [e.model_dump() for e in entries]
+    except Exception as exc:
+        logger.warning("get_history failed: %s", exc)
+        return []
+
+@router.get("/history/summary", tags=["history"])
+async def get_history_summary_endpoint() -> dict:
+    """Return a summary of tracked history."""
+    from .services.history_service import get_history_summary
+    try:
+        return get_history_summary()
+    except Exception as exc:
+        logger.warning("get_history_summary failed: %s", exc)
+        return {"total_tickers": 0, "total_entries": 0}
+
+@router.get("/watchlist/themes", tags=["watchlist"])
+async def get_watchlist_themes() -> list:
+    """Return watchlist entries grouped by macro theme."""
+    from .services.watchlist_themes import group_watchlist_by_theme
+    try:
+        entries = watchlist_service.get_watchlist()
+        raw = [e.model_dump() for e in entries]
+        groups = group_watchlist_by_theme(raw)
+        return [g.model_dump() for g in groups]
+    except Exception as exc:
+        logger.warning("get_watchlist_themes failed: %s", exc)
+        return []
+
+@router.get("/usage/stats", tags=["usage"])
+async def get_usage_stats() -> dict:
+    """Return aggregate usage statistics."""
+    from .services.usage_tracking import usage_tracker
+    return usage_tracker.get_totals()

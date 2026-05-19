@@ -441,6 +441,12 @@ class WatchlistService:
                 "WatchlistService: material change for %s — %s (%s)",
                 ticker, event.change_type, event.severity,
             )
+            logger.info(
+                "Material change detected | ticker=%s | category=%s | score=%.2f",
+                ticker,
+                event.change_category,
+                event.materiality_score,
+            )
 
         # Generate PM-quality change narrative
         pm_narrative = build_pm_change_narrative(diff, previous_snap, current_snap)
