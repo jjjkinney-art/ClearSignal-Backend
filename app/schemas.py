@@ -1627,6 +1627,12 @@ class EventImpactAssessment(BaseModel):
     timestamp: str = Field(default="")
     snapshot_id: Optional[str] = Field(default=None)
 
+    # Phase M — evidence provenance
+    provenance: Optional["EvidenceProvenance"] = Field(
+        default=None,
+        description="Source provenance for this assessment's triggering event",
+    )
+
 
 class MarketRegime(BaseModel):
     """
@@ -1657,3 +1663,173 @@ class MarketRegime(BaseModel):
         description="2-4 specific macro factors currently driving regime",
     )
     last_updated: str = Field(default="")
+
+
+# ---------------------------------------------------------------------------
+# Phase M — Real Market Infrastructure
+# ---------------------------------------------------------------------------
+
+
+class EvidenceProvenance(BaseModel):
+    """
+    Tracks the real-world source of a claim, event, or thesis component.
+
+    Rendered as a subtle citation label beneath key claims in the UI.
+    Always minimal — citation_label is the primary display field.
+
+    Examples:
+      citation_label = "Q1 2025 earnings call"
+      citation_label = "CPI March 2025"
+      citation_label = "10-K filing, Feb 2025"
+    """
+    source_origin: str = Field(
+        default="",
+        description=(
+            "Primary source type: 'earnings_transcript' | 'sec_filing' | "
+            "'macro_release' | 'treasury_move' | 'fed_statement' | "
+            "'analyst_revision' | 'news_wire' | 'market_pricing'"
+        ),
+    )
+    source_timestamp: str = Field(
+        default="",
+        description="ISO-8601 when the source was published/released",
+    )
+    source_confidence: float = Field(
+        default=0.8,
+        ge=0.0,
+        le=1.0,
+        description="0-1 confidence in provenance accuracy. SEC filings=1.0, news=0.7",
+    )
+    evidence_type: str = Field(
+        default="",
+        description=(
+            "Structured evidence category: 'filing' | 'transcript' | "
+            "'macro' | 'market_move' | 'guidance' | 'estimate' | 'regulatory'"
+        ),
+    )
+    citation_label: str = Field(
+        default="",
+        description=(
+            "Human-readable citation rendered in UI beneath the claim. "
+            "Good: 'Q1 2025 earnings call' | 'CPI March 2025' | '10-K filing, Feb 2025'. "
+            "Bad: 'Data source' | 'Source document'"
+        ),
+    )
+
+
+class EventFreshnessScore(BaseModel):
+    """
+    Time-decay freshness score for a NormalizedEvent.
+
+    Used by the pipeline to downweight stale events and surface
+    freshness labels in the UI (Live / Today / This Week / Stale).
+    """
+    event_id: str = Field(default="")
+    age_hours: float = Field(default=0.0, ge=0.0)
+    freshness: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="0-1 where 1.0=just ingested, 0.0=completely stale",
+    )
+    label: str = Field(
+        default="Today",
+        description="Live | Today | This Week | Stale",
+    )
+    is_stale: bool = Field(default=False)
+    ingested_at: str = Field(default="")
+
+
+class WatchlistDriftSummary(BaseModel):
+    """Per-ticker thesis drift summary for morning brief section 5."""
+    ticker: str
+    direction: str = Field(
+        default="unchanged",
+        description="strengthened | weakened | broke | unchanged | priced_in",
+    )
+    driver: str = Field(default="", description="≤12-word mechanism phrase")
+    materiality: float = Field(default=0.0, ge=0.0, le=1.0)
+    alert_priority: str = Field(default="ignore")
+
+
+class MorningBriefV2(BaseModel):
+    """
+    Phase M morning brief — institutional command center format.
+
+    Five structured sections replace the single brief_text blob.
+    Readable in under 60 seconds. Institutionally compressed.
+
+    Section philosophy:
+      1. MARKET REGIME    — "What currently matters most"
+      2. WHAT CHANGED     — "Which narratives shifted"
+      3. DEBATE SHIFTS    — "Which investment debates evolved"
+      4. PRIORITY ALERTS  — "What requires immediate attention"
+      5. WATCHLIST DRIFT  — "Which theses strengthened / weakened"
+    """
+    generated_at: str = Field(default="")
+    reference_date: str = Field(default="")
+    ticker_count: int = Field(default=0)
+
+    # Section 1 — Market Regime
+    regime_headline: str = Field(
+        default="",
+        description=(
+            "1-sentence PM compression of current macro regime. "
+            "Good: 'Higher-for-longer confirmed — rate-duration risk elevated across long-dated multiples.' "
+            "Good: 'Risk appetite recovering — market rotating into growth post macro clarity.'"
+        ),
+    )
+    regime_factors: List[str] = Field(
+        default_factory=list,
+        description="2-4 specific macro factors currently driving the regime",
+    )
+    rate_environment: str = Field(default="uncertain")
+    risk_appetite: str = Field(default="selective")
+
+    # Section 2 — What Changed
+    narrative_shifts: List[str] = Field(
+        default_factory=list,
+        description=(
+            "2-4 PM-compressed sentences about which narratives shifted since last brief. "
+            "Good: 'Cloud optimism broadening beyond NVDA.' "
+            "Good: 'AI infra leadership rotating — semis leading into software.' "
+            "Bad: 'Stock XYZ reported earnings.' "
+        ),
+    )
+
+    # Section 3 — Debate Shifts
+    debate_shifts: List[str] = Field(
+        default_factory=list,
+        description=(
+            "2-3 sentences about which investment debates evolved. "
+            "Good: 'META debate shifting from Reality Labs drag → AI monetization durability.' "
+            "Good: 'Rate-sensitive software repricing again — macro overriding fundamentals.' "
+        ),
+    )
+
+    # Section 4 — Priority Alerts
+    priority_alerts: List[str] = Field(
+        default_factory=list,
+        description="Critical and high alerts formatted as PM-style one-liners",
+    )
+    attention_required: List[str] = Field(
+        default_factory=list,
+        description="Tickers requiring PM decision this session",
+    )
+
+    # Section 5 — Watchlist Drift
+    watchlist_drift: List[WatchlistDriftSummary] = Field(
+        default_factory=list,
+        description="Per-ticker thesis drift summaries, sorted by materiality desc",
+    )
+    top_movers: List[str] = Field(
+        default_factory=list,
+        description="Tickers with most significant thesis movement",
+    )
+
+    # Backward-compat: single-string brief for legacy consumers
+    brief_text: str = Field(
+        default="",
+        description="Concatenated brief text for backward compatibility",
+    )
+    market_regime_note: str = Field(default="")

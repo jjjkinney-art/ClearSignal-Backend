@@ -19,6 +19,7 @@ from typing import Optional
 
 import requests as _requests
 from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import BaseModel
 
 from .schemas import (
     AnalysisRequest,
@@ -577,3 +578,227 @@ async def get_market_regime() -> dict:
     except Exception as exc:
         logger.warning("get_market_regime failed: %s", exc)
         return {"rate_environment": "uncertain", "risk_appetite": "selective"}
+
+
+# ---------------------------------------------------------------------------
+# Phase M — Real Market Infrastructure endpoints
+# ---------------------------------------------------------------------------
+
+
+@router.get("/pipeline/health", tags=["pipeline"])
+async def get_pipeline_health() -> dict:
+    """
+    Return health status of all ingestion adapters.
+
+    Reports per-adapter reachability, last run timestamp, dedup stats.
+    """
+    try:
+        from .services.ingestion.event_ingestion_pipeline import get_default_pipeline
+        pipeline = get_default_pipeline(auto_register=True)
+        health = await pipeline.health_check()
+        return health
+    except Exception as exc:
+        logger.warning("pipeline_health failed: %s", exc)
+        return {"pipeline_healthy": False, "error": str(exc)}
+
+
+class _PipelineRunRequest(BaseModel):
+    tickers: Optional[list] = None
+    since: Optional[str] = None
+
+
+@router.post("/pipeline/run", tags=["pipeline"])
+async def run_ingestion_pipeline(body: _PipelineRunRequest = None) -> dict:
+    """
+    Trigger a full ingestion pipeline run.
+
+    Fetches from all registered adapters (SEC EDGAR, Treasury/Macro,
+    Earnings, News), deduplicates, scores freshness, assesses thesis impact.
+
+    Returns PipelineRunResult summary with impact assessments.
+    """
+    try:
+        from .services.ingestion.event_ingestion_pipeline import get_default_pipeline
+        pipeline = get_default_pipeline(auto_register=True)
+        tickers = body.tickers if body else None
+        since = body.since if body else None
+        result = await pipeline.run(tickers=tickers, since=since)
+        return {
+            "started_at": result.started_at,
+            "completed_at": result.completed_at,
+            "duration_ms": result.duration_ms,
+            "adapters_called": result.adapters_called,
+            "events_fetched": result.events_fetched,
+            "events_after_dedup": result.events_after_dedup,
+            "events_after_freshness": result.events_after_freshness,
+            "impact_assessments": [a.model_dump() for a in result.impact_assessments],
+            "skipped_stale": result.skipped_stale,
+            "adapter_errors": result.adapter_errors,
+        }
+    except Exception as exc:
+        logger.warning("pipeline_run failed: %s", exc)
+        return {"error": str(exc), "impact_assessments": []}
+
+
+@router.post("/events/process", tags=["events"])
+async def process_single_event(payload: dict) -> dict:
+    """
+    Process a single event through the LiveThesisUpdateService.
+
+    Accepts a NormalizedEvent payload, runs through the full pipeline:
+    normalize → thesis impact → regime update → watchlist drift.
+
+    Returns UpdateSummary with per-ticker impact assessments.
+    """
+    try:
+        from .services.ingestion.normalized_event import EventCategory, NormalizedEvent, SourceReliability
+        from .services.live_thesis_update_service import get_live_thesis_service
+        from datetime import datetime, timezone
+
+        now_iso = datetime.now(timezone.utc).isoformat()
+
+        # Build NormalizedEvent from payload with safe defaults
+        event = NormalizedEvent(
+            ticker=payload.get("ticker"),
+            category=EventCategory(payload.get("category", "news")),
+            headline=payload.get("headline", ""),
+            body=payload.get("body", ""),
+            source=payload.get("source", "api"),
+            source_reliability=SourceReliability(
+                payload.get("source_reliability", "medium")
+            ),
+            event_timestamp=payload.get("event_timestamp") or now_iso,
+            ingestion_timestamp=now_iso,
+            is_market_moving=payload.get("is_market_moving", False),
+            tags=payload.get("tags", []),
+            magnitude=payload.get("magnitude"),
+        )
+
+        service = get_live_thesis_service()
+        summary = service.process_event(event)
+        return summary.to_dict()
+    except Exception as exc:
+        logger.warning("process_single_event failed: %s", exc)
+        return {"error": str(exc), "impact_count": 0}
+
+
+@router.get("/events/freshness/{ticker}", tags=["events"])
+async def get_event_freshness(ticker: str, limit: int = 20) -> list:
+    """
+    Return recent EventImpactAssessments with freshness scores for a ticker.
+
+    Adds freshness metadata (age_hours, label, is_stale) to each assessment.
+    Used by the frontend to display "Live / Today / This Week / Stale" labels.
+    """
+    try:
+        from .services.timeline_store import default_store
+        from .services.ingestion.freshness_scorer import freshness_label
+        from datetime import datetime, timezone
+
+        entries = default_store.load(ticker.upper(), entry_type="event_impact")
+        entries.sort(key=lambda e: e.timestamp, reverse=True)
+
+        now = datetime.now(timezone.utc)
+        result = []
+        for entry in entries[:limit]:
+            data = dict(entry.data)
+            # Add freshness metadata based on assessment timestamp
+            ts_str = data.get("timestamp", "") or entry.timestamp or ""
+            age_hours = 999.0
+            if ts_str:
+                try:
+                    ts_str_clean = ts_str.replace("Z", "+00:00")
+                    dt = datetime.fromisoformat(ts_str_clean)
+                    if dt.tzinfo is None:
+                        from datetime import timezone as tz
+                        dt = dt.replace(tzinfo=tz.utc)
+                    age_hours = max(0.0, (now - dt).total_seconds() / 3600.0)
+                except Exception:
+                    pass
+            data["freshness_label"] = freshness_label(age_hours)
+            data["age_hours"] = round(age_hours, 1)
+            result.append(data)
+        return result
+    except Exception as exc:
+        logger.warning("get_event_freshness failed: %s", exc)
+        return []
+
+
+@router.get("/morning-brief/v2", tags=["brief"])
+async def get_morning_brief_v2(reference_date: Optional[str] = None) -> dict:
+    """
+    Generate the Phase M 5-section institutional morning brief.
+
+    Sections:
+      1. Market Regime (rate_environment, risk_appetite, regime_headline)
+      2. What Changed (narrative_shifts — 2-4 PM sentences)
+      3. Debate Shifts (debate_shifts — 2-3 sentences)
+      4. Priority Alerts (priority_alerts + attention_required tickers)
+      5. Watchlist Drift (per-ticker direction/driver/materiality)
+    """
+    try:
+        from .services.watchlist_service import watchlist_service
+        from .services.market_regime_tracker import get_current_regime
+        from .services.thesis_impact_evaluator import get_default_evaluator
+        from .services.morning_brief_service import generate_morning_brief_v2
+        from .services.timeline_store import default_store
+
+        # Fetch watchlist state
+        watchlist_entries = await watchlist_service.get_all_entries()
+
+        # Fetch current regime
+        try:
+            regime = get_current_regime()
+        except Exception:
+            regime = None
+
+        # Fetch recent event impacts across all watched tickers
+        all_impacts = []
+        for entry in watchlist_entries:
+            ticker_entries = default_store.load(entry.ticker, entry_type="event_impact")
+            ticker_entries.sort(key=lambda e: e.timestamp, reverse=True)
+            from .schemas import EventImpactAssessment
+            for te in ticker_entries[:5]:
+                try:
+                    all_impacts.append(EventImpactAssessment.model_validate(te.data))
+                except Exception:
+                    pass
+
+        # Compute watchlist drift
+        evaluator = get_default_evaluator()
+        tickers = [e.ticker for e in watchlist_entries]
+        drift = evaluator.get_watchlist_drift(tickers) if tickers else []
+
+        brief = generate_morning_brief_v2(
+            watchlist_entries=watchlist_entries,
+            event_impacts=all_impacts,
+            watchlist_drift=drift,
+            regime=regime,
+            reference_date=reference_date,
+        )
+        return brief.model_dump()
+    except Exception as exc:
+        logger.warning("morning_brief_v2 failed: %s", exc)
+        return {"error": str(exc), "regime_headline": "", "narrative_shifts": []}
+
+
+@router.get("/watchlist/drift", tags=["watchlist"])
+async def get_watchlist_drift() -> list:
+    """
+    Return current thesis drift summaries for all watched tickers.
+
+    Sorted by materiality descending. Direction: broke > weakened > strengthened > unchanged.
+    Used by the watchlist page to show thesis evolution without running a full analysis.
+    """
+    try:
+        from .services.watchlist_service import watchlist_service
+        from .services.thesis_impact_evaluator import get_default_evaluator
+
+        entries = await watchlist_service.get_all_entries()
+        tickers = [e.ticker for e in entries]
+        evaluator = get_default_evaluator()
+        drift = evaluator.get_watchlist_drift(tickers)
+        return [d.model_dump() for d in drift]
+    except Exception as exc:
+        logger.warning("watchlist_drift failed: %s", exc)
+        return []

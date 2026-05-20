@@ -36,3 +36,5 @@ class NormalizedEvent(BaseModel):
     sentiment: Optional[str] = Field(default=None)  # positive | negative | neutral
     magnitude: Optional[float] = Field(default=None) # 0.0-1.0 estimated impact magnitude
     tags: list[str] = Field(default_factory=list)    # ["beat", "guidance_raised", "miss", etc.]
+    # Phase M — evidence provenance (set by EventNormalizer post-processing)
+    provenance: Optional[Any] = Field(default=None)  # EvidenceProvenance; typed as Any to avoid circular import
