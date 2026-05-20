@@ -725,7 +725,13 @@ async def get_event_freshness(ticker: str, limit: int = 20) -> list:
 
 
 @router.get("/morning-brief/v2", tags=["brief"])
-async def get_morning_brief_v2(reference_date: Optional[str] = None) -> dict:
+async def get_morning_brief_v2(
+    reference_date: Optional[str] = None,
+    tickers: Optional[str] = Query(
+        default=None,
+        description="Comma-separated ticker list from frontend localStorage (fallback when backend list is empty)",
+    ),
+) -> dict:
     """
     Generate the Phase M 5-section institutional morning brief.
 
@@ -735,6 +741,12 @@ async def get_morning_brief_v2(reference_date: Optional[str] = None) -> dict:
       3. Debate Shifts (debate_shifts — 2-3 sentences)
       4. Priority Alerts (priority_alerts + attention_required tickers)
       5. Watchlist Drift (per-ticker direction/driver/materiality)
+
+    Query params:
+      tickers: comma-separated list of tickers from the frontend watchlist store.
+               Used as fallback when the backend has no registered entries (e.g., fresh
+               server start). The backend will auto-register them and generate a brief.
+      reference_date: ISO date string for the brief header (defaults to today UTC).
     """
     try:
         from .services.watchlist_service import watchlist_service
@@ -742,9 +754,20 @@ async def get_morning_brief_v2(reference_date: Optional[str] = None) -> dict:
         from .services.thesis_impact_evaluator import get_default_evaluator
         from .services.morning_brief_service import generate_morning_brief_v2
         from .services.timeline_store import default_store
+        from .schemas import EventImpactAssessment, WatchlistEntry as WLEntry
 
-        # Fetch watchlist state
-        watchlist_entries = await watchlist_service.get_all_entries()
+        # Fetch watchlist state (sync method — get_watchlist returns List[WatchlistEntry])
+        watchlist_entries = watchlist_service.get_watchlist()
+
+        # Fallback: if backend has no entries but frontend sent tickers, register them
+        if not watchlist_entries and tickers:
+            frontend_tickers = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+            for ticker_sym in frontend_tickers[:20]:  # cap at 20
+                try:
+                    watchlist_service.add_ticker(ticker_sym, ticker_sym)
+                except Exception:
+                    pass
+            watchlist_entries = watchlist_service.get_watchlist()
 
         # Fetch current regime
         try:
@@ -755,19 +778,21 @@ async def get_morning_brief_v2(reference_date: Optional[str] = None) -> dict:
         # Fetch recent event impacts across all watched tickers
         all_impacts = []
         for entry in watchlist_entries:
-            ticker_entries = default_store.load(entry.ticker, entry_type="event_impact")
-            ticker_entries.sort(key=lambda e: e.timestamp, reverse=True)
-            from .schemas import EventImpactAssessment
-            for te in ticker_entries[:5]:
-                try:
-                    all_impacts.append(EventImpactAssessment.model_validate(te.data))
-                except Exception:
-                    pass
+            try:
+                ticker_entries = default_store.load(entry.ticker, entry_type="event_impact")
+                ticker_entries.sort(key=lambda e: e.timestamp, reverse=True)
+                for te in ticker_entries[:5]:
+                    try:
+                        all_impacts.append(EventImpactAssessment.model_validate(te.data))
+                    except Exception:
+                        pass
+            except Exception:
+                pass
 
         # Compute watchlist drift
         evaluator = get_default_evaluator()
-        tickers = [e.ticker for e in watchlist_entries]
-        drift = evaluator.get_watchlist_drift(tickers) if tickers else []
+        ticker_list = [e.ticker for e in watchlist_entries]
+        drift = evaluator.get_watchlist_drift(ticker_list) if ticker_list else []
 
         brief = generate_morning_brief_v2(
             watchlist_entries=watchlist_entries,
@@ -779,7 +804,25 @@ async def get_morning_brief_v2(reference_date: Optional[str] = None) -> dict:
         return brief.model_dump()
     except Exception as exc:
         logger.warning("morning_brief_v2 failed: %s", exc)
-        return {"error": str(exc), "regime_headline": "", "narrative_shifts": []}
+        # Return a valid empty-state brief rather than an error object
+        return {
+            "generated_at": "",
+            "reference_date": reference_date or "",
+            "ticker_count": 0,
+            "regime_headline": "",
+            "regime_factors": [],
+            "rate_environment": "uncertain",
+            "risk_appetite": "selective",
+            "narrative_shifts": [],
+            "debate_shifts": [],
+            "priority_alerts": [],
+            "attention_required": [],
+            "watchlist_drift": [],
+            "top_movers": [],
+            "brief_text": "",
+            "market_regime_note": "",
+            "_error": str(exc),
+        }
 
 
 @router.get("/watchlist/drift", tags=["watchlist"])
@@ -794,7 +837,7 @@ async def get_watchlist_drift() -> list:
         from .services.watchlist_service import watchlist_service
         from .services.thesis_impact_evaluator import get_default_evaluator
 
-        entries = await watchlist_service.get_all_entries()
+        entries = watchlist_service.get_watchlist()
         tickers = [e.ticker for e in entries]
         evaluator = get_default_evaluator()
         drift = evaluator.get_watchlist_drift(tickers)
@@ -802,3 +845,78 @@ async def get_watchlist_drift() -> list:
     except Exception as exc:
         logger.warning("watchlist_drift failed: %s", exc)
         return []
+
+
+@router.get("/watchlist/status", tags=["watchlist"])
+async def get_watchlist_status() -> dict:
+    """
+    Diagnostic endpoint — returns the full state of the watchlist + analysis coverage.
+
+    Returns:
+      - registered_tickers: list of tickers in the backend registry
+      - tickers_with_snapshots: tickers that have at least one thesis snapshot
+      - tickers_with_analyses: same as snapshots (one analysis = one snapshot)
+      - tickers_pending_analysis: registered but no snapshot yet
+      - ticker_count: total registered
+      - ready_count: registered + analyzed
+      - pending_count: registered but not yet analyzed
+      - guidance: human-readable next-step instruction
+
+    Use this for frontend diagnostics and empty-state UX decisions.
+    """
+    try:
+        from .services.watchlist_service import watchlist_service
+        from .services.timeline_store import default_store
+
+        entries = watchlist_service.get_watchlist()
+        tickers_registered = [e.ticker for e in entries]
+
+        # Check which tickers have snapshots (= have been analyzed)
+        tickers_with_snapshots = []
+        tickers_pending = []
+        for ticker in tickers_registered:
+            snaps = default_store.load(ticker, entry_type="thesis_snapshot")
+            if snaps:
+                tickers_with_snapshots.append(ticker)
+            else:
+                tickers_pending.append(ticker)
+
+        ready_count = len(tickers_with_snapshots)
+        pending_count = len(tickers_pending)
+        total_count = len(tickers_registered)
+
+        if total_count == 0:
+            guidance = "Add companies to your watchlist by clicking 'Watch' on the analyze page."
+        elif pending_count > 0 and ready_count == 0:
+            guidance = (
+                f"{pending_count} ticker{'s' if pending_count > 1 else ''} registered. "
+                f"Run an analysis on each to populate the morning brief, timeline, and alerts."
+            )
+        elif pending_count > 0:
+            guidance = (
+                f"{ready_count} analyzed, {pending_count} pending analysis. "
+                f"Analyze remaining tickers to complete your watchlist intelligence."
+            )
+        else:
+            guidance = f"{ready_count} ticker{'s' if ready_count > 1 else ''} active with thesis memory."
+
+        return {
+            "registered_tickers": tickers_registered,
+            "tickers_with_snapshots": tickers_with_snapshots,
+            "tickers_pending_analysis": tickers_pending,
+            "ticker_count": total_count,
+            "ready_count": ready_count,
+            "pending_count": pending_count,
+            "guidance": guidance,
+        }
+    except Exception as exc:
+        logger.warning("watchlist_status failed: %s", exc)
+        return {
+            "registered_tickers": [],
+            "tickers_with_snapshots": [],
+            "tickers_pending_analysis": [],
+            "ticker_count": 0,
+            "ready_count": 0,
+            "pending_count": 0,
+            "guidance": "Status unavailable.",
+        }
