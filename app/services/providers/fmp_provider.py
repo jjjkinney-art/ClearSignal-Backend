@@ -352,6 +352,181 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
     return []
 
 
+def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
+    """Fetch forward valuation multiples: forward P/E, EV/EBITDA, P/S, P/FCF.
+
+    Uses FMP's /v3/ratios-ttm and /v3/key-metrics-ttm endpoints.
+    Returns [] when the API key is absent or the call fails.
+    """
+    api_key = _get_api_key()
+    if not api_key:
+        return []
+    evidence: List[RetrievedEvidence] = []
+    try:
+        url = f"{_FMP_BASE}/v3/ratios-ttm/{quote(symbol)}?apikey={api_key}"
+        data = _fetch_json(url)
+        if isinstance(data, list) and data:
+            r = data[0]
+        elif isinstance(data, dict):
+            r = data
+        else:
+            r = {}
+
+        parts: List[str] = []
+        pe_ttm = r.get("peRatioTTM")
+        if pe_ttm:
+            parts.append(f"Trailing P/E (TTM): {pe_ttm:.1f}x")
+        fwd_pe = r.get("priceEarningsRatioTTM") or r.get("forwardPE")
+        if fwd_pe and fwd_pe != pe_ttm:
+            parts.append(f"Forward P/E: {fwd_pe:.1f}x")
+        ev_ebitda = r.get("enterpriseValueMultipleTTM") or r.get("evToEbitdaTTM")
+        if ev_ebitda:
+            parts.append(f"EV/EBITDA (TTM): {ev_ebitda:.1f}x")
+        ps = r.get("priceToSalesRatioTTM")
+        if ps:
+            parts.append(f"Price/Sales (TTM): {ps:.1f}x")
+        pfcf = r.get("priceToFreeCashFlowsRatioTTM") or r.get("priceFreeCashFlowRatioTTM")
+        if pfcf:
+            parts.append(f"Price/FCF (TTM): {pfcf:.1f}x")
+        pb = r.get("priceToBookRatioTTM")
+        if pb:
+            parts.append(f"Price/Book (TTM): {pb:.1f}x")
+        roe = r.get("returnOnEquityTTM")
+        if roe:
+            parts.append(f"ROE (TTM): {_fmt_pct(roe)}")
+
+        if parts:
+            summary = f"{symbol} valuation multiples (TTM): " + " | ".join(parts) + "."
+            evidence.append(RetrievedEvidence(
+                title=f"{symbol} Valuation Multiples (TTM)",
+                source="FMP/ratios-ttm",
+                summary=summary,
+                relevance_score=0.95,
+            ))
+    except Exception as exc:
+        logger.debug("FMP valuation ratios failed for %s: %r", symbol, exc)
+
+    try:
+        url = f"{_FMP_BASE}/v3/key-metrics-ttm/{quote(symbol)}?apikey={api_key}"
+        data = _fetch_json(url)
+        if isinstance(data, list) and data:
+            km = data[0]
+        elif isinstance(data, dict):
+            km = data
+        else:
+            km = {}
+
+        parts2: List[str] = []
+        revenue_per_share = km.get("revenuePerShareTTM")
+        if revenue_per_share:
+            parts2.append(f"Revenue/share: ${revenue_per_share:.2f}")
+        fcf_yield = km.get("freeCashFlowYieldTTM")
+        if fcf_yield:
+            parts2.append(f"FCF yield: {_fmt_pct(fcf_yield)}")
+        ev = km.get("enterpriseValueTTM")
+        if ev:
+            parts2.append(f"Enterprise value: {_fmt_large(ev)}")
+        net_debt_ebitda = km.get("netDebtToEBITDATTM")
+        if net_debt_ebitda:
+            parts2.append(f"Net Debt/EBITDA: {net_debt_ebitda:.2f}x")
+        roic = km.get("roicTTM")
+        if roic:
+            parts2.append(f"ROIC: {_fmt_pct(roic)}")
+
+        if parts2:
+            summary2 = f"{symbol} key metrics (TTM): " + " | ".join(parts2) + "."
+            evidence.append(RetrievedEvidence(
+                title=f"{symbol} Key Metrics (TTM)",
+                source="FMP/key-metrics-ttm",
+                summary=summary2,
+                relevance_score=0.90,
+            ))
+    except Exception as exc:
+        logger.debug("FMP key-metrics-ttm failed for %s: %r", symbol, exc)
+
+    return evidence
+
+
+def fetch_analyst_estimates(symbol: str) -> List[RetrievedEvidence]:
+    """Fetch analyst EPS/revenue estimates and price targets.
+
+    Uses FMP's /v3/analyst-estimates and /v4/price-target-consensus.
+    Returns [] when the API key is absent or the call fails.
+    """
+    api_key = _get_api_key()
+    if not api_key:
+        return []
+    evidence: List[RetrievedEvidence] = []
+
+    try:
+        url = (
+            f"{_FMP_BASE}/v3/analyst-estimates/{quote(symbol)}"
+            f"?period=annual&limit=2&apikey={api_key}"
+        )
+        data = _fetch_json(url)
+        if isinstance(data, list) and data:
+            est = data[0]
+            parts: List[str] = []
+            date = est.get("date", "")
+            rev_est = est.get("estimatedRevenueAvg")
+            eps_est = est.get("estimatedEpsAvg")
+            rev_high = est.get("estimatedRevenueHigh")
+            rev_low  = est.get("estimatedRevenueLow")
+            if rev_est:
+                parts.append(f"Revenue est. {date}: {_fmt_large(rev_est)}")
+                if rev_high and rev_low:
+                    parts.append(f"(range: {_fmt_large(rev_low)} – {_fmt_large(rev_high)})")
+            if eps_est:
+                parts.append(f"EPS est. {date}: ${eps_est:.2f}")
+            num_analysts = est.get("numberAnalystEstimatedRevenue")
+            if num_analysts:
+                parts.append(f"Based on {int(num_analysts)} analyst estimates")
+            if parts:
+                summary = f"{symbol} forward analyst estimates: " + " | ".join(parts) + "."
+                evidence.append(RetrievedEvidence(
+                    title=f"{symbol} Analyst Estimates",
+                    source="FMP/analyst-estimates",
+                    summary=summary,
+                    relevance_score=0.92,
+                ))
+    except Exception as exc:
+        logger.debug("FMP analyst estimates failed for %s: %r", symbol, exc)
+
+    try:
+        url = f"{_FMP_BASE}/v4/price-target-consensus?symbol={quote(symbol)}&apikey={api_key}"
+        data = _fetch_json(url)
+        if isinstance(data, list) and data:
+            pt = data[0]
+        elif isinstance(data, dict):
+            pt = data
+        else:
+            pt = {}
+        if pt:
+            parts2: List[str] = []
+            target_high = pt.get("targetHigh")
+            target_low  = pt.get("targetLow")
+            target_mean = pt.get("targetMean") or pt.get("targetConsensus")
+            target_median = pt.get("targetMedian")
+            if target_mean:
+                parts2.append(f"Consensus price target: ${target_mean:.2f}")
+            if target_high and target_low:
+                parts2.append(f"Range: ${target_low:.2f} – ${target_high:.2f}")
+            if target_median and target_median != target_mean:
+                parts2.append(f"Median: ${target_median:.2f}")
+            if parts2:
+                summary2 = f"{symbol} analyst price targets: " + " | ".join(parts2) + "."
+                evidence.append(RetrievedEvidence(
+                    title=f"{symbol} Analyst Price Targets",
+                    source="FMP/price-target-consensus",
+                    summary=summary2,
+                    relevance_score=0.93,
+                ))
+    except Exception as exc:
+        logger.debug("FMP price-target-consensus failed for %s: %r", symbol, exc)
+
+    return evidence
+
+
 def fetch_company_evidence(company: str) -> List[RetrievedEvidence]:
     """Top-level entry point: resolve ticker then fetch all company evidence.
 

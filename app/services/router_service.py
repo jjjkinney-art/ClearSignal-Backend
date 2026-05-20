@@ -51,6 +51,7 @@ from ..agents import _YIELD_FALLBACK_ANSWER, _GENERIC_EVIDENCE_FALLBACK
 
 # ── Company detection + investment pipeline imports ───────────────────────────
 from .company_detection import detect_company, resolve_entity, MINIMUM_ROUTE_CONFIDENCE
+from .providers.fmp_provider import fetch_valuation_ratios, fetch_analyst_estimates
 from .company_knowledge import get_profile_for_company
 from .evidence_partitioner import partition_evidence
 from .providers import retrieve_market_evidence
@@ -637,6 +638,69 @@ def _has_investment_intent(question: str) -> bool:
     return any(kw in q for kw in _INVESTMENT_INTENT_KEYWORDS)
 
 
+# ── Question-intent classifier ────────────────────────────────────────────────
+
+_VALUATION_STANCE_PATTERNS: tuple = (
+    # Direct price-fairness questions
+    "overpriced", "over priced", "overvalued", "over valued",
+    "underpriced", "under priced", "undervalued", "under valued",
+    "fairly valued", "fairly priced", "fair value", "fair price",
+    "too expensive", "too cheap", "cheap stock", "expensive stock",
+    "worth buying", "worth the price", "priced correctly",
+    "at a premium", "at a discount",
+    # Is it a buy/avoid at current price?
+    "buy at current", "buy at this price", "buy here", "avoid at",
+    "good price", "right price", "wrong price",
+    # Multiple-anchored questions
+    "p/e too high", "pe too high", "pe ratio too", "multiple too",
+    "stretched valuation", "stretched multiple", "stretched multiple",
+    "discount to", "premium to peers", "cheap relative",
+)
+
+_MACRO_SENSITIVITY_PATTERNS: tuple = (
+    "how would", "how will", "what happens if", "impact of",
+    "effect of", "affect", "rate hike", "rate cut", "inflation",
+    "recession", "yield curve", "fed", "interest rate",
+)
+
+_RISK_ASSESSMENT_PATTERNS: tuple = (
+    "what are the risks", "biggest risk", "main risk", "key risk",
+    "downside risk", "worst case", "what could go wrong",
+    "regulatory risk", "competitive threat",
+)
+
+_COMPETITIVE_PATTERNS: tuple = (
+    "competitive position", "market share", "moat", "versus",
+    "compared to", "better than", "worse than", "vs ",
+    "competitive advantage", "differentiat",
+)
+
+
+def _detect_question_intent(question: str) -> str:
+    """Classify the user's question into a fine-grained intent.
+
+    Returns one of:
+      'valuation_stance'    — "Is X overpriced?" / "Is X fairly valued?"
+      'macro_sensitivity'   — "How would rates affect X?"
+      'risk_assessment'     — "What are X's biggest risks?"
+      'competitive_position'— "How does X compare to competitors?"
+      'investment_thesis'   — default full-thesis intent
+
+    Used to drive depth allocation, evidence retrieval, and answer framing.
+    """
+    q = question.lower()
+
+    if any(p in q for p in _VALUATION_STANCE_PATTERNS):
+        return "valuation_stance"
+    if any(p in q for p in _MACRO_SENSITIVITY_PATTERNS):
+        return "macro_sensitivity"
+    if any(p in q for p in _RISK_ASSESSMENT_PATTERNS):
+        return "risk_assessment"
+    if any(p in q for p in _COMPETITIVE_PATTERNS):
+        return "competitive_position"
+    return "investment_thesis"
+
+
 def _run_investment_pipeline(
     company: CompanyContext,
     question: str,
@@ -659,6 +723,13 @@ def _run_investment_pipeline(
     """
     ticker = company.ticker
 
+    # ── Question intent detection ─────────────────────────────────────────────
+    # Classify the user's question before evidence retrieval so that
+    # valuation_stance questions get extra FMP evidence appended after the
+    # standard cap.  This intent flows through the entire pipeline.
+    question_intent = _detect_question_intent(question)
+    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: question_intent={question_intent!r}")
+
     # ── Evidence retrieval ────────────────────────────────────────────────────
     # Market evidence: FMP + SEC + NewsAPI (company-specific + macro topics)
     detected_topics = _detect_topics(question)
@@ -670,6 +741,32 @@ def _run_investment_pipeline(
     # FRED macro evidence — interest rates, inflation, yield curve
     fred_evidence = retrieve_general_finance_evidence(question)
     evidence = market_evidence + fred_evidence
+
+    # ── Valuation-specific extra evidence ─────────────────────────────────────
+    # For "Is X overpriced?" questions, append forward multiples and analyst
+    # price targets AFTER the standard evidence cap so the valuation_agent
+    # has explicit ratio and consensus data available.
+    if question_intent == "valuation_stance":
+        try:
+            _val_ratios = fetch_valuation_ratios(ticker)
+            if _val_ratios:
+                evidence = evidence + _val_ratios
+                print(
+                    f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+                    f"appended {len(_val_ratios)} valuation_ratios item(s)"
+                )
+        except Exception as _exc:
+            logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, _exc)
+        try:
+            _analyst_ests = fetch_analyst_estimates(ticker)
+            if _analyst_ests:
+                evidence = evidence + _analyst_ests
+                print(
+                    f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+                    f"appended {len(_analyst_ests)} analyst_estimates item(s)"
+                )
+        except Exception as _exc:
+            logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _exc)
 
     print(
         f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
@@ -691,7 +788,11 @@ def _run_investment_pipeline(
     # ── Specialist agents ─────────────────────────────────────────────────────
     print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: running 5 specialist agents")
     try:
-        valuation = run_valuation_agent(company, partition.valuation, request_id=request_id, profile=profile)
+        valuation = run_valuation_agent(
+            company, partition.valuation,
+            request_id=request_id, profile=profile,
+            question_intent=question_intent,
+        )
     except Exception as exc:
         logger.warning("[router] valuation_agent failed for %s: %r", ticker, exc)
         from ..schemas import ValuationView
@@ -747,6 +848,7 @@ def _run_investment_pipeline(
             evidence=evidence,
             profile=profile,
             original_user_question=question,
+            question_intent=question_intent,
             prior_snapshot=prior_snapshot,
         )
     except Exception as exc:
@@ -762,6 +864,15 @@ def _run_investment_pipeline(
             key_drivers=[],
             key_risks=[],
         )
+
+    # ── Stamp question intent + propagate valuation stance ───────────────────
+    # Ensure question_intent is always on the thesis so the frontend / API
+    # consumers can branch on it without re-deriving it.
+    thesis.question_intent = question_intent
+    # When the user asked a valuation stance question and the valuation agent
+    # produced an explicit verdict, promote it to the top-level thesis field.
+    if question_intent == "valuation_stance" and getattr(valuation, "valuation_stance", ""):
+        thesis.valuation_stance = valuation.valuation_stance
 
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.

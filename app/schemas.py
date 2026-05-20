@@ -741,6 +741,19 @@ class ValuationView(BaseModel):
         default_factory=list,
         description="Structured signals extracted by this agent",
     )
+    # ── Valuation stance (populated when question asks about over/undervaluation) ──
+    valuation_stance: str = Field(
+        default="",
+        description=(
+            "Explicit verdict when the user's question asks about price fairness. "
+            "One of: 'overpriced' | 'fairly_valued' | 'underpriced' | 'cannot_determine'. "
+            "Empty string when no stance question was detected."
+        ),
+    )
+    valuation_stance_reasoning: str = Field(
+        default="",
+        description="1-2 sentence reasoning behind the valuation_stance verdict.",
+    )
 
 
 class MacroSensitivity(BaseModel):
@@ -980,6 +993,25 @@ class InvestmentThesis(BaseModel):
     dominant_dimension: str = Field(
         default="",
         description="Dominant analytical frame for this thesis (macro/valuation/regulatory/operational/capital_allocation/competitive/behavioral)",
+    )
+
+    # ── Question-anchored fields ──────────────────────────────────────────────
+    valuation_stance: str = Field(
+        default="",
+        description=(
+            "Explicit verdict when the user's question is about price fairness. "
+            "One of: 'overpriced' | 'fairly_valued' | 'underpriced' | 'cannot_determine'. "
+            "Empty string when no valuation stance question was detected."
+        ),
+    )
+    question_intent: str = Field(
+        default="",
+        description=(
+            "Detected intent of the user's question: "
+            "'valuation_stance' | 'macro_sensitivity' | 'competitive_position' | "
+            "'investment_thesis' | 'risk_assessment'. "
+            "Drives depth allocation and direct_answer framing."
+        ),
     )
 
     # ── Phase J — Institutional Clarity ──────────────────────────────────────────

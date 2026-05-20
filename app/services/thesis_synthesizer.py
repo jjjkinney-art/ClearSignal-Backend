@@ -939,6 +939,7 @@ def _build_synthesis_prompt(
     original_user_question: Optional[str] = None,
     ranked: Optional[RankedSignalSet] = None,
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoid circular import
+    question_intent: Optional[str] = None,
 ) -> str:
     # Plain-text agent summaries — NO markdown headings to avoid bleeding into output
     agent_summaries = "\n\n".join([
@@ -1090,7 +1091,45 @@ def _build_synthesis_prompt(
         historical_reasoning_block = ""
 
     # Build the question-anchor block (injected only when a question is present)
-    if original_user_question:
+    # For valuation_stance questions ("Is X overpriced?") the block is
+    # overridden to require an explicit verdict in direct_answer.
+    if original_user_question and question_intent == "valuation_stance":
+        # Pull valuation_stance from the valuation agent if available
+        _stance = getattr(valuation, "valuation_stance", "") or ""
+        _stance_reasoning = getattr(valuation, "valuation_stance_reasoning", "") or ""
+        _val_conf = getattr(valuation, "confidence", 0.5)
+        _low_conf_caveat = (
+            "\n- CRITICAL: Evidence coverage is thin (valuation agent confidence < 0.45). "
+            "You MUST include the phrase 'low-confidence' in your direct_answer and note "
+            "which key data is missing (e.g. forward P/E, analyst price targets).\n"
+            if _val_conf < 0.45 else ""
+        )
+        _stance_hint = (
+            f"\nValuation agent verdict: {_stance} — {_stance_reasoning}"
+            if _stance and _stance != "cannot_determine"
+            else ""
+        )
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"VALUATION STANCE ANSWER — MANDATORY FOR \"direct_answer\" FIELD:\n"
+            f"The user is asking whether {company.company_name} ({ticker}) is "
+            f"overpriced, fairly valued, or underpriced at the current price.\n"
+            f"{_stance_hint}\n"
+            f"Your `direct_answer` MUST:\n"
+            f"  1. State the verdict explicitly in Sentence 1: "
+            f'"Based on current multiples, {ticker} appears [overpriced / fairly valued / underpriced]…"\n'
+            f"  2. Name the primary metric anchoring the verdict "
+            f"(e.g. forward P/E, EV/EBITDA, FCF yield, analyst consensus target vs current price).\n"
+            f"  3. State what growth or execution assumption the current price requires to be justified.\n"
+            f"  4. Keep to 2 sentences total — verdict + mechanism only.\n"
+            f"  FORBIDDEN: Hedging the verdict with 'it depends' without a directional lean.\n"
+            f"  FORBIDDEN: Restating the question ('You asked whether {ticker} is overpriced…').\n"
+            f"  FORBIDDEN: Opening with company description instead of the verdict.\n"
+            f"{_low_conf_caveat}\n"
+            f"Also set `valuation_stance` in the thesis output to one of: "
+            f'"overpriced" | "fairly_valued" | "underpriced" | "cannot_determine"\n\n'
+        )
+    elif original_user_question:
         question_anchor_block = (
             f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
             f"QUESTION-ANCHORED DIRECT ANSWER RULES (mandatory for \"direct_answer\" field):\n"
@@ -1877,6 +1916,7 @@ def synthesize_thesis(
     profile: Optional[CompanyKnowledgeProfile] = None,
     original_user_question: Optional[str] = None,
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoids circular import at module level
+    question_intent: Optional[str] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -1941,6 +1981,7 @@ def synthesize_thesis(
         original_user_question=original_user_question,
         ranked=ranked,
         prior_snapshot=prior_snapshot,
+        question_intent=question_intent,
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
@@ -1961,6 +2002,19 @@ def synthesize_thesis(
     thesis.company_name = company.company_name
     thesis.evidence_count = len(evidence)
     thesis.generated_at = datetime.now(timezone.utc).isoformat()
+
+    # Stamp question_intent so the API response always carries it
+    if question_intent:
+        thesis.question_intent = question_intent
+
+    # Propagate valuation_stance from the valuation agent into the thesis
+    # when the user asked a price-fairness question.  The synthesiser LLM
+    # may also set this field directly; the valuation agent's verdict wins
+    # only when the thesis field was left empty by the synthesiser.
+    if question_intent == "valuation_stance":
+        _agent_stance = getattr(valuation, "valuation_stance", "") or ""
+        if _agent_stance and not getattr(thesis, "valuation_stance", ""):
+            thesis.valuation_stance = _agent_stance
 
     # Guard: core_market_debate must be non-empty; fall back to core_debate if LLM omitted it
     if not getattr(thesis, "core_market_debate", ""):

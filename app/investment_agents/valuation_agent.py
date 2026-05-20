@@ -77,6 +77,7 @@ def _build_prompt(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
 ) -> str:
     """Build the valuation agent prompt."""
     evidence_block = "\n".join(
@@ -110,10 +111,44 @@ VALUATION SPECIFICITY REQUIRED:
     else:
         company_context_block = ""
 
+    # ── Valuation stance instruction block ───────────────────────────────────
+    # Injected only when the user is asking a price-fairness question.
+    # Requires the model to commit to an explicit verdict.
+    if question_intent == "valuation_stance":
+        stance_block = f"""
+VALUATION STANCE REQUIRED — USER IS ASKING WHETHER {company.ticker} IS OVERPRICED / FAIRLY VALUED / UNDERPRICED:
+
+You MUST populate the `valuation_stance` field with one of:
+  "overpriced" | "fairly_valued" | "underpriced" | "cannot_determine"
+
+Rules for choosing a stance:
+- "overpriced":       current multiple materially exceeds what the growth/quality profile justifies.
+  Look for: forward P/E > historical range, EV/EBITDA above peer median, analyst consensus price
+  target below current price, or premium that requires execution perfection.
+- "underpriced":      current multiple is below what the growth/quality profile justifies.
+  Look for: P/E discount to peers without fundamental justification, FCF yield above risk-free
+  rate by meaningful margin, or analyst targets materially above current price.
+- "fairly_valued":    current price reasonably reflects known fundamentals — neither stretched
+  nor cheap by standard metrics. Use when evidence does not clearly support either extreme.
+- "cannot_determine": evidence is genuinely insufficient to form a confident view.
+  ONLY use this when no ratio data or analyst targets are available — do NOT use it as a
+  hedge when evidence exists but the answer is uncomfortable.
+
+Also populate `valuation_stance_reasoning` with 1–2 sentences naming:
+  (a) the key metric that anchors your verdict (e.g. "Trading at ~28x forward P/E vs peer median of 22x"),
+  (b) what growth/quality assumption the current price requires to be justified.
+
+If confidence < 0.45 because evidence is thin, set `valuation_stance = "cannot_determine"` and
+explain what data is missing in `valuation_stance_reasoning`.
+"""
+    else:
+        stance_block = ""
+
     return f"""You are a specialist valuation analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
 {company_context_block}
+{stance_block}
 EVIDENCE:
 {evidence_block}
 
@@ -124,6 +159,8 @@ Produce a JSON object matching the ValuationView schema with these fields:
 - discount_sensitivity: How sensitive the valuation is to discount-rate moves
 - relative_value: Relative value vs sector peers
 - overall: One concise paragraph summarising the valuation
+- valuation_stance: (see instruction above) "overpriced" | "fairly_valued" | "underpriced" | "cannot_determine" | "" (empty when no stance question)
+- valuation_stance_reasoning: 1-2 sentences anchoring the verdict to a specific metric
 - confidence: 0.0-1.0 based on evidence completeness
 - signals: array of 2-4 extracted signals. Each signal object must have:
     - signal: string — 1-2 sentences naming the specific driver, with priced-in language (NOT generic)
@@ -168,23 +205,33 @@ def run_valuation_agent(
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
 ) -> ValuationView:
     """Run the valuation specialist agent.
 
     Filters evidence to valuation-relevant items, builds a focused prompt,
     calls the LLM via get_structured_response, and returns a ValuationView.
     Degrades gracefully if evidence is empty or the LLM call fails.
+
+    Parameters
+    ----------
+    question_intent : Optional[str]
+        Detected intent from _detect_question_intent().  When
+        ``"valuation_stance"`` the prompt requires an explicit
+        overpriced / fairly_valued / underpriced / cannot_determine verdict
+        and populates ``valuation_stance`` + ``valuation_stance_reasoning``.
     """
     relevant = _filter_evidence(evidence, company)
     print(
         f"[DIAG] [{_AGENT_NAME}] ticker={company.ticker} "
-        f"relevant_evidence={len(relevant)}/{len(evidence)}"
+        f"relevant_evidence={len(relevant)}/{len(evidence)} "
+        f"question_intent={question_intent!r}"
     )
 
     if not relevant:
         return _empty_output("No valuation-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant, profile)
+    prompt = _build_prompt(company, relevant, profile, question_intent=question_intent)
     try:
         result: ValuationView = get_structured_response(
             prompt,
