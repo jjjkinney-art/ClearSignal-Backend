@@ -50,7 +50,7 @@ from .general_finance_evidence import _detect_topics, normalize_macro_query as _
 from ..agents import _YIELD_FALLBACK_ANSWER, _GENERIC_EVIDENCE_FALLBACK
 
 # ── Company detection + investment pipeline imports ───────────────────────────
-from .company_detection import detect_company, resolve_entity
+from .company_detection import detect_company, resolve_entity, MINIMUM_ROUTE_CONFIDENCE
 from .company_knowledge import get_profile_for_company
 from .evidence_partitioner import partition_evidence
 from .providers import retrieve_market_evidence
@@ -840,16 +840,46 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     "candidates": [t for t, _, _ in (_entity_resolution.candidates or [])],
                 })
             )
-            if _entity_resolution.context is not None and _entity_resolution.confidence >= 0.72:
-                _text_detected_company = _entity_resolution.context
-                if _entity_resolution.confidence < 0.90:
+            if _entity_resolution.context is not None:
+                # Hard confidence gate — always route exact_ticker (1.0) and
+                # alias_exact (0.95) matches.  For fuzzy_token matches, only
+                # route when confidence meets MINIMUM_ROUTE_CONFIDENCE (0.85).
+                # Below that threshold the match is ambiguous: surface candidates
+                # via the "Did you mean?" flow instead of silently running the
+                # wrong company's investment pipeline.
+                _meets_threshold = (
+                    _entity_resolution.method in ("exact_ticker", "alias_exact")
+                    or _entity_resolution.confidence >= MINIMUM_ROUTE_CONFIDENCE
+                )
+                if _meets_threshold:
+                    _text_detected_company = _entity_resolution.context
+                    if _entity_resolution.confidence < 0.90:
+                        logger.warning(
+                            "[router] medium-confidence entity resolution: %s (%.2f via %s) "
+                            "— proceeding with investment pipeline",
+                            _entity_resolution.context.ticker,
+                            _entity_resolution.confidence,
+                            _entity_resolution.method,
+                        )
+                else:
+                    # Fuzzy match below threshold — treat as unresolved so the
+                    # "Did you mean?" path fires below.
                     logger.warning(
-                        "[router] medium-confidence entity resolution: %s (%.2f via %s) "
-                        "— proceeding with investment pipeline",
+                        "[router] fuzzy match below routing threshold: "
+                        "%s (%.2f via %s, threshold=%.2f) — demoting to candidates",
                         _entity_resolution.context.ticker,
                         _entity_resolution.confidence,
                         _entity_resolution.method,
+                        MINIMUM_ROUTE_CONFIDENCE,
                     )
+                    # Promote the low-confidence match as the top candidate
+                    # so it appears in the "Did you mean?" suggestion.
+                    if not _entity_resolution.candidates:
+                        info = _entity_resolution.context
+                        _entity_resolution.candidates = [
+                            (info.ticker, info.company_name, _entity_resolution.confidence)
+                        ]
+                    _entity_resolution.context = None
         except Exception as _det_exc:
             logger.warning("[router] entity resolution failed: %r", _det_exc)
             _text_detected_company = None
@@ -894,14 +924,10 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     if (
         _entity_resolution is not None
         and _entity_resolution.context is None
-        and _entity_resolution.candidates
         and _has_intent
     ):
         request_id = str(uuid.uuid4())
         candidates = _entity_resolution.candidates[:3]
-        suggestion_text = " or ".join(
-            f"{name} ({ticker})" for ticker, name, _ in candidates
-        )
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",
@@ -911,23 +937,51 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             })
         )
         from ..schemas import GeneralFinanceAnswer as _GFA
-        did_you_mean = _GFA(
-            answer=(
-                f"The company name wasn't recognised with high confidence. "
-                f"Did you mean {suggestion_text}? "
-                f"Try entering the exact company name or ticker symbol."
-            ),
-            bullets=[
-                f"{name} — ticker: {ticker}" for ticker, name, _ in candidates
-            ],
-            caveats=[],
-        )
+        if candidates:
+            suggestion_text = " or ".join(
+                f"{name} ({ticker})" for ticker, name, _ in candidates
+            )
+            did_you_mean = _GFA(
+                answer=(
+                    f"The company could not be identified with sufficient confidence. "
+                    f"Did you mean {suggestion_text}? "
+                    f"Try entering the exact company name or ticker symbol (e.g. VRTX, NVO, ISRG)."
+                ),
+                bullets=[
+                    f"{name} — ticker: {ticker}" for ticker, name, _ in candidates
+                ],
+                caveats=[
+                    "Use the exact ticker symbol for reliable results (e.g. VRTX for Vertex Pharmaceuticals).",
+                    "Company names are matched exactly — check spelling and try the full legal name.",
+                ],
+            )
+        else:
+            # No candidates at all — firm rejection, no hallucinated routing.
+            did_you_mean = _GFA(
+                answer=(
+                    "The company name could not be confidently identified. "
+                    "No close matches were found in the company database. "
+                    "Please enter the exact company name or ticker symbol."
+                ),
+                bullets=[
+                    "Use a ticker symbol for best results (e.g. AAPL, MSFT, NVDA, VRTX).",
+                    "Check the spelling of the company name — partial or ambiguous names may not resolve.",
+                    "If the company is not publicly listed in the US, it may not be in the current database.",
+                ],
+                caveats=[
+                    "The system will not route to an unrelated company when confidence is low.",
+                ],
+            )
         return AgentAnswerResponse(
             company=request.company_name,
             request_id=request_id,
             agents_used=["entity_resolution_fallback"],
             answer={"general": did_you_mean.model_dump()},
-            routing={"intent": "company_analysis", "pipeline": "entity_suggestion"},
+            routing={
+                "intent": "company_analysis",
+                "pipeline": "entity_suggestion",
+                "candidates": [(t, n) for t, n, _ in candidates],
+            },
         )
 
     # ── General finance fast-path ─────────────────────────────────────────────

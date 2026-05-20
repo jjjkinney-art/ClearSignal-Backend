@@ -15,7 +15,10 @@ resolve_entity(text: str) -> EntityResolution
 Detection pipeline (in order)
 ------------------------------
 1. Explicit uppercase ticker extraction — regex + stop-word filter.
-2. Alias substring lookup  — longest-match-first on the full lowercased text.
+2. Alias word-boundary lookup — longest-match-first on the full lowercased
+   text, using ``\\b`` word boundaries so that "arm" does NOT match inside
+   "pharmaceuticals".  This prevents the ARM Holdings / Vertex Pharma class
+   of false-positive resolution.
 3. Token-window fuzzy match — N-gram windows extracted from the *normalised*
    text are compared against all alias keys via difflib (cutoff 0.72).
    This step handles typos embedded in natural-language sentences, e.g.
@@ -27,6 +30,13 @@ exact_ticker  : 1.00
 alias_exact   : 0.95
 fuzzy_token   : scaled 0.72 – 0.95 from the difflib ratio
 not_found     : 0.00  (candidates populated for "Did you mean?" UX)
+
+Routing gate
+------------
+MINIMUM_ROUTE_CONFIDENCE : 0.85
+    Hard floor used by the router_service.  Fuzzy matches below this value
+    are surfaced as "Did you mean?" suggestions rather than being silently
+    routed to the wrong company's investment pipeline.
 
 No network calls are made; no external API keys are required.
 """
@@ -42,6 +52,17 @@ from typing import List, Optional, Tuple
 from app.schemas import CompanyContext
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# Routing confidence gate
+# ---------------------------------------------------------------------------
+
+# Hard minimum confidence for the router to send a query to the investment
+# pipeline.  alias_exact (0.95) and exact_ticker (1.00) always clear this bar.
+# fuzzy_token matches below this threshold are treated as "not found" by the
+# router and surfaced as "Did you mean?" candidates rather than silently
+# routed to the wrong company.
+MINIMUM_ROUTE_CONFIDENCE: float = 0.85
 
 # ---------------------------------------------------------------------------
 # Stop-words — common English words that look like valid tickers
@@ -179,6 +200,110 @@ _COMPANY_DB: dict[str, dict] = {
     "BBAI":  {"company_name": "BigBear.ai Holdings Inc.",                "sector": "Technology",                "industry": "AI Analytics"},
     "RGTI":  {"company_name": "Rigetti Computing Inc.",                  "sector": "Technology",                "industry": "Quantum Computing"},
     "IONQ":  {"company_name": "IonQ Inc.",                               "sector": "Technology",                "industry": "Quantum Computing"},
+
+    # ── Pharma & Biotech (regression coverage) ────────────────────────────────
+    "VRTX":  {"company_name": "Vertex Pharmaceuticals Inc.",             "sector": "Health Care",               "industry": "Biotechnology"},
+    "NVO":   {"company_name": "Novo Nordisk A/S",                        "sector": "Health Care",               "industry": "Pharmaceuticals"},
+    "ISRG":  {"company_name": "Intuitive Surgical Inc.",                 "sector": "Health Care",               "industry": "Medical Devices"},
+    "CRSP":  {"company_name": "CRISPR Therapeutics AG",                  "sector": "Health Care",               "industry": "Biotechnology"},
+    "AZN":   {"company_name": "AstraZeneca PLC",                         "sector": "Health Care",               "industry": "Pharmaceuticals"},
+    "RHHBY": {"company_name": "Roche Holding AG",                        "sector": "Health Care",               "industry": "Pharmaceuticals"},
+    "BNTX":  {"company_name": "BioNTech SE",                             "sector": "Health Care",               "industry": "Biotechnology"},
+    "BIIB":  {"company_name": "Biogen Inc.",                             "sector": "Health Care",               "industry": "Biotechnology"},
+    "GILD":  {"company_name": "Gilead Sciences Inc.",                    "sector": "Health Care",               "industry": "Biotechnology"},
+    "AMGN":  {"company_name": "Amgen Inc.",                              "sector": "Health Care",               "industry": "Biotechnology"},
+    "ILMN":  {"company_name": "Illumina Inc.",                           "sector": "Health Care",               "industry": "Genomics"},
+    "DXCM":  {"company_name": "DexCom Inc.",                             "sector": "Health Care",               "industry": "Medical Devices"},
+    "VEEV":  {"company_name": "Veeva Systems Inc.",                      "sector": "Health Care",               "industry": "Healthcare Software"},
+    "INCY":  {"company_name": "Incyte Corporation",                      "sector": "Health Care",               "industry": "Biotechnology"},
+    "ALNY":  {"company_name": "Alnylam Pharmaceuticals Inc.",            "sector": "Health Care",               "industry": "Biotechnology"},
+    "SGEN":  {"company_name": "Seagen Inc.",                             "sector": "Health Care",               "industry": "Biotechnology"},
+    "EXAS":  {"company_name": "Exact Sciences Corporation",              "sector": "Health Care",               "industry": "Diagnostics"},
+    "SRPT":  {"company_name": "Sarepta Therapeutics Inc.",               "sector": "Health Care",               "industry": "Biotechnology"},
+    "NTLA":  {"company_name": "Intellia Therapeutics Inc.",              "sector": "Health Care",               "industry": "Biotechnology"},
+    "BEAM":  {"company_name": "Beam Therapeutics Inc.",                  "sector": "Health Care",               "industry": "Biotechnology"},
+    "EDIT":  {"company_name": "Editas Medicine Inc.",                    "sector": "Health Care",               "industry": "Biotechnology"},
+    "ZBH":   {"company_name": "Zimmer Biomet Holdings Inc.",             "sector": "Health Care",               "industry": "Medical Devices"},
+    "SYK":   {"company_name": "Stryker Corporation",                     "sector": "Health Care",               "industry": "Medical Devices"},
+    "BSX":   {"company_name": "Boston Scientific Corporation",           "sector": "Health Care",               "industry": "Medical Devices"},
+    "MDT":   {"company_name": "Medtronic plc",                           "sector": "Health Care",               "industry": "Medical Devices"},
+    "ABT":   {"company_name": "Abbott Laboratories",                     "sector": "Health Care",               "industry": "Medical Devices"},
+    "DHR":   {"company_name": "Danaher Corporation",                     "sector": "Health Care",               "industry": "Life Sciences Tools"},
+    "TMO":   {"company_name": "Thermo Fisher Scientific Inc.",           "sector": "Health Care",               "industry": "Life Sciences Tools"},
+    "A":     {"company_name": "Agilent Technologies Inc.",               "sector": "Health Care",               "industry": "Life Sciences Tools"},
+    "EW":    {"company_name": "Edwards Lifesciences Corporation",        "sector": "Health Care",               "industry": "Medical Devices"},
+    "HCA":   {"company_name": "HCA Healthcare Inc.",                     "sector": "Health Care",               "industry": "Healthcare Services"},
+    "CVS":   {"company_name": "CVS Health Corporation",                  "sector": "Health Care",               "industry": "Healthcare Services"},
+    "CI":    {"company_name": "Cigna Group",                             "sector": "Health Care",               "industry": "Managed Care"},
+    "MCK":   {"company_name": "McKesson Corporation",                    "sector": "Health Care",               "industry": "Healthcare Distribution"},
+    "HUM":   {"company_name": "Humana Inc.",                             "sector": "Health Care",               "industry": "Managed Care"},
+    "ELV":   {"company_name": "Elevance Health Inc.",                    "sector": "Health Care",               "industry": "Managed Care"},
+    "MOH":   {"company_name": "Molina Healthcare Inc.",                  "sector": "Health Care",               "industry": "Managed Care"},
+
+    # ── Financials (broader) ──────────────────────────────────────────────────
+    "BLK":   {"company_name": "BlackRock Inc.",                          "sector": "Financials",                "industry": "Asset Management"},
+    "MS":    {"company_name": "Morgan Stanley",                          "sector": "Financials",                "industry": "Investment Banking"},
+    "SCHW":  {"company_name": "Charles Schwab Corporation",              "sector": "Financials",                "industry": "Brokerage"},
+    "AXP":   {"company_name": "American Express Company",                "sector": "Financials",                "industry": "Credit Services"},
+    "COF":   {"company_name": "Capital One Financial Corporation",       "sector": "Financials",                "industry": "Consumer Finance"},
+    "USB":   {"company_name": "U.S. Bancorp",                            "sector": "Financials",                "industry": "Banking"},
+    "PNC":   {"company_name": "PNC Financial Services Group Inc.",       "sector": "Financials",                "industry": "Banking"},
+    "TFC":   {"company_name": "Truist Financial Corporation",            "sector": "Financials",                "industry": "Banking"},
+    "SPGI":  {"company_name": "S&P Global Inc.",                         "sector": "Financials",                "industry": "Financial Data"},
+    "MCO":   {"company_name": "Moody's Corporation",                     "sector": "Financials",                "industry": "Financial Data"},
+    "ICE":   {"company_name": "Intercontinental Exchange Inc.",          "sector": "Financials",                "industry": "Financial Exchanges"},
+    "CME":   {"company_name": "CME Group Inc.",                          "sector": "Financials",                "industry": "Financial Exchanges"},
+    "MSCI":  {"company_name": "MSCI Inc.",                               "sector": "Financials",                "industry": "Financial Data"},
+    "NDAQ":  {"company_name": "Nasdaq Inc.",                             "sector": "Financials",                "industry": "Financial Exchanges"},
+
+    # ── Utilities & Real Estate ───────────────────────────────────────────────
+    "NEE":   {"company_name": "NextEra Energy Inc.",                     "sector": "Utilities",                 "industry": "Electric Utilities"},
+    "DUK":   {"company_name": "Duke Energy Corporation",                 "sector": "Utilities",                 "industry": "Electric Utilities"},
+    "SO":    {"company_name": "Southern Company",                        "sector": "Utilities",                 "industry": "Electric Utilities"},
+    "AMT":   {"company_name": "American Tower Corporation",              "sector": "Real Estate",               "industry": "Cell Tower REITs"},
+    "EQIX":  {"company_name": "Equinix Inc.",                            "sector": "Real Estate",               "industry": "Data Center REITs"},
+    "PLD":   {"company_name": "Prologis Inc.",                           "sector": "Real Estate",               "industry": "Industrial REITs"},
+    "SPG":   {"company_name": "Simon Property Group Inc.",               "sector": "Real Estate",               "industry": "Retail REITs"},
+    "DLR":   {"company_name": "Digital Realty Trust Inc.",               "sector": "Real Estate",               "industry": "Data Center REITs"},
+    "O":     {"company_name": "Realty Income Corporation",               "sector": "Real Estate",               "industry": "Net Lease REITs"},
+
+    # ── Consumer / Retail ─────────────────────────────────────────────────────
+    "PG":    {"company_name": "Procter & Gamble Co.",                    "sector": "Consumer Staples",          "industry": "Household Products"},
+    "KO":    {"company_name": "The Coca-Cola Company",                   "sector": "Consumer Staples",          "industry": "Beverages"},
+    "PEP":   {"company_name": "PepsiCo Inc.",                            "sector": "Consumer Staples",          "industry": "Beverages"},
+    "PM":    {"company_name": "Philip Morris International Inc.",        "sector": "Consumer Staples",          "industry": "Tobacco"},
+    "MO":    {"company_name": "Altria Group Inc.",                       "sector": "Consumer Staples",          "industry": "Tobacco"},
+    "CL":    {"company_name": "Colgate-Palmolive Company",               "sector": "Consumer Staples",          "industry": "Household Products"},
+    "MDLZ":  {"company_name": "Mondelez International Inc.",             "sector": "Consumer Staples",          "industry": "Food Products"},
+    "GIS":   {"company_name": "General Mills Inc.",                      "sector": "Consumer Staples",          "industry": "Food Products"},
+    "K":     {"company_name": "Kellanova",                               "sector": "Consumer Staples",          "industry": "Food Products"},
+    "CMG":   {"company_name": "Chipotle Mexican Grill Inc.",             "sector": "Consumer Discretionary",    "industry": "Restaurants"},
+    "YUM":   {"company_name": "Yum! Brands Inc.",                        "sector": "Consumer Discretionary",    "industry": "Restaurants"},
+    "BKNG":  {"company_name": "Booking Holdings Inc.",                   "sector": "Consumer Discretionary",    "industry": "Online Travel"},
+    "EXPE":  {"company_name": "Expedia Group Inc.",                      "sector": "Consumer Discretionary",    "industry": "Online Travel"},
+    "AMZN":  {"company_name": "Amazon.com Inc.",                         "sector": "Consumer Discretionary",    "industry": "E-Commerce"},  # already present but confirm
+    "LVS":   {"company_name": "Las Vegas Sands Corp.",                   "sector": "Consumer Discretionary",    "industry": "Casinos & Gaming"},
+    "WYNN":  {"company_name": "Wynn Resorts Limited",                    "sector": "Consumer Discretionary",    "industry": "Casinos & Gaming"},
+    "MGM":   {"company_name": "MGM Resorts International",               "sector": "Consumer Discretionary",    "industry": "Casinos & Gaming"},
+
+    # ── Industrials (broader) ─────────────────────────────────────────────────
+    "UPS":   {"company_name": "United Parcel Service Inc.",              "sector": "Industrials",               "industry": "Air Freight & Logistics"},
+    "FDX":   {"company_name": "FedEx Corporation",                       "sector": "Industrials",               "industry": "Air Freight & Logistics"},
+    "CSX":   {"company_name": "CSX Corporation",                         "sector": "Industrials",               "industry": "Railroads"},
+    "NSC":   {"company_name": "Norfolk Southern Corporation",            "sector": "Industrials",               "industry": "Railroads"},
+    "UNP":   {"company_name": "Union Pacific Corporation",               "sector": "Industrials",               "industry": "Railroads"},
+    "WM":    {"company_name": "Waste Management Inc.",                   "sector": "Industrials",               "industry": "Waste Management"},
+    "VRSK":  {"company_name": "Verisk Analytics Inc.",                   "sector": "Industrials",               "industry": "Data Analytics"},
+    "EXPO":  {"company_name": "Exponent Inc.",                           "sector": "Industrials",               "industry": "Consulting"},
+
+    # ── Materials ─────────────────────────────────────────────────────────────
+    "LIN":   {"company_name": "Linde plc",                               "sector": "Materials",                 "industry": "Industrial Gases"},
+    "APD":   {"company_name": "Air Products and Chemicals Inc.",         "sector": "Materials",                 "industry": "Industrial Gases"},
+    "ECL":   {"company_name": "Ecolab Inc.",                             "sector": "Materials",                 "industry": "Specialty Chemicals"},
+    "SHW":   {"company_name": "The Sherwin-Williams Company",            "sector": "Materials",                 "industry": "Specialty Chemicals"},
+    "FCX":   {"company_name": "Freeport-McMoRan Inc.",                   "sector": "Materials",                 "industry": "Copper Mining"},
+    "NEM":   {"company_name": "Newmont Corporation",                     "sector": "Materials",                 "industry": "Gold Mining"},
+    "GOLD":  {"company_name": "Barrick Gold Corporation",                "sector": "Materials",                 "industry": "Gold Mining"},
 }
 
 # ---------------------------------------------------------------------------
@@ -561,6 +686,264 @@ _ALIAS_MAP: dict[str, str] = {
     "c3.ai":                   "AI",
     "soundhound":              "SOUN",
     "sound hound":             "SOUN",
+
+    # ── Vertex Pharmaceuticals ────────────────────────────────────────────────
+    # CRITICAL: must be registered before short aliases like "arm" can
+    # substring-match inside "pharmaceuticals".  Word-boundary fix in
+    # _alias_lookup also prevents that class of false match.
+    "vertex pharmaceuticals":          "VRTX",
+    "vertex pharma":                   "VRTX",
+    "vertex":                          "VRTX",
+    "vrtx":                            "VRTX",
+    # typos
+    "vertx pharmaceuticals":           "VRTX",
+    "vertex pharmaceutical":           "VRTX",
+
+    # ── Novo Nordisk ──────────────────────────────────────────────────────────
+    "novo nordisk":                    "NVO",
+    "novo":                            "NVO",
+    "nvo":                             "NVO",
+    # typos / variants
+    "novo nordisk as":                 "NVO",
+    "novonordisk":                     "NVO",
+
+    # ── Intuitive Surgical ────────────────────────────────────────────────────
+    "intuitive surgical":              "ISRG",
+    "intuitive":                       "ISRG",
+    "isrg":                            "ISRG",
+    # typos
+    "intuative surgical":              "ISRG",
+
+    # ── CRISPR Therapeutics ───────────────────────────────────────────────────
+    "crispr therapeutics":             "CRSP",
+    "crispr":                          "CRSP",
+    "crsp":                            "CRSP",
+    # typos
+    "crispr theraputics":              "CRSP",
+
+    # ── AstraZeneca ───────────────────────────────────────────────────────────
+    "astrazeneca":                     "AZN",
+    "astra zeneca":                    "AZN",
+    "azn":                             "AZN",
+    # typos
+    "astra zennica":                   "AZN",
+    "astrazenica":                     "AZN",
+
+    # ── Roche ─────────────────────────────────────────────────────────────────
+    "roche":                           "RHHBY",
+    "roche holding":                   "RHHBY",
+    "roche holdings":                  "RHHBY",
+    "rhhby":                           "RHHBY",
+    # typos
+    "roch":                            "RHHBY",
+
+    # ── BioNTech ──────────────────────────────────────────────────────────────
+    "biontech":                        "BNTX",
+    "bio n tech":                      "BNTX",
+    "bntx":                            "BNTX",
+    # typos
+    "biotech biontech":                "BNTX",
+    "biontech se":                     "BNTX",
+
+    # ── Biogen ────────────────────────────────────────────────────────────────
+    "biogen":                          "BIIB",
+    "biib":                            "BIIB",
+
+    # ── Gilead Sciences ───────────────────────────────────────────────────────
+    "gilead":                          "GILD",
+    "gilead sciences":                 "GILD",
+    "gild":                            "GILD",
+
+    # ── Amgen ─────────────────────────────────────────────────────────────────
+    "amgen":                           "AMGN",
+    "amgn":                            "AMGN",
+
+    # ── Illumina ──────────────────────────────────────────────────────────────
+    "illumina":                        "ILMN",
+    "ilmn":                            "ILMN",
+
+    # ── DexCom ────────────────────────────────────────────────────────────────
+    "dexcom":                          "DXCM",
+    "dex com":                         "DXCM",
+
+    # ── Veeva Systems ─────────────────────────────────────────────────────────
+    "veeva":                           "VEEV",
+    "veeva systems":                   "VEEV",
+
+    # ── Alnylam ───────────────────────────────────────────────────────────────
+    "alnylam":                         "ALNY",
+    "alnylam pharmaceuticals":         "ALNY",
+
+    # ── Intuitive (medical) ───────────────────────────────────────────────────
+    # (aliased above)
+
+    # ── Stryker ───────────────────────────────────────────────────────────────
+    "stryker":                         "SYK",
+    "syk":                             "SYK",
+
+    # ── Boston Scientific ─────────────────────────────────────────────────────
+    "boston scientific":               "BSX",
+    "bsx":                             "BSX",
+
+    # ── Medtronic ─────────────────────────────────────────────────────────────
+    "medtronic":                       "MDT",
+    "mdt":                             "MDT",
+
+    # ── Abbott ────────────────────────────────────────────────────────────────
+    "abbott":                          "ABT",
+    "abbott laboratories":             "ABT",
+    "abt":                             "ABT",
+
+    # ── Danaher ───────────────────────────────────────────────────────────────
+    "danaher":                         "DHR",
+    "dhr":                             "DHR",
+
+    # ── Thermo Fisher ─────────────────────────────────────────────────────────
+    "thermo fisher":                   "TMO",
+    "thermo fisher scientific":        "TMO",
+    "tmo":                             "TMO",
+
+    # ── Edwards Lifesciences ──────────────────────────────────────────────────
+    "edwards lifesciences":            "EW",
+    "edwards":                         "EW",
+
+    # ── HCA Healthcare ────────────────────────────────────────────────────────
+    "hca healthcare":                  "HCA",
+    "hca":                             "HCA",
+
+    # ── CVS Health ────────────────────────────────────────────────────────────
+    "cvs health":                      "CVS",
+    "cvs":                             "CVS",
+    "cvs pharmacy":                    "CVS",
+
+    # ── Cigna ─────────────────────────────────────────────────────────────────
+    "cigna":                           "CI",
+    "cigna group":                     "CI",
+
+    # ── McKesson ──────────────────────────────────────────────────────────────
+    "mckesson":                        "MCK",
+
+    # ── Humana ────────────────────────────────────────────────────────────────
+    "humana":                          "HUM",
+
+    # ── Elevance Health ───────────────────────────────────────────────────────
+    "elevance health":                 "ELV",
+    "elevance":                        "ELV",
+    "anthem":                          "ELV",       # formerly Anthem Inc.
+
+    # ── BlackRock ─────────────────────────────────────────────────────────────
+    "blackrock":                       "BLK",
+    "blk":                             "BLK",
+
+    # ── Morgan Stanley ────────────────────────────────────────────────────────
+    "morgan stanley":                  "MS",
+
+    # ── Charles Schwab ────────────────────────────────────────────────────────
+    "charles schwab":                  "SCHW",
+    "schwab":                          "SCHW",
+
+    # ── American Express ──────────────────────────────────────────────────────
+    "american express":                "AXP",
+    "amex":                            "AXP",
+    "axp":                             "AXP",
+
+    # ── Capital One ───────────────────────────────────────────────────────────
+    "capital one":                     "COF",
+
+    # ── U.S. Bancorp ──────────────────────────────────────────────────────────
+    "us bancorp":                      "USB",
+    "u.s. bancorp":                    "USB",
+    "us bank":                         "USB",
+
+    # ── S&P Global ────────────────────────────────────────────────────────────
+    "s&p global":                      "SPGI",
+    "sp global":                       "SPGI",
+    "standard and poors":              "SPGI",
+
+    # ── Moody's ───────────────────────────────────────────────────────────────
+    "moodys":                          "MCO",
+    "moody's":                         "MCO",
+
+    # ── ICE ───────────────────────────────────────────────────────────────────
+    "intercontinental exchange":       "ICE",
+
+    # ── CME Group ─────────────────────────────────────────────────────────────
+    "cme group":                       "CME",
+    "cme":                             "CME",
+    "chicago mercantile exchange":     "CME",
+
+    # ── MSCI ──────────────────────────────────────────────────────────────────
+    "msci":                            "MSCI",
+
+    # ── Nasdaq ────────────────────────────────────────────────────────────────
+    "nasdaq inc":                      "NDAQ",
+
+    # ── NextEra Energy ────────────────────────────────────────────────────────
+    "nextera energy":                  "NEE",
+    "nextera":                         "NEE",
+
+    # ── Duke Energy ───────────────────────────────────────────────────────────
+    "duke energy":                     "DUK",
+
+    # ── Southern Company ──────────────────────────────────────────────────────
+    "southern company":                "SO",
+
+    # ── American Tower ────────────────────────────────────────────────────────
+    "american tower":                  "AMT",
+
+    # ── Equinix ───────────────────────────────────────────────────────────────
+    "equinix":                         "EQIX",
+
+    # ── Prologis ──────────────────────────────────────────────────────────────
+    "prologis":                        "PLD",
+
+    # ── Simon Property Group ──────────────────────────────────────────────────
+    "simon property":                  "SPG",
+
+    # ── Digital Realty ────────────────────────────────────────────────────────
+    "digital realty":                  "DLR",
+
+    # ── Realty Income ─────────────────────────────────────────────────────────
+    "realty income":                   "O",
+
+    # ── Consumer staples ──────────────────────────────────────────────────────
+    "procter and gamble":              "PG",
+    "procter & gamble":                "PG",
+    "p&g":                             "PG",
+    "coca cola":                       "KO",
+    "coca-cola":                       "KO",
+    "coke":                            "KO",
+    "pepsi":                           "PEP",
+    "pepsico":                         "PEP",
+    "philip morris":                   "PM",
+    "altria":                          "MO",
+    "colgate":                         "CL",
+    "colgate palmolive":               "CL",
+    "mondelez":                        "MDLZ",
+    "general mills":                   "GIS",
+    "chipotle":                        "CMG",
+    "booking holdings":                "BKNG",
+    "booking.com":                     "BKNG",
+    "expedia":                         "EXPE",
+
+    # ── Industrials ───────────────────────────────────────────────────────────
+    "ups":                             "UPS",
+    "united parcel service":           "UPS",
+    "fedex":                           "FDX",
+    "csx":                             "CSX",
+    "norfolk southern":                "NSC",
+    "union pacific":                   "UNP",
+    "waste management":                "WM",
+    "linde":                           "LIN",
+    "air products":                    "APD",
+    "ecolab":                          "ECL",
+    "sherwin williams":                "SHW",
+    "sherwin-williams":                "SHW",
+    "freeport mcmoran":                "FCX",
+    "freeport":                        "FCX",
+    "newmont":                         "NEM",
+    "barrick gold":                    "GOLD",
+    "barrick":                         "GOLD",
 }
 
 # Pre-sort alias keys by length (descending) so that the longest match wins.
@@ -579,6 +962,43 @@ _CONTEXT_WORDS: frozenset[str] = frozenset({
     # Common English words that can fuzzy-match company names at our threshold
     "services", "service", "booming", "rising", "falling",
     "markets", "market", "sector", "industry", "today", "week",
+    # Generic industry / sector terms — must not trigger company detection.
+    # E.g. "biotech" would fuzzy-match "biontech" (BNTX) at ratio 0.93,
+    # "pharmaceutical" would fuzzy-match via substring in alias_exact.
+    "biotech", "biotechnology", "pharma", "pharmaceutical", "pharmaceuticals",
+    "therapeutics", "genomics", "healthcare", "health care", "medtech",
+    "semiconductor", "semiconductors", "software", "hardware", "fintech",
+    "streaming", "ecommerce", "cybersecurity", "enterprise", "startup",
+    "fund", "funds", "etf", "index", "reit", "trust",
+    "equipment", "agricultural", "industrial", "manufacturing",
+    "technology", "technologies", "solutions", "systems", "group",
+    "holdings", "international", "global", "national", "american",
+    "financial", "capital", "management", "consulting", "analytics",
+    "energy", "renewable", "electric", "utility", "utilities",
+    "retail", "consumer", "media", "entertainment", "gaming",
+    "logistics", "transport", "transportation", "aerospace", "defense",
+    # Common financial and economic terms that fuzzy-match company names.
+    # Critical case: "interest" has ratio 0.941 with "pinterest" (literally
+    # a suffix relationship: "p" + "interest" = "pinterest").
+    "interest", "interests", "rate", "rates", "yield", "yields",
+    "inflation", "deflation", "stagflation", "monetary", "fiscal",
+    "recession", "expansion", "contraction", "growth", "decline",
+    "high", "low", "rising", "falling", "volatile", "volatility",
+    "earnings", "revenue", "profit", "profits", "loss", "losses",
+    "margin", "margins", "valuation", "valuations", "multiple", "multiples",
+    "dividend", "dividends", "buyback", "buybacks", "repurchase",
+    "guidance", "forecast", "forecasts", "estimate", "estimates",
+    "quarter", "quarterly", "annual", "year", "years", "month", "months",
+    "increase", "decrease", "growth", "decline", "surge", "drop",
+    "invest", "investing", "investment", "investments", "investor", "investors",
+    "portfolio", "allocation", "diversification", "hedge", "hedging",
+    "risk", "risks", "reward", "rewards", "return", "returns",
+    "bull", "bear", "rally", "correction", "crash", "recovery",
+    "macro", "micro", "cyclical", "secular", "structural", "tactical",
+    "why", "when", "where", "which", "whose", "whom",
+    "high", "low", "much", "many", "some", "most", "more", "less",
+    "because", "since", "given", "despite", "although", "however",
+    "currently", "recently", "historically", "going", "forward",
 })
 
 # ---------------------------------------------------------------------------
@@ -686,10 +1106,27 @@ def _extract_explicit_ticker(text: str) -> Optional[CompanyContext]:
 
 
 def _alias_lookup(text: str) -> Optional[CompanyContext]:
-    """Step 2 — substring search over lowercased *text*, longest alias first."""
+    """Step 2 — word-boundary search over lowercased *text*, longest alias first.
+
+    Uses ``re.search(r'\\b<alias>\\b', lower)`` rather than a plain substring
+    ``in`` check.  This prevents false positives where a short alias appears
+    *inside* an unrelated word — the canonical failure case being "arm"
+    matching inside "pharmaceuticals", which caused "Vertex Pharmaceuticals"
+    to resolve to ARM Holdings.
+
+    Word-boundary semantics (Python ``re`` module):
+      - ``\\b`` matches between a word-char (``[A-Za-z0-9_]``) and a
+        non-word-char (or string edge).
+      - "arm" in "pharmaceuticals" → NO match (surrounded by word chars).
+      - "arm" in "arm holdings"    → MATCH (boundaries on both sides).
+      - "arm" in "ARM Holdings"    → MATCH (after lowercasing).
+      - "coke" in "Coca-Cola"      → NO match (hyphen is non-word-char but
+        "coke" is not present as text, so still no match).
+    """
     lower = text.lower()
     for alias in _ALIAS_KEYS_BY_LENGTH:
-        if alias in lower:
+        pattern = r'\b' + re.escape(alias) + r'\b'
+        if re.search(pattern, lower):
             ticker = _ALIAS_MAP[alias]
             return _make_context(ticker, alias)
     return None
@@ -715,7 +1152,13 @@ def _fuzzy_token_match(
     if not normalized:
         return None
 
-    alias_keys = list(_ALIAS_MAP.keys())
+    # Exclude very short aliases (< 4 chars) from fuzzy matching.
+    # Short aliases like "arm" (3), "ma" (2), "so" (2) have high difflib
+    # similarity with many ordinary English words ("charm", "macro", "also").
+    # They are always covered by exact_ticker detection (STEP 1) or
+    # word-boundary alias lookup (STEP 2), so excluding them from STEP 3
+    # does not reduce recall on legitimate queries.
+    alias_keys = [k for k in _ALIAS_MAP.keys() if len(k) >= 4]
     best_score = 0.0
     best_alias: Optional[str] = None
 
