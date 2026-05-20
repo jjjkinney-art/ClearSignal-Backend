@@ -1569,3 +1569,91 @@ class AlertRule(BaseModel):
         default="medium",
         description="high | medium | low — severity of alerts fired by this rule",
     )
+
+
+# =============================================================================
+# Phase L — Live Market Intelligence schemas
+# =============================================================================
+
+
+class EventImpactAssessment(BaseModel):
+    """
+    The result of comparing a market event against a stored thesis snapshot.
+
+    Produced by event_processor.assess_event_impact(). Represents how one
+    new event changes the investment case for a specific ticker.
+    """
+    assessment_id: str = Field(default_factory=lambda: str(_uuid.uuid4()))
+    ticker: str = Field(default="")
+    event_id: str = Field(default="")
+    event_headline: str = Field(default="")
+    event_category: str = Field(default="")   # earnings | macro | news | guidance | etc.
+
+    # ── Impact classification ─────────────────────────────────────────────────
+    impact_type: str = Field(
+        default="noise",
+        description=(
+            "thesis_broke | debate_shift | strengthens_thesis | weakens_thesis | "
+            "market_repriced | priced_in | regime_change | noise"
+        ),
+    )
+    materiality_score: float = Field(default=0.0, ge=0.0, le=1.0)
+
+    # ── Priced-in reasoning ───────────────────────────────────────────────────
+    already_priced_in: bool = Field(default=False)
+    already_priced_in_reasoning: str = Field(
+        default="",
+        description="PM-language explanation of what was/wasn't expected by the market",
+    )
+
+    # ── PM-style implications ─────────────────────────────────────────────────
+    thesis_implication: str = Field(
+        default="",
+        description=(
+            "1 sentence in PM shorthand explaining what this event means for the thesis. "
+            "Good: 'The execution check cleared — burden shifts back to multiple.' "
+            "Good: 'The bull case just got harder to defend at current multiples.' "
+            "Bad: 'This event has positive implications for the company.'"
+        ),
+    )
+    recommended_action: str = Field(
+        default="monitor",
+        description="re_evaluate | alert | monitor | ignore",
+    )
+    alert_priority: str = Field(
+        default="ignore",
+        description="critical | high | medium | ignore",
+    )
+    timestamp: str = Field(default="")
+    snapshot_id: Optional[str] = Field(default=None)
+
+
+class MarketRegime(BaseModel):
+    """
+    Current market regime classification.
+
+    Derived deterministically from recent macro events and market pricing signals.
+    Used to contextualize all thesis analysis and morning brief generation.
+    """
+    rate_environment: str = Field(
+        default="uncertain",
+        description="higher_for_longer | cutting_cycle | pause | uncertain",
+    )
+    risk_appetite: str = Field(
+        default="selective",
+        description="risk_on | risk_off | selective",
+    )
+    dominant_narrative: str = Field(
+        default="",
+        description=(
+            "1 sentence in PM language describing the current macro regime. "
+            "Good: 'Rates staying higher for longer — rate-duration risk is real for long-dated multiples.' "
+            "Good: 'Risk appetite recovering — market rotating back into growth after macro clarity.' "
+            "Bad: 'Markets are mixed with uncertainty.'"
+        ),
+    )
+    key_macro_factors: List[str] = Field(
+        default_factory=list,
+        description="2-4 specific macro factors currently driving regime",
+    )
+    last_updated: str = Field(default="")

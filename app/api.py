@@ -517,3 +517,63 @@ async def get_usage_stats() -> dict:
     """Return aggregate usage statistics."""
     from .services.usage_tracking import usage_tracker
     return usage_tracker.get_totals()
+
+
+# ── Live Market Intelligence (Phase L) ───────────────────────────────────────
+
+@router.post("/events/ingest", tags=["events"])
+async def ingest_event(event_data: dict) -> dict:
+    """
+    Ingest a normalized event and return impact assessments for all relevant tickers.
+    Accepts NormalizedEvent-compatible dict.
+    """
+    from .services.ingestion.normalized_event import NormalizedEvent, EventCategory, SourceReliability
+    from .services.event_processor import process_event_for_watchlist, save_impact_assessment
+    from .services.market_regime_tracker import update_regime
+    try:
+        # Normalize event_data
+        event = NormalizedEvent(**{
+            k: v for k, v in event_data.items()
+            if k in NormalizedEvent.model_fields
+        })
+        impacts = process_event_for_watchlist(event)
+        # Save all non-noise impacts
+        for impact in impacts:
+            save_impact_assessment(impact)
+        # Update regime if this is a macro event
+        if event.category == EventCategory.MACRO:
+            update_regime([event])
+        return {
+            "event_id": event.event_id,
+            "ticker": event.ticker,
+            "impact_count": len(impacts),
+            "impacts": [i.model_dump() for i in impacts],
+        }
+    except Exception as exc:
+        logger.warning("ingest_event failed: %s", exc)
+        return {"error": str(exc), "impact_count": 0, "impacts": []}
+
+
+@router.get("/events/impact/{ticker}", tags=["events"])
+async def get_event_impacts(ticker: str, limit: int = 20) -> list:
+    """Get recent event impact assessments for a specific ticker."""
+    try:
+        from .services.timeline_store import default_store
+        entries = default_store.load(ticker.upper(), entry_type="event_impact")
+        entries.sort(key=lambda e: e.timestamp, reverse=True)
+        return [e.data for e in entries[:limit]]
+    except Exception as exc:
+        logger.warning("get_event_impacts failed: %s", exc)
+        return []
+
+
+@router.get("/regime", tags=["market"])
+async def get_market_regime() -> dict:
+    """Get the current market regime classification."""
+    from .services.market_regime_tracker import get_current_regime
+    try:
+        regime = get_current_regime()
+        return regime.model_dump()
+    except Exception as exc:
+        logger.warning("get_market_regime failed: %s", exc)
+        return {"rate_environment": "uncertain", "risk_appetite": "selective"}

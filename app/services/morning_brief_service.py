@@ -9,12 +9,15 @@ names when they share a common macro driver.
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
 from pydantic import BaseModel
 
 from ..schemas import Alert, MaterialChangeEvent, WatchlistEntry
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -205,11 +208,80 @@ def _group_by_driver(
 # ---------------------------------------------------------------------------
 
 
+def generate_overnight_summary(
+    event_impacts: List,
+    regime: Optional[object] = None,
+) -> str:
+    """
+    Generate the 'what changed overnight' section from event impacts.
+    Returns 1-3 sentences in PM language.
+
+    Parameters
+    ----------
+    event_impacts:
+        List of EventImpactAssessment objects.
+    regime:
+        Optional MarketRegime object for macro context.
+    """
+    try:
+        if not event_impacts:
+            if regime is not None:
+                narrative = getattr(regime, "dominant_narrative", "")
+                if narrative:
+                    return narrative
+            return "No material overnight developments for tracked names."
+
+        sentences: List[str] = []
+
+        # Add regime narrative first if risk-off or higher-for-longer
+        if regime is not None:
+            rate_env = getattr(regime, "rate_environment", "")
+            risk_app = getattr(regime, "risk_appetite", "")
+            dominant_narrative = getattr(regime, "dominant_narrative", "")
+            if dominant_narrative and (
+                rate_env in ("higher_for_longer", "cutting_cycle")
+                or risk_app == "risk_off"
+            ):
+                sentences.append(dominant_narrative)
+
+        # Group by ticker, pick highest-priority impact per ticker
+        ticker_impacts: dict = {}
+        for impact in event_impacts:
+            ticker = getattr(impact, "ticker", "")
+            existing = ticker_impacts.get(ticker)
+            if existing is None:
+                ticker_impacts[ticker] = impact
+            else:
+                # Keep higher materiality
+                if getattr(impact, "materiality_score", 0.0) > getattr(existing, "materiality_score", 0.0):
+                    ticker_impacts[ticker] = impact
+
+        for ticker, impact in ticker_impacts.items():
+            priority = getattr(impact, "alert_priority", "ignore")
+            implication = getattr(impact, "thesis_implication", "")
+            if priority == "critical" and implication:
+                sentences.append(f"{ticker}: {implication}")
+            elif priority in ("high",) and implication:
+                sentences.append(f"{ticker}'s setup changed — {implication}")
+
+        # Cap at 3 sentences
+        sentences = sentences[:3]
+
+        if not sentences:
+            return "No material overnight developments for tracked names."
+
+        return " ".join(sentences)
+    except Exception as exc:
+        logger.warning("generate_overnight_summary failed: %s", exc)
+        return "No material overnight developments for tracked names."
+
+
 def generate_morning_brief(
     watchlist_entries: List[WatchlistEntry],
     recent_material_changes: List[MaterialChangeEvent],
     recent_alerts: List[Alert],
     reference_date: Optional[str] = None,
+    event_impacts: Optional[List] = None,
 ) -> MorningBrief:
     """Generate a PM-style morning brief from watchlist state.
 
@@ -231,6 +303,18 @@ def generate_morning_brief(
         Structured morning note with brief_text, top_movers,
         attention_required, debate_shifts, and market_regime_note.
     """
+    # ── Pre-build event impact sentences for injection ────────────────────────
+    _impact_sentences: List[str] = []
+    if event_impacts:
+        for impact in event_impacts:
+            priority = getattr(impact, "alert_priority", "ignore")
+            implication = getattr(impact, "thesis_implication", "")
+            ticker = getattr(impact, "ticker", "")
+            if priority == "critical" and implication and ticker:
+                _impact_sentences.append(f"{ticker}: {implication}")
+            elif priority == "high" and implication and ticker:
+                _impact_sentences.append(f"{ticker}'s setup changed — {implication}")
+
     generated_at   = _now_iso()
     ref_date       = _today_str(reference_date)
     ticker_count   = len(watchlist_entries) if watchlist_entries else 0
@@ -338,6 +422,10 @@ def generate_morning_brief(
     if n_flagged >= 2:
         intro = f"{n_flagged} names flagged overnight."
         sentences = [intro] + sentences
+
+    # Prepend critical/high event impact sentences
+    if _impact_sentences:
+        sentences = _impact_sentences + sentences
 
     # Trim to 8 sentences total
     sentences = sentences[:8]
