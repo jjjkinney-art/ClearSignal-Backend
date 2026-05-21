@@ -360,13 +360,20 @@ _ALIAS_MAP: dict[str, str] = {
     # ── NVIDIA ────────────────────────────────────────────────────────────────
     "nvidia":                  "NVDA",
     "nvda":                    "NVDA",
+    "nvidia corporation":      "NVDA",
+    # NVIDIA product brands
+    "cuda":                    "NVDA",
+    "h100":                    "NVDA",
+    "blackwell":               "NVDA",
+    "hopper":                  "NVDA",    # NVIDIA GPU architecture
     # typos
     "nvidea":                  "NVDA",
     "nvidai":                  "NVDA",
     "nvdia":                   "NVDA",
     "nividia":                 "NVDA",
     "nviida":                  "NVDA",
-    "nvdia corporation":       "NVDA",
+    "nviddia":                 "NVDA",
+    "nvida":                   "NVDA",
 
     # ── Tesla ─────────────────────────────────────────────────────────────────
     "tesla":                   "TSLA",
@@ -484,6 +491,13 @@ _ALIAS_MAP: dict[str, str] = {
     # ── AMD ───────────────────────────────────────────────────────────────────
     "amd":                     "AMD",
     "advanced micro devices":  "AMD",
+    # AMD product brands — users search these even when asking about the stock
+    "ryzen":                   "AMD",
+    "radeon":                  "AMD",
+    "epyc":                    "AMD",
+    # typos
+    "amdd":                    "AMD",
+    "advancedmicro":           "AMD",
 
     # ── Intel ─────────────────────────────────────────────────────────────────
     "intel":                   "INTC",
@@ -493,10 +507,19 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── Broadcom ──────────────────────────────────────────────────────────────
     "broadcom":                "AVGO",
+    "avgo":                    "AVGO",   # ticker alias (people say "AVGO stock" lowercase)
+    "broadcom inc":            "AVGO",
+    # typos
+    "broadcome":               "AVGO",
+    "braodcom":                "AVGO",
+    "brodcom":                 "AVGO",
 
     # ── TSMC ──────────────────────────────────────────────────────────────────
     "tsmc":                    "TSM",
     "taiwan semiconductor":    "TSM",
+    "taiwan semiconductor manufacturing": "TSM",
+    "taiwan semi":             "TSM",
+    "tsm":                     "TSM",   # lowercase ticker alias
 
     # ── Salesforce ────────────────────────────────────────────────────────────
     "salesforce":              "CRM",
@@ -546,6 +569,7 @@ _ALIAS_MAP: dict[str, str] = {
     # ── Arm Holdings ──────────────────────────────────────────────────────────
     "arm":                     "ARM",
     "arm holdings":            "ARM",
+    "arm semiconductor":       "ARM",
 
     # ── Super Micro ───────────────────────────────────────────────────────────
     "super micro":             "SMCI",
@@ -560,9 +584,13 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── ASML ──────────────────────────────────────────────────────────────────
     "asml":                    "ASML",
+    "asml holding":            "ASML",
+    "asml holdings":           "ASML",
+    "asml semiconductor":      "ASML",
 
     # ── Lam Research ──────────────────────────────────────────────────────────
     "lam research":            "LRCX",
+    "lrcx":                    "LRCX",
 
     # ── Texas Instruments ─────────────────────────────────────────────────────
     "texas instruments":       "TXN",
@@ -1025,12 +1053,24 @@ class EntityResolution:
     candidates:
         For not_found: list of (ticker, company_name, score) tuples,
         sorted by score descending.  Empty for successful resolutions.
+    rejection_reason:
+        Non-empty when a fuzzy match was found but discarded before routing:
+        "fuzzy_below_threshold" — difflib match found but confidence < MINIMUM_ROUTE_CONFIDENCE
+        "not_found"             — no match at any confidence level
+        ""                      — resolution succeeded (exact_ticker or alias_exact)
+    fallback_reason:
+        Non-empty when no confident resolution was reached:
+        "candidates_available"  — top-N suggestions populated for Did-you-mean UX
+        "no_candidates"         — not even low-confidence suggestions found
+        ""                      — resolution succeeded, no fallback needed
     """
     context: Optional[CompanyContext]
     confidence: float
     method: str
     matched_text: str
     candidates: List[Tuple[str, str, float]] = field(default_factory=list)
+    rejection_reason: str = ""
+    fallback_reason: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -1234,8 +1274,22 @@ def resolve_entity(text: str) -> EntityResolution:
     """Full entity resolution with confidence scoring and structured observability.
 
     Runs the three detection steps in order and returns an
-    :class:`EntityResolution` with a confidence score, resolution method, and
-    candidate suggestions when no match is found.
+    :class:`EntityResolution` with a confidence score, resolution method,
+    candidate suggestions when no match is found, and observability fields
+    (rejection_reason, fallback_reason) for logging and monitoring.
+
+    Detection order
+    ---------------
+    1. Exact uppercase ticker — always wins at confidence 1.00.
+    2. Alias word-boundary lookup — longest match first, confidence 0.95.
+    3. Token-window fuzzy match — difflib ratio scaled to 0.72–0.95.
+
+    Governance
+    ----------
+    The router applies MINIMUM_ROUTE_CONFIDENCE (0.85) as a hard gate.
+    Fuzzy matches below that threshold are flagged with
+    rejection_reason="fuzzy_below_threshold" so callers can surface a
+    "Did you mean?" UI instead of silently routing to the wrong company.
 
     Parameters
     ----------
@@ -1248,35 +1302,55 @@ def resolve_entity(text: str) -> EntityResolution:
         Always returns an object (never raises).  Check ``context`` and
         ``confidence`` in the caller.
     """
+    import json as _json
+
     if not text or not text.strip():
-        return EntityResolution(None, 0.0, "not_found", "", [])
+        return EntityResolution(
+            None, 0.0, "not_found", "",
+            rejection_reason="not_found",
+            fallback_reason="no_candidates",
+        )
 
     normalized = _normalize_query(text)
-    logger.info(
-        "[entity_resolution] raw=%r normalized=%r",
-        text[:120],
-        normalized[:120],
-    )
 
     # ── Step 1: explicit uppercase ticker ────────────────────────────────────
     ctx = _extract_explicit_ticker(text)
     if ctx is not None:
-        logger.info(
-            "[entity_resolution] method=exact_ticker entity=%s conf=1.00",
-            ctx.ticker,
+        logger.info(_json.dumps({
+            "event": "entity_resolved",
+            "method": "exact_ticker",
+            "ticker": ctx.ticker,
+            "confidence": 1.00,
+            "matched_text": ctx.ticker,
+            "rejection_reason": "",
+            "fallback_reason": "",
+            "raw_query": text[:120],
+        }))
+        return EntityResolution(
+            ctx, 1.0, "exact_ticker", ctx.ticker,
+            rejection_reason="",
+            fallback_reason="",
         )
-        return EntityResolution(ctx, 1.0, "exact_ticker", ctx.ticker)
 
-    # ── Step 2: alias exact substring match ───────────────────────────────────
+    # ── Step 2: alias word-boundary lookup ────────────────────────────────────
     ctx = _alias_lookup(text)
     if ctx is not None:
         alias = ctx.aliases[0] if ctx.aliases else ""
-        logger.info(
-            "[entity_resolution] method=alias_exact entity=%s alias=%r conf=0.95",
-            ctx.ticker,
-            alias,
+        logger.info(_json.dumps({
+            "event": "entity_resolved",
+            "method": "alias_exact",
+            "ticker": ctx.ticker,
+            "confidence": 0.95,
+            "matched_text": alias,
+            "rejection_reason": "",
+            "fallback_reason": "",
+            "raw_query": text[:120],
+        }))
+        return EntityResolution(
+            ctx, 0.95, "alias_exact", alias,
+            rejection_reason="",
+            fallback_reason="",
         )
-        return EntityResolution(ctx, 0.95, "alias_exact", alias)
 
     # ── Step 3: token-window fuzzy match ─────────────────────────────────────
     fuzzy_result = _fuzzy_token_match(text, cutoff=0.72)
@@ -1284,23 +1358,47 @@ def resolve_entity(text: str) -> EntityResolution:
         ctx, score, matched_alias = fuzzy_result
         # Scale difflib ratio (0.72 – 1.0) → confidence (0.72 – 0.95)
         confidence = round(0.50 + score * 0.47, 3)
-        logger.info(
-            "[entity_resolution] method=fuzzy_token entity=%s alias=%r "
-            "score=%.3f conf=%.3f",
-            ctx.ticker,
-            matched_alias,
-            score,
-            confidence,
+        # Determine whether this match clears the routing gate.
+        # Matches below MINIMUM_ROUTE_CONFIDENCE must NOT be silently routed;
+        # the router will demote them to "Did you mean?" candidates.
+        below_threshold = confidence < MINIMUM_ROUTE_CONFIDENCE
+        rejection_reason = "fuzzy_below_threshold" if below_threshold else ""
+        logger.info(_json.dumps({
+            "event": "entity_resolved",
+            "method": "fuzzy_token",
+            "ticker": ctx.ticker,
+            "confidence": confidence,
+            "matched_text": matched_alias,
+            "difflib_score": round(score, 4),
+            "rejection_reason": rejection_reason,
+            "fallback_reason": "",
+            "below_routing_threshold": below_threshold,
+            "raw_query": text[:120],
+        }))
+        return EntityResolution(
+            ctx, confidence, "fuzzy_token", matched_alias,
+            rejection_reason=rejection_reason,
+            fallback_reason="",
         )
-        return EntityResolution(ctx, confidence, "fuzzy_token", matched_alias)
 
-    # ── Not found — gather candidates ─────────────────────────────────────────
+    # ── Not found — gather candidates for "Did you mean?" ────────────────────
     candidates = _gather_candidates(text)
-    logger.info(
-        "[entity_resolution] method=not_found candidates=%s",
-        [(t, s) for t, _, s in candidates],
+    fallback_reason = "candidates_available" if candidates else "no_candidates"
+    logger.info(_json.dumps({
+        "event": "entity_not_found",
+        "method": "not_found",
+        "rejection_reason": "not_found",
+        "fallback_reason": fallback_reason,
+        "candidate_count": len(candidates),
+        "top_candidates": [(t, round(s, 3)) for t, _, s in candidates[:3]],
+        "raw_query": text[:120],
+    }))
+    return EntityResolution(
+        None, 0.0, "not_found", "",
+        candidates=candidates,
+        rejection_reason="not_found",
+        fallback_reason=fallback_reason,
     )
-    return EntityResolution(None, 0.0, "not_found", "", candidates)
 
 
 def detect_company(text: str) -> Optional[CompanyContext]:
