@@ -439,8 +439,14 @@ class TestRouterPipelineIntentFlow:
 
         mock_val_ratios.assert_called_once_with("VRTX")
 
-    def test_pipeline_does_not_call_fetch_valuation_ratios_for_default_question(self):
-        """For non-stance questions, pipeline must NOT call fetch_valuation_ratios."""
+    def test_pipeline_calls_fetch_valuation_ratios_for_all_questions(self):
+        """FMP fetch is always-on — pipeline calls fetch_valuation_ratios for ANY question.
+
+        This supersedes the previous test that asserted FMP was only called for
+        valuation_stance questions.  Since the truth-density phase made FMP
+        always-on, every company analysis now fetches live ratios and analyst
+        estimates so the confidence calibrator can check coverage.
+        """
         from app.services.router_service import _run_investment_pipeline
         from app.schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
 
@@ -478,8 +484,9 @@ class TestRouterPipelineIntentFlow:
                 request_id="test-789",
             )
 
-        mock_val_ratios.assert_not_called()
-        mock_est.assert_not_called()
+        # Always-on: must be called even for non-valuation-stance questions
+        mock_val_ratios.assert_called_once_with("VRTX")
+        mock_est.assert_called_once_with("VRTX")
 
 
 # ─────────────────────────────────────────────────────────────────────────────

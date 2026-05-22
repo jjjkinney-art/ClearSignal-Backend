@@ -742,31 +742,31 @@ def _run_investment_pipeline(
     fred_evidence = retrieve_general_finance_evidence(question)
     evidence = market_evidence + fred_evidence
 
-    # ── Valuation-specific extra evidence ─────────────────────────────────────
-    # For "Is X overpriced?" questions, append forward multiples and analyst
-    # price targets AFTER the standard evidence cap so the valuation_agent
-    # has explicit ratio and consensus data available.
-    if question_intent == "valuation_stance":
-        try:
-            _val_ratios = fetch_valuation_ratios(ticker)
-            if _val_ratios:
-                evidence = evidence + _val_ratios
-                print(
-                    f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
-                    f"appended {len(_val_ratios)} valuation_ratios item(s)"
-                )
-        except Exception as _exc:
-            logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, _exc)
-        try:
-            _analyst_ests = fetch_analyst_estimates(ticker)
-            if _analyst_ests:
-                evidence = evidence + _analyst_ests
-                print(
-                    f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
-                    f"appended {len(_analyst_ests)} analyst_estimates item(s)"
-                )
-        except Exception as _exc:
-            logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _exc)
+    # ── Always-on FMP evidence ────────────────────────────────────────────────
+    # Live valuation ratios and analyst estimates are fetched for ALL company
+    # queries, not just valuation_stance questions.  This ensures every thesis
+    # has real P/E, EV/EBITDA, and consensus price-target data so the
+    # confidence calibrator can confirm coverage rather than penalise gaps.
+    try:
+        _val_ratios = fetch_valuation_ratios(ticker)
+        if _val_ratios:
+            evidence = evidence + _val_ratios
+            print(
+                f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+                f"appended {len(_val_ratios)} valuation_ratios item(s)"
+            )
+    except Exception as _exc:
+        logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, _exc)
+    try:
+        _analyst_ests = fetch_analyst_estimates(ticker)
+        if _analyst_ests:
+            evidence = evidence + _analyst_ests
+            print(
+                f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+                f"appended {len(_analyst_ests)} analyst_estimates item(s)"
+            )
+    except Exception as _exc:
+        logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _exc)
 
     print(
         f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
@@ -893,10 +893,60 @@ def _run_investment_pipeline(
     except Exception:
         thesis_dict = thesis.dict()
 
+    # ── [BACKEND_FINAL_RESPONSE] — truth-path telemetry at serialization point ──
+    # This log fires at the exact moment model_dump() converts InvestmentThesis
+    # to a dict for the API response. If this log shows the right values but the
+    # frontend still shows 65%, the problem is in the proxy, the Next.js route,
+    # the frontend fetch handler, or the extractInvestmentThesis function.
+    # Use the authoritative score_source stamped by synthesize_thesis (Phase 5g).
+    # Falls back to the inline derivation if the field is absent (e.g. stale object).
+    _score_source_diag = getattr(thesis, "score_source", None) or (
+        "conviction_modeler"
+        if bool(thesis.conviction_dimensions) and thesis.setup_label != "actionable thesis"
+        else "llm_raw_preserved" if not bool(thesis.conviction_dimensions)
+        else "conviction_modeler_balanced"
+    )
+    logger.info(
+        "[BACKEND_FINAL_RESPONSE] ticker=%s "
+        "confidence_score=%.4f "
+        "setup_label=%r "
+        "score_source=%s "
+        "fragility_mult=%.4f "
+        "asymmetry_mult=%.4f "
+        "conviction_dims=%d "
+        "confidence_reasoning_snippet=%r",
+        ticker,
+        thesis.confidence_score,
+        thesis.setup_label,
+        _score_source_diag,
+        thesis.fragility_multiplier_applied,
+        thesis.asymmetry_multiplier_applied,
+        len(thesis.conviction_dimensions or {}),
+        (thesis.confidence_reasoning or "")[:80],
+    )
+    # [HEADLINE_CONFIDENCE_SOURCE] — also echoed here at the router serialization
+    # boundary so the source is visible in a single log stream without needing
+    # to cross-reference thesis_synthesizer logs.
+    _used_legacy_formatter = _score_source_diag == "llm_raw_preserved"
+    _reasoning_snippet = (thesis.confidence_reasoning or "")[:80].lower()
+    _has_legacy_phrase = any(
+        p in _reasoning_snippet for p in [
+            "limited evidence coverage",
+            "framework is sound",
+            "data is thin",
+        ]
+    )
     print(
-        f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
-        f"thesis_complete=True "
-        f"consistency_warnings={len(thesis.consistency_warnings or [])}"
+        f"[BACKEND_FINAL_RESPONSE] [{ticker}] "
+        f"confidence={thesis.confidence_score:.4f} "
+        f"setup_label={thesis.setup_label!r} "
+        f"score_source={_score_source_diag} "
+        f"fragility_mult={thesis.fragility_multiplier_applied:.4f} "
+        f"conviction_dims={len(thesis.conviction_dimensions or {})} "
+        f"reasoning_len={len(thesis.confidence_reasoning or '')} "
+        f"[HEADLINE_CONFIDENCE_SOURCE] used_legacy_formatter={_used_legacy_formatter} "
+        f"hard_fail_phrase={_has_legacy_phrase} "
+        f"one_sentence_thesis={thesis.one_sentence_thesis!r:.60}"
     )
 
     return AgentAnswerResponse(

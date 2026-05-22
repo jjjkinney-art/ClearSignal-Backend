@@ -40,6 +40,7 @@ import datetime as _dt
 import json
 import logging
 import re
+import traceback as _traceback
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -64,12 +65,18 @@ from .signal_ranker import (
     check_forbidden_phrases,
     propagate_evidence_refs,
     detect_signal_overlap,
-    build_confidence_reasoning,
+    # build_confidence_reasoning is intentionally NOT imported here.
+    # Phase 5c+: production pipeline never calls it — the conviction modeler
+    # (conviction_modeler.py) owns confidence_reasoning.  Calling this function
+    # would inject generic boilerplate phrases that the governance check flags
+    # as hard-fail violations.
     compute_confidence_realism_cap,
     _get_signal_dimension,
     RankedSignalSet,
 )
 from .thesis_polisher import polish_thesis
+from .confidence_calibrator import compute_evidence_coverage_gaps
+from .conviction_modeler import compute_conviction
 
 logger = logging.getLogger(__name__)
 
@@ -112,6 +119,7 @@ _THESIS_FIELDS = (
     "confidence_score",
     "confidence_reasoning",
     "what_changes_the_thesis",
+    "what_increases_conviction",
     "conclusion",
 )
 
@@ -520,6 +528,90 @@ def _composite_evidence_score(ev: RetrievedEvidence, reference_ts: str) -> float
     return base
 
 
+def _build_live_data_provenance_block(evidence: List[RetrievedEvidence]) -> str:
+    """Build a prompt block that enforces live-data citation and provenance.
+
+    When FMP valuation ratios or analyst estimate evidence is present, the
+    synthesiser is required to cite the live metric directly rather than
+    using generic valuation language.  When the evidence is thin or stale,
+    the block instructs the model to qualify claims accordingly.
+    """
+    from .confidence_calibrator import (
+        _has_live_valuation,
+        _has_analyst_estimates,
+        _has_recent_earnings,
+        _oldest_evidence_age_days,
+        _STALE_THRESHOLD_DAYS,
+        _RECENT_EARNINGS_THRESHOLD_DAYS,
+    )
+
+    has_val = _has_live_valuation(evidence)
+    has_est = _has_analyst_estimates(evidence)
+    has_earn = _has_recent_earnings(evidence)
+    oldest = _oldest_evidence_age_days(evidence)
+
+    lines: List[str] = ["EVIDENCE PROVENANCE — MANDATORY:"]
+
+    if has_val:
+        lines.append(
+            "- Live valuation ratios (FMP) are present in the evidence. "
+            "You MUST cite the specific ratio (P/E, EV/EBITDA, FCF yield, or Price/Sales) "
+            "from these items in valuation_view. "
+            'Do NOT write "the stock trades at a premium" without naming the actual multiple.'
+        )
+    else:
+        lines.append(
+            "- No live valuation ratios available. "
+            "You MUST qualify valuation claims with 'estimated' or 'based on available data' "
+            "and note the absence of current ratio data in confidence_reasoning."
+        )
+
+    if has_est:
+        lines.append(
+            "- Analyst estimates / price-target consensus data is present. "
+            "You MUST reference the consensus target vs current price or forward EPS estimate "
+            "when discussing the valuation outlook."
+        )
+    else:
+        lines.append(
+            "- No analyst estimate or price-target data available. "
+            "Do NOT assert a 'consensus view' or 'analyst expectations' without explicit evidence."
+        )
+
+    if has_earn:
+        lines.append(
+            "- Recent earnings evidence is present. "
+            "You MUST incorporate the actual vs estimated result or guidance language "
+            "when assessing near-term trajectory."
+        )
+    else:
+        lines.append(
+            "- No recent earnings evidence (< 90d). "
+            "Flag this gap when discussing near-term earnings visibility."
+        )
+
+    if oldest is not None and oldest > _STALE_THRESHOLD_DAYS:
+        lines.append(
+            f"- WARNING: Oldest evidence is {oldest}d old — some data pre-dates current "
+            "market conditions. Use temporal qualifiers ('as of [date]') for any claims "
+            "that could have changed materially."
+        )
+    elif oldest is not None and oldest > _RECENT_EARNINGS_THRESHOLD_DAYS:
+        lines.append(
+            f"- Evidence is moderately stale (oldest: {oldest}d). "
+            "Prefer the most recent items when claims conflict across time periods."
+        )
+
+    lines.append(
+        "- CITATION REQUIREMENT: Every quantitative claim (multiples, margins, growth rates, "
+        "price targets) MUST be traceable to an evidence item number [N]. "
+        'Do NOT invent numbers. If no number is available, write "no current data" rather '
+        "than fabricating a figure."
+    )
+
+    return "\n".join(lines) + "\n\n"
+
+
 def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> str:
     """Format top-N evidence items with composite recency+relevance scoring.
 
@@ -867,9 +959,11 @@ FX → international revenue mix → reported EPS). \
 Sentence 2: magnitude and directional bias — quantify the sensitivity where possible \
 (100bps rate move ≈ X% P/E compression; 10% USD appreciation ≈ Y% revenue headwind \
 on international segment).
-  "confidence_score"        : number between 0.0 and 1.0. Be genuinely conservative: \
+  "confidence_score"        : number between 0.0 and 1.0. Provide your honest analytical read. \
 score 0.80+ ONLY when macro, risk, AND evidence all clearly agree. If macro or regulatory \
-uncertainty is real and unresolved, cap yourself at 0.72. If evidence is sparse, cap at 0.65. \
+uncertainty is real and unresolved, lean toward 0.55–0.72 range. \
+IMPORTANT: The conviction modeler will override this score after you respond — your job is \
+to give an honest initial read, NOT to anchor at any specific number. Do not anchor at 0.65. \
 The score should reflect what you could defend in an IC meeting, not an optimistic read.
   "confidence_reasoning"    : string — 2-3 sentences of honest analyst-style uncertainty. \
 Name what IS clear and WHY, then name specifically what is NOT resolved and why it matters \
@@ -891,6 +985,12 @@ CONFIDENCE LANGUAGE ALIGNMENT — MANDATORY:
   NEVER use regardless of score: "high conviction", "strong conviction", "highly constructive",
   "confidence remains high", "elevated conviction", "well-supported thesis"
   The PROSE must match the SCORE — a 0.68 score that says "high conviction" is a contradiction.
+  "what_increases_conviction": string — 1-2 sentences. Name the SPECIFIC evidence, event, or \
+data release that would most raise conviction for THIS company right now. PM-grade specificity \
+required. This is the single most important missing piece that, if resolved, would change the \
+investment decision. GOOD: "Clarity on hyperscaler CapEx guidance for H2 2026 would resolve \
+the primary uncertainty — that data point determines whether the data-center revenue runway \
+extends or plateaus." BAD: "More evidence would increase conviction." \
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
   "core_takeaway"           : string — 1-2 sentences that make the thesis INSTANTLY CLEAR to \
 an intelligent but non-institutional investor. Same analytical depth, accessible language. \
@@ -1001,6 +1101,9 @@ def _build_synthesis_prompt(
     dominant_dim         = _detect_dominant_dimension(macro, risk, valuation, ranked)
     dominant_dim_block   = _DEPTH_DIRECTIVES.get(dominant_dim, "")
     section_priority_tag = _build_section_priority_block(dominant_dim)
+
+    # Build live-data provenance block (Truth Density phase)
+    live_data_provenance_block = _build_live_data_provenance_block(evidence)
 
     # Build market regime context block from evidence (Phase G)
     market_regime_block = _build_market_regime_block(evidence)
@@ -1176,7 +1279,7 @@ Recent Catalysts:
 SUPPORTING EVIDENCE:
 {ev_block}
 
-STOCK-MOVEMENT ORIENTATION — MANDATORY FOR ALL SECTIONS:
+{live_data_provenance_block}STOCK-MOVEMENT ORIENTATION — MANDATORY FOR ALL SECTIONS:
 Every sentence must answer "What moves the stock?" — NOT "What describes the company?"
 
 HIERARCHICAL DENSITY REQUIREMENT:
@@ -1186,6 +1289,14 @@ HIERARCHICAL DENSITY REQUIREMENT:
   Do NOT compress these to assertion-level. A 3-4 sentence analytical paragraph is correct.
 - valuation_view, macro_sensitivity → 2 sentences each: state the structure and the
   sensitivity logic. Not a one-liner assertion — a complete analytical thought.
+- what_increases_conviction → 1-2 sentences. Name the SPECIFIC evidence, event, or data
+  release that would most raise conviction for THIS company. PM-grade specificity required.
+  GOOD: "Clarity on hyperscaler CapEx guidance for H2 2026 would be the single biggest
+        conviction driver — that determines whether the data-center revenue runway extends."
+  GOOD: "The next pipeline Phase 3 readout and FDA response on the CFTR successor would
+        resolve the primary uncertainty constraining conviction."
+  BAD: "More evidence would increase conviction." (too generic)
+  BAD: "Better market conditions would help." (not company-specific)
 
 REQUIRED in bull_thesis, bear_thesis, valuation_view, macro_sensitivity:
 - Explicit mechanism: X factor → Y stock effect (name the transmission)
@@ -1238,6 +1349,15 @@ FORBIDDEN PHRASES — remove every instance:
 - "continues to benefit" → explain HOW and WHY the benefit accrues
 - "poised to", "positioned for" → replace with specific catalyst or trigger
 - "a testament to", "speaks to the" → replace with direct causal statement
+- "analysts expect", "consensus expects" → cite the actual estimate figure or omit
+- "recent data suggests" → name the specific data item and its date
+- "historically" without a date → "as of [period]" or name the specific historical reference
+- "the stock is trading at" without citing the multiple → give the actual ratio from evidence
+
+HALLUCINATION PREVENTION — ABSOLUTE RULES:
+- NEVER invent a P/E ratio, EV/EBITDA, revenue figure, or price target not present in the evidence.
+- If you do not have a specific figure, write "no current ratio data available" rather than estimating.
+- Every cited number MUST have a corresponding [N] evidence citation.
 
 REQUIRED language: causal chains, specific metrics, named transmission mechanisms,
 asymmetry analysis, stock-price relevance in every sentence.
@@ -1748,6 +1868,142 @@ def _check_evidence_sparse(
     return warnings
 
 
+def _check_stance_conclusion_alignment(
+    valuation: ValuationView,
+    thesis: InvestmentThesis,
+) -> List[str]:
+    """Flag when valuation_stance contradicts buy/sell language in the conclusion.
+
+    "overpriced" + conclusion that recommends buying (or vice versa) is an
+    internal contradiction that confuses the user.
+    """
+    warnings: List[str] = []
+    stance = (getattr(valuation, "valuation_stance", "") or "").lower().strip()
+    if not stance or stance == "cannot_determine":
+        return warnings
+
+    conclusion_lower = (getattr(thesis, "conclusion", "") or "").lower()
+    direct_lower = (getattr(thesis, "direct_answer", "") or "").lower()
+    combined = conclusion_lower + " " + direct_lower
+
+    _BUY_SIGNALS = ("buy", "long", "add exposure", "accumulate", "attractive entry",
+                    "undervalued", "upside")
+    _SELL_SIGNALS = ("sell", "short", "reduce", "exit", "overpriced", "stretched",
+                     "overvalued", "avoid")
+
+    has_buy = any(s in combined for s in _BUY_SIGNALS)
+    has_sell = any(s in combined for s in _SELL_SIGNALS)
+
+    if stance == "overpriced" and has_buy and not has_sell:
+        warnings.append(
+            f"[GOVERNANCE] Stance-conclusion contradiction for {thesis.ticker}: "
+            f"valuation_stance='overpriced' but conclusion/direct_answer contains "
+            f"buy-side language without bearish qualification. Verify alignment."
+        )
+    elif stance == "underpriced" and has_sell and not has_buy:
+        warnings.append(
+            f"[GOVERNANCE] Stance-conclusion contradiction for {thesis.ticker}: "
+            f"valuation_stance='underpriced' but conclusion/direct_answer contains "
+            f"sell-side language without bullish qualification. Verify alignment."
+        )
+    return warnings
+
+
+def _check_stale_evidence_warning(
+    evidence: List[RetrievedEvidence],
+    thesis: InvestmentThesis,
+) -> List[str]:
+    """Flag when the thesis carries high confidence but evidence is old.
+
+    Uses the confidence_calibrator's freshness check rather than re-implementing
+    the staleness logic.  Adds a consistency_warning so the frontend can
+    surface a 'data may be outdated' badge.
+    """
+    warnings: List[str] = []
+    _, gaps = compute_evidence_coverage_gaps(evidence)
+    stale_gaps = [g for g in gaps if "stale" in g.lower()]
+    if stale_gaps and thesis.confidence_score > 0.60:
+        for gap in stale_gaps:
+            warnings.append(
+                f"[GOVERNANCE] Stale evidence with elevated confidence "
+                f"({thesis.confidence_score:.0%}) for {thesis.ticker}: {gap}"
+            )
+    return warnings
+
+
+_GENERIC_CONFIDENCE_PHRASES: List[str] = [
+    "limited evidence coverage",
+    "evidence is sparse",
+    "insufficient evidence",
+    "evidence base is thin",
+    "confidence is high",
+    "conviction remains strong",
+    "evidence is directionally constructive",
+    "multiple factors",
+    "various factors",
+    "several considerations",
+    "overall assessment",
+]
+
+# Phase 5c: Hard-fail phrases sourced from build_confidence_reasoning (signal_ranker.py).
+# These exact templates MUST NOT appear in production confidence_reasoning regardless of
+# whether the company ticker is present — they are process artifacts, not analytical language.
+_HARD_FAIL_CONFIDENCE_PHRASES: List[str] = [
+    "limited evidence coverage means this position carries more uncertainty",
+    "the framework is sound, the data is thin",
+    "carries more uncertainty than the score reflects",
+    "framework is sound",
+    "more uncertainty than the score",
+]
+
+
+def _check_generic_confidence_reasoning(
+    thesis: InvestmentThesis,
+    company: CompanyContext,
+) -> List[str]:
+    """Flag when confidence_reasoning uses generic boilerplate instead of company-specific language.
+
+    Phase 5c governance rules:
+    1. HARD FAIL: exact fallback phrases from build_confidence_reasoning are ALWAYS flagged,
+       regardless of whether the company ticker appears — they are process artifacts.
+    2. SOFT FAIL: generic phrases without a company reference trigger a warning.
+
+    The conviction modeler should always produce specific, company-anchored reasoning.
+    This check is a canary for fallback leakage.
+    """
+    warnings: List[str] = []
+    reasoning = (thesis.confidence_reasoning or "").lower()
+    if not reasoning:
+        return warnings
+
+    ticker = getattr(company, "ticker", "") or ""
+
+    # ── Hard-fail check: these templates NEVER belong in production output ────
+    hard_hits = [p for p in _HARD_FAIL_CONFIDENCE_PHRASES if p in reasoning]
+    if hard_hits:
+        warnings.append(
+            f"[GOVERNANCE] Hard-fail generic phrase in confidence_reasoning for {ticker}: "
+            f"phrases={hard_hits}. These build_confidence_reasoning templates must be "
+            f"replaced by the conviction modeler's company-specific output."
+        )
+        return warnings  # hard fail is conclusive — don't double-flag
+
+    # ── Soft-fail check: generic phrases without any company reference ────────
+    company_name = (getattr(company, "company_name", "") or "").lower()
+    has_company_ref = ticker.lower() in reasoning or (
+        len(company_name) > 3 and company_name[:6] in reasoning
+    )
+
+    generic_hits = [p for p in _GENERIC_CONFIDENCE_PHRASES if p in reasoning]
+    if generic_hits and not has_company_ref:
+        warnings.append(
+            f"[GOVERNANCE] Generic confidence_reasoning for {ticker}: "
+            f"phrases detected={generic_hits}. "
+            f"Company-specific uncertainty drivers should be primary, not fallback."
+        )
+    return warnings
+
+
 def _run_governance_checks(
     company: CompanyContext,
     valuation: ValuationView,
@@ -1761,6 +2017,9 @@ def _run_governance_checks(
     warnings.extend(_check_rate_cut_bank_contradiction(company, macro, thesis))
     warnings.extend(_check_valuation_risk_tension(valuation, risk, thesis))
     warnings.extend(_check_evidence_sparse(evidence, thesis))
+    warnings.extend(_check_stance_conclusion_alignment(valuation, thesis))
+    warnings.extend(_check_stale_evidence_warning(evidence, thesis))
+    warnings.extend(_check_generic_confidence_reasoning(thesis, company))
     return warnings
 
 
@@ -1771,6 +2030,13 @@ def _empty_thesis(
     reason: str = "",
     original_user_question: Optional[str] = None,
 ) -> InvestmentThesis:
+    _ticker_empty = getattr(company, "ticker", None) or "UNKNOWN"
+    logger.warning(
+        "[FALLBACK_REASONING_TRIGGER] ticker=%s path=_empty_thesis "
+        "source_function=_empty_thesis reason=%r "
+        "confidence_reasoning=zero_evidence_sentinel score=0.0",
+        _ticker_empty, reason or "no_evidence_or_agents",
+    )
     return InvestmentThesis(
         ticker=company.ticker,
         company_name=company.company_name,
@@ -2041,9 +2307,21 @@ def synthesize_thesis(
     # Stamp dominant analytical dimension (deterministic, pre-LLM)
     thesis.dominant_dimension = dominant_dim_for_thesis
 
-    # ── R1: Deterministic confidence realism cap ──────────────────────────────
-    # Applied immediately after LLM output so the post-synthesis chain sees
-    # a properly conservative confidence score throughout.
+    # ── [CONFIDENCE_AUDIT] stage 1: LLM raw score ─────────────────────────────
+    _ticker_audit = getattr(company, "ticker", "UNKNOWN") or "UNKNOWN"
+    _llm_raw_score = thesis.confidence_score
+    logger.info(
+        "[CONFIDENCE_AUDIT] ticker=%s stage=llm_raw score=%.4f "
+        "macro_conf=%.2f risk_conf=%.2f val_conf=%.2f evidence_count=%d",
+        _ticker_audit, _llm_raw_score,
+        macro.confidence, risk.confidence, valuation.confidence, len(evidence),
+    )
+
+    # ── R1: Legacy confidence realism cap (kept as safety floor) ─────────────
+    # Still applied so that the old cap logic acts as a floor before the
+    # conviction modeler's more granular computation runs.
+    # NOTE: This cap is OVERRIDDEN by the conviction modeler at the end of this
+    # block.  It only matters if the conviction modeler throws an exception.
     try:
         adjusted_conf, cap_triggers = compute_confidence_realism_cap(
             raw_score=thesis.confidence_score,
@@ -2053,15 +2331,36 @@ def synthesize_thesis(
             evidence_count=len(evidence),
             ranked=ranked,
         )
+        logger.info(
+            "[CONFIDENCE_AUDIT] ticker=%s stage=r1_legacy_cap "
+            "pre=%.4f post=%.4f triggers=%s",
+            _ticker_audit, thesis.confidence_score, adjusted_conf, cap_triggers,
+        )
         if adjusted_conf < thesis.confidence_score:
-            print(
-                f"[thesis_synthesizer] confidence capped: "
-                f"{thesis.confidence_score:.2f} → {adjusted_conf:.2f} "
-                f"triggers={cap_triggers}"
-            )
             thesis.confidence_score = adjusted_conf
     except Exception as exc:
         logger.warning("[thesis_synthesizer] confidence realism cap failed: %r", exc)
+
+    # ── R1b: Evidence coverage gap penalty (still applied for gap tracking) ──
+    _cov_gaps: List[str] = []
+    try:
+        cov_penalty, _cov_gaps = compute_evidence_coverage_gaps(evidence)
+        if cov_penalty > 0:
+            pre_cov = thesis.confidence_score
+            thesis.confidence_score = max(0.0, round(thesis.confidence_score - cov_penalty, 4))
+            logger.info(
+                "[CONFIDENCE_AUDIT] ticker=%s stage=r1b_coverage_gap "
+                "pre=%.4f post=%.4f penalty=%.4f gaps=%s",
+                _ticker_audit, pre_cov, thesis.confidence_score, cov_penalty, _cov_gaps,
+            )
+        else:
+            logger.info(
+                "[CONFIDENCE_AUDIT] ticker=%s stage=r1b_coverage_gap "
+                "pre=%.4f post=%.4f penalty=0.0 gaps=[]",
+                _ticker_audit, thesis.confidence_score, thesis.confidence_score,
+            )
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] coverage gap penalty failed: %r", exc)
 
     # ── Attach ranked signals to thesis ──────────────────────────────────────
     if ranked is not None:
@@ -2069,32 +2368,7 @@ def synthesize_thesis(
         thesis.top_risks = ranked.top_risks
         thesis.secondary_signals = ranked.secondary_signals
 
-    # ── Refinement 2: causal confidence reasoning ─────────────────────────────
-    # Replace LLM-generated generic confidence text with specific causal
-    # reasoning that cites agent agreement/disagreement, evidence coverage,
-    # and signal direction consensus.
-    try:
-        agent_confidences = {
-            "valuation": valuation.confidence,
-            "macro":     macro.confidence,
-            "risk":      risk.confidence,
-            "market":    market.confidence,
-            "quality":   quality.confidence,
-        }
-        causal_reasoning = build_confidence_reasoning(
-            agent_confidences=agent_confidences,
-            ranked=ranked,
-            evidence_count=len(evidence),
-            original_reasoning=thesis.confidence_reasoning or "",
-        )
-        if causal_reasoning:
-            thesis.confidence_reasoning = causal_reasoning
-    except Exception as exc:
-        logger.warning("[thesis_synthesizer] confidence_reasoning build failed: %r", exc)
-
     # ── Refinement 3: Evidence reference propagation ──────────────────────────
-    # Infer evidence_refs on signals that the LLM did not explicitly annotate,
-    # using keyword overlap against the full evidence pool.
     try:
         thesis.top_signals = propagate_evidence_refs(thesis.top_signals, evidence)
         thesis.top_risks   = propagate_evidence_refs(thesis.top_risks,   evidence)
@@ -2130,6 +2404,197 @@ def synthesize_thesis(
         for w in warnings:
             print(w)
 
+    # ── Conviction modeler — institutional confidence calibration ─────────────
+    # Replaces the legacy causal reasoning builder (build_confidence_reasoning)
+    # with a seven-dimension decomposition that produces distributed scores and
+    # company-specific uncertainty language.  Runs AFTER governance checks so
+    # the governance_warnings list is complete.
+    try:
+        conviction = compute_conviction(
+            evidence            = evidence,
+            valuation           = valuation,
+            macro               = macro,
+            risk                = risk,
+            market              = market,
+            quality             = quality,
+            company             = company,
+            ranked              = ranked,
+            governance_warnings = warnings,
+            profile             = profile,
+        )
+        # Conviction modeler is ALWAYS authoritative — it replaces the LLM score entirely.
+        # The LLM score is an initial read; the modeler applies dimensional decomposition,
+        # company-specific uncertainty drivers, and contradiction compression on top.
+        _pre_conviction_score = thesis.confidence_score
+        thesis.confidence_score = conviction.final_score
+
+        # ── [CONFIDENCE_AUDIT] stage 3: conviction modeler output ─────────────
+        logger.info(
+            "[CONFIDENCE_AUDIT] ticker=%s stage=conviction_modeler "
+            "pre=%.4f post=%.4f "
+            "linear_base=%.4f frag_score=%.4f frag_mult=%.4f "
+            "asym_score=%.4f asym_mult=%.4f "
+            "compression_reasons=%d setup_label=%s",
+            _ticker_audit,
+            _pre_conviction_score, conviction.final_score,
+            getattr(conviction, "linear_base_score", conviction.final_score),
+            conviction.dimensions.expectation_fragility, conviction.fragility_multiplier_applied,
+            conviction.dimensions.expectation_asymmetry, conviction.asymmetry_multiplier_applied,
+            len(conviction.compression_reasons or []),
+            conviction.setup_label,
+        )
+
+        # Always override reasoning and add what_increases_conviction.
+        thesis.confidence_reasoning = conviction.confidence_reasoning
+        if _cov_gaps:
+            gap_suffix = " | Coverage gaps: " + "; ".join(_cov_gaps)
+            existing = thesis.confidence_reasoning or ""
+            if existing and not existing.endswith("."):
+                existing += "."
+            thesis.confidence_reasoning = existing + gap_suffix
+
+        # Stamp new fields — conviction modeler is authoritative for what_increases_conviction too
+        thesis.what_increases_conviction = conviction.what_increases_conviction
+        thesis.conviction_dimensions = conviction.dimensions.to_dict()
+
+        # ── Phase 5d: Stamp setup quality fields onto thesis ──────────────────
+        # CRITICAL: these three fields are NOT stamped automatically — they live
+        # on ConvictionResult, not InvestmentThesis.  Without this block the
+        # frontend always gets null/defaults ("actionable thesis" / 1.0 / 1.0)
+        # because model_dump() only serialises InvestmentThesis fields.
+        thesis.setup_label = conviction.setup_label
+        thesis.fragility_multiplier_applied = conviction.fragility_multiplier_applied
+        thesis.asymmetry_multiplier_applied = conviction.asymmetry_multiplier_applied
+
+        # ── [CONFIDENCE_PIPELINE] end-to-end telemetry ───────────────────────
+        # Traces raw→fragility→asymmetry→compression→final for dispersion audits.
+        _dims = conviction.dimensions
+        logger.info(
+            "[CONFIDENCE_PIPELINE] ticker=%s "
+            "stage=final_conviction "
+            "llm_raw=%.4f "
+            "frag_score=%.4f frag_mult=%.4f "
+            "asym_score=%.4f asym_mult=%.4f "
+            "compression_reasons=%d "
+            "final_score=%.4f "
+            "setup_label=%s "
+            "thesis_confidence_score=%.4f",
+            _ticker_audit,
+            _llm_raw_score,
+            _dims.expectation_fragility, conviction.fragility_multiplier_applied,
+            _dims.expectation_asymmetry, conviction.asymmetry_multiplier_applied,
+            len(conviction.compression_reasons) if conviction.compression_reasons else 0,
+            conviction.final_score,
+            conviction.setup_label,
+            thesis.confidence_score,
+        )
+
+        # ── Structured observability log ──────────────────────────────────────
+        logger.info(
+            "[conviction_modeler] ticker=%s score_pre=%.2f score_post=%.2f "
+            "delta=%.2f compressed=%s compression_reasons=%s "
+            "eq=%.2f ef=%.2f ta=%.2f mu=%.2f vc=%.2f ed=%.2f gr=%.2f "
+            "frag=%.2f asym=%.2f frag_mult=%.3f asym_mult=%.3f setup_label=%s",
+            getattr(company, "ticker", "UNKNOWN"),
+            _pre_conviction_score,
+            conviction.final_score,
+            conviction.final_score - _pre_conviction_score,
+            conviction.compression_applied,
+            conviction.compression_reasons,
+            conviction.dimensions.evidence_quality,
+            conviction.dimensions.evidence_freshness,
+            conviction.dimensions.thesis_alignment,
+            conviction.dimensions.macro_uncertainty,
+            conviction.dimensions.valuation_certainty,
+            conviction.dimensions.estimate_dispersion,
+            conviction.dimensions.governance_risk,
+            conviction.dimensions.expectation_fragility,
+            conviction.dimensions.expectation_asymmetry,
+            conviction.fragility_multiplier_applied,
+            conviction.asymmetry_multiplier_applied,
+            conviction.setup_label,
+        )
+    except Exception as exc:
+        _ticker_exc = getattr(company, "ticker", None) or "UNKNOWN"
+        _tb_str = _traceback.format_exc()
+        # ── [CONVICTION_PROPAGATION_FAILURE] mandatory assertion ──────────────
+        # This fires whenever compute_conviction() throws — it means dims/setup_label/
+        # fragility_multiplier will NOT be stamped onto the thesis and the frontend
+        # will show llm_raw_preserved score with 0/9 dims.
+        # Search for this marker in logs to identify the exact exception.
+        logger.error(
+            "[CONVICTION_PROPAGATION_FAILURE] ticker=%s "
+            "exc_type=%s exc_repr=%r "
+            "score_will_be=llm_raw_preserved "
+            "dims_will_be=0/9 "
+            "setup_label_will_be=actionable_thesis_default "
+            "action=FIX_THIS_EXCEPTION "
+            "traceback=%s",
+            _ticker_exc, type(exc).__name__, exc, _tb_str,
+        )
+        print(
+            f"[CONVICTION_PROPAGATION_FAILURE] [{_ticker_exc}] "
+            f"exc_type={type(exc).__name__} exc={exc!r}\n"
+            f"TRACEBACK:\n{_tb_str}"
+        )
+        logger.warning(
+            "[FALLBACK_REASONING_TRIGGER] ticker=%s path=conviction_modeler_exception "
+            "source_function=compute_conviction exc_type=%s "
+            "action=preserve_llm_reasoning score_preserved=%.4f "
+            "reason=conviction_modeler_threw_exception",
+            _ticker_exc, type(exc).__name__, thesis.confidence_score,
+        )
+        logger.warning(
+            "[thesis_synthesizer] conviction_modeler failed: %r — "
+            "preserving LLM reasoning score (build_confidence_reasoning NOT called)",
+            exc,
+        )
+        # CRITICAL: DO NOT call build_confidence_reasoning here.
+        # That function produces generic phrases ("limited evidence coverage means this
+        # position carries more uncertainty", "the framework is sound, the data is thin")
+        # which the governance check flags as hard-fail violations.
+        #
+        # Phase 5g: preserve the LLM's confidence_reasoning UNLESS it contains a
+        # hard-fail generic phrase (these are process artifacts, not analytical language).
+        # When found, replace with a minimal company-specific fallback that is always
+        # more analytically honest than the legacy boilerplate.
+        try:
+            _ticker_fb  = getattr(company, "ticker", None) or "the company"
+            _sector_fb  = getattr(company, "sector", None) or ""
+            _sector_str = f" in the {_sector_fb} sector" if _sector_fb else ""
+            _reasoning_lc = (thesis.confidence_reasoning or "").lower()
+            _has_hard_fail = any(
+                phrase in _reasoning_lc for phrase in _HARD_FAIL_CONFIDENCE_PHRASES
+            )
+            if not thesis.confidence_reasoning or _has_hard_fail:
+                _reason = "empty_llm_reasoning" if not thesis.confidence_reasoning else "hard_fail_phrase_in_llm_reasoning"
+                logger.warning(
+                    "[FALLBACK_REASONING_TRIGGER] ticker=%s path=%s "
+                    "source_function=_synthesize_investment_thesis "
+                    "reason=conviction_modeler_failed_replacing_legacy_phrase "
+                    "action=generating_company_specific_minimal_fallback",
+                    _ticker_fb, _reason,
+                )
+                thesis.confidence_reasoning = (
+                    f"Conviction on {_ticker_fb}{_sector_str} is constrained by "
+                    "unresolved variables in the evidence — "
+                    "the analytical framework is directionally intact but open items "
+                    "prevent a high-confidence assignment at this stage."
+                )
+            if _cov_gaps:
+                gap_suffix = " | Coverage gaps: " + "; ".join(_cov_gaps)
+                existing = thesis.confidence_reasoning or ""
+                if existing and not existing.endswith("."):
+                    existing += "."
+                thesis.confidence_reasoning = existing + gap_suffix
+        except Exception as inner_exc:
+            logger.warning(
+                "[FALLBACK_REASONING_TRIGGER] ticker=%s path=inner_fallback_exception "
+                "source_function=_synthesize_investment_thesis "
+                "reason=company_specific_fallback_also_failed exc=%r",
+                getattr(company, "ticker", "UNKNOWN"), inner_exc,
+            )
+
     # ── Phase 4: thesis compression ───────────────────────────────────────────
     if ranked is not None:
         try:
@@ -2144,11 +2609,179 @@ def synthesize_thesis(
     except Exception as exc:
         logger.warning("[thesis_synthesizer] thesis_polisher failed: %r — skipping", exc)
 
+    # ── Phase 5g: Sync compressed_thesis.one_sentence_thesis after polishing ──
+    # compress_hero_thesis() in polish_thesis() strips the conviction bracket
+    # "[moderate conviction, 65%]" from thesis.one_sentence_thesis (top-level),
+    # but does NOT update thesis.compressed_thesis.one_sentence_thesis.
+    # The frontend reads compressed_thesis.one_sentence_thesis first and would
+    # show the stale unpolished bracket — this sync eliminates that path.
+    if (
+        thesis.one_sentence_thesis
+        and thesis.compressed_thesis is not None
+        and thesis.compressed_thesis.one_sentence_thesis != thesis.one_sentence_thesis
+    ):
+        try:
+            _ct_synced = (
+                thesis.compressed_thesis.model_copy(
+                    update={"one_sentence_thesis": thesis.one_sentence_thesis}
+                )
+                if hasattr(thesis.compressed_thesis, "model_copy")
+                else thesis.compressed_thesis.copy(  # type: ignore[attr-defined]
+                    update={"one_sentence_thesis": thesis.one_sentence_thesis}
+                )
+            )
+            thesis = (
+                thesis.model_copy(update={"compressed_thesis": _ct_synced})
+                if hasattr(thesis, "model_copy")
+                else thesis.copy(update={"compressed_thesis": _ct_synced})  # type: ignore[attr-defined]
+            )
+            logger.debug(
+                "[thesis_synthesizer] compressed_thesis.one_sentence_thesis synced after polishing "
+                "ticker=%s hero=%r",
+                getattr(company, "ticker", "UNKNOWN"),
+                thesis.one_sentence_thesis[:60],
+            )
+        except Exception as _sync_exc:
+            logger.warning(
+                "[thesis_synthesizer] compressed_thesis sync failed (non-fatal): %r", _sync_exc
+            )
+
     overlap_count = sum(1 for w in warnings if w.startswith("[OVERLAP]"))
     gov_count = len(warnings) - len(depth_warnings) - len(quality_warnings) - overlap_count
+
+    # ── [LIVE_CONFIDENCE_AUDIT] — end-to-end truth path for dispersion tracing ──
+    # This single log consolidates every stage of the confidence score pipeline.
+    # Use this to verify that conviction_modeler score (not LLM raw) reaches the
+    # API response, and that no mid-pipeline step silently collapses dispersion.
+    #
+    # Stages:
+    #   llm_raw      — LLM's initial confidence_score (anchoring signal)
+    #   r1_legacy    — after compute_confidence_realism_cap() (overridden by modeler)
+    #   conviction   — conviction_modeler.final_score (AUTHORITATIVE)
+    #   thesis_final — thesis.confidence_score at serialization time (should == conviction)
+    #   setup_label  — semantic band label (drives frontend Setup Quality meter)
+    #   score_source — which path produced the final score
+    # ── Stamp score_source provenance field ──────────────────────────────────────
+    # Determines and stamps the authoritative score provenance onto the thesis.
+    # Travels in the API response so the frontend forensic overlay can display it
+    # without re-deriving it from other fields.
+    _has_conviction_dims = bool(thesis.conviction_dimensions)
+    if _has_conviction_dims and thesis.setup_label != "actionable thesis":
+        _score_source = "conviction_modeler"
+    elif _has_conviction_dims:
+        # Conviction modeler ran but produced balanced/default label
+        _score_source = "conviction_modeler_balanced"
+    elif thesis.confidence_score == 0.0:
+        _score_source = "fallback_empty"
+    else:
+        _score_source = "llm_raw_preserved"
+    # Stamp onto thesis so it travels in the serialized API response
+    thesis.score_source = _score_source
+
+    logger.info(
+        "[LIVE_CONFIDENCE_AUDIT] ticker=%s "
+        "llm_raw=%.4f "
+        "conviction_modeler=%.4f "
+        "thesis_final=%.4f "
+        "setup_label=%s "
+        "score_source=%s "
+        "fragility_mult=%.4f "
+        "asymmetry_mult=%.4f "
+        "confidence_reasoning_len=%d "
+        "fallback_fired=%s",
+        getattr(company, "ticker", "UNKNOWN"),
+        _llm_raw_score,
+        thesis.confidence_score,   # == conviction_modeler output if modeler succeeded
+        thesis.confidence_score,
+        thesis.setup_label,
+        _score_source,
+        thesis.fragility_multiplier_applied,
+        thesis.asymmetry_multiplier_applied,
+        len(thesis.confidence_reasoning or ""),
+        str(_score_source == "llm_raw_preserved"),
+    )
+
+    # ── [CONVICTION_PROPAGATION_FAILURE] mandatory pre-serialization assertion ──
+    # If this fires, the conviction modeler did NOT propagate. The API response
+    # will show 0/9 dims and llm_raw_preserved score on the frontend.
+    # Fix: look for [CONVICTION_PROPAGATION_FAILURE] earlier in the same log stream.
+    if _score_source == "llm_raw_preserved":
+        logger.error(
+            "[CONVICTION_PROPAGATION_FAILURE] ticker=%s "
+            "stage=pre_serialization "
+            "conviction_dimensions_count=%d "
+            "setup_label=%r "
+            "fragility_mult=%.4f "
+            "score_source=llm_raw_preserved "
+            "ACTION=investigate_CONVICTION_PROPAGATION_FAILURE_above_in_logs",
+            getattr(company, "ticker", "UNKNOWN"),
+            len(thesis.conviction_dimensions or {}),
+            thesis.setup_label,
+            thesis.fragility_multiplier_applied,
+        )
+        print(
+            f"[CONVICTION_PROPAGATION_FAILURE] [{getattr(company, 'ticker', 'UNKNOWN')}] "
+            f"pre_serialization: dims={len(thesis.conviction_dimensions or {})}/9 "
+            f"setup_label={thesis.setup_label!r} "
+            f"score={thesis.confidence_score:.4f} (llm_raw, NOT conviction_modeler) "
+            f"— search earlier logs for [CONVICTION_PROPAGATION_FAILURE] to find the exception"
+        )
+
+    # ── [HEADLINE_CONFIDENCE_SOURCE] — audit log for headline + confidence layer ──
+    # This log proves which formatter produced the visible confidence/conviction
+    # layer in the API response.  used_legacy_formatter=true means the conviction
+    # modeler did NOT run; the LLM's raw score and reasoning were preserved.
+    _reasoning_lc = (thesis.confidence_reasoning or "").lower()
+    _has_hard_fail_phrase = any(p in _reasoning_lc for p in _HARD_FAIL_CONFIDENCE_PHRASES)
+    _used_legacy = _score_source == "llm_raw_preserved"
+    logger.info(
+        "[HEADLINE_CONFIDENCE_SOURCE] ticker=%s "
+        "headline_text=%r "
+        "confidence_score=%.4f "
+        "confidence_label=%s "
+        "setup_label=%s "
+        "source_function=%s "
+        "used_legacy_formatter=%s "
+        "hard_fail_phrase_in_reasoning=%s "
+        "one_sentence_thesis=%r",
+        getattr(company, "ticker", "UNKNOWN"),
+        (thesis.direct_answer or thesis.conclusion or "")[:80],
+        thesis.confidence_score,
+        (
+            "high" if thesis.confidence_score >= 0.75
+            else "moderate" if thesis.confidence_score >= 0.55
+            else "low"
+        ),
+        thesis.setup_label or "ABSENT",
+        "conviction_modeler" if not _used_legacy else "llm_raw_preserved",
+        str(_used_legacy),
+        str(_has_hard_fail_phrase),
+        (thesis.one_sentence_thesis or "")[:60],
+    )
+    if _used_legacy:
+        print(
+            f"[HEADLINE_CONFIDENCE_SOURCE] [{getattr(company, 'ticker', 'UNKNOWN')}] "
+            f"used_legacy_formatter=true "
+            f"score={thesis.confidence_score:.2f} "
+            f"setup_label={thesis.setup_label!r} "
+            f"hard_fail_phrase={_has_hard_fail_phrase} "
+            f"→ conviction_modeler exception — search [CONVICTION_PROPAGATION_FAILURE]"
+        )
+    else:
+        print(
+            f"[HEADLINE_CONFIDENCE_SOURCE] [{getattr(company, 'ticker', 'UNKNOWN')}] "
+            f"used_legacy_formatter=false ✓ "
+            f"score={thesis.confidence_score:.2f} "
+            f"setup_label={thesis.setup_label!r} "
+            f"score_source={_score_source}"
+        )
+
     print(
         f"[thesis_synthesizer] done for {company.ticker}: "
         f"confidence={thesis.confidence_score:.2f} "
+        f"setup_label={thesis.setup_label} "
+        f"score_source={_score_source} "
+        f"dims={len(thesis.conviction_dimensions or {})}/9 "
         f"warnings={len(warnings)} "
         f"(governance={gov_count}, depth={len(depth_warnings)}, "
         f"quality={len(quality_warnings)}, overlap={overlap_count}) "

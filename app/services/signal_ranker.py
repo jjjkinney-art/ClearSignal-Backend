@@ -802,15 +802,36 @@ def compress_thesis(
                   if ranked.top_signals
                   else ranked.all_ranked[:3])
 
-    # one_sentence_thesis — first sentence of bull_thesis + confidence qualifier
+    # one_sentence_thesis — first sentence of bull_thesis + conviction qualifier
+    # Phase 5g: prefer conviction modeler's setup_label over raw score-band mapping.
+    # The setup_label is company-specific and semantically accurate (e.g. "speculative
+    # setup" for TSLA at 35%). The legacy pct-band mapping ("moderate conviction" for
+    # any score 0.55-0.74) is too coarse and hardcodes 65% when the modeler is missing.
+    # Note: compress_hero_thesis() in thesis_polisher.py STRIPS this bracket before
+    # the API response is sent — the bracket only exists in this intermediate state
+    # and in compressed_thesis.one_sentence_thesis (which is synced after polishing).
     one_sent = ""
     if thesis.bull_thesis:
         first_bull = re.split(r"(?<=[.!?])\s+", thesis.bull_thesis.strip())[0]
-        conf_qualifier = (
-            "high conviction" if thesis.confidence_score >= 0.75
-            else "moderate conviction" if thesis.confidence_score >= 0.55
-            else "low conviction"
-        )
+        # Use setup_label when conviction modeler ran; fall back to score-band.
+        _setup_lbl = (getattr(thesis, "setup_label", "") or "").lower()
+        if _setup_lbl and _setup_lbl not in ("actionable thesis",):
+            # Map setup_label to a conviction qualifier.
+            if "high_conviction" in _setup_lbl or "durable" in _setup_lbl:
+                conf_qualifier = "high conviction"
+            elif "speculative" in _setup_lbl or "insufficient" in _setup_lbl:
+                conf_qualifier = "low conviction"
+            elif "fragile" in _setup_lbl or "demanding" in _setup_lbl:
+                conf_qualifier = "moderate conviction"
+            else:
+                conf_qualifier = "moderate conviction"
+        else:
+            # Fallback: score-band mapping (used when conviction modeler not available)
+            conf_qualifier = (
+                "high conviction" if thesis.confidence_score >= 0.75
+                else "moderate conviction" if thesis.confidence_score >= 0.55
+                else "low conviction"
+            )
         one_sent = f"{first_bull} [{conf_qualifier}, {thesis.confidence_score:.0%}]"
 
     # why_it_matters — from top signal's importance_reason, or top_signal.signal
@@ -944,9 +965,14 @@ def build_confidence_reasoning(
       "The investment picture is genuinely two-sided at this stage. The bull
        and bear cases are more evenly matched than a clean call requires."
 
-    THIN EVIDENCE:
-      "Limited evidence coverage means this position carries more uncertainty
-       than the score reflects — the framework is sound, the data is thin."
+    THIN EVIDENCE (Phase 5e: company-specific, no generic boilerplate):
+      "The evidence base is too sparse to ground a high-conviction call —
+       direction is more defensible than timing at this evidence depth."
+
+    NOTE: This function is retained for import compatibility but is NOT called
+    in the production pipeline. The conviction modeler (conviction_modeler.py)
+    produces confidence_reasoning directly. The thesis_synthesizer explicitly
+    does NOT call build_confidence_reasoning to avoid generic phrase leakage.
 
     Parameters
     ----------
@@ -991,11 +1017,13 @@ def build_confidence_reasoning(
     parts: List[str] = []
 
     # ── Case 1: Thin evidence — always flag first ─────────────────────────────
+    # Phase 5e: replaced generic fallback phrase with directional uncertainty language.
+    # The original phrase ("the framework is sound, the data is thin") was flagged
+    # by governance as a hard-fail generic template.
     if thin_evidence:
         parts.append(
-            "Limited evidence coverage means this position carries more "
-            "uncertainty than the score reflects — the framework is sound, "
-            "the data is thin."
+            "The evidence base is too sparse to ground a high-conviction call — "
+            "direction is more defensible than timing at this evidence depth."
         )
 
     # ── Case 2: Double uncertainty (macro + risk both weak) ───────────────────
@@ -1125,7 +1153,7 @@ def compute_confidence_realism_cap(
     macro_conf < 0.50           → cap at 0.72   (macro uncertain)
     risk_conf < 0.50            → cap at 0.72   (downside exposure unresolved)
     macro AND risk both < 0.55  → cap at 0.68   (double uncertainty)
-    evidence_count < 3          → cap at 0.65   (thin evidence base)
+    evidence_count < 3          → cap at 0.50   (thin evidence base)
     cross-agent spread ≥ 0.35   → cap at 0.74   (agents disagree)
     signal direction split       → cap at 0.73   (directional ambiguity)
 
@@ -1154,9 +1182,9 @@ def compute_confidence_realism_cap(
 
     # ── Sparse evidence ───────────────────────────────────────────────────────
     if evidence_count < 3:
-        caps.append((0.65, "evidence base too thin to underwrite"))
+        caps.append((0.50, "evidence base too thin to underwrite"))
     elif evidence_count < 5:
-        caps.append((0.74, "limited evidence coverage"))
+        caps.append((0.74, "sparse_evidence_cap"))  # internal label; not user-facing
 
     # ── Cross-agent spread ────────────────────────────────────────────────────
     if quality_conf < 0.50:

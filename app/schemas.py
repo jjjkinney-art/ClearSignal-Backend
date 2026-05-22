@@ -1041,6 +1041,91 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Conviction modeling (institutional confidence calibration) ────────────
+    what_increases_conviction: str = Field(
+        default="",
+        description=(
+            "PM-grade statement of what evidence or events would most raise conviction. "
+            "Company-specific, not generic. "
+            "Example (NVDA): 'Clarity on hyperscaler CapEx guidance for FY26 would be the "
+            "single biggest conviction driver.' "
+            "Example (VRTX): 'Next-generation CFTR therapy Phase 3 readout would resolve "
+            "the primary pipeline durability uncertainty.' "
+            "Rendered in the UI as 'What would increase conviction'."
+        ),
+    )
+    conviction_dimensions: Dict[str, float] = Field(
+        default_factory=dict,
+        description=(
+            "Per-dimension sub-scores from the conviction modeler (0–1 each). "
+            "Keys: evidence_quality, evidence_freshness, thesis_alignment, "
+            "macro_uncertainty, valuation_certainty, estimate_dispersion, governance_risk. "
+            "For macro_uncertainty and governance_risk higher = worse (more uncertain/risky). "
+            "Exposed for frontend conviction breakdown UI."
+        ),
+    )
+
+    # ── Conviction setup quality (Phase 5b/5c/5d) ──────────────────────────────
+    # These three fields carry the conviction modeler's post-composition
+    # multiplier state through to the API response and frontend.  Without
+    # them the frontend always defaults to "actionable thesis" / Balanced.
+    setup_label: str = Field(
+        default="actionable thesis",
+        description=(
+            "Semantic band label produced by the conviction modeler after all "
+            "multipliers are applied. One of: 'high-alignment thesis', "
+            "'actionable thesis', 'monitoring required', 'expectation-sensitive', "
+            "'mixed evidence', 'fragile setup', 'asymmetric setup', "
+            "'speculative setup', 'insufficient conviction'. "
+            "Drives the Setup Quality tier meter in the frontend."
+        ),
+    )
+    fragility_multiplier_applied: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Post-composition fragility penalty multiplier (≤1.0). "
+            "1.0 = no penalty (fragility below threshold). "
+            "~0.78 = maximum penalty (fragility ~0.95). "
+            "Serialized for frontend debug panel and telemetry."
+        ),
+    )
+    asymmetry_multiplier_applied: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description=(
+            "Post-composition asymmetry penalty multiplier (≤1.0). "
+            "1.0 = no penalty (asymmetry below threshold). "
+            "~0.80 = maximum penalty (asymmetry ~0.90). "
+            "Serialized for frontend debug panel and telemetry."
+        ),
+    )
+
+    # ── Conviction score provenance (Phase 5g) ────────────────────────────────
+    # Explicit audit field that records which pipeline stage produced the final
+    # confidence_score.  This travels in the API response so the frontend forensic
+    # overlay can show exactly which path was taken without re-deriving it.
+    #
+    # Literal values:
+    #   "conviction_modeler"         — conviction_modeler ran and is authoritative
+    #   "conviction_modeler_balanced"— conviction_modeler ran; setup_label is
+    #                                  "actionable thesis" (default label)
+    #   "llm_raw_preserved"          — conviction_modeler threw an exception;
+    #                                  LLM-raw confidence_score is preserved as-is
+    #   "fallback_empty"             — thesis is empty / synthesis failed entirely
+    score_source: str = Field(
+        default="llm_raw_preserved",
+        description=(
+            "Conviction score provenance: 'conviction_modeler' | "
+            "'conviction_modeler_balanced' | 'llm_raw_preserved' | 'fallback_empty'. "
+            "Indicates which pipeline stage produced confidence_score. "
+            "'llm_raw_preserved' means the conviction modeler failed and the LLM "
+            "score was kept unchanged. Used by the frontend forensic overlay."
+        ),
+    )
+
 
 class AlertCondition(BaseModel):
     """A condition to watch that triggers an alert when its threshold is crossed.
