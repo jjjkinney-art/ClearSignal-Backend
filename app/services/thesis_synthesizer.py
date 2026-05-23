@@ -1945,15 +1945,28 @@ _GENERIC_CONFIDENCE_PHRASES: List[str] = [
     "overall assessment",
 ]
 
-# Phase 5c: Hard-fail phrases sourced from build_confidence_reasoning (signal_ranker.py).
-# These exact templates MUST NOT appear in production confidence_reasoning regardless of
-# whether the company ticker is present — they are process artifacts, not analytical language.
+# Phase 5c / productization: Hard-fail phrases that MUST NOT appear in production
+# confidence_reasoning regardless of whether the company ticker is present.
+# These are process artifacts or AI boilerplate — not analytical language.
+# Any of these appearing means the legacy path or a generic fallback fired.
 _HARD_FAIL_CONFIDENCE_PHRASES: List[str] = [
+    # Legacy build_confidence_reasoning templates (signal_ranker.py Phase 5c)
     "limited evidence coverage means this position carries more uncertainty",
     "the framework is sound, the data is thin",
     "carries more uncertainty than the score reflects",
     "framework is sound",
     "more uncertainty than the score",
+    # Remaining conviction_modeler fallback paths (productization pass)
+    "the data is too thin to act on",
+    "thesis framework exists but the data",
+    "data is too sparse to act on",
+    # Generic AI boilerplate that slips through LLM generation
+    "it's worth noting that",
+    "it is worth noting that",
+    "this is a complex situation",
+    "it is important to note",
+    "there are many factors",
+    "various factors contribute",
 ]
 
 

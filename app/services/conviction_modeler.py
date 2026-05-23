@@ -117,6 +117,25 @@ _TICKER_UNCERTAINTY_DRIVERS: Dict[str, List[str]] = {
     "AMZN":  ["AWS growth deceleration",            "retail margin recovery trajectory",  "AI services competitive moat"],
     "NFLX":  ["ad-tier ARPU scaling",              "password-sharing churn tail",        "content margin structure"],
     "CRM":   ["AI Agentforce attach rate",          "seat-count growth deceleration",     "competitive displacement risk"],
+    # Enterprise SaaS / data / cloud
+    "PLTR":  ["government contract renewal risk",   "commercial revenue growth durability","AI platform enterprise attach rate"],
+    "SNOW":  ["enterprise AI spending persistence", "platform consumption growth rate",   "competitive displacement by warehouse-native AI"],
+    "NOW":   ["AI workflow monetization pace",      "federal seat-count expansion",       "competitive displacement from platform sprawl"],
+    "DDOG":  ["observability market consolidation", "enterprise consumption recovery",    "AI-driven workload monitoring attach rate"],
+    "MDB":   ["Atlas consumption recovery pace",    "developer seat-count deceleration",  "competitive pressure from AWS DocumentDB"],
+    "HUBS":  ["SMB demand resilience",              "AI-Breeze attach rate",              "seat expansion amid macro softness"],
+    # Industrials / defense / aerospace
+    "LMT":   ["DoD budget trajectory",             "F-35 program delivery cadence",      "classified programme contribution visibility"],
+    "GE":    ["LEAP engine delivery backlog",       "services attach rate",               "power-grid demand durability"],
+    "CAT":   ["infrastructure cycle direction",     "dealer inventory destocking pace",   "China construction activity"],
+    "DE":    ["precision-ag adoption durability",   "farm equipment demand cycle",        "dealer channel inventory level"],
+    # Consumer / retail
+    "COST":  ["membership fee renewal rate",        "discretionary spend mix trajectory", "private-label penetration pace"],
+    "TGT":   ["discretionary spend recovery",       "inventory shrink trajectory",        "private-label margin recovery"],
+    "NKE":   ["China sell-through recovery",        "DTC margin trajectory",              "Americas wholesale channel reset"],
+    # Energy / commodity
+    "XOM":   ["oil price floor assumption",         "Permian Basin growth trajectory",    "LNG contract realisation"],
+    "CVX":   ["Tengiz project ramp-up",             "oil price assumptions",              "Hess integration execution"],
     # Healthcare / Pharma
     "VRTX":  ["pipeline durability post-Trikafta",  "next-gen CFTR therapy data",        "pricing negotiation outcome"],
     "LLY":   ["GLP-1 manufacturing capacity",       "Mounjaro/Wegovy demand durability",  "biosimilar competitive entry"],
@@ -151,9 +170,9 @@ _SECTOR_UNCERTAINTY_DRIVERS: Dict[str, List[str]] = {
 }
 
 _DEFAULT_UNCERTAINTY_DRIVERS = [
-    "macro outlook remaining unresolved",
-    "limited near-term earnings visibility",
-    "analyst estimate dispersion",
+    "near-term earnings trajectory",
+    "valuation multiple durability under current macro conditions",
+    "analyst estimate convergence",
 ]
 
 # ── Source quality fingerprints ───────────────────────────────────────────────
@@ -951,42 +970,49 @@ def _dominant_gap(dims: ConvictionDimensions) -> str:
 
 _DRIVER_SENTENCES = {
     "evidence_quality": (
-        "Conviction is constrained by the quality of available data — "
-        "live valuation ratios and analyst estimates are the key missing inputs."
+        "Conviction is constrained by the evidence base — "
+        "live valuation ratios and analyst price-target consensus are the key missing inputs "
+        "that would directly anchor the thesis."
     ),
     "evidence_freshness": (
-        "The evidence base is moderately stale; conclusions drawn from older filings "
-        "may not capture the current market regime."
+        "The evidence base does not fully reflect recent developments — "
+        "conclusions drawn from older filings may not capture the current operating regime "
+        "or the most recent guidance cycle."
     ),
     "thesis_alignment": (
         "The analytical picture is genuinely two-sided — "
-        "the bull and bear cases are more evenly matched than a clean call requires."
+        "the bull and bear cases are more evenly matched than a clean directional call requires, "
+        "with cross-agent views pointing in conflicting directions."
     ),
     "macro_certainty": (
-        "The macro transmission is the main unresolved variable; "
-        "the rate/growth path is hard to call from current evidence."
+        "The macro transmission remains the primary unresolved variable — "
+        "the rate path, growth outlook, and their combined effect on the multiple "
+        "are harder to call than the fundamental picture alone implies."
     ),
     "valuation_certainty": (
-        "The valuation anchor is unclear without live multiple data — "
-        "multiple-based conclusions carry more uncertainty than the score implies."
+        "The valuation anchor is absent — without live multiple data "
+        "the current-price-to-intrinsic-value comparison carries more uncertainty than the score reflects, "
+        "and multiple-based conclusions depend on assumptions that are not yet validated."
     ),
     "estimate_dispersion": (
-        "Analyst estimates remain dispersed or absent, "
-        "reducing the sell-side visibility that typically anchors conviction."
+        "Sell-side estimates remain dispersed or absent — "
+        "without a converged consensus the earnings trajectory and implied multiple "
+        "are harder to defend than the directional thesis suggests."
     ),
     "governance_safety": (
-        "Internal consistency checks flagged analytical tensions "
-        "that are not yet fully resolved in the synthesis."
+        "Analytical consistency checks flagged tensions between the stated thesis "
+        "and the underlying evidence — these unresolved contradictions "
+        "prevent a higher conviction assignment until they are reconciled."
     ),
     "expectation_safety": (
-        "The primary tension is that the business quality is priced in — "
+        "The primary tension is that the business quality is already priced in — "
         "upside requires execution above elevated consensus expectations, not merely meeting them. "
         "The setup becomes fragile if any of the core drivers miss by even a small margin."
     ),
     "asymmetry_safety": (
-        "The risk/reward is skewed — the setup requires near-perfect execution continuation "
-        "while the downside from even a modest miss would be disproportionately large. "
-        "The market leaves no room for stumble."
+        "The risk/reward is skewed against the current holder — the setup requires near-perfect "
+        "execution continuation while the downside from even a modest miss would be "
+        "disproportionately large relative to the remaining upside."
     ),
 }
 
@@ -1166,23 +1192,28 @@ def _build_reasoning(
                 "than a clean call requires."
             )
     elif final_score >= 0.35:
+        _primary_driver = uncertainty_drivers[0] if uncertainty_drivers else "key business variables"
         if is_he:
             tier_opener = (
                 f"Conviction on {ticker} is limited despite business quality — "
-                "the stock setup demands execution well above what the evidence base "
-                "can confidently support, and multiple open variables make this "
-                "a speculative call at current expectations."
+                f"the stock setup demands execution well above what current evidence on "
+                f"{_primary_driver} can confidently support, and multiple open variables "
+                "make this a speculative call at current expectations."
             )
         else:
             tier_opener = (
                 f"Conviction on {ticker} is limited — "
-                "multiple open variables make this a speculative position "
-                "at current evidence depth."
+                f"the outcome range is too wide to defend a clean directional call, "
+                f"with {_primary_driver} representing the primary unresolved variable."
             )
     else:
+        # final_score < 0.35: evidence is too thin to act on — keep the tier_opener
+        # focused on the evidence-gap level without repeating the uncertainty driver
+        # (the middle gap_sentence handles the company-specific driver anchor).
         tier_opener = (
-            f"Evidence coverage for {ticker} is insufficient to form a defensible "
-            "conviction level — the thesis framework exists but the data is too thin to act on."
+            f"Current evidence on {ticker} does not yet support a defensible conviction level — "
+            "the analytical framework is directionally intact but there is insufficient "
+            "operating data to act on the thesis at current prices."
         )
     parts.append(tier_opener)
 
@@ -1328,7 +1359,20 @@ def _build_reasoning(
             "to the underlying business change."
         )
 
-    return " ".join(parts[:3])   # cap at 3 sentences
+    result = " ".join(parts[:3])   # cap at 3 sentences
+
+    # ── Realism guard: reasoning must always reference the ticker ─────────────
+    # If parts is unexpectedly empty (edge-case path not yet covered), emit a
+    # company-specific minimal fallback rather than an empty string.
+    if not result or (company.ticker and company.ticker.upper() not in result.upper()):
+        _primary = uncertainty_drivers[0] if uncertainty_drivers else "key operating variables"
+        result = (
+            f"Conviction on {ticker} reflects the current evidence depth — "
+            f"the primary open variable is {_primary}, and until that resolves, "
+            "the timing call is harder than the directional case."
+        )
+
+    return result
 
 
 def _build_what_increases_conviction(
