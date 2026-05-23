@@ -1126,6 +1126,54 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Thesis persistence schema (Live Intelligence phase) ───────────────────
+    # These fields support institutional surveillance and thesis versioning.
+    # No database required — populated at generation time; consumed by the
+    # drift engine and watchlist monitor for cross-version comparison.
+
+    thesis_version_id: str = Field(
+        default="",
+        description=(
+            "UUID identifying this specific analysis run. "
+            "Generated at synthesis time. Used to link current thesis to its "
+            "prior version via previous_thesis_version_id."
+        ),
+    )
+    previous_thesis_version_id: str = Field(
+        default="",
+        description=(
+            "thesis_version_id of the prior thesis for this ticker, if one "
+            "exists. Empty string when no prior version is tracked."
+        ),
+    )
+    change_vector: Dict[str, Any] = Field(
+        default_factory=dict,
+        description=(
+            "Machine-readable delta from the prior thesis. "
+            "Keys: conviction_delta, setup_label_changed, driver_shifted, "
+            "stance_shifted, dimension_deltas (dict). "
+            "Populated by the drift engine when a prior thesis is available."
+        ),
+    )
+    monitored_drivers: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Active uncertainty drivers under surveillance for this ticker. "
+            "Populated from the conviction modeler's uncertainty_drivers list. "
+            "Used by the watchlist monitor to detect driver pivot events."
+        ),
+    )
+    evidence_freshness: Dict[str, Optional[int]] = Field(
+        default_factory=dict,
+        description=(
+            "Per-dimension evidence age in calendar days. "
+            "Keys: earnings_age_days, filing_age_days, estimate_age_days, "
+            "valuation_age_days, macro_age_days. "
+            "None when no evidence of that type was found. "
+            "Populated by the freshness analyzer at synthesis time."
+        ),
+    )
+
 
 class AlertCondition(BaseModel):
     """A condition to watch that triggers an alert when its threshold is crossed.

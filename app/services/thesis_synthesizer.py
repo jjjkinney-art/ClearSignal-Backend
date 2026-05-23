@@ -78,6 +78,7 @@ from .signal_ranker import (
 from .thesis_polisher import polish_thesis
 from .confidence_calibrator import compute_evidence_coverage_gaps
 from .conviction_modeler import compute_conviction
+from .freshness_analyzer import analyze_evidence_freshness
 
 logger = logging.getLogger(__name__)
 
@@ -2814,4 +2815,43 @@ def synthesize_thesis(
         f"top_signals={len(thesis.top_signals)} "
         f"top_risks={len(thesis.top_risks)}"
     )
+
+    # ── Live Intelligence: persistence metadata and freshness stamping ────────
+    # Stamped after all scoring is complete so version_id and freshness reflect
+    # the final synthesized state — not an intermediate.
+    try:
+        import uuid as _uuid
+        thesis.thesis_version_id = str(_uuid.uuid4())
+
+        # Evidence freshness profile — dimension-level age metadata
+        _fp = analyze_evidence_freshness(evidence)
+        thesis.evidence_freshness = _fp.to_dict()
+
+        # Active uncertainty drivers from conviction modeler dimensions
+        if thesis.conviction_dimensions:
+            # Most stale or uncertain dimensions become monitored_drivers
+            _stale_dims = _fp.stale_dimensions()
+            if _stale_dims:
+                thesis.monitored_drivers = _stale_dims
+            elif thesis.conviction_dimensions:
+                # Fall back to the lowest-scoring conviction dimensions
+                _dim_scores = thesis.conviction_dimensions
+                _worst = sorted(
+                    [(k, v) for k, v in _dim_scores.items() if v is not None],
+                    key=lambda x: x[1]
+                )[:2]
+                thesis.monitored_drivers = [k for k, _ in _worst]
+
+        logger.debug(
+            "[thesis_synthesizer] persistence metadata stamped: "
+            "version_id=%s freshness_dims=%s monitored_drivers=%s",
+            thesis.thesis_version_id,
+            list(thesis.evidence_freshness.keys()),
+            thesis.monitored_drivers,
+        )
+    except Exception as _pe:
+        logger.warning(
+            "[thesis_synthesizer] persistence metadata stamping failed (non-fatal): %r", _pe
+        )
+
     return thesis
