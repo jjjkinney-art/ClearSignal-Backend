@@ -66,6 +66,40 @@ _EARNINGS_KEYWORDS = (
     "net income",
 )
 
+_MANAGEMENT_COMMENTARY_KEYWORDS = (
+    "earnings call",
+    "conference call",
+    "management commentary",
+    "ceo comments",
+    "cfo comments",
+    "investor day",
+    "analyst day",
+    "management guidance",
+)
+
+_SEC_FILING_KEYWORDS = (
+    "10-k",
+    "10-q",
+    "8-k",
+    "sec filing",
+    "edgar",
+    "annual report",
+    "quarterly report",
+)
+
+_MACRO_LINKAGE_KEYWORDS = (
+    "federal reserve",
+    "fomc",
+    "interest rate",
+    "inflation",
+    "yield curve",
+    "gdp",
+    "macro",
+    "monetary policy",
+    "credit",
+    "recession",
+)
+
 # ── Penalty constants ─────────────────────────────────────────────────────────
 _PENALTY_NO_LIVE_VALUATION: float = 0.08
 _PENALTY_NO_ANALYST_ESTIMATES: float = 0.05
@@ -171,12 +205,53 @@ def _oldest_evidence_age_days(evidence: List[RetrievedEvidence]) -> Optional[int
     return max_age
 
 
+def _newest_evidence_age_days(evidence: List[RetrievedEvidence]) -> Optional[int]:
+    """Return the age of the MOST RECENT parseable evidence item (days)."""
+    now = datetime.now(timezone.utc)
+    min_age: Optional[int] = None
+    for ev in evidence:
+        ev_dt = _parse_timestamp(getattr(ev, "timestamp", None))
+        if ev_dt is None:
+            continue
+        age = (now - ev_dt).days
+        if min_age is None or age < min_age:
+            min_age = age
+    return min_age
+
+
+def _has_management_commentary(evidence: List[RetrievedEvidence]) -> bool:
+    """Return True if any evidence item contains management commentary / earnings call."""
+    for ev in evidence:
+        text = f"{ev.title or ''} {ev.source or ''} {ev.summary or ''}".lower()
+        if any(kw in text for kw in _MANAGEMENT_COMMENTARY_KEYWORDS):
+            return True
+    return False
+
+
+def _has_sec_filing(evidence: List[RetrievedEvidence]) -> bool:
+    """Return True if any evidence item is a SEC filing (10-K, 10-Q, 8-K)."""
+    for ev in evidence:
+        text = f"{ev.title or ''} {ev.source or ''}".lower()
+        if any(kw in text for kw in _SEC_FILING_KEYWORDS):
+            return True
+    return False
+
+
+def _has_macro_linkage(evidence: List[RetrievedEvidence]) -> bool:
+    """Return True if any evidence item has macro context (rates, inflation, Fed)."""
+    for ev in evidence:
+        text = f"{ev.title or ''} {ev.summary or ''}".lower()
+        if any(kw in text for kw in _MACRO_LINKAGE_KEYWORDS):
+            return True
+    return False
+
+
 # ── Public API ────────────────────────────────────────────────────────────────
 
 def compute_evidence_coverage_gaps(
     evidence: List[RetrievedEvidence],
 ) -> Tuple[float, List[str]]:
-    """Compute evidence coverage penalty and list of gap descriptions.
+    """Compute evidence coverage penalty and structured gap taxonomy.
 
     Parameters
     ----------
@@ -186,57 +261,107 @@ def compute_evidence_coverage_gaps(
     -------
     penalty : Total confidence penalty (0.0 – ~0.38). Subtract from the
               LLM-generated confidence_score; floor at 0.
-    gaps    : Human-readable descriptions of each detected coverage gap.
-              Empty list when all checks pass.
+    gaps    : Institutional-quality descriptions of each coverage gap,
+              categorized by gap type. Empty list when all checks pass.
+
+    Gap taxonomy:
+      GAP_VALUATION        — no live P/E, EV/EBITDA, FCF yield data
+      GAP_ANALYST          — no sell-side estimates or price-target consensus
+      GAP_EARNINGS         — no recent earnings transcript or results
+      GAP_MGMT_COMMENTARY  — no earnings call or management guidance text
+      GAP_SEC_FILING       — no 10-K / 10-Q / 8-K filing evidence
+      GAP_STALE            — evidence is >180d old on average
+      GAP_VERY_STALE       — evidence is >365d old on average
+      GAP_SPARSE           — fewer than 3 evidence items total
     """
     if not evidence:
         return 0.28, [
-            "No evidence available — live valuation, analyst estimates, and "
-            "recent earnings coverage all absent"
+            "GAP_SPARSE | No evidence retrieved — live valuation ratios, analyst "
+            "estimates, management commentary, and recent earnings are all absent; "
+            "no directional call can be defended"
         ]
 
     penalty: float = 0.0
     gaps: List[str] = []
+    ev_count = len(evidence)
+
+    # ── Sparse evidence pool ──────────────────────────────────────────────────
+    if ev_count < 3:
+        gaps.append(
+            f"GAP_SPARSE | Evidence pool contains only {ev_count} item"
+            f"{'s' if ev_count != 1 else ''} — conclusions drawn from this base "
+            "should be treated as directional inference, not grounded analysis"
+        )
+        # No separate penalty — sparse pool already reduces all downstream checks
 
     # ── Live valuation ratios ─────────────────────────────────────────────────
     if not _has_live_valuation(evidence):
         penalty += _PENALTY_NO_LIVE_VALUATION
         gaps.append(
-            "No live valuation ratios (FMP) — P/E, EV/EBITDA, and FCF yield "
-            "coverage absent; multiple-based conclusions are unanchored"
+            "GAP_VALUATION | No live valuation ratios — P/E, EV/EBITDA, and FCF yield "
+            "absent; multiple-based conclusions are unanchored and cannot be stress-tested "
+            "against current pricing"
         )
 
     # ── Analyst estimates / price targets ────────────────────────────────────
     if not _has_analyst_estimates(evidence):
         penalty += _PENALTY_NO_ANALYST_ESTIMATES
         gaps.append(
-            "No analyst estimates or price-target consensus — forward earnings "
-            "and sell-side positioning absent"
+            "GAP_ANALYST | No analyst estimates or price-target consensus — "
+            "forward earnings trajectory and sell-side positioning are absent; "
+            "the embedded market expectation cannot be precisely characterized"
         )
 
     # ── Recent earnings evidence ──────────────────────────────────────────────
     if not _has_recent_earnings(evidence):
         penalty += _PENALTY_NO_RECENT_EARNINGS
         gaps.append(
-            f"No recent earnings evidence (< {_RECENT_EARNINGS_THRESHOLD_DAYS}d) — "
-            "actual vs guidance comparison and management commentary absent"
+            f"GAP_EARNINGS | No recent earnings evidence (< {_RECENT_EARNINGS_THRESHOLD_DAYS}d) — "
+            "actual results vs guidance, margin trajectory, and beat/miss cadence "
+            "are absent from the evidence base"
+        )
+
+    # ── Management commentary ─────────────────────────────────────────────────
+    if not _has_management_commentary(evidence):
+        # Informational only — no additional penalty (earnings already captures this)
+        gaps.append(
+            "GAP_MGMT_COMMENTARY | No earnings call or management guidance transcript — "
+            "qualitative guidance signals and forward-looking language are absent"
+        )
+
+    # ── SEC filing evidence ───────────────────────────────────────────────────
+    if not _has_sec_filing(evidence):
+        # Informational only — no additional penalty
+        gaps.append(
+            "GAP_SEC_FILING | No SEC filing (10-K / 10-Q / 8-K) — balance sheet, "
+            "risk-factor disclosure, and regulatory filings not reflected in the evidence"
         )
 
     # ── Evidence freshness ────────────────────────────────────────────────────
     oldest = _oldest_evidence_age_days(evidence)
+    newest = _newest_evidence_age_days(evidence)
     if oldest is not None:
-        if oldest > _STALE_THRESHOLD_DAYS:
+        age_months = round(oldest / 30)
+        if oldest > 365:
             penalty += _PENALTY_STALE_BEYOND_180
             gaps.append(
-                f"Evidence stale: oldest item is {oldest}d old "
-                f"(> {_STALE_THRESHOLD_DAYS}d threshold) — conclusions may not "
-                "reflect current market conditions"
+                f"GAP_VERY_STALE | Oldest evidence is {age_months} months old — "
+                "execution assumptions, margin structure, and valuation context "
+                "may not reflect any developments since this date; "
+                "directional conclusions carry meaningful temporal uncertainty"
+            )
+        elif oldest > _STALE_THRESHOLD_DAYS:
+            penalty += _PENALTY_STALE_BEYOND_180
+            gaps.append(
+                f"GAP_STALE | Evidence is approximately {age_months} months old — "
+                "recent operating data, guidance revisions, and market regime shifts "
+                "are not captured; time-sensitive assumptions should be flagged"
             )
         elif oldest > _RECENT_EARNINGS_THRESHOLD_DAYS:
             penalty += _PENALTY_STALE_90_TO_180
             gaps.append(
-                f"Evidence moderately stale: oldest item is {oldest}d old — "
-                "some recency risk in time-sensitive claims"
+                f"GAP_STALE | Evidence is approximately {age_months} months old — "
+                "some recency risk in execution-sensitive claims"
             )
 
     return round(penalty, 4), gaps

@@ -65,6 +65,7 @@ from .signal_ranker import (
     check_forbidden_phrases,
     propagate_evidence_refs,
     detect_signal_overlap,
+    check_cross_section_duplication,
     # build_confidence_reasoning is intentionally NOT imported here.
     # Phase 5c+: production pipeline never calls it — the conviction modeler
     # (conviction_modeler.py) owns confidence_reasoning.  Calling this function
@@ -2410,6 +2411,18 @@ def synthesize_thesis(
     # ── Phase 5+: forbidden phrase quality check ──────────────────────────────
     quality_warnings = check_forbidden_phrases(thesis)
     warnings = warnings + quality_warnings
+
+    # ── Phase 5++: cross-section duplication audit ────────────────────────────
+    try:
+        dedup_warnings = check_cross_section_duplication(thesis)
+        if dedup_warnings:
+            logger.debug(
+                "[thesis_synthesizer] cross-section duplication: %d pair(s)",
+                len(dedup_warnings),
+            )
+        warnings = warnings + dedup_warnings
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] cross-section dedup failed: %r", exc)
 
     thesis.consistency_warnings = warnings
 

@@ -182,7 +182,14 @@ class TestCoverageGapDetection:
         ]
         penalty, gaps = compute_evidence_coverage_gaps(ev)
         assert penalty == 0.0
-        assert gaps == []
+        # Informational-only gaps (GAP_MGMT_COMMENTARY, GAP_SEC_FILING) may still
+        # appear when management commentary or SEC filing keywords are absent.
+        # These carry no penalty — confirm no penalty-carrying gap types appear.
+        penalty_gap_types = {"GAP_VALUATION", "GAP_ANALYST", "GAP_EARNINGS", "GAP_STALE", "GAP_VERY_STALE"}
+        for g in gaps:
+            assert not any(t in g for t in penalty_gap_types), (
+                f"Unexpected penalty-carrying gap with full evidence coverage: {g}"
+            )
 
     def test_penalty_is_additive(self):
         """Multiple gaps compound: total >= sum of individual penalties."""

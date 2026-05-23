@@ -1068,6 +1068,8 @@ def _build_reasoning(
     compression_applied: bool,
     compression_reasons: List[str],
     uncertainty_drivers: List[str],
+    evidence:            Optional[List["RetrievedEvidence"]] = None,
+    valuation:           Optional["ValuationView"] = None,
 ) -> str:
     """Build a 2–3 sentence company-specific conviction reasoning string.
 
@@ -1082,11 +1084,33 @@ def _build_reasoning(
     Phase 5e: realism-specific language patterns for expectation fragility
     dominance — "little room for misses", "multiple vulnerable if growth
     moderates", "acceleration required", HE-ticker explicit awareness.
+
+    Hardening pass: evidence stale/sparse context and valuation multiple
+    are now injected into the gap sentence for more specific diagnostics.
     """
+    import re as _re
+
     parts: List[str] = []
     ticker         = company.ticker or "the company"
     _ticker_up     = (company.ticker or "").upper()
     is_he          = _ticker_up in _HIGH_EXPECTATION_TICKERS
+
+    # ── Evidence context: stale / sparse diagnostics ──────────────────────────
+    _ev_list   = evidence or []
+    _ev_count  = len(_ev_list)
+    _ev_sparse = _ev_count < 3                      # fewer than 3 items → very thin
+
+    _ev_ages       = [_age_days(getattr(ev, "timestamp", None)) for ev in _ev_list]
+    _ev_known_ages = [a for a in _ev_ages if a is not None]
+    _ev_avg_age    = (sum(_ev_known_ages) / len(_ev_known_ages)) if _ev_known_ages else None
+    _ev_stale      = _ev_avg_age is not None and _ev_avg_age > 180   # >6 months avg
+    _ev_very_stale = _ev_avg_age is not None and _ev_avg_age > 365   # >12 months avg
+
+    # ── Valuation multiple extraction (for expectation_safety language) ───────
+    _pe_raw   = getattr(valuation, "pe_assessment", "") if valuation is not None else ""
+    _pe_text  = str(_pe_raw).lower() if _pe_raw and isinstance(_pe_raw, str) else ""
+    _pe_match = _re.search(r'(\d{2,3}(?:\.\d+)?)\s*x', _pe_text) if _pe_text else None
+    _pe_ratio = float(_pe_match.group(1)) if _pe_match else None
 
     # Phase 5e: align high_fragility threshold with T6 compression threshold (0.62)
     high_fragility = dims.expectation_fragility > 0.62
@@ -1210,11 +1234,24 @@ def _build_reasoning(
         # final_score < 0.35: evidence is too thin to act on — keep the tier_opener
         # focused on the evidence-gap level without repeating the uncertainty driver
         # (the middle gap_sentence handles the company-specific driver anchor).
-        tier_opener = (
-            f"Current evidence on {ticker} does not yet support a defensible conviction level — "
-            "the analytical framework is directionally intact but there is insufficient "
-            "operating data to act on the thesis at current prices."
-        )
+        if _ev_count == 0:
+            tier_opener = (
+                f"No usable evidence on {ticker} was available — "
+                "a directional conviction call cannot be made without current operating data, "
+                "and any directional view would be inference only."
+            )
+        elif _ev_sparse:
+            tier_opener = (
+                f"Evidence on {ticker} is extremely limited ({_ev_count} item{'s' if _ev_count != 1 else ''}) — "
+                "current data is insufficient to support a defensible conviction level, "
+                "and a directional call would overstate the evidence base."
+            )
+        else:
+            tier_opener = (
+                f"Current evidence on {ticker} does not yet support a defensible conviction level — "
+                "the analytical framework is directionally intact but there is insufficient "
+                "operating data to act on the thesis at current prices."
+            )
     parts.append(tier_opener)
 
     # ── Middle: dominant gap with company-specific language ───────────────────
@@ -1240,10 +1277,28 @@ def _build_reasoning(
                 "analytical inference and cross-agent signals rather than grounded primary evidence."
             )
         elif gap_dim == "evidence_freshness":
-            gap_sentence = (
-                f"The evidence base predates the latest developments on {driver} — "
-                "conclusions may not fully reflect the current picture."
-            )
+            if _ev_very_stale and _ev_avg_age:
+                _age_mo = round(_ev_avg_age / 30)
+                gap_sentence = (
+                    f"Operating assumptions on {ticker}'s {driver} rely on evidence "
+                    f"that is approximately {_age_mo} months old — at this lag, "
+                    "execution data predates meaningful market regime changes and makes "
+                    "the valuation framework difficult to validate against current conditions."
+                )
+            elif _ev_stale and _ev_avg_age:
+                _age_mo = round(_ev_avg_age / 30)
+                gap_sentence = (
+                    f"The evidence base on {ticker}'s {driver} is approximately "
+                    f"{_age_mo} months old — management commentary, estimate revisions, "
+                    "and recent execution data are absent, which reduces confidence in "
+                    "execution-sensitive assumptions."
+                )
+            else:
+                gap_sentence = (
+                    f"The evidence base predates the latest developments on {driver} — "
+                    "conclusions may not fully reflect the current execution picture "
+                    "or the most recent guidance cycle."
+                )
         elif gap_dim == "valuation_certainty":
             gap_sentence = (
                 f"The valuation call is constrained by uncertainty around {driver} — "
@@ -1255,9 +1310,13 @@ def _build_reasoning(
                 "sell-side consensus has not yet converged."
             )
         elif gap_dim == "expectation_safety":
+            _pe_clause = (
+                f"At ~{_pe_ratio:.0f}x forward earnings, "
+                if _pe_ratio and _pe_ratio > 25 else ""
+            )
             if dims.expectation_fragility > 0.80:
                 gap_sentence = (
-                    f"The setup is demanding — {driver} is priced for continued "
+                    f"{_pe_clause}the setup is demanding — {driver} is priced for continued "
                     "acceleration, leaving little room for misses. "
                     "Expectations are elevated to a level where even modest shortfalls "
                     "create asymmetric repricing; the multiple is vulnerable if growth "
@@ -1267,14 +1326,14 @@ def _build_reasoning(
                 # Phase 5e: lowered from 0.65 to match T6 threshold
                 gap_sentence = (
                     f"The primary tension is that {driver} is priced optimistically — "
-                    "the stock setup requires outrunning elevated expectations, not merely "
-                    "meeting them. The multiple is vulnerable if growth moderates or "
+                    f"{_pe_clause}the stock setup requires outrunning elevated expectations, "
+                    "not merely meeting them. The multiple is vulnerable if growth moderates or "
                     "execution disappoints even marginally."
                 )
             elif dims.expectation_fragility > 0.45 and is_he:
                 # Phase 5e: HE-ticker moderate fragility — still call out expectation risk
                 gap_sentence = (
-                    f"{ticker}'s {driver} carries embedded expectation premium — "
+                    f"{_pe_clause}{ticker}'s {driver} carries embedded expectation premium — "
                     "the market prices above-consensus execution as the base case, "
                     "meaning any guide-down or estimate cut reprices faster than "
                     "the fundamental deterioration warrants."
@@ -1282,8 +1341,8 @@ def _build_reasoning(
             else:
                 gap_sentence = (
                     f"The primary tension is that {driver} is priced optimistically — "
-                    "the stock setup requires the business to outrun elevated expectations, "
-                    "not merely meet them."
+                    f"{_pe_clause}the stock setup requires the business to outrun elevated "
+                    "expectations, not merely meet them."
                 )
         elif gap_dim == "asymmetry_safety":
             if is_he:
@@ -1555,7 +1614,8 @@ def compute_conviction(
 
     # ── Reasoning and what_increases_conviction ───────────────────────────────
     reasoning = _build_reasoning(
-        dims, final_score, company, should_compress, compression_reasons, uncertainty_drivers
+        dims, final_score, company, should_compress, compression_reasons, uncertainty_drivers,
+        evidence=evidence, valuation=valuation,
     )
     what_increases = _build_what_increases_conviction(dims, company, uncertainty_drivers)
 

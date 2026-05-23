@@ -927,6 +927,66 @@ def detect_signal_overlap(
     return warnings
 
 
+# ── Cross-section duplication detector ───────────────────────────────────────
+
+def check_cross_section_duplication(
+    thesis: "InvestmentThesis",
+    threshold: float = 0.55,
+) -> List[str]:
+    """Detect when the same substantive content appears across multiple thesis sections.
+
+    Uses Jaccard word-set similarity to compare sentences across sections.
+    Returns [DUPLICATE_SECTION] warning strings for pairs that exceed the
+    threshold, so the frontend can surface repetition issues for prompt tuning.
+
+    Sections checked (in order of editorial priority):
+      direct_answer, conclusion → highest priority (reader sees these first)
+      bull_thesis, bear_thesis  → narrative sections
+      confidence_reasoning      → conviction layer
+
+    Parameters
+    ----------
+    thesis    : The synthesized InvestmentThesis to audit.
+    threshold : Jaccard similarity above which two sentences are considered duplicate.
+                Default 0.55 is tuned to catch restatements without flagging
+                legitimate thematic repetition.
+    """
+    import re as _re
+
+    def _sentences(text: str) -> List[str]:
+        """Split text into sentences (crude but fast)."""
+        if not text:
+            return []
+        return [s.strip() for s in _re.split(r'(?<=[.!?])\s+', text.strip()) if len(s.strip()) > 20]
+
+    sections: Dict[str, List[str]] = {
+        "direct_answer":       _sentences(getattr(thesis, "direct_answer", "") or ""),
+        "conclusion":          _sentences(getattr(thesis, "conclusion", "") or ""),
+        "bull_thesis":         _sentences(getattr(thesis, "bull_thesis", "") or ""),
+        "bear_thesis":         _sentences(getattr(thesis, "bear_thesis", "") or ""),
+        "confidence_reasoning": _sentences(getattr(thesis, "confidence_reasoning", "") or ""),
+    }
+
+    warnings: List[str] = []
+    section_names = list(sections.keys())
+
+    for i in range(len(section_names)):
+        for j in range(i + 1, len(section_names)):
+            name_a, name_b = section_names[i], section_names[j]
+            sents_a, sents_b = sections[name_a], sections[name_b]
+            for sa in sents_a:
+                for sb in sents_b:
+                    sim = _jaccard(sa, sb)
+                    if sim >= threshold:
+                        warnings.append(
+                            f"[DUPLICATE_SECTION] similarity={sim:.2f} "
+                            f"between {name_a!r} and {name_b!r}: "
+                            f"'{sa[:60]}…' ≈ '{sb[:60]}…'"
+                        )
+
+    return warnings
+
+
 # ── Confidence reasoning builder ──────────────────────────────────────────────
 
 def build_confidence_reasoning(
