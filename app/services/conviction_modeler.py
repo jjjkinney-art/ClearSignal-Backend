@@ -290,6 +290,9 @@ class ConvictionResult:
     compression_reasons:          List[str] = dataclasses.field(default_factory=list)
     fragility_multiplier_applied: float = 1.0
     asymmetry_multiplier_applied: float = 1.0
+    # ── Directional stance (pre-launch product refinement) ────────────────────
+    directional_stance:           str   = "Hold"
+    directional_stance_reasoning: str   = ""
 
 
 # ── Timestamp parser (reuse from calibrator pattern) ─────────────────────────
@@ -729,42 +732,164 @@ def _confidence_band_label(
 ) -> str:
     """Return a semantic setup label for the conviction band.
 
-    The label is context-sensitive: the same score range can carry different
-    labels depending on whether the dominant driver is fragility, asymmetry,
-    or evidence quality / thesis alignment.
+    The label is context-sensitive: the same score can produce different labels
+    depending on the dominant driver — fragility, asymmetry, or thesis alignment.
 
-    Band targets (Phase 5d calibration):
-        Durable    — ≥0.75  → high-alignment thesis
-        Balanced   — 0.60–0.75 → actionable thesis / monitoring required
-        Demanding  — 0.45–0.60 → mixed evidence / expectation-sensitive / asymmetric/fragile setup
-        Speculative — 0.20–0.45 → speculative setup
-        Minimal    — <0.20  → insufficient conviction
+    Pre-launch recalibration target distribution:
+        Durable     — ≥0.72  → high-alignment thesis / actionable thesis
+                      (MSFT, COST, V, JPM — strong evidence, low expectations)
+        Balanced    — 0.58–0.72 → actionable thesis / monitoring required
+                      (GOOGL, META, ASML — solid, some expectations embedded)
+        Demanding   — 0.42–0.58 + high fragility → expectation-sensitive / asymmetric
+                      (NVDA, AAPL, AMZN — great businesses, demanding setup)
+        Fragile     — 0.25–0.42 or moderate fragility → fragile setup
+                      (TSLA, SNOW — real business, little room for misses)
+        Speculative — <0.30 or low thesis alignment → speculative setup
+                      (PLTR, C3.ai — narrative-dependent, conviction-thin)
 
-    These boundaries are intentionally tight: they force meaningful spread across
-    the semantic tier meter.  A PM reading "Balanced" at 68% vs "Speculative" at
-    32% should immediately understand the expectation asymmetry difference.
+    Escape valves (pre-launch):
+        - High-quality names compressed by fragility multiplier but with strong
+          thesis_alignment escape into "expectation-sensitive" rather than "speculative".
+        - Moderate-quality names with real revenues escape "speculative" into "fragile setup".
     """
     frag = dims.expectation_fragility
     asym = dims.expectation_asymmetry
+    ta   = dims.thesis_alignment
 
-    if final_score >= 0.75:
-        return "high-alignment thesis"
-    elif final_score >= 0.60:
-        if frag > 0.60 or asym > 0.55:
-            return "monitoring required"
+    # ── Tier 1: Durable (≥0.72) ──────────────────────────────────────────────
+    if final_score >= 0.72:
+        if frag < 0.40 and asym < 0.40:
+            return "high-alignment thesis"
         return "actionable thesis"
-    elif final_score >= 0.45:
-        if asym > 0.60:
+
+    # ── Tier 2: Balanced (0.58–0.72) ─────────────────────────────────────────
+    elif final_score >= 0.58:
+        if frag > 0.62 or asym > 0.55:
+            return "monitoring required"
+        if ta < 0.48:
+            return "mixed evidence"
+        return "actionable thesis"
+
+    # ── Tier 3: Demanding (0.42–0.58) ────────────────────────────────────────
+    elif final_score >= 0.42:
+        if asym > 0.65:
             return "asymmetric setup"
-        if frag > 0.65:
+        if frag > 0.60:
             return "expectation-sensitive"
-        if dims.thesis_alignment < 0.45:
+        if ta < 0.45:
             return "fragile setup"
         return "mixed evidence"
-    elif final_score >= 0.20:
+
+    # ── Tier 4: Fragile / Speculative (0.25–0.42) ────────────────────────────
+    elif final_score >= 0.25:
+        # High-quality demanding names that compressed through fragility×asymmetry
+        # (e.g. NVDA with ta ≥ 0.62 and high fragility) → expectation-sensitive, not speculative
+        if frag > 0.60 and ta >= 0.62:
+            return "expectation-sensitive"
+        # Real businesses with moderate thesis quality (e.g. TSLA) → fragile, not speculative
+        if ta >= 0.50 or frag >= 0.50:
+            return "fragile setup"
         return "speculative setup"
+
+    # ── Tier 5: Minimal (<0.25) ───────────────────────────────────────────────
     else:
         return "insufficient conviction"
+
+
+# ── Directional stance synthesis ──────────────────────────────────────────────
+
+def _compute_directional_stance(
+    final_score: float,
+    dims:        "ConvictionDimensions",
+    setup_label: str,
+    company:     "CompanyContext",
+) -> Tuple[str, str]:
+    """Derive a directional stance and institutional reasoning from the conviction output.
+
+    Outputs
+    -------
+    stance    : "Strong Buy" | "Buy" | "Hold" | "Avoid" | "Sell"
+    reasoning : 1-2 sentence institutional explanation — PM-grade, not generic.
+
+    Design rules
+    ------------
+    - Stance derives from score + fragility + asymmetry + thesis_alignment.
+    - Reasoning must reference the expectation context, not just the score.
+    - "Sell" is reserved for genuine structural conviction breaks (<0.28 score).
+    - Contradictory combinations are caught by the governance layer in
+      thesis_synthesizer.py before the response is serialized.
+    - Language must be institutional: no "BUY because fundamentals are strong."
+    """
+    frag   = dims.expectation_fragility
+    asym   = dims.expectation_asymmetry
+    ta     = dims.thesis_alignment
+    vc     = dims.valuation_certainty
+    ticker = (company.ticker or "the company").upper()
+
+    # ── Strong Buy ────────────────────────────────────────────────────────────
+    # High-conviction, low-fragility, high thesis alignment — evidence-supported
+    if final_score >= 0.72 and frag < 0.40 and ta > 0.65:
+        return (
+            "Strong Buy",
+            f"The setup remains attractive because current expectations still understate "
+            f"the durable potential on {ticker}. Evidence quality is high, thesis alignment "
+            "is strong, and the valuation does not require execution above consensus.",
+        )
+
+    # ── Buy ───────────────────────────────────────────────────────────────────
+    # Solid conviction, manageable expectation risk
+    if final_score >= 0.62 and frag < 0.58:
+        return (
+            "Buy",
+            f"The business quality and setup support a constructive view on {ticker}. "
+            "Risk/reward remains favorable at current expectations without requiring "
+            "above-consensus execution.",
+        )
+
+    # ── Hold — demanding setup ────────────────────────────────────────────────
+    # Good quality but elevated expectations leave limited margin of safety
+    if final_score >= 0.42 and frag >= 0.58:
+        return (
+            "Hold",
+            f"The business is strong, but the current setup leaves limited room for "
+            f"execution misses on {ticker}. The thesis is intact; the expectation bar is "
+            "elevated. Patience is required before adding at these levels.",
+        )
+
+    # ── Hold — balanced but thin ──────────────────────────────────────────────
+    if final_score >= 0.52:
+        return (
+            "Hold",
+            f"The {ticker} thesis remains directionally intact but lacks a clear near-term "
+            "catalyst to re-rate. Conviction is insufficient to initiate or add at current "
+            "prices without a reset in expectations.",
+        )
+
+    # ── Avoid ─────────────────────────────────────────────────────────────────
+    # Weak evidence + fragile setup — risk/reward unfavorable
+    if final_score >= 0.30:
+        if frag > 0.65:
+            return (
+                "Avoid",
+                f"The valuation now depends on assumptions that are difficult to defend "
+                f"with present evidence on {ticker}. The setup requires above-consensus "
+                "execution with limited downside protection.",
+            )
+        return (
+            "Avoid",
+            f"Evidence on {ticker} does not support a constructive position at current "
+            "prices. Too many open variables remain unresolved to establish a high-conviction "
+            "directional view.",
+        )
+
+    # ── Sell ──────────────────────────────────────────────────────────────────
+    # Structural conviction break — genuine evidence of deterioration
+    return (
+        "Sell",
+        f"The combination of evidence quality, expectation risk, and setup fragility "
+        f"does not support holding {ticker} at current levels. The evidence base is "
+        "insufficient to defend the current valuation framework.",
+    )
 
 
 # ── Weighted composition ──────────────────────────────────────────────────────
@@ -1612,6 +1737,11 @@ def compute_conviction(
     # ── Semantic setup label ──────────────────────────────────────────────────
     setup_label = _confidence_band_label(final_score, dims)
 
+    # ── Directional stance ────────────────────────────────────────────────────
+    _stance, _stance_reasoning = _compute_directional_stance(
+        final_score, dims, setup_label, company
+    )
+
     # ── Reasoning and what_increases_conviction ───────────────────────────────
     reasoning = _build_reasoning(
         dims, final_score, company, should_compress, compression_reasons, uncertainty_drivers,
@@ -1655,4 +1785,6 @@ def compute_conviction(
         compression_reasons          = compression_reasons,
         fragility_multiplier_applied = frag_mult,
         asymmetry_multiplier_applied = asym_mult,
+        directional_stance           = _stance,
+        directional_stance_reasoning = _stance_reasoning,
     )

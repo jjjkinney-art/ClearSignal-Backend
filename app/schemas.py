@@ -1126,6 +1126,24 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Directional stance (Final Pre-Launch Product Refinement) ─────────────
+    directional_stance: str = Field(
+        default="Hold",
+        description=(
+            "PM-grade directional conclusion derived deterministically from the "
+            "conviction modeler. One of: 'Strong Buy' | 'Buy' | 'Hold' | 'Avoid' | 'Sell'. "
+            "NOT a simple bullish/bearish label — encodes setup quality and expectation risk."
+        ),
+    )
+    directional_stance_reasoning: str = Field(
+        default="",
+        description=(
+            "Institutional 1-2 sentence rationale for the directional_stance. "
+            "Company-specific, PM-grade language. Never generic. "
+            "Rendered beneath the stance badge in the frontend."
+        ),
+    )
+
     # ── Thesis persistence schema (Live Intelligence phase) ───────────────────
     # These fields support institutional surveillance and thesis versioning.
     # No database required — populated at generation time; consumed by the

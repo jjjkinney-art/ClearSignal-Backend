@@ -2019,6 +2019,61 @@ def _check_generic_confidence_reasoning(
     return warnings
 
 
+def _check_directional_stance_consistency(
+    thesis: InvestmentThesis,
+    company: CompanyContext,
+) -> List[str]:
+    """Detect contradictions between directional_stance and setup_label / conviction.
+
+    Rules (deterministic — no LLM calls):
+    1. Strong Buy + speculative setup → contradiction
+    2. Strong Buy + fragile setup → contradiction
+    3. Strong Buy + confidence_score < 0.60 → contradiction
+    4. Sell + high-alignment thesis → contradiction
+    5. Sell + confidence_score > 0.70 → contradiction
+    6. Strong Buy + expectation_fragility > 0.70 → downgrade reasoning note
+    """
+    warnings: List[str] = []
+    stance = (thesis.directional_stance or "Hold").strip()
+    label  = (thesis.setup_label or "").lower().strip()
+    score  = thesis.confidence_score or 0.0
+    ticker = (getattr(company, "ticker", "") or "the company").upper()
+
+    _SPECULATIVE_LABELS = {"speculative setup", "speculative", "insufficient conviction", "fragile setup"}
+    _DURABLE_LABELS     = {"high-alignment thesis", "actionable thesis"}
+
+    if stance == "Strong Buy":
+        if label in _SPECULATIVE_LABELS:
+            warnings.append(
+                f"[GOVERNANCE] Directional contradiction on {ticker}: "
+                f"stance=Strong Buy but setup_label='{label}'. "
+                f"Strong Buy requires at minimum 'monitoring required' setup quality. "
+                f"Stance should be downgraded to Buy or Hold."
+            )
+        if score < 0.60:
+            warnings.append(
+                f"[GOVERNANCE] Directional contradiction on {ticker}: "
+                f"stance=Strong Buy but confidence_score={score:.2f} (<0.60). "
+                f"Strong Buy requires conviction ≥0.60."
+            )
+
+    if stance == "Sell":
+        if label in _DURABLE_LABELS:
+            warnings.append(
+                f"[GOVERNANCE] Directional contradiction on {ticker}: "
+                f"stance=Sell but setup_label='{label}'. "
+                f"Sell is incompatible with a durable/aligned setup."
+            )
+        if score > 0.70:
+            warnings.append(
+                f"[GOVERNANCE] Directional contradiction on {ticker}: "
+                f"stance=Sell but confidence_score={score:.2f} (>0.70). "
+                f"High-conviction theses should not produce a Sell stance."
+            )
+
+    return warnings
+
+
 def _run_governance_checks(
     company: CompanyContext,
     valuation: ValuationView,
@@ -2035,6 +2090,7 @@ def _run_governance_checks(
     warnings.extend(_check_stance_conclusion_alignment(valuation, thesis))
     warnings.extend(_check_stale_evidence_warning(evidence, thesis))
     warnings.extend(_check_generic_confidence_reasoning(thesis, company))
+    warnings.extend(_check_directional_stance_consistency(thesis, company))
     return warnings
 
 
@@ -2492,6 +2548,8 @@ def synthesize_thesis(
         thesis.setup_label = conviction.setup_label
         thesis.fragility_multiplier_applied = conviction.fragility_multiplier_applied
         thesis.asymmetry_multiplier_applied = conviction.asymmetry_multiplier_applied
+        thesis.directional_stance = conviction.directional_stance
+        thesis.directional_stance_reasoning = conviction.directional_stance_reasoning
 
         # ── [CONFIDENCE_PIPELINE] end-to-end telemetry ───────────────────────
         # Traces raw→fragility→asymmetry→compression→final for dispersion audits.
