@@ -229,6 +229,29 @@ async def market_resolve(
             if low_52          is not None: result["fiftyTwoWeekLow"]  = low_52
             if pe              is not None: result["peRatio"]          = pe
 
+        # ── Step 3: forward P/E from analyst consensus EPS estimate ───────
+        # FMP /analyst-estimates returns annual estimates sorted desc; we
+        # take the earliest *future* fiscal year to get next-12m forward EPS.
+        if price is not None:
+            est_url  = f"{base}/analyst-estimates/{ticker}?limit=4&apikey={api_key}"
+            est_data = _fmp_get(est_url)
+            if est_data and isinstance(est_data, list):
+                import datetime as _dt
+                current_year = _dt.date.today().year
+                fwd_eps: Optional[float] = None
+                for est in sorted(est_data, key=lambda r: r.get("date", ""), reverse=False):
+                    try:
+                        est_year = int(str(est.get("date", ""))[:4])
+                    except (ValueError, TypeError):
+                        continue
+                    if est_year >= current_year:
+                        raw_eps = est.get("estimatedEpsAvg") or est.get("estimatedEps")
+                        fwd_eps = _safe_float(raw_eps)
+                        if fwd_eps and fwd_eps > 0:
+                            break
+                if fwd_eps and fwd_eps > 0:
+                    result["forwardPe"] = round(price / fwd_eps, 1)
+
     return result
 
 
