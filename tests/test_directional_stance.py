@@ -430,3 +430,117 @@ class TestQualityDurabilityOffset:
         assert label not in ("speculative setup", "insufficient conviction"), (
             f"JPM should not be speculative at overpriced valuation, got: {label}"
         )
+
+
+# ── 7. Phase 3: QD Balanced floor (MSFT/JPM → Balanced, TSLA/PLTR → Fragile/Speculative) ──
+
+class TestPhase3QDBalancedFloor:
+    """
+    Phase 3 calibration validation:
+
+    Quality-durable tickers (COST, MSFT, JPM) with sparse evidence and mixed signals
+    should land in Demanding or Balanced — NOT in Fragile/Speculative.
+
+    Narrative-dependent tickers (TSLA, PLTR, SNOW) at the same sparse-evidence
+    conditions remain correctly in Fragile/Speculative.
+
+    Tests operate via compute_conviction() end-to-end so the QD label floor fires.
+    """
+
+    def _run_full(self, ticker: str, evidence_quality: float = 0.35) -> str:
+        """Run compute_conviction with realistic sparse-evidence inputs and return setup_label."""
+        from app.schemas import (
+            ValuationView, MacroSensitivity, RiskProfile,
+            MarketContext, QualityAssessment,
+        )
+        company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
+        valuation = ValuationView(valuation_stance="overpriced", confidence=0.45)
+        macro     = MacroSensitivity(confidence=0.45)
+        risk      = RiskProfile(confidence=0.45)
+        market    = MarketContext(confidence=0.45)
+        quality   = QualityAssessment(confidence=0.45)
+        result = compute_conviction(
+            evidence=[], valuation=valuation, macro=macro,
+            risk=risk, market=market, quality=quality, company=company,
+        )
+        return result.setup_label
+
+    # ── QD tickers: must not be Speculative or Insufficient ──────────────────
+
+    def test_cost_sparse_not_speculative(self):
+        """COST with sparse evidence and overpriced stance must not show Speculative."""
+        label = self._run_full("COST")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"COST should not be speculative with sparse evidence, got: {label!r}"
+        )
+
+    def test_msft_sparse_not_speculative(self):
+        """MSFT with sparse evidence must not show Speculative."""
+        label = self._run_full("MSFT")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"MSFT should not be speculative with sparse evidence, got: {label!r}"
+        )
+
+    def test_jpm_sparse_not_speculative(self):
+        """JPM with sparse evidence must not show Speculative."""
+        label = self._run_full("JPM")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"JPM should not be speculative with sparse evidence, got: {label!r}"
+        )
+
+    def test_asml_sparse_not_speculative(self):
+        """ASML (QD, not HE) with sparse evidence must not show Speculative."""
+        label = self._run_full("ASML")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"ASML should not be speculative with sparse evidence, got: {label!r}"
+        )
+
+    # ── QD tickers: must land in Demanding or Balanced tier (not Fragile/Speculative) ──
+
+    _DEMANDING_OR_BETTER = frozenset({
+        "high-alignment thesis", "actionable thesis",
+        "monitoring required", "expectation-sensitive",
+        "mixed evidence",  # mixed maps to Demanding — acceptable
+    })
+
+    def test_cost_sparse_label_in_demanding_or_better(self):
+        """COST sparse → Demanding or Balanced tier (not Fragile/Speculative tier)."""
+        label = self._run_full("COST")
+        assert label in self._DEMANDING_OR_BETTER, (
+            f"COST should be Demanding/Balanced tier with sparse evidence, got: {label!r}"
+        )
+
+    def test_msft_sparse_label_in_demanding_or_better(self):
+        label = self._run_full("MSFT")
+        assert label in self._DEMANDING_OR_BETTER, (
+            f"MSFT should be Demanding/Balanced tier with sparse evidence, got: {label!r}"
+        )
+
+    def test_jpm_sparse_label_in_demanding_or_better(self):
+        label = self._run_full("JPM")
+        assert label in self._DEMANDING_OR_BETTER, (
+            f"JPM should be Demanding/Balanced tier with sparse evidence, got: {label!r}"
+        )
+
+    # ── Non-QD tickers: TSLA/PLTR remain Fragile/Speculative at same conditions ──
+
+    def test_tsla_sparse_remains_fragile_or_speculative(self):
+        """TSLA is not QD → sparse evidence + overpriced → Fragile or Speculative (correct)."""
+        label = self._run_full("TSLA")
+        fragile_or_spec = frozenset({
+            "fragile setup", "speculative setup", "insufficient conviction",
+            "asymmetric setup",
+        })
+        assert label in fragile_or_spec, (
+            f"TSLA should be Fragile/Speculative with sparse evidence, got: {label!r}"
+        )
+
+    def test_pltr_sparse_remains_speculative(self):
+        """PLTR is not QD → sparse + overpriced → Speculative or Fragile (correct)."""
+        label = self._run_full("PLTR")
+        fragile_or_spec = frozenset({
+            "fragile setup", "speculative setup", "insufficient conviction",
+        })
+        assert label in fragile_or_spec, (
+            f"PLTR should be Speculative with sparse evidence, got: {label!r}"
+        )

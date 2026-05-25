@@ -397,12 +397,17 @@ BAD examples (rejected):
 SECTION DEPTH HIERARCHY — driven by the debate type:
 {depth_directive}
 
-CONCLUSION REQUIREMENT — mandatory fulcrum restatement:
-The conclusion MUST do ONE of the following:
-  (a) Restate the fulcrum: "The debate reduces to whether X holds — if it does, the stock works."
-  (b) Name what must happen next: "The thesis requires Y — everything else is secondary."
-  (c) Explain the mis/repricing: "At current multiples, the market is underpricing X / still overpricing Y."
-FORBIDDEN in conclusion: generic summaries, restating what was said above, "the company faces headwinds."
+CONCLUSION REQUIREMENT — positioning-first, not mechanism-first:
+The conclusion MUST open with the bottom-line positioning view or expectation structure.
+NOT with the mechanism. NOT with "The thesis requires..." or "The business needs...".
+REQUIRED:
+  Sentence 1 → Positioning or expectation structure: what the market is pricing vs. what is defensible.
+  Sentence 2 → The fulcrum or exit risk: the specific thing that would change the view.
+PATTERNS:
+  "[Business] remains [quality], but the market already prices in [expectation] — setup works only if [condition]."
+  "At ~[X]x, the market is paying for [assumption] — the risk is whether [Y] holds."
+  "Current pricing already assumes [X]; the question is whether [Y] delivers on schedule."
+FORBIDDEN: "The thesis requires...", "The company remains...", "The business has...", generic headwind/tailwind summaries.
 
 """
 
@@ -1012,31 +1017,40 @@ GOOD: "China tariff impact on iPhone supply chain economics" \
 BAD: "Multiple factors are influencing the investment case." \
 This should be the answer to: "If you had to name ONE thing that matters most right now, what is it?"
   "conclusion"              : string — decision-compressive PM-grade conclusion. HARD LIMIT: 2 sentences. \
-The first sentence MUST state the directional positioning call — the bottom-line view — \
-not a description of what was discussed. Think: what would a PM write in the final line of \
-a trade recommendation memo? \
+LEAD WITH POSITIONING AND EXPECTATION STRUCTURE — not mechanism explanation. \
+Think of the final line of a trade desk recommendation memo: bottom-line view first, then the fulcrum. \
+\
 MANDATORY STRUCTURE: \
-  Sentence 1 → Positioning call with the operative condition or expectation context. \
-  Sentence 2 → The single most important risk or fulcrum that could change the view. \
-REQUIRED PATTERNS for sentence 1 (use one — do not blend them): \
-(a) Expectation structure — "Current pricing already assumes X; the setup only works if Y." \
-(b) Expectation mis-pricing — "At current multiples, the market is underpricing X — the thesis holds if Y." \
-(c) Thesis condition — "The thesis works if X — the question is whether Y arrives on schedule." \
-(d) Setup quality — "The setup is constructive if X holds; the risk is the market has already priced it." \
-FORBIDDEN: Opening with "[Ticker]'s [noun phrase] provides/supports/enables". \
-Generic summaries. Restating what was said in bull_thesis or bear_thesis. \
-Any sentence that begins "The company remains..." or "The business has..." \
-GOOD (decision-compressive): \
-"Current pricing already assumes continued Cloud margin expansion — the setup only works if that holds. \
-The bear case is not valuation; it is whether Search deceleration becomes structural before Cloud offsets it." \
-"The thesis works if Services ARR sustains double-digit growth into rising rates — the multiple already assumes it. \
-The risk is not the direction of the business; it is when the expectation gap closes." \
-"At 55x, the market is paying for membership durability, not near-term growth — the setup is constructive if \
-renewal rates hold and margin expansion continues. The question is whether the multiple can compress without \
-an earnings miss triggering the exit." \
-BAD: "The company remains well-positioned despite headwinds." \
-BAD: "[Ticker]'s strong fundamentals support a positive outlook going forward." \
-BAD: "Overall, the investment thesis is balanced with risks and opportunities on both sides." """
+  Sentence 1 → Positioning call OR expectation structure — the bottom-line view. \
+  Sentence 2 → The single risk or fulcrum that would change the view. NOT a mechanism restatement. \
+\
+REQUIRED PATTERNS for sentence 1 (use one, do not blend): \
+(a) Positioning + expectation — "[Business] remains [quality], but the market already prices in [expectation]." \
+(b) Expectation mis-pricing — "At current multiples, the market is underpricing [X] — the thesis holds if [Y]." \
+(c) Expectation structure — "Current pricing already assumes [X]; the setup only works if [Y]." \
+(d) Setup quality — "The setup is constructive — [expectation] is already embedded in the multiple." \
+\
+SENTENCE 1 RULES — STRICTLY ENFORCED: \
+- MUST open with the positioning or expectation structure, not the mechanism \
+- FORBIDDEN openers: "The thesis requires...", "This thesis requires...", "The business requires..." \
+- FORBIDDEN openers: "The company remains...", "The stock needs...", "[Ticker]'s [noun] provides..." \
+- FORBIDDEN openers: Any sentence beginning with the mechanism rather than the bottom-line view \
+\
+GOOD (decision-compressive, positioning-first): \
+"Costco remains durable, but the market already prices in continued margin execution — the setup only \
+works if renewal rates hold and ticket sizes expand." \
+"At ~28x forward earnings, the market is paying for durable Cloud margin expansion, not just stability — \
+the bear case is whether Search deceleration becomes structural before Azure offsets it." \
+"Current pricing already assumes membership fee stability and operating leverage — the question is \
+whether that assumption survives a softening consumer environment." \
+"The setup is constructive — most downside is embedded in the multiple, but rate duration remains the exit risk." \
+\
+BAD (mechanism-first, avoid these): \
+"The thesis requires Costco's margin expansion to outpace [anything]." \
+"The company remains well-positioned despite headwinds." \
+"This thesis requires [X] to materialize before the market reprices the multiple." \
+"[Ticker]'s strong fundamentals support a positive outlook going forward." \
+"Overall, the investment thesis is balanced with risks and opportunities on both sides." """
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────

@@ -697,10 +697,11 @@ def _score_expectation_fragility(
     #   "fragile narrative-dependent speculation" (TSLA, PLTR, SNOW)
     #
     # Net effect for a QD ticker with overpriced valuation:
-    #   COST: base(0.28) + overpriced(0.28) - QD_offset(0.14) = 0.42 → Demanding
+    #   COST: base(0.28) + overpriced(0.28) - QD_offset(0.20) = 0.36 → below fragility threshold
+    #         → no fragility penalty → score stays in Demanding/Balanced territory
     #         vs. without offset: 0.56 → Fragile/Speculative
     # For tickers that are BOTH HE and QD (MSFT, GOOGL, AMZN):
-    #   net = +0.20(HE) - 0.14(QD) = +0.06 → mild elevation (appropriate)
+    #   net = +0.20(HE) - 0.20(QD) = 0.00 → neutral (HE and QD cancel — appropriate)
     if ticker in _QUALITY_DURABLE_TICKERS:
         base = max(0.05, base - _QUALITY_DURABILITY_FRAGILITY_OFFSET)
 
@@ -1962,6 +1963,10 @@ def compute_conviction(
     #   (Fragile is allowed when evidence quality is HIGH and reveals actual problems.)
     if _ticker_up in _QUALITY_DURABLE_TICKERS:
         if setup_label in ("speculative setup", "insufficient conviction"):
+            # Hard floor: durable recurring-economics businesses are NEVER speculative
+            # just because evidence is sparse or valuation is elevated.
+            # "Speculative" requires: narrative dependency + binary execution risk +
+            # weak durability + fragile economics — not a premium multiple on COST/MSFT.
             setup_label = "expectation-sensitive"
             _logger.debug(
                 "[qd_label_floor] ticker=%s speculative→expectation-sensitive "
@@ -1975,6 +1980,20 @@ def compute_conviction(
             setup_label = "expectation-sensitive"
             _logger.debug(
                 "[qd_label_floor] ticker=%s fragile→expectation-sensitive "
+                "reason=sparse_evidence evidence_quality=%.3f",
+                _ticker_up, dims.evidence_quality,
+            )
+        elif setup_label == "mixed evidence" and dims.evidence_quality < 0.50:
+            # For QD tickers, "mixed evidence" with sparse coverage reflects
+            # evidence scarcity, NOT genuine cross-agent strategic disagreement.
+            # Elite durable businesses (MSFT, JPM, COST) with thin data should
+            # read as "monitoring required" (Balanced tier) — not "mixed" (Demanding).
+            # This separation lets MSFT/JPM reach "Balanced" without requiring
+            # full evidence depth.  When evidence quality IS high and genuine
+            # disagreement persists, the label stays "mixed evidence" (evidence_quality ≥ 0.50).
+            setup_label = "monitoring required"
+            _logger.debug(
+                "[qd_label_floor] ticker=%s mixed_evidence→monitoring_required "
                 "reason=sparse_evidence evidence_quality=%.3f",
                 _ticker_up, dims.evidence_quality,
             )
