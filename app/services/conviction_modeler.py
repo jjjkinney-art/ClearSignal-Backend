@@ -238,71 +238,49 @@ _MIN_SCORE = 0.12
 _MAX_SCORE = 0.92
 
 # Tickers where expectations are structurally elevated relative to evidence
-_HIGH_EXPECTATION_TICKERS = frozenset({
-    "NVDA", "TSLA", "ARM", "SMCI", "PLTR", "SNOW", "CRWD", "DDOG",
-    "NET", "SHOP", "COIN", "RBLX", "HOOD", "RIVN", "LCID",
-    "CAVA", "CELH", "DUOL", "AI", "SOUN",
-})
-
-# ── Quality-durable tickers ───────────────────────────────────────────────────
-# High-quality recurring-economics businesses whose premium valuations reflect
-# durable structural moats — not fragile narrative or optionality.  These names
-# should resist speculative compression even when multiples are elevated, because
-# the BUSINESS does not require "flawless execution" in the way that TSLA or PLTR
-# do.  The distinction:
+# ── Durability-based calibration constants ────────────────────────────────────
 #
-#   COST membership renewal ~92% → execution asymmetry is LOW
-#   MSFT Office/Azure subscriptions → structural recurring base, not binary optionality
-#   JPM fee-based capital markets + NIM spread → not execution-dependent
+# Phase 3 Architecture: COMPUTED DURABILITY replaces hardcoded ticker frozensets.
 #
-# vs.
-#   TSLA FSD / Optimus → genuinely binary optionality
-#   PLTR commercial GAAP path → narrative-dependent, execution-binary
-#   SNOW consumption → hyper-competitive, compressed moat
+# Both _QUALITY_DURABLE_TICKERS and _HIGH_EXPECTATION_TICKERS are REMOVED.
+# The system now computes business_durability_score [0, 1] from four layered sources:
 #
-# The offset is applied directly inside _score_expectation_fragility and
-# _score_expectation_asymmetry — reducing raw fragility/asymmetry scores before
-# the multiplier pipeline fires.  This preserves the correct pipeline architecture;
-# it does NOT add a separate post-score boost (which would mask real signal).
-
-_QUALITY_DURABLE_TICKERS = frozenset({
-    # Consumer compounders with near-certain recurring revenue
-    "COST", "WMT",
-    # Mega-cap technology with structural subscription economics
-    "MSFT", "AAPL",
-    # Payment networks — structural recurring fee economics
-    "V", "MA",
-    # Semiconductor equipment duopoly — non-cyclical long-order-book
-    "ASML",
-    # Advertising platforms with structural ad-market moat
-    "META", "GOOGL", "GOOG",
-    # Cloud + marketplace with deep lock-in economics
-    "AMZN",
-    # Financial compounders with durable fee/NIM base
-    "JPM", "BLK", "MS",
-    # Healthcare compounders with durable patent-protected GLP-1 moat
-    "LLY", "NVO",
-    # Streaming monopoly with global pricing power
-    "NFLX",
-    # Defence/aerospace with long-contract structural backlog
-    "LMT",
-})
-
-# Fragility reduction for quality-durable names (applied as a subtraction from
-# the raw fragility score BEFORE the multiplier fires).
+#   1. CompanyKnowledgeProfile (structured facts — highest signal quality)
+#      - recurring_revenue_sources quality and count
+#      - recession_behavior resilience keywords
+#      - valuation_style narrative/optionality signals (reduces durability)
+#      - major_risks binary-outcome signals (reduces durability)
+#      - competitive_advantages depth
 #
-# Phase 2 recalibration (increased from 0.14):
-# Target: COST at "overpriced" valuation → frag ≤ 0.36 (below multiplier threshold)
-#   base(0.28) + overpriced(0.28) - QD_offset(0.20) = 0.36 → no multiplier penalty
-#   → score stays in "Balanced/Demanding" territory, NOT "Fragile/Speculative"
-# Tickers that are BOTH HE and QD (MSFT, GOOGL, AMZN):
-#   net = +0.20(HE) - 0.20(QD) = 0.00 net → raw base only (mild premium appropriate)
-_QUALITY_DURABILITY_FRAGILITY_OFFSET = 0.20
+#   2. QualityAssessment agent text (moat, revenue_durability, operating_quality)
+#   3. RiskProfile agent text (binary risk, execution dependency signals)
+#   4. Evidence corpus (recurring revenue, moat, defensive demand signals)
+#
+# This generalizes to ANY company in the universe:
+#   High durability (0.65+) → Costco, MSFT, JPM, ASML, Visa — qualifies for label floor
+#   Moderate durability (0.40–0.64) → NVDA, sector-specific compounders — some offset, no floor
+#   Low durability (<0.40) → TSLA, PLTR, pre-revenue biotech — minimal offset, no floor
+#
+# Crucially: the valuation_stance signal ("overpriced" → +0.28 fragility) already
+# captures the high-expectation dimension for any stock at elevated multiples.
+# No ticker-specific premium is needed — the valuation agent provides this signal.
 
-# Asymmetry reduction for quality-durable names — recurring businesses have
-# structurally lower execution binary-risk than optionality-dependent names.
-# COST membership renewal is not binary. MSFT O365 churn is not binary.
-_QUALITY_DURABILITY_ASYMMETRY_OFFSET = 0.12
+# Maximum fragility reduction for a perfectly durable business (durability_score = 1.0).
+# Applied as: fragility -= durability_score × _DURABILITY_MAX_FRAGILITY_OFFSET
+# At durability = 0.72: offset = 0.72 × 0.20 = 0.144 → COST overpriced: 0.56 - 0.144 = 0.416
+_DURABILITY_MAX_FRAGILITY_OFFSET  = 0.20
+
+# Maximum asymmetry reduction for a perfectly durable business.
+# Recurring businesses have structurally lower execution binary-risk.
+# COST membership renewal is not binary. MSFT O365 churn is not fragile-execution.
+_DURABILITY_MAX_ASYMMETRY_OFFSET  = 0.12
+
+# Minimum durability_score required for the label floor to fire.
+# Below this threshold: the label floor does NOT apply — the business has not
+# demonstrated sufficient structural durability through profile + agent signals.
+# A durable business scores 0.65+ through: high-quality recurring revenue +
+# recession resilience + absence of binary/narrative risk signals.
+_DURABILITY_FLOOR_THRESHOLD = 0.65
 
 
 # ── Data containers ───────────────────────────────────────────────────────────
@@ -642,10 +620,167 @@ _SPECULATIVE_TERMS = (
 )
 
 
+def _compute_business_durability(
+    quality:  "QualityAssessment",
+    risk:     "RiskProfile",
+    evidence: "List[RetrievedEvidence]",
+    profile:  "Optional[CompanyKnowledgeProfile]" = None,
+) -> float:
+    """Compute a continuous business-durability score [0, 1] from four layered sources.
+
+    This replaces both _QUALITY_DURABLE_TICKERS and _HIGH_EXPECTATION_TICKERS frozensets.
+    The score generalizes to any company in the universe without ticker-specific overrides.
+
+    Score architecture
+    ------------------
+    Baseline:  0.40 (neutral — unknown company with no profile)
+
+    Layer 1:   CompanyKnowledgeProfile (highest signal quality, structured facts)
+               +0.04–0.15  recurring_revenue_sources (count × quality)
+               ±0.04–0.10  recession_behavior (positive vs negative keywords)
+               –0.04–0.12  valuation_style narrative/optionality signals (reduces durability)
+               –0.04–0.12  major_risks binary-outcome signals (reduces durability)
+               +0.04–0.08  competitive_advantages depth
+
+    Layer 2:   QualityAssessment agent text (moat, revenue_durability, operating_quality)
+               +0.03 per durability keyword hit (capped at 0.12)
+               –0.03 per fragility keyword hit (capped at 0.12)
+               ±0.06 confidence band adjustment
+
+    Layer 3:   RiskProfile agent text (binary risk signals)
+               –0.05 per binary-risk keyword hit (capped at 0.15)
+
+    Layer 4:   Evidence corpus (first 12 items)
+               +0.03 per durability term hit (capped at 0.10)
+               –0.03 per narrative/speculative term hit (capped at 0.10)
+
+    Expected ranges
+    ---------------
+    COST / MSFT / JPM / ASML (with profile): 0.68–0.78 → HIGH → floor fires (≥0.65) ✓
+    NVDA (with profile):                     0.52–0.58 → MODERATE → no floor ✓
+    TSLA (with profile):                     0.30–0.40 → LOW → no floor ✓
+    PLTR (with profile):                     0.42–0.52 → LOW-MODERATE → no floor ✓
+    Unknown company (no profile, 0 evidence): 0.40      → NEUTRAL → no floor ✓
+    """
+    score = 0.40  # neutral baseline for unknown companies
+
+    # ── Layer 1: CompanyKnowledgeProfile ─────────────────────────────────────
+    if profile is not None:
+        recurring  = " ".join(profile.recurring_revenue_sources or []).lower()
+        recession  = (profile.recession_behavior or "").lower()
+        valuation_s = (profile.valuation_style or "").lower()
+        risks      = " ".join(profile.major_risks or []).lower()
+
+        # Recurring revenue quality — high-retention signals boost durability more.
+        # "management fee" covers AUM-based financial institutions (JPM, BLK, V).
+        # "multi-year" covers equipment/industrial service contracts without needing the
+        #   exact phrase "multi-year contract" (covers "multi-year maintenance agreement").
+        high_quality_signals = (
+            "renewal rate", "membership", "multi-year contract", "service contract",
+            "subscription", "patient adherence", "maintenance", "management fee",
+        )
+        n_recurring = len(profile.recurring_revenue_sources or [])
+        n_hq = sum(1 for t in high_quality_signals if t in recurring)
+        if n_hq >= 2 or (n_hq >= 1 and n_recurring >= 3):
+            score += 0.15
+        elif n_recurring >= 2:
+            score += 0.08
+        elif n_recurring >= 1:
+            score += 0.04
+
+        # Recession resilience — positive vs negative keyword balance.
+        # "mission-critical" covers enterprise software / infrastructure (MSFT, ORCL).
+        # "secular" covers businesses driven by long-run structural demand vs cyclical CapEx.
+        positive_rec = (
+            "stable", "resilient", "non-discretionary", "defensive", "essential",
+            "counter-cyclical", "recession-resistant", "maintained dividend",
+            "sticky", "visibility", "non-cyclical", "mission-critical", "secular",
+        )
+        negative_rec = (
+            "discretionary", "fall 30", "fall 40", "cyclical", "steep decline",
+            "sensitive to consumer", "volatile",
+        )
+        pos_hits = sum(1 for t in positive_rec if t in recession)
+        neg_hits = sum(1 for t in negative_rec if t in recession)
+        score += max(-0.12, min(0.10, (pos_hits - neg_hits) * 0.04))
+
+        # Narrative/optionality penalty — reduces durability
+        narrative_val = (
+            "optionality", "blue-sky", "terminal value", "platform",
+            "option value", "speculative",
+        )
+        score -= min(0.12, sum(1 for t in narrative_val if t in valuation_s) * 0.04)
+
+        # Binary-outcome risk penalty from major_risks
+        binary_risk = (
+            "binary", "regulatory approval", "clinical trial", "fda approval",
+            "make-or-break", "unproven", "key-person risk",
+        )
+        score -= min(0.12, sum(1 for t in binary_risk if t in risks) * 0.04)
+
+        # Competitive advantages depth — wider moat → more durable
+        n_adv = len(profile.competitive_advantages or [])
+        if n_adv >= 4:
+            score += 0.08
+        elif n_adv >= 2:
+            score += 0.04
+
+    # ── Layer 2: QualityAssessment agent text ─────────────────────────────────
+    qa_text = " ".join([
+        quality.moat or "",
+        quality.revenue_durability or "",
+        quality.operating_quality or "",
+        quality.overall or "",
+    ]).lower()
+
+    durability_terms = (
+        "recurring", "subscription", "membership", "renewal", "moat",
+        "pricing power", "switching cost", "defensive", "consistent margin",
+        "free cash flow", "resilient", "capital-light", "mission-critical",
+    )
+    fragility_terms = (
+        "binary", "pre-revenue", "speculative", "narrative", "optionality",
+        "execution risk", "unproven", "disruption", "early stage",
+    )
+    score += min(0.12, sum(1 for t in durability_terms if t in qa_text) * 0.03)
+    score -= min(0.12, sum(1 for t in fragility_terms if t in qa_text) * 0.03)
+    score += (quality.confidence - 0.50) * 0.06  # above-average quality confidence lifts score
+
+    # ── Layer 3: RiskProfile binary/execution risk ────────────────────────────
+    risk_text = " ".join([
+        " ".join(risk.key_risks or []),
+        risk.overall or "",
+        risk.competitive_risk or "",
+    ]).lower()
+    binary_risk_terms = (
+        "binary outcome", "binary risk", "pre-revenue", "clinical trial",
+        "fda approval", "execution binary", "no moat", "narrative-driven",
+    )
+    score -= min(0.15, sum(1 for t in binary_risk_terms if t in risk_text) * 0.05)
+
+    # ── Layer 4: Evidence corpus (first 12 items) ─────────────────────────────
+    ev_text = " ".join(
+        f"{ev.title} {ev.summary}" for ev in evidence[:12]
+    ).lower()
+    ev_durability = (
+        "recurring revenue", "subscription", "membership fee", "renewal rate",
+        "pricing power", "moat", "free cash flow", "defensive demand", "essential",
+    )
+    ev_narrative = (
+        "optionality", "platform potential", "if successful", "speculative",
+        "binary", "pre-revenue", "early stage", "moonshot", "narrative",
+    )
+    score += min(0.10, sum(1 for t in ev_durability if t in ev_text) * 0.03)
+    score -= min(0.10, sum(1 for t in ev_narrative if t in ev_text) * 0.03)
+
+    return round(min(0.95, max(0.05, score)), 4)
+
+
 def _score_expectation_fragility(
-    valuation:  "ValuationView",
-    evidence:   "List[RetrievedEvidence]",
-    company:    "CompanyContext",
+    valuation:        "ValuationView",
+    evidence:         "List[RetrievedEvidence]",
+    company:          "CompanyContext",
+    durability_score: float = 0.50,
 ) -> float:
     """Score how fragile the current setup is relative to embedded expectations (0–1).
 
@@ -679,40 +814,36 @@ def _score_expectation_fragility(
     base += min(0.10, asymmetry_hits  * 0.04)
     base += min(0.10, speculative_hits * 0.04)
 
-    # ── Ticker-specific structural premium ────────────────────────────────────
-    # Phase 5e: increased from +0.15 to +0.20 — ensures HE tickers clear T6 threshold
-    # (0.62) even with fairly_valued stance and minimal explicit signals:
-    #   base(0.28) + fairly_valued(0.08) + HE(0.20) = 0.56 → not quite T6
-    #   with any 2 priced_in_terms hits: +0.14 → 0.70 > T6 threshold
-    ticker = (company.ticker or "").upper()
-    if ticker in _HIGH_EXPECTATION_TICKERS:
-        base += 0.20
-
-    # ── Quality durability offset (Phase 2 pre-launch calibration) ────────────
-    # High-quality recurring-economics businesses resist speculative compression.
-    # Premium multiples on COST, MSFT, V, JPM etc. reflect durable moat quality,
-    # NOT fragile narrative dependency.  This offset distinguishes:
-    #   "high expectations on elite durable business" (COST, MSFT, ASML)
-    # from:
-    #   "fragile narrative-dependent speculation" (TSLA, PLTR, SNOW)
+    # ── Business durability offset ────────────────────────────────────────────
+    # Computed durability_score [0, 1] replaces both _HIGH_EXPECTATION_TICKERS and
+    # _QUALITY_DURABLE_TICKERS frozensets.  Generalizes to any company in the universe.
     #
-    # Net effect for a QD ticker with overpriced valuation:
-    #   COST: base(0.28) + overpriced(0.28) - QD_offset(0.20) = 0.36 → below fragility threshold
-    #         → no fragility penalty → score stays in Demanding/Balanced territory
-    #         vs. without offset: 0.56 → Fragile/Speculative
-    # For tickers that are BOTH HE and QD (MSFT, GOOGL, AMZN):
-    #   net = +0.20(HE) - 0.20(QD) = 0.00 → neutral (HE and QD cancel — appropriate)
-    if ticker in _QUALITY_DURABLE_TICKERS:
-        base = max(0.05, base - _QUALITY_DURABILITY_FRAGILITY_OFFSET)
+    # The valuation_stance signal ("overpriced" → +0.28) already captures the
+    # high-expectation dimension for any expensive stock.  No ticker-specific premium
+    # is needed — the valuation agent provides this signal.
+    #
+    # The durability offset then correctly differentiates:
+    #   "high expectations on elite durable business" (COST, MSFT, ASML)
+    #     → large offset → net fragility reduced → Balanced/Demanding territory
+    #   "fragile narrative-dependent speculation" (TSLA, PLTR, SNOW)
+    #     → minimal offset → full fragility → Fragile/Speculative territory
+    #
+    # Continuous scaling examples at "overpriced" stance (base = 0.56 before offset):
+    #   durability=0.72 (COST):  offset = 0.72×0.20 = 0.144 → net fragility ≈ 0.416
+    #   durability=0.55 (NVDA):  offset = 0.55×0.20 = 0.110 → net fragility ≈ 0.450
+    #   durability=0.35 (TSLA):  offset = 0.35×0.20 = 0.070 → net fragility ≈ 0.490
+    #   durability=0.05 (PLTR):  offset = 0.05×0.20 = 0.010 → net fragility ≈ 0.550
+    base = max(0.05, base - durability_score * _DURABILITY_MAX_FRAGILITY_OFFSET)
 
     return round(min(0.95, max(0.05, base)), 4)
 
 
 def _score_expectation_asymmetry(
-    valuation:  "ValuationView",
-    evidence:   "List[RetrievedEvidence]",
-    company:    "CompanyContext",
-    dims:       "ConvictionDimensions",
+    valuation:        "ValuationView",
+    evidence:         "List[RetrievedEvidence]",
+    company:          "CompanyContext",
+    dims:             "ConvictionDimensions",
+    durability_score: float = 0.50,
 ) -> float:
     """Score how much the setup requires near-perfect execution (0–1; higher = worse).
 
@@ -735,17 +866,17 @@ def _score_expectation_asymmetry(
     elif stance in ("undervalued", "attractive"):
         base -= 0.05
 
-    # Structural ticker asymmetry — Phase 5e: increased +0.15 → +0.20
-    ticker = (company.ticker or "").upper()
-    if ticker in _HIGH_EXPECTATION_TICKERS:
-        base += 0.20
-
-    # Quality durability offset — recurring businesses have structurally lower
-    # execution binary-risk.  COST membership renewal is NOT a binary outcome.
-    # MSFT O365 churn is NOT fragile-execution-dependent.  Distinct from HE names
-    # like TSLA (FSD binary) or PLTR (commercial scaling binary).
-    if ticker in _QUALITY_DURABLE_TICKERS:
-        base = max(0.05, base - _QUALITY_DURABILITY_ASYMMETRY_OFFSET)
+    # ── Business durability offset ────────────────────────────────────────────
+    # Recurring-economics businesses have structurally lower execution binary-risk.
+    # COST membership renewal is NOT a binary outcome.  MSFT O365 churn is NOT
+    # fragile-execution-dependent.  TSLA FSD delivery and PLTR commercial scaling
+    # ARE binary-ish outcomes — their durability_score naturally reflects this.
+    #
+    # Continuous scaling examples at "overpriced" stance (base = 0.36 before offset):
+    #   durability=0.72 (COST): offset = 0.72×0.12 = 0.086 → net asymmetry ≈ 0.274
+    #   durability=0.55 (NVDA): offset = 0.55×0.12 = 0.066 → net asymmetry ≈ 0.294
+    #   durability=0.35 (TSLA): offset = 0.35×0.12 = 0.042 → net asymmetry ≈ 0.318
+    base = max(0.05, base - durability_score * _DURABILITY_MAX_ASYMMETRY_OFFSET)
 
     # Evidence text signals
     ev_text = " ".join(
@@ -1425,7 +1556,12 @@ def _build_reasoning(
     parts: List[str] = []
     ticker         = company.ticker or "the company"
     _ticker_up     = (company.ticker or "").upper()
-    is_he          = _ticker_up in _HIGH_EXPECTATION_TICKERS
+    # Derived from computed fragility/asymmetry — no hardcoded ticker lists.
+    # A "high-expectation" setup is one where the market has embedded significant
+    # execution premiums: high fragility combined with high asymmetry.
+    # This drives more precise reasoning language (acceleration vs continuation framing)
+    # and accurately reflects the actual computed setup — not a static ticker classification.
+    is_he          = (dims.expectation_fragility > 0.56 and dims.expectation_asymmetry > 0.44)
 
     # ── Evidence context: stale / sparse diagnostics ──────────────────────────
     _ev_list   = evidence or []
@@ -1869,6 +2005,17 @@ def compute_conviction(
     warnings_list = governance_warnings or []
     uncertainty_drivers = _get_uncertainty_drivers(company)
 
+    # ── Business durability score ─────────────────────────────────────────────
+    # Computed from: CompanyKnowledgeProfile + QualityAssessment + RiskProfile + evidence.
+    # Replaces _QUALITY_DURABLE_TICKERS and _HIGH_EXPECTATION_TICKERS frozensets.
+    # High durability (≥0.65) → label floor fires; continuous offset on fragility/asymmetry.
+    durability_score = _compute_business_durability(quality, risk, evidence, profile)
+    _logger.debug(
+        "[durability] ticker=%s score=%.4f threshold=%.2f floor_fires=%s",
+        company.ticker or "UNKNOWN", durability_score, _DURABILITY_FLOOR_THRESHOLD,
+        durability_score >= _DURABILITY_FLOOR_THRESHOLD,
+    )
+
     # ── Pass 1: Score the seven linear dimensions + expectation_fragility ─────
     dims_base = ConvictionDimensions(
         evidence_quality      = _score_evidence_quality(evidence),
@@ -1879,11 +2026,13 @@ def compute_conviction(
         valuation_certainty   = _score_valuation_certainty(valuation, evidence),
         estimate_dispersion   = _score_estimate_dispersion(evidence),
         governance_risk       = _score_governance_risk(warnings_list),
-        expectation_fragility = _score_expectation_fragility(valuation, evidence, company),
+        expectation_fragility = _score_expectation_fragility(
+                                    valuation, evidence, company, durability_score),
     )
 
     # ── Pass 2: Score expectation_asymmetry (depends on dims_base fields) ────
-    asymmetry_score = _score_expectation_asymmetry(valuation, evidence, company, dims_base)
+    asymmetry_score = _score_expectation_asymmetry(
+        valuation, evidence, company, dims_base, durability_score)
     dims = dataclasses.replace(dims_base, expectation_asymmetry=asymmetry_score)
 
     # ── Compose: linear_base × fragility_mult × asymmetry_mult ───────────────
@@ -1902,100 +2051,72 @@ def compute_conviction(
     else:
         final_score = raw_score
 
-    # ── HE ticker structural compression (Phase 5e) ───────────────────────────
-    # High-expectation tickers embed performance expectations that evidence alone
-    # cannot fully reflect.  Even when the analytical picture is constructive,
-    # the market setup embeds a fragility premium that systematically reduces
-    # the defensible conviction level for these names.
-    #
-    # This fires AFTER contradiction compression as a final structural adjustment.
-    # Intentionally mild (×0.88) — and ONLY when contradiction compression hasn't
-    # already applied significant or severe penalties (≤0.80 factor).  This prevents
-    # double-penalising tickers like NVDA-overpriced which already received T6
-    # significant compression; the HE premium is for cases where the analytical
-    # picture reads constructive but the market setup still embeds an unreflected risk.
-    #
-    # Conditions:
-    #   - HE ticker
-    #   - thesis_alignment > 0.45 (most real analyses; excludes pure empty-evidence cases)
-    #   - contradiction compression was NONE or MILD only (factor > _COMPRESSION_SIGNIFICANT)
-    _ticker_up = (company.ticker or "").upper()
-    _existing_factor = compression_factor if should_compress else 1.0
-    if (
-        _ticker_up in _HIGH_EXPECTATION_TICKERS
-        and dims.thesis_alignment > 0.45
-        and _existing_factor > _COMPRESSION_SIGNIFICANT   # 0.80 — only fires when mild/none
-    ):
-        _he_pre = final_score
-        final_score = round(min(_MAX_SCORE, max(_MIN_SCORE, final_score * _COMPRESSION_MILD)), 4)
-        if not should_compress:
-            should_compress = True
-            compression_reasons = []
-        compression_reasons.append(
-            f"{_ticker_up} embeds structural expectation premium — "
-            "market pricing reflects continued execution above consensus, "
-            "creating setup sensitivity beyond what fundamentals alone support"
-        )
-        _logger.debug(
-            "[he_structural_compression] ticker=%s pre=%.3f post=%.3f factor=%.2f",
-            _ticker_up, _he_pre, final_score, _COMPRESSION_MILD,
-        )
-
     # ── Semantic setup label ──────────────────────────────────────────────────
+    # Note: The Phase 5e HE structural compression (×0.88 for high-expectation tickers)
+    # has been removed.  The durability-based fragility/asymmetry offsets now correctly
+    # differentiate high-expectation-durable (COST, MSFT) from high-expectation-fragile
+    # (TSLA, PLTR) setups without requiring a post-compression ticker-specific override.
+    # The overpriced valuation stance (+0.28 fragility) combined with the durability
+    # offset provides the correct natural spread.
     setup_label = _confidence_band_label(final_score, dims)
 
-    # ── Quality-durable setup label floor (Phase 2) ───────────────────────────
+    # ── Durability-computed setup label floor (Phase 3) ──────────────────────
     # CRITICAL SEPARATION: confidence_score (0–1) and setup_label are INDEPENDENT signals.
     #
     #   confidence_score → reflects evidence depth and uncertainty → CAN be low for COST
     #   setup_label      → reflects the BUSINESS SETUP QUALITY    → should NOT be "speculative"
-    #                      for elite recurring-economics businesses just because evidence is sparse.
+    #                      for high-durability businesses just because evidence is sparse.
     #
     # "Speculative" is reserved for: narrative-dependent, pre-revenue, binary-optionality-driven,
     # or genuinely weakly-proven setups (TSLA Optimus, PLTR commercial, SNOW platform adoption).
-    # NOT for: COST at elevated P/E with thin evidence, MSFT with sparse analyst coverage.
+    # NOT for: a high-durability business at elevated P/E with thin evidence.
+    #
+    # The floor fires when durability_score >= _DURABILITY_FLOOR_THRESHOLD (0.65).
+    # This is COMPUTED from profile + agent + evidence — NOT from a hardcoded ticker list.
+    # Any company with sufficient structural durability signals will qualify automatically.
     #
     # Hard floor:
     #   "speculative setup" / "insufficient conviction" → floor to "expectation-sensitive"
     #
     # Soft floor (sparse evidence only — NOT real deterioration):
     #   "fragile setup" with evidence_quality < 0.40 → floor to "expectation-sensitive"
-    #   (Fragile is allowed when evidence quality is HIGH and reveals actual problems.)
-    if _ticker_up in _QUALITY_DURABLE_TICKERS:
+    #   "mixed evidence" with evidence_quality < 0.50 → floor to "monitoring required"
+    #   (Both soft floors lift only when evidence is absent, not when evidence reveals problems.)
+    _ticker_up = (company.ticker or "").upper()
+    if durability_score >= _DURABILITY_FLOOR_THRESHOLD:
         if setup_label in ("speculative setup", "insufficient conviction"):
-            # Hard floor: durable recurring-economics businesses are NEVER speculative
-            # just because evidence is sparse or valuation is elevated.
+            # Hard floor: high-durability businesses are NEVER speculative just because
+            # evidence is sparse or valuation is elevated.
             # "Speculative" requires: narrative dependency + binary execution risk +
-            # weak durability + fragile economics — not a premium multiple on COST/MSFT.
+            # weak durability + fragile economics — not a premium multiple on a durable compounder.
             setup_label = "expectation-sensitive"
             _logger.debug(
-                "[qd_label_floor] ticker=%s speculative→expectation-sensitive "
+                "[durability_label_floor] ticker=%s durability=%.3f speculative→expectation-sensitive "
                 "final_score=%.3f evidence_quality=%.3f",
-                _ticker_up, final_score, dims.evidence_quality,
+                _ticker_up, durability_score, final_score, dims.evidence_quality,
             )
         elif setup_label == "fragile setup" and dims.evidence_quality < 0.40:
             # Sparse evidence alone ≠ fragile business.
-            # Fragile label for QD tickers requires high evidence quality that reveals
-            # genuine structural problems — not absence of data.
+            # Fragile label for high-durability businesses requires high evidence quality
+            # that reveals genuine structural problems — not absence of data.
             setup_label = "expectation-sensitive"
             _logger.debug(
-                "[qd_label_floor] ticker=%s fragile→expectation-sensitive "
+                "[durability_label_floor] ticker=%s durability=%.3f fragile→expectation-sensitive "
                 "reason=sparse_evidence evidence_quality=%.3f",
-                _ticker_up, dims.evidence_quality,
+                _ticker_up, durability_score, dims.evidence_quality,
             )
         elif setup_label == "mixed evidence" and dims.evidence_quality < 0.50:
-            # For QD tickers, "mixed evidence" with sparse coverage reflects
+            # For high-durability businesses, "mixed evidence" with sparse coverage reflects
             # evidence scarcity, NOT genuine cross-agent strategic disagreement.
             # Elite durable businesses (MSFT, JPM, COST) with thin data should
             # read as "monitoring required" (Balanced tier) — not "mixed" (Demanding).
-            # This separation lets MSFT/JPM reach "Balanced" without requiring
-            # full evidence depth.  When evidence quality IS high and genuine
-            # disagreement persists, the label stays "mixed evidence" (evidence_quality ≥ 0.50).
+            # This separation lets them reach Balanced tier without full evidence depth.
+            # When evidence quality IS high and genuine disagreement persists, label stays.
             setup_label = "monitoring required"
             _logger.debug(
-                "[qd_label_floor] ticker=%s mixed_evidence→monitoring_required "
+                "[durability_label_floor] ticker=%s durability=%.3f mixed_evidence→monitoring_required "
                 "reason=sparse_evidence evidence_quality=%.3f",
-                _ticker_up, dims.evidence_quality,
+                _ticker_up, durability_score, dims.evidence_quality,
             )
 
     # ── Directional stance ────────────────────────────────────────────────────

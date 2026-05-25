@@ -340,19 +340,33 @@ class TestQualityDurabilityOffset:
     """
 
     def _run_fragility(self, ticker: str, stance: str = "overpriced") -> float:
-        from app.services.conviction_modeler import _score_expectation_fragility
-        from app.schemas import ValuationView
+        from app.services.conviction_modeler import (
+            _score_expectation_fragility, _compute_business_durability,
+        )
+        from app.services.company_knowledge import get_knowledge_profile
+        from app.schemas import ValuationView, QualityAssessment, RiskProfile
         company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
         val = ValuationView(valuation_stance=stance, confidence=0.65)
-        return _score_expectation_fragility(val, [], company)
+        profile = get_knowledge_profile(ticker)
+        quality = QualityAssessment(confidence=0.65)
+        risk = RiskProfile(confidence=0.65)
+        durability = _compute_business_durability(quality, risk, [], profile)
+        return _score_expectation_fragility(val, [], company, durability)
 
     def _run_asymmetry(self, ticker: str, stance: str = "overpriced") -> float:
-        from app.services.conviction_modeler import _score_expectation_asymmetry
-        from app.schemas import ValuationView
+        from app.services.conviction_modeler import (
+            _score_expectation_asymmetry, _compute_business_durability,
+        )
+        from app.services.company_knowledge import get_knowledge_profile
+        from app.schemas import ValuationView, QualityAssessment, RiskProfile
         company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
         val = ValuationView(valuation_stance=stance, confidence=0.65)
+        profile = get_knowledge_profile(ticker)
+        quality = QualityAssessment(confidence=0.65)
+        risk = RiskProfile(confidence=0.65)
+        durability = _compute_business_durability(quality, risk, [], profile)
         dims = ConvictionDimensions()
-        return _score_expectation_asymmetry(val, [], company, dims)
+        return _score_expectation_asymmetry(val, [], company, dims, durability)
 
     # ── Fragility ordering: QD < HE ──────────────────────────────────────────
 
@@ -396,18 +410,24 @@ class TestQualityDurabilityOffset:
         from app.services.conviction_modeler import (
             _score_expectation_fragility, _score_expectation_asymmetry,
             _compose_score, _confidence_band_label, _WEIGHTS,
+            _compute_business_durability,
         )
-        from app.schemas import ValuationView
+        from app.services.company_knowledge import get_knowledge_profile
+        from app.schemas import ValuationView, QualityAssessment, RiskProfile
         company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
         val = ValuationView(valuation_stance="overpriced", confidence=0.65)
-        frag = _score_expectation_fragility(val, [], company)
+        profile = get_knowledge_profile(ticker)
+        quality = QualityAssessment(confidence=0.65)
+        risk = RiskProfile(confidence=0.65)
+        durability = _compute_business_durability(quality, risk, [], profile)
+        frag = _score_expectation_fragility(val, [], company, durability)
         dims = ConvictionDimensions(
             evidence_quality=0.65, evidence_freshness=0.70,
             thesis_alignment=0.68, macro_uncertainty=0.30,
             valuation_certainty=0.60, estimate_dispersion=0.65,
             governance_risk=0.0, expectation_fragility=frag,
         )
-        asym = _score_expectation_asymmetry(val, [], company, dims)
+        asym = _score_expectation_asymmetry(val, [], company, dims, durability)
         import dataclasses
         dims2 = dataclasses.replace(dims, expectation_asymmetry=asym)
         score = _compose_score(dims2)
@@ -448,12 +468,19 @@ class TestPhase3QDBalancedFloor:
     """
 
     def _run_full(self, ticker: str, evidence_quality: float = 0.35) -> str:
-        """Run compute_conviction with realistic sparse-evidence inputs and return setup_label."""
+        """Run compute_conviction with realistic sparse-evidence inputs and return setup_label.
+
+        Passes the CompanyKnowledgeProfile so that _compute_business_durability() can
+        derive the correct durability_score from structured business-model facts.
+        This is the generalized approach — no ticker-specific overrides in the engine itself.
+        """
         from app.schemas import (
             ValuationView, MacroSensitivity, RiskProfile,
             MarketContext, QualityAssessment,
         )
-        company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
+        from app.services.company_knowledge import get_knowledge_profile
+        company  = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
+        profile  = get_knowledge_profile(ticker)  # may be None for unknown tickers
         valuation = ValuationView(valuation_stance="overpriced", confidence=0.45)
         macro     = MacroSensitivity(confidence=0.45)
         risk      = RiskProfile(confidence=0.45)
@@ -462,6 +489,7 @@ class TestPhase3QDBalancedFloor:
         result = compute_conviction(
             evidence=[], valuation=valuation, macro=macro,
             risk=risk, market=market, quality=quality, company=company,
+            profile=profile,
         )
         return result.setup_label
 

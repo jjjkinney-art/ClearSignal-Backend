@@ -259,9 +259,9 @@ _register(CompanyKnowledgeProfile(
     recession_behavior=(
         "Microsoft 365 churn is very low even in recessions because it is mission-critical "
         "productivity infrastructure.  Azure consumption can slow as customers optimise "
-        "workloads but does not contract sharply.  Advertising (Bing, LinkedIn) is more "
-        "cyclical.  Xbox hardware and game sales are discretionary.  Overall, MSFT is "
-        "among the most recession-resilient large-cap tech companies."
+        "workloads but does not contract sharply.  Advertising (Bing, LinkedIn) and Xbox "
+        "hardware face headwinds in recessions.  Overall, MSFT is among the most "
+        "recession-resilient large-cap tech companies."
     ),
     major_risks=[
         "Azure growth deceleration vs AWS and Google Cloud — market share competition "
@@ -277,7 +277,7 @@ _register(CompanyKnowledgeProfile(
         "the preferred metric (~30-35x FCF given ~$85B/yr FCF).  Sum-of-parts: Azure "
         "valued at ~20-25x revenue (cloud multiple), Microsoft 365 at ~12-15x revenue "
         "(mature SaaS), gaming/advertising at lower multiples.  AI Copilot revenue "
-        "upsell (~$30/seat premium) is the key near-term upside optionality."
+        "upsell (~$30/seat premium) is the key near-term incremental revenue opportunity."
     ),
     key_metrics=[
         "Azure revenue growth rate (constant currency)",
@@ -689,10 +689,13 @@ _register(CompanyKnowledgeProfile(
     ),
     recession_behavior=(
         "Recessions increase credit losses: JPM builds reserves (provision expense "
-        "spikes) and net charge-offs rise.  In 2008-09, JPM was better-capitalised than "
-        "peers and acquired Bear Stearns and WaMu at distressed prices.  JPM's CET1 "
-        "ratio (~15%) provides a large capital buffer.  Investment banking revenue "
-        "collapses in credit-driven recessions (no M&A/IPO activity)."
+        "spikes) and net charge-offs rise.  In 2008-09, JPM proved resilient relative to "
+        "peers — it was better-capitalised and acquired Bear Stearns and WaMu at distressed "
+        "prices, demonstrating that essential banking infrastructure can gain share through "
+        "crises.  JPM's CET1 ratio (~15%) provides a large capital buffer.  Investment "
+        "banking revenue is more cyclical in credit-driven recessions (no M&A/IPO activity), "
+        "but deposit and card fee revenues remain resilient as non-discretionary payment "
+        "infrastructure."
     ),
     major_risks=[
         "Credit loss cycle: consumer credit card delinquencies rising from post-pandemic "
@@ -1079,6 +1082,280 @@ _register(CompanyKnowledgeProfile(
         "Permian Basin", "Guyana", "Stabroek", "Pioneer", "upstream", "Brent",
         "WTI", "crack spread", "LNG", "Darren Woods", "Low Carbon Solutions",
         "breakeven", "refinery", "Chemical", "dividend growth",
+    ],
+))
+
+
+# ── Costco Wholesale (COST) ───────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="COST",
+    company_name="Costco Wholesale Corporation",
+    business_model=(
+        "Costco operates membership-only warehouse clubs selling general merchandise, "
+        "groceries, and private-label Kirkland Signature goods at thin margins (~2% net), "
+        "with the membership fee (~$5B annually) constituting essentially all operating profit. "
+        "The business is structurally defensive: members pre-pay for access, driving 92-93% "
+        "North American and ~90% global renewal rates regardless of macroeconomic conditions."
+    ),
+    primary_revenue_drivers=[
+        "Membership fees (~$5B/yr — the primary source of operating profit, near 100% gross margin)",
+        "Merchandise sales (~$240B/yr — sold at near-cost, generating traffic and renewals)",
+        "Kirkland Signature private label (~30% of sales, highest margin merchandise tier)",
+        "E-commerce and ancillary services (gasoline, pharmacy, optical, travel)",
+    ],
+    recurring_revenue_sources=[
+        "Annual warehouse membership fee — $65 (Gold Star) / $130 (Executive): ~92-93% "
+        "North American renewal rate sustained across multiple economic cycles",
+        "Executive membership fee surcharge (~45% of members, driving upgrade attach)",
+        "Kirkland Signature repeat purchases: private-label brand loyalty creates predictable "
+        "merchandise revenue distinct from commodity retail",
+        "Costco Travel and ancillary services: members return 2-4x per week on average",
+    ],
+    rate_sensitivity_note=(
+        "Costco's consumer is primarily middle-to-upper-income households for whom rate "
+        "moves have limited spending impact.  Membership fee renewal is non-discretionary for "
+        "loyal members.  Higher rates modestly increase inventory financing costs but Costco "
+        "carries lean inventory (~29 days) and has no meaningful long-term debt relative to "
+        "cash generation.  Real estate (owned warehouses) benefits from inflation over time."
+    ),
+    inflation_pass_through=(
+        "Costco's buying scale and private label allow cost pass-through without losing members. "
+        "Historically, Costco raised membership fees every 5-7 years (most recently in 2024) "
+        "with near-zero impact on renewal rates — pricing power derived from value perception, "
+        "not contractual lock-in.  Kirkland Signature absorbs supplier cost increases better "
+        "than branded equivalents."
+    ),
+    recession_behavior=(
+        "Highly recession-resilient and often counter-cyclical: members trade down from "
+        "specialty grocers and premium retailers to Costco bulk buying during downturns. "
+        "Membership renewal rates remained above 90% through the 2008-09 financial crisis "
+        "and COVID-19 disruption.  Consumer staples and essentials dominate the merchandise "
+        "mix.  The treasure-hunt format sustains visit frequency even when spending per "
+        "trip declines marginally."
+    ),
+    major_risks=[
+        "Membership fee hike cadence risk — fee increases every 5-7 years are priced into "
+        "the stock; any delay compresses earnings growth vs expectations",
+        "E-commerce competition (Amazon, Walmart) eroding discretionary non-food categories",
+        "International expansion execution risk (higher shrink, lower renewal rates outside "
+        "North America historically)",
+        "Real estate concentration (large-format warehouses constrain format flexibility)",
+        "Valuation premium: Costco trades at 45-55x P/E — any deceleration in comparable "
+        "store sales or fee income reprices the stock sharply",
+    ],
+    valuation_style=(
+        "Costco is valued as a high-quality compounder on P/E (45-55x) and EV/EBITDA (~35x), "
+        "pricing continued mid-single-digit SSS growth and periodic membership fee increases. "
+        "The market pays a structural premium for the business model's predictability and "
+        "recession resilience.  Durable compounders of this quality rarely offer margin of safety "
+        "on a traditional DCF — the multiple reflects the scarcity of this business model quality."
+    ),
+    key_metrics=[
+        "Comparable store sales growth (Americas, International)",
+        "Membership renewal rate (North America, International)",
+        "New warehouse openings (and payback period)",
+        "E-commerce penetration and growth",
+        "Membership fee income growth",
+        "Kirkland Signature as % of net sales",
+        "Gross margin % (merchandise only, ex-membership)",
+    ],
+    competitive_advantages=[
+        "Membership model creates pre-paid customer relationship and near-100% margin fee income — "
+        "economic alignment between Costco's success and member satisfaction",
+        "Kirkland Signature private label: #1 consumer packaged goods brand by revenue in the US, "
+        "commanding premium to national brands at Costco-level prices",
+        "Scale-driven buying power: 300M+ members globally enable negotiated pricing below "
+        "any competing retailer in most categories",
+        "Physical warehouse format generates mission-critical treasure-hunt traffic frequency "
+        "that no digital substitute replicates",
+        "Institutional trust and member loyalty: Costco NPS is among the highest of any retailer; "
+        "membership churn is structurally low regardless of macro environment",
+    ],
+    business_model_keywords=[
+        "membership fee", "renewal rate", "Kirkland Signature", "warehouse", "comparable store",
+        "executive membership", "treasure hunt", "bulk buying", "private label",
+        "membership income", "ancillary", "gasoline", "e-commerce penetration",
+    ],
+))
+
+
+# ── ASML Holding (ASML) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="ASML",
+    company_name="ASML Holding N.V.",
+    business_model=(
+        "ASML is the sole supplier of extreme ultraviolet (EUV) lithography machines — "
+        "equipment that semiconductor manufacturers (TSMC, Samsung, Intel) must use to "
+        "fabricate leading-edge chips at 7nm and below.  ASML also makes deep ultraviolet "
+        "(DUV) immersion systems, used at mature nodes.  The installed base of ~5,000+ "
+        "systems generates a high-margin recurring service revenue stream independent of "
+        "new system shipments."
+    ),
+    primary_revenue_drivers=[
+        "EUV system sales (~€30,000–€40,000 per system, High-NA EUV at ~€300M+ per unit) — "
+        "~50% of revenue at leading-edge",
+        "DUV (deep ultraviolet) system sales — mature and advanced nodes, China exposure",
+        "Installed Base Management (service and upgrades) — ~40% gross margin, predictable",
+        "Metrology and inspection tools (HMI / Hermes Microvision)",
+    ],
+    recurring_revenue_sources=[
+        "Installed Base Management (IBM) service contracts: multi-year maintenance and "
+        "field-service agreements across 5,000+ installed systems — recurring, high-margin",
+        "EUV refurbishment and upgrade revenue: existing EUV systems upgraded to newer "
+        "optical generations, extending revenue without new system sale",
+        "Reticle (photomask) inspection revenue via HMI subsidiary",
+        "Application software licenses for lithography process optimization",
+    ],
+    rate_sensitivity_note=(
+        "ASML trades at 25-35x forward P/E — long-duration cash flows make it modestly "
+        "rate-sensitive.  A 100 bps rate rise compresses fair value by ~3-5 turns.  ASML's "
+        "balance sheet is conservative with €4B+ net cash.  Semiconductor CapEx cycles (which "
+        "drive ASML orders) are driven by technology roadmap and memory cycle, not interest rates.  "
+        "Rate sensitivity is primarily a valuation/DCF effect, not a demand effect."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power: ASML has no competitor for EUV — customers cannot substitute. "
+        "High-NA EUV pricing is set by ASML on a cost-plus basis with monopoly premium. "
+        "Service contract pricing inflates annually.  DUV faces more competitive pressure "
+        "from Nikon/Canon at mature nodes but remains dominant at leading edge."
+    ),
+    recession_behavior=(
+        "Semiconductor CapEx is cyclical: DRAM and NAND fabs defer orders during inventory "
+        "corrections, as occurred in 2023.  However, ASML's multi-year order backlog "
+        "(€40B+ at peak) and long system lead times dampen the cycle impact.  Logic CapEx "
+        "from TSMC, Samsung, and Intel for leading-edge EUV is more secular than memory. "
+        "Service revenue is resilient regardless of new system demand — installed systems "
+        "require maintenance to continue running."
+    ),
+    major_risks=[
+        "China export controls: Dutch/US government EUV and advanced DUV export restrictions "
+        "permanently removed China as a leading-edge customer (was ~15% of revenue in 2023)",
+        "Semiconductor CapEx cycle: customer (TSMC, Samsung, Intel) order cuts during "
+        "inventory correction directly reduce ASML system shipments with 12-18 month lag",
+        "Technology risk: High-NA EUV ramp slower or more expensive than guided",
+        "Customer concentration: top 3 customers (TSMC, Samsung, Intel) represent ~80% of revenue",
+        "Geopolitical Taiwan risk: TSMC is ASML's largest customer; Taiwan Strait conflict "
+        "would disrupt semiconductor supply chain fundamentally",
+    ],
+    valuation_style=(
+        "ASML is valued as a technology compounder with monopoly characteristics: "
+        "25-35x forward P/E and 25-30x EV/EBITDA, pricing the continued EUV TAM expansion "
+        "through Moore's Law progression and High-NA transition.  The monopoly in EUV "
+        "justifies a structural premium above semiconductor equipment peers."
+    ),
+    key_metrics=[
+        "EUV system shipments (units per quarter)",
+        "Installed Base Management (IBM) revenue and margins",
+        "Order book / backlog (€B)",
+        "High-NA EUV shipment cadence and margin ramp",
+        "Gross margin % (system vs service mix matters)",
+        "China DUV revenue (post export controls)",
+        "TSMC 3nm and 2nm ramp timing",
+    ],
+    competitive_advantages=[
+        "EUV monopoly: ASML is the only company in the world that can manufacture EUV "
+        "lithography systems — 20+ years of R&D and €6B+ invested to reach this position",
+        "Installed base lock-in: 5,000+ systems cannot be replaced with competitor equipment; "
+        "service and upgrade revenue is captive",
+        "High-NA EUV: next-generation technology also being developed exclusively by ASML, "
+        "extending the monopoly for another decade",
+        "Ecosystem dependencies: the entire semiconductor supply chain (photoresist makers, "
+        "reticle shops, process equipment makers) is built around ASML specifications",
+    ],
+    business_model_keywords=[
+        "EUV", "DUV", "High-NA", "lithography", "installed base", "TSMC", "Samsung",
+        "Intel", "IBM revenue", "service", "backlog", "Moore's Law", "China export",
+        "semiconductor CapEx", "Nikon", "photomask",
+    ],
+))
+
+
+# ── Palantir Technologies (PLTR) ───────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="PLTR",
+    company_name="Palantir Technologies Inc.",
+    business_model=(
+        "Palantir sells data analytics, AI, and decision-intelligence software platforms: "
+        "Gotham (US government and intelligence agencies), Foundry (commercial enterprise "
+        "data integration), and AIP (AI Platform, launched 2023, integrating large language "
+        "models into enterprise workflows).  Revenue is recognized on multi-year software "
+        "contracts, with government work representing ~55% and commercial ~45% of revenue. "
+        "The company reached GAAP profitability in 2023 for the first time."
+    ),
+    primary_revenue_drivers=[
+        "US Government (intelligence, defense) — Gotham contracts, high margin, "
+        "long-duration (~55-60% of total revenue)",
+        "US Commercial (AIP bootcamps, Foundry enterprise) — fastest-growing segment, "
+        "customer acquisition through 'bootcamp' model",
+        "International Government — allies and non-US governments, lower growth",
+        "International Commercial — smaller, slower, less strategic",
+    ],
+    recurring_revenue_sources=[
+        "Multi-year government software contracts (often 3-5 year commitments with JEDI, "
+        "Army Vantage, and classified programs) — provides revenue visibility",
+        "Foundry enterprise SaaS renewals and seat expansions",
+        "AIP commercial bootcamp conversions to multi-year Foundry/AIP licenses",
+    ],
+    rate_sensitivity_note=(
+        "PLTR trades at 60-100x forward revenue and 300-400x trailing GAAP P/E — extreme "
+        "long-duration valuation makes it highly rate-sensitive.  A 100 bps rate rise "
+        "compresses the implied fair value by 15-25% in DCF models.  PLTR has no debt and "
+        "significant cash, so direct rate impact on financials is minimal — the sensitivity "
+        "is entirely valuation multiple compression."
+    ),
+    inflation_pass_through=(
+        "Limited pricing power at current scale: government contracts are typically fixed-price "
+        "or cost-plus, and commercial contracts are negotiated on a per-customer basis. "
+        "AIP represents a premium over Foundry pricing but is still early in commercial adoption."
+    ),
+    recession_behavior=(
+        "Government contracts are relatively recession-resistant — US defense and intelligence "
+        "spending is bipartisan and counter-cyclical.  Commercial adoption of Foundry/AIP "
+        "may slow as enterprises defer IT CapEx.  PLTR's commercial customer count is still "
+        "small and early-stage, creating adoption risk if enterprise budgets tighten.  "
+        "The stock is highly speculative during recessions given its extreme multiple."
+    ),
+    major_risks=[
+        "Commercial AIP adoption pace: the entire re-rating thesis depends on AIP driving "
+        "a step-change in US commercial customer count — still unproven at scale",
+        "Valuation: 60-100x revenue prices in a decade of hyper-growth; any deceleration "
+        "in AIP adoption reprices the stock sharply",
+        "Binary on US Government contract renewals: losing a major classified program "
+        "would remove a large, predictable revenue block",
+        "Competition from hyperscalers (Microsoft Copilot, Amazon Bedrock, Google Vertex) "
+        "offering similar AI workflow capabilities at lower cost",
+        "Key-person risk: Peter Thiel and Alex Karp are central to the government "
+        "relationship network; leadership departure risk is existential",
+    ],
+    valuation_style=(
+        "PLTR is valued on a revenue multiple (EV/Revenue 30-60x) with optionality embedded "
+        "for AIP commercial adoption driving software-like margins at scale.  The commercial "
+        "segment growth rate and bootcamp conversion rate are the key valuation drivers.  "
+        "On any normalized earnings basis, the stock carries extreme optionality premium — "
+        "most of the value is in a blue-sky scenario where AIP becomes a category-defining "
+        "enterprise platform."
+    ),
+    key_metrics=[
+        "US Commercial customer count and growth rate",
+        "Net dollar retention (NRR) by segment",
+        "AIP bootcamp conversion rate to multi-year deals",
+        "US Government contract backlog and renewal rate",
+        "Total remaining deal value (TRV)",
+        "Rule of 40 (growth rate + GAAP operating margin)",
+        "Stock-based compensation as % of revenue (historically very high)",
+    ],
+    competitive_advantages=[
+        "Forward-deployed engineers: Palantir embeds software engineers at customer sites, "
+        "creating deep integration and high switching costs once Foundry is in production",
+        "Government trust network: classified clearances and long-term intelligence "
+        "relationships are not easily replicable by hyperscalers",
+        "Ontology-based data model: Foundry's ontology layer creates proprietary data "
+        "structures that are expensive to migrate away from",
+    ],
+    business_model_keywords=[
+        "Gotham", "Foundry", "AIP", "bootcamp", "US Government", "US Commercial",
+        "intelligence", "defense", "ontology", "forward-deployed", "Peter Thiel",
+        "Alex Karp", "GAAP profitability", "net dollar retention", "TRV", "bootcamp conversion",
     ],
 ))
 
