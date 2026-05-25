@@ -324,3 +324,109 @@ class TestDirectionalStanceGovernance:
         warnings = self._run_governance(thesis)
         stance_sell_warnings = [w for w in warnings if "Sell" in w and "contradiction" in w]
         assert not stance_sell_warnings
+
+
+# ── 6. Quality Durability Offset ──────────────────────────────────────────────
+# Validates that quality-durable tickers resist speculative compression vs
+# narrative-dependent HE tickers when valuation is stretched.
+
+class TestQualityDurabilityOffset:
+    """
+    COST / MSFT / JPM at overpriced valuation should land in Balanced/Demanding,
+    NOT Speculative.  TSLA / PLTR / SNOW at same valuation should land lower.
+
+    All tests use minimal evidence (the offset must dominate over raw evidence
+    signal) and a constructive but not artificially perfect thesis_alignment.
+    """
+
+    def _run_fragility(self, ticker: str, stance: str = "overpriced") -> float:
+        from app.services.conviction_modeler import _score_expectation_fragility
+        from app.schemas import ValuationView
+        company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
+        val = ValuationView(valuation_stance=stance, confidence=0.65)
+        return _score_expectation_fragility(val, [], company)
+
+    def _run_asymmetry(self, ticker: str, stance: str = "overpriced") -> float:
+        from app.services.conviction_modeler import _score_expectation_asymmetry
+        from app.schemas import ValuationView
+        company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
+        val = ValuationView(valuation_stance=stance, confidence=0.65)
+        dims = ConvictionDimensions()
+        return _score_expectation_asymmetry(val, [], company, dims)
+
+    # ── Fragility ordering: QD < HE ──────────────────────────────────────────
+
+    def test_cost_fragility_lower_than_tsla(self):
+        """COST (QD) must have lower fragility than TSLA (HE) at overpriced valuation."""
+        assert self._run_fragility("COST") < self._run_fragility("TSLA")
+
+    def test_msft_fragility_lower_than_pltr(self):
+        assert self._run_fragility("MSFT") < self._run_fragility("PLTR")
+
+    def test_jpm_fragility_lower_than_snow(self):
+        assert self._run_fragility("JPM") < self._run_fragility("SNOW")
+
+    def test_asml_fragility_lower_than_nvda(self):
+        """ASML (QD only) must have lower fragility than NVDA (HE only)."""
+        assert self._run_fragility("ASML") < self._run_fragility("NVDA")
+
+    # ── Asymmetry ordering: QD < HE ──────────────────────────────────────────
+
+    def test_cost_asymmetry_lower_than_tsla(self):
+        assert self._run_asymmetry("COST") < self._run_asymmetry("TSLA")
+
+    def test_v_asymmetry_lower_than_pltr(self):
+        assert self._run_asymmetry("V") < self._run_asymmetry("PLTR")
+
+    # ── Absolute thresholds: QD names at overpriced must stay ≤ 0.50 fragility ──
+    # Ensures COST overpriced does not exceed the "fragile setup" fragility level.
+
+    def test_cost_overpriced_fragility_below_050(self):
+        assert self._run_fragility("COST") <= 0.50
+
+    def test_msft_overpriced_fragility_below_050(self):
+        assert self._run_fragility("MSFT") <= 0.50
+
+    def test_jpm_overpriced_fragility_below_050(self):
+        assert self._run_fragility("JPM") <= 0.50
+
+    # ── End-to-end: QD names should NOT produce Speculative label ────────────
+
+    def _run_e2e_label(self, ticker: str) -> str:
+        from app.services.conviction_modeler import (
+            _score_expectation_fragility, _score_expectation_asymmetry,
+            _compose_score, _confidence_band_label, _WEIGHTS,
+        )
+        from app.schemas import ValuationView
+        company = CompanyContext(ticker=ticker, company_name=f"{ticker} Inc.")
+        val = ValuationView(valuation_stance="overpriced", confidence=0.65)
+        frag = _score_expectation_fragility(val, [], company)
+        dims = ConvictionDimensions(
+            evidence_quality=0.65, evidence_freshness=0.70,
+            thesis_alignment=0.68, macro_uncertainty=0.30,
+            valuation_certainty=0.60, estimate_dispersion=0.65,
+            governance_risk=0.0, expectation_fragility=frag,
+        )
+        asym = _score_expectation_asymmetry(val, [], company, dims)
+        import dataclasses
+        dims2 = dataclasses.replace(dims, expectation_asymmetry=asym)
+        score = _compose_score(dims2)
+        return _confidence_band_label(score, dims2)
+
+    def test_cost_overpriced_not_speculative(self):
+        label = self._run_e2e_label("COST")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"COST should not be speculative at overpriced valuation, got: {label}"
+        )
+
+    def test_msft_overpriced_not_speculative(self):
+        label = self._run_e2e_label("MSFT")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"MSFT should not be speculative at overpriced valuation, got: {label}"
+        )
+
+    def test_jpm_overpriced_not_speculative(self):
+        label = self._run_e2e_label("JPM")
+        assert label not in ("speculative setup", "insufficient conviction"), (
+            f"JPM should not be speculative at overpriced valuation, got: {label}"
+        )

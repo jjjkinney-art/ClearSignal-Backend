@@ -244,6 +244,60 @@ _HIGH_EXPECTATION_TICKERS = frozenset({
     "CAVA", "CELH", "DUOL", "AI", "SOUN",
 })
 
+# ── Quality-durable tickers ───────────────────────────────────────────────────
+# High-quality recurring-economics businesses whose premium valuations reflect
+# durable structural moats — not fragile narrative or optionality.  These names
+# should resist speculative compression even when multiples are elevated, because
+# the BUSINESS does not require "flawless execution" in the way that TSLA or PLTR
+# do.  The distinction:
+#
+#   COST membership renewal ~92% → execution asymmetry is LOW
+#   MSFT Office/Azure subscriptions → structural recurring base, not binary optionality
+#   JPM fee-based capital markets + NIM spread → not execution-dependent
+#
+# vs.
+#   TSLA FSD / Optimus → genuinely binary optionality
+#   PLTR commercial GAAP path → narrative-dependent, execution-binary
+#   SNOW consumption → hyper-competitive, compressed moat
+#
+# The offset is applied directly inside _score_expectation_fragility and
+# _score_expectation_asymmetry — reducing raw fragility/asymmetry scores before
+# the multiplier pipeline fires.  This preserves the correct pipeline architecture;
+# it does NOT add a separate post-score boost (which would mask real signal).
+
+_QUALITY_DURABLE_TICKERS = frozenset({
+    # Consumer compounders with near-certain recurring revenue
+    "COST", "WMT",
+    # Mega-cap technology with structural subscription economics
+    "MSFT", "AAPL",
+    # Payment networks — structural recurring fee economics
+    "V", "MA",
+    # Semiconductor equipment duopoly — non-cyclical long-order-book
+    "ASML",
+    # Advertising platforms with structural ad-market moat
+    "META", "GOOGL", "GOOG",
+    # Cloud + marketplace with deep lock-in economics
+    "AMZN",
+    # Financial compounders with durable fee/NIM base
+    "JPM", "BLK", "MS",
+    # Healthcare compounders with durable patent-protected GLP-1 moat
+    "LLY", "NVO",
+    # Streaming monopoly with global pricing power
+    "NFLX",
+    # Defence/aerospace with long-contract structural backlog
+    "LMT",
+})
+
+# Fragility reduction for quality-durable names (applied as a subtraction from
+# the raw fragility score BEFORE the multiplier fires).
+# Calibrated so that COST at "overpriced" valuation reads ~0.42 fragility
+# rather than ~0.56 — landing in "Demanding" rather than "Fragile/Speculative".
+_QUALITY_DURABILITY_FRAGILITY_OFFSET = 0.14
+
+# Asymmetry reduction for quality-durable names — recurring businesses have
+# structurally lower execution binary-risk than optionality-dependent names.
+_QUALITY_DURABILITY_ASYMMETRY_OFFSET = 0.10
+
 
 # ── Data containers ───────────────────────────────────────────────────────────
 
@@ -621,6 +675,22 @@ def _score_expectation_fragility(
     if ticker in _HIGH_EXPECTATION_TICKERS:
         base += 0.20
 
+    # ── Quality durability offset (Phase 2 pre-launch calibration) ────────────
+    # High-quality recurring-economics businesses resist speculative compression.
+    # Premium multiples on COST, MSFT, V, JPM etc. reflect durable moat quality,
+    # NOT fragile narrative dependency.  This offset distinguishes:
+    #   "high expectations on elite durable business" (COST, MSFT, ASML)
+    # from:
+    #   "fragile narrative-dependent speculation" (TSLA, PLTR, SNOW)
+    #
+    # Net effect for a QD ticker with overpriced valuation:
+    #   COST: base(0.28) + overpriced(0.28) - QD_offset(0.14) = 0.42 → Demanding
+    #         vs. without offset: 0.56 → Fragile/Speculative
+    # For tickers that are BOTH HE and QD (MSFT, GOOGL, AMZN):
+    #   net = +0.20(HE) - 0.14(QD) = +0.06 → mild elevation (appropriate)
+    if ticker in _QUALITY_DURABLE_TICKERS:
+        base = max(0.05, base - _QUALITY_DURABILITY_FRAGILITY_OFFSET)
+
     return round(min(0.95, max(0.05, base)), 4)
 
 
@@ -655,6 +725,13 @@ def _score_expectation_asymmetry(
     ticker = (company.ticker or "").upper()
     if ticker in _HIGH_EXPECTATION_TICKERS:
         base += 0.20
+
+    # Quality durability offset — recurring businesses have structurally lower
+    # execution binary-risk.  COST membership renewal is NOT a binary outcome.
+    # MSFT O365 churn is NOT fragile-execution-dependent.  Distinct from HE names
+    # like TSLA (FSD binary) or PLTR (commercial scaling binary).
+    if ticker in _QUALITY_DURABLE_TICKERS:
+        base = max(0.05, base - _QUALITY_DURABILITY_ASYMMETRY_OFFSET)
 
     # Evidence text signals
     ev_text = " ".join(
