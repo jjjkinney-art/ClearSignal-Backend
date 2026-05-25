@@ -1144,6 +1144,36 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Analysis Foundation (Phase 2 — user-facing structured provenance) ─────
+    # Clean, institutional content for the Analysis Foundation collapsible section.
+    # No GAP_* codes, no internal telemetry labels, no dimension field names.
+    # Replaces the raw confidence_reasoning wall in the production UI.
+    # The raw confidence_reasoning (with diagnostic codes) is shown only in DEV mode.
+
+    analysis_foundation_evidence: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Categories of evidence that contributed to the analysis. "
+            "Human-readable — e.g. 'valuation multiple context', 'earnings commentary'. "
+            "No internal labels."
+        ),
+    )
+    analysis_foundation_constraints: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Current constraints on the analysis — what is missing or thin. "
+            "Phrased as informational context, not error codes or internal taxonomy. "
+            "e.g. 'limited recent earnings data', 'incomplete analyst estimate coverage'."
+        ),
+    )
+    analysis_foundation_sources: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Data providers reflected in the evidence pool. "
+            "e.g. 'SEC filings', 'Financial Modeling Prep', 'earnings transcripts'."
+        ),
+    )
+
     # ── Thesis persistence schema (Live Intelligence phase) ───────────────────
     # These fields support institutional surveillance and thesis versioning.
     # No database required — populated at generation time; consumed by the

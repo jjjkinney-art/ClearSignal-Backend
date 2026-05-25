@@ -290,13 +290,19 @@ _QUALITY_DURABLE_TICKERS = frozenset({
 
 # Fragility reduction for quality-durable names (applied as a subtraction from
 # the raw fragility score BEFORE the multiplier fires).
-# Calibrated so that COST at "overpriced" valuation reads ~0.42 fragility
-# rather than ~0.56 — landing in "Demanding" rather than "Fragile/Speculative".
-_QUALITY_DURABILITY_FRAGILITY_OFFSET = 0.14
+#
+# Phase 2 recalibration (increased from 0.14):
+# Target: COST at "overpriced" valuation → frag ≤ 0.36 (below multiplier threshold)
+#   base(0.28) + overpriced(0.28) - QD_offset(0.20) = 0.36 → no multiplier penalty
+#   → score stays in "Balanced/Demanding" territory, NOT "Fragile/Speculative"
+# Tickers that are BOTH HE and QD (MSFT, GOOGL, AMZN):
+#   net = +0.20(HE) - 0.20(QD) = 0.00 net → raw base only (mild premium appropriate)
+_QUALITY_DURABILITY_FRAGILITY_OFFSET = 0.20
 
 # Asymmetry reduction for quality-durable names — recurring businesses have
 # structurally lower execution binary-risk than optionality-dependent names.
-_QUALITY_DURABILITY_ASYMMETRY_OFFSET = 0.10
+# COST membership renewal is not binary. MSFT O365 churn is not binary.
+_QUALITY_DURABILITY_ASYMMETRY_OFFSET = 0.12
 
 
 # ── Data containers ───────────────────────────────────────────────────────────
@@ -347,6 +353,13 @@ class ConvictionResult:
     # ── Directional stance (pre-launch product refinement) ────────────────────
     directional_stance:           str   = "Hold"
     directional_stance_reasoning: str   = ""
+    # ── Analysis Foundation (Phase 2 — user-facing structured provenance) ─────
+    # Clean, institutional-quality content for the Analysis Foundation section.
+    # No internal telemetry labels (no GAP_* codes, no dimension names).
+    # Replaces the raw confidence_reasoning wall in the production UI.
+    analysis_foundation_evidence:    List[str] = dataclasses.field(default_factory=list)
+    analysis_foundation_constraints: List[str] = dataclasses.field(default_factory=list)
+    analysis_foundation_sources:     List[str] = dataclasses.field(default_factory=list)
 
 
 # ── Timestamp parser (reuse from calibrator pattern) ─────────────────────────
@@ -1168,6 +1181,122 @@ def _dominant_gap(dims: ConvictionDimensions) -> str:
     return min(effective, key=effective.get)
 
 
+# ── Analysis Foundation builder ──────────────────────────────────────────────
+
+def _build_analysis_foundation(
+    evidence:   "List[RetrievedEvidence]",
+    dims:       "ConvictionDimensions",
+    company:    "CompanyContext",
+) -> Tuple[List[str], List[str], List[str]]:
+    """Build structured Analysis Foundation content for the production UI.
+
+    Returns (evidence_used, constraints, sources) — all human-readable,
+    no internal telemetry labels (no GAP_* codes, no dimension field names).
+
+    Design rules
+    ------------
+    - evidence_used : categories of evidence that contributed to the analysis.
+    - constraints   : what is missing or thin — phrased as informational context,
+                      not error codes or internal taxonomy.
+    - sources       : data providers that were reflected in the evidence pool.
+
+    These three lists are rendered directly in the Analysis Foundation collapsible
+    section in the production frontend.  The raw confidence_reasoning (with its
+    GAP_* diagnostic codes) is shown only in DEV mode.
+    """
+    ev_used:     List[str] = []
+    constraints: List[str] = []
+    sources:     List[str] = []
+
+    # ── Build search corpus from evidence titles + source names ───────────────
+    ev_corpus = " ".join(
+        f"{ev.source} {ev.title}" for ev in evidence
+    ).lower()
+
+    # ── Evidence categories (what was found) ──────────────────────────────────
+    has_valuation = any(kw in ev_corpus for kw in (
+        "ratios-ttm", "key-metrics-ttm", "pe ratio", "ev/ebitda",
+        "valuation_ratios", "fmp-ratios", "price-to",
+    ))
+    has_analyst = any(kw in ev_corpus for kw in (
+        "analyst-estimates", "price-target", "consensus",
+    ))
+    has_filing = any(kw in ev_corpus for kw in (
+        "10-k", "10-q", "8-k", "sec", "edgar",
+    ))
+    has_earnings = any(kw in ev_corpus for kw in _EARNINGS_KEYWORDS)
+    has_macro = any(kw in ev_corpus for kw in (
+        "macro", "rate", "inflation", "fed", "yield", "monetary", "economic",
+    ))
+    has_competitive = any(kw in ev_corpus for kw in (
+        "competitive", "market share", "peer", "industry", "competitive positioning",
+    ))
+    has_recurring = any(kw in ev_corpus for kw in (
+        "membership", "subscription", "recurring", "renewal", "retention",
+    ))
+    has_ir = any(kw in ev_corpus for kw in (
+        "investor relations", "ir ", "annual report",
+    ))
+
+    if has_valuation:
+        ev_used.append("valuation multiple context")
+        sources.append("Financial Modeling Prep")
+    if has_analyst:
+        ev_used.append("analyst estimate consensus")
+        sources.append("analyst consensus feeds")
+    if has_earnings:
+        ev_used.append("earnings commentary")
+        sources.append("earnings transcripts")
+    if has_recurring:
+        ev_used.append("recurring revenue mechanics")
+    if has_macro:
+        ev_used.append("macro rate sensitivity")
+        sources.append("Federal Reserve data")
+    if has_competitive:
+        ev_used.append("competitive positioning")
+    if dims.evidence_quality >= 0.60 or len(evidence) >= 5:
+        ev_used.append("margin and profitability trajectory")
+    if has_filing:
+        ev_used.append("SEC filing disclosures")
+        sources.append("SEC filings")
+    if has_ir:
+        sources.append("company investor relations")
+
+    # Always include IR as a potential source for major companies
+    ticker = (company.ticker or "").upper()
+    if ticker and "company investor relations" not in sources:
+        sources.append("company investor relations")
+
+    if not ev_used:
+        ev_used = ["limited evidence available for this analysis"]
+
+    # ── Constraints (what is absent or thin) ─────────────────────────────────
+    if len(evidence) < 3:
+        constraints.append("limited recent evidence depth")
+
+    if not has_earnings:
+        constraints.append("limited recent earnings data")
+
+    if not has_analyst:
+        constraints.append("incomplete analyst estimate coverage")
+
+    if not has_valuation:
+        constraints.append("incomplete valuation anchor data")
+
+    if dims.evidence_freshness < 0.45:
+        constraints.append("stale management commentary")
+
+    if not has_filing and len(evidence) < 5:
+        constraints.append("SEC filing evidence limited")
+
+    # ── Deduplicate (preserve insertion order) ────────────────────────────────
+    ev_used     = list(dict.fromkeys(ev_used))
+    constraints = list(dict.fromkeys(constraints))
+    sources     = list(dict.fromkeys(sources))
+
+    return ev_used, constraints, sources
+
+
 # ── Reasoning builder ─────────────────────────────────────────────────────────
 
 _DRIVER_SENTENCES = {
@@ -1814,6 +1943,42 @@ def compute_conviction(
     # ── Semantic setup label ──────────────────────────────────────────────────
     setup_label = _confidence_band_label(final_score, dims)
 
+    # ── Quality-durable setup label floor (Phase 2) ───────────────────────────
+    # CRITICAL SEPARATION: confidence_score (0–1) and setup_label are INDEPENDENT signals.
+    #
+    #   confidence_score → reflects evidence depth and uncertainty → CAN be low for COST
+    #   setup_label      → reflects the BUSINESS SETUP QUALITY    → should NOT be "speculative"
+    #                      for elite recurring-economics businesses just because evidence is sparse.
+    #
+    # "Speculative" is reserved for: narrative-dependent, pre-revenue, binary-optionality-driven,
+    # or genuinely weakly-proven setups (TSLA Optimus, PLTR commercial, SNOW platform adoption).
+    # NOT for: COST at elevated P/E with thin evidence, MSFT with sparse analyst coverage.
+    #
+    # Hard floor:
+    #   "speculative setup" / "insufficient conviction" → floor to "expectation-sensitive"
+    #
+    # Soft floor (sparse evidence only — NOT real deterioration):
+    #   "fragile setup" with evidence_quality < 0.40 → floor to "expectation-sensitive"
+    #   (Fragile is allowed when evidence quality is HIGH and reveals actual problems.)
+    if _ticker_up in _QUALITY_DURABLE_TICKERS:
+        if setup_label in ("speculative setup", "insufficient conviction"):
+            setup_label = "expectation-sensitive"
+            _logger.debug(
+                "[qd_label_floor] ticker=%s speculative→expectation-sensitive "
+                "final_score=%.3f evidence_quality=%.3f",
+                _ticker_up, final_score, dims.evidence_quality,
+            )
+        elif setup_label == "fragile setup" and dims.evidence_quality < 0.40:
+            # Sparse evidence alone ≠ fragile business.
+            # Fragile label for QD tickers requires high evidence quality that reveals
+            # genuine structural problems — not absence of data.
+            setup_label = "expectation-sensitive"
+            _logger.debug(
+                "[qd_label_floor] ticker=%s fragile→expectation-sensitive "
+                "reason=sparse_evidence evidence_quality=%.3f",
+                _ticker_up, dims.evidence_quality,
+            )
+
     # ── Directional stance ────────────────────────────────────────────────────
     _stance, _stance_reasoning = _compute_directional_stance(
         final_score, dims, setup_label, company
@@ -1825,6 +1990,11 @@ def compute_conviction(
         evidence=evidence, valuation=valuation,
     )
     what_increases = _build_what_increases_conviction(dims, company, uncertainty_drivers)
+
+    # ── Analysis Foundation (user-facing structured provenance) ───────────────
+    _af_evidence, _af_constraints, _af_sources = _build_analysis_foundation(
+        evidence, dims, company
+    )
 
     # ── Structured telemetry ──────────────────────────────────────────────────
     if should_compress:
@@ -1853,15 +2023,18 @@ def compute_conviction(
     )
 
     return ConvictionResult(
-        final_score                  = final_score,
-        dimensions                   = dims,
-        confidence_reasoning         = reasoning,
-        what_increases_conviction    = what_increases,
-        setup_label                  = setup_label,
-        compression_applied          = should_compress,
-        compression_reasons          = compression_reasons,
-        fragility_multiplier_applied = frag_mult,
-        asymmetry_multiplier_applied = asym_mult,
-        directional_stance           = _stance,
-        directional_stance_reasoning = _stance_reasoning,
+        final_score                       = final_score,
+        dimensions                        = dims,
+        confidence_reasoning              = reasoning,
+        what_increases_conviction         = what_increases,
+        setup_label                       = setup_label,
+        compression_applied               = should_compress,
+        compression_reasons               = compression_reasons,
+        fragility_multiplier_applied      = frag_mult,
+        asymmetry_multiplier_applied      = asym_mult,
+        directional_stance                = _stance,
+        directional_stance_reasoning      = _stance_reasoning,
+        analysis_foundation_evidence      = _af_evidence,
+        analysis_foundation_constraints   = _af_constraints,
+        analysis_foundation_sources       = _af_sources,
     )

@@ -2542,14 +2542,18 @@ def synthesize_thesis(
             conviction.setup_label,
         )
 
-        # Always override reasoning and add what_increases_conviction.
+        # Always override reasoning — conviction modeler is authoritative.
+        # Phase 2: DO NOT append _cov_gaps (GAP_SPARSE | GAP_VALUATION | etc.) to
+        # confidence_reasoning — these are internal telemetry labels, not user content.
+        # Gap diagnostics remain available in the server logs ([CONFIDENCE_AUDIT]) and
+        # the DEV debug panel via analysis_foundation_constraints (clean human-readable).
         thesis.confidence_reasoning = conviction.confidence_reasoning
+        # Log gaps for DEV/ops observability without exposing them to users
         if _cov_gaps:
-            gap_suffix = " | Coverage gaps: " + "; ".join(_cov_gaps)
-            existing = thesis.confidence_reasoning or ""
-            if existing and not existing.endswith("."):
-                existing += "."
-            thesis.confidence_reasoning = existing + gap_suffix
+            logger.debug(
+                "[coverage_gaps] ticker=%s gaps=%s",
+                _ticker_audit, "; ".join(_cov_gaps),
+            )
 
         # Stamp new fields — conviction modeler is authoritative for what_increases_conviction too
         thesis.what_increases_conviction = conviction.what_increases_conviction
@@ -2565,6 +2569,12 @@ def synthesize_thesis(
         thesis.asymmetry_multiplier_applied = conviction.asymmetry_multiplier_applied
         thesis.directional_stance = conviction.directional_stance
         thesis.directional_stance_reasoning = conviction.directional_stance_reasoning
+
+        # ── Phase 2: Stamp Analysis Foundation structured provenance ──────────
+        # User-facing structured content — no internal labels or telemetry.
+        thesis.analysis_foundation_evidence    = conviction.analysis_foundation_evidence
+        thesis.analysis_foundation_constraints = conviction.analysis_foundation_constraints
+        thesis.analysis_foundation_sources     = conviction.analysis_foundation_sources
 
         # ── [CONFIDENCE_PIPELINE] end-to-end telemetry ───────────────────────
         # Traces raw→fragility→asymmetry→compression→final for dispersion audits.
@@ -2681,12 +2691,12 @@ def synthesize_thesis(
                     "the analytical framework is directionally intact but open items "
                     "prevent a high-confidence assignment at this stage."
                 )
+            # Phase 2: gaps are logged for ops observability, NOT appended to user-visible reasoning.
             if _cov_gaps:
-                gap_suffix = " | Coverage gaps: " + "; ".join(_cov_gaps)
-                existing = thesis.confidence_reasoning or ""
-                if existing and not existing.endswith("."):
-                    existing += "."
-                thesis.confidence_reasoning = existing + gap_suffix
+                logger.debug(
+                    "[coverage_gaps_fallback] ticker=%s gaps=%s",
+                    _ticker_fb, "; ".join(_cov_gaps),
+                )
         except Exception as inner_exc:
             logger.warning(
                 "[FALLBACK_REASONING_TRIGGER] ticker=%s path=inner_fallback_exception "
