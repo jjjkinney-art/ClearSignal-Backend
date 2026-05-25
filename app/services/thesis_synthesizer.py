@@ -1011,20 +1011,32 @@ GOOD: "Rate duration compression on long-dated FCF multiples" \
 GOOD: "China tariff impact on iPhone supply chain economics" \
 BAD: "Multiple factors are influencing the investment case." \
 This should be the answer to: "If you had to name ONE thing that matters most right now, what is it?"
-  "conclusion"              : string — institutional-quality 2-sentence conclusion. \
-MUST name specific revenue drivers, risks, and valuation factors. Must NOT contain generic phrases. \
-MANDATORY FULCRUM RESTATEMENT: the conclusion MUST do ONE of the following: \
-(a) Restate the fulcrum from core_market_debate — "The debate reduces to whether X holds." \
-(b) Identify what must happen from here — "The thesis works if X — the question is timing." \
-(c) Explain the mis/repricing — "At current multiples, the market is underpricing X." \
-FORBIDDEN: Generic summaries. Opening with "[Ticker]'s [noun phrase] provides/supports/enables". \
-Restating what was already said in bull_thesis or bear_thesis. "The company faces headwinds." \
-GOOD: "The debate reduces to whether Cloud margin expansion outpaces Search deceleration — \
-if it does, the stock re-rates; if it does not, the multiple compression has further to run." \
-GOOD: "The thesis requires Services ARR to sustain double-digit growth into rising rates — \
-the multiple already assumes it; the risk is when it does not arrive on schedule." \
+  "conclusion"              : string — decision-compressive PM-grade conclusion. HARD LIMIT: 2 sentences. \
+The first sentence MUST state the directional positioning call — the bottom-line view — \
+not a description of what was discussed. Think: what would a PM write in the final line of \
+a trade recommendation memo? \
+MANDATORY STRUCTURE: \
+  Sentence 1 → Positioning call with the operative condition or expectation context. \
+  Sentence 2 → The single most important risk or fulcrum that could change the view. \
+REQUIRED PATTERNS for sentence 1 (use one — do not blend them): \
+(a) Expectation structure — "Current pricing already assumes X; the setup only works if Y." \
+(b) Expectation mis-pricing — "At current multiples, the market is underpricing X — the thesis holds if Y." \
+(c) Thesis condition — "The thesis works if X — the question is whether Y arrives on schedule." \
+(d) Setup quality — "The setup is constructive if X holds; the risk is the market has already priced it." \
+FORBIDDEN: Opening with "[Ticker]'s [noun phrase] provides/supports/enables". \
+Generic summaries. Restating what was said in bull_thesis or bear_thesis. \
+Any sentence that begins "The company remains..." or "The business has..." \
+GOOD (decision-compressive): \
+"Current pricing already assumes continued Cloud margin expansion — the setup only works if that holds. \
+The bear case is not valuation; it is whether Search deceleration becomes structural before Cloud offsets it." \
+"The thesis works if Services ARR sustains double-digit growth into rising rates — the multiple already assumes it. \
+The risk is not the direction of the business; it is when the expectation gap closes." \
+"At 55x, the market is paying for membership durability, not near-term growth — the setup is constructive if \
+renewal rates hold and margin expansion continues. The question is whether the multiple can compress without \
+an earnings miss triggering the exit." \
 BAD: "The company remains well-positioned despite headwinds." \
-BAD: "[Ticker]'s strong fundamentals support a positive outlook going forward." """
+BAD: "[Ticker]'s strong fundamentals support a positive outlook going forward." \
+BAD: "Overall, the investment thesis is balanced with risks and opportunities on both sides." """
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────
@@ -1455,6 +1467,9 @@ CADENCE_VARIATION — specific requirements:
 - bull_thesis MUST contain at least one sentence ≤ 12 words (forces compression somewhere).
 - bear_thesis MUST NOT end with a conjunctive clause ("which means...", "and therefore...").
 - conclusion MUST NOT begin with "[Ticker]'s [noun phrase] provides/supports/sustains/enables..."
+- conclusion MUST begin with the directional positioning call — the bottom-line view — not a mechanism description.
+  WRONG: "MSFT benefits from AI tailwinds that support the premium multiple."
+  RIGHT: "Current pricing already assumes Copilot attach rate materialises — the setup only works if enterprise adoption holds through FY26."
 - A section CAN end with a blunt one-liner if the point is already made.
 - Sections should feel uneven — not every section builds to a tidy multi-clause conclusion.
 GOOD CADENCE EXAMPLES (study the rhythm — varied lengths, abrupt endings):
