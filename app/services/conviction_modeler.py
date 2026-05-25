@@ -283,6 +283,82 @@ _DURABILITY_MAX_ASYMMETRY_OFFSET  = 0.12
 _DURABILITY_FLOOR_THRESHOLD = 0.65
 
 
+# ── Setup archetype inference constants ───────────────────────────────────────
+#
+# Archetypes are INFERRED from durability_score — NOT from ticker identity.
+# They encode: "what minimum scoring does this business class deserve even
+# when literal evidence items are sparse?"
+#
+# The CompanyKnowledgeProfile encodes business model facts (recurring revenue
+# structure, recession behavior, moat depth) as structured evidence.  For a
+# durable compounder, the profile itself provides substantial conviction about
+# the business setup even when real-time evidence items are absent or thin.
+# These floors represent that information content of the profile.
+#
+# Archetype tiers (by durability_score):
+#
+#   durable_compounder (≥ 0.65):
+#     Examples: COST, MSFT, JPM, ASML, V, MA, GOOGL, META
+#     Profile knowledge → inherently well-understood recurring economics
+#     evidence_quality floor:   0.48  (profile knowledge = base evidence)
+#     evidence_freshness floor: 0.30  (business model stability)
+#     thesis_alignment floor:   0.56  (structural conviction from known moat)
+#     Expected score boost: ~+0.14 over raw sparse-evidence baseline
+#     Target confidence range: 45–60%
+#
+#   expectation_sensitive_quality (0.55–0.65):
+#     Examples: NVDA, AAPL, AMZN — quality but CapEx/growth-rate dependent
+#     evidence_quality floor:   0.32
+#     evidence_freshness floor: 0.22
+#     thesis_alignment floor:   0.52  (ta ≥ 0.50 → "fragile setup" not speculative)
+#     Expected score boost: ~+0.07 over raw sparse-evidence baseline
+#     Target label: Fragile (not Speculative)
+#
+#   narrative_fragile / speculative_narrative (< 0.55):
+#     Examples: TSLA, PLTR, SNOW — narrative-dependent, binary execution
+#     No floors applied: standard sparse-evidence behavior
+#     "Speculative setup" is the correct label for these at sparse evidence.
+#
+# Critical design constraint: _DURABLE_EQ_FLOOR must be < 0.50 so the label
+# floor condition (evidence_quality < 0.50 → "mixed evidence" → "monitoring required")
+# still fires for durable compounders with sparse evidence.
+
+_ARCHETYPE_DURABLE_THRESHOLD   = 0.65   # same as _DURABILITY_FLOOR_THRESHOLD
+_ARCHETYPE_QUALITY_THRESHOLD   = 0.55   # between durable and narrative tiers
+
+# Durable compounder floors
+_DURABLE_EQ_FLOOR = 0.48   # evidence_quality — MUST stay < 0.50 (see label floor constraint above)
+_DURABLE_EF_FLOOR = 0.30   # evidence_freshness
+_DURABLE_TA_FLOOR = 0.56   # thesis_alignment
+
+# Expectation-sensitive quality floors
+_QSEN_EQ_FLOOR = 0.32      # evidence_quality
+_QSEN_EF_FLOOR = 0.22      # evidence_freshness
+_QSEN_TA_FLOOR = 0.52      # thesis_alignment — ta ≥ 0.50 lifts Tier 4 label to "fragile setup"
+
+
+def _infer_archetype_floors(
+    durability_score: float,
+) -> Tuple[float, float, float]:
+    """Infer evidence-quality/freshness/thesis-alignment floors from durability_score.
+
+    Returns (eq_floor, ef_floor, ta_floor).
+
+    Archetypes are inferred from the computed durability_score — no ticker identity.
+    Any business that accumulates sufficient structural durability signals through
+    profile + agent + evidence automatically qualifies for its archetype tier.
+
+    Floors activate only when raw dim values fall below them (sparse evidence).
+    With rich evidence, raw values exceed floors → no effect.
+    """
+    if durability_score >= _ARCHETYPE_DURABLE_THRESHOLD:
+        return _DURABLE_EQ_FLOOR, _DURABLE_EF_FLOOR, _DURABLE_TA_FLOOR
+    elif durability_score >= _ARCHETYPE_QUALITY_THRESHOLD:
+        return _QSEN_EQ_FLOOR, _QSEN_EF_FLOOR, _QSEN_TA_FLOOR
+    else:
+        return 0.0, 0.0, 0.0  # narrative_fragile / speculative_narrative — no floors
+
+
 # ── Data containers ───────────────────────────────────────────────────────────
 
 @dataclasses.dataclass
@@ -2029,6 +2105,40 @@ def compute_conviction(
         expectation_fragility = _score_expectation_fragility(
                                     valuation, evidence, company, durability_score),
     )
+
+    # ── Archetype-informed scoring floors (sparse evidence protection) ─────────
+    # Archetype is inferred from durability_score — NOT from ticker identity.
+    # For durable compounders, the CompanyKnowledgeProfile encodes business model
+    # facts that provide structural conviction even when literal evidence is sparse.
+    # The floor represents: "this profile knowledge is itself a form of evidence."
+    #
+    # Design constraint: _DURABLE_EQ_FLOOR < 0.50 ensures the QD label floor
+    # condition (evidence_quality < 0.50) still fires for sparse-evidence durable
+    # businesses, lifting "mixed evidence" → "monitoring required" (Balanced tier).
+    #
+    # Effect on target tickers (sparse evidence, overpriced valuation):
+    #   durable_compounder:           score ~32% → ~47%  label: Balanced ✓
+    #   expectation_sensitive_quality: score ~32% → ~40%  label: Fragile  ✓
+    #   narrative_fragile:             score ~31-33%        label: Speculative ✓
+    _eq_raw = dims_base.evidence_quality
+    _ef_raw = dims_base.evidence_freshness
+    _ta_raw = dims_base.thesis_alignment
+    _eq_floor, _ef_floor, _ta_floor = _infer_archetype_floors(durability_score)
+    if _eq_floor > 0.0 or _ta_floor > 0.0:
+        dims_base = dataclasses.replace(
+            dims_base,
+            evidence_quality   = max(_eq_raw, _eq_floor),
+            evidence_freshness = max(_ef_raw, _ef_floor),
+            thesis_alignment   = max(_ta_raw, _ta_floor),
+        )
+        _logger.debug(
+            "[archetype_floors] ticker=%s durability=%.3f "
+            "eq %.3f→%.3f  ef %.3f→%.3f  ta %.3f→%.3f",
+            company.ticker or "UNKNOWN", durability_score,
+            _eq_raw, dims_base.evidence_quality,
+            _ef_raw, dims_base.evidence_freshness,
+            _ta_raw, dims_base.thesis_alignment,
+        )
 
     # ── Pass 2: Score expectation_asymmetry (depends on dims_base fields) ────
     asymmetry_score = _score_expectation_asymmetry(

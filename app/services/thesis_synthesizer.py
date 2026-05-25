@@ -77,7 +77,7 @@ from .signal_ranker import (
 )
 from .thesis_polisher import polish_thesis
 from .confidence_calibrator import compute_evidence_coverage_gaps
-from .conviction_modeler import compute_conviction
+from .conviction_modeler import compute_conviction, _compute_business_durability, _ARCHETYPE_DURABLE_THRESHOLD, _ARCHETYPE_QUALITY_THRESHOLD
 from .freshness_analyzer import analyze_evidence_freshness
 
 logger = logging.getLogger(__name__)
@@ -397,17 +397,34 @@ BAD examples (rejected):
 SECTION DEPTH HIERARCHY — driven by the debate type:
 {depth_directive}
 
-CONCLUSION REQUIREMENT — positioning-first, not mechanism-first:
-The conclusion MUST open with the bottom-line positioning view or expectation structure.
-NOT with the mechanism. NOT with "The thesis requires..." or "The business needs...".
-REQUIRED:
-  Sentence 1 → Positioning or expectation structure: what the market is pricing vs. what is defensible.
-  Sentence 2 → The fulcrum or exit risk: the specific thing that would change the view.
-PATTERNS:
-  "[Business] remains [quality], but the market already prices in [expectation] — setup works only if [condition]."
-  "At ~[X]x, the market is paying for [assumption] — the risk is whether [Y] holds."
-  "Current pricing already assumes [X]; the question is whether [Y] delivers on schedule."
-FORBIDDEN: "The thesis requires...", "The company remains...", "The business has...", generic headwind/tailwind summaries.
+CONCLUSION REQUIREMENT — 2 sentences HARD CAP, positioning-first, PM-grade:
+The conclusion is the most important output. It must read like a portfolio manager's one-line
+assessment after reviewing a full IC memo — not an academic summary or mechanism explanation.
+
+SENTENCE 1 — Positioning verdict (REQUIRED):
+  Open with the BOTTOM-LINE SETUP VIEW: what is the market pricing, and is that defensible?
+  The reader must know the positioning stance within the first 10 words.
+  APPROVED OPENERS:
+    "[Business] remains [quality], but the market already prices in [X] — [condition]."
+    "At ~[X]x, the setup already assumes [Y]; the risk is whether [Z] holds."
+    "[Business] is durable, but the stock setup is [demanding/expectation-sensitive]."
+    "The business quality is not in question; the debate is whether [pricing/timing/execution]."
+
+SENTENCE 2 — Fulcrum or exit (REQUIRED):
+  Name the specific condition that would change the positioning view — either a catalyst that
+  would upgrade conviction, or the specific thing that would prove the setup wrong.
+
+STRICTLY FORBIDDEN — these trigger immediate rewrite:
+  "The thesis requires..." / "The company remains..." / "The business has..."
+  "This thesis requires [Company] to..." / "[Ticker]'s [noun] provides..."
+  Any sentence beginning with a mechanism before the positioning verdict.
+  Generic headwind/tailwind summaries with no bottom-line positioning.
+  Restating the bull/bear case instead of giving a verdict.
+
+ARCHETYPE VOCABULARY (use the right register for this business):
+  Durable compounder at premium: "priced for continued execution", "expectation-sensitive at current levels", "valuation already prices in the moat"
+  Expectation-sensitive quality: "demanding setup", "limited room for misses", "acceleration priced in not continuation"
+  Narrative-fragile: "speculative at current multiples", "binary on [X]", "execution dependency too concentrated"
 
 """
 
@@ -1104,8 +1121,33 @@ def _build_synthesis_prompt(
     else:
         ranked_signals_section = ""
 
-    # Optional company business model section
+    # Optional company business model section + archetype hint
     if profile is not None:
+        # Compute business durability and derive setup archetype.
+        # Inferred from profile + agent signals — NO ticker identity.
+        _dur = _compute_business_durability(quality, risk, evidence, profile)
+        if _dur >= _ARCHETYPE_DURABLE_THRESHOLD:
+            _archetype_label = "durable_compounder"
+            _archetype_hint = (
+                "SETUP ARCHETYPE: durable_compounder — recurring economics, moat-driven, "
+                "recession-resilient. Premium valuation reflects quality premium, NOT narrative "
+                "dependency. Conclusion vocabulary: 'priced for continued execution', "
+                "'expectation-sensitive at current levels', 'valuation already prices in the moat'."
+            )
+        elif _dur >= _ARCHETYPE_QUALITY_THRESHOLD:
+            _archetype_label = "expectation_sensitive_quality"
+            _archetype_hint = (
+                "SETUP ARCHETYPE: expectation_sensitive_quality — high-quality but cyclical "
+                "or growth-rate dependent. Conclusion vocabulary: 'demanding setup', "
+                "'limited room for misses', 'acceleration priced in, not continuation'."
+            )
+        else:
+            _archetype_label = "narrative_fragile"
+            _archetype_hint = (
+                "SETUP ARCHETYPE: narrative_fragile — execution binary, expectation-heavy, "
+                "narrative-dependent valuation. Conclusion vocabulary: 'speculative at current "
+                "multiples', 'binary on [X]', 'execution dependency too concentrated'."
+            )
         biz_model_section = (
             f"COMPANY BUSINESS MODEL (ground every claim in this):\n"
             f"Business model: {profile.business_model}\n"
@@ -1115,6 +1157,7 @@ def _build_synthesis_prompt(
             f"Key metrics: {', '.join(profile.key_metrics)}\n"
             f"Competitive advantages: {'; '.join(profile.competitive_advantages)}\n"
             f"Rate sensitivity: {profile.rate_sensitivity_note}\n"
+            f"\n{_archetype_hint}\n"
         )
         profile_keywords_hint = (
             f"Required terms include: {', '.join(profile.business_model_keywords[:8])}."
@@ -1772,10 +1815,14 @@ TASK — produce a JSON object with exactly these fields:
    duration are harder to size — which is where the bear case lives, not in the core thesis."
 
 10. what_changes_the_thesis: exactly 4 company-specific triggers (not generic macro events).
-11. conclusion: 2 institutional sentences. MUST name specific {ticker} revenue drivers,
-    risks, and valuation factors. Must NOT contain generic phrases like "the company faces
-    headwinds" or "as a growth stock". Lead with the inflection condition or current
-    positioning, not a summary of what was said above.
+11. conclusion: 2 sentences HARD CAP. POSITIONING-FIRST — not mechanism-first.
+    Sentence 1: State the bottom-line setup view (what is priced in, whether it is defensible).
+    Sentence 2: Name the specific fulcrum — the condition that would change the view.
+    FORBIDDEN: "The thesis requires...", "The company remains...", "The business has...",
+    restating the bull/bear cases, mechanism-before-verdict structure.
+    REQUIRED: The reader knows the positioning verdict within the first 10 words.
+    APPROVED: "[Business] remains [quality], but the market already prices in [X]."
+              "At ~[X]x, the setup assumes [Y]; the risk is whether [Z] holds."
 
 Agent reconciliation rules:
 - If agents DISAGREE on direction, explicitly say WHY the stronger argument wins and \
