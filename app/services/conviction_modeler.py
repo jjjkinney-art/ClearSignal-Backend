@@ -1299,16 +1299,29 @@ def _compute_directional_stance(
 
     Outputs
     -------
-    stance    : "Strong Buy" | "Buy" | "Hold" | "Avoid" | "Sell"
+    stance    : one of the expanded stance vocabulary below
     reasoning : 1-2 sentence institutional explanation — PM-grade, not generic.
+
+    Stance vocabulary (ordered from most to least constructive):
+      "Aggressive Buy"  — exceptional setup: very high conviction, low fragility
+      "Buy"             — solid setup: good conviction with manageable expectation risk
+      "Accumulate"      — quality business, fair valuation: add on weakness, not at spot
+      "Hold"            — thesis intact but expectation bar elevated; no urgent add
+      "Tactical"        — short-term opportunity or specific catalyst play; limited
+                          structural conviction; not a full position add
+      "Avoid"           — weak evidence or fragile setup; risk/reward unfavorable
+      "Sell"            — structural conviction break; deteriorating evidence base
 
     Design rules
     ------------
-    - Stance derives from score + fragility + asymmetry + thesis_alignment.
-    - Reasoning must reference the expectation context, not just the score.
+    - Stance derives from final_score + fragility + asymmetry + thesis_alignment.
+    - "Accumulate" fires for durable setups where valuation is fair-to-full
+      (frag 0.40-0.62) — the business is high quality but the entry matters.
+    - "Aggressive Buy" requires very high score + low fragility + strong alignment.
+    - "Tactical" fires when score is above threshold but fragility is elevated AND
+      valuation_certainty is low — the trade has asymmetry but low structural support.
     - "Sell" is reserved for genuine structural conviction breaks (<0.28 score).
-    - Contradictory combinations are caught by the governance layer in
-      thesis_synthesizer.py before the response is serialized.
+    - Reasoning must reference the expectation context, not just score.
     - Language must be institutional: no "BUY because fundamentals are strong."
     """
     frag   = dims.expectation_fragility
@@ -1317,43 +1330,77 @@ def _compute_directional_stance(
     vc     = dims.valuation_certainty
     ticker = (company.ticker or "the company").upper()
 
-    # ── Strong Buy ────────────────────────────────────────────────────────────
-    # High-conviction, low-fragility, high thesis alignment — evidence-supported
-    if final_score >= 0.72 and frag < 0.40 and ta > 0.65:
+    # ── Aggressive Buy ────────────────────────────────────────────────────────
+    # Exceptional setup: very high conviction, low fragility, very high alignment
+    # Market undervalues durable compounding; setup does not require perfection.
+    if final_score >= 0.78 and frag < 0.35 and ta > 0.68:
         return (
-            "Strong Buy",
-            f"The setup remains attractive because current expectations still understate "
-            f"the durable potential on {ticker}. Evidence quality is high, thesis alignment "
-            "is strong, and the valuation does not require execution above consensus.",
+            "Aggressive Buy",
+            f"Current expectations on {ticker} leave material room for upside — "
+            f"the setup does not require above-consensus delivery to work. "
+            f"Low fragility and strong cross-signal alignment support adding size.",
         )
 
     # ── Buy ───────────────────────────────────────────────────────────────────
-    # Solid conviction, manageable expectation risk
+    # High-conviction, manageable expectation risk — standard constructive entry
+    if final_score >= 0.68 and frag < 0.40 and ta > 0.65:
+        return (
+            "Buy",
+            f"The setup remains attractive on {ticker} — evidence quality is high, "
+            f"the thesis is aligned across signals, and the current multiple does not "
+            f"require above-consensus execution to defend.",
+        )
+
+    # ── Accumulate ────────────────────────────────────────────────────────────
+    # Quality business at full-to-fair valuation — add on weakness, not at spot.
+    # The key distinction from Buy: expectations are priced in (frag 0.40-0.62),
+    # but the structural quality remains intact.  Best built over time.
+    if final_score >= 0.58 and 0.40 <= frag < 0.62:
+        return (
+            "Accumulate",
+            f"{ticker} is a quality business where current pricing already reflects "
+            f"the operational strength — the setup favours adding on dips rather than "
+            f"chasing at current levels. The thesis holds; the entry matters.",
+        )
+
+    # ── Buy (broad) ───────────────────────────────────────────────────────────
+    # Solid conviction, manageable expectation risk — covers mid-range score
     if final_score >= 0.62 and frag < 0.58:
         return (
             "Buy",
-            f"The business quality and setup support a constructive view on {ticker}. "
-            "Risk/reward remains favorable at current expectations without requiring "
-            "above-consensus execution.",
+            f"Business quality and setup support a constructive view on {ticker}. "
+            f"Risk/reward remains favorable at current expectations without requiring "
+            f"above-consensus execution.",
+        )
+
+    # ── Tactical ─────────────────────────────────────────────────────────────
+    # Moderate score + high fragility but identifiable catalyst — not a full add.
+    # The asymmetry exists but the structural case is thin.  Time-bounded.
+    if final_score >= 0.52 and frag >= 0.55 and asym < 0.50:
+        return (
+            "Tactical",
+            f"The {ticker} setup has near-term asymmetry around a specific catalyst but "
+            f"lacks the structural conviction for a full position. Risk/reward is "
+            f"acceptable tactically; the setup is not a conviction add.",
         )
 
     # ── Hold — demanding setup ────────────────────────────────────────────────
-    # Good quality but elevated expectations leave limited margin of safety
+    # Elevated expectations leave limited margin of safety; pause before adding
     if final_score >= 0.42 and frag >= 0.58:
         return (
             "Hold",
             f"The business is strong, but the current setup leaves limited room for "
-            f"execution misses on {ticker}. The thesis is intact; the expectation bar is "
-            "elevated. Patience is required before adding at these levels.",
+            f"execution misses on {ticker}. The thesis is intact; the expectation bar "
+            f"is elevated — patience is required before adding.",
         )
 
-    # ── Hold — balanced but thin ──────────────────────────────────────────────
+    # ── Hold — balanced ───────────────────────────────────────────────────────
     if final_score >= 0.52:
         return (
             "Hold",
-            f"The {ticker} thesis remains directionally intact but lacks a clear near-term "
-            "catalyst to re-rate. Conviction is insufficient to initiate or add at current "
-            "prices without a reset in expectations.",
+            f"The {ticker} thesis remains directionally intact but lacks a clear catalyst "
+            f"to re-rate near-term. Conviction is insufficient to initiate or add without "
+            f"a reset in expectations.",
         )
 
     # ── Avoid ─────────────────────────────────────────────────────────────────
@@ -1362,15 +1409,15 @@ def _compute_directional_stance(
         if frag > 0.65:
             return (
                 "Avoid",
-                f"The valuation now depends on assumptions that are difficult to defend "
-                f"with present evidence on {ticker}. The setup requires above-consensus "
-                "execution with limited downside protection.",
+                f"The valuation on {ticker} now depends on assumptions that are difficult "
+                f"to defend with present evidence. The setup requires above-consensus "
+                f"execution with limited downside protection.",
             )
         return (
             "Avoid",
             f"Evidence on {ticker} does not support a constructive position at current "
-            "prices. Too many open variables remain unresolved to establish a high-conviction "
-            "directional view.",
+            f"prices. Too many open variables remain unresolved to establish a "
+            f"high-conviction directional view.",
         )
 
     # ── Sell ──────────────────────────────────────────────────────────────────
@@ -1379,7 +1426,7 @@ def _compute_directional_stance(
         "Sell",
         f"The combination of evidence quality, expectation risk, and setup fragility "
         f"does not support holding {ticker} at current levels. The evidence base is "
-        "insufficient to defend the current valuation framework.",
+        f"insufficient to defend the current valuation framework.",
     )
 
 
@@ -1597,73 +1644,177 @@ def _build_analysis_foundation(
     Design rules
     ------------
     - evidence_used : categories of evidence that contributed to the analysis.
+      Ordered by signal richness: richer categories first.  Uses full domain
+      labels (e.g. "estimate revision trend") not raw counts.
     - constraints   : what is missing or thin — phrased as informational context,
                       not error codes or internal taxonomy.
     - sources       : data providers that were reflected in the evidence pool.
 
-    These three lists are rendered directly in the Analysis Foundation collapsible
-    section in the production frontend.  The raw confidence_reasoning (with its
-    GAP_* diagnostic codes) is shown only in DEV mode.
+    Evidence category taxonomy (Part 1 expansion):
+      structural   — capital structure, long-term durability signals
+      cyclical     — cycle-position, inventory, capacity utilisation
+      valuation    — ratios, price multiples, peer comparisons
+      sentiment    — analyst upgrades/downgrades, short interest, positioning
+      execution    — quarterly delivery vs expectations, guidance beats/misses
+      balance_sheet— net cash, debt, buyback capacity
+      demand       — unit volumes, attach rates, geographic demand trends
+      macro        — rates, FX, inflation, recession signals
+      regulatory   — FDA, antitrust, government contract, compliance events
+      positioning  — consensus positioning, institutional ownership shifts
+
+    Historical context layer:
+      QoQ / YoY comparisons, estimate revision direction, management tone shifts.
     """
     ev_used:     List[str] = []
     constraints: List[str] = []
     sources:     List[str] = []
 
-    # ── Build search corpus from evidence titles + source names ───────────────
+    # ── Build search corpus (titles + summaries for richer matching) ──────────
     ev_corpus = " ".join(
+        f"{ev.source} {ev.title} {ev.summary}" for ev in evidence
+    ).lower()
+    ev_title_corpus = " ".join(
         f"{ev.source} {ev.title}" for ev in evidence
     ).lower()
 
-    # ── Evidence categories (what was found) ──────────────────────────────────
-    has_valuation = any(kw in ev_corpus for kw in (
+    # ── Core category detection ───────────────────────────────────────────────
+    has_valuation = any(kw in ev_title_corpus for kw in (
         "ratios-ttm", "key-metrics-ttm", "pe ratio", "ev/ebitda",
-        "valuation_ratios", "fmp-ratios", "price-to",
+        "valuation_ratios", "fmp-ratios", "price-to", "forward pe",
+        "price target", "fair value",
     ))
-    has_analyst = any(kw in ev_corpus for kw in (
-        "analyst-estimates", "price-target", "consensus",
+    has_analyst = any(kw in ev_title_corpus for kw in (
+        "analyst-estimates", "price-target", "consensus", "estimate",
+        "upgrade", "downgrade", "initiat",
     ))
-    has_filing = any(kw in ev_corpus for kw in (
-        "10-k", "10-q", "8-k", "sec", "edgar",
+    has_filing = any(kw in ev_title_corpus for kw in (
+        "10-k", "10-q", "8-k", "sec", "edgar", "annual report",
     ))
     has_earnings = any(kw in ev_corpus for kw in _EARNINGS_KEYWORDS)
     has_macro = any(kw in ev_corpus for kw in (
         "macro", "rate", "inflation", "fed", "yield", "monetary", "economic",
+        "fomc", "gdp", "recession", "soft landing",
     ))
     has_competitive = any(kw in ev_corpus for kw in (
-        "competitive", "market share", "peer", "industry", "competitive positioning",
+        "competitive", "market share", "peer", "industry", "moat",
+        "pricing power", "competitive positioning", "market position",
     ))
     has_recurring = any(kw in ev_corpus for kw in (
         "membership", "subscription", "recurring", "renewal", "retention",
+        "arr", "annual recurring", "contract",
     ))
-    has_ir = any(kw in ev_corpus for kw in (
-        "investor relations", "ir ", "annual report",
+    has_ir = any(kw in ev_title_corpus for kw in (
+        "investor relations", "ir ", "annual report", "investor day",
     ))
 
+    # ── Extended category detection (Part 1 expansion) ───────────────────────
+    has_balance_sheet = any(kw in ev_corpus for kw in (
+        "balance sheet", "net cash", "debt", "leverage", "buyback",
+        "share repurchase", "capital return", "cash position", "liquidity",
+        "free cash flow", "fcf", "net debt",
+    ))
+    has_demand = any(kw in ev_corpus for kw in (
+        "unit volume", "units sold", "attach rate", "demand trend",
+        "channel inventory", "sell-through", "shipment", "order book",
+        "consumer demand", "enterprise demand", "backlog",
+    ))
+    has_regulatory = any(kw in ev_corpus for kw in (
+        "regulatory", "fda", "antitrust", "doj", "ftc", "government contract",
+        "compliance", "investigation", "approval", "legislation", "tariff",
+    ))
+    has_sentiment = any(kw in ev_corpus for kw in (
+        "upgrade", "downgrade", "short interest", "positioning", "sentiment",
+        "flows", "options activity", "put/call", "institutional ownership",
+        "hedge fund", "13f",
+    ))
+    has_execution = any(kw in ev_corpus for kw in (
+        "beat", "miss", "guidance", "raised guidance", "lowered guidance",
+        "above consensus", "below consensus", "in line", "vs estimate",
+        "outperformed", "underperformed", "execution",
+    ))
+
+    # ── Historical / temporal context detection (Part 1 expansion) ───────────
+    has_qoq = any(kw in ev_corpus for kw in (
+        "quarter-over-quarter", "qoq", "sequential", "prior quarter",
+        "last quarter", "q/q", "quarter to quarter",
+    ))
+    has_yoy = any(kw in ev_corpus for kw in (
+        "year-over-year", "yoy", "y/y", "prior year", "last year",
+        "annual comparison", "year on year",
+    ))
+    has_revision = any(kw in ev_corpus for kw in (
+        "estimate revision", "raised estimate", "lowered estimate",
+        "cut estimate", "revised higher", "revised lower", "consensus revision",
+        "estimate cut", "estimate raise", "upward revision", "downward revision",
+    ))
+    has_tone_shift = any(kw in ev_corpus for kw in (
+        "tone shift", "management tone", "cautious language", "more optimistic",
+        "conservative guidance", "bullish commentary", "bearish commentary",
+        "changed language", "messaging shift",
+    ))
+    has_regime = any(kw in ev_corpus for kw in (
+        "rate regime", "macro regime", "current cycle", "this cycle",
+        "since rates", "since repricing", "regime change",
+    ))
+
+    # ── Build ev_used list (ordered by analytical richness) ───────────────────
+    # Execution and estimate signals first — most time-sensitive
+    if has_execution:
+        ev_used.append("execution vs expectations")
+    if has_revision:
+        ev_used.append("estimate revision trend")
+    if has_earnings:
+        ev_used.append("earnings commentary")
+        sources.append("earnings transcripts")
+
+    # Valuation and analyst coverage
     if has_valuation:
         ev_used.append("valuation multiple context")
         sources.append("Financial Modeling Prep")
     if has_analyst:
         ev_used.append("analyst estimate consensus")
         sources.append("analyst consensus feeds")
-    if has_earnings:
-        ev_used.append("earnings commentary")
-        sources.append("earnings transcripts")
+    if has_sentiment:
+        ev_used.append("analyst sentiment shift")
+
+    # Business fundamentals
     if has_recurring:
         ev_used.append("recurring revenue mechanics")
+    if has_balance_sheet:
+        ev_used.append("balance sheet and capital structure")
+    if has_demand:
+        ev_used.append("demand trend and volume indicators")
+    if has_competitive:
+        ev_used.append("competitive positioning")
+
+    # Macro and regime context
     if has_macro:
         ev_used.append("macro rate sensitivity")
         sources.append("Federal Reserve data")
-    if has_competitive:
-        ev_used.append("competitive positioning")
-    if dims.evidence_quality >= 0.60 or len(evidence) >= 5:
-        ev_used.append("margin and profitability trajectory")
+    if has_regime:
+        ev_used.append("market regime context")
+
+    # Historical comparisons
+    if has_qoq:
+        ev_used.append("sequential quarter comparison")
+    if has_yoy:
+        ev_used.append("year-over-year trajectory")
+    if has_tone_shift:
+        ev_used.append("management tone shift")
+
+    # Structural / regulatory
     if has_filing:
         ev_used.append("SEC filing disclosures")
         sources.append("SEC filings")
+    if has_regulatory:
+        ev_used.append("regulatory and compliance context")
+    if dims.evidence_quality >= 0.60 or len(evidence) >= 5:
+        ev_used.append("margin and profitability trajectory")
+
     if has_ir:
         sources.append("company investor relations")
 
-    # Always include IR as a potential source for major companies
+    # Always include IR for named companies
     ticker = (company.ticker or "").upper()
     if ticker and "company investor relations" not in sources:
         sources.append("company investor relations")
@@ -1674,21 +1825,18 @@ def _build_analysis_foundation(
     # ── Constraints (what is absent or thin) ─────────────────────────────────
     if len(evidence) < 3:
         constraints.append("limited recent evidence depth")
-
     if not has_earnings:
         constraints.append("limited recent earnings data")
-
     if not has_analyst:
         constraints.append("incomplete analyst estimate coverage")
-
     if not has_valuation:
         constraints.append("incomplete valuation anchor data")
-
     if dims.evidence_freshness < 0.45:
         constraints.append("stale management commentary")
-
     if not has_filing and len(evidence) < 5:
         constraints.append("SEC filing evidence limited")
+    if not has_revision and has_analyst:
+        constraints.append("estimate revision direction unclear")
 
     # ── Deduplicate (preserve insertion order) ────────────────────────────────
     ev_used     = list(dict.fromkeys(ev_used))

@@ -966,6 +966,23 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Thesis Evolution — "What Changed?" intelligence (Part 2) ─────────────
+    # Narrative paragraph synthesizing recent shifts in the investment story.
+    # Populated even without a prior snapshot — derived from evidence recency,
+    # estimate revision signals, management tone, and macro regime shifts.
+    # Designed to answer: "What has changed recently that a PM needs to know?"
+    thesis_evolution: str = Field(
+        default="",
+        description=(
+            "2-3 sentence narrative capturing what has recently shifted in the "
+            "investment story. Synthesizes: expectation revisions, management "
+            "tone changes, macro regime shifts, debate evolution, or acceleration/"
+            "deceleration in the underlying drivers. "
+            "Empty string when evidence is too sparse to detect material shifts. "
+            "Rendered as the 'What Changed?' section in the UI."
+        ),
+    )
+
     # ── Cognition quality fields ───────────────────────────────────────────────
     core_debate: str = Field(
         default="",
@@ -1125,13 +1142,17 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
-    # ── Directional stance (Final Pre-Launch Product Refinement) ─────────────
+    # ── Directional stance (Phase 6 High-Density expanded vocabulary) ──────────
     directional_stance: str = Field(
         default="Hold",
         description=(
             "PM-grade directional conclusion derived deterministically from the "
-            "conviction modeler. One of: 'Strong Buy' | 'Buy' | 'Hold' | 'Avoid' | 'Sell'. "
-            "NOT a simple bullish/bearish label — encodes setup quality and expectation risk."
+            "conviction modeler. Expanded vocabulary: "
+            "'Aggressive Buy' | 'Buy' | 'Accumulate' | 'Hold' | 'Tactical' | 'Avoid' | 'Sell'. "
+            "'Accumulate' = quality business at full valuation — add on dips, not at spot. "
+            "'Tactical' = short-term asymmetry without structural conviction. "
+            "NOT a simple bullish/bearish label — encodes setup quality, expectation risk, "
+            "valuation entry context."
         ),
     )
     directional_stance_reasoning: str = Field(

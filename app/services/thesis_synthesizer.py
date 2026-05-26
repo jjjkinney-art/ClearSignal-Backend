@@ -1023,6 +1023,17 @@ investment decision. GOOD: "Clarity on hyperscaler CapEx guidance for H2 2026 wo
 the primary uncertainty — that data point determines whether the data-center revenue runway \
 extends or plateaus." BAD: "More evidence would increase conviction." \
   "what_changes_the_thesis" : array of 4 strings — company-specific triggers that flip the thesis
+  "thesis_evolution"        : string — 2-3 sentence "What Changed?" narrative (MANDATORY). \
+Synthesize what has recently shifted in the investment story. Answer: "What does a PM returning \
+after 2 weeks need to know has changed?" Draw from: estimate revisions, management tone, \
+debate evolution, macro regime shift, multiple re-rating, acceleration/deceleration. \
+REQUIRED patterns (use whichever applies): \
+  "The debate shifted from [X] toward [Y] — [driver]." \
+  "Consensus expectations [expanded/contracted] after [event]." \
+  "Macro sensitivity [changed] as [mechanism] — the stock now [...]." \
+  "The operating story is unchanged — the repricing came from [rates/sentiment/multiple]." \
+If evidence is genuinely sparse: "Insufficient recent evidence to characterise a thesis evolution." \
+FORBIDDEN: Generic statements ("the market has been volatile", "conditions have changed").
   "core_takeaway"           : string — 1-2 sentences that make the thesis INSTANTLY CLEAR to \
 an intelligent but non-institutional investor. Same analytical depth, accessible language. \
 NOT educational. NOT simplified reasoning. Just clear expression of what matters. \
@@ -1869,6 +1880,60 @@ TASK — produce a JSON object with exactly these fields:
     REQUIRED: The reader knows the positioning verdict within the first 10 words.
     APPROVED: "[Business] remains [quality], but the market already prices in [X]."
               "At ~[X]x, the setup assumes [Y]; the risk is whether [Z] holds."
+
+12. thesis_evolution: 2-3 sentences — "What Changed?" narrative (Part 2 — MANDATORY).
+    This is the most time-sensitive section. A PM returning after 2 weeks needs to read
+    this first to understand what has shifted.
+    Synthesize from the evidence what has RECENTLY CHANGED in the investment story:
+    - Expectation revisions: have estimates moved higher or lower, and why?
+    - Debate evolution: has the primary uncertainty narrowed, intensified, or shifted topic?
+    - Acceleration/deceleration: is the primary driver moving faster or slower than before?
+    - Management tone: did recent commentary signal more caution or more confidence?
+    - Multiple re-rating: has the market repriced the stock without a fundamental change?
+    - Macro regime shift: has a change in rates/FX/credit altered the sensitivity?
+    REQUIRED patterns (use the most applicable):
+      "The debate shifted from [X] toward [Y] — [what drove the shift]."
+      "Consensus expectations [expanded/contracted] materially after [event]."
+      "Macro sensitivity [increased/declined] as [mechanism] — the stock now [...]."
+      "Management tone shifted [more cautious/more optimistic] — [specific language]."
+      "The operating story is unchanged — the repricing came from [rates/sentiment], not fundamentals."
+    FORBIDDEN: Generic statements ("the market has been volatile", "conditions changed").
+    If evidence is too sparse to detect a meaningful shift, write:
+      "Insufficient recent evidence to characterise a thesis evolution."
+    DO NOT default to this fallback unless evidence is genuinely sparse — real analysis preferred.
+
+SIGNAL DIVERSITY REQUIREMENTS (Part 3 — MANDATORY):
+key_drivers and key_risks MUST draw from diverse signal categories. FORBIDDEN to use the
+same concept type in more than 2 of the 4 drivers OR more than 2 of the 4 risks.
+
+REQUIRED signal category spread — at least 3 different categories across key_drivers:
+  - pricing power / ASP discipline (how the company protects or grows unit economics)
+  - operating leverage (fixed-cost absorption as revenue scales)
+  - capital allocation (buybacks, M&A, capex efficiency, dividend capacity)
+  - geographic expansion (international revenue mix shift and FX exposure)
+  - balance sheet optionality (net cash, debt refinancing, acquisition capacity)
+  - duration sensitivity (rate sensitivity on long-dated FCF multiples)
+  - margin structure (gross margin mix shift, COGS leverage, SG&A efficiency)
+  - inventory efficiency (channel inventory health, working capital cycle)
+  - customer behaviour (churn, attach rates, NPS, switching costs in action)
+  - competitive re-rating (share gain/loss, moat erosion signals, new entrants)
+  - regulatory tailwind/headwind (specific rule changes affecting unit economics)
+  - execution cadence (quarter-over-quarter delivery vs street model)
+
+CROSS-SIGNAL INTERACTION — MANDATORY for bear_thesis:
+Name at least ONE cross-signal compound risk where two factors interact:
+  "higher rates + lean inventory + membership cash flow = muted macro sensitivity"
+  "rate re-acceleration + hardware cycle + high multiple = three-way compression"
+  "margin expansion + buyback + rate cuts = layered EPS support even at flat revenue"
+The compound interaction should appear as one sentence in bear_thesis or bull_thesis.
+
+SIGNAL REPETITION — FORBIDDEN:
+Do NOT use more than one of these per entire thesis output:
+  - "renewal rates" / "membership fee growth" / "membership renewal"
+  - "multiple compression" / "valuation compression" / "P/E compression"
+  - "rate sensitivity" / "rate pressure" / "interest rate headwind"
+These may appear in EXACTLY ONE section each. If the concept is already in bull_thesis,
+it may not reappear in valuation_view, macro_sensitivity, or conclusion.
 
 Agent reconciliation rules:
 - If agents DISAGREE on direction, explicitly say WHY the stronger argument wins and \
