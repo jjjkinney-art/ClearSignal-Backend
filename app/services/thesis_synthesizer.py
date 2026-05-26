@@ -426,6 +426,13 @@ ARCHETYPE VOCABULARY (use the right register for this business):
   Expectation-sensitive quality: "demanding setup", "limited room for misses", "acceleration priced in not continuation"
   Narrative-fragile: "speculative at current multiples", "binary on [X]", "execution dependency too concentrated"
 
+CONCRETE EXAMPLE — durable compounder at elevated valuation:
+  GOOD: "[Ticker] likely remains a durable compounder, but current valuation leaves limited room for execution misses."
+  BAD:  "The thesis requires [Ticker] margin expansion to validate the current multiple."
+  Why the GOOD version wins: it opens with a positioning verdict ("likely remains… durable") and
+  immediately frames the risk from the market's perspective ("limited room"), not the business
+  mechanism ("margin expansion required"). The reader knows the stance in the first 7 words.
+
 """
 
 
@@ -2637,6 +2644,42 @@ def synthesize_thesis(
         thesis.analysis_foundation_constraints = conviction.analysis_foundation_constraints
         thesis.analysis_foundation_sources     = conviction.analysis_foundation_sources
 
+        # ── Phase 6: Stamp runtime fingerprint ───────────────────────────────
+        # Allows the frontend to verify the live backend is running matrix code.
+        try:
+            import hashlib as _hashlib, os as _os_rt, time as _time_rt
+            from .conviction_modeler import (
+                CONVICTION_SCHEMA_VERSION as _CSV,
+                ARCHETYPE_MATRIX_ENABLED as _AME,
+            )
+            _cm_path = _os_rt.path.join(
+                _os_rt.path.dirname(__file__), "conviction_modeler.py"
+            )
+            _checksum = "unavailable"
+            if _os_rt.path.exists(_cm_path):
+                with open(_cm_path, "rb") as _f:
+                    _checksum = _hashlib.md5(_f.read()).hexdigest()[:12]
+            from ..startup import _PROCESS_START_EPOCH
+            import time as _t_rt
+            _deploy_ts = _t_rt.strftime(
+                "%Y-%m-%dT%H:%M:%SZ", _t_rt.gmtime(_PROCESS_START_EPOCH)
+            )
+            _git = (
+                _os_rt.environ.get("RENDER_GIT_COMMIT", "")[:12]
+                or _os_rt.environ.get("GIT_COMMIT", "")[:12]
+                or "unknown"
+            )
+            thesis.runtime_version = {
+                "matrix_loaded":                _AME,
+                "matrix_version":               _CSV,
+                "conviction_modeler_checksum":  _checksum,
+                "deployment_timestamp":         _deploy_ts,
+                "git_commit":                   _git,
+            }
+        except Exception as _rv_exc:
+            logger.warning("[runtime_version_stamp] failed: %r", _rv_exc)
+            thesis.runtime_version = {"matrix_loaded": False, "error": str(_rv_exc)}
+
         # ── [CONFIDENCE_PIPELINE] end-to-end telemetry ───────────────────────
         # Traces raw→fragility→asymmetry→compression→final for dispersion audits.
         _dims = conviction.dimensions
@@ -2836,12 +2879,16 @@ def synthesize_thesis(
     # Determines and stamps the authoritative score provenance onto the thesis.
     # Travels in the API response so the frontend forensic overlay can display it
     # without re-deriving it from other fields.
+    # Phase 6 matrix: "actionable thesis" IS the correct label for durable compounders
+    # (COST, MSFT). Any present label + conviction dims = conviction modeler ran.
+    # The old check `setup_label != "actionable thesis"` was wrong — it treated the
+    # correct matrix output as an absence signal.
     _has_conviction_dims = bool(thesis.conviction_dimensions)
-    if _has_conviction_dims and thesis.setup_label != "actionable thesis":
+    if _has_conviction_dims:
+        # Conviction modeler ran — use single canonical source name.
+        # We no longer distinguish "balanced" vs "non-balanced" labels because
+        # "actionable thesis" is now the correct authoritative label for many tickers.
         _score_source = "conviction_modeler"
-    elif _has_conviction_dims:
-        # Conviction modeler ran but produced balanced/default label
-        _score_source = "conviction_modeler_balanced"
     elif thesis.confidence_score == 0.0:
         _score_source = "fallback_empty"
     else:

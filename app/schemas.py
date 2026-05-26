@@ -1109,17 +1109,16 @@ class InvestmentThesis(BaseModel):
     # overlay can show exactly which path was taken without re-deriving it.
     #
     # Literal values:
-    #   "conviction_modeler"         — conviction_modeler ran and is authoritative
-    #   "conviction_modeler_balanced"— conviction_modeler ran; setup_label is
-    #                                  "actionable thesis" (default label)
-    #   "llm_raw_preserved"          — conviction_modeler threw an exception;
-    #                                  LLM-raw confidence_score is preserved as-is
-    #   "fallback_empty"             — thesis is empty / synthesis failed entirely
+    #   "conviction_modeler"  — conviction_modeler ran and is authoritative
+    #                           (any setup_label, including "actionable thesis")
+    #   "llm_raw_preserved"   — conviction_modeler threw an exception;
+    #                           LLM-raw confidence_score is preserved as-is
+    #   "fallback_empty"      — thesis is empty / synthesis failed entirely
     score_source: str = Field(
         default="llm_raw_preserved",
         description=(
             "Conviction score provenance: 'conviction_modeler' | "
-            "'conviction_modeler_balanced' | 'llm_raw_preserved' | 'fallback_empty'. "
+            "'llm_raw_preserved' | 'fallback_empty'. "
             "Indicates which pipeline stage produced confidence_score. "
             "'llm_raw_preserved' means the conviction modeler failed and the LLM "
             "score was kept unchanged. Used by the frontend forensic overlay."
@@ -1219,6 +1218,27 @@ class InvestmentThesis(BaseModel):
             "valuation_age_days, macro_age_days. "
             "None when no evidence of that type was found. "
             "Populated by the freshness analyzer at synthesis time."
+        ),
+    )
+
+    # ── Runtime fingerprint (Phase 6 — matrix architecture proof) ─────────────
+    # Populated at synthesis time so the frontend can verify the live backend
+    # is running the Phase 6 matrix conviction architecture, not stale code.
+    # Fields:
+    #   matrix_loaded        — True if ARCHETYPE_MATRIX_ENABLED=True in the live process
+    #   matrix_version       — CONVICTION_SCHEMA_VERSION string ("6-matrix")
+    #   conviction_modeler_checksum — first 12 chars of MD5 of conviction_modeler.py
+    #   deployment_timestamp — ISO-8601 UTC process-start time
+    #   git_commit           — RENDER_GIT_COMMIT env var (12 chars) or "unknown"
+    runtime_version: Dict[str, Any] = Field(
+        default_factory=dict,
+        description=(
+            "Runtime fingerprint populated at synthesis time. "
+            "Keys: matrix_loaded (bool), matrix_version (str), "
+            "conviction_modeler_checksum (str), deployment_timestamp (str), "
+            "git_commit (str). "
+            "Surfaced in DEV mode to verify live backend is running Phase 6 matrix code. "
+            "Empty dict when synthesis fails before the matrix check runs."
         ),
     )
 

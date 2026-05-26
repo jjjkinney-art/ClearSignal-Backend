@@ -84,6 +84,272 @@ async def health() -> dict:
     return {"status": "ok"}
 
 
+@router.get(
+    "/version",
+    summary="Runtime version — conviction schema + deployment identity",
+    tags=["health"],
+)
+async def api_version() -> dict:
+    """Public endpoint returning the live conviction schema version and build commit.
+
+    Lighter-weight alternative to /debug/version — suitable for frontend polling
+    and uptime monitors.  Does NOT run a full smoke test; just reads constants
+    from the loaded module.
+
+    Key fields:
+      schema_version          — "6-matrix" when Phase 6 matrix code is active
+      conviction_runtime      — human-readable build label
+      durability_matrix_enabled — True when matrix architecture is active
+      build_commit            — short git SHA from RENDER_GIT_COMMIT env var
+      conviction_modeler_md5  — first 16 chars of MD5 of conviction_modeler.py on disk
+    """
+    import time as _t
+    import os as _o
+    from .startup import _PROCESS_START_EPOCH, _conviction_modeler_checksum
+
+    try:
+        from .services.conviction_modeler import (
+            CONVICTION_SCHEMA_VERSION,
+            ARCHETYPE_MATRIX_ENABLED,
+        )
+        schema_version  = CONVICTION_SCHEMA_VERSION
+        matrix_enabled  = ARCHETYPE_MATRIX_ENABLED
+    except Exception as exc:
+        schema_version  = f"IMPORT_ERROR:{exc}"
+        matrix_enabled  = False
+
+    git_commit = (
+        _o.environ.get("RENDER_GIT_COMMIT", "")[:12]
+        or _o.environ.get("GIT_COMMIT", "")[:12]
+        or "unknown"
+    )
+    return {
+        "schema_version":           schema_version,
+        "conviction_runtime":       f"phase-6-matrix/{schema_version}",
+        "durability_matrix_enabled": matrix_enabled,
+        "build_commit":             git_commit,
+        "conviction_modeler_md5":   _conviction_modeler_checksum(),
+        "process_start_utc":        _t.strftime(
+                                        "%Y-%m-%dT%H:%M:%SZ",
+                                        _t.gmtime(_PROCESS_START_EPOCH),
+                                    ),
+    }
+
+
+@router.get(
+    "/debug/version",
+    summary="Live process version — matrix system proof",
+    tags=["debug"],
+)
+async def debug_version() -> dict:
+    """Return live process identity and conviction system version.
+
+    This endpoint proves the deployed process loaded the Phase 6 matrix
+    architecture.  Call GET /debug/version on the live Render URL and confirm:
+
+      - conviction_schema_version == "6-matrix"
+      - archetype_matrix_enabled  == true
+      - matrix_smoke_label        == "actionable thesis"   (durable compounder test)
+
+    If conviction_schema_version is absent or wrong, the live process is running
+    stale pre-matrix code — trigger a Render manual restart.
+
+    Also includes:
+      - git_commit_hash   : short SHA of the running commit (RENDER_GIT_COMMIT env var
+                            or the VERCEL_GIT_COMMIT_SHA — set this in Render settings)
+      - process_start_utc : when this gunicorn worker spawned
+      - deployment_id     : RENDER_SERVICE_ID env var if set
+
+    Never exposes secret key values — only presence booleans.
+    """
+    import time as _time
+    import os as _os
+
+    # ── Conviction system fingerprint ─────────────────────────────────────────
+    try:
+        from .services.conviction_modeler import (
+            CONVICTION_SCHEMA_VERSION,
+            ARCHETYPE_MATRIX_ENABLED,
+            _DURABILITY_MATRIX_HIGH,
+            _DURABILITY_MATRIX_MID,
+            _durability_matrix_label,
+        )
+        _exp_risk_smoke = round(0.70 * 0.42 + 0.30 * 0.28, 4)
+        _smoke_label    = _durability_matrix_label(0.71, _exp_risk_smoke)
+        _matrix_ok      = ARCHETYPE_MATRIX_ENABLED and _smoke_label not in (
+            "speculative setup", "insufficient conviction"
+        )
+        matrix_info = {
+            "conviction_schema_version": CONVICTION_SCHEMA_VERSION,
+            "archetype_matrix_enabled":  ARCHETYPE_MATRIX_ENABLED,
+            "durability_matrix_high":    _DURABILITY_MATRIX_HIGH,
+            "durability_matrix_mid":     _DURABILITY_MATRIX_MID,
+            "matrix_smoke_label":        _smoke_label,
+            "matrix_ok":                 _matrix_ok,
+        }
+    except Exception as exc:
+        matrix_info = {
+            "conviction_schema_version": "IMPORT_ERROR",
+            "archetype_matrix_enabled":  False,
+            "matrix_ok":                 False,
+            "import_error":              str(exc),
+        }
+
+    # ── Deployment identity ───────────────────────────────────────────────────
+    from .startup import _PROCESS_START_EPOCH
+    git_hash   = (
+        _os.environ.get("RENDER_GIT_COMMIT", "")[:12]
+        or _os.environ.get("GIT_COMMIT", "")[:12]
+        or "unknown"
+    )
+    process_start_utc = _time.strftime(
+        "%Y-%m-%dT%H:%M:%SZ", _time.gmtime(_PROCESS_START_EPOCH)
+    )
+
+    return {
+        # ── Proof fields — check these on Render ──────────────────────────────
+        "matrix": matrix_info,
+        # ── Deployment identity ───────────────────────────────────────────────
+        "deployment": {
+            "git_commit_hash":    git_hash,
+            "process_start_utc":  process_start_utc,
+            "render_service_id":  _os.environ.get("RENDER_SERVICE_ID", "local"),
+            "render_instance_id": _os.environ.get("RENDER_INSTANCE_ID", "local"),
+            "python_version":     __import__("sys").version.split()[0],
+        },
+        # ── Key presence (never expose values) ───────────────────────────────
+        "env": {
+            "openai_key_present": bool(_os.environ.get("OPENAI_API_KEY", "")),
+            "fred_key_present":   bool(_os.environ.get("FRED_API_KEY", "")),
+            "backend_url_set":    bool(_os.environ.get("BACKEND_URL", "")),
+        },
+    }
+
+
+@router.get(
+    "/debug/matrix-test",
+    summary="Live matrix smoke test — runs compute_conviction() production path",
+    tags=["debug"],
+)
+async def debug_matrix_test() -> dict:
+    """Run compute_conviction() through the actual production path for 5 archetypes.
+
+    Tests:
+      COST  — durable compounder:   must NOT be 'speculative setup'
+      MSFT  — durable compounder:   must NOT be 'speculative setup'
+      TSLA  — narrative/speculative: CAN be 'speculative setup'
+      PLTR  — narrative/speculative: CAN be 'speculative setup'
+      NVDA  — quality cyclical:      check expectation-sensitive range
+
+    Returns the setup_label and confidence_score for each, plus a PASS/FAIL verdict.
+    """
+    import traceback as _tb
+    from .services.conviction_modeler import (
+        compute_conviction,
+        CONVICTION_SCHEMA_VERSION,
+        ARCHETYPE_MATRIX_ENABLED,
+    )
+    from .schemas import (
+        CompanyContext,
+        CompanyKnowledgeProfile,
+        ValuationView,
+        MacroSensitivity,
+        RiskProfile,
+        MarketContext,
+        QualityAssessment,
+    )
+
+    _ARCHETYPES = [
+        # (ticker, company_name, sector, archetype_expect)
+        ("COST",  "Costco Wholesale",      "Consumer Staples",  "durable"),
+        ("MSFT",  "Microsoft",             "Technology",        "durable"),
+        ("NVDA",  "Nvidia",                "Technology",        "cyclical"),
+        ("TSLA",  "Tesla",                 "Consumer Disc.",    "narrative"),
+        ("PLTR",  "Palantir Technologies", "Technology",        "narrative"),
+    ]
+
+    results = []
+    all_pass = True
+
+    for ticker, name, sector, archetype_expect in _ARCHETYPES:
+        try:
+            # CompanyContext = minimal company identity (required by compute_conviction)
+            company = CompanyContext(ticker=ticker, company_name=name, sector=sector)
+
+            # CompanyKnowledgeProfile = optional structured facts (enriches durability score)
+            profile = CompanyKnowledgeProfile(
+                ticker=ticker,
+                company_name=name,
+                business_model=(
+                    "membership-fee-driven retailer with recurring subscription economics"
+                    if ticker == "COST" else
+                    "enterprise software and cloud platform with subscription revenue"
+                    if ticker == "MSFT" else
+                    "semiconductor IP designer with cyclical data-center demand"
+                    if ticker == "NVDA" else
+                    "automotive EV manufacturer with narrative-driven valuation"
+                    if ticker == "TSLA" else
+                    "data-analytics software with government and enterprise contracts"
+                ),
+                recurring_revenue_sources=(
+                    ["membership fees", "renewal subscriptions"] if archetype_expect == "durable" else []
+                ),
+            )
+            val  = ValuationView()
+            mac  = MacroSensitivity()
+            risk = RiskProfile()
+            mkt  = MarketContext()
+            qual = QualityAssessment()
+
+            result = compute_conviction(
+                evidence=[],
+                valuation=val,
+                macro=mac,
+                risk=risk,
+                market=mkt,
+                quality=qual,
+                company=company,
+                ranked=None,
+                governance_warnings=[],
+                profile=profile,
+            )
+
+            label = result.setup_label
+            score = result.final_score
+
+            # Validation rule: durable compounders must NEVER get speculative labels
+            _FORBIDDEN_FOR_DURABLE = {"speculative setup", "insufficient conviction"}
+            if archetype_expect == "durable" and label in _FORBIDDEN_FOR_DURABLE:
+                verdict = "FAIL — durable compounder got speculative label"
+                all_pass = False
+            else:
+                verdict = "PASS"
+
+            results.append({
+                "ticker":             ticker,
+                "archetype_expected": archetype_expect,
+                "setup_label":        label,
+                "confidence_score":   round(score, 4),
+                "confidence_pct":     round(score * 100),
+                "verdict":            verdict,
+            })
+
+        except Exception as exc:
+            all_pass = False
+            results.append({
+                "ticker":  ticker,
+                "verdict": f"ERROR — {type(exc).__name__}: {exc}",
+                "traceback": _tb.format_exc()[-500:],
+            })
+
+    return {
+        "overall": "PASS" if all_pass else "FAIL",
+        "matrix_version": CONVICTION_SCHEMA_VERSION,
+        "matrix_enabled": ARCHETYPE_MATRIX_ENABLED,
+        "results": results,
+    }
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,

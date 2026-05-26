@@ -555,8 +555,15 @@ def _score_thesis_alignment(
 
 def _score_macro_uncertainty(macro: MacroSensitivity, evidence: List[RetrievedEvidence]) -> float:
     """Score macro uncertainty level (0–1; higher = MORE uncertain)."""
-    # Inverted from macro confidence
-    base = 1.0 - macro.confidence
+    # Inverted from macro confidence.
+    # When confidence == 0.0 (default/absent), use a neutral 0.50 rather than 1.0.
+    # Without this fix every company gets base=0.95 macro drag, uniformly
+    # suppressing all scores by ~0.45 even when macro data is simply absent.
+    raw_confidence = macro.confidence
+    if raw_confidence < 0.01:
+        base = 0.50  # neutral: no macro data → neither bullish nor bearish signal
+    else:
+        base = 1.0 - raw_confidence
 
     # Boost uncertainty if evidence contains rate/inflation volatility language
     rate_terms = ("rate hike", "rate cut", "fed pivot", "inflation surprise",
@@ -1022,6 +1029,148 @@ def _asymmetry_multiplier(asymmetry: float) -> float:
         return 1.0
     penalty = min(_ASYMMETRY_MAX, (asymmetry - _ASYMMETRY_THRESHOLD) * _ASYMMETRY_SCALE)
     return round(1.0 - penalty, 4)
+
+
+# ── Matrix-based setup label constants ───────────────────────────────────────
+#
+# Phase 1+2 architectural refactor: setup_label is now derived from a
+# 2D matrix of (durability_score, expectation_risk) — completely independent
+# of the composite confidence score.
+#
+# This separation is critical:
+#   confidence_score → reflects evidence depth and uncertainty (can be low for COST)
+#   setup_label      → reflects BUSINESS SETUP QUALITY (NEVER "speculative" for a durable compounder)
+#
+# Matrix tiers:
+#   Durable compounder (durability ≥ 0.60): Balanced–Demanding range only
+#   Quality cyclical (0.40 ≤ durability < 0.60): Fragile–Demanding range
+#   Narrative/speculative (durability < 0.40): Speculative–Fragile range
+_DURABILITY_MATRIX_HIGH = 0.60   # durable compounder threshold
+_DURABILITY_MATRIX_MID  = 0.40   # quality cyclical threshold
+
+# ── Conviction system version constants ──────────────────────────────────────
+# These are imported by startup.py and /debug/version to prove the live process
+# is running the matrix architecture code, not a stale pre-matrix version.
+#
+# CONVICTION_SCHEMA_VERSION: bump whenever the label vocabulary or matrix layout
+#   changes — forces frontend DEV overlay to show the new version.
+# ARCHETYPE_MATRIX_ENABLED: always True in this module — startup.py asserts it.
+#   If this import fails or returns False, the server refuses to start.
+CONVICTION_SCHEMA_VERSION = "6-matrix"
+ARCHETYPE_MATRIX_ENABLED  = True
+
+# ── [DEPLOYMENT PROOF] Module-level import-time marker ───────────────────────
+# This print fires the MOMENT Python imports conviction_modeler — at server boot.
+# Search Render logs for "MATRIX_CONVICTION_MODEL_ACTIVE" to confirm the live
+# process loaded THIS file (not a stale pre-matrix version).
+# If this line does NOT appear in Render logs after deploy, the file was not
+# deployed — check git push status and Render build logs.
+print(
+    f"[conviction_modeler] MATRIX_CONVICTION_MODEL_ACTIVE "
+    f"schema={CONVICTION_SCHEMA_VERSION} "
+    f"matrix_enabled={ARCHETYPE_MATRIX_ENABLED} "
+    f"durability_high={_DURABILITY_MATRIX_HIGH} "
+    f"durability_mid={_DURABILITY_MATRIX_MID}"
+)
+
+
+def _compute_expectation_risk(dims: "ConvictionDimensions") -> float:
+    """Compute a single expectation-risk score [0, 1] from conviction dimensions.
+
+    Combines expectation_fragility (valuation/execution premium) and
+    expectation_asymmetry (binary-outcome risk) into a single risk scalar.
+
+    Higher = more expectation risk (closer to Speculative).
+    Lower  = lower expectation risk (closer to High-Alignment).
+    """
+    return round(
+        0.70 * dims.expectation_fragility + 0.30 * dims.expectation_asymmetry,
+        4,
+    )
+
+
+def _durability_matrix_label(durability_score: float, expectation_risk: float) -> str:
+    """Derive setup_label from a 2D durability × expectation-risk matrix.
+
+    This function is the SOLE source of setup_label in compute_conviction().
+    It completely replaces both _confidence_band_label() and the label-floor
+    block that previously patched score-derived labels after the fact.
+
+    Design guarantees:
+      - Durable compounders (durability ≥ 0.60) NEVER receive "speculative setup".
+      - Narrative/optionality businesses (durability < 0.40) NEVER receive
+        "high-alignment thesis" or "actionable thesis".
+      - Only expectation_risk drives where within each tier the label lands.
+      - The confidence_score (evidence depth) does NOT affect the label.
+
+    Matrix
+    ──────
+    Durable compounder (durability ≥ 0.60):
+      exp_risk < 0.35 → "high-alignment thesis"    (strong conviction, low premium risk)
+      exp_risk < 0.50 → "actionable thesis"         (good setup, manageable premium)
+      exp_risk < 0.65 → "monitoring required"       (durable but demanding valuation)
+      exp_risk ≥ 0.65 → "expectation-sensitive"     (stretched valuation on quality name)
+
+    Quality cyclical (0.40 ≤ durability < 0.60):
+      exp_risk < 0.35 → "actionable thesis"         (good quality at reasonable valuation)
+      exp_risk < 0.55 → "fragile setup"             (quality + some expectation risk)
+      exp_risk < 0.75 → "asymmetric setup"          (high expectation risk on cyclical)
+      exp_risk ≥ 0.75 → "speculative setup"         (extreme expectation risk, rare)
+
+    Narrative/speculative (durability < 0.40):
+      exp_risk < 0.40 → "fragile setup"             (narrative but not fully speculative)
+      exp_risk < 0.60 → "speculative setup"         (narrative + material expectation risk)
+      exp_risk ≥ 0.60 → "insufficient conviction"   (narrative + extreme premium → no edge)
+    """
+    if durability_score >= _DURABILITY_MATRIX_HIGH:
+        # Durable compounder tier — Balanced/Demanding range only.
+        # "speculative setup" is STRUCTURALLY IMPOSSIBLE from this branch.
+        if expectation_risk < 0.35:
+            label = "high-alignment thesis"
+        elif expectation_risk < 0.50:
+            label = "actionable thesis"
+        elif expectation_risk < 0.65:
+            label = "monitoring required"
+        else:
+            label = "expectation-sensitive"
+
+    elif durability_score >= _DURABILITY_MATRIX_MID:
+        # Quality cyclical tier — Fragile/Demanding range
+        if expectation_risk < 0.35:
+            label = "actionable thesis"
+        elif expectation_risk < 0.55:
+            label = "fragile setup"
+        elif expectation_risk < 0.75:
+            label = "asymmetric setup"
+        else:
+            label = "speculative setup"
+
+    else:
+        # Narrative/speculative tier — Speculative range
+        if expectation_risk < 0.40:
+            label = "fragile setup"
+        elif expectation_risk < 0.60:
+            label = "speculative setup"
+        else:
+            label = "insufficient conviction"
+
+    # ── Phase 6: Live classification assertion ────────────────────────────────
+    # [INVALID_ARCHETYPE_CLASSIFICATION] fires when a durable compounder somehow
+    # receives a speculative label — this should be structurally IMPOSSIBLE from
+    # the durable tier branch, but we assert it explicitly as a production guard.
+    # If this fires, it means _DURABILITY_MATRIX_HIGH was incorrectly overridden
+    # or there's a code path bug — NOT a normal calibration signal.
+    if (durability_score >= _DURABILITY_MATRIX_HIGH
+            and label in ("speculative setup", "insufficient conviction")):
+        _logger.error(
+            "[INVALID_ARCHETYPE_CLASSIFICATION] durability=%.3f >= threshold=%.2f "
+            "but label=%r — this is a matrix code bug. "
+            "expectation_risk=%.3f. Overriding to 'expectation-sensitive'.",
+            durability_score, _DURABILITY_MATRIX_HIGH, label, expectation_risk,
+        )
+        label = "expectation-sensitive"
+
+    return label
 
 
 def _confidence_band_label(
@@ -1600,6 +1749,55 @@ _WHAT_INCREASES_TEMPLATES = {
 }
 
 
+def _sanitize_reasoning(text: str) -> str:
+    """Strip internal telemetry vocabulary from user-facing reasoning text.
+
+    This is a defensive final-pass sanitizer — a last line of defence against
+    any diagnostic artifact surfacing in the production UI.
+
+    Strips:
+      - GAP_* diagnostic codes (e.g. GAP_SPARSE, GAP_VALUATION_ABSENT)
+      - ALL_CAPS_UNDERSCORE internal schema identifiers
+      - Known ontology / telemetry vocabulary
+      - Trailing whitespace artefacts
+
+    The function is idempotent and safe to call on already-clean strings.
+    """
+    import re as _re
+
+    # 1. Strip GAP_* codes (e.g. "GAP_SPARSE_EVIDENCE", "GAP_VALUATION_ABSENT")
+    text = _re.sub(r'\bGAP_[A-Z_]+\b', '', text)
+
+    # 2. Strip ALL_CAPS_UNDERSCORE internal identifiers (4+ chars, ≥1 underscore)
+    text = _re.sub(r'\b[A-Z]{2,}(?:_[A-Z]{2,})+\b', '', text)
+
+    # 3. Strip known internal ontology vocabulary
+    _BANNED_PHRASES = (
+        "directional inference",
+        "not grounded analysis",
+        "cross-agent signals",       # ok in DEV but not user-facing
+        "conviction_modeler",
+        "evidence_quality",
+        "evidence_freshness",
+        "thesis_alignment",
+        "macro_uncertainty",
+        "valuation_certainty",
+        "estimate_dispersion",
+        "expectation_fragility",
+        "expectation_asymmetry",
+        "governance_risk",
+        "expectation_safety",
+        "asymmetry_safety",
+    )
+    for phrase in _BANNED_PHRASES:
+        text = text.replace(phrase, "")
+
+    # 4. Collapse multiple spaces / leading/trailing whitespace
+    text = _re.sub(r'  +', ' ', text).strip()
+
+    return text
+
+
 def _build_reasoning(
     dims:                ConvictionDimensions,
     final_score:         float,
@@ -1975,7 +2173,8 @@ def _build_reasoning(
             "the timing call is harder than the directional case."
         )
 
-    return result
+    # ── Phase 4: production sanitizer — strip any leaked telemetry vocabulary ──
+    return _sanitize_reasoning(result)
 
 
 def _build_what_increases_conviction(
@@ -2168,66 +2367,25 @@ def compute_conviction(
     # (TSLA, PLTR) setups without requiring a post-compression ticker-specific override.
     # The overpriced valuation stance (+0.28 fragility) combined with the durability
     # offset provides the correct natural spread.
-    setup_label = _confidence_band_label(final_score, dims)
-
-    # ── Durability-computed setup label floor (Phase 3) ──────────────────────
-    # CRITICAL SEPARATION: confidence_score (0–1) and setup_label are INDEPENDENT signals.
+    # ── Matrix-based setup label (Phase 1+2 architecture) ────────────────────
+    # setup_label is derived from a 2D (durability × expectation_risk) matrix.
+    # This completely replaces _confidence_band_label() + the label-floor patch.
     #
-    #   confidence_score → reflects evidence depth and uncertainty → CAN be low for COST
-    #   setup_label      → reflects the BUSINESS SETUP QUALITY    → should NOT be "speculative"
-    #                      for high-durability businesses just because evidence is sparse.
+    # Key design guarantee:
+    #   - Durable compounders (durability ≥ 0.60) NEVER receive "speculative setup".
+    #   - The composite confidence_score (evidence depth) does NOT affect the label.
+    #   - Only business durability class + expectation risk level determine the label.
     #
-    # "Speculative" is reserved for: narrative-dependent, pre-revenue, binary-optionality-driven,
-    # or genuinely weakly-proven setups (TSLA Optimus, PLTR commercial, SNOW platform adoption).
-    # NOT for: a high-durability business at elevated P/E with thin evidence.
-    #
-    # The floor fires when durability_score >= _DURABILITY_FLOOR_THRESHOLD (0.65).
-    # This is COMPUTED from profile + agent + evidence — NOT from a hardcoded ticker list.
-    # Any company with sufficient structural durability signals will qualify automatically.
-    #
-    # Hard floor:
-    #   "speculative setup" / "insufficient conviction" → floor to "expectation-sensitive"
-    #
-    # Soft floor (sparse evidence only — NOT real deterioration):
-    #   "fragile setup" with evidence_quality < 0.40 → floor to "expectation-sensitive"
-    #   "mixed evidence" with evidence_quality < 0.50 → floor to "monitoring required"
-    #   (Both soft floors lift only when evidence is absent, not when evidence reveals problems.)
+    # Logging for traceability:
     _ticker_up = (company.ticker or "").upper()
-    if durability_score >= _DURABILITY_FLOOR_THRESHOLD:
-        if setup_label in ("speculative setup", "insufficient conviction"):
-            # Hard floor: high-durability businesses are NEVER speculative just because
-            # evidence is sparse or valuation is elevated.
-            # "Speculative" requires: narrative dependency + binary execution risk +
-            # weak durability + fragile economics — not a premium multiple on a durable compounder.
-            setup_label = "expectation-sensitive"
-            _logger.debug(
-                "[durability_label_floor] ticker=%s durability=%.3f speculative→expectation-sensitive "
-                "final_score=%.3f evidence_quality=%.3f",
-                _ticker_up, durability_score, final_score, dims.evidence_quality,
-            )
-        elif setup_label == "fragile setup" and dims.evidence_quality < 0.40:
-            # Sparse evidence alone ≠ fragile business.
-            # Fragile label for high-durability businesses requires high evidence quality
-            # that reveals genuine structural problems — not absence of data.
-            setup_label = "expectation-sensitive"
-            _logger.debug(
-                "[durability_label_floor] ticker=%s durability=%.3f fragile→expectation-sensitive "
-                "reason=sparse_evidence evidence_quality=%.3f",
-                _ticker_up, durability_score, dims.evidence_quality,
-            )
-        elif setup_label == "mixed evidence" and dims.evidence_quality < 0.50:
-            # For high-durability businesses, "mixed evidence" with sparse coverage reflects
-            # evidence scarcity, NOT genuine cross-agent strategic disagreement.
-            # Elite durable businesses (MSFT, JPM, COST) with thin data should
-            # read as "monitoring required" (Balanced tier) — not "mixed" (Demanding).
-            # This separation lets them reach Balanced tier without full evidence depth.
-            # When evidence quality IS high and genuine disagreement persists, label stays.
-            setup_label = "monitoring required"
-            _logger.debug(
-                "[durability_label_floor] ticker=%s durability=%.3f mixed_evidence→monitoring_required "
-                "reason=sparse_evidence evidence_quality=%.3f",
-                _ticker_up, durability_score, dims.evidence_quality,
-            )
+    _expectation_risk = _compute_expectation_risk(dims)
+    setup_label = _durability_matrix_label(durability_score, _expectation_risk)
+    _logger.debug(
+        "[matrix_label] ticker=%s durability=%.3f expectation_risk=%.3f → label=%s "
+        "(frag=%.3f asym=%.3f final_score=%.3f)",
+        _ticker_up, durability_score, _expectation_risk, setup_label,
+        dims.expectation_fragility, dims.expectation_asymmetry, final_score,
+    )
 
     # ── Directional stance ────────────────────────────────────────────────────
     _stance, _stance_reasoning = _compute_directional_stance(
@@ -2270,6 +2428,24 @@ def compute_conviction(
         frag_mult, asym_mult,
         raw_score, final_score,
         setup_label, _compression_tier, len(compression_reasons),
+    )
+
+    # ── [BACKEND_FINAL_RESPONSE] — mandatory INFO log before serialization ────
+    # This is the AUTHORITATIVE last-mile log. If Render logs show this line
+    # with wrong values, the bug is in conviction_modeler. If it shows correct
+    # values but the frontend renders wrong values, the bug is in serialization
+    # or the proxy. Search for "[BACKEND_FINAL_RESPONSE]" in Render logs.
+    _logger.info(
+        "[BACKEND_FINAL_RESPONSE] ticker=%s "
+        "conviction_schema=%s matrix_enabled=%s "
+        "durability=%.3f expectation_risk=%.3f "
+        "setup_label=%s final_score=%.4f (%d%%) "
+        "frag_mult=%.3f asym_mult=%.3f compression=%s",
+        _ticker_up,
+        CONVICTION_SCHEMA_VERSION, ARCHETYPE_MATRIX_ENABLED,
+        durability_score, _expectation_risk,
+        setup_label, final_score, round(final_score * 100),
+        frag_mult, asym_mult, should_compress,
     )
 
     return ConvictionResult(

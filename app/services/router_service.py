@@ -893,6 +893,24 @@ def _run_investment_pipeline(
     except Exception:
         thesis_dict = thesis.dict()
 
+    # ── [PRODUCTION_SANITIZE] Strip confidence_reasoning from API response ─────
+    # confidence_reasoning is an internal telemetry field — a raw diagnostic wall
+    # produced by the conviction modeler.  It must NEVER appear in production API
+    # responses: it contains internal ontology labels, dimension field names,
+    # GAP_* codes, and model-internal vocabulary that should not be visible to
+    # end users or frontend consumers.
+    #
+    # The field is retained on the thesis object for in-process logging (see the
+    # [BACKEND_FINAL_RESPONSE] log below) but is removed from the serialized dict
+    # before it is embedded in the API response payload.
+    #
+    # DEV exposure: the raw confidence_reasoning is still accessible in server logs
+    # and the [LIVE_CONFIDENCE_AUDIT] debug panel (which reads from rawPayload before
+    # this strip fires — no, rawPayload IS the response dict, so it will be absent
+    # there too, which is correct: DEV should read it from server logs, not UI).
+    _raw_reasoning_for_log = thesis_dict.get("confidence_reasoning", "")
+    thesis_dict["confidence_reasoning"] = ""   # blank — never None to keep schema valid
+
     # ── [BACKEND_FINAL_RESPONSE] — truth-path telemetry at serialization point ──
     # This log fires at the exact moment model_dump() converts InvestmentThesis
     # to a dict for the API response. If this log shows the right values but the
@@ -900,11 +918,12 @@ def _run_investment_pipeline(
     # the frontend fetch handler, or the extractInvestmentThesis function.
     # Use the authoritative score_source stamped by synthesize_thesis (Phase 5g).
     # Falls back to the inline derivation if the field is absent (e.g. stale object).
+    # Phase 6: use the stamped score_source field directly.
+    # The old fallback derivation used `!= "actionable thesis"` which was wrong —
+    # "actionable thesis" is now the correct matrix label for durable compounders.
     _score_source_diag = getattr(thesis, "score_source", None) or (
-        "conviction_modeler"
-        if bool(thesis.conviction_dimensions) and thesis.setup_label != "actionable thesis"
-        else "llm_raw_preserved" if not bool(thesis.conviction_dimensions)
-        else "conviction_modeler_balanced"
+        "conviction_modeler" if bool(thesis.conviction_dimensions)
+        else "llm_raw_preserved"
     )
     logger.info(
         "[BACKEND_FINAL_RESPONSE] ticker=%s "
@@ -922,13 +941,13 @@ def _run_investment_pipeline(
         thesis.fragility_multiplier_applied,
         thesis.asymmetry_multiplier_applied,
         len(thesis.conviction_dimensions or {}),
-        (thesis.confidence_reasoning or "")[:80],
+        (_raw_reasoning_for_log or "")[:80],   # pre-strip value for log only
     )
     # [HEADLINE_CONFIDENCE_SOURCE] — also echoed here at the router serialization
     # boundary so the source is visible in a single log stream without needing
     # to cross-reference thesis_synthesizer logs.
     _used_legacy_formatter = _score_source_diag == "llm_raw_preserved"
-    _reasoning_snippet = (thesis.confidence_reasoning or "")[:80].lower()
+    _reasoning_snippet = (_raw_reasoning_for_log or "")[:80].lower()
     _has_legacy_phrase = any(
         p in _reasoning_snippet for p in [
             "limited evidence coverage",
@@ -943,17 +962,32 @@ def _run_investment_pipeline(
         f"score_source={_score_source_diag} "
         f"fragility_mult={thesis.fragility_multiplier_applied:.4f} "
         f"conviction_dims={len(thesis.conviction_dimensions or {})} "
-        f"reasoning_len={len(thesis.confidence_reasoning or '')} "
+        f"reasoning_len={len(_raw_reasoning_for_log or '')} "
+        f"[PRODUCTION_SANITIZE] confidence_reasoning=STRIPPED "
         f"[HEADLINE_CONFIDENCE_SOURCE] used_legacy_formatter={_used_legacy_formatter} "
         f"hard_fail_phrase={_has_legacy_phrase} "
         f"one_sentence_thesis={thesis.one_sentence_thesis!r:.60}"
     )
 
+    # ── [DEPLOYMENT PROOF] backend_version in every thesis response ──────────
+    # Temporary field — lets the frontend confirm the live backend is running
+    # Phase 6 matrix conviction code by reading answer.backend_version.
+    # If this field is missing from the live API response, the deployed process
+    # is pre-matrix.  Remove once Render deploy is confirmed.
+    try:
+        from ..services.conviction_modeler import CONVICTION_SCHEMA_VERSION as _CSV
+        _backend_version = f"matrix-conviction-v1/{_CSV}"
+    except Exception:
+        _backend_version = "matrix-conviction-v1/IMPORT_ERROR"
+
     return AgentAnswerResponse(
         company=ticker,
         request_id=request_id,
         agents_used=agents_run + ["thesis_synthesizer"],
-        answer={"investment_thesis": thesis_dict},
+        answer={
+            "investment_thesis": thesis_dict,
+            "backend_version":   _backend_version,   # [DEPLOYMENT PROOF]
+        },
         routing={
             "pipeline": "investment_thesis",
             "detected_ticker": ticker,
