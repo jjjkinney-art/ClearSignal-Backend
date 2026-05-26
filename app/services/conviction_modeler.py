@@ -189,12 +189,24 @@ _EARNINGS_KEYWORDS = ("earnings", "eps", "quarterly results", "guidance", "fisca
 # NOT in this table — they are post-composition multipliers (see below).
 
 _WEIGHTS = {
-    "evidence_quality":    0.20,
-    "evidence_freshness":  0.15,
-    "thesis_alignment":    0.25,
+    # Phase 6 calibration:
+    #   evidence_quality  ↑ 0.20→0.22  (reward richer evidence pools)
+    #   thesis_alignment  ↑ 0.25→0.28  (cross-agent signal convergence is the
+    #                                    strongest forward-looking conviction signal)
+    #   valuation_certainty ↓ 0.15→0.10  (valuation pressure CAPS upside via
+    #                                    fragility/asymmetry multipliers — it
+    #                                    should not also drag the base score for
+    #                                    elite businesses at fair-to-full prices)
+    #   estimate_dispersion ↑ 0.06→0.07
+    #   governance_risk unchanged 0.04
+    #   macro_uncertainty unchanged 0.15
+    #   evidence_freshness unchanged 0.14  (small reduction to offset others)
+    "evidence_quality":    0.22,
+    "evidence_freshness":  0.14,
+    "thesis_alignment":    0.28,
     "macro_uncertainty":   0.15,   # applied as (1 - macro_uncertainty)
-    "valuation_certainty": 0.15,
-    "estimate_dispersion": 0.06,
+    "valuation_certainty": 0.10,
+    "estimate_dispersion": 0.07,
     "governance_risk":     0.04,   # applied as (1 - governance_risk)
 }
 assert abs(sum(_WEIGHTS.values()) - 1.0) < 1e-9, "Weights must sum to 1.0"
@@ -300,41 +312,73 @@ _DURABILITY_FLOOR_THRESHOLD = 0.65
 #   durable_compounder (≥ 0.65):
 #     Examples: COST, MSFT, JPM, ASML, V, MA, GOOGL, META
 #     Profile knowledge → inherently well-understood recurring economics
-#     evidence_quality floor:   0.48  (profile knowledge = base evidence)
-#     evidence_freshness floor: 0.30  (business model stability)
-#     thesis_alignment floor:   0.56  (structural conviction from known moat)
-#     Expected score boost: ~+0.14 over raw sparse-evidence baseline
-#     Target confidence range: 45–60%
+#     evidence_quality floor:   0.56  (profile knowledge = substantial evidence)
+#     evidence_freshness floor: 0.42  (business model stability)
+#     thesis_alignment floor:   0.65  (structural conviction from known moat)
+#     Plus durability bonus: +(durability-0.40)×0.10 ≈ +0.032 for COST
+#     Plus compression floor: factor ≥ 0.82 (no over-compression for quality)
+#     Target confidence range: 62–72% (Durable label)
 #
 #   expectation_sensitive_quality (0.55–0.65):
 #     Examples: NVDA, AAPL, AMZN — quality but CapEx/growth-rate dependent
-#     evidence_quality floor:   0.32
-#     evidence_freshness floor: 0.22
+#     evidence_quality floor:   0.34
+#     evidence_freshness floor: 0.24
 #     thesis_alignment floor:   0.52  (ta ≥ 0.50 → "fragile setup" not speculative)
-#     Expected score boost: ~+0.07 over raw sparse-evidence baseline
-#     Target label: Fragile (not Speculative)
+#     Target confidence range: 50–62% (Demanding label)
 #
 #   narrative_fragile / speculative_narrative (< 0.55):
 #     Examples: TSLA, PLTR, SNOW — narrative-dependent, binary execution
 #     No floors applied: standard sparse-evidence behavior
-#     "Speculative setup" is the correct label for these at sparse evidence.
+#     Target confidence range: <45% (Fragile or Speculative label)
 #
-# Critical design constraint: _DURABLE_EQ_FLOOR must be < 0.50 so the label
-# floor condition (evidence_quality < 0.50 → "mixed evidence" → "monitoring required")
-# still fires for durable compounders with sparse evidence.
+# NOTE: The old constraint "_DURABLE_EQ_FLOOR < 0.50" was needed for a label
+# floor trigger (evidence_quality < 0.50 → "mixed evidence") that was REMOVED
+# in Phase 6.  setup_label now comes exclusively from _durability_matrix_label().
+# The EQ floor can safely exceed 0.50.
 
 _ARCHETYPE_DURABLE_THRESHOLD   = 0.65   # same as _DURABILITY_FLOOR_THRESHOLD
 _ARCHETYPE_QUALITY_THRESHOLD   = 0.55   # between durable and narrative tiers
 
-# Durable compounder floors
-_DURABLE_EQ_FLOOR = 0.48   # evidence_quality — MUST stay < 0.50 (see label floor constraint above)
-_DURABLE_EF_FLOOR = 0.30   # evidence_freshness
-_DURABLE_TA_FLOOR = 0.56   # thesis_alignment
+# Durable compounder floors — Phase 6 calibration (raised from 0.48/0.30/0.56)
+# NOTE: The old constraint "EQ_FLOOR < 0.50" was needed for a label-floor trigger
+# that has been REMOVED in Phase 6 (label now comes from _durability_matrix_label,
+# not evidence_quality threshold).  These floors can safely exceed 0.50.
+#
+# Target score range with live evidence for COST/MSFT: 62–72%
+# Sparse-evidence COST floor: ~42%  (floors only, no live evidence boost)
+_DURABLE_EQ_FLOOR = 0.56   # was 0.48 — profile knowledge = substantial evidence baseline
+_DURABLE_EF_FLOOR = 0.42   # was 0.30 — business model stability reduces freshness drag
+_DURABLE_TA_FLOOR = 0.65   # was 0.56 — structural moat = persistent thesis alignment
 
 # Expectation-sensitive quality floors
-_QSEN_EQ_FLOOR = 0.32      # evidence_quality
-_QSEN_EF_FLOOR = 0.22      # evidence_freshness
-_QSEN_TA_FLOOR = 0.52      # thesis_alignment — ta ≥ 0.50 lifts Tier 4 label to "fragile setup"
+_QSEN_EQ_FLOOR = 0.34      # was 0.32
+_QSEN_EF_FLOOR = 0.24      # was 0.22
+_QSEN_TA_FLOOR = 0.52      # unchanged — ta ≥ 0.50 keeps "fragile setup" (not speculative)
+
+# ── Durability persistence bonus ──────────────────────────────────────────────
+# Applied as an additive bonus to raw_score after composition.
+# Represents the persistent baseline conviction that business durability itself
+# contributes — independent of evidence depth.
+#
+# Rationale: a durable compounder at full valuation is NOT equivalent to a
+# speculative name at fair valuation.  The business quality premium must persist
+# in the score even when evidence is mixed or the setup is demanding.
+#
+# Formula: bonus = max(0, (durability_score - 0.40) × _DURABILITY_BONUS_SCALE)
+# At durability 0.72 (COST/MSFT):  +0.032  (+3.2pp)
+# At durability 0.60 (threshold):   +0.020  (+2.0pp)
+# At durability 0.55 (NVDA):        +0.015  (+1.5pp)
+# At durability 0.40 (neutral):     +0.000  (no bonus)
+# At durability 0.35 (TSLA/PLTR):   +0.000  (no bonus, clamped at 0)
+_DURABILITY_BONUS_SCALE = 0.10
+
+# ── Compression floor for high-durability businesses ─────────────────────────
+# Even with maximum compression, a durable compounder (durability ≥ 0.65) cannot
+# be pushed below this fraction of its raw pre-compression score.
+# Prevents over-compression from stacking triggers for elite businesses.
+# Value 0.82 means: compression can at most take 18% off the raw score.
+# (Worst-case _COMPRESSION_SEVERE = ×0.70 becomes ×0.82 for durable compounders)
+_DURABLE_MIN_COMPRESSION_FACTOR = 0.82
 
 
 def _infer_archetype_floors(
@@ -2344,21 +2388,42 @@ def compute_conviction(
         valuation, evidence, company, dims_base, durability_score)
     dims = dataclasses.replace(dims_base, expectation_asymmetry=asymmetry_score)
 
+    # ── Ticker identifier (used in log lines below) ──────────────────────────
+    _ticker_up = (company.ticker or "UNKNOWN").upper()
+
     # ── Compose: linear_base × fragility_mult × asymmetry_mult ───────────────
     frag_mult = _fragility_multiplier(dims.expectation_fragility)
     asym_mult = _asymmetry_multiplier(dims.expectation_asymmetry)
     raw_score = _compose_score(dims)  # internally applies both multipliers
+
+    # ── Durability persistence bonus ─────────────────────────────────────────
+    # Additive bonus representing structural business quality conviction that
+    # exists independent of evidence depth.  Applied before compression so
+    # compression can still cap upside, but the bonus protects the floor.
+    _durability_bonus = max(0.0, (durability_score - 0.40) * _DURABILITY_BONUS_SCALE)
+    raw_score_with_bonus = round(
+        min(_MAX_SCORE, max(_MIN_SCORE, raw_score + _durability_bonus)), 4
+    )
+    _logger.debug(
+        "[durability_bonus] ticker=%s durability=%.3f bonus=%.4f "
+        "raw=%.4f raw_with_bonus=%.4f",
+        _ticker_up, durability_score, _durability_bonus, raw_score, raw_score_with_bonus,
+    )
 
     # ── Tiered contradiction compression ─────────────────────────────────────
     should_compress, compression_reasons, compression_factor = _check_contradiction_compression(
         dims, valuation, ranked, evidence
     )
     if should_compress:
+        # For durable compounders: compression cannot exceed _DURABLE_MIN_COMPRESSION_FACTOR
+        # Prevents over-stacking for elite businesses at demanding valuations.
+        if durability_score >= _ARCHETYPE_DURABLE_THRESHOLD:
+            compression_factor = max(compression_factor, _DURABLE_MIN_COMPRESSION_FACTOR)
         final_score = round(
-            min(_MAX_SCORE, max(_MIN_SCORE, raw_score * compression_factor)), 4
+            min(_MAX_SCORE, max(_MIN_SCORE, raw_score_with_bonus * compression_factor)), 4
         )
     else:
-        final_score = raw_score
+        final_score = raw_score_with_bonus
 
     # ── Semantic setup label ──────────────────────────────────────────────────
     # Note: The Phase 5e HE structural compression (×0.88 for high-expectation tickers)
@@ -2377,7 +2442,6 @@ def compute_conviction(
     #   - Only business durability class + expectation risk level determine the label.
     #
     # Logging for traceability:
-    _ticker_up = (company.ticker or "").upper()
     _expectation_risk = _compute_expectation_risk(dims)
     setup_label = _durability_matrix_label(durability_score, _expectation_risk)
     _logger.debug(

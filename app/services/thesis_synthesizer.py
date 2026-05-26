@@ -1357,7 +1357,46 @@ Recent Catalysts:
 SUPPORTING EVIDENCE:
 {ev_block}
 
-{live_data_provenance_block}STOCK-MOVEMENT ORIENTATION — MANDATORY FOR ALL SECTIONS:
+{live_data_provenance_block}SECTION CONTRACT — EACH SECTION HAS ONE JOB AND MUST NOT POACH FROM OTHERS:
+
+  direct_answer     → ONLY answers the user's exact question. 2 sentences maximum.
+                      Does NOT summarise the business, repeat the conclusion, or
+                      discuss the market debate.
+
+  one_sentence_thesis → Single positioning statement. Does NOT preview the bull/bear.
+
+  core_market_debate → The ONE live investor disagreement question. Phrased as a question.
+                       Does NOT describe the business model or restate the thesis.
+
+  bull_thesis        → WHY the thesis works economically. Mechanism + operating leverage.
+                       Does NOT repeat the valuation multiple or macro rate context
+                       already covered in valuation_view/macro_sensitivity.
+
+  bear_thesis        → HOW the thesis breaks. Specific compounding failure path.
+                       Does NOT repeat risk factors already named in bull_thesis.
+
+  valuation_view     → What expectations are already PRICED IN at the current multiple.
+                       2 sentences. Does NOT opine on business quality (that is bull_thesis).
+                       Does NOT discuss interest rates (that is macro_sensitivity).
+
+  macro_sensitivity  → HOW macro variables (rates, FX, cycle) alter the thesis mechanics.
+                       2 sentences. Does NOT repeat the P/E ratio or valuation stance
+                       already stated in valuation_view.
+
+  conclusion         → Final PM-grade positioning verdict. 2 sentences HARD CAP.
+                       Does NOT restate the bull/bear case or summarise earlier sections.
+                       Opens with positioning stance — not with a mechanism description.
+
+NON-REPETITION RULE — STRICTLY ENFORCED:
+- A phrase appearing verbatim in one section MUST NOT appear in any other section.
+- A mechanism described in one section need only be named (not re-explained) elsewhere.
+- "membership fee growth", "renewal rates", "multiple compression", "rate sensitivity"
+  should appear in AT MOST ONE section each — the section where they are the primary driver.
+- If a concept was fully explained in bull_thesis, later sections may reference it in
+  one clause ("membership fee renewals already addressed above" is acceptable) but
+  MUST NOT re-explain the mechanism.
+
+STOCK-MOVEMENT ORIENTATION — MANDATORY FOR ALL SECTIONS:
 Every sentence must answer "What moves the stock?" — NOT "What describes the company?"
 
 HIERARCHICAL DENSITY REQUIREMENT:
