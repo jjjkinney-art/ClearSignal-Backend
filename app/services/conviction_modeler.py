@@ -1293,10 +1293,12 @@ def _confidence_band_label(
 # ── Directional stance synthesis ──────────────────────────────────────────────
 
 def _compute_directional_stance(
-    final_score: float,
-    dims:        "ConvictionDimensions",
-    setup_label: str,
-    company:     "CompanyContext",
+    final_score:        float,
+    dims:               "ConvictionDimensions",
+    setup_label:        str,
+    company:            "CompanyContext",
+    expectation_regime: str   = "fair",   # NEW — regime from _classify_expectation_regime
+    durability_score:   float = 0.50,     # NEW — business durability [0, 1]
 ) -> Tuple[str, str]:
     """Derive a directional stance and institutional reasoning from the conviction output.
 
@@ -1307,23 +1309,21 @@ def _compute_directional_stance(
 
     Stance vocabulary (ordered from most to least constructive):
       "Aggressive Buy"  — exceptional setup: very high conviction, low fragility
-      "Buy"             — solid setup: good conviction with manageable expectation risk
-      "Accumulate"      — quality business, fair valuation: add on weakness, not at spot
+      "Buy"             — solid setup: clear upside asymmetry, attractive/cheap regime
+      "Accumulate"      — durable compounder at fair/attractive valuation; add on dips
       "Hold"            — thesis intact but expectation bar elevated; no urgent add
-      "Tactical"        — short-term opportunity or specific catalyst play; limited
-                          structural conviction; not a full position add
+      "Tactical"        — short-term catalyst window; limited structural conviction
       "Avoid"           — weak evidence or fragile setup; risk/reward unfavorable
       "Sell"            — structural conviction break; deteriorating evidence base
 
-    Design rules
-    ------------
-    - Stance derives from final_score + fragility + asymmetry + thesis_alignment.
-    - "Accumulate" fires for durable setups where valuation is fair-to-full
-      (frag 0.40-0.62) — the business is high quality but the entry matters.
-    - "Aggressive Buy" requires very high score + low fragility + strong alignment.
-    - "Tactical" fires when score is above threshold but fragility is elevated AND
-      valuation_certainty is low — the trade has asymmetry but low structural support.
-    - "Sell" is reserved for genuine structural conviction breaks (<0.28 score).
+    Design rules (Phase 3 calibration)
+    ------------------------------------
+    - BUY requires clear upside asymmetry (low frag + high ta) AND a regime that
+      is not stretched/euphoric/bubble.  Quality alone is insufficient.
+    - ACCUMULATE captures durable compounders at fair/attractive valuation where
+      expectations are partially priced-in but the structural thesis is intact.
+    - Regime-gating: stretched/euphoric/bubble regimes block Buy (broad) from firing.
+    - Early Avoid: euphoric/bubble + low conviction → Avoid before other rules.
     - Reasoning must reference the expectation context, not just score.
     - Language must be institutional: no "BUY because fundamentals are strong."
     """
@@ -1333,10 +1333,20 @@ def _compute_directional_stance(
     vc     = dims.valuation_certainty
     ticker = (company.ticker or "the company").upper()
 
+    # ── Early Avoid: euphoric/bubble regime + insufficient conviction ─────────
+    # When the market is pricing perfection, only very high conviction survives.
+    if expectation_regime in ("euphoric", "bubble") and final_score < 0.60:
+        return (
+            "Avoid",
+            f"{ticker} is priced for outcomes that current evidence cannot support. "
+            f"The expectation regime ({expectation_regime}) leaves minimal margin for "
+            f"execution variance — the risk/reward is unfavorable at this entry.",
+        )
+
     # ── Aggressive Buy ────────────────────────────────────────────────────────
     # Exceptional setup: very high conviction, low fragility, very high alignment
     # Market undervalues durable compounding; setup does not require perfection.
-    if final_score >= 0.78 and frag < 0.35 and ta > 0.68:
+    if final_score >= 0.78 and frag < 0.32 and ta > 0.68:
         return (
             "Aggressive Buy",
             f"Current expectations on {ticker} leave material room for upside — "
@@ -1344,31 +1354,48 @@ def _compute_directional_stance(
             f"Low fragility and strong cross-signal alignment support adding size.",
         )
 
-    # ── Buy ───────────────────────────────────────────────────────────────────
-    # High-conviction, manageable expectation risk — standard constructive entry
-    if final_score >= 0.68 and frag < 0.40 and ta > 0.65:
+    # ── Buy (explicit) ────────────────────────────────────────────────────────
+    # High-conviction, manageable expectation risk, regime supports entry.
+    # Regime gate: stretched/euphoric/bubble block this rule.
+    if (final_score >= 0.68 and frag < 0.40 and ta > 0.60
+            and expectation_regime not in ("stretched", "euphoric", "bubble")):
         return (
             "Buy",
-            f"The setup remains attractive on {ticker} — evidence quality is high, "
-            f"the thesis is aligned across signals, and the current multiple does not "
-            f"require above-consensus execution to defend.",
+            f"The setup on {ticker} offers clear upside asymmetry — evidence quality is "
+            f"high, the thesis is aligned across signals, and the current multiple does "
+            f"not require above-consensus execution to defend.",
         )
 
-    # ── Accumulate ────────────────────────────────────────────────────────────
-    # Quality business at full-to-fair valuation — add on weakness, not at spot.
-    # The key distinction from Buy: expectations are priced in (frag 0.40-0.62),
-    # but the structural quality remains intact.  Best built over time.
+    # ── Accumulate (frag band) ────────────────────────────────────────────────
+    # Quality business where expectations are partially priced-in.
+    # The key distinction from Buy: expectations are priced-in (frag 0.40-0.62),
+    # so the business is high-quality but the entry point matters.
     if final_score >= 0.58 and 0.40 <= frag < 0.62:
         return (
             "Accumulate",
             f"{ticker} is a quality business where current pricing already reflects "
-            f"the operational strength — the setup favours adding on dips rather than "
+            f"operational strength — the setup favours adding on dips rather than "
             f"chasing at current levels. The thesis holds; the entry matters.",
         )
 
-    # ── Buy (broad) ───────────────────────────────────────────────────────────
-    # Solid conviction, manageable expectation risk — covers mid-range score
-    if final_score >= 0.62 and frag < 0.58:
+    # ── Accumulate (durable compounder — KEY calibration rule) ───────────────
+    # Durable compounders with low fragility in non-stretched regimes should
+    # Accumulate rather than Buy — quality is recognised but upside asymmetry
+    # is incomplete.  META at fair/attractive valuation lands here.
+    if (durability_score >= 0.65 and final_score >= 0.58 and frag < 0.40
+            and expectation_regime not in ("euphoric", "bubble")):
+        return (
+            "Accumulate",
+            f"{ticker} is a durable compounder with a high-quality business, but the "
+            f"current entry does not offer the clear upside asymmetry required for a "
+            f"full Buy. The thesis is intact; add on pullbacks rather than at spot.",
+        )
+
+    # ── Buy (broad) — regime-gated ────────────────────────────────────────────
+    # Solid conviction with manageable expectation risk — blocked in
+    # stretched/euphoric/bubble regimes where quality is already priced.
+    if (final_score >= 0.62 and frag < 0.58
+            and expectation_regime not in ("stretched", "euphoric", "bubble")):
         return (
             "Buy",
             f"Business quality and setup support a constructive view on {ticker}. "
@@ -1385,6 +1412,15 @@ def _compute_directional_stance(
             f"The {ticker} setup has near-term asymmetry around a specific catalyst but "
             f"lacks the structural conviction for a full position. Risk/reward is "
             f"acceptable tactically; the setup is not a conviction add.",
+        )
+
+    # ── Tactical (euphoric/bubble, moderate conviction) ───────────────────────
+    if expectation_regime in ("euphoric", "bubble") and final_score >= 0.60 and asym < 0.50:
+        return (
+            "Tactical",
+            f"{ticker} has identifiable near-term momentum, but the expectation regime "
+            f"({expectation_regime}) means the structural risk/reward is unfavorable "
+            f"for a full position. Tactical-only at current pricing.",
         )
 
     # ── Hold — demanding setup ────────────────────────────────────────────────
@@ -1809,11 +1845,12 @@ def _weight_sort_evidence(
 
 # Expectation regime thresholds derived from expectation_fragility + valuation signals
 # Regime labels: cheap | fair | stretched | euphoric | bubble
-_REGIME_BUBBLE     = 0.88   # fragility above this → bubble (disconnected from reality)
-_REGIME_EUPHORIC   = 0.72   # fragility above this → euphoric
+_REGIME_BUBBLE     = 0.86   # fragility above this → bubble (disconnected from reality)
+_REGIME_EUPHORIC   = 0.68   # fragility above this → euphoric  (tightened: 0.72→0.68)
 _REGIME_STRETCHED  = 0.50   # fragility above this → stretched
-_REGIME_FAIR       = 0.32   # fragility above this → fair
-# below _REGIME_FAIR → cheap
+_REGIME_FAIR       = 0.36   # fragility above this → fair      (raised: 0.32→0.36)
+_REGIME_ATTRACTIVE = 0.20   # fragility above this → attractive (NEW — between cheap and fair)
+# below _REGIME_ATTRACTIVE → cheap
 
 
 def _classify_expectation_regime(
@@ -1831,7 +1868,7 @@ def _classify_expectation_regime(
     - valuation_stance from the valuation agent overrides as a hard signal
       when available.
 
-    Returns: 'cheap' | 'fair' | 'stretched' | 'euphoric' | 'bubble'
+    Returns: 'cheap' | 'attractive' | 'fair' | 'stretched' | 'euphoric' | 'bubble'
     """
     # Hard overrides from valuation agent stance
     vs = (valuation_stance or "").lower()
@@ -1844,10 +1881,11 @@ def _classify_expectation_regime(
     # (they can trade at higher multiples sustainably)
     dur_adj = durability_score * 0.12   # max +0.12 at durability=1.0
 
-    bubble_thresh    = _REGIME_BUBBLE    + dur_adj
-    euphoric_thresh  = _REGIME_EUPHORIC  + dur_adj
-    stretched_thresh = _REGIME_STRETCHED + dur_adj
-    fair_thresh      = _REGIME_FAIR      + dur_adj
+    bubble_thresh     = _REGIME_BUBBLE     + dur_adj
+    euphoric_thresh   = _REGIME_EUPHORIC   + dur_adj
+    stretched_thresh  = _REGIME_STRETCHED  + dur_adj
+    fair_thresh       = _REGIME_FAIR       + dur_adj
+    attractive_thresh = _REGIME_ATTRACTIVE + dur_adj
 
     if expectation_fragility >= bubble_thresh:
         return "bubble"
@@ -1857,6 +1895,8 @@ def _classify_expectation_regime(
         return "stretched"
     if expectation_fragility >= fair_thresh:
         return "fair"
+    if expectation_fragility >= attractive_thresh:
+        return "attractive"
     return "cheap"
 
 
@@ -2907,9 +2947,19 @@ def compute_conviction(
         dims.expectation_fragility, dims.expectation_asymmetry, final_score,
     )
 
+    # ── Expectation regime (computed BEFORE stance so it gates stance rules) ──
+    _val_stance = (getattr(valuation, "valuation_stance", "") or "").lower()
+    _exp_regime = _classify_expectation_regime(
+        expectation_fragility = dims.expectation_fragility,
+        valuation_stance      = _val_stance,
+        durability_score      = durability_score,
+    )
+
     # ── Directional stance ────────────────────────────────────────────────────
     _stance, _stance_reasoning = _compute_directional_stance(
-        final_score, dims, setup_label, company
+        final_score, dims, setup_label, company,
+        expectation_regime = _exp_regime,
+        durability_score   = durability_score,
     )
 
     # ── Reasoning and what_increases_conviction ───────────────────────────────
@@ -2925,12 +2975,6 @@ def compute_conviction(
     )
 
     # ── Expectation Intelligence ──────────────────────────────────────────────
-    _val_stance = (getattr(valuation, "valuation_stance", "") or "").lower()
-    _exp_regime = _classify_expectation_regime(
-        expectation_fragility = dims.expectation_fragility,
-        valuation_stance      = _val_stance,
-        durability_score      = durability_score,
-    )
     _exp_shift_sev = _classify_expectation_shift_severity(evidence)
 
     # ── Structured telemetry ──────────────────────────────────────────────────

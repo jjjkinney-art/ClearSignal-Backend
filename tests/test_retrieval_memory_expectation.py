@@ -272,10 +272,22 @@ class TestExpectationRegime:
         regime = _classify_expectation_regime(expectation_fragility=0.15)
         assert regime == "cheap"
 
-    def test_fair_regime_at_moderate_fragility(self):
+    def test_attractive_regime_at_moderate_fragility(self):
+        """Phase 3: fragility=0.40 is now 'attractive' (below updated fair_thresh=0.42)."""
         from app.services.conviction_modeler import _classify_expectation_regime
         regime = _classify_expectation_regime(expectation_fragility=0.40)
-        assert regime == "fair"
+        assert regime == "attractive", (
+            f"Expected 'attractive' at fragility=0.40 (below fair_thresh≈0.42 with default durability). "
+            f"Got {regime!r}. Phase 3 raised _REGIME_FAIR from 0.32→0.36 and added _REGIME_ATTRACTIVE=0.20."
+        )
+
+    def test_fair_regime_at_moderate_fragility(self):
+        """fragility=0.45 lands above fair_thresh≈0.42, below stretched_thresh≈0.56."""
+        from app.services.conviction_modeler import _classify_expectation_regime
+        regime = _classify_expectation_regime(expectation_fragility=0.45)
+        assert regime == "fair", (
+            f"Expected 'fair' at fragility=0.45; got {regime!r}."
+        )
 
     def test_stretched_regime_at_elevated_fragility(self):
         from app.services.conviction_modeler import _classify_expectation_regime
@@ -289,7 +301,7 @@ class TestExpectationRegime:
 
     def test_bubble_regime_at_extreme_fragility(self):
         from app.services.conviction_modeler import _classify_expectation_regime
-        # Use durability_score=0.0 so dur_adj=0 and bubble_thresh=0.88 (raw threshold)
+        # Use durability_score=0.0 so dur_adj=0 and bubble_thresh=0.86 (raw threshold, Phase 3 tightened)
         regime = _classify_expectation_regime(expectation_fragility=0.93, durability_score=0.0)
         assert regime == "bubble"
 
@@ -310,8 +322,9 @@ class TestExpectationRegime:
         assert regime == "bubble"
 
     def test_all_outputs_are_valid_vocabulary(self):
+        """Phase 3: 'attractive' is now a valid regime label between 'cheap' and 'fair'."""
         from app.services.conviction_modeler import _classify_expectation_regime
-        valid = {"cheap", "fair", "stretched", "euphoric", "bubble"}
+        valid = {"cheap", "attractive", "fair", "stretched", "euphoric", "bubble"}
         for frag in [0.05, 0.20, 0.40, 0.55, 0.65, 0.75, 0.85, 0.95]:
             result = _classify_expectation_regime(frag)
             assert result in valid, f"Invalid regime {result!r} for frag={frag}"
