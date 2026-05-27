@@ -78,10 +78,51 @@ def _extract_scope(request: Request) -> "ScopeContext | None":
         return None
 
 
+@router.get("/", summary="Root — service identity", tags=["health"])
 @router.get("/health", summary="Health check", tags=["health"])
+@router.get("/healthz", summary="Health check (k8s-style alias)", tags=["health"])
 async def health() -> dict:
-    """Return basic health status."""
-    return {"status": "ok"}
+    """Return service health and identity.
+
+    Suitable for uptime monitors, Render health checks, and frontend warmup pings.
+    All three paths (/, /health, /healthz) return the same payload.
+
+    Response fields:
+      status      — always "ok" when the process is up
+      service     — stable service identifier
+      version     — conviction schema version loaded at startup
+      timestamp   — current UTC ISO-8601 timestamp
+      environment — "production" / "development" / "unknown"
+      build_commit — short git SHA from RENDER_GIT_COMMIT env var
+    """
+    import time as _t
+    import os as _o
+
+    git_commit = (
+        _o.environ.get("RENDER_GIT_COMMIT", "")[:12]
+        or _o.environ.get("GIT_COMMIT", "")[:12]
+        or "unknown"
+    )
+    environment = (
+        "production"  if _o.environ.get("RENDER_SERVICE_ID") else
+        "development" if _o.environ.get("NODE_ENV") != "production" else
+        "unknown"
+    )
+
+    try:
+        from .services.conviction_modeler import CONVICTION_SCHEMA_VERSION
+        version = CONVICTION_SCHEMA_VERSION
+    except Exception:
+        version = "unknown"
+
+    return {
+        "status":       "ok",
+        "service":      "clearsignal-backend",
+        "version":      version,
+        "timestamp":    _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+        "environment":  environment,
+        "build_commit": git_commit,
+    }
 
 
 @router.get(

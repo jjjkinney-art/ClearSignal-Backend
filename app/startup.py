@@ -144,12 +144,20 @@ def print_startup_diagnostics() -> None:
         or os.environ.get("GIT_COMMIT", "")[:12]
         or "unknown"
     )
+    port           = os.environ.get("PORT", "8000")
+    service_id     = os.environ.get("RENDER_SERVICE_ID", "local")
+    service_name   = os.environ.get("RENDER_SERVICE_NAME", "local")
+    environment    = "production" if os.environ.get("RENDER_SERVICE_ID") else "development"
 
     print("=" * 60)
-    print("[STARTUP] AI Analyst Backend — environment check")
+    print("[STARTUP] ClearSignal AI Backend — boot sequence")
+    print(f"[STARTUP] Service:                {service_name} ({service_id})")
+    print(f"[STARTUP] Environment:            {environment}")
+    print(f"[STARTUP] Port:                   {port}")
+    print(f"[STARTUP] GIT_COMMIT:             {git_commit}")
+    print(f"[STARTUP] Health endpoints:       GET /, GET /health, GET /healthz")
     print(f"[STARTUP] FRED_API_KEY present:   {bool(fred_key)}  (len={len(fred_key)})")
     print(f"[STARTUP] OPENAI_API_KEY present: {bool(openai_key)}  (len={len(openai_key)})")
-    print(f"[STARTUP] GIT_COMMIT:             {git_commit}")
 
     if not fred_key:
         print(
