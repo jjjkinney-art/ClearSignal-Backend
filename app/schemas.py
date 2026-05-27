@@ -62,6 +62,41 @@ class RetrievedEvidence(BaseModel):
         description="Relevance score 0.0–1.0; higher items are shown first in the prompt",
     )
 
+    # ── Retrieval intelligence tags (Part 1 — Retrieval Enrichment) ──────────
+    # Assigned by _classify_evidence_tags() in conviction_modeler.  Each tag
+    # identifies the type of intelligence the item carries so the analysis
+    # foundation can weight it appropriately.  Tags:
+    #   recent_change       — published within last 30 days, high temporal value
+    #   estimate_revision   — earnings/revenue estimate was raised or cut
+    #   tone_shift          — management language materially changed
+    #   valuation_regime    — multiple expansion/compression context
+    #   expectation_change  — consensus expectations moved (up or down)
+    #   sentiment_regime    — analyst or institutional sentiment shifted
+    #   positioning         — institutional ownership / short interest change
+    #   macro_transition    — macro regime change (rate cycle, GDP turn)
+    #   execution_signal    — beat/miss/guidance vs expectations
+    #   balance_sheet_event — buyback, debt change, capital return event
+    retrieval_tags: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Intelligence tags assigned by the retrieval classifier. "
+            "Values: recent_change | estimate_revision | tone_shift | "
+            "valuation_regime | expectation_change | sentiment_regime | "
+            "positioning | macro_transition | execution_signal | balance_sheet_event"
+        ),
+    )
+    retrieval_weight: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=3.0,
+        description=(
+            "Priority weight for this evidence item. 1.0=default, >1.0=boosted. "
+            "Items tagged recent_change, estimate_revision, tone_shift get weight ≥1.5. "
+            "Generic company descriptions get weight 0.6. "
+            "Used to sort evidence before synthesis — high-weight items go first."
+        ),
+    )
+
 
 class CompanyProfile(BaseModel):
     """Basic company profile information.
@@ -583,6 +618,84 @@ class SignalProfileModel(BaseModel):
 # Investment Intelligence schemas — company-aware multi-agent thesis layer
 # =============================================================================
 
+class CatalystContext(BaseModel):
+    """Structured catalyst calendar for a Tactical or near-term thesis.
+
+    Populated when directional_stance is 'Tactical' or when evidence contains
+    catalyst proximity signals (earnings, macro events, product launches,
+    regulatory decisions).  Makes Tactical outputs actually actionable by
+    providing event window, timing context, and asymmetry framing.
+
+    All fields are optional so this can be partially populated when only
+    some catalyst data is available.
+
+    time_horizon values:
+        tactical    — < 30 days (pre-earnings, pre-event)
+        intermediate — 1-3 months (post-earnings setup, macro turn)
+        structural   — > 3 months (business model re-rating)
+    """
+
+    # ── Catalyst events ────────────────────────────────────────────────────────
+    primary_catalyst: str = Field(
+        default="",
+        description=(
+            "The single most important near-term catalyst. "
+            "Good: 'Q2 earnings call — guidance is the key variable.' "
+            "Good: 'FDA PDUFA date — binary outcome on approval.' "
+            "Bad: 'Upcoming earnings report.'"
+        ),
+    )
+    catalyst_type: str = Field(
+        default="",
+        description=(
+            "earnings | macro_event | product_launch | regulatory_decision | "
+            "guidance_event | management_event | none"
+        ),
+    )
+    event_window: str = Field(
+        default="",
+        description=(
+            "Human-readable timing window for the primary catalyst. "
+            "Good: 'Within 2-3 weeks (pre-earnings)', 'Next 4-6 weeks'. "
+            "Bad: 'Soon' or 'In the near future'."
+        ),
+    )
+    asymmetry_window: str = Field(
+        default="",
+        description=(
+            "1-sentence description of the upside/downside asymmetry before the event. "
+            "Good: 'Upside limited at current price; downside from guidance cut is ~12-15%.' "
+            "Good: 'Risk/reward skewed to upside if execution check clears.' "
+            "Bad: 'There is uncertainty around the event.'"
+        ),
+    )
+    what_resolves_the_debate: str = Field(
+        default="",
+        description=(
+            "What specific data from the catalyst would confirm or deny the thesis. "
+            "Good: 'Gross margin guidance above 72% confirms Services mix-shift.' "
+            "Good: 'Revenue guidance reaffirmation resolves the demand durability debate.'"
+        ),
+    )
+
+    # ── Time horizon ───────────────────────────────────────────────────────────
+    time_horizon: str = Field(
+        default="structural",
+        description=(
+            "Thesis time horizon: 'tactical' (<30d) | 'intermediate' (1-3m) | "
+            "'structural' (>3m). Drives UI rendering of the catalyst chip."
+        ),
+    )
+    time_horizon_rationale: str = Field(
+        default="",
+        description=(
+            "Why this time horizon was assigned. "
+            "Good: 'Earnings in ~2 weeks makes this a tactical event-window setup.' "
+            "Good: 'No near-term binary event — thesis plays out over 6-12 months.'"
+        ),
+    )
+
+
 class CompanyContext(BaseModel):
     """Normalised company identity resolved from a user query.
 
@@ -966,6 +1079,36 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Expectation Intelligence (Part 3 — Expectation Regime) ──────────────
+    # Standalone valuation/expectation regime — separate from business_durability
+    # and expectation_fragility.  Answers: "What is the market currently pricing?"
+    # rather than "How risky is the setup?"
+    expectation_regime: str = Field(
+        default="fair",
+        description=(
+            "Current market valuation/expectation regime for this ticker. "
+            "Determined by the conviction modeler from valuation signals and "
+            "expectation fragility. Values: "
+            "'cheap' — trading below intrinsic value, limited downside priced-in; "
+            "'fair' — multiples aligned with fundamental outlook; "
+            "'stretched' — priced for above-trend execution, limited margin of safety; "
+            "'euphoric' — extreme expectations embedded, any miss reprices sharply; "
+            "'bubble' — market pricing disconnected from any reasonable fundamental. "
+            "NOT a stance recommendation — purely a market-pricing classification."
+        ),
+    )
+    expectation_shift_severity: str = Field(
+        default="none",
+        description=(
+            "Severity of recent expectation shift detected in the evidence. "
+            "Values: 'none' | 'minor' | 'moderate' | 'significant' | 'major'. "
+            "Populated by the temporal intelligence layer from revision signals, "
+            "tone changes, and consensus movement. "
+            "'major' = consensus moved >2 standard deviations in one direction recently. "
+            "Drives the UI 'What Changed?' urgency indicator."
+        ),
+    )
+
     # ── Thesis Evolution — "What Changed?" intelligence (Part 2) ─────────────
     # Narrative paragraph synthesizing recent shifts in the investment story.
     # Populated even without a prior snapshot — derived from evidence recency,
@@ -1239,6 +1382,20 @@ class InvestmentThesis(BaseModel):
             "valuation_age_days, macro_age_days. "
             "None when no evidence of that type was found. "
             "Populated by the freshness analyzer at synthesis time."
+        ),
+    )
+
+    # ── Catalyst Calendar (Part 5 — Catalyst Calendar Awareness) ────────────
+    # Optional structured catalyst context — populated when stance is Tactical
+    # or when evidence contains near-term catalyst proximity signals.
+    # Empty/None for structural theses without near-term binary events.
+    catalyst_calendar: Optional[CatalystContext] = Field(
+        default=None,
+        description=(
+            "Structured catalyst timing and asymmetry context. "
+            "Populated for Tactical stances and event-driven setups. "
+            "None for structural theses without near-term catalysts. "
+            "Renders as catalyst chip in the frontend."
         ),
     )
 

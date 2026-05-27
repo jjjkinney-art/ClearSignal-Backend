@@ -1085,7 +1085,35 @@ BAD (mechanism-first, avoid these): \
 "The company remains well-positioned despite headwinds." \
 "This thesis requires [X] to materialize before the market reprices the multiple." \
 "[Ticker]'s strong fundamentals support a positive outlook going forward." \
-"Overall, the investment thesis is balanced with risks and opportunities on both sides." """
+"Overall, the investment thesis is balanced with risks and opportunities on both sides."
+
+CATALYST CALENDAR REQUIREMENT (Part 5 — MANDATORY when applicable):
+  "catalyst_calendar" field MUST be populated when:
+    (a) directional_stance is "Tactical", OR
+    (b) Evidence references an upcoming earnings print, guidance event, regulatory decision,
+        product launch, or macro release within 60 days.
+  If no near-term catalyst exists, set catalyst_calendar to null.
+
+  When populated, catalyst_calendar must be a JSON object with these fields:
+    "primary_catalyst"      : string — the single most important near-term event
+    "catalyst_type"         : "earnings" | "macro_event" | "product_launch" |
+                              "regulatory_decision" | "guidance_event" | "management_event" | "none"
+    "event_window"          : string — specific timing window (e.g. "2-3 weeks", "next 4-6 weeks")
+    "asymmetry_window"      : string — upside/downside asymmetry before the event
+    "what_resolves_the_debate" : string — what specific data from the event confirms or denies thesis
+    "time_horizon"          : "tactical" | "intermediate" | "structural"
+    "time_horizon_rationale": string — why this time horizon was assigned
+
+  GOOD catalyst_calendar: {
+    "primary_catalyst": "Q2 earnings call — gross margin guidance is the key variable",
+    "catalyst_type": "earnings",
+    "event_window": "Within 2-3 weeks",
+    "asymmetry_window": "Setup skewed to downside at current multiples — guidance cut reprices ~12%",
+    "what_resolves_the_debate": "Gross margin guidance above 72% confirms Services mix durability",
+    "time_horizon": "tactical",
+    "time_horizon_rationale": "Binary earnings event within 2 weeks makes this tactical"
+  }
+  BAD: Vague timing ("soon"), generic catalyst ("upcoming results"), no asymmetry framing. """
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────
@@ -2748,6 +2776,10 @@ def synthesize_thesis(
         thesis.analysis_foundation_constraints = conviction.analysis_foundation_constraints
         thesis.analysis_foundation_sources     = conviction.analysis_foundation_sources
 
+        # ── Expectation Intelligence (Part 3) ─────────────────────────────────
+        thesis.expectation_regime         = conviction.expectation_regime
+        thesis.expectation_shift_severity = conviction.expectation_shift_severity
+
         # ── Phase 6: Stamp runtime fingerprint ───────────────────────────────
         # Allows the frontend to verify the live backend is running matrix code.
         try:
@@ -3110,6 +3142,58 @@ def synthesize_thesis(
         f"top_signals={len(thesis.top_signals)} "
         f"top_risks={len(thesis.top_risks)}"
     )
+
+    # ── Post-synthesis validation (Part 6) ────────────────────────────────────
+    # Deterministic quality checks on the synthesized thesis.  Non-blocking:
+    # violations are logged but do NOT prevent the thesis from being returned.
+    # In a future iteration, hard violations may trigger a targeted retry.
+    try:
+        from .synthesis_validator import validate_thesis, summarize_validation
+        _val_result = validate_thesis(thesis)
+        if _val_result.has_violations:
+            _val_summary = summarize_validation(_val_result)
+            logger.info(
+                "[synthesis_validator] ticker=%s %s",
+                getattr(company, "ticker", "UNKNOWN"), _val_summary,
+            )
+            # Append validator warnings to consistency_warnings (advisory only)
+            for _vv in _val_result.violations:
+                if _vv.severity == "hard":
+                    thesis.consistency_warnings.append(
+                        f"[VALIDATOR:{_vv.check_id}] {_vv.description}"
+                    )
+        else:
+            logger.debug(
+                "[synthesis_validator] ticker=%s all checks passed (%d)",
+                getattr(company, "ticker", "UNKNOWN"), _val_result.checks_run,
+            )
+    except Exception as _ve:
+        logger.warning("[synthesis_validator] failed (non-fatal): %r", _ve)
+
+    # ── Catalyst Calendar: extract from LLM output if returned ────────────────
+    # The synthesis prompt asks the LLM to populate catalyst_calendar as a JSON
+    # sub-object.  If it was returned (non-None), validate and stamp it.
+    # If not returned but stance is Tactical, log a warning.
+    try:
+        from ..schemas import CatalystContext as _CatCtx
+        _cc_raw = getattr(thesis, "catalyst_calendar", None)
+        if _cc_raw is None and thesis.directional_stance == "Tactical":
+            logger.info(
+                "[catalyst_calendar] ticker=%s stance=Tactical but catalyst_calendar is None — "
+                "prompt should have populated it",
+                getattr(company, "ticker", "UNKNOWN"),
+            )
+        elif isinstance(_cc_raw, dict):
+            # LLM returned a dict — validate into CatalystContext
+            try:
+                thesis.catalyst_calendar = _CatCtx.model_validate(_cc_raw)
+            except Exception:
+                thesis.catalyst_calendar = _CatCtx(**{
+                    k: v for k, v in _cc_raw.items()
+                    if k in _CatCtx.model_fields
+                })
+    except Exception as _cce:
+        logger.warning("[catalyst_calendar] failed (non-fatal): %r", _cce)
 
     # ── Live Intelligence: persistence metadata and freshness stamping ────────
     # Stamped after all scoring is complete so version_id and freshness reflect

@@ -32,7 +32,10 @@ Design invariants
 from __future__ import annotations
 
 import hashlib
+import json
 import logging
+import os
+import pathlib
 from datetime import datetime, timezone
 from typing import Callable, Dict, List, Optional, Tuple
 
@@ -44,6 +47,10 @@ from ..schemas import (
     ThesisDiff,
     ThesisSnapshot,
 )
+# TYPE_CHECKING import to avoid circular at runtime
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    pass  # InvestmentThesis already imported above
 
 logger = logging.getLogger(__name__)
 
@@ -910,6 +917,172 @@ DEFAULT_ALERT_RULES: List[AlertRule] = [
         severity      = "low",
     ),
 ]
+
+
+# ---------------------------------------------------------------------------
+# Persistence layer — file-based snapshot store
+# ---------------------------------------------------------------------------
+
+# Default storage directory.  Can be overridden via the
+# CLEARSIGNAL_MEMORY_DIR environment variable or by passing
+# memory_dir explicitly to the persistence functions.
+_DEFAULT_MEMORY_DIR = pathlib.Path(
+    os.environ.get("CLEARSIGNAL_MEMORY_DIR", ".clearsignal_memory")
+)
+
+# Maximum snapshots retained per ticker (oldest pruned first)
+_MAX_SNAPSHOTS_PER_TICKER = 20
+
+
+def _memory_dir(memory_dir: Optional[pathlib.Path] = None) -> pathlib.Path:
+    d = memory_dir or _DEFAULT_MEMORY_DIR
+    d.mkdir(parents=True, exist_ok=True)
+    return d
+
+
+def _snapshot_path(ticker: str, memory_dir: Optional[pathlib.Path] = None) -> pathlib.Path:
+    """Return the JSON file path for a ticker's snapshot history."""
+    return _memory_dir(memory_dir) / f"{ticker.upper()}.json"
+
+
+def save_snapshot(
+    snapshot: ThesisSnapshot,
+    memory_dir: Optional[pathlib.Path] = None,
+) -> pathlib.Path:
+    """Persist a ThesisSnapshot to the file-based memory store.
+
+    Appends the new snapshot to the ticker's JSON history file.  Prunes
+    to _MAX_SNAPSHOTS_PER_TICKER oldest entries after appending.
+
+    Returns the path where the snapshot was saved.
+
+    Design invariants:
+    - Atomic write: writes to a temp file, then renames to avoid corruption.
+    - Thread-safe at the OS rename level (not multi-process safe without a lock).
+    - Never raises: catches all exceptions and logs them.
+    """
+    ticker = (snapshot.ticker or "UNKNOWN").upper()
+    fpath  = _snapshot_path(ticker, memory_dir)
+
+    try:
+        # Load existing history
+        existing: list = []
+        if fpath.exists():
+            raw = fpath.read_text(encoding="utf-8")
+            if raw.strip():
+                existing = json.loads(raw)
+
+        # Append new snapshot as dict
+        snap_dict = json.loads(snapshot.model_dump_json())
+        existing.append(snap_dict)
+
+        # Prune oldest if over limit
+        if len(existing) > _MAX_SNAPSHOTS_PER_TICKER:
+            existing = existing[-_MAX_SNAPSHOTS_PER_TICKER:]
+
+        # Atomic write
+        tmp = fpath.with_suffix(".tmp")
+        tmp.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+        tmp.rename(fpath)
+
+        logger.debug(
+            "thesis_memory: saved snapshot for %s (id=%s, total=%d)",
+            ticker, snapshot.snapshot_id[:8], len(existing),
+        )
+        return fpath
+
+    except Exception as exc:
+        logger.warning("thesis_memory: save_snapshot failed for %s: %s", ticker, exc)
+        return fpath
+
+
+def load_latest_snapshot(
+    ticker: str,
+    memory_dir: Optional[pathlib.Path] = None,
+) -> Optional[ThesisSnapshot]:
+    """Load the most recent snapshot for a ticker from the memory store.
+
+    Returns None when no history exists for this ticker.
+    """
+    fpath = _snapshot_path(ticker.upper(), memory_dir)
+    if not fpath.exists():
+        return None
+    try:
+        raw = fpath.read_text(encoding="utf-8")
+        if not raw.strip():
+            return None
+        history: list = json.loads(raw)
+        if not history:
+            return None
+        return ThesisSnapshot.model_validate(history[-1])
+    except Exception as exc:
+        logger.warning(
+            "thesis_memory: load_latest_snapshot failed for %s: %s", ticker, exc
+        )
+        return None
+
+
+def load_snapshot_history(
+    ticker: str,
+    limit: int = 10,
+    memory_dir: Optional[pathlib.Path] = None,
+) -> List[ThesisSnapshot]:
+    """Load the most recent `limit` snapshots for a ticker, oldest first.
+
+    Returns empty list when no history exists.
+    """
+    fpath = _snapshot_path(ticker.upper(), memory_dir)
+    if not fpath.exists():
+        return []
+    try:
+        raw = fpath.read_text(encoding="utf-8")
+        if not raw.strip():
+            return []
+        history: list = json.loads(raw)
+        # Return the last `limit` snapshots, oldest first
+        sliced = history[-limit:]
+        return [ThesisSnapshot.model_validate(s) for s in sliced]
+    except Exception as exc:
+        logger.warning(
+            "thesis_memory: load_snapshot_history failed for %s: %s", ticker, exc
+        )
+        return []
+
+
+def compute_and_save_diff(
+    thesis: InvestmentThesis,
+    memory_dir: Optional[pathlib.Path] = None,
+) -> "Tuple[ThesisSnapshot, Optional[ThesisDiff]]":
+    """Full thesis memory workflow: load prior → diff → save current → return diff.
+
+    This is the primary entry point for the thesis persistence workflow.
+    Call this once per analysis run to:
+    1. Convert the current thesis to a snapshot
+    2. Load the previous snapshot (if any) for this ticker
+    3. Compute the diff (if prior exists)
+    4. Save the new snapshot
+    5. Return (new_snapshot, diff) — diff is None if no prior snapshot
+
+    Does NOT raise: returns (snapshot, None) on any failure.
+    """
+    ticker = (getattr(thesis, "ticker", "") or "UNKNOWN").upper()
+    current = snapshot_from_thesis(thesis)
+
+    # Load prior snapshot before saving current
+    prior = load_latest_snapshot(ticker, memory_dir)
+
+    # Save new snapshot
+    save_snapshot(current, memory_dir)
+
+    # Compute diff
+    diff = None
+    if prior is not None:
+        try:
+            diff = compare_thesis_snapshots(prior, current)
+        except Exception as exc:
+            logger.warning("thesis_memory: diff failed for %s: %s", ticker, exc)
+
+    return current, diff
 
 
 def evaluate_alert_rules(

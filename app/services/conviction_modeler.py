@@ -458,6 +458,9 @@ class ConvictionResult:
     analysis_foundation_evidence:    List[str] = dataclasses.field(default_factory=list)
     analysis_foundation_constraints: List[str] = dataclasses.field(default_factory=list)
     analysis_foundation_sources:     List[str] = dataclasses.field(default_factory=list)
+    # ── Expectation Intelligence (Part 3) ─────────────────────────────────────
+    expectation_regime:              str = "fair"   # cheap|fair|stretched|euphoric|bubble
+    expectation_shift_severity:      str = "none"   # none|minor|moderate|significant|major
 
 
 # ── Timestamp parser (reuse from calibrator pattern) ─────────────────────────
@@ -1629,6 +1632,281 @@ def _dominant_gap(dims: ConvictionDimensions) -> str:
     return min(effective, key=effective.get)
 
 
+# ── Retrieval tagging + weighting ────────────────────────────────────────────
+
+# Keywords used by _classify_evidence_tags to assign retrieval intelligence tags
+_TAG_RECENT_CHANGE_KEYWORDS = (
+    "raised guidance", "lowered guidance", "cut guidance", "revised higher", "revised lower",
+    "estimate revision", "beat expectations", "missed estimates", "tone shift",
+    "management tone", "cautious language", "more optimistic", "changed language",
+    "material change", "new development", "updated forecast",
+)
+_TAG_ESTIMATE_REVISION_KEYWORDS = (
+    "estimate revision", "raised estimate", "lowered estimate", "cut estimate",
+    "revised higher", "revised lower", "consensus revision", "estimate cut",
+    "estimate raise", "upward revision", "downward revision", "eps revision",
+    "price target raised", "price target cut", "pt raised", "pt cut",
+)
+_TAG_TONE_SHIFT_KEYWORDS = (
+    "tone shift", "management tone", "cautious language", "more optimistic",
+    "conservative guidance", "bullish commentary", "bearish commentary",
+    "changed language", "messaging shift", "less confident", "more confident",
+    "walked back", "tempered expectations",
+)
+_TAG_VALUATION_REGIME_KEYWORDS = (
+    "multiple expansion", "multiple compression", "re-rating", "de-rating",
+    "premium valuation", "discount valuation", "historically expensive",
+    "historically cheap", "stretched multiple", "trough multiple", "peak multiple",
+    "pe expansion", "ev/ebitda expansion",
+)
+_TAG_EXPECTATION_CHANGE_KEYWORDS = (
+    "consensus expectations", "expectation change", "higher expectations", "lower expectations",
+    "priced in", "already priced", "expectations reset", "reset lower", "reset higher",
+    "bar raised", "bar lowered", "setup improved", "setup deteriorated",
+)
+_TAG_SENTIMENT_REGIME_KEYWORDS = (
+    "upgrade", "downgrade", "initiat", "sentiment shift", "analyst consensus",
+    "bullish sentiment", "bearish sentiment", "short interest", "short squeeze",
+    "flows", "put/call ratio", "options positioning",
+)
+_TAG_POSITIONING_KEYWORDS = (
+    "institutional ownership", "13f", "hedge fund", "position change",
+    "net long", "net short", "crowded trade", "positioning data",
+    "ownership increase", "ownership decrease",
+)
+_TAG_MACRO_TRANSITION_KEYWORDS = (
+    "rate cut", "rate hike", "fed pivot", "policy change", "monetary transition",
+    "macro regime", "rate regime", "cycle change", "soft landing confirmed",
+    "recession risk", "growth deceleration", "regime transition",
+)
+_TAG_EXECUTION_SIGNAL_KEYWORDS = (
+    "beat", "miss", "above consensus", "below consensus", "in line with",
+    "exceeded estimates", "fell short", "guidance raised", "guidance cut",
+    "outperformed", "underperformed", "delivered vs",
+)
+_TAG_BALANCE_SHEET_EVENT_KEYWORDS = (
+    "buyback", "share repurchase", "dividend increase", "dividend cut",
+    "debt reduction", "refinanced", "capital return", "net cash increased",
+    "leverage reduced", "balance sheet strength", "fcf inflection",
+)
+
+# Age thresholds for recent_change tag (days)
+_RECENT_CHANGE_AGE_DAYS = 45
+
+
+def _classify_evidence_tags(
+    evidence: "List[RetrievedEvidence]",
+) -> "List[RetrievedEvidence]":
+    """Assign retrieval intelligence tags and weights to each evidence item in-place.
+
+    Returns the same list with retrieval_tags and retrieval_weight populated.
+    Does NOT modify the original objects — returns new objects with tags set.
+
+    Tagging logic:
+    - Parse each item's title + summary against keyword pools
+    - Assign tags matching the content type
+    - Compute retrieval_weight:
+        base = 1.0
+        recent_change tag    → +0.60
+        estimate_revision    → +0.50
+        execution_signal     → +0.40
+        tone_shift           → +0.35
+        expectation_change   → +0.30
+        macro_transition     → +0.25
+        sentiment_regime     → +0.20
+        valuation_regime     → +0.20
+        positioning          → +0.15
+        balance_sheet_event  → +0.15
+        generic company desc → weight 0.60 (below baseline)
+    """
+    from datetime import datetime, timezone, timedelta
+    import copy as _copy
+
+    now = datetime.now(timezone.utc)
+    cutoff_recent = now - timedelta(days=_RECENT_CHANGE_AGE_DAYS)
+
+    result = []
+    for ev in evidence:
+        corpus = f"{ev.title} {ev.summary}".lower()
+        tags: list = []
+
+        # Date-based recency tag
+        try:
+            ev_date = datetime.fromisoformat(ev.timestamp.replace("Z", "+00:00"))
+            if ev_date.tzinfo is None:
+                ev_date = ev_date.replace(tzinfo=timezone.utc)
+            if ev_date >= cutoff_recent:
+                tags.append("recent_change")
+        except (ValueError, AttributeError):
+            pass
+
+        # Content-based tags
+        if any(kw in corpus for kw in _TAG_ESTIMATE_REVISION_KEYWORDS):
+            tags.append("estimate_revision")
+        if any(kw in corpus for kw in _TAG_TONE_SHIFT_KEYWORDS):
+            tags.append("tone_shift")
+        if any(kw in corpus for kw in _TAG_VALUATION_REGIME_KEYWORDS):
+            tags.append("valuation_regime")
+        if any(kw in corpus for kw in _TAG_EXPECTATION_CHANGE_KEYWORDS):
+            tags.append("expectation_change")
+        if any(kw in corpus for kw in _TAG_SENTIMENT_REGIME_KEYWORDS):
+            tags.append("sentiment_regime")
+        if any(kw in corpus for kw in _TAG_POSITIONING_KEYWORDS):
+            tags.append("positioning")
+        if any(kw in corpus for kw in _TAG_MACRO_TRANSITION_KEYWORDS):
+            tags.append("macro_transition")
+        if any(kw in corpus for kw in _TAG_EXECUTION_SIGNAL_KEYWORDS):
+            tags.append("execution_signal")
+        if any(kw in corpus for kw in _TAG_BALANCE_SHEET_EVENT_KEYWORDS):
+            tags.append("balance_sheet_event")
+
+        # Compute weight
+        weight = 1.0
+        if "recent_change"      in tags: weight += 0.60
+        if "estimate_revision"  in tags: weight += 0.50
+        if "execution_signal"   in tags: weight += 0.40
+        if "tone_shift"         in tags: weight += 0.35
+        if "expectation_change" in tags: weight += 0.30
+        if "macro_transition"   in tags: weight += 0.25
+        if "sentiment_regime"   in tags: weight += 0.20
+        if "valuation_regime"   in tags: weight += 0.20
+        if "positioning"        in tags: weight += 0.15
+        if "balance_sheet_event" in tags: weight += 0.15
+
+        # Generic company description penalty (no actionable tags)
+        if not tags:
+            weight = 0.60  # below baseline — deprioritize generic descriptions
+
+        # Cap at 3.0
+        weight = round(min(3.0, weight), 3)
+
+        # Return new RetrievedEvidence with tags set (avoids mutating caller's list)
+        try:
+            tagged = ev.model_copy(update={"retrieval_tags": tags, "retrieval_weight": weight})
+        except AttributeError:
+            # pydantic v1 fallback
+            tagged = ev.copy(update={"retrieval_tags": tags, "retrieval_weight": weight})
+        result.append(tagged)
+
+    return result
+
+
+def _weight_sort_evidence(
+    evidence: "List[RetrievedEvidence]",
+) -> "List[RetrievedEvidence]":
+    """Sort evidence by retrieval_weight descending (highest-priority first).
+
+    If retrieval_tags have not been assigned, classifies first.
+    Items with equal weight preserve original order (stable sort).
+    """
+    # Classify if not done
+    if evidence and not getattr(evidence[0], "retrieval_tags", None):
+        evidence = _classify_evidence_tags(evidence)
+    return sorted(evidence, key=lambda e: getattr(e, "retrieval_weight", 1.0), reverse=True)
+
+
+# ── Expectation regime classifier ─────────────────────────────────────────────
+
+# Expectation regime thresholds derived from expectation_fragility + valuation signals
+# Regime labels: cheap | fair | stretched | euphoric | bubble
+_REGIME_BUBBLE     = 0.88   # fragility above this → bubble (disconnected from reality)
+_REGIME_EUPHORIC   = 0.72   # fragility above this → euphoric
+_REGIME_STRETCHED  = 0.50   # fragility above this → stretched
+_REGIME_FAIR       = 0.32   # fragility above this → fair
+# below _REGIME_FAIR → cheap
+
+
+def _classify_expectation_regime(
+    expectation_fragility: float,
+    valuation_stance:      str = "",
+    durability_score:      float = 0.50,
+) -> str:
+    """Map expectation fragility + valuation signals to a regime label.
+
+    Regime philosophy:
+    - Does NOT directly say "buy" or "avoid" — it describes what the market
+      is pricing, not what to do about it.
+    - durability_score adjusts the thresholds: high-quality businesses can
+      sustain stretched multiples longer (higher bar for "euphoric" label).
+    - valuation_stance from the valuation agent overrides as a hard signal
+      when available.
+
+    Returns: 'cheap' | 'fair' | 'stretched' | 'euphoric' | 'bubble'
+    """
+    # Hard overrides from valuation agent stance
+    vs = (valuation_stance or "").lower()
+    if vs in ("bubble", "severely_overpriced"):
+        return "bubble"
+    if vs == "euphoric":
+        return "euphoric"
+
+    # Durability adjustment: high-quality businesses shift thresholds up
+    # (they can trade at higher multiples sustainably)
+    dur_adj = durability_score * 0.12   # max +0.12 at durability=1.0
+
+    bubble_thresh    = _REGIME_BUBBLE    + dur_adj
+    euphoric_thresh  = _REGIME_EUPHORIC  + dur_adj
+    stretched_thresh = _REGIME_STRETCHED + dur_adj
+    fair_thresh      = _REGIME_FAIR      + dur_adj
+
+    if expectation_fragility >= bubble_thresh:
+        return "bubble"
+    if expectation_fragility >= euphoric_thresh:
+        return "euphoric"
+    if expectation_fragility >= stretched_thresh:
+        return "stretched"
+    if expectation_fragility >= fair_thresh:
+        return "fair"
+    return "cheap"
+
+
+def _classify_expectation_shift_severity(
+    evidence: "List[RetrievedEvidence]",
+) -> str:
+    """Classify the severity of recent expectation shifts in the evidence pool.
+
+    Scans evidence for revision count, direction consistency, and tone shift
+    signals.  Returns:
+        'none'        — no material expectation movement detected
+        'minor'       — 1-2 directional signals, same direction
+        'moderate'    — 3-4 consistent signals or mix of large + small
+        'significant' — 5+ consistent signals or major single revision
+        'major'       — overwhelming consensus shift in one direction
+    """
+    ev_text = " ".join(f"{ev.title} {ev.summary}" for ev in evidence[:15]).lower()
+
+    # Count positive and negative revision signals
+    positive_signals = sum(1 for kw in (
+        "raised estimate", "revised higher", "estimate raise", "upward revision",
+        "raised guidance", "raised price target", "pt raised", "beat estimates",
+        "above consensus", "better than expected", "exceeded",
+    ) if kw in ev_text)
+
+    negative_signals = sum(1 for kw in (
+        "lowered estimate", "revised lower", "estimate cut", "downward revision",
+        "lowered guidance", "cut guidance", "missed estimates", "below consensus",
+        "worse than expected", "fell short", "missed",
+    ) if kw in ev_text)
+
+    total = positive_signals + negative_signals
+    max_dir = max(positive_signals, negative_signals)
+
+    # Also check for tone shift keywords (qualitative signal)
+    tone_shifts = sum(1 for kw in _TAG_TONE_SHIFT_KEYWORDS if kw in ev_text)
+
+    effective_score = max_dir + (tone_shifts * 0.5)
+
+    if effective_score >= 6:
+        return "major"
+    if effective_score >= 4:
+        return "significant"
+    if effective_score >= 2.5 or (total >= 3 and tone_shifts >= 1):
+        return "moderate"
+    if effective_score >= 1:
+        return "minor"
+    return "none"
+
+
 # ── Analysis Foundation builder ──────────────────────────────────────────────
 
 def _build_analysis_foundation(
@@ -1669,13 +1947,35 @@ def _build_analysis_foundation(
     constraints: List[str] = []
     sources:     List[str] = []
 
+    # ── Retrieval weighting: sort evidence by intelligence value ──────────────
+    # Classify tags if not already done, then sort by weight so high-value
+    # items (recent changes, estimate revisions, execution signals) lead the
+    # corpus and receive earlier positional priority in the synthesis prompt.
+    weighted_evidence = _weight_sort_evidence(list(evidence)) if evidence else []
+
     # ── Build search corpus (titles + summaries for richer matching) ──────────
+    # Use weighted-sorted evidence — high-weight items indexed first
     ev_corpus = " ".join(
-        f"{ev.source} {ev.title} {ev.summary}" for ev in evidence
+        f"{ev.source} {ev.title} {ev.summary}" for ev in weighted_evidence
     ).lower()
     ev_title_corpus = " ".join(
-        f"{ev.source} {ev.title}" for ev in evidence
+        f"{ev.source} {ev.title}" for ev in weighted_evidence
     ).lower()
+
+    # ── Retrieval tag presence (high-intelligence signals) ───────────────────
+    all_tags: list = []
+    for ev in weighted_evidence:
+        all_tags.extend(getattr(ev, "retrieval_tags", []) or [])
+    has_retrieval_recent    = "recent_change"      in all_tags
+    has_retrieval_revision  = "estimate_revision"  in all_tags
+    has_retrieval_tone      = "tone_shift"          in all_tags
+    has_retrieval_sentiment = "sentiment_regime"    in all_tags
+    has_retrieval_execution = "execution_signal"    in all_tags
+    has_retrieval_regime    = "macro_transition"    in all_tags
+    has_retrieval_valuation = "valuation_regime"    in all_tags
+    has_retrieval_position  = "positioning"         in all_tags
+    has_retrieval_bs        = "balance_sheet_event" in all_tags
+    has_retrieval_expect    = "expectation_change"  in all_tags
 
     # ── Core category detection ───────────────────────────────────────────────
     has_valuation = any(kw in ev_title_corpus for kw in (
@@ -1758,11 +2058,15 @@ def _build_analysis_foundation(
     ))
 
     # ── Build ev_used list (ordered by analytical richness) ───────────────────
-    # Execution and estimate signals first — most time-sensitive
-    if has_execution:
+    # Retrieval-tagged signals take priority (highest intelligence value)
+    if has_retrieval_recent or has_retrieval_execution or has_execution:
         ev_used.append("execution vs expectations")
-    if has_revision:
+    if has_retrieval_revision or has_revision:
         ev_used.append("estimate revision trend")
+    if has_retrieval_tone or has_tone_shift:
+        ev_used.append("management tone shift")
+    if has_retrieval_expect or has_revision:
+        ev_used.append("expectation regime context")
     if has_earnings:
         ev_used.append("earnings commentary")
         sources.append("earnings transcripts")
@@ -1774,13 +2078,17 @@ def _build_analysis_foundation(
     if has_analyst:
         ev_used.append("analyst estimate consensus")
         sources.append("analyst consensus feeds")
-    if has_sentiment:
+    if has_retrieval_sentiment or has_sentiment:
         ev_used.append("analyst sentiment shift")
+    if has_retrieval_valuation or has_revision:
+        ev_used.append("valuation regime context")
+    if has_retrieval_position:
+        ev_used.append("institutional positioning shift")
 
     # Business fundamentals
     if has_recurring:
         ev_used.append("recurring revenue mechanics")
-    if has_balance_sheet:
+    if has_retrieval_bs or has_balance_sheet:
         ev_used.append("balance sheet and capital structure")
     if has_demand:
         ev_used.append("demand trend and volume indicators")
@@ -1788,7 +2096,7 @@ def _build_analysis_foundation(
         ev_used.append("competitive positioning")
 
     # Macro and regime context
-    if has_macro:
+    if has_retrieval_regime or has_macro:
         ev_used.append("macro rate sensitivity")
         sources.append("Federal Reserve data")
     if has_regime:
@@ -2616,6 +2924,15 @@ def compute_conviction(
         evidence, dims, company
     )
 
+    # ── Expectation Intelligence ──────────────────────────────────────────────
+    _val_stance = (getattr(valuation, "valuation_stance", "") or "").lower()
+    _exp_regime = _classify_expectation_regime(
+        expectation_fragility = dims.expectation_fragility,
+        valuation_stance      = _val_stance,
+        durability_score      = durability_score,
+    )
+    _exp_shift_sev = _classify_expectation_shift_severity(evidence)
+
     # ── Structured telemetry ──────────────────────────────────────────────────
     if should_compress:
         _compression_tier = (
@@ -2675,4 +2992,6 @@ def compute_conviction(
         analysis_foundation_evidence      = _af_evidence,
         analysis_foundation_constraints   = _af_constraints,
         analysis_foundation_sources       = _af_sources,
+        expectation_regime                = _exp_regime,
+        expectation_shift_severity        = _exp_shift_sev,
     )
