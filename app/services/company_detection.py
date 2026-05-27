@@ -76,6 +76,22 @@ _TICKER_STOP_WORDS: frozenset[str] = frozenset({
     "OFF", "OLD", "OUR", "OUT", "OWN", "SAY", "SHE", "SO", "THE", "TOO",
     "TWO", "USE", "WAS", "WAY", "WHO", "WHY", "WIN", "WITH", "YES", "YET",
     "YOU",
+    # ── Protected generic-word tickers ────────────────────────────────────────
+    # These are valid ticker symbols that are ALSO common English words.
+    # Prevent them from being auto-resolved in free-text queries — they are
+    # handled explicitly via alias lookup ("c3 ai", "applovin", "cloudflare",
+    # "snowflake", "doordash", "shopify", "uipath", "opendoor", "arm holdings")
+    # or via the entity_resolution_service clarification flow.
+    "AI",   # C3.ai — "AI" most commonly means artificial intelligence in prose
+    "APP",  # AppLovin — "app" is a ubiquitous English word
+    "NET",  # Cloudflare — "net" is a common noun/adjective
+    "SNOW", # Snowflake — "snow" is a weather term
+    "DASH", # DoorDash — "dash" is a common verb/noun
+    "PATH", # UiPath — "path" is a common noun
+    "OPEN", # Opendoor — "open" is a common adjective/verb
+    "SHOP", # Shopify — "shop" is a common verb/noun (Shopify resolves via alias)
+    "ARM",  # Arm Holdings — "arm" is a body part (resolves via "arm holdings" alias)
+    "NOW",  # ServiceNow — "now" is a common adverb (resolves via "servicenow" alias)
 })
 
 # ---------------------------------------------------------------------------
@@ -196,6 +212,7 @@ _COMPANY_DB: dict[str, dict] = {
     "GTLB":  {"company_name": "GitLab Inc.",                             "sector": "Technology",                "industry": "DevOps Software"},
     "PATH":  {"company_name": "UiPath Inc.",                             "sector": "Technology",                "industry": "Automation Software"},
     "AI":    {"company_name": "C3.ai Inc.",                              "sector": "Technology",                "industry": "Enterprise AI"},
+    "APP":   {"company_name": "AppLovin Corporation",                     "sector": "Technology",                "industry": "Mobile Advertising"},
     "SOUN":  {"company_name": "SoundHound AI Inc.",                      "sector": "Technology",                "industry": "Voice AI"},
     "BBAI":  {"company_name": "BigBear.ai Holdings Inc.",                "sector": "Technology",                "industry": "AI Analytics"},
     "RGTI":  {"company_name": "Rigetti Computing Inc.",                  "sector": "Technology",                "industry": "Quantum Computing"},
@@ -712,6 +729,15 @@ _ALIAS_MAP: dict[str, str] = {
     "uipath":                  "PATH",
     "c3 ai":                   "AI",
     "c3.ai":                   "AI",
+
+    # ── AppLovin ──────────────────────────────────────────────────────────────
+    # NOTE: "app" alone is NOT registered — it's a generic English word and
+    # would cause "Is this app investable?" to resolve to AppLovin.
+    "applovin":                "APP",
+    "applovin corporation":    "APP",
+    "app lovin":               "APP",
+    "applovin inc":            "APP",
+
     "soundhound":              "SOUN",
     "sound hound":             "SOUN",
 
@@ -976,6 +1002,26 @@ _ALIAS_MAP: dict[str, str] = {
 
 # Pre-sort alias keys by length (descending) so that the longest match wins.
 _ALIAS_KEYS_BY_LENGTH: list[str] = sorted(_ALIAS_MAP.keys(), key=len, reverse=True)
+
+# ---------------------------------------------------------------------------
+# Protected generic-word tickers
+# ---------------------------------------------------------------------------
+# Mapping: TICKER → (company_name, clarification_prompt)
+# These tickers are also common English words.  The entity_resolution_service
+# uses this dict to detect ambiguous queries and return needs_clarification=True
+# rather than silently routing to the wrong company.
+PROTECTED_GENERIC_TICKERS: dict[str, tuple[str, str]] = {
+    "AI":   ("C3.ai Inc.",            "Do you mean C3.ai (AI), artificial intelligence broadly, or another AI company?"),
+    "APP":  ("AppLovin Corporation",  "Do you mean AppLovin (APP) or are you using 'app' generically?"),
+    "NET":  ("Cloudflare Inc.",       "Do you mean Cloudflare (NET) or using 'net' as a general term?"),
+    "SNOW": ("Snowflake Inc.",        "Do you mean Snowflake (SNOW) or the weather/substance term 'snow'?"),
+    "DASH": ("DoorDash Inc.",         "Do you mean DoorDash (DASH) or using 'dash' generically?"),
+    "PATH": ("UiPath Inc.",           "Do you mean UiPath (PATH) or using 'path' generically?"),
+    "OPEN": ("Opendoor Technologies Inc.", "Do you mean Opendoor (OPEN) or using 'open' generically?"),
+    "SHOP": ("Shopify Inc.",          "Do you mean Shopify (SHOP) or using 'shop' generically?"),
+    "ARM":  ("Arm Holdings plc",      "Do you mean Arm Holdings (ARM) or using 'arm' generically?"),
+    "NOW":  ("ServiceNow Inc.",       "Do you mean ServiceNow (NOW) or using 'now' as a time reference?"),
+}
 
 # Context words to strip when normalising a query.
 _CONTEXT_WORDS: frozenset[str] = frozenset({

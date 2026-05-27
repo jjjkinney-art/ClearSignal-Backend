@@ -859,8 +859,71 @@ def analyze_company(
         8. Finish trace
     """
     request_id = str(uuid.uuid4())
-    company    = request.company_name
     t_start    = time.perf_counter()
+
+    # ── 0. Entity resolution — must run before anything else ─────────────────
+    # Resolve the intended company from the full user_question (which has the
+    # most contextual signal) with company_name as a fallback hint.
+    # This prevents incidental uppercase tokens like "AI" in
+    # "Can Meta continue despite AI infrastructure spending?" from routing to
+    # C3.ai instead of Meta Platforms.
+    _entity_warning  = ""
+    _resolved_ticker = ""
+    _entity_conf     = 0.0
+    try:
+        from .entity_resolution_service import resolve_for_analysis
+        _entity_result = resolve_for_analysis(
+            user_question=request.user_question or "",
+            company_hint=request.company_name,
+        )
+        if _entity_result.canonical_ticker:
+            # Successful resolution — override company_name with canonical form
+            _resolved_ticker = _entity_result.canonical_ticker
+            _entity_conf     = _entity_result.confidence_score
+            _resolved_company_name = _entity_result.company_name
+            if _entity_result.resolution_warning:
+                _entity_warning = _entity_result.resolution_warning
+            logger.info(
+                json.dumps({
+                    "event":  "entity_resolved",
+                    "ticker": _resolved_ticker,
+                    "company": _resolved_company_name,
+                    "method": _entity_result.resolution_method,
+                    "confidence": _entity_conf,
+                    "matched_alias": _entity_result.matched_alias,
+                    "request_id": request_id,
+                })
+            )
+        elif _entity_result.needs_clarification:
+            _entity_warning = _entity_result.clarification_prompt
+            logger.warning(
+                json.dumps({
+                    "event": "entity_needs_clarification",
+                    "prompt": _entity_result.clarification_prompt,
+                    "company_hint": request.company_name[:60],
+                    "request_id": request_id,
+                })
+            )
+        else:
+            # Not found — keep raw company_name, warn if short/generic
+            if len(request.company_name.split()) <= 2:
+                _entity_warning = (
+                    f"Could not confidently identify a company from "
+                    f"'{request.company_name}' — results may be inaccurate."
+                )
+    except Exception as _er_exc:
+        logger.warning(json.dumps({
+            "event": "entity_resolution_error",
+            "error": str(_er_exc),
+            "request_id": request_id,
+        }))
+
+    # Use resolved canonical company name if available; fall back to raw input
+    company = (
+        _resolved_company_name
+        if _resolved_ticker and "_resolved_company_name" in dir()
+        else request.company_name
+    )
 
     # ── 1. Start observability trace ──────────────────────────────────────
     trace = None
@@ -1161,4 +1224,9 @@ def analyze_company(
         # Mirrors synthesis.verdict_reasoning at the top level for frontend
         # debugging — confirms the field survives serialization.
         debug_verdict_reasoning = synthesis.verdict_reasoning,
+        # Entity resolution metadata
+        resolved_company           = company,
+        resolved_ticker            = _resolved_ticker,
+        entity_confidence          = _entity_conf,
+        entity_resolution_warning  = _entity_warning,
     )

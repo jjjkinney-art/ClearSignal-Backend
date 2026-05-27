@@ -358,6 +358,15 @@ class AnalysisResponse(BaseModel):
     # TODO: remove once verdict_reasoning is confirmed non-empty in production.
     debug_verdict_reasoning: str = Field(default="")
 
+    # Entity resolution metadata — populated by entity_resolution_service.
+    # resolved_company / resolved_ticker identify the actual entity analyzed.
+    # entity_resolution_warning is non-empty when resolution was ambiguous or
+    # low-confidence (shown as a subtle UI chip).
+    resolved_company:           str   = Field(default="", description="Canonical company name resolved from the query")
+    resolved_ticker:            str   = Field(default="", description="Canonical ticker resolved from the query")
+    entity_confidence:          float = Field(default=0.0, description="Resolution confidence score 0.0–1.0")
+    entity_resolution_warning:  str   = Field(default="", description="Non-empty when entity resolution was ambiguous")
+
 
 class GeneralFinanceAnswer(BaseModel):
     """Structured answer for general finance questions (non-company intents).
