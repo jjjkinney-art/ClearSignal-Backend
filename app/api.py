@@ -78,14 +78,12 @@ def _extract_scope(request: Request) -> "ScopeContext | None":
         return None
 
 
-@router.get("/", summary="Root — service identity", tags=["health"])
-@router.get("/health", summary="Health check", tags=["health"])
-@router.get("/healthz", summary="Health check (k8s-style alias)", tags=["health"])
 async def health() -> dict:
     """Return service health and identity.
 
-    Suitable for uptime monitors, Render health checks, and frontend warmup pings.
-    All three paths (/, /health, /healthz) return the same payload.
+    Registered on GET + HEAD for:  /  /health  /healthz
+    Suitable for UptimeRobot (HEAD), Render health checks, and frontend warmup pings.
+    HEAD requests return 200 with an empty body; GET requests return the full JSON.
 
     Response fields:
       status      — always "ok" when the process is up
@@ -123,6 +121,21 @@ async def health() -> dict:
         "environment":  environment,
         "build_commit": git_commit,
     }
+
+
+# Register GET + HEAD on all three health paths.
+# FastAPI/Starlette 0.49+ does NOT auto-add HEAD for GET routes — must be explicit.
+# UptimeRobot free plan uses HEAD; Render uses GET; frontend warmup uses GET.
+for _health_path in ("/", "/health", "/healthz"):
+    router.add_api_route(
+        _health_path,
+        health,
+        methods=["GET", "HEAD"],
+        summary="Health check" if _health_path != "/" else "Root — service identity",
+        tags=["health"],
+        include_in_schema=True,
+    )
+del _health_path  # avoid leaking the loop variable into module scope
 
 
 @router.get(
