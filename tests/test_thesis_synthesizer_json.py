@@ -507,22 +507,29 @@ class TestSynthesizeThesis:
         assert isinstance(result.consistency_warnings, list)
 
     def test_empty_thesis_returned_when_all_agents_zero_and_no_evidence(self):
-        """Returns graceful empty thesis when all agents have 0 confidence + no evidence."""
+        """Returns graceful empty thesis when all agents have 0 confidence + no evidence.
+
+        Guard behaviour (post-fix): for a known ticker (AAPL), the synthesiser
+        now attempts the LLM call even with empty agents/evidence so the model
+        can draw on training knowledge.  When that call fails (here: mock
+        returns None), synthesize_thesis falls back to an empty thesis rather
+        than propagating the error.
+        """
         empty_val = ValuationView(overall="", confidence=0.0)
         empty_mac = MacroSensitivity(overall="", confidence=0.0)
         empty_risk = RiskProfile(overall="", confidence=0.0)
         empty_mkt = MarketContext(overall="", confidence=0.0)
         empty_qual = QualityAssessment(overall="", confidence=0.0)
-        mock_client = MagicMock()
 
-        with patch("app.services.thesis_synthesizer.model_client", mock_client):
+        with patch("app.services.thesis_synthesizer.model_client") as mock_client:
+            mock_client.call.return_value = None  # simulate LLM failure / no key
             result = synthesize_thesis(
                 _company(), empty_val, empty_mac, empty_risk, empty_mkt, empty_qual,
                 evidence=[],
             )
 
-        # Should return empty thesis without calling model
-        mock_client.call.assert_not_called()
+        # LLM was attempted (guard no longer bails immediately for known tickers)
+        mock_client.call.assert_called()
         assert result.confidence_score == 0.0
         assert "insufficient" in result.bull_thesis.lower()
 

@@ -150,23 +150,66 @@ class ModelClient:
                     raise
                 time.sleep(self.backoff_factor * (2 ** (attempt - 1)))
             except APIError as exc:
-                # Retry on server-side API errors (5xx); raise immediately on client errors (4xx)
-                if hasattr(exc, "status_code") and exc.status_code is not None and exc.status_code < 500:
+                status_code = getattr(exc, "status_code", None)
+
+                # ── HTTP 429 — rate-limited: retry with exponential backoff ──────
+                # 429 is a transient server-side signal ("slow down"), not a
+                # permanent client misconfiguration.  Honour Retry-After when
+                # the response includes it; otherwise use the standard backoff.
+                if status_code == 429:
+                    # Extract Retry-After seconds if the header is present.
+                    retry_after: Optional[float] = None
+                    _headers = getattr(exc, "response", None)
+                    if _headers is not None:
+                        _ra = getattr(_headers, "headers", {}).get("retry-after")
+                        if _ra is not None:
+                            try:
+                                retry_after = float(_ra)
+                            except (ValueError, TypeError):
+                                pass
+
+                    sleep_secs = (
+                        retry_after
+                        if retry_after is not None
+                        else self.backoff_factor * (2 ** (attempt - 1))
+                    )
+                    logger.warning(
+                        json.dumps({
+                            "event": "model_call_rate_limited",
+                            "request_id": request_id,
+                            "attempt": attempt,
+                            "retry_after_secs": sleep_secs,
+                            "error": str(exc),
+                        })
+                    )
+                    if attempt == self.max_retries:
+                        raise
+                    time.sleep(sleep_secs)
+                    continue
+
+                # ── True client/config errors: fail immediately, no retry ────────
+                # 400 Bad Request, 401 Unauthorized, 403 Forbidden, 422 Unprocessable.
+                # Retrying these wastes quota and time — the request itself is wrong.
+                _NO_RETRY_CODES = {400, 401, 403, 422}
+                if status_code is not None and status_code in _NO_RETRY_CODES:
                     logger.error(
                         json.dumps({
                             "event": "model_call_client_error",
                             "request_id": request_id,
                             "attempt": attempt,
-                            "status_code": exc.status_code,
+                            "status_code": status_code,
                             "error": str(exc),
                         })
                     )
                     raise
+
+                # ── All other APIErrors (5xx, unknown): retry with backoff ────────
                 logger.warning(
                     json.dumps({
                         "event": "model_call_retry",
                         "request_id": request_id,
                         "attempt": attempt,
+                        "status_code": status_code,
                         "error": str(exc),
                     })
                 )
