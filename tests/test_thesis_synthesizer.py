@@ -102,10 +102,12 @@ def _mock_thesis_json(ticker="AAPL", name="Apple Inc.", extra: dict = None) -> s
 # ── TestSynthesizeThesisNoLLM ─────────────────────────────────────────────────
 
 class TestSynthesizeThesisNoLLM:
-    """All agents empty + no evidence → synthesizer returns empty thesis without LLM call."""
+    """Guard behaviour: truly unknown companies bail early; known tickers attempt LLM."""
 
-    def test_all_empty_agents_no_evidence_returns_empty_thesis(self):
-        company = _company()
+    def test_unknown_company_no_evidence_returns_empty_thesis_immediately(self):
+        """Guard fires when BOTH ticker and name are empty — no LLM attempt."""
+        from app.schemas import CompanyContext
+        company = CompanyContext(ticker="", company_name="")
         val = ValuationView()
         mac = MacroSensitivity()
         risk = RiskProfile()
@@ -114,10 +116,35 @@ class TestSynthesizeThesisNoLLM:
         result = synthesize_thesis(company, val, mac, risk, market, quality, [])
         assert isinstance(result, InvestmentThesis)
         assert result.confidence_score == 0.0
+        # Should include the "no agent outputs" reason, not the retries-exhausted one
+        assert "No agent outputs" in result.conclusion
+
+    def test_known_ticker_empty_agents_no_evidence_attempts_llm(self):
+        """Guard is bypassed for well-known tickers — LLM synthesis is attempted.
+
+        If the LLM call fails (no key in test env) the synthesiser still returns
+        an InvestmentThesis rather than silently dropping the analysis.
+        """
+        company = _company()  # ticker="AAPL"
+        val = ValuationView()   # confidence = 0.0
+        mac = MacroSensitivity()
+        risk = RiskProfile()
+        market = MarketContext()
+        quality = QualityAssessment()
+
+        with patch("app.services.thesis_synthesizer.model_client") as mock_client:
+            # Simulate model call failure (no API key / network error)
+            mock_client.call.return_value = None
+            result = synthesize_thesis(company, val, mac, risk, market, quality, [])
+
+        assert isinstance(result, InvestmentThesis)
         assert result.ticker == "AAPL"
+        # LLM was attempted (call was made), then fell back to empty thesis
+        mock_client.call.assert_called()
 
     def test_empty_thesis_has_generated_at(self):
-        company = _company()
+        from app.schemas import CompanyContext
+        company = CompanyContext(ticker="", company_name="")
         val = ValuationView()
         mac = MacroSensitivity()
         risk = RiskProfile()

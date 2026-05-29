@@ -2507,14 +2507,40 @@ def synthesize_thesis(
         f"quality_conf={quality.confidence:.2f})"
     )
 
-    # Check if all agents returned empty outputs (all-zero confidence)
+    # Log agent confidence signals for diagnostics.
     agent_confidences = [
         valuation.confidence, macro.confidence,
         risk.confidence, market.confidence, quality.confidence,
     ]
-    if all(c == 0.0 for c in agent_confidences) and not evidence:
-        print(f"[thesis_synthesizer] all agents empty + no evidence — skipping LLM call")
-        return _empty_thesis(company, "No agent outputs or evidence available.")
+    all_agents_empty  = all(c == 0.0 for c in agent_confidences)
+    no_evidence       = not evidence
+
+    if all_agents_empty and no_evidence:
+        # All agents returned zero confidence AND no evidence was retrieved.
+        # This typically means external data providers are unavailable (no API
+        # keys / network error).  Rather than silently returning "Analysis
+        # incomplete", attempt the LLM synthesis anyway — the model has strong
+        # training knowledge for well-known companies (TSLA, AAPL, etc.) and
+        # can still produce a useful thesis from the question + company context
+        # even without retrieved evidence.
+        #
+        # We only hard-bail when the company object carries no identifiable
+        # ticker/name, which would leave the synthesiser with nothing to reason
+        # about.
+        ticker_known = bool(getattr(company, "ticker", None))
+        name_known   = bool(getattr(company, "company_name", None))
+        if not ticker_known and not name_known:
+            print(
+                f"[thesis_synthesizer] all agents empty + no evidence + "
+                f"unknown company — skipping LLM call"
+            )
+            return _empty_thesis(company, "No agent outputs or evidence available.")
+
+        print(
+            f"[thesis_synthesizer] WARNING: all agents empty + no evidence for "
+            f"{company.ticker} — attempting LLM synthesis from model knowledge "
+            f"(external data providers may be unavailable)"
+        )
 
     # ── Phase 3: Signal ranking (pre-synthesis) ───────────────────────────────
     # Run before the LLM call so ranked signals can be injected into the prompt.
