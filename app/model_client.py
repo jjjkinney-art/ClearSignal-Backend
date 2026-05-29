@@ -229,10 +229,23 @@ class ModelClient:
 
 
 # Instantiate a default client using environment settings.  This instance
-# can be imported throughout the codebase.
+# is used by the investment agents and general chat.
 model_client = ModelClient(
     api_key=settings.openai_api_key,
     model=settings.openai_model,
+    temperature=settings.temperature,
+    max_tokens=settings.max_tokens,
+    timeout=settings.model_timeout,
+    max_retries=settings.model_max_retries,
+    backoff_factor=settings.model_backoff_factor,
+)
+
+# Dedicated client for the thesis synthesiser.  Uses settings.synthesis_model
+# (default: gpt-4o-mini; override via SYNTHESIS_MODEL env var).  Shares the
+# same API key, timeouts, and retry policy as the main client.
+synthesis_client = ModelClient(
+    api_key=settings.openai_api_key,
+    model=settings.synthesis_model,
     temperature=settings.temperature,
     max_tokens=settings.max_tokens,
     timeout=settings.model_timeout,

@@ -56,7 +56,7 @@ from ..schemas import (
     ValuationView,
 )
 from ..structured_output import get_structured_response, extract_json_candidate, repair_data
-from ..model_client import model_client
+from ..model_client import synthesis_client as model_client
 from ..config import settings
 from .depth_guard import check_synthesis_depth
 from .signal_ranker import (

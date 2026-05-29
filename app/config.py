@@ -48,7 +48,15 @@ class Settings(BaseSettings):
     """
 
     openai_api_key: str = ""
+
+    # Model used by the investment agents and general chat.
     openai_model: str = "gpt-4o"
+
+    # Model used exclusively by the thesis synthesiser.  Defaults to a
+    # faster, cheaper model; override via SYNTHESIS_MODEL in the environment
+    # or .env file when higher capability is required.
+    synthesis_model: str = "gpt-4o-mini"
+
     max_tokens: int = 4096
     temperature: float = 0.0
 
