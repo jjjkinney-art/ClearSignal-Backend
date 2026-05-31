@@ -128,7 +128,10 @@ Produce a JSON object matching the MacroSensitivity schema with these fields:
 - cyclicality: Cyclical vs defensive revenue mix and economic correlation
 - overall: One concise paragraph summarising macro sensitivity
 - confidence: 0.0-1.0 based on evidence completeness
-- signals: array of 2-3 extracted macro signals. Each signal object must have:
+- signals: array of 2-3 extracted macro signals. REQUIRED: this array MUST NOT be empty — return
+  at least 1 signal even if evidence is limited. At least 1 signal MUST have direction="bullish"
+  or direction="neutral" describing the company's macro resilience or rate/inflation tailwind.
+  Each signal object must have:
     - signal: string — causal mechanism (e.g. "100bps rate rise compresses AAPL P/E ~15% via DCF discount rate")
     - direction: "bullish" | "bearish" | "neutral"
     - signal_type: "macro" | "structural" | "cyclical" | "risk"

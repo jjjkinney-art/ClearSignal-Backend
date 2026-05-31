@@ -1480,6 +1480,294 @@ _register(CompanyKnowledgeProfile(
 ))
 
 
+# ── AMD (AMD) ─────────────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="AMD",
+    company_name="Advanced Micro Devices, Inc.",
+    business_model=(
+        "AMD is a fabless semiconductor company that designs high-performance CPUs "
+        "(EPYC server, Ryzen consumer), GPUs and AI accelerators (Instinct MI300/MI325 "
+        "series, Radeon gaming), and adaptive compute (Xilinx FPGAs/Versal). All "
+        "manufacturing is outsourced to TSMC. AMD competes with Intel in x86 CPUs and "
+        "NVIDIA in GPUs/AI accelerators."
+    ),
+    primary_revenue_drivers=[
+        "Data Center (~55% of revenue): EPYC server CPUs + Instinct/MI300 AI accelerators",
+        "Client (~25%): Ryzen consumer and mobile CPUs",
+        "Gaming (~10%): Radeon GPUs + semi-custom (PlayStation/Xbox SoCs)",
+        "Embedded (~10%): Xilinx FPGAs, Versal adaptive SoCs (Xilinx acquisition 2022)",
+    ],
+    recurring_revenue_sources=[
+        "Semi-custom SoC royalties (PlayStation 5, Xbox Series X long-cycle contracts)",
+        "Hyperscaler EPYC CPU deployment (multi-year server refresh cycles)",
+        "MI300X AI accelerator pipeline from cloud providers and HPC customers",
+    ],
+    rate_sensitivity_note=(
+        "AMD is valued as a high-growth semiconductor play (~40-60x forward P/E at peak "
+        "AI cycle). Rate rises compress the growth multiple disproportionately vs. mature "
+        "chip peers. However AMD's near-term EPS revisions are driven more by EPYC share "
+        "gains vs Intel and MI300X AI ramp than by macro rate cycles."
+    ),
+    inflation_pass_through=(
+        "AMD has moderate pricing power. EPYC CPUs command a price premium vs Intel Xeon "
+        "on performance-per-watt, allowing ASP increases. Consumer Ryzen pricing is more "
+        "competitive. TSMC wafer cost increases (CHIPS Act surcharges) compress gross "
+        "margins if not offset by mix shift to higher-margin data center products."
+    ),
+    recession_behavior=(
+        "AMD has moderate cyclicality. Data Center (EPYC + Instinct) is relatively "
+        "resilient as hyperscaler AI capex is a multi-year secular build-out. Client "
+        "(Ryzen) and Gaming (Radeon, semi-custom) are consumer-cyclical and can decline "
+        "30-50% in severe downturns. Embedded (Xilinx) is the most cyclical segment."
+    ),
+    major_risks=[
+        "NVIDIA CUDA ecosystem lock-in: ROCm (AMD's CUDA alternative) is years behind "
+        "in software maturity and ISV support — limits MI300X adoption beyond inference",
+        "Intel competitive response: Arrow Lake and Clearwater Forest server CPUs target "
+        "AMD EPYC market share gains; Granite Rapids already competitive at high core counts",
+        "China revenue (~25% of total): Instinct AI chips face U.S. export controls (MI308 "
+        "downclocked for China compliance); revenue at risk if restrictions tighten",
+        "TSMC single-source concentration: all advanced node production at TSMC N3/N4/N5; "
+        "any TSMC capacity disruption (geopolitical, natural disaster) directly impacts AMD",
+        "AI accelerator market concentration: over 80% of AI GPU market controlled by "
+        "NVIDIA; AMD is the credible alternative but still single-digit market share",
+    ],
+    valuation_style=(
+        "AMD trades on a forward EV/Sales and P/E basis relative to the AI accelerator "
+        "market opportunity. The market prices AMD as 'the credible NVIDIA alternative' "
+        "at a discount (~30-40x forward P/E vs NVIDIA ~50-60x). Key re-rating catalysts: "
+        "MI300X/MI325X quarterly revenue run-rate surpassing $5-8B (proving AI GPU "
+        "franchise), EPYC server CPU market share sustainably above 30%. De-rating risk: "
+        "NVIDIA Blackwell supply normalization squeezes MI300X window; ROCm software "
+        "adoption stalls; China export control escalation."
+    ),
+    key_metrics=[
+        "Data Center revenue quarterly run-rate (EPYC + Instinct combined)",
+        "MI300X/Instinct AI accelerator quarterly shipments and ASP vs H100/H200",
+        "EPYC server CPU market share (target: 30%+ vs Intel Xeon)",
+        "Gross margin trajectory: mix shift from client/gaming to data center",
+        "ROCm software adoption: PyTorch/JAX support, ISV certifications",
+        "China Data Center revenue (export control exposure)",
+        "Embedded (Xilinx) revenue recovery from inventory correction",
+    ],
+    competitive_advantages=[
+        "EPYC performance-per-watt leadership: Zen 4/5 architecture outperforms Intel "
+        "Xeon on TCO metrics, driving hyperscaler adoption (AWS Graviton alternative, "
+        "Azure, Google Cloud EPYC deployments)",
+        "MI300X memory bandwidth advantage: 192GB HBM3 unified memory makes MI300X the "
+        "best-in-class accelerator for large-model inference (fits entire LLaMA-70B in "
+        "a single GPU without fragmentation — NVIDIA H100 requires 2+ GPUs)",
+        "Lisa Su execution track record: turned AMD from near-bankruptcy (2015) to #2 "
+        "semiconductor company by market cap via disciplined product roadmap execution",
+        "Chiplet architecture (AMD CDNA/RDNA on TSMC): AMD pioneered chiplet design for "
+        "cost-effective scaling of HPC chips, now the industry standard approach",
+    ],
+    business_model_keywords=[
+        "EPYC", "MI300", "Instinct", "Ryzen", "ROCm", "CDNA", "RDNA",
+        "Zen 5", "Xilinx", "Versal", "HBM", "inference", "data center GPU",
+        "server CPU", "semi-custom", "Lisa Su", "fabless",
+    ],
+))
+
+# ── UnitedHealth Group (UNH) ─────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="UNH",
+    company_name="UnitedHealth Group Incorporated",
+    business_model=(
+        "UnitedHealth Group operates through two segments: UnitedHealthcare (health "
+        "insurance — Medicare Advantage, Medicaid, commercial employer plans) and Optum "
+        "(health services — OptumHealth care delivery, OptumRx pharmacy benefit management, "
+        "OptumInsight data/analytics). Optum now contributes ~55% of operating earnings "
+        "and is the primary margin-expansion engine."
+    ),
+    primary_revenue_drivers=[
+        "UnitedHealthcare Insurance Premiums (~$280B revenue): Medicare Advantage "
+        "(~50% of UHC membership), Medicaid, commercial employer/individual plans",
+        "Optum Health (~$100B): care delivery clinics, surgery centers, physician groups",
+        "OptumRx (~$120B): pharmacy benefit management — 3rd largest PBM in U.S.",
+        "OptumInsight (~$15B): healthcare data analytics, technology services, consulting",
+    ],
+    recurring_revenue_sources=[
+        "Medicare Advantage premium payments (CMS-contracted, annual rate-setting)",
+        "Employer group insurance premiums (annual contract renewals, ~85% retention)",
+        "Medicaid managed care contracts (state-contracted, multi-year)",
+        "OptumRx long-term PBM contracts with employers and health plans",
+    ],
+    rate_sensitivity_note=(
+        "UNH is relatively rate-insensitive on the revenue side — insurance premiums "
+        "and PBM contracts are set annually via negotiation, not tied to interest rates. "
+        "Higher rates modestly benefit UNH's investment income on its float (~$50B+ "
+        "investment portfolio). A rate-rise environment is broadly neutral to mildly "
+        "positive. Higher rates increase UNH's pension and benefit obligation discounting."
+    ),
+    inflation_pass_through=(
+        "UNH has strong inflation pass-through via annual premium repricing. Medical cost "
+        "inflation (pharmaceutical, labor, utilization) is embedded into next-year premium "
+        "bids. The key risk is intra-year Medical Loss Ratio (MLR) spikes when actual costs "
+        "exceed actuarial projections — UNH targets 83-86% MLR. GLP-1 drug cost inflation "
+        "(Ozempic/Wegovy) is a current headwind not yet fully priced into premiums."
+    ),
+    recession_behavior=(
+        "UNH is defensive in recessions. Medicare Advantage membership is recession-proof "
+        "(demographic demand). Employer group plans can decline if unemployment rises "
+        "(members lose employer coverage). Medicaid membership typically GROWS in recessions "
+        "as income thresholds are met. Optum care delivery is relatively stable."
+    ),
+    major_risks=[
+        "MLR normalization: post-COVID utilization suppression has reversed; medical cost "
+        "trend above 6% threatens 2024-2025 EPS guidance if premiums under-priced",
+        "CMS Medicare Advantage rate cuts: annual CMS rate-setting directly impacts "
+        "MA premium revenue; 2024 CMS rate announcement below expectations caused ~15% "
+        "stock decline — ongoing regulatory risk",
+        "DOJ antitrust investigation: vertical integration of UnitedHealthcare + Optum "
+        "Health (insurer owning care delivery) under DOJ scrutiny; Change Healthcare "
+        "acquisition scrutiny set precedent",
+        "Change Healthcare cyberattack (2024): $1.6B+ direct costs, reputational damage, "
+        "cash flow disruption — raised concerns about IT infrastructure resilience",
+        "Political/legislative risk: Medicare Advantage pricing reform, PBM transparency "
+        "legislation (Pharmacy Benefit Manager Reform Act), drug pricing regulation",
+        "GLP-1 drug cost surge: Ozempic, Wegovy, Mounjaro creating insurance cost "
+        "inflation exceeding actuarial assumptions across plans",
+    ],
+    valuation_style=(
+        "UNH trades at 18-22x forward P/E, a premium to managed care peers (CVS, CI, "
+        "HUM) justified by Optum's high-margin health services mix and consistent 13-16% "
+        "EPS CAGR. Key re-rating catalyst: MLR normalization proving actuarial accuracy, "
+        "Optum revenue exceeding $200B (demonstrating vertical integration value). "
+        "De-rating risk: sustained MLR above 86%, CMS MA rate reductions, DOJ breakup "
+        "action. Sum-of-parts: UnitedHealthcare at ~12x earnings + Optum at ~22x earnings."
+    ),
+    key_metrics=[
+        "Medical Loss Ratio (MLR): UHC consolidated target 83.0-86.0%",
+        "STAR ratings: CMS quality ratings that determine Medicare Advantage bonus payments",
+        "Optum operating earnings as % of UNH total (target >55%)",
+        "Medicare Advantage membership growth (organic, not just via acquisitions)",
+        "OptumRx scripts dispensed and PBM market share",
+        "Days Claims Payable (DCP): balance sheet indicator of claims reserve adequacy",
+        "Adjusted EPS guidance and medical cost trend per management guidance",
+    ],
+    competitive_advantages=[
+        "Scale and data moat: UNH processes 1.8B+ claims annually — largest healthcare "
+        "data asset in the U.S., enabling better risk adjustment and actuarial accuracy",
+        "Optum vertical integration: owning care delivery (OptumHealth) + PBM (OptumRx) "
+        "+ data (OptumInsight) creates cost savings vs competitors who outsource these",
+        "Medicare Advantage STAR ratings: UNH consistently achieves 4+ STAR ratings "
+        "which generate CMS bonus payments (~$4-8B annually) funding price competitive "
+        "MA benefits — a reinforcing quality moat",
+        "Employer group retention: ~90%+ annual employer renewal rate across large group "
+        "plans; switching costs (claims history, network rebuilding) are high",
+    ],
+    business_model_keywords=[
+        "Optum", "OptumRx", "OptumHealth", "OptumInsight",
+        "Medicare Advantage", "Medicaid", "MLR", "medical loss ratio",
+        "STAR rating", "PBM", "pharmacy benefit", "UnitedHealthcare",
+        "Andrew Witty", "Change Healthcare", "GLP-1",
+    ],
+))
+
+# ── Taiwan Semiconductor Manufacturing (TSM) ─────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="TSM",
+    company_name="Taiwan Semiconductor Manufacturing Company Limited",
+    business_model=(
+        "TSMC is the world's largest pure-play semiconductor foundry — it manufactures "
+        "chips designed by fabless customers (Apple, NVIDIA, AMD, Qualcomm, Broadcom) "
+        "and does not sell its own branded products. Revenue = wafer volume × ASP. "
+        "TSMC holds ~60% of global foundry market share and is the only company "
+        "with commercially available N3 (3nm) and N2 (2nm) process nodes at scale."
+    ),
+    primary_revenue_drivers=[
+        "Advanced nodes N3/N5/N7 (~60-65% of wafer revenue; highest ASP, >55% gross margin)",
+        "Apple (~25% of revenue): sole supplier for A-series/M-series chips at N3",
+        "HPC/AI segment (~50% of revenue): NVIDIA, AMD, Broadcom, Intel Foundry customers",
+        "CoWoS advanced packaging (~$8-12B run-rate): HBM-on-substrate stacking for AI GPUs",
+        "Mature nodes N28/N40/N65 (~35-40%): automotive, IoT, analog, lower-margin",
+    ],
+    recurring_revenue_sources=[
+        "Apple multi-year chip supply agreements (A-series iPhone, M-series Mac, annual)",
+        "NVIDIA AI GPU wafer allocations (H100/H200/Blackwell, 12-18 month lead times)",
+        "CoWoS advanced packaging pre-paid capacity reservations from hyperscalers",
+        "Long-term NRE (non-recurring engineering) contracts for custom process development",
+    ],
+    rate_sensitivity_note=(
+        "TSMC is a capital-intensive manufacturer with $40B+ annual capex. High interest "
+        "rates increase the cost of debt financing for fab construction (Arizona, Japan, "
+        "Germany fabs). TSMC's balance sheet carries significant long-term debt for "
+        "international expansion. Rate rises also pressure the growth multiple on TSMC's "
+        "Taiwan-listed ADR; as a high-capex industrial compounder it behaves like a "
+        "growth infrastructure stock in rate-sensitive environments."
+    ),
+    inflation_pass_through=(
+        "TSMC has strong long-run pricing power — it is the only N3/N2 supplier, giving "
+        "customers no alternative. TSMC raised N3 wafer prices ~6% in 2023 and N5 prices "
+        "~6% in 2022. However, pricing negotiations are annual and customers (Apple, "
+        "NVIDIA) have leverage via volume concentration. Labor and energy inflation in "
+        "Taiwan is modest; Arizona fab labor costs are 2-3x Taiwan equivalent."
+    ),
+    recession_behavior=(
+        "TSMC has cyclical exposure through smartphone (Apple) and PC (AMD, Intel) end "
+        "markets, which decline in recessions. However, AI/HPC demand has become a "
+        "structural offset — hyperscaler AI capex is relatively recession-resistant. "
+        "In 2022-2023 inventory correction, TSMC revenue declined ~15% then recovered "
+        "strongly. Advanced node revenue is more resilient than mature node revenue."
+    ),
+    major_risks=[
+        "Taiwan geopolitical risk: Taiwan Strait tensions or military conflict would "
+        "directly threaten TSMC's primary manufacturing base (~90% of capacity in Taiwan); "
+        "U.S./Netherlands export controls on EUV tools limit TSMC China expansion",
+        "Arizona fab execution risk: TSMC Arizona N3 ramp delayed by 2+ years; labor "
+        "costs 4-5x Taiwan equivalent; CHIPS Act subsidy uncertainty post-2024 election",
+        "Customer concentration: Apple ~25% of revenue — iPhone unit volume directly "
+        "impacts TSMC utilization; Apple in-sourcing risk for modem chips",
+        "Samsung foundry competition: Samsung 3GAE process competes at advanced nodes "
+        "for Qualcomm and Google Tensor chips; Intel 18A is a longer-term threat",
+        "EUV equipment concentration: ASML is the sole EUV supplier; equipment delays "
+        "or export restrictions on ASML tools constrain TSMC's advanced node ramp",
+        "CoWoS capacity bottleneck: AI GPU demand is constrained by CoWoS packaging "
+        "capacity shortfall — a positive demand signal but execution risk for ramp",
+    ],
+    valuation_style=(
+        "TSMC trades at 18-25x forward P/E, premium to foundry peers (GlobalFoundries, "
+        "Samsung) justified by advanced node monopoly and AI tailwind. Key re-rating "
+        "catalysts: CoWoS capacity scaling to meet AI GPU demand, N2 volume ramp on "
+        "schedule, Arizona fab proving cost competitiveness. De-rating risk: Apple "
+        "guidance cut reducing Q4 wafer orders, geopolitical escalation in Taiwan Strait, "
+        "CHIPS Act subsidy reduction. ADR premium to Taiwan shares reflects geopolitical "
+        "discount; TSMC trades at a 20-30% discount to its 'deserved' multiple because "
+        "of Taiwan risk overhang."
+    ),
+    key_metrics=[
+        "Advanced node revenue mix (N3+N5+N7 as % of total wafer revenue)",
+        "CoWoS advanced packaging quarterly revenue and capacity utilization",
+        "Gross margin: target 53-55%+; Arizona dilution impact per management guidance",
+        "Capex guidance ($38-42B annually): measures fab investment intensity",
+        "AI/HPC revenue as % of total (structural growth driver vs smartphone cyclicality)",
+        "N2 volume ramp timeline: key indicator of next-generation node execution",
+        "TSMC Arizona fab utilization rate and cost-per-wafer vs Taiwan equivalent",
+    ],
+    competitive_advantages=[
+        "Advanced node monopoly: TSMC is the only foundry producing N3 and N2 at "
+        "commercial scale; Samsung and Intel alternatives are at least 1-2 generations "
+        "behind on yield and throughput — customers cannot multi-source",
+        "Customer-specific process tuning: TSMC co-develops process variants for Apple "
+        "(TSMC A16), NVIDIA (CoWoS-S/L), and AMD (N3E) — creating deep switching costs "
+        "as re-qualification at Samsung or Intel requires 12-24 months",
+        "CoWoS advanced packaging monopoly: 80%+ of AI GPU CoWoS packaging for "
+        "NVIDIA/AMD done at TSMC; this is a new strategic position in the AI value chain "
+        "beyond pure wafer manufacturing",
+        "Manufacturing yield leadership: TSMC's N3 yield is materially higher than "
+        "Samsung 3GAE, translating to better chip economics for customers — a "
+        "self-reinforcing moat as customers stay for better economics",
+    ],
+    business_model_keywords=[
+        "foundry", "N3", "N5", "N2", "CoWoS", "advanced packaging",
+        "wafer", "TSMC", "Taiwan", "Apple", "NVIDIA", "AMD",
+        "fabless", "HBM", "CHIPS Act", "Arizona", "CC Wei",
+        "advanced node", "EUV", "ASML",
+    ],
+))
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------

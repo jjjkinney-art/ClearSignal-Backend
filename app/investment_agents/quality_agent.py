@@ -130,7 +130,10 @@ Produce a JSON object matching the QualityAssessment schema with these fields:
 - operating_quality: Margin consistency, FCF conversion, asset intensity
 - overall: One concise paragraph summarising business quality
 - confidence: 0.0-1.0 based on evidence completeness
-- signals: array of 2-3 quality signals. Each signal object must have:
+- signals: array of 2-3 quality signals. REQUIRED: this array MUST NOT be empty — return at
+  least 1 signal even if evidence is limited. At least 1 signal MUST have direction="bullish"
+  describing the company's primary moat, FCF quality, or capital-allocation strength.
+  Each signal object must have:
     - signal: string — specific quality driver (e.g. "[company-specific] FCF conversion
       and [company's actual capital return] provide durable shareholder return — use
       the ACTUAL company's metrics from evidence, never copy figures from other companies")

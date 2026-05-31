@@ -747,6 +747,18 @@ def rank_signals(
     # top_risks: up to 4 from bearish/risk pool (orthogonality applied at 2 per dim)
     top_risks = bearish_risk[:4]
 
+    # Defensive fallback: if no bullish/neutral signals exist (all agents returned
+    # only bearish/risk signals), promote the highest-scoring signal so that
+    # top_signals is never empty when signal data exists.
+    # Preference order: (1) a signal not already in top_risks; (2) any signal.
+    if not top_signals and all_ranked:
+        used_risk_ids = {id(s) for s in top_risks}
+        fallback = next(
+            (s for s in all_ranked if id(s) not in used_risk_ids),
+            all_ranked[0],  # last resort: best-scored signal even if also a risk
+        )
+        top_signals = [fallback]
+
     # secondary_signals: everything else, up to 6
     used_ids = {id(s) for s in top_signals + top_risks}
     secondary = [s for s in all_ranked if id(s) not in used_ids][:6]

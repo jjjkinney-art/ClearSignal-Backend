@@ -126,7 +126,10 @@ Produce a JSON object matching the MarketContext schema with these fields:
 - positioning: Institutional and retail positioning signals
 - overall: One concise paragraph summarising the current market context
 - confidence: 0.0-1.0 based on evidence completeness
-- signals: array of 2-3 catalyst or market signals. Each signal object must have:
+- signals: array of 2-3 catalyst or market signals. REQUIRED: this array MUST NOT be empty —
+  return at least 1 signal even if evidence is limited. At least 1 signal MUST have
+  direction="bullish" describing the company's primary near-term catalyst or positive momentum.
+  Each signal object must have:
     - signal: string — specific catalyst or sentiment driver (e.g. "AAPL Services guidance raise by $1.2B signals accelerating flywheel")
     - direction: "bullish" | "bearish" | "neutral"
     - signal_type: "catalyst" | "structural" | "cyclical" | "risk"

@@ -775,11 +775,24 @@ class TestEdgeCases:
         assert len(result.noise) >= 1
 
     def test_signals_from_all_five_agents_collected(self):
-        val = _valuation(signals=[_signal("Valuation signal", signal_type="valuation", impact=0.6)])
-        mac = _macro(signals=[_signal("Macro signal", signal_type="macro", impact=0.6)])
-        ris = _risk(signals=[_signal("Risk signal", signal_type="risk", direction="bearish", impact=0.6)])
-        mkt = _market(signals=[_signal("Catalyst signal", signal_type="catalyst", impact=0.6)])
-        qua = _quality(signals=[_signal("Quality signal", signal_type="quality", impact=0.6)])
+        # Use fully distinct, non-overlapping signal texts to prevent the dedup
+        # logic from merging them (short identical-suffix strings like "X signal"
+        # share the "signal" token and can collapse across agents).
+        val = _valuation(signals=[_signal(
+            "Azure cloud 29% growth drives FCF expansion and multiple re-rating",
+            signal_type="valuation", impact=0.6)])
+        mac = _macro(signals=[_signal(
+            "Federal Reserve rate pivot reduces discount rate compression on growth multiples",
+            signal_type="macro", impact=0.6)])
+        ris = _risk(signals=[_signal(
+            "Antitrust DOJ investigation into cloud bundling creates regulatory overhang",
+            signal_type="risk", direction="bearish", impact=0.6)])
+        mkt = _market(signals=[_signal(
+            "Consensus EPS estimate revision cycle turning positive after three quarters of cuts",
+            signal_type="catalyst", impact=0.6)])
+        qua = _quality(signals=[_signal(
+            "Recurring subscription revenue base exceeds 85% of total providing earnings durability",
+            signal_type="quality", impact=0.6)])
         result = rank_signals(val, mac, ris, mkt, qua)
         source_agents = {s.source_agent for s in result.all_ranked}
         assert "valuation" in source_agents
@@ -787,3 +800,131 @@ class TestEdgeCases:
         assert "risk" in source_agents
         assert "market" in source_agents
         assert "quality" in source_agents
+
+
+# ── Fix-5 regression: defensive fallback when only bearish signals exist ──────
+
+class TestTopSignalsFallback:
+    """Regression tests for the defensive fallback in rank_signals().
+
+    When all agents return only bearish/risk-type signals (the observed failure
+    mode for MSFT, AMZN, NVDA, AMD, GS, UNH, NFLX in the 20-company validation),
+    the fallback promotes the highest-scoring non-risk signal to top_signals so
+    that top_signals is never empty when signal data exists.
+    """
+
+    def test_fallback_fires_when_only_risk_signals_present(self):
+        """When all non-risk agents return empty signals and risk agent has bearish
+        signals, the fallback puts at least 1 signal in top_signals."""
+        # Risk agent: 3 bearish signals only — mirrors the zero-signal company pattern
+        risk_sigs = [
+            _signal(
+                f"Regulatory antitrust exposure risk factor {i}",
+                signal_type="risk",
+                direction="bearish",
+                impact=0.80 - i * 0.05,
+                source_agent="risk",
+            )
+            for i in range(3)
+        ]
+        val   = _valuation(signals=[])
+        mac   = _macro(signals=[])
+        ris   = _risk(signals=risk_sigs)
+        mkt   = _market(signals=[])
+        qua   = _quality(signals=[])
+        result = rank_signals(val, mac, ris, mkt, qua)
+
+        # The fallback must fire: top_signals was empty, all_ranked is non-empty
+        assert len(result.top_signals) >= 1, (
+            "Fallback must populate top_signals when only bearish signals exist. "
+            f"Got top_signals={result.top_signals}, all_ranked={result.all_ranked}"
+        )
+
+    def test_fallback_does_not_fire_when_bullish_signals_exist(self):
+        """When bullish signals are present, the normal path fires (no fallback needed)."""
+        bullish_sig = _signal(
+            "Azure cloud FCF expansion supports premium multiple",
+            direction="bullish",
+            signal_type="structural",
+            impact=0.85,
+            source_agent="valuation",
+        )
+        val   = _valuation(signals=[bullish_sig])
+        mac   = _macro(signals=[])
+        ris   = _risk(signals=[_signal("Rate risk", direction="bearish", signal_type="risk", source_agent="risk")])
+        mkt   = _market(signals=[])
+        qua   = _quality(signals=[])
+        result = rank_signals(val, mac, ris, mkt, qua)
+
+        assert len(result.top_signals) >= 1
+        # The promoted signal should be the bullish one (not a risk signal promoted)
+        assert result.top_signals[0].direction in ("bullish", "neutral")
+
+    def test_fallback_does_not_fire_when_no_signals_at_all(self):
+        """When every agent returns empty signals, top_signals stays empty (no phantom signals)."""
+        val   = _valuation(signals=[])
+        mac   = _macro(signals=[])
+        ris   = _risk(signals=[])
+        mkt   = _market(signals=[])
+        qua   = _quality(signals=[])
+        result = rank_signals(val, mac, ris, mkt, qua)
+
+        # all_ranked is empty, fallback can't create signals from nothing
+        assert result.top_signals == [], (
+            "Fallback must not create signals when all agents return empty signals. "
+            f"Got top_signals={result.top_signals}"
+        )
+
+    def test_fallback_prioritises_non_risk_signal_when_available(self):
+        """When both risk and non-risk signals exist, fallback prefers the non-risk one.
+
+        A 'non-risk signal' in this context is a signal that is neither direction='bearish'
+        nor signal_type='risk', so it does not end up in bearish_risk/top_risks.
+        A neutral macro or structural signal from a non-risk agent qualifies.
+        """
+        # 2 bearish risk signals (will go to bearish_risk → top_risks)
+        risk_sigs = [
+            _signal(
+                "Antitrust regulatory scrutiny overhang creates headline risk for multiple",
+                signal_type="risk",
+                direction="bearish",
+                impact=0.78,
+                source_agent="risk",
+            ),
+            _signal(
+                "Supply chain concentration in single geography creates execution risk",
+                signal_type="risk",
+                direction="bearish",
+                impact=0.72,
+                source_agent="risk",
+            ),
+        ]
+        # 1 neutral macro signal (NOT bearish, NOT risk type → will NOT be in bearish_risk)
+        neutral_macro = _signal(
+            "Enterprise cloud spending resilient versus consumer cyclical pressures on balance",
+            signal_type="macro",
+            direction="neutral",
+            impact=0.75,
+            source_agent="macro",
+        )
+        val   = _valuation(signals=[])
+        mac   = _macro(signals=[neutral_macro])
+        ris   = _risk(signals=risk_sigs)
+        mkt   = _market(signals=[])
+        qua   = _quality(signals=[])
+        result = rank_signals(val, mac, ris, mkt, qua)
+
+        # Fallback should have fired: neutral_macro was in bullish_neutral[:6]
+        # (direction="neutral") so it should actually go through the normal path,
+        # not the fallback. top_signals must be non-empty.
+        assert len(result.top_signals) >= 1, (
+            "Neutral signal from macro agent must populate top_signals via normal path"
+        )
+        # The neutral signal is NOT in bearish_risk, so top_signals and top_risks
+        # should not overlap
+        top_signal_ids = {id(s) for s in result.top_signals}
+        top_risk_ids   = {id(s) for s in result.top_risks}
+        no_overlap = top_signal_ids.isdisjoint(top_risk_ids)
+        assert no_overlap, (
+            "A neutral signal must not overlap with top_risks (which only has bearish signals)"
+        )

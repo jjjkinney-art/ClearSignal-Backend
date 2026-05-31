@@ -121,3 +121,131 @@ class TestListKnownTickers:
         tickers = list_known_tickers()
         for t in tickers:
             assert t == t.upper(), f"Ticker {t!r} is not uppercase"
+
+
+# ── New profile regressions: AMD, UNH, TSM ────────────────────────────────────
+
+class TestAmdProfile:
+    """Regression tests for the AMD knowledge profile added in fix-2."""
+
+    def setup_method(self):
+        self.amd = get_knowledge_profile("AMD")
+
+    def test_amd_profile_exists(self):
+        assert self.amd is not None, "AMD knowledge profile must be registered"
+
+    def test_amd_ticker_correct(self):
+        assert self.amd.ticker == "AMD"
+
+    def test_amd_has_epyc_keyword(self):
+        assert "EPYC" in self.amd.business_model_keywords
+
+    def test_amd_has_instinct_or_mi300_keyword(self):
+        kw = self.amd.business_model_keywords
+        assert "MI300" in kw or "Instinct" in kw, (
+            "AMD profile must include MI300 or Instinct in business_model_keywords"
+        )
+
+    def test_amd_has_ryzen_keyword(self):
+        assert "Ryzen" in self.amd.business_model_keywords
+
+    def test_amd_has_rocm_keyword(self):
+        assert "ROCm" in self.amd.business_model_keywords
+
+    def test_amd_primary_revenue_drivers_mentions_data_center(self):
+        drivers = self.amd.primary_revenue_drivers
+        assert any("data center" in d.lower() or "Data Center" in d for d in drivers)
+
+    def test_amd_competitive_advantages_not_empty(self):
+        assert len(self.amd.competitive_advantages) >= 2
+
+    def test_amd_major_risks_mentions_cuda(self):
+        risks_text = " ".join(self.amd.major_risks).lower()
+        assert "cuda" in risks_text, "AMD risks must mention CUDA ecosystem moat"
+
+    def test_amd_business_model_keywords_at_least_8(self):
+        assert len(self.amd.business_model_keywords) >= 8
+
+
+class TestUnhProfile:
+    """Regression tests for the UNH knowledge profile added in fix-2."""
+
+    def setup_method(self):
+        self.unh = get_knowledge_profile("UNH")
+
+    def test_unh_profile_exists(self):
+        assert self.unh is not None, "UNH knowledge profile must be registered"
+
+    def test_unh_ticker_correct(self):
+        assert self.unh.ticker == "UNH"
+
+    def test_unh_has_optum_keyword(self):
+        assert "Optum" in self.unh.business_model_keywords
+
+    def test_unh_has_medicare_advantage_keyword(self):
+        kw = self.unh.business_model_keywords
+        assert "Medicare Advantage" in kw, "UNH profile must include Medicare Advantage keyword"
+
+    def test_unh_has_mlr_keyword(self):
+        kw = self.unh.business_model_keywords
+        assert "MLR" in kw or "medical loss ratio" in kw, (
+            "UNH profile must include MLR or medical loss ratio keyword"
+        )
+
+    def test_unh_primary_revenue_drivers_mentions_optum(self):
+        drivers = " ".join(self.unh.primary_revenue_drivers)
+        assert "Optum" in drivers
+
+    def test_unh_competitive_advantages_mentions_star_ratings(self):
+        advantages_text = " ".join(self.unh.competitive_advantages).lower()
+        assert "star" in advantages_text, "UNH advantages must mention STAR ratings"
+
+    def test_unh_major_risks_mentions_mlr(self):
+        risks_text = " ".join(self.unh.major_risks).lower()
+        assert "mlr" in risks_text or "medical loss" in risks_text
+
+    def test_unh_business_model_keywords_at_least_8(self):
+        assert len(self.unh.business_model_keywords) >= 8
+
+
+class TestTsmProfile:
+    """Regression tests for the TSM knowledge profile added in fix-2."""
+
+    def setup_method(self):
+        self.tsm = get_knowledge_profile("TSM")
+
+    def test_tsm_profile_exists(self):
+        assert self.tsm is not None, "TSM knowledge profile must be registered"
+
+    def test_tsm_ticker_correct(self):
+        assert self.tsm.ticker == "TSM"
+
+    def test_tsm_has_foundry_keyword(self):
+        assert "foundry" in self.tsm.business_model_keywords
+
+    def test_tsm_has_cowos_keyword(self):
+        assert "CoWoS" in self.tsm.business_model_keywords
+
+    def test_tsm_has_advanced_node_keywords(self):
+        kw = self.tsm.business_model_keywords
+        assert "N3" in kw or "N5" in kw or "N2" in kw, (
+            "TSM profile must include at least one advanced node keyword (N3, N5, or N2)"
+        )
+
+    def test_tsm_business_model_mentions_foundry(self):
+        assert "foundry" in self.tsm.business_model.lower()
+
+    def test_tsm_primary_revenue_drivers_mentions_apple(self):
+        drivers = " ".join(self.tsm.primary_revenue_drivers)
+        assert "Apple" in drivers
+
+    def test_tsm_major_risks_mentions_taiwan(self):
+        risks_text = " ".join(self.tsm.major_risks).lower()
+        assert "taiwan" in risks_text, "TSM risks must mention Taiwan geopolitical risk"
+
+    def test_tsm_competitive_advantages_mentions_advanced_node(self):
+        advantages_text = " ".join(self.tsm.competitive_advantages).lower()
+        assert "n3" in advantages_text or "advanced node" in advantages_text
+
+    def test_tsm_business_model_keywords_at_least_8(self):
+        assert len(self.tsm.business_model_keywords) >= 8

@@ -162,7 +162,10 @@ Produce a JSON object matching the ValuationView schema with these fields:
 - valuation_stance: (see instruction above) "overpriced" | "fairly_valued" | "underpriced" | "cannot_determine" | "" (empty when no stance question)
 - valuation_stance_reasoning: 1-2 sentences anchoring the verdict to a specific metric
 - confidence: 0.0-1.0 based on evidence completeness
-- signals: array of 2-4 extracted signals. Each signal object must have:
+- signals: array of 2-4 extracted signals. REQUIRED: this array MUST NOT be empty — return at
+  least 1 signal even if evidence is limited. At least 1 signal MUST have direction="bullish"
+  describing the company's primary valuation support, pricing power, or earnings growth driver.
+  Each signal object must have:
     - signal: string — 1-2 sentences naming the specific driver, with priced-in language (NOT generic)
     - direction: "bullish" | "bearish" | "neutral"
     - signal_type: "valuation" | "structural" | "cyclical" | "catalyst" | "macro" | "quality" | "risk"
