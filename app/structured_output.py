@@ -74,6 +74,24 @@ def repair_data(parsed: Dict[str, Any], schema: Type[BaseModel]) -> Dict[str, An
     expects a list.  It splits strings on newlines or bullet
     characters.  It fills missing keys with default values from the
     schema.  Additional repair strategies can be added here.
+
+    Stringified-array fix (2026)
+    ----------------------------
+    LLMs occasionally return a JSON array field as a JSON-encoded string
+    instead of a proper JSON array, for example::
+
+        "key_risks": "[\"risk 1\", \"risk 2\"]"   ← wrong: string
+        "key_risks": ["risk 1", "risk 2"]          ← correct: array
+
+    The original logic found no newline/bullet delimiters in such
+    strings and placed the whole JSON string as a single element in the
+    repaired list.  For ``List[str]`` fields Pydantic accepted this, so
+    the raw JSON string was silently passed through to the frontend and
+    rendered verbatim.  The fix tries ``json.loads`` first whenever the
+    string starts with ``[`` and ends with ``]``; if it returns a list
+    that list is used directly.  For ``List[Signal]`` fields the same
+    fix lets the JSON-decoded dicts be coerced to ``Signal`` objects by
+    Pydantic, recovering signals that would otherwise have been lost.
     """
     repaired: Dict[str, Any] = {}
     # Pydantic v2 exposes ``model_fields`` as the public interface to
@@ -111,8 +129,27 @@ def repair_data(parsed: Dict[str, Any], schema: Type[BaseModel]) -> Dict[str, An
                 if isinstance(value, list):
                     repaired[key] = value
                 elif isinstance(value, str):
-                    # split on newlines, bullets or hyphens and semicolons
-                    items = [item.strip().lstrip('-').strip() for item in re.split(r'[\n\r]+|•|\u2022|\-|;|\*', value) if item.strip()]
+                    stripped = value.strip()
+                    # ── Stringified-array fix ──────────────────────────────────
+                    # LLMs sometimes return a JSON array field as a JSON-encoded
+                    # string, e.g. "key_risks": "[\"r1\",\"r2\"]" instead of
+                    # "key_risks": ["r1","r2"].  Without this fix, repair_data
+                    # found no newline/bullet delimiters and wrapped the whole
+                    # JSON string in a one-element list.  For List[str] fields
+                    # Pydantic accepted that single-element list, so raw JSON
+                    # strings silently reached the frontend and rendered as-is.
+                    # Fix: if the string looks like a JSON array, try json.loads
+                    # first.  Use the parsed list directly if it succeeds.
+                    if stripped.startswith('[') and stripped.endswith(']'):
+                        try:
+                            parsed_list = json.loads(stripped)
+                            if isinstance(parsed_list, list):
+                                repaired[key] = parsed_list
+                                continue  # do not fall through to split logic
+                        except (json.JSONDecodeError, ValueError):
+                            pass  # fall through to split-on-delimiter logic
+                    # Fallback: split on newlines, bullets or hyphens
+                    items = [item.strip().lstrip('-').strip() for item in re.split(r'[\n\r]+|\u2022|\-|;|\*', value) if item.strip()]
                     repaired[key] = items
                 else:
                     repaired[key] = []
