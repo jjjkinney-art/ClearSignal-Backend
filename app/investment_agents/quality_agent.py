@@ -131,7 +131,9 @@ Produce a JSON object matching the QualityAssessment schema with these fields:
 - overall: One concise paragraph summarising business quality
 - confidence: 0.0-1.0 based on evidence completeness
 - signals: array of 2-3 quality signals. Each signal object must have:
-    - signal: string — specific quality driver (e.g. "95% FCF conversion and $90B annual buyback provide durable shareholder return regardless of revenue mix")
+    - signal: string — specific quality driver (e.g. "[company-specific] FCF conversion
+      and [company's actual capital return] provide durable shareholder return — use
+      the ACTUAL company's metrics from evidence, never copy figures from other companies")
     - direction: "bullish" | "bearish" | "neutral"
     - signal_type: "quality" | "structural" | "risk"
     - impact_score: 0.0-1.0

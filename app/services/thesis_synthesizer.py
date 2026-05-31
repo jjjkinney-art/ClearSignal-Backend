@@ -1485,12 +1485,14 @@ SENTENCE STRUCTURE: Mechanism → Specific data point → So-what for {ticker}'s
 rate-driven P/E multiple pressure on the lower-margin hardware segment."
 
   BAD: "The company remains well positioned in its key markets."
-  GOOD: "{ticker}'s $165B net-cash position and $90B annual buyback sustain EPS even \
-as hardware revenue faces credit-cycle headwinds."
+  GOOD: "{ticker}'s net-cash balance and [company-specific] annual capital return
+sustain EPS even as [primary segment] revenue faces credit-cycle headwinds."
+  NOTE: Never copy dollar amounts from these examples. All figures must come
+  from the evidence items or the company business model context above.
 
   BAD: "This indicates positive momentum going forward."
-  GOOD: "The acceleration in Services attach rates since iOS 17 signals upsell runway \
-that sell-side estimates have not yet captured."
+  GOOD: "The acceleration in [company-specific product/segment] attach rates since
+[specific recent event] signals upsell runway that sell-side estimates have not yet captured."
 
 FORBIDDEN PHRASES — remove every instance:
 - "well positioned", "well-positioned" → say specifically HOW
@@ -1509,6 +1511,20 @@ FORBIDDEN PHRASES — remove every instance:
 - "recent data suggests" → name the specific data item and its date
 - "historically" without a date → "as of [period]" or name the specific historical reference
 - "the stock is trading at" without citing the multiple → give the actual ratio from evidence
+
+CROSS-COMPANY CONTAMINATION PREVENTION — ABSOLUTE RULES:
+The synthesis prompt contains example sentences drawn from AAPL analysis.
+These examples illustrate STYLE AND STRUCTURE — the dollar amounts are APPLE'S,
+not {ticker}'s.  You MUST NOT copy any figure from these examples into your output.
+Specifically:
+- "$90B buyback" → this is Apple's buyback.  Do NOT use for {ticker}.
+- "$165B net-cash" → this is Apple's gross cash.  Do NOT use for {ticker}.
+- "$100B ARR" → this is Apple's Services ARR.  Do NOT use for {ticker}.
+- "72% gross margin" → this is Apple's Services margin.  Do NOT use for {ticker}.
+- "iOS 17", "Services", "iPhone", "App Store" → Apple products.  Do NOT use for {ticker}.
+If {ticker} has a buyback, its SIZE must come from the evidence items above.
+If no buyback is mentioned in the evidence, do NOT assert one exists.
+Violation of this rule causes a hallucination alert and disqualifies the thesis.
 
 HALLUCINATION PREVENTION — ABSOLUTE RULES:
 - NEVER invent a P/E ratio, EV/EBITDA, revenue figure, or price target not present in the evidence.
@@ -1654,8 +1670,12 @@ MECHANISM_PRIORITY — MANDATORY:
 Every causal claim must name the TRANSMISSION PATH, not the outcome abstraction.
 BANNED mechanism abstractions (replace with the actual transmission):
 - "offsets the pressure" → HOW does it offset? (e.g. "Services recurring FCF absorbs the ~8% EPS hit from hardware unit declines")
-- "stabilizes valuation" → WHAT stabilizes it? ("$90B buyback compresses share count, sustaining EPS at zero revenue growth")
-- "cushions downside" → WHAT is the cushion mechanism? ("net cash of $165B covers 18 months of buyback even if FCF halves")
+- "stabilizes valuation" → WHAT stabilizes it? (e.g. "[company-specific] buyback
+  compresses share count, sustaining EPS at zero revenue growth — use the ACTUAL
+  company's buyback figure from evidence, never copy example dollar amounts")
+- "cushions downside" → WHAT is the cushion mechanism? (e.g. "net cash of [X]B
+  covers N months of buyback even if FCF halves — cite the ACTUAL company's cash
+  position from evidence, do not invent or copy figures from other companies")
 - "supports resilience" → HOW? name the specific financial buffer
 - "enhances profitability" → WHICH line item, by how much, through what mechanism
 - "pricing power" → name the specific ASP/volume/take-rate mechanism that enables it
@@ -1843,8 +1863,10 @@ TASK — produce a JSON object with exactly these fields:
    (e.g. "Services gross margin mix expanding to ~35% of revenue inflects blended operating
    leverage, driving EPS growth that is structurally decoupled from hardware unit cycles.").
    Sentence 2 — AMPLIFIER: Name the operating leverage, capital allocation, or cost structure
-   effect that makes the bull case self-reinforcing (e.g. "$90B buyback on declining share
-   count amplifies EPS even at zero revenue growth.").
+   effect that makes the bull case self-reinforcing (e.g. "[company's actual buyback or
+   capital return mechanism] amplifies EPS even at zero revenue growth — cite the company's
+   ACTUAL capital return amount from evidence; do not invent or copy figures from other
+   companies").
    Sentence 3 — VALUATION ANCHOR: What multiple is justified if the bull case plays out, and
    what has to be true (e.g. "At 25-28x forward P/E the stock is fairly valued IF Services
    ARR sustains double-digit growth.").
@@ -1860,8 +1882,9 @@ TASK — produce a JSON object with exactly these fields:
    compresses {ticker}'s 28x P/E to ~22-24x via DCF discount-rate expansion, a ~15-20%
    valuation headwind even with earnings unchanged.").
    Sentence 2 — SECOND-ORDER EFFECT: Name the compounding force (e.g. "As rates rise, the
-   $90B buyback ROI deteriorates relative to debt service costs, blunting EPS support at
-   exactly the point multiple compression requires it.").
+   [company's actual buyback] ROI deteriorates relative to debt service costs, blunting
+   EPS support at exactly the point multiple compression requires it — use the company's
+   ACTUAL capital return figure from evidence, not a figure from another company").
    Sentence 3 — DOWNSIDE PATHWAY: The realistic magnitude and sequence (e.g. "If hardware
    demand softens simultaneously — a plausible outcome at higher consumer credit costs —
    blended EPS could compress 10-15%, producing a double headwind on a compressed multiple.").

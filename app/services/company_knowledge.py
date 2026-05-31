@@ -1360,6 +1360,126 @@ _register(CompanyKnowledgeProfile(
 ))
 
 
+# ── Broadcom (AVGO) ────────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="AVGO",
+    company_name="Broadcom Inc.",
+    business_model=(
+        "Broadcom designs high-performance semiconductors and infrastructure software. "
+        "The semiconductor segment (~75% of revenue) supplies custom AI ASICs for "
+        "hyperscalers (Google TPU, Meta MTIA), networking silicon (Ethernet switching: "
+        "Tomahawk, Trident, Jericho; PCIe/SAS storage controllers; wireless combo chips "
+        "for Apple iPhone), and Fibre Channel HBAs.  The infrastructure software segment "
+        "(~25% of revenue post-VMware acquisition) provides virtualisation (VMware vSphere, "
+        "NSX), mainframe tools (CA Technologies), and security (Symantec).  Capital "
+        "allocation is dividend-focused with moderate buybacks — NOT a $90B buyback program."
+    ),
+    primary_revenue_drivers=[
+        "Custom AI ASIC / XPU for hyperscalers (~25-30% of semiconductor revenue, "
+        "growing fastest — Google TPU v5/v6, Meta MTIA Gen 2, Apple neural engines)",
+        "Networking switching silicon — Tomahawk (merchant Ethernet), Trident (enterprise), "
+        "Jericho2/3 (service-provider scale-up/out routing) (~20% of semi revenue)",
+        "VMware virtualisation and cloud infrastructure software (~25% of total revenue, "
+        "high recurring subscription margin post-2024 conversion)",
+        "Wireless connectivity chips for Apple iPhone (WiFi, Bluetooth, UWB combo) "
+        "(~15% of semi revenue — Apple concentration risk)",
+        "Storage controllers, PCIe switches, Fibre Channel HBAs (~10-15% of semi revenue)",
+    ],
+    recurring_revenue_sources=[
+        "VMware subscription conversions (vSphere+, vSAN+, VCF bundles) — multi-year "
+        "enterprise contracts, >90% renewal rates historically",
+        "CA Technologies mainframe tool subscriptions (highly sticky — decades of "
+        "installed base with high switching costs)",
+        "Custom ASIC multi-year co-design contracts with hyperscalers (Google, Meta, Apple) "
+        "— typically 3-5 year design engagements with volume commitments",
+        "Symantec enterprise security software subscriptions",
+    ],
+    rate_sensitivity_note=(
+        "Broadcom trades at ~22-28x forward P/E (semiconductor + software blend).  "
+        "A 100 bps rate move compresses the multiple by roughly 2-3 turns via DCF "
+        "mechanics.  AVGO carries significant acquisition debt (~$70-75B post-VMware "
+        "2023 acquisition) — higher rates directly increase interest expense and reduce "
+        "FCF available for deleveraging and dividends.  Unlike Apple, Broadcom does NOT "
+        "have a fortress net-cash position; it is a net-debt company actively deleveraging. "
+        "The dividend (~3-4% yield at typical price) is supported by strong FCF (~$18-20B/yr) "
+        "but is NOT backed by a $90B buyback — Broadcom's capital return is dividend-first, "
+        "with buybacks playing a secondary and smaller role."
+    ),
+    inflation_pass_through=(
+        "Moderate: custom ASIC contracts are typically cost-plus or priced with margin "
+        "protection, and switching costs are high (hyperscaler TPU co-design takes 18-24 "
+        "months — customers cannot easily switch silicon vendors mid-cycle).  Merchant "
+        "switching silicon faces more pricing pressure from Marvell and Intel.  VMware "
+        "pricing has faced pushback from enterprise customers resisting the perpetual-to- "
+        "subscription conversion, which creates near-term churn risk."
+    ),
+    recession_behavior=(
+        "Data-center spending (AI infrastructure) has been counter-cyclical through "
+        "recent slowdowns — hyperscaler AI CapEx continued growing even as enterprise "
+        "IT spend contracted.  Enterprise VMware licenses are sticky but large-enterprise "
+        "budget freezes could slow new vSphere deployments.  iPhone wireless chips are "
+        "consumer-demand sensitive — Apple iPhone unit declines directly pressure "
+        "AVGO's wireless semiconductor revenue.  FCF is robust (~$18-20B/yr) and "
+        "supports deleveraging and dividends through downturns."
+    ),
+    major_risks=[
+        "Custom ASIC concentration: Google (~20% of semiconductor revenue) and Meta "
+        "co-design hyperscaler XPU chips.  If hyperscalers in-source ASIC design "
+        "(as Amazon with Trainium/Inferentia) or consolidate on fewer vendors, AVGO "
+        "loses a high-margin, high-growth revenue stream",
+        "Apple iPhone wireless chip concentration (~15% of semi revenue): Apple is "
+        "actively designing its own wireless chips in-house — AVGO faces a 3-5yr risk "
+        "of losing the Apple wireless socket, potentially a ~$4-5B revenue headwind",
+        "VMware integration execution: converting VMware perpetual licenses to "
+        "subscriptions is creating enterprise pushback; churn from price-sensitive "
+        "customers could slow software revenue ramp",
+        "M&A integration debt burden: post-VMware acquisition debt of ~$70-75B "
+        "requires sustained deleveraging; a revenue shortfall would constrain "
+        "both deleveraging and dividend sustainability",
+        "Nvidia GPU competition: Nvidia's networking portfolio (InfiniBand, Spectrum-X "
+        "Ethernet) competes with Broadcom's Tomahawk/Jericho in AI data-center fabric",
+    ],
+    valuation_style=(
+        "AVGO is valued on a blended semiconductor + software P/E (~22-28x forward), "
+        "with the software segment (VMware, CA, Symantec) often valued at a SaaS-like "
+        "multiple and the semiconductor segment at a cyclical hardware multiple.  "
+        "Sum-of-parts: semiconductor at ~18-22x EV/EBITDA, software at ~20-25x EV/EBITDA. "
+        "Key re-rating catalyst: AI ASIC revenue inflecting above $10B quarterly run rate, "
+        "proving hyperscaler custom silicon is a sustainable, growing moat.  "
+        "De-rating risk: hyperscaler in-sourcing or Apple wireless socket loss."
+    ),
+    key_metrics=[
+        "AI ASIC / custom XPU quarterly revenue run rate (primary AI inflection signal)",
+        "VMware subscription ARR and renewal rate (software segment health)",
+        "Net leverage ratio (debt/EBITDA) and deleveraging trajectory",
+        "Free cash flow conversion (FCF/EBITDA) — supports dividend and debt repayment",
+        "Jericho and Tomahawk Ethernet switch design wins at hyperscalers",
+        "Apple wireless chip socket retention vs. in-house Apple chip timeline",
+        "Semiconductor revenue ex-Apple (shows structural AI/data-center growth)",
+        "Total semiconductor revenue: data-center vs. broadband vs. networking split",
+    ],
+    competitive_advantages=[
+        "Custom ASIC co-design moat: multi-year TPU/XPU co-design partnerships with "
+        "Google and Meta create 2-3 year lead time advantage; re-sourcing would require "
+        "full silicon re-spin at 18-24 month cycle time",
+        "Jericho2/3 networking silicon: the only merchant silicon capable of line-rate "
+        "400G/800G routing at service-provider scale with sub-1 microsecond latency — "
+        "Cisco and Juniper both rely on Jericho for service-provider routing",
+        "VMware virtualisation installed base: 90%+ of Fortune 1000 run VMware; "
+        "switching to KVM/OpenStack requires 12-24 months of re-architecture",
+        "Patent portfolio and standards participation: Broadcom co-chairs PCIe, "
+        "Ethernet, and Fibre Channel standards bodies — creates technology leverage "
+        "over competitors and customers",
+    ],
+    business_model_keywords=[
+        "custom ASIC", "XPU", "TPU", "AI ASIC", "Jericho", "Tomahawk", "Trident",
+        "VMware", "vSphere", "VCF", "networking silicon", "Ethernet switching",
+        "hyperscaler", "PCIe", "Fibre Channel", "wireless combo chip",
+        "CA Technologies", "Symantec", "deleveraging", "FCF", "subscription conversion",
+    ],
+))
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
