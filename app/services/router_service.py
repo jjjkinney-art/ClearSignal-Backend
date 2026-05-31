@@ -624,6 +624,18 @@ _INVESTMENT_INTENT_KEYWORDS: frozenset = frozenset([
     "moat", "competitive", "risk", "risks", "outlook", "forecast",
     "interest rate", "rates", "inflation", "recession", "macro",
     "how would", "how will", "what happens", "what would",
+    # Common investment-question words missing from the original list.
+    # "Is Visa overvalued?" and "Is ASML undervalued?" were falling through
+    # to general_finance because these synonyms of "valuation" were absent.
+    "overvalued", "undervalued", "overpriced", "underpriced",
+    # "Can Eli Lilly maintain GLP-1 growth?" — "growth" is the most common
+    # investment metric and was absent from the gate.
+    "growth", "grow",
+    # Pharma / biotech investment language.
+    "pipeline", "approval", "trial", "clinical",
+    # Broader investment-question patterns.
+    "worth", "performance", "position", "upside", "downside",
+    "dividend", "yield", "multiple", "pe ratio", "p/e",
 ])
 
 
@@ -1093,8 +1105,17 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     )
 
     # Route to full investment pipeline when a company is detected from question
-    # text AND the question has investment intent.
-    if _text_detected_company is not None and _has_intent:
+    # text AND the question has investment intent — OR when the entity was
+    # resolved with high confidence (exact ticker or alias match), which
+    # covers bare queries like "ASML", "Visa", "LLY", "NVO" that carry no
+    # investment-signal keywords but are unambiguously company references.
+    # Fuzzy matches still require explicit investment intent to avoid routing
+    # on incidental company-name mentions in macro questions.
+    _is_high_conf_entity = (
+        _entity_resolution is not None
+        and _entity_resolution.method in ("exact_ticker", "alias_exact")
+    )
+    if _text_detected_company is not None and (_has_intent or _is_high_conf_entity):
         request_id = str(uuid.uuid4())
         logger.info(
             json.dumps({

@@ -437,6 +437,9 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── Visa ──────────────────────────────────────────────────────────────────
     "visa":                    "V",
+    "visa inc":                "V",
+    "visa inc.":               "V",
+    "visa card":               "V",
 
     # ── Mastercard ────────────────────────────────────────────────────────────
     "mastercard":              "MA",
@@ -602,6 +605,7 @@ _ALIAS_MAP: dict[str, str] = {
     # ── ASML ──────────────────────────────────────────────────────────────────
     "asml":                    "ASML",
     "asml holding":            "ASML",
+    "asml holding n.v.":       "ASML",
     "asml holdings":           "ASML",
     "asml semiconductor":      "ASML",
 
@@ -671,6 +675,9 @@ _ALIAS_MAP: dict[str, str] = {
     # ── Eli Lilly ─────────────────────────────────────────────────────────────
     "eli lilly":               "LLY",
     "lilly":                   "LLY",
+    "lly":                     "LLY",
+    "eli lilly and company":   "LLY",
+    "eli lilly & company":     "LLY",
 
     # ── Merck ─────────────────────────────────────────────────────────────────
     "merck":                   "MRK",
@@ -757,9 +764,11 @@ _ALIAS_MAP: dict[str, str] = {
     "novo nordisk":                    "NVO",
     "novo":                            "NVO",
     "nvo":                             "NVO",
-    # typos / variants
+    # typos / variants and legal forms
     "novo nordisk as":                 "NVO",
+    "novo nordisk a/s":                "NVO",
     "novonordisk":                     "NVO",
+    "nordisk":                         "NVO",
 
     # ── Intuitive Surgical ────────────────────────────────────────────────────
     "intuitive surgical":              "ISRG",
