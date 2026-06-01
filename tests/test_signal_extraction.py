@@ -76,7 +76,9 @@ class TestSentencePositiveScore:
         assert score > 0
 
     def test_sentence_dominated_by_negatives_scores_zero(self):
-        # 3+ negative keywords trigger early return of 0
+        # 3+ negative keywords (excluding "compet") trigger early return of 0.
+        # Note: "compet" is no longer in _NEGATIVE_SKIP_KEYWORDS — see module
+        # docstring for rationale ("competitive advantage" is a positive use).
         sent = "The antitrust risk, regulatory pressure, and declining market challenge the bull case."
         score = _sentence_positive_score(sent, frozenset())
         assert score == 0
@@ -447,3 +449,120 @@ class TestBearishOnlyExtractionFix:
         assert "no bullish structured signal" in source, (
             "_signal_extraction.py importance_reason must reference 'no bullish structured signal'"
         )
+
+
+# ── Extraction scoring fix (commit after 047fc92) ────────────────────────────
+# Root cause: "compet" in _NEGATIVE_SKIP_KEYWORDS fired on "competitive
+# advantage" / "competitive positioning" (positive uses).  Combined with the
+# old penalty formula, this caused 100% of agent-level sentences for
+# MSFT/NVDA/AMZN/AMD/GS/UNH/TSLA to hit the neg>=3 early-return wall.
+# Fix: (1) remove "compet" from _NEGATIVE_SKIP_KEYWORDS, (2) forgive the
+# first negative qualifier in the penalty formula, (3) lower threshold to 1.
+
+class TestExtractionScoringFix:
+    """Regression tests for the scoring calibration fix.
+
+    Validates that sentences the LLM actually writes for bearish-heavy
+    companies (MSFT, NVDA, AMZN, AMD, GS, UNH, TSLA) now qualify for
+    extraction, while truly negative sentences still correctly return 0.
+    """
+
+    def test_compet_not_in_negative_keywords(self):
+        """'compet' must be absent from _NEGATIVE_SKIP_KEYWORDS."""
+        from app.investment_agents._signal_extraction import _NEGATIVE_SKIP_KEYWORDS
+        assert "compet" not in _NEGATIVE_SKIP_KEYWORDS, (
+            "'compet' was removed because it fires on positive uses like "
+            "'competitive advantage' and 'competitive positioning'"
+        )
+
+    def test_compound_bullish_sentence_qualifies(self):
+        """'Azure growth is robust but faces competitive pressure' → qualifies."""
+        sent = (
+            "Azure's growth trajectory remains robust but competitive pressure "
+            "from AWS and Google Cloud creates meaningful downside risk."
+        )
+        score = _sentence_positive_score(sent, frozenset())
+        assert score >= 1, (
+            f"Expected score >= 1 for sentence with genuine positive content, got {score}"
+        )
+
+    def test_subscription_durability_sentence_qualifies(self):
+        """'Subscription durability supports thesis' qualifies despite rate/competition."""
+        sent = (
+            "Microsoft 365 subscription durability supports the base case, "
+            "but rate sensitivity and competition limit upside from current levels."
+        )
+        score = _sentence_positive_score(sent, frozenset())
+        assert score >= 1
+
+    def test_epyc_market_share_sentence_qualifies(self):
+        """AMD EPYC market share sentence qualifies — competition no longer penalises."""
+        sent = (
+            "Sustained EPYC market share gains drive revenue growth, enhancing "
+            "AMD's competitive positioning against Intel."
+        )
+        score = _sentence_positive_score(sent, frozenset())
+        assert score >= 2
+
+    def test_ficc_recovery_sentence_qualifies(self):
+        """GS FICC/M&A recovery sentence qualifies."""
+        sent = "A recovery in M&A activity could drive investment banking fees and improve ROTCE."
+        score = _sentence_positive_score(sent, frozenset())
+        assert score >= 1
+
+    def test_cuda_ecosystem_sentence_qualifies(self):
+        """NVDA CUDA competitive advantage sentence qualifies."""
+        sent = (
+            "NVIDIA's CUDA ecosystem creates durable competitive advantage "
+            "in AI training workloads."
+        )
+        score = _sentence_positive_score(sent, frozenset())
+        assert score >= 2
+
+    def test_declining_growth_sentence_still_fails(self):
+        """'Declining growth challenges valuation' must still score 0 (neg >= 3)."""
+        sent = "Declining growth and margin pressures challenge the valuation."
+        score = _sentence_positive_score(sent, frozenset())
+        assert score == 0, (
+            f"'Declining growth' sentence should score 0 (neg>=3 early return), got {score}"
+        )
+
+    def test_rate_headwind_dominant_sentence_still_fails(self):
+        """High-neg-count sentence dominated by rate/risk language must score 0."""
+        sent = (
+            "Microsoft faces elevated valuation risk at ~30x P/E as Azure growth faces "
+            "competitive pressure from AWS and regulatory uncertainty."
+        )
+        score = _sentence_positive_score(sent, frozenset())
+        assert score == 0
+
+    def test_extraction_produces_bullish_for_msft_compound_overall(self):
+        """Full extraction succeeds on a realistic MSFT agent overall text."""
+        company = CompanyContext(ticker="MSFT", company_name="Microsoft Corporation")
+        overall = (
+            "At ~30x forward P/E, Microsoft faces rate sensitivity as a long-duration "
+            "asset, but Azure's cloud growth trajectory remains robust with expanding "
+            "operating margins. The recurring subscription revenue of Microsoft 365 "
+            "provides durable FCF conversion even in a slowing macro environment. "
+            "Competitive pressure from AWS limits pricing power in infrastructure, "
+            "yet Microsoft's integrated platform advantage supports premium retention."
+        )
+        result = extract_min_bullish_signal(overall, company, "valuation_agent", "valuation")
+        assert len(result) == 1, (
+            f"Expected 1 bullish signal extracted from MSFT compound overall, got {len(result)}"
+        )
+        assert result[0].direction == "bullish"
+
+    def test_extraction_produces_bullish_for_gs_recovery_overall(self):
+        """Full extraction succeeds on a realistic GS agent overall text."""
+        company = CompanyContext(ticker="GS", company_name="Goldman Sachs Group")
+        overall = (
+            "Goldman Sachs faces near-term pressure from subdued M&A volumes and "
+            "elevated funding costs, which compress near-term ROTCE. However, a "
+            "recovery in investment banking activity and resilient FICC revenues "
+            "could drive meaningful earnings upside. The firm's leading market "
+            "position in advisory and prime brokerage provides durable revenue."
+        )
+        result = extract_min_bullish_signal(overall, company, "quality_agent", "quality")
+        assert len(result) == 1
+        assert result[0].direction == "bullish"

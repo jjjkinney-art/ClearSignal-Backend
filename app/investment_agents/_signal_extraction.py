@@ -50,11 +50,18 @@ _POSITIVE_KEYWORDS: frozenset = frozenset({
 
 # Keywords that strongly suggest risk / negative sentiment — sentences
 # dominated by these are skipped when searching for the bullish signal.
+# NOTE: "compet" is intentionally excluded even though it can signal
+# competition risk, because it also appears in clearly positive contexts
+# ("competitive advantage", "competitive moat", "competitive positioning").
+# Those positive uses are already covered by "competitive advantage" in
+# _POSITIVE_KEYWORDS above.  Including "compet" here was causing the
+# early-return guard to fire on every sentence written about tech companies
+# (nearly all of which mention competition in some form).
 _NEGATIVE_SKIP_KEYWORDS: frozenset = frozenset({
     "risk", "threat", "decline", "declin", "compress",
     "loss", "loses", "headwind", "limit", "challenge", "concern",
     "uncertain", "volatile", "volatility", "pressure",
-    "compet", "regulatory", "antitrust",
+    "regulatory", "antitrust",
 })
 
 
@@ -65,17 +72,27 @@ def _sentence_positive_score(
     """Return a positive-signal score for a single sentence.
 
     Uses keyword hit-counting with a bonus for profile-specific keywords.
+
+    Negative keywords subtract from the score, but the first negative hit
+    is forgiven — this allows sentences structured as "X is strong, but Y
+    creates headwinds" to still qualify when the positive content is
+    genuine.  Sentences with 3+ negative hits are discarded entirely (they
+    are dominated by risk language regardless of any positive qualifier).
     """
     lower = sentence.lower()
 
-    # Penalise sentences dominated by negative language.
+    # Discard sentences dominated by negative language.
     neg_hits = sum(1 for kw in _NEGATIVE_SKIP_KEYWORDS if kw in lower)
     if neg_hits >= 3:
         return 0
 
     pos_hits = sum(1 for kw in _POSITIVE_KEYWORDS if kw in lower)
     profile_hits = sum(2 for kw in profile_keywords if kw in lower)
-    return pos_hits + profile_hits - neg_hits
+    # Forgive the first negative qualifier — only the excess penalises the
+    # score.  "Azure growth faces rate pressure" → 2 pos, 1 neg → net 2
+    # (threshold met) rather than net 1 (threshold missed at old cutoff of 2).
+    effective_neg = max(0, neg_hits - 1)
+    return pos_hits + profile_hits - effective_neg
 
 
 def extract_min_bullish_signal(
@@ -91,8 +108,11 @@ def extract_min_bullish_signal(
     - ``overall`` is too short to sentence-split meaningfully.
     - No sentence scores above the minimum threshold.
 
-    This is intentionally conservative — it is better to return nothing than
-    to promote a neutral or weak sentence as a bullish signal.
+    The scoring is calibrated to handle agents that write compound sentences
+    containing both positive and negative qualifiers (e.g. "Azure's growth
+    trajectory is robust but faces competitive pressure and rate risk").
+    The first two negative keywords are forgiven; only the excess penalises
+    the score.  Sentences with 5+ negative hits are discarded entirely.
 
     Parameters
     ----------
@@ -128,8 +148,11 @@ def extract_min_bullish_signal(
             best_score = score
             best_sentence = sent
 
-    # Minimum threshold: at least 2 positive keyword hits (net of negatives).
-    if best_sentence is None or best_score < 2:
+    # Minimum threshold: at least 1 net-positive score after forgiven negatives.
+    # Threshold lowered from 2 → 1 because the adjusted penalty formula already
+    # requires genuine positive content (sentences with only negative keywords
+    # score 0 or negative and are excluded).
+    if best_sentence is None or best_score < 1:
         logger.debug(
             "[%s] signal_extraction: no qualifying positive sentence found "
             "for %s (best_score=%d)",
