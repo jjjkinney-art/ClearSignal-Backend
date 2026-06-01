@@ -402,3 +402,367 @@ class TestNvoProfile:
 
     def test_nvo_keywords_at_least_8(self):
         assert len(self.nvo.business_model_keywords) >= 8
+
+
+# ── Severity-1 profiles: ORCL, BAC, VZ, T, CMCSA, PG, SLB ───────────────────
+
+class TestOrclProfile:
+    """Regression tests for the Oracle knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.orcl = get_knowledge_profile("ORCL")
+
+    def test_orcl_profile_exists(self):
+        assert self.orcl is not None, "ORCL knowledge profile must be registered"
+
+    def test_orcl_ticker_correct(self):
+        assert self.orcl.ticker == "ORCL"
+
+    def test_orcl_has_oracle_database_keyword(self):
+        kw = self.orcl.business_model_keywords
+        assert "Oracle Database" in kw or "oracle database" in " ".join(kw).lower()
+
+    def test_orcl_has_oci_keyword(self):
+        assert "OCI" in self.orcl.business_model_keywords
+
+    def test_orcl_has_fusion_keyword(self):
+        assert "Fusion" in self.orcl.business_model_keywords
+
+    def test_orcl_has_netsuite_keyword(self):
+        assert "NetSuite" in self.orcl.business_model_keywords
+
+    def test_orcl_has_larry_ellison_keyword(self):
+        kw = " ".join(self.orcl.business_model_keywords).lower()
+        assert "larry ellison" in kw or "ellison" in kw
+
+    def test_orcl_has_rpo_keyword(self):
+        kw = self.orcl.business_model_keywords
+        assert "RPO" in kw or "remaining performance obligations" in kw
+
+    def test_orcl_primary_drivers_mention_cloud(self):
+        drivers = " ".join(self.orcl.primary_revenue_drivers).lower()
+        assert "cloud" in drivers
+
+    def test_orcl_competitive_advantages_mention_database_installed_base(self):
+        adv = " ".join(self.orcl.competitive_advantages).lower()
+        assert "database" in adv or "installed base" in adv
+
+    def test_orcl_major_risks_mention_cerner(self):
+        risks = " ".join(self.orcl.major_risks).lower()
+        assert "cerner" in risks
+
+    def test_orcl_keywords_at_least_10(self):
+        assert len(self.orcl.business_model_keywords) >= 10
+
+
+class TestBacProfile:
+    """Regression tests for the Bank of America knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.bac = get_knowledge_profile("BAC")
+
+    def test_bac_profile_exists(self):
+        assert self.bac is not None, "BAC knowledge profile must be registered"
+
+    def test_bac_ticker_correct(self):
+        assert self.bac.ticker == "BAC"
+
+    def test_bac_has_merrill_lynch_keyword(self):
+        kw = " ".join(self.bac.business_model_keywords).lower()
+        assert "merrill lynch" in kw
+
+    def test_bac_has_gwim_keyword(self):
+        assert "GWIM" in self.bac.business_model_keywords
+
+    def test_bac_has_nii_keyword(self):
+        assert "NII" in self.bac.business_model_keywords
+
+    def test_bac_has_rotce_keyword(self):
+        assert "ROTCE" in self.bac.business_model_keywords
+
+    def test_bac_has_cet1_keyword(self):
+        assert "CET1" in self.bac.business_model_keywords
+
+    def test_bac_has_aoci_keyword(self):
+        assert "AOCI" in self.bac.business_model_keywords
+
+    def test_bac_has_brian_moynihan_keyword(self):
+        kw = " ".join(self.bac.business_model_keywords).lower()
+        assert "brian moynihan" in kw or "moynihan" in kw
+
+    def test_bac_primary_drivers_mention_consumer_banking(self):
+        drivers = " ".join(self.bac.primary_revenue_drivers).lower()
+        assert "consumer" in drivers
+
+    def test_bac_primary_drivers_mention_gwim(self):
+        drivers = " ".join(self.bac.primary_revenue_drivers)
+        assert "GWIM" in drivers or "Merrill" in drivers
+
+    def test_bac_major_risks_mention_aoci(self):
+        risks = " ".join(self.bac.major_risks).lower()
+        assert "aoci" in risks or "unrealised" in risks or "unrealized" in risks
+
+    def test_bac_competitive_advantages_mention_merrill(self):
+        adv = " ".join(self.bac.competitive_advantages).lower()
+        assert "merrill" in adv or "wealth" in adv
+
+    def test_bac_keywords_at_least_10(self):
+        assert len(self.bac.business_model_keywords) >= 10
+
+
+class TestVzProfile:
+    """Regression tests for the Verizon knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.vz = get_knowledge_profile("VZ")
+
+    def test_vz_profile_exists(self):
+        assert self.vz is not None, "VZ knowledge profile must be registered"
+
+    def test_vz_ticker_correct(self):
+        assert self.vz.ticker == "VZ"
+
+    def test_vz_has_fios_keyword(self):
+        assert "Fios" in self.vz.business_model_keywords
+
+    def test_vz_has_myplan_keyword(self):
+        assert "MyPlan" in self.vz.business_model_keywords
+
+    def test_vz_has_arpa_keyword(self):
+        assert "ARPA" in self.vz.business_model_keywords
+
+    def test_vz_has_fwa_keyword(self):
+        kw = self.vz.business_model_keywords
+        assert "FWA" in kw or "fixed wireless access" in kw
+
+    def test_vz_has_cband_keyword(self):
+        kw = " ".join(self.vz.business_model_keywords).lower()
+        assert "c-band" in kw or "cband" in kw
+
+    def test_vz_has_wireless_postpaid_keyword(self):
+        kw = " ".join(self.vz.business_model_keywords).lower()
+        assert "wireless" in kw and ("postpaid" in kw)
+
+    def test_vz_has_hans_vestberg_keyword(self):
+        kw = " ".join(self.vz.business_model_keywords).lower()
+        assert "vestberg" in kw or "hans vestberg" in kw
+
+    def test_vz_primary_drivers_mention_postpaid(self):
+        drivers = " ".join(self.vz.primary_revenue_drivers).lower()
+        assert "postpaid" in drivers
+
+    def test_vz_major_risks_mention_tmobile(self):
+        risks = " ".join(self.vz.major_risks).lower()
+        assert "t-mobile" in risks or "tmobile" in risks
+
+    def test_vz_competitive_advantages_mention_network(self):
+        adv = " ".join(self.vz.competitive_advantages).lower()
+        assert "network" in adv
+
+    def test_vz_keywords_at_least_10(self):
+        assert len(self.vz.business_model_keywords) >= 10
+
+
+class TestTProfile:
+    """Regression tests for the AT&T knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.t = get_knowledge_profile("T")
+
+    def test_t_profile_exists(self):
+        assert self.t is not None, "T (AT&T) knowledge profile must be registered"
+
+    def test_t_ticker_correct(self):
+        assert self.t.ticker == "T"
+
+    def test_t_has_att_fiber_keyword(self):
+        kw = " ".join(self.t.business_model_keywords).lower()
+        assert "at&t fiber" in kw or "fiber" in kw
+
+    def test_t_has_firstnet_keyword(self):
+        assert "FirstNet" in self.t.business_model_keywords
+
+    def test_t_has_arpu_keyword(self):
+        assert "ARPU" in self.t.business_model_keywords
+
+    def test_t_has_free_cash_flow_keyword(self):
+        kw = " ".join(self.t.business_model_keywords).lower()
+        assert "free cash flow" in kw
+
+    def test_t_has_directv_keyword(self):
+        assert "DIRECTV" in self.t.business_model_keywords
+
+    def test_t_has_john_stankey_keyword(self):
+        kw = " ".join(self.t.business_model_keywords).lower()
+        assert "stankey" in kw or "john stankey" in kw
+
+    def test_t_primary_drivers_mention_mobility(self):
+        drivers = " ".join(self.t.primary_revenue_drivers).lower()
+        assert "mobility" in drivers or "wireless" in drivers
+
+    def test_t_primary_drivers_mention_fiber(self):
+        drivers = " ".join(self.t.primary_revenue_drivers).lower()
+        assert "fiber" in drivers
+
+    def test_t_major_risks_mention_debt(self):
+        risks = " ".join(self.t.major_risks).lower()
+        assert "debt" in risks or "deleverage" in risks or "deleveraging" in risks
+
+    def test_t_competitive_advantages_mention_firstnet(self):
+        adv = " ".join(self.t.competitive_advantages).lower()
+        assert "firstnet" in adv
+
+    def test_t_keywords_at_least_10(self):
+        assert len(self.t.business_model_keywords) >= 10
+
+
+class TestCmcsaProfile:
+    """Regression tests for the Comcast knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.cmcsa = get_knowledge_profile("CMCSA")
+
+    def test_cmcsa_profile_exists(self):
+        assert self.cmcsa is not None, "CMCSA knowledge profile must be registered"
+
+    def test_cmcsa_ticker_correct(self):
+        assert self.cmcsa.ticker == "CMCSA"
+
+    def test_cmcsa_has_peacock_keyword(self):
+        assert "Peacock" in self.cmcsa.business_model_keywords
+
+    def test_cmcsa_has_xfinity_keyword(self):
+        assert "Xfinity" in self.cmcsa.business_model_keywords
+
+    def test_cmcsa_has_broadband_keyword(self):
+        assert "broadband" in self.cmcsa.business_model_keywords
+
+    def test_cmcsa_has_nbcuniversal_keyword(self):
+        assert "NBCUniversal" in self.cmcsa.business_model_keywords
+
+    def test_cmcsa_has_epic_universe_keyword(self):
+        kw = " ".join(self.cmcsa.business_model_keywords).lower()
+        assert "epic universe" in kw or "theme parks" in kw
+
+    def test_cmcsa_has_brian_roberts_keyword(self):
+        kw = " ".join(self.cmcsa.business_model_keywords).lower()
+        assert "roberts" in kw or "brian roberts" in kw
+
+    def test_cmcsa_primary_drivers_mention_broadband(self):
+        drivers = " ".join(self.cmcsa.primary_revenue_drivers).lower()
+        assert "broadband" in drivers
+
+    def test_cmcsa_major_risks_mention_fiber_overbuild(self):
+        risks = " ".join(self.cmcsa.major_risks).lower()
+        assert "fiber" in risks or "overbuild" in risks
+
+    def test_cmcsa_competitive_advantages_mention_hfc(self):
+        adv = " ".join(self.cmcsa.competitive_advantages).lower()
+        assert "hfc" in adv or "cable" in adv or "network" in adv
+
+    def test_cmcsa_keywords_at_least_10(self):
+        assert len(self.cmcsa.business_model_keywords) >= 10
+
+
+class TestPgProfile:
+    """Regression tests for the Procter & Gamble knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.pg = get_knowledge_profile("PG")
+
+    def test_pg_profile_exists(self):
+        assert self.pg is not None, "PG knowledge profile must be registered"
+
+    def test_pg_ticker_correct(self):
+        assert self.pg.ticker == "PG"
+
+    def test_pg_has_tide_keyword(self):
+        assert "Tide" in self.pg.business_model_keywords
+
+    def test_pg_has_pampers_keyword(self):
+        assert "Pampers" in self.pg.business_model_keywords
+
+    def test_pg_has_gillette_keyword(self):
+        assert "Gillette" in self.pg.business_model_keywords
+
+    def test_pg_has_skii_keyword(self):
+        assert "SK-II" in self.pg.business_model_keywords
+
+    def test_pg_has_organic_sales_growth_keyword(self):
+        kw = " ".join(self.pg.business_model_keywords).lower()
+        assert "organic" in kw and "sales" in kw
+
+    def test_pg_has_dividend_king_keyword(self):
+        kw = " ".join(self.pg.business_model_keywords).lower()
+        assert "dividend king" in kw
+
+    def test_pg_has_jon_moeller_keyword(self):
+        kw = " ".join(self.pg.business_model_keywords).lower()
+        assert "moeller" in kw or "jon moeller" in kw
+
+    def test_pg_primary_drivers_mention_fabric_care(self):
+        drivers = " ".join(self.pg.primary_revenue_drivers).lower()
+        assert "fabric" in drivers or "tide" in drivers
+
+    def test_pg_major_risks_mention_private_label(self):
+        risks = " ".join(self.pg.major_risks).lower()
+        assert "private label" in risks or "private-label" in risks or "store brand" in risks
+
+    def test_pg_competitive_advantages_mention_brand(self):
+        adv = " ".join(self.pg.competitive_advantages).lower()
+        assert "brand" in adv
+
+    def test_pg_keywords_at_least_10(self):
+        assert len(self.pg.business_model_keywords) >= 10
+
+
+class TestSlbProfile:
+    """Regression tests for the SLB knowledge profile (Severity-1 quality gap fix)."""
+
+    def setup_method(self):
+        self.slb = get_knowledge_profile("SLB")
+
+    def test_slb_profile_exists(self):
+        assert self.slb is not None, "SLB knowledge profile must be registered"
+
+    def test_slb_ticker_correct(self):
+        assert self.slb.ticker == "SLB"
+
+    def test_slb_has_delfi_keyword(self):
+        assert "Delfi" in self.slb.business_model_keywords
+
+    def test_slb_has_reservoir_characterization_keyword(self):
+        kw = " ".join(self.slb.business_model_keywords).lower()
+        assert "reservoir characterization" in kw or "reservoir" in kw
+
+    def test_slb_has_digital_keyword(self):
+        assert "digital" in self.slb.business_model_keywords
+
+    def test_slb_has_deepwater_keyword(self):
+        assert "deepwater" in self.slb.business_model_keywords
+
+    def test_slb_has_noc_keyword(self):
+        assert "NOC" in self.slb.business_model_keywords
+
+    def test_slb_has_olivier_le_peuch_keyword(self):
+        kw = " ".join(self.slb.business_model_keywords).lower()
+        assert "le peuch" in kw or "olivier" in kw
+
+    def test_slb_primary_drivers_mention_well_construction(self):
+        drivers = " ".join(self.slb.primary_revenue_drivers).lower()
+        assert "well construction" in drivers or "drilling" in drivers
+
+    def test_slb_primary_drivers_mention_digital(self):
+        drivers = " ".join(self.slb.primary_revenue_drivers).lower()
+        assert "digital" in drivers
+
+    def test_slb_major_risks_mention_oil_price(self):
+        risks = " ".join(self.slb.major_risks).lower()
+        assert "oil price" in risks or "brent" in risks or "crude" in risks
+
+    def test_slb_competitive_advantages_mention_deepwater(self):
+        adv = " ".join(self.slb.competitive_advantages).lower()
+        assert "deepwater" in adv or "offshore" in adv
+
+    def test_slb_keywords_at_least_10(self):
+        assert len(self.slb.business_model_keywords) >= 10

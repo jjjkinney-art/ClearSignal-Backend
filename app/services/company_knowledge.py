@@ -2198,6 +2198,770 @@ _register(CompanyKnowledgeProfile(
 ))
 
 
+# ── Oracle (ORCL) ─────────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="ORCL",
+    company_name="Oracle Corporation",
+    business_model=(
+        "Oracle is an enterprise software and cloud infrastructure company.  Its three "
+        "core businesses are: (1) Oracle Cloud Infrastructure (OCI), a hyperscale IaaS/PaaS "
+        "competing with AWS, Azure, and GCP; (2) Oracle Fusion Cloud Applications (ERP, HCM, "
+        "SCM, CX) and NetSuite (SMB ERP), delivered as multi-tenant SaaS; and (3) a massive "
+        "installed base of on-premise Oracle Database licenses and Exadata engineered systems "
+        "that generate ~$9B/yr in high-margin support revenue largely independent of new sales."
+    ),
+    primary_revenue_drivers=[
+        "Cloud services & license support (~77% of revenue, ~85% gross margin — Oracle "
+        "Database, Fusion ERP/HCM, NetSuite, OCI subscription, technical support)",
+        "Cloud license & on-premise license (~11% — new perpetual/term license sales)",
+        "Hardware (~5% — Exadata engineered systems, SPARC servers)",
+        "Services (~7% — consulting and managed cloud services)",
+    ],
+    recurring_revenue_sources=[
+        "Oracle Database and Technology license support contracts (>95% annual renewal rate "
+        "— installed base spans Fortune 500 mission-critical systems)",
+        "Fusion Cloud ERP/HCM/SCM SaaS subscriptions (multi-year, typically 3-5 year terms)",
+        "NetSuite ERP subscriptions (~25-30% annual growth, SMB market)",
+        "OCI consumption-based billing (hyperscaler workloads, Oracle Dedicated Region)",
+        "MySQL HeatWave cloud database subscriptions",
+    ],
+    rate_sensitivity_note=(
+        "Oracle trades at ~20-25x forward P/E — moderate rate sensitivity via DCF mechanics. "
+        "A 100 bps rate rise compresses fair value by ~2-3 turns.  Oracle carries ~$85-90B "
+        "of long-term debt (largely taken on via Sun Microsystems, PeopleSoft, Cerner "
+        "acquisitions) — higher rates modestly increase interest expense on floating-rate "
+        "tranches.  However, Oracle's ~$18-20B annual FCF comfortably services this debt. "
+        "Enterprise IT spend on database and ERP infrastructure is relatively rate-insensitive "
+        "as these are mission-critical systems customers cannot switch off."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power: Oracle has raised support contract prices 4-6% annually for "
+        "decades on the installed base without meaningful customer attrition.  Fusion Cloud "
+        "contract pricing is negotiated, but customers migrating from on-premise to SaaS "
+        "accept higher per-seat costs for reduced infrastructure overhead.  OCI is priced at "
+        "a deliberate 30-40% discount to AWS to gain market share in training AI workloads."
+    ),
+    recession_behavior=(
+        "Oracle's support revenue (~$9B/yr, >85% gross margin) is highly defensive — "
+        "Fortune 500 companies cannot turn off Oracle Database during a recession.  License "
+        "new sales are more cyclical.  Cloud SaaS (Fusion, NetSuite) is stickier than "
+        "on-premise licenses.  OCI consumption can be deferred.  Cerner healthcare IT "
+        "(acquired 2022) adds recession-resilient federal/hospital revenue."
+    ),
+    major_risks=[
+        "OCI competitive positioning vs AWS, Azure, Google Cloud — Oracle is a distant #4 "
+        "in hyperscale IaaS despite significant CapEx investment and aggressive pricing",
+        "Cerner integration execution: $28B Cerner acquisition (2022) requires multi-year "
+        "migration of 25,000+ hospital clients to Oracle Health cloud — behind schedule",
+        "Database disintermediation: open-source PostgreSQL, MySQL, and cloud-native DBs "
+        "(Amazon Aurora, Google Spanner) erode Oracle Database growth in new workloads",
+        "License support cannibalization: as customers migrate to Fusion Cloud, high-margin "
+        "support revenue from on-premise licenses gradually declines",
+        "Larry Ellison key-person risk: Ellison is executive chairman, CTO, and owns ~40% "
+        "of Oracle shares — his strategic decisions are unchecked",
+    ],
+    valuation_style=(
+        "Oracle trades at ~20-25x forward P/E and ~20x EV/FCF.  The market prices Oracle "
+        "as a combination of a high-quality installed-base annuity (support revenue) and a "
+        "cloud growth optionality premium (OCI + Fusion).  AI tailwind: Oracle's OCI GPU "
+        "clusters are attracting AI training workloads as AWS/Azure face capacity shortages — "
+        "this is the key re-rating catalyst driving Oracle's ~40%+ stock appreciation since 2023."
+    ),
+    key_metrics=[
+        "Cloud revenue (OCI + Fusion + NetSuite combined growth rate)",
+        "Remaining performance obligations (RPO) — contractual backlog indicator",
+        "Database license support renewal rate (>95% target)",
+        "OCI quarterly revenue and capacity utilization",
+        "Fusion ERP cloud application customer count and ARPU",
+        "Cerner / Oracle Health cloud migration progress",
+        "Free cash flow ($18-20B/yr range)",
+        "Net leverage ratio (target below 4x EBITDA)",
+    ],
+    competitive_advantages=[
+        "Oracle Database installed base moat: the world's most deployed enterprise relational "
+        "database — 40+ years of mission-critical adoption creates extremely high switching "
+        "costs (schema migrations take years and cost $100M+ at large enterprises)",
+        "Exadata engineered systems: Oracle hardware + software stack delivers 10-100x "
+        "Database performance vs standard x86 — enterprises requiring maximum OLTP throughput "
+        "have no equivalent option",
+        "Fusion Cloud vertical integration: Oracle designs silicon (Oracle SPARC), OS "
+        "(Oracle Linux), hypervisor (Oracle VM), and application layer (Fusion ERP) — "
+        "a full-stack cloud that no hyperscaler can match in enterprise ERP",
+        "OCI GPU capacity advantage for AI: OCI's RDMA networking fabric (800Gbps "
+        "Cluster Networking) and NVIDIA H100/H200 allocation position Oracle as the "
+        "preferred hyperscaler for GPU-dense AI training workloads",
+    ],
+    business_model_keywords=[
+        "Oracle Database", "OCI", "Fusion", "NetSuite", "Exadata", "Cerner",
+        "Oracle Health", "HCM", "ERP", "SCM", "cloud infrastructure", "license support",
+        "Larry Ellison", "Safra Catz", "RPO", "remaining performance obligations",
+        "autonomous database", "MySQL",
+    ],
+))
+
+
+# ── Bank of America (BAC) ─────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="BAC",
+    company_name="Bank of America Corporation",
+    business_model=(
+        "Bank of America is the second-largest US bank by assets (~$3.3T), operating across "
+        "four segments: Consumer Banking (retail deposits, checking/savings, consumer loans, "
+        "Zelle P2P), Global Wealth & Investment Management (Merrill Lynch wealth management "
+        "and private bank, ~$3.8T AUM), Global Banking (corporate/commercial lending, "
+        "investment banking, treasury services), and Global Markets (FICC and equities trading)."
+    ),
+    primary_revenue_drivers=[
+        "Consumer Banking (~35% of net revenue — NII on deposits/loans, card fees, "
+        "service charges, home equity)",
+        "Global Wealth & Investment Management / GWIM (~25% — Merrill Lynch advisory "
+        "fees, Private Bank, brokerage commissions on $3.8T AUM)",
+        "Global Banking (~20% — commercial banking NII, investment banking fees, "
+        "treasury management, leasing)",
+        "Global Markets (~20% — FICC trading, equities trading, sales and trading revenue)",
+    ],
+    recurring_revenue_sources=[
+        "Net Interest Income (NII) from deposit spread — largest component of revenue",
+        "Merrill Lynch fee-based advisory accounts (~60% of GWIM client assets in "
+        "fee-based relationships, providing recurring AUM-percentage fees)",
+        "Card services interchange revenue (consumer and commercial credit/debit cards)",
+        "Treasury management fees (cash management, payments, trade finance for corporate clients)",
+    ],
+    rate_sensitivity_note=(
+        "BAC is among the most rate-sensitive large US banks.  Management estimates each "
+        "100 bps parallel shift in the yield curve adds approximately $1.8-2.5B to "
+        "annualised NII — BAC is heavily asset-sensitive due to its large floating-rate "
+        "loan portfolio and deposit base that reprices slowly.  Conversely, rate cuts "
+        "compress NII significantly.  The key BAC-specific issue is Accumulated Other "
+        "Comprehensive Income (AOCI): BAC holds a large HTM (held-to-maturity) bond "
+        "portfolio with unrealised losses of $100B+ at peak-rate — these losses are "
+        "excluded from regulatory capital but represent an opportunity cost vs peers "
+        "who redeployed capital at higher yields."
+    ),
+    inflation_pass_through=(
+        "Banks benefit indirectly from inflation via higher nominal loan balances and card "
+        "spend volumes.  BAC's Merrill Lynch wealth management revenue is asset-valued — "
+        "equity market inflation increases AUM and fee revenue.  Primary cost pressure "
+        "is employee compensation (~50%+ of non-interest expense), which inflates with "
+        "wages.  BAC has consistently targeted positive operating leverage (revenue growth "
+        "exceeding expense growth) via efficiency ratio improvement."
+    ),
+    recession_behavior=(
+        "BAC builds loan loss reserves in recessions (provision expense spikes, compressing "
+        "earnings).  The consumer banking segment faces card and home equity delinquency "
+        "increases.  GWIM AUM declines with equity markets.  Global Banking IB fees fall "
+        "with deal activity.  BAC's CET1 ratio (~12-13%) provides a meaningful capital "
+        "buffer.  CEO Brian Moynihan's 'responsible growth' framework targets maintained "
+        "through-cycle profitability above a minimum ROTCE threshold."
+    ),
+    major_risks=[
+        "AOCI HTM bond portfolio: $100B+ unrealised losses in rising-rate environment "
+        "reduce BAC's ability to deploy capital and create earnings opportunity cost "
+        "vs peers who didn't lock into long-duration bonds at pandemic-era low rates",
+        "Consumer credit normalisation: credit card and auto delinquencies rising from "
+        "post-pandemic lows; subprime card exposure is the most vulnerable segment",
+        "Rate cut cycle: BAC's significant asset sensitivity means rate cuts directly "
+        "reduce NII — each 25 bps cut reduces NII by ~$0.5-0.8B annualised",
+        "Basel III Endgame capital requirements: potentially ~20% RWA increase would "
+        "force additional capital retention and reduce buyback capacity",
+        "Merrill Lynch competitive dynamics: Morgan Stanley/UBS Wealth Management "
+        "competing aggressively for high-net-worth financial advisors",
+    ],
+    valuation_style=(
+        "BAC trades at ~1.1-1.4x P/TBV (tangible book value) and ~11-13x forward P/E, "
+        "at a discount to JPM (~2x TBV) reflecting AOCI concerns and slightly lower "
+        "ROTCE (~12-14% vs JPM ~17-19%).  Key re-rating catalyst: AOCI HTM maturity "
+        "reducing unrealised losses over time, sustained NII above $14B/quarter, ROTCE "
+        "approaching 15% which would justify 1.5-1.7x TBV multiple."
+    ),
+    key_metrics=[
+        "Net Interest Income (NII) — quarterly absolute and management guidance",
+        "Net Interest Margin (NIM) — impacted by deposit repricing mix",
+        "ROTCE (Return on Tangible Common Equity) — target 15%+",
+        "CET1 capital ratio (~12-13% actual vs ~10% regulatory minimum)",
+        "GWIM AUM and net new assets ($3.8T+ target)",
+        "Provision for credit losses and net charge-off rate by segment",
+        "AOCI unrealised HTM portfolio losses (balance sheet risk metric)",
+        "Efficiency ratio (expenses/revenue) — target below 60%",
+    ],
+    competitive_advantages=[
+        "Merrill Lynch wealth franchise: 19,000+ financial advisors managing $3.8T+ AUM "
+        "— one of the two dominant US wirehouse platforms (with Morgan Stanley)",
+        "Consumer banking deposit franchise: 69M+ consumer and small business clients "
+        "provide a low-cost deposit base that funds loans at higher spreads",
+        "Scale and digital banking: Zelle P2P, digital banking platform with 57M+ verified "
+        "digital users creates low-cost distribution vs brick-and-mortar competitors",
+        "Responsible Growth track record: consistent quarterly profitability since 2014 "
+        "under Brian Moynihan's multi-year strategy with strong through-cycle earnings",
+    ],
+    business_model_keywords=[
+        "Merrill Lynch", "GWIM", "NII", "NIM", "CET1", "ROTCE",
+        "consumer banking", "AOCI", "HTM", "deposit beta", "Global Markets",
+        "Global Banking", "Brian Moynihan", "responsible growth",
+        "Zelle", "wealth management", "private bank", "trading revenue",
+    ],
+))
+
+
+# ── Verizon Communications (VZ) ───────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="VZ",
+    company_name="Verizon Communications Inc.",
+    business_model=(
+        "Verizon is a US wireless and wireline telecommunications company.  The Consumer "
+        "segment (~75% of revenue) provides wireless postpaid/prepaid mobile services, Fios "
+        "fiber broadband and TV, and fixed wireless access (FWA) home broadband.  The "
+        "Business segment (~25%) serves enterprise, mid-market, and government customers "
+        "with wireless, private 5G networks, and wireline connectivity.  Verizon's "
+        "competitive differentiation is its C-band 5G network quality, claimed to deliver "
+        "the best urban/suburban 5G performance among US carriers."
+    ),
+    primary_revenue_drivers=[
+        "Consumer wireless postpaid services (~50% of total revenue — ~98M postpaid "
+        "phone connections, highest ARPA of any US carrier)",
+        "Consumer wireline — Fios fiber (~15% — ~8M Fios internet subscribers, ~3M Fios "
+        "TV; fiber broadband adding value in MDU/suburban markets)",
+        "Fixed Wireless Access (FWA) home broadband — fastest-growing consumer segment; "
+        "targeting 4-5M FWA subs by 2025 using 5G/4G LTE spectrum",
+        "Business wireless and wireline (~25% — enterprise mobility, private 5G MEC, "
+        "government FirstResponder Network Authority adjacent services)",
+    ],
+    recurring_revenue_sources=[
+        "Wireless postpaid device payment plan and service fee monthly billings (~$36-40 "
+        "ARPA — average revenue per account) — very high switching costs due to device "
+        "payoff lock-in and 24-month payment plans",
+        "MyPlan and MyHome customizable plan ARPA expansion (add-ons for Disney+, Apple One, "
+        "Walmart+ — driving ARPU growth via upsell)",
+        "Fios internet subscription (monthly broadband service fee — 96%+ retention rate "
+        "in Fios footprint)",
+        "Business connectivity long-term contracts (enterprise WAN, private 5G, SD-WAN)",
+    ],
+    rate_sensitivity_note=(
+        "Verizon carries ~$150B of total debt (including long-term spectrum financing and "
+        "operating lease obligations) — one of the largest corporate debt loads in the S&P 500. "
+        "A 100 bps rise in rates increases annual interest expense by ~$0.5-1B on floating-rate "
+        "debt tranches.  The stock typically yields 6-7% — a high dividend yield relative to "
+        "10-year Treasuries; rising rates narrow this spread and may reduce VZ's appeal to "
+        "income-seeking investors, compressing the P/E multiple.  Free cash flow (~$18-19B) "
+        "comfortably covers the ~$11B annual dividend, providing fundamental support."
+    ),
+    inflation_pass_through=(
+        "Verizon has demonstrated wireless pricing power: MyPlan architecture enabled "
+        "ARPA increases of ~3-5% in 2023-24 as customers added premium plan tiers.  "
+        "Network operating costs (power, spectrum lease, maintenance) inflate with CPI. "
+        "Handset upgrade subsidy costs are volume-dependent.  The primary inflation defense "
+        "is ARPA mix-shift toward higher-tier plans (premium unlimited, add-ons)."
+    ),
+    recession_behavior=(
+        "Wireless service is largely non-discretionary — consumers maintain phone plans "
+        "even in recessions (may downgrade tier but rarely cancel).  Fios broadband is "
+        "nearly recession-proof (essential connectivity).  Device upgrade volumes slow "
+        "in recessions (consumers extend device life), reducing equipment revenue but "
+        "improving service margin mix.  Business wireline may see enterprise spending "
+        "deferrals.  VZ's ~$11B annual dividend is well-covered by FCF."
+    ),
+    major_risks=[
+        "T-Mobile competitive threat: T-Mobile's 5G mid-band coverage advantage and "
+        "competitive pricing are driving postpaid phone net adds at T-Mobile's expense "
+        "— VZ has lost postpaid net add momentum vs T-Mobile in 2022-24",
+        "Spectrum cost: VZ spent ~$45B+ on C-band licenses (2021) and must continue "
+        "investing $8-10B/yr in CapEx for 5G network build — elevating debt burden",
+        "Lead cable sheathing liability: potential remediation costs for legacy "
+        "lead-jacketed cables across the network (industry-wide regulatory risk)",
+        "FWA market saturation: fixed wireless access is a land-grab between VZ, T-Mobile, "
+        "and cable operators; addressable market is homes without fiber access",
+        "Legacy wireline decline: business wireline revenue declining structurally as "
+        "enterprise customers migrate to IP and wireless connectivity",
+    ],
+    valuation_style=(
+        "VZ trades at ~9-11x forward P/E and is valued primarily on dividend yield "
+        "(6-7%) and EV/EBITDA (~7-8x) — a classic utility-like telecom multiple. "
+        "The market prices VZ as a high-yield dividend stock, not a growth story. "
+        "Key re-rating catalyst: postpaid phone net add recovery above zero, ARPA "
+        "growth demonstrating MyPlan monetisation, debt leverage reduction below 2.5x "
+        "EBITDA.  De-rating risk: T-Mobile continuing to outgrow VZ, dividend coverage "
+        "declining, spectrum cost escalation."
+    ),
+    key_metrics=[
+        "Wireless postpaid phone net adds (key competitive metric vs T-Mobile, AT&T)",
+        "ARPA (average revenue per account) and ARPU (per user) growth",
+        "Fios internet net adds (indicates fiber broadband competitiveness)",
+        "Fixed Wireless Access (FWA) subscribers (FWA growth target 4-5M)",
+        "Total wireless service revenue growth rate",
+        "Free cash flow ($18-19B annual target for dividend sustainability)",
+        "Net leverage ratio (total debt/adjusted EBITDA — target 2.25x-2.5x)",
+        "C-band 5G coverage milestones and densification progress",
+    ],
+    competitive_advantages=[
+        "Network quality leadership in urban/suburban markets: C-band 5G deployment "
+        "delivers best-in-class latency and throughput in Tier 1 markets; enterprise "
+        "customers pay a premium for network reliability (911 and mission-critical apps)",
+        "Postpaid customer base loyalty: ~98M postpaid phone connections with industry-"
+        "leading ARPA; device payment plan lock-in creates 24-month customer stickiness",
+        "MyPlan customizable architecture: allows ARPA upsell via digital content "
+        "add-ons (streaming, cloud, perks) without requiring plan tier changes",
+        "Fios fiber moat in footprint: FTTH (fiber-to-the-home) in NY/NJ/PA markets "
+        "delivers gigabit broadband with near-zero churn in established footprint",
+    ],
+    business_model_keywords=[
+        "wireless postpaid", "Fios", "C-band", "5G", "MyPlan", "ARPA",
+        "fixed wireless access", "FWA", "spectrum", "postpaid net adds",
+        "Hans Vestberg", "enterprise 5G", "network quality", "broadband",
+        "dividend", "free cash flow", "T-Mobile competition",
+    ],
+))
+
+
+# ── AT&T (T) ──────────────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="T",
+    company_name="AT&T Inc.",
+    business_model=(
+        "AT&T is a US wireless and broadband company following its 2022 divestiture of "
+        "WarnerMedia (merged into Warner Bros. Discovery).  The refocused AT&T operates "
+        "two segments: Mobility (wireless postpaid/prepaid — largest US carrier by "
+        "subscribers ~115M+) and Consumer Wireline (AT&T Fiber broadband + DIRECTV-linked "
+        "legacy TV).  The Business Wireline segment serves enterprise and government "
+        "customers with connectivity, cybersecurity, and managed services.  AT&T's "
+        "strategic priority is fiber expansion (30M+ passings target by 2025) via AT&T Fiber."
+    ),
+    primary_revenue_drivers=[
+        "Mobility services (~55% of revenue — postpaid/prepaid wireless service revenue; "
+        "~115M subscriber base including FirstNet first-responder network)",
+        "Consumer Wireline — AT&T Fiber (~20% — fiber broadband subscriptions growing "
+        "at 15-20%/yr; ~10M+ AT&T Fiber customers; ARPU ~$70+/mo)",
+        "Business Wireline (~20% — enterprise connectivity, cybersecurity, managed "
+        "services; structural decline in legacy copper/DSL)",
+        "Wireless equipment (~5% — device sale revenue at near-zero margin)",
+    ],
+    recurring_revenue_sources=[
+        "Wireless postpaid service fee billings (high-stickiness monthly recurring revenue "
+        "— ~$55-60 ARPU on postpaid phone accounts)",
+        "AT&T Fiber broadband subscription (near-100% retention in fiber footprint; "
+        "internet-only strategy following DIRECTV stake reduction)",
+        "FirstNet network service contracts (multi-year federal/state first-responder "
+        "wireless contracts — deferred revenue and long-term visibility)",
+        "Business Wireline managed services contracts (multi-year government/enterprise)",
+    ],
+    rate_sensitivity_note=(
+        "AT&T carries ~$130-140B of total debt — one of the highest in the S&P 500, "
+        "a legacy of failed media acquisitions (DirecTV $48B, WarnerMedia $85B). "
+        "A 100 bps rise in rates increases annualised interest expense by ~$0.5B on "
+        "floating-rate tranches.  More importantly, AT&T's ~6-7% dividend yield competes "
+        "directly with rising Treasury yields for income-seeking investors — rate rises "
+        "reduce T's relative yield attractiveness and compress its P/E multiple.  FCF "
+        "guidance of $17-18B/yr must cover the ~$8B annual dividend and debt reduction."
+    ),
+    inflation_pass_through=(
+        "AT&T has pricing power in wireless: raised unlimited plan prices 10-15% in "
+        "2023 with modest churn impact.  Fiber broadband ARPU has been rising as the "
+        "legacy DSL base migrates to higher-priced fiber plans.  Network operating "
+        "costs (power, maintenance, labor) inflate with CPI — margin management is "
+        "a key investor focus."
+    ),
+    recession_behavior=(
+        "Wireless service is non-discretionary for most consumers.  AT&T Fiber broadband "
+        "is essential infrastructure.  Consumers may downgrade to lower-priced prepaid "
+        "in severe recessions.  Business wireline sees enterprise spending deferrals. "
+        "AT&T's primary recession concern is FCF coverage of the dividend — if FCF "
+        "falls below $14B, the ~$8B/yr dividend sustainability comes into question."
+    ),
+    major_risks=[
+        "Debt burden and deleveraging pace: AT&T must reduce net debt from ~$130B toward "
+        "$100B by 2025 — free cash flow generation is the primary constraint; any FCF "
+        "miss threatens the deleveraging timeline",
+        "Fiber overbuild competition: Comcast, Charter, and Google Fiber are overbulding "
+        "AT&T's fiber footprint, increasing churn in established markets",
+        "Lead sheathing cable liability: potential remediation of legacy lead-clad cables "
+        "could represent a multi-billion dollar liability (shared across industry)",
+        "Legacy business wireline decline: copper/DSL enterprise revenue declining "
+        "structurally, offsetting fiber broadband growth",
+        "DIRECTV complexity: AT&T still owns ~70% of DIRECTV — satellite TV secular "
+        "decline creates a drag on earnings and balance sheet",
+    ],
+    valuation_style=(
+        "AT&T trades at ~9-11x forward P/E and ~7-8x EV/EBITDA, valued as a "
+        "high-yield dividend utility.  The stock's 6-7% dividend yield is the primary "
+        "investor proposition.  Key re-rating catalysts: debt leverage below 2.5x "
+        "EBITDA, AT&T Fiber subscribers surpassing 15M (validating fiber ROI), "
+        "wireless service revenue re-acceleration.  De-rating risk: FCF miss from "
+        "fiber buildout CapEx overrun, DIRECTV value impairment, T-Mobile/Verizon "
+        "taking postpaid market share."
+    ),
+    key_metrics=[
+        "Wireless postpaid phone net adds (key competitive metric vs Verizon/T-Mobile)",
+        "AT&T Fiber net adds and subscriber count (target 15M+ by 2025)",
+        "AT&T Fiber ARPU growth (~$70+/mo target)",
+        "Free cash flow ($17-18B annual guidance — covers dividend and debt paydown)",
+        "Net leverage ratio (target 2.5x EBITDA by end-2025)",
+        "FirstNet subscriber count and revenue contribution",
+        "Wireless service revenue growth rate",
+        "Business Wireline revenue trend (rate of legacy decline vs fiber enterprise growth)",
+    ],
+    competitive_advantages=[
+        "FirstNet first-responder network: sole carrier contracted to build the national "
+        "public safety broadband network — creates sticky government/first-responder "
+        "subscriber base and federal deferred revenue stream",
+        "Fiber broadband quality: AT&T Fiber's gigabit symmetric internet service "
+        "delivers superior speeds vs cable HFC in overlapping markets — strong NPS "
+        "and low churn once customers switch to fiber",
+        "Wireless network scale: 115M+ subscriber base provides spectrum amortisation "
+        "advantage and enterprise bundle leverage (wireless + fiber + 5G)",
+        "Postpaid wireless pricing momentum: price increases in 2023 demonstrated "
+        "consumer acceptance of value-tiered pricing, expanding ARPU without equivalent "
+        "churn — showing demand inelasticity for wireless service",
+    ],
+    business_model_keywords=[
+        "AT&T Fiber", "FirstNet", "wireless postpaid", "ARPU", "fiber broadband",
+        "DIRECTV", "WarnerMedia", "Business Wireline", "free cash flow",
+        "John Stankey", "deleveraging", "debt reduction", "5G", "postpaid net adds",
+        "C-band", "fiber passings", "dividend", "net leverage",
+    ],
+))
+
+
+# ── Comcast (CMCSA) ───────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="CMCSA",
+    company_name="Comcast Corporation",
+    business_model=(
+        "Comcast operates through three major segments: (1) Connectivity & Platforms — "
+        "Xfinity cable broadband (the largest US cable broadband provider, ~32M customers), "
+        "Xfinity Mobile (MVNO using Verizon network + WiFi), linear TV, and business "
+        "connectivity; (2) NBCUniversal — broadcast networks (NBC, Telemundo), cable channels "
+        "(MSNBC, CNBC, USA), filmed entertainment (Universal Pictures), theme parks (Universal "
+        "Studios), and Peacock streaming; (3) Sky — European satellite TV and broadband "
+        "serving UK, Italy, Germany (~21M customers)."
+    ),
+    primary_revenue_drivers=[
+        "Connectivity & Platforms broadband (~40% of total revenue — Xfinity internet "
+        "service, ~32M residential and SMB broadband customers at $70-85/mo ARPU)",
+        "NBCUniversal (~25% — advertising, theme park admissions, distribution fees, "
+        "Universal filmed entertainment)",
+        "Xfinity Mobile wireless (~7% and growing — ~7M subscriber lines, MVNO model "
+        "on Verizon network, high-margin bundle upsell)",
+        "Video/linear TV (~15% — declining; cord-cutting continues ~3-4% annual sub loss)",
+        "Sky (~13% — European broadband, satellite TV, content rights)",
+    ],
+    recurring_revenue_sources=[
+        "Broadband monthly subscription fees (Xfinity internet — ~96% retention rate; "
+        "essential infrastructure for remote work and streaming)",
+        "Xfinity Mobile recurring service revenue (bundled with broadband at minimal "
+        "incremental cost — very high incremental margin on mobile adds)",
+        "Theme park revenue per visit (Universal Studios, Wizarding World of Harry Potter; "
+        "Epic Universe opening 2025)",
+        "NBCUniversal cable network affiliate fees (retransmission consent payments from "
+        "pay-TV distributors — multi-year, inflation-escalating contracts)",
+        "Peacock streaming subscriptions (ad-supported and premium tiers; ~36M paid subs)",
+    ],
+    rate_sensitivity_note=(
+        "Comcast carries ~$95-100B of total debt.  A 100 bps rate rise increases annual "
+        "interest expense by ~$0.3-0.5B on floating-rate exposure.  Comcast's broadband "
+        "and theme park businesses generate robust FCF ($15-17B/yr), providing strong "
+        "debt-service capacity.  The cable broadband business trades at a utility-like "
+        "multiple (~12-15x EV/EBITDA) that is modestly DCF-sensitive.  Higher rates "
+        "also increase the cost of NBCU content financing."
+    ),
+    inflation_pass_through=(
+        "Broadband ARPU has been raised 3-5% annually for a decade with minimal customer "
+        "loss — internet service is a near-essential utility with few viable alternatives "
+        "outside AT&T Fiber overbuild zones.  Theme park ticket pricing grows annually "
+        "above CPI (Universal has raised prices 10%+ in 2023-24).  Content production "
+        "costs (talent, below-the-line labor) inflate with wages.  NBCUniversal advertising "
+        "revenue is cyclical and acutely sensitive to the ad market."
+    ),
+    recession_behavior=(
+        "Broadband is essential infrastructure — churn is extremely low even in recessions. "
+        "Theme parks are discretionary; attendance fell sharply in 2020 but recovered "
+        "strongly post-COVID with record per-capita spending.  Linear TV advertising "
+        "is cyclical.  Peacock streaming investments create near-term FCF headwinds "
+        "that are financed by broadband cash flow."
+    ),
+    major_risks=[
+        "Broadband competition from fiber overbuild: AT&T Fiber and T-Mobile FWA are "
+        "taking market share in Comcast's cable footprint — broadband net adds have gone "
+        "negative in some recent quarters",
+        "Cord-cutting acceleration: linear TV revenue declining 4-6%/yr as subscribers "
+        "leave cable for streaming; Comcast must offset with broadband ARPU and Peacock",
+        "Peacock content investment ROI: Comcast is investing $3-4B/yr in Peacock content "
+        "— the streaming business remains unprofitable and subscriber growth has slowed "
+        "vs Disney+ and Netflix",
+        "Epic Universe execution and ROI: $7B+ theme park investment in Orlando opening "
+        "2025 — execution risk and competitive dynamics with Walt Disney World",
+        "NBC broadcast rights expiration: NFL Thursday Night Football, Olympics contracts "
+        "require expensive renewals that inflate content cost structure",
+    ],
+    valuation_style=(
+        "Comcast trades at ~12-14x forward P/E and ~7-8x EV/EBITDA — a cable utility "
+        "multiple that discounts the NBCUniversal content complexity.  Sum-of-parts: "
+        "broadband business alone at 12-15x EBITDA (~$120-140B), NBCU at 8-10x EBITDA "
+        "($30-40B), Sky at 7-9x EBITDA ($15-20B).  The conglomerate discount is "
+        "significant — broadband alone is worth more than Comcast's market cap on some "
+        "analyses.  Buybacks (~$10B/yr) provide meaningful EPS support."
+    ),
+    key_metrics=[
+        "Broadband net adds (residential + business; turning negative is a red flag)",
+        "Broadband ARPU growth (~3-5%/yr target)",
+        "Xfinity Mobile subscriber count and line growth",
+        "Peacock subscriber count and ARPU (ad-supported vs. premium mix)",
+        "Theme park attendance and per capita spending (Universal Studios)",
+        "Free cash flow ($15-17B annual range)",
+        "Total capital return to shareholders (buyback + dividend)",
+        "Linear TV subscriber decline rate (cord-cutting pace)",
+    ],
+    competitive_advantages=[
+        "HFC cable network moat: Comcast's hybrid fiber-coaxial plant reaches ~60M+ US "
+        "homes — the only near-gigabit broadband option for most of its footprint; fiber "
+        "overbuild is occurring but is expensive and slow, limiting competition",
+        "Xfinity Mobile bundle economics: selling wireless service on Verizon's MVNO at "
+        "minimal incremental cost to broadband customers — ~85%+ incremental EBITDA "
+        "margin on mobile adds, dramatically improving bundle economics",
+        "NBCUniversal theme park IP: Wizarding World, Nintendo World, Minions, and Epic "
+        "Universe create must-visit physical experiences that generate $6-8B/yr in "
+        "high-margin recurring revenue with pricing power",
+        "Scale in content distribution: Comcast distributes content across cable network, "
+        "streaming (Peacock), broadcast (NBC), and Sky — giving content creators "
+        "multi-platform exposure in deal negotiations",
+    ],
+    business_model_keywords=[
+        "Xfinity", "broadband", "Peacock", "NBCUniversal", "Sky", "Universal Studios",
+        "Epic Universe", "Xfinity Mobile", "cord-cutting", "ARPU",
+        "Brian Roberts", "theme parks", "cable network", "HFC",
+        "affiliate fees", "fiber overbuild", "linear TV", "streaming",
+    ],
+))
+
+
+# ── Procter & Gamble (PG) ─────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="PG",
+    company_name="The Procter & Gamble Company",
+    business_model=(
+        "Procter & Gamble is the world's largest consumer packaged goods (CPG) company, "
+        "selling household and personal care products across five business segments: "
+        "Fabric & Home Care (Tide, Gain, Downy, Febreze, Dawn, Cascade — ~35% of sales), "
+        "Baby/Feminine/Family Care (Pampers, Always, Tampax, Charmin, Bounty — ~26%), "
+        "Beauty (Pantene, Head & Shoulders, Olay, SK-II, Old Spice — ~19%), "
+        "Grooming (Gillette, Venus, Braun razors and appliances — ~9%), and "
+        "Health Care (Oral-B toothbrushes/toothpaste, Pepto-Bismol, Metamucil, Vicks — ~11%).  "
+        "P&G sells through 180+ countries, with North America ~45% of revenue."
+    ),
+    primary_revenue_drivers=[
+        "Fabric & Home Care (~35% of revenue — Tide market share leader; pricing power "
+        "through super-premium formulations; Febreze/Downy/Dawn brand loyalty)",
+        "Baby/Feminine/Family Care (~26% — Pampers #1 global diaper brand in premium "
+        "segment; Always/Tampax feminine care market leader in US/Europe)",
+        "Beauty (~19% — SK-II ultra-premium prestige skin care (China exposure); "
+        "Pantene/Head & Shoulders hair care mass-market leadership)",
+        "Health Care (~11% — Oral-B electric toothbrush market leader; Vicks/DayQuil OTC "
+        "pharma with resilient demand)",
+        "Grooming (~9% — Gillette global leader in blade cartridge, though market share "
+        "eroded by Dollar Shave Club/direct-to-consumer competitors)",
+    ],
+    recurring_revenue_sources=[
+        "Repeat consumable purchases: Tide, Pampers, Oral-B refills are repeat weekly/monthly "
+        "household purchases with near-zero switching cost consideration",
+        "Blade cartridge system revenue: Gillette razor system creates recurring cartridge "
+        "replacement revenue (installed base of razors drives refill attach)",
+        "Amazon Subscribe & Save and retail subscription programs amplifying repeat purchase "
+        "frequency and reducing churn",
+    ],
+    rate_sensitivity_note=(
+        "P&G trades at ~22-26x forward P/E — a quality defensive premium.  A 100 bps rate "
+        "rise compresses the multiple by ~2-3 turns.  P&G carries ~$25-28B long-term debt "
+        "at mostly fixed rates, limiting refinancing exposure.  Consumer staples like P&G "
+        "are rate-sensitive mainly via valuation (higher rates reduce the present value of "
+        "stable, long-duration cash flows) rather than fundamental business sensitivity.  "
+        "P&G's ~$9-10B annual FCF and ~2.5% dividend yield are directly compared to "
+        "risk-free rates by income investors."
+    ),
+    inflation_pass_through=(
+        "P&G has strong pricing power: the company executed ~10%+ cumulative price increases "
+        "in 2022-2023 across most categories, absorbing commodity inflation (pulp, resin, "
+        "titanium dioxide) while maintaining volume.  Historical evidence: P&G has raised "
+        "prices in 38 of the last 40 years.  The 2023-24 shift from pricing-led to volume-led "
+        "growth indicates pricing ceiling reached in some categories — P&G must now grow "
+        "through premium mix/innovation rather than list price increases."
+    ),
+    recession_behavior=(
+        "Consumer staples are highly defensive: households continue purchasing Tide, Pampers, "
+        "and Oral-B products through recessions, though they may trade down to store brands "
+        "in severe downturns.  P&G demonstrated recession resilience in 2009 (organic revenue "
+        "growth positive), 2020 (accelerated purchases during COVID).  SK-II (luxury skin "
+        "care, primarily China) is more discretionary and recession-vulnerable."
+    ),
+    major_risks=[
+        "Volume pressure from price elasticity: cumulative pricing increases have driven "
+        "consumers toward private-label alternatives in Fabric Care and Baby Care — "
+        "market share loss to store brands (Kirkland, Amazon Basics) is a structural risk",
+        "SK-II China exposure (~$2B+ revenue): SK-II ultra-premium skin care brand has "
+        "significant China revenue sensitivity to consumer confidence and competitive "
+        "pressure from local Chinese beauty brands (C-beauty)",
+        "Gillette market share erosion: Dollar Shave Club (Unilever), Harry's, and "
+        "direct-to-consumer brands continue taking blade cartridge share",
+        "Innovation execution: P&G must continuously innovate (premium formulations, "
+        "sustainable packaging, concentrated formats) to justify price premiums vs private label",
+        "Input cost inflation: pulp, resin, surfactants, and titanium dioxide are the "
+        "primary COGS components — commodity cycles create margin volatility",
+    ],
+    valuation_style=(
+        "P&G trades at a defensive premium multiple of ~22-26x forward P/E and ~22-24x "
+        "EV/EBITDA, pricing in the brand portfolio durability, pricing power, and recession "
+        "resilience.  FCF yield (~3-4%) is the primary return driver alongside ~2.5% dividend "
+        "yield.  P&G has paid and grown its dividend for 68 consecutive years (Dividend King). "
+        "Sum-of-parts analysis values the brand portfolio at 5-7x revenue for the leading "
+        "brands in each category."
+    ),
+    key_metrics=[
+        "Organic sales growth (pricing % + volume % decomposition — volume growth recovering "
+        "post-pricing cycle is the key near-term metric)",
+        "Gross margin recovery (post-commodity inflation; heading toward 52-54% target)",
+        "Market share by category (Nielsen/Circana — Tide, Pampers, Gillette share trends)",
+        "SK-II sales growth (China travel retail and prestige beauty indicator)",
+        "Free cash flow (~$14-15B/yr range)",
+        "Dividend growth rate (68 consecutive years of increases)",
+        "Emerging markets organic growth (India, Middle East, Africa offsetting China)",
+        "Jon Moeller CEO organic growth framework guidance",
+    ],
+    competitive_advantages=[
+        "Brand equity depth: P&G has 23 brands with >$1B in annual revenue — each "
+        "is the #1 or #2 market share holder in its category, providing retailer shelf "
+        "negotiating leverage and premium pricing support",
+        "R&D investment scale: $2B+ annual R&D investment enables patent-protected "
+        "formulation superiority (e.g., Tide PODS detergent concentration vs powder) "
+        "that private-label manufacturers cannot easily replicate",
+        "Global distribution scale: P&G products reach 5B+ consumers across 180 "
+        "countries through a network of retailers, distributors, and e-commerce platforms "
+        "that gives new product launches instant global reach",
+        "Dividend King status: 68+ consecutive years of dividend growth demonstrates "
+        "through-cycle pricing power and FCF durability — an unmatched operational track record",
+    ],
+    business_model_keywords=[
+        "Tide", "Pampers", "Gillette", "SK-II", "Oral-B", "Pantene",
+        "Fabric Care", "Beauty", "Grooming", "organic sales growth",
+        "pricing", "volume", "private label", "Jon Moeller", "Dividend King",
+        "gross margin", "commodity", "consumer staples", "brand equity",
+    ],
+))
+
+
+# ── SLB (Schlumberger) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="SLB",
+    company_name="SLB (formerly Schlumberger Limited)",
+    business_model=(
+        "SLB is the world's largest oilfield services company, providing technology, "
+        "integrated project management, and information solutions to the global oil and "
+        "gas industry.  The company operates through four divisions: Digital & Integration "
+        "(AI-powered reservoir intelligence, cloud data platforms — Delfi, Lumi), "
+        "Reservoir Performance (well stimulation, completions, intervention), "
+        "Well Construction (drilling, cementing, well integrity), and "
+        "Production Systems (surface/subsea production equipment, artificial lift, "
+        "integrated production management).  ~80% of revenue is generated internationally "
+        "(Middle East, Africa, Asia Pacific, Europe/CIS) vs North America onshore."
+    ),
+    primary_revenue_drivers=[
+        "Well Construction (~35% of revenue — drilling fluids, directional drilling, "
+        "completion tools; offshore and onshore market leader)",
+        "Production Systems (~25% — surface production equipment, subsea trees, "
+        "manifolds; high-margin long-cycle offshore equipment)",
+        "Digital & Integration (~20% — Delfi digital platform, Lumi data analytics, "
+        "integrated project management contracts, AI reservoir characterization)",
+        "Reservoir Performance (~20% — pressure pumping/fracturing, wireline formation "
+        "evaluation, reservoir sampling and testing)",
+    ],
+    recurring_revenue_sources=[
+        "Long-cycle international offshore contracts (integrated project management "
+        "with NOCs — multi-year, fixed-fee with performance bonuses)",
+        "Digital platform subscriptions (Delfi/Lumi SaaS licenses — growing recurring "
+        "revenue from cloud-based reservoir characterization tools)",
+        "Production Systems aftermarket parts and services (subsea maintenance "
+        "contracts for installed base)",
+        "Artificial lift and production optimization services (continuous well surveillance "
+        "and intervention for producing wells)",
+    ],
+    rate_sensitivity_note=(
+        "SLB is primarily correlated with oil price and E&P CapEx rather than interest "
+        "rates.  A 100 bps rate rise has minimal direct impact on SLB's earnings; the "
+        "relevant sensitivity is Brent crude price — SLB management has guided that the "
+        "current cycle is sustainable above $60/bbl Brent due to structural underinvestment "
+        "in energy supply.  SLB carries ~$10-12B of long-term debt at mostly fixed rates.  "
+        "Higher rates increase the cost of NOC and E&P customer project financing, "
+        "potentially delaying project FIDs (final investment decisions) at the margin."
+    ),
+    inflation_pass_through=(
+        "Moderate: SLB has pricing leverage in tight service markets (offshore deepwater "
+        "requires specialized equipment and expertise) but faces pushback in North America "
+        "onshore (highly commoditized pressure pumping market).  Technology differentiation "
+        "via Digital & Integration allows higher-margin contracts.  Input cost inflation "
+        "(steel, energy, labor) is partially passed through via pricing on new contracts."
+    ),
+    recession_behavior=(
+        "Oilfield services revenue is highly correlated with E&P capital budgets, which "
+        "are oil-price dependent.  A severe oil price correction (~50%+ from peak) triggers "
+        "customer budget cuts within 2-3 quarters, directly reducing SLB revenue.  "
+        "Long-cycle international projects (deepwater, LNG) are more resilient than "
+        "short-cycle North America onshore.  SLB's 2020 revenue fell ~28% as COVID "
+        "crashed oil demand — the company cut 21,000 jobs to manage costs.  Digital "
+        "segment provides some counter-cyclical cushion."
+    ),
+    major_risks=[
+        "Oil price collapse: Brent/WTI below $65/bbl would trigger E&P budget cuts "
+        "reducing SLB drilling and completions revenue; breakeven is ~$45-50/bbl Brent "
+        "for international project profitability",
+        "North America onshore competitive intensity: pressure pumping is highly "
+        "commoditized with low barriers to entry; EBITDA margins ~20% vs international ~25%",
+        "National oil company (NOC) concentration: Saudi Aramco, ADNOC, PDVSA, and "
+        "other NOCs represent ~40% of revenue — political/geopolitical NOC budget changes "
+        "directly impact SLB results",
+        "Energy transition risk: long-term decline in fossil fuel investment reduces "
+        "the global oilfield services TAM over a 10-20 year horizon",
+        "Digital competition from Halliburton, Baker Hughes, and pure-play tech companies "
+        "offering reservoir analytics at lower price points",
+    ],
+    valuation_style=(
+        "SLB trades at ~14-18x forward P/E and ~10-12x EV/EBITDA — a cyclical industrial "
+        "multiple with an oil-services premium for international exposure.  The Digital "
+        "& Integration segment justifies a partial tech multiple as SaaS-like subscription "
+        "revenue grows.  Key re-rating catalyst: Digital segment reaching >25% of revenue "
+        "and demonstrating margin accretion, sustained international E&P cycle supporting "
+        "multi-year earnings growth.  De-rating risk: oil price decline, Middle East "
+        "geopolitical disruption reducing NOC CapEx."
+    ),
+    key_metrics=[
+        "International revenue growth (Middle East/Asia/Africa — core growth engine)",
+        "EBITDA margin by division (target 25%+ blended; Digital highest margin)",
+        "Digital & Integration revenue growth rate (proxy for software transition progress)",
+        "North America vs International revenue mix (international = higher margin)",
+        "Offshore vs onshore revenue mix (offshore = higher pricing leverage)",
+        "Free cash flow conversion (FCF/Net Income target >80%)",
+        "Oil price (Brent WTI) — primary macro driver of E&P CapEx decisions",
+        "Subsea backlog and book-to-bill ratio",
+    ],
+    competitive_advantages=[
+        "Deepwater technology leadership: SLB's subsea Production Systems and directional "
+        "drilling tools are the preferred choice for technically complex ultra-deepwater "
+        "projects — differentiated from Halliburton and Baker Hughes in sub-salt formations",
+        "Delfi/Lumi digital platform: cloud-native reservoir characterization platform "
+        "with AI-powered geology and geomechanics capabilities that integrates disparate "
+        "NOC data sources — creates switching costs once data is ingested",
+        "International NOC relationships: 60+ years of operating in challenging basins "
+        "(Saudi Arabia, Russia, Iraq, Kazakhstan) builds institutional trust that no "
+        "new entrant can replicate quickly",
+        "Integrated project management: SLB can take full-cycle well delivery risk "
+        "(design-to-production) for NOC customers who lack internal technical capacity "
+        "— differentiated from equipment-only competitors",
+    ],
+    business_model_keywords=[
+        "oilfield services", "Delfi", "Lumi", "Well Construction", "Production Systems",
+        "Reservoir Performance", "digital", "Digital & Integration", "deepwater",
+        "offshore", "directional drilling", "reservoir characterization",
+        "NOC", "Olivier Le Peuch", "artificial lift", "subsea",
+        "international", "E&P", "Brent", "completions",
+    ],
+))
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
