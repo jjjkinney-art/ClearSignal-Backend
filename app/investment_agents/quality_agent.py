@@ -13,6 +13,7 @@ from ..schemas import CompanyContext, QualityAssessment, RetrievedEvidence, Comp
 from ..structured_output import get_structured_response
 from ..model_client import model_client
 from ..config import settings
+from ._signal_extraction import extract_min_bullish_signal
 
 logger = logging.getLogger(__name__)
 
@@ -183,6 +184,16 @@ def run_quality_agent(
             backoff_factor=settings.model_backoff_factor,
         )
         result.evidence_used = [ev.title[:70] for ev in relevant]
+        if not result.signals and result.overall and result.confidence > 0.3:
+            extracted = extract_min_bullish_signal(
+                result.overall, company, _AGENT_NAME, "quality", profile
+            )
+            if extracted:
+                result.signals = extracted
+                print(
+                    f"[DIAG] [{_AGENT_NAME}] signal_extraction fallback fired "
+                    f"ticker={company.ticker} extracted={len(extracted)}"
+                )
         return result
     except Exception as exc:
         logger.warning(

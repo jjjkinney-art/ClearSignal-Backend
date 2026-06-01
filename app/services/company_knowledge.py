@@ -1768,6 +1768,436 @@ _register(CompanyKnowledgeProfile(
 ))
 
 
+# ── Goldman Sachs (GS) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="GS",
+    company_name="The Goldman Sachs Group, Inc.",
+    business_model=(
+        "Goldman Sachs is a global investment banking and financial services firm "
+        "operating across four segments: Global Banking & Markets (investment banking "
+        "advisory/underwriting + FICC and equities trading), Asset & Wealth Management "
+        "(AWM, ~$2.8T AUS), Platform Solutions (consumer cards and transaction banking), "
+        "and the legacy Marcus consumer banking business (being wound down). Revenue is "
+        "highly variable, driven by deal activity, market volatility, and AUM flows."
+    ),
+    primary_revenue_drivers=[
+        "FICC (Fixed Income, Currencies & Commodities) trading (~25-30% of revenue) — "
+        "rates, credit, FX, commodities intermediation; highest in volatile markets",
+        "Equities trading (~20%) — prime brokerage, derivatives, cash equities",
+        "Investment Banking fees (~15-20%) — M&A advisory, ECM/DCM underwriting; "
+        "highly cyclical with deal activity",
+        "Asset & Wealth Management (~25%) — management fees on $2.8T+ AUS, incentive "
+        "fees from alternatives (private equity, hedge fund, real estate)",
+        "Platform Solutions / Transaction Banking (~5-10%) — growing transaction "
+        "banking and institutional cash management",
+    ],
+    recurring_revenue_sources=[
+        "AWM management fees (~$2.8T AUS × ~0.5% blended fee = ~$14B recurring)",
+        "Transaction banking float and service fees",
+        "Prime brokerage financing revenue (relatively stable vs trading P&L)",
+        "Carried interest and incentive fees from alternatives (multi-year lockup funds)",
+    ],
+    rate_sensitivity_note=(
+        "GS benefits from higher rates via two channels: (1) FICC trading activity "
+        "increases when rates and credit spreads are volatile; (2) higher rates increase "
+        "net interest income on the balance sheet and client cash balances. However, higher "
+        "rates compress M&A deal volumes (higher cost of capital reduces LBO viability) "
+        "and slow ECM issuance. Net effect: GS benefits from rate volatility more than "
+        "rate level. Extended low-rate, low-volatility periods compress trading revenues."
+    ),
+    inflation_pass_through=(
+        "GS has limited direct inflation exposure — fee revenue is transaction-based, "
+        "not cost-plus. High inflation typically accompanies Fed tightening and rate "
+        "volatility, which increases FICC trading opportunities. The primary inflation "
+        "impact is on compensation: ~40% of revenues flow to employee comp, and talent "
+        "competition with hedge funds and PE firms keeps compensation elevated."
+    ),
+    recession_behavior=(
+        "Mixed recession dynamics: M&A and ECM revenues decline sharply (corporate "
+        "management freezes strategic activity); FICC trading revenues can INCREASE "
+        "in credit/rates dislocations (GS profited in 2008-2009 FICC). AWM faces "
+        "AUM outflows in severe downturns. Historically, GS has navigated recessions "
+        "through FICC gains that partially offset IB revenue declines."
+    ),
+    major_risks=[
+        "M&A cycle dependence: deal volumes are highly correlated with CEO confidence "
+        "and equity market levels — a sustained bear market cuts IB revenues 40-60%",
+        "Marcus/consumer banking losses: GS spent $3B+ building Marcus consumer bank "
+        "then began strategic retreat; lingering credit card losses (Apple Card, GM Card) "
+        "drag on ROTCE",
+        "Regulatory capital requirements: Basel III Endgame SCB requirements could "
+        "require GS to hold more capital, reducing ROTCE from ~14% toward ~12%",
+        "Key-man and talent risk: GS's business model depends on relationship bankers "
+        "and traders; talent attrition to hedge funds and PE firms is structural",
+        "FICC revenue volatility: in calm markets GS's trading revenues can fall 20-30% "
+        "year-over-year, making EPS highly unpredictable",
+    ],
+    valuation_style=(
+        "GS is valued on P/TBV (price-to-tangible book value) and ROTCE vs cost of equity. "
+        "At a sustained ROTCE of 14-16%, GS deserves ~1.3-1.5x TBV. Below 13% ROTCE "
+        "the stock approaches 1.0x TBV. The IB cycle premium: when M&A volumes recover "
+        "to normalized levels, GS's IB wallet share (~8%) drives EPS upside. Key "
+        "re-rating catalyst: exit from Marcus consumer losses + IB cycle recovery. "
+        "De-rating risk: sustained low-volatility market reduces FICC revenue + ongoing "
+        "consumer credit losses."
+    ),
+    key_metrics=[
+        "ROTCE (Return on Tangible Common Equity) — management target 14-16%",
+        "M&A advisory fee revenue and deal backlog",
+        "FICC net revenues per quarter",
+        "AWM AUS (Assets Under Supervision) and management fee margin",
+        "Marcus / Platform Solutions net credit losses (drag on ROTCE)",
+        "CET1 capital ratio vs SCB requirement",
+        "Comp-to-revenue ratio (~40% target)",
+    ],
+    competitive_advantages=[
+        "Top-2 M&A advisory market share: GS's relationship banking franchise and "
+        "brand attract CEO-level mandates; switching costs for long-standing clients "
+        "are high (decade-long banker relationships)",
+        "FICC trading infrastructure: decades of technology investment and balance "
+        "sheet capacity give GS execution quality advantages in credit, rates, and FX",
+        "AWM private alternatives platform: GS Alternatives has $450B+ in illiquid "
+        "strategies with high-fee structures and long lockup periods",
+        "Global network and regulatory relationships: GS has operated in 40+ countries "
+        "for decades, giving multinational clients a one-stop cross-border solution",
+    ],
+    business_model_keywords=[
+        "FICC", "investment banking", "M&A advisory", "ECM", "DCM", "ROTCE",
+        "Marcus", "Asset & Wealth Management", "AWM", "AUS", "deal activity",
+        "trading revenue", "net interest income", "prime brokerage",
+        "David Solomon", "IB wallet", "capital markets", "carried interest",
+    ],
+))
+
+
+# ── Netflix (NFLX) ────────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="NFLX",
+    company_name="Netflix, Inc.",
+    business_model=(
+        "Netflix is the world's largest subscription video-on-demand (SVOD) service with "
+        "~270M+ global paid subscribers across 190+ countries. Revenue comes from tiered "
+        "monthly subscriptions (Standard with Ads at $7-8/mo, Standard at $15, Premium "
+        "at $23) and growing advertising revenue from its ad-supported tier launched in "
+        "November 2022. Netflix owns ~$32B of content assets (original programming, "
+        "licensed titles) amortized over estimated useful lives."
+    ),
+    primary_revenue_drivers=[
+        "Subscription revenue (~97%): ~270M paid members × ~$17 average monthly revenue "
+        "per membership = ~$38B annual revenue; mix shift toward premium and ad-tier",
+        "Advertising revenue (<3% but fastest-growing): ad-supported tier ARPU "
+        "growing as advertiser interest ramps; targeting 2026-2027 material contribution",
+        "Password-sharing crackdown: enforced paid-sharing policy (2023) converted "
+        "~30M+ borrower households into paid subscribers, accelerating member growth",
+        "International expansion: LATAM, APAC, EMEA are key subscriber growth regions; "
+        "local content investment drives retention",
+    ],
+    recurring_revenue_sources=[
+        "Monthly subscription fees (high stickiness — ~2-3% monthly churn for paid tiers)",
+        "Annual/pre-paid plan subscribers (growing mix, lower churn)",
+        "Ad-supported tier subscription fees + CPM-based advertising revenue",
+    ],
+    rate_sensitivity_note=(
+        "Netflix is a growth stock valued at 30-40x forward P/E — moderate rate sensitivity "
+        "via DCF discount rate compression. A 100 bps rate rise compresses the multiple ~3-4 "
+        "turns. More importantly, Netflix's business fundamentals are relatively rate-insensitive: "
+        "consumer entertainment spending is sticky, and Netflix's $7-23/mo tiers are "
+        "defensible against consumer cutbacks. Content financing is at fixed rates. "
+        "Higher rates modestly increase Netflix's cost of debt on its $14B+ debt load."
+    ),
+    inflation_pass_through=(
+        "Netflix has demonstrated pricing power: raised US Standard price from $11 to $15 "
+        "(2019-2022) with minimal churn. The ad-supported tier launch at $7 created a "
+        "price-tiered moat. Key risk: consumer subscription fatigue — multiple streaming "
+        "services competing for the same wallet. ARPU growth is the primary indicator of "
+        "pricing power. Content cost inflation (talent, production) is the key cost pressure."
+    ),
+    recession_behavior=(
+        "Historically resilient: Netflix is a relative-value entertainment option vs "
+        "live events, theaters, and travel. In 2020 recession, paid members accelerated "
+        "+26M. In 2022 reset, Netflix lost 200K subscribers (first decline) then recovered "
+        "via password sharing enforcement. Key risk: consumers trade down from Standard "
+        "($15) to Ad ($7), reducing ARPU even if membership holds."
+    ),
+    major_risks=[
+        "Streaming competition: Disney+ ($7-14), Amazon Prime Video ($9), Max ($10), "
+        "Apple TV+ ($10) all compete for the same consumer budget; competition intensifies "
+        "as studios recapture content from licensing deals",
+        "Content amortization cycle: Netflix spends $17-18B/yr on content; if hit rates "
+        "decline, subscriber growth slows and the market re-rates the content ROI",
+        "Password-sharing crackdown: one-time subscriber bump from 2023 enforcement "
+        "will not repeat; future growth depends on organic demand and international",
+        "ARPU pressure from ad-tier mix shift: if subscribers trade down to $7 ad-tier, "
+        "ARPU compresses unless ad revenue per user scales to compensate",
+        "Gaming and live content: Netflix is investing in games and live events "
+        "(WWE Raw, NFL Christmas games) — execution risk on new content categories",
+    ],
+    valuation_style=(
+        "Netflix is valued on EV/FCF and P/E as it transitions from growth-at-all-costs "
+        "to a profitable FCF-generative business. 2024-2025 FCF target $6-8B+ supports "
+        "a 20-25x FCF multiple. Key re-rating catalysts: advertising revenue reaching "
+        "$3-5B+ run-rate (proving the ad model), operating margin sustaining above 25%, "
+        "continued subscriber growth above 200M. De-rating risk: stalled ARPU growth "
+        "(subscribers grow but revenue per user flat/down), content miss (no breakout hits), "
+        "Disney+ bundling acceleration taking market share."
+    ),
+    key_metrics=[
+        "Paid subscribers (global total and net adds per quarter)",
+        "Average revenue per membership (ARM / ARPU) by region",
+        "Paid sharing / password crackdown conversion progress",
+        "Ad-supported tier membership and advertising revenue per user",
+        "Operating margin (target 26-28% by 2026)",
+        "Free cash flow ($6-8B target range)",
+        "Content spend ($17-18B/yr) and content amortization rate",
+        "Engagement hours per subscriber (indicates retention quality)",
+    ],
+    competitive_advantages=[
+        "Scale and recommendation algorithm: 270M+ subscribers generate 250M+ daily "
+        "viewing hours of data; Netflix's recommendation engine (responsible for 80%+ "
+        "of viewed content) requires this data density to function — competitors at "
+        "50-100M subscribers cannot replicate this flywheel",
+        "Original content IP ownership: Netflix owns its originals permanently (Stranger "
+        "Things, Squid Game, Wednesday) — competitors depend on licensing deals that "
+        "expire; Netflix's owned library grows each year",
+        "Global licensing infrastructure: operating in 190+ countries with localized "
+        "payment processing, content compliance, and subtitling at a scale no competitor "
+        "matches (Disney+ is in ~80 countries, Max in ~65)",
+        "Password-sharing enforcement model: Netflix's technical infrastructure and "
+        "household verification systems are more advanced than competitors, enabling "
+        "the paid-sharing upsell that added 30M+ subscribers",
+    ],
+    business_model_keywords=[
+        "subscriber", "paid sharing", "password crackdown", "ad-supported tier",
+        "ARPU", "ARM", "content amortization", "engagement", "streaming",
+        "Squid Game", "Stranger Things", "Wednesday", "original content",
+        "operating margin", "free cash flow", "international expansion",
+        "Ted Sarandos", "Greg Peters", "ad tier", "live content",
+    ],
+))
+
+
+# ── Eli Lilly (LLY) ──────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="LLY",
+    company_name="Eli Lilly and Company",
+    business_model=(
+        "Eli Lilly is a global pharmaceutical company whose portfolio is being reshaped "
+        "by GLP-1 receptor agonists: Mounjaro (tirzepatide, approved diabetes 2022) and "
+        "Zepbound (tirzepatide, approved obesity 2023) are the fastest-growing drugs in "
+        "pharmaceutical history. The company also has key franchises in oncology "
+        "(Verzenio/abemaciclib), immunology (Taltz, Olumiant), and neuroscience "
+        "(Kisunla for Alzheimer's). Trulicity (dulaglutide) is a legacy GLP-1 in "
+        "structural decline as patients switch to tirzepatide."
+    ),
+    primary_revenue_drivers=[
+        "Mounjaro (tirzepatide injection, Type 2 diabetes) — peak sales potential "
+        "$20-25B; fastest-growing diabetes drug ever; dual GIP/GLP-1 agonist",
+        "Zepbound (tirzepatide injection, obesity/weight management) — peak sales "
+        "potential $25B+; obesity market is multi-decade secular opportunity (1B+ obese "
+        "globally, <5% treated pharmacologically)",
+        "Verzenio / abemaciclib (CDK4/6 inhibitor, breast cancer) — ~$4B+ revenue, "
+        "gaining share vs Pfizer Ibrance in adjuvant setting",
+        "Kisunla (donanemab, Alzheimer's) — newly approved 2024; addressing amyloid "
+        "plaque; $10B+ peak potential if uptake mirrors early Alzheimer's treatment",
+        "Trulicity (dulaglutide, legacy GLP-1) — declining ~30%+ as patients switch "
+        "to tirzepatide; material revenue headwind through 2026",
+    ],
+    recurring_revenue_sources=[
+        "Chronic disease prescriptions (tirzepatide patients need indefinite dosing — "
+        "diabetes/obesity are not cured, creating multi-decade recurring revenue)",
+        "Oncology maintenance therapy (Verzenio in adjuvant breast cancer is 2 years "
+        "of continuous therapy, generating predictable revenue)",
+        "PBM access agreements (Mounjaro/Zepbound have Express Scripts and CVS "
+        "formulary coverage — formulary position drives prescribing)",
+    ],
+    rate_sensitivity_note=(
+        "LLY trades at 40-60x forward P/E — one of the highest multiples in large-cap "
+        "pharma — because the market is pricing in multi-decade GLP-1 revenue compounding. "
+        "A 100 bps rate rise compresses the multiple by ~5-8 turns in a standard DCF "
+        "with a 25-30 year GLP-1 revenue tail. However, LLY's near-term fundamentals "
+        "(Mounjaro/Zepbound production ramp, obesity market penetration) are more thesis-"
+        "defining than interest rate moves. Lilly has a strong A+ credit rating with "
+        "manageable $10B+ net debt relative to $50B+ annual revenue trajectory."
+    ),
+    inflation_pass_through=(
+        "Strong pharmaceutical pricing power: Mounjaro list price ~$1,000/mo, Zepbound "
+        "~$1,060/mo — premium pricing justified by clinical outcomes (15% body weight "
+        "loss vs ~6% for GLP-1 mono). The primary pricing risk is political: the "
+        "Inflation Reduction Act (IRA) will allow CMS to negotiate Part D prices for "
+        "small-molecule drugs starting 2025 and biologics starting 2028. LLY's injectables "
+        "(tirzepatide) are biologics exempt until 2028+, providing pricing protection."
+    ),
+    recession_behavior=(
+        "Defensive/mixed: Diabetes and obesity treatments have strong clinical necessity "
+        "driving persistence. However, GLP-1 drugs are expensive and high out-of-pocket "
+        "costs may cause discontinuation in severe recessions. The obesity indication "
+        "(Zepbound) may be more discretionary than diabetes (Mounjaro). Chronic "
+        "conditions like breast cancer (Verzenio) are recession-proof."
+    ),
+    major_risks=[
+        "Tirzepatide manufacturing capacity constraint: LLY is rapidly expanding "
+        "manufacturing (Indiana, North Carolina, Germany plants) but capacity shortages "
+        "have already limited Zepbound/Mounjaro prescription fulfillment",
+        "GLP-1 competitive landscape: Novo Nordisk semaglutide (Ozempic/Wegovy) has "
+        "established brand; new entrants (oral semaglutide, Amgen AMG-133, Structure "
+        "Therapeutics) could intensify competition",
+        "Trulicity decline: ~$3B+ revenue declining 30%+ annually as patients switch "
+        "to tirzepatide — represents a near-term earnings headwind partially offsetting "
+        "Mounjaro/Zepbound ramp",
+        "IRA drug pricing risk: future CMS negotiation could reduce peak tirzepatide "
+        "revenue if biologics are reclassified or regulation expands",
+        "Alzheimer's market risk: Kisunla requires IV infusion + amyloid PET scan "
+        "confirmation — access and reimbursement pathways are being established",
+    ],
+    valuation_style=(
+        "LLY trades at 40-60x forward P/E and ~15-20x forward revenue — extreme "
+        "multiples justified only if Mounjaro/Zepbound achieve $30-50B combined peak "
+        "sales. DCF analysis uses a 20-30 year revenue tail for tirzepatide in "
+        "diabetes, obesity, NASH, and cardiovascular indications. Key re-rating "
+        "catalyst: Zepbound SURMOUNT-MMO cardiovascular outcomes data (reduces "
+        "MACE), oral tirzepatide approval, manufacturing capacity normalization. "
+        "De-rating risk: oral GLP-1 competitor approval, payer formulary restrictions, "
+        "Mounjaro/Zepbound supply constraints limiting market penetration speed."
+    ),
+    key_metrics=[
+        "Mounjaro quarterly revenue and prescription growth (TRx, NRx)",
+        "Zepbound quarterly revenue and new prescription volume",
+        "Tirzepatide manufacturing fill rate vs demand",
+        "Trulicity revenue decline rate (earnings headwind measure)",
+        "Verzenio sales growth and market share in adjuvant breast cancer",
+        "Kisunla (donanemab) launch uptake and reimbursement coverage",
+        "Pipeline: oral tirzepatide Phase 3 results, retatrutide Phase 3",
+        "Operating margin trajectory (guided 40%+ long-term)",
+    ],
+    competitive_advantages=[
+        "Tirzepatide clinical superiority: dual GIP/GLP-1 mechanism produces ~15% "
+        "body weight loss vs ~12-13% for semaglutide (Ozempic/Wegovy) in head-to-head "
+        "trials — the best weight loss drug ever approved, commanding premium positioning",
+        "First-mover advantage in tirzepatide: multi-year manufacturing scale-up "
+        "head start vs competitors; patients and physicians build familiarity with LLY products",
+        "Pipeline depth: Phase 3 programs in NASH, sleep apnea, heart failure, renal "
+        "disease (all with tirzepatide) could expand TAM to $100B+ across indications",
+        "Oncology franchise: Verzenio CDK4/6 inhibitor is gaining on Ibrance in the "
+        "$10B+ breast cancer market through adjuvant label expansion",
+    ],
+    business_model_keywords=[
+        "Mounjaro", "tirzepatide", "Zepbound", "GLP-1", "GIP", "obesity",
+        "weight loss", "Verzenio", "abemaciclib", "Kisunla", "donanemab",
+        "Alzheimer's", "Trulicity", "dulaglutide", "semaglutide", "retatrutide",
+        "manufacturing capacity", "IRA", "Dave Ricks", "diabetes",
+    ],
+))
+
+
+# ── Novo Nordisk (NVO) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="NVO",
+    company_name="Novo Nordisk A/S",
+    business_model=(
+        "Novo Nordisk is a Danish pharmaceutical company and the global leader in "
+        "GLP-1 receptor agonist therapy. Its two blockbuster drugs — Ozempic "
+        "(semaglutide weekly injection, diabetes) and Wegovy (semaglutide high-dose, "
+        "obesity) — are the most prescribed GLP-1 therapies globally. Novo also holds "
+        "a dominant position in insulin therapy (Tresiba, Levemir, NovoLog/NovoRapid). "
+        "The company is developing next-generation obesity therapies including "
+        "CagriSema (cagrilintide + semaglutide combination) and oral semaglutide."
+    ),
+    primary_revenue_drivers=[
+        "GLP-1 diabetes (Ozempic, Rybelsus oral semaglutide) — ~55% of revenue; "
+        "Ozempic is the #1 prescribed injectable GLP-1 globally",
+        "GLP-1 obesity (Wegovy high-dose semaglutide) — fastest-growing segment; "
+        "peak sales potential $20-30B; approved in US/EU/UK",
+        "Insulin franchise (Tresiba, Levemir, NovoLog, NovoRapid) — ~25% of revenue; "
+        "mature/declining market but high-margin durable cash flow",
+        "Rare disease (Haemophilia — Alhemo, Mim8; Rare blood disorders) — ~5% of revenue",
+    ],
+    recurring_revenue_sources=[
+        "Chronic disease prescriptions (diabetes and obesity patients require indefinite "
+        "treatment — high refill rates and long-duration therapy)",
+        "Insulin biosimilar competition partially offset by Ozempic/Wegovy growth "
+        "(formulary access across Medicare/Medicaid guarantees minimum volume)",
+    ],
+    rate_sensitivity_note=(
+        "NVO trades at 25-35x forward P/E as a European pharma compounder. A 100 bps "
+        "rate rise compresses the ADR multiple ~3-4 turns. NVO is a Danish krone-denominated "
+        "business — USD/DKK FX movements affect ADR valuations. NVO's balance sheet is "
+        "conservatively financed with net cash/modest leverage. The primary valuation "
+        "driver is Ozempic/Wegovy revenue trajectory, not interest rates."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power in the US market: Ozempic list price ~$936/mo, Wegovy ~$1,349/mo. "
+        "PBM formulary negotiations apply; net price after rebates is lower. In Europe, "
+        "NVO faces tendered pricing with more constrained ASPs. The SELECT trial results "
+        "(Wegovy reduces cardiovascular events 20%) have strengthened NVO's formulary "
+        "negotiating position with payers. Manufacturing cost inflation (fill-finish, "
+        "active ingredient) is manageable given high drug margins (~85%+)."
+    ),
+    recession_behavior=(
+        "Defensive: Ozempic (diabetes) prescriptions are medically necessary and largely "
+        "recession-proof. Wegovy (obesity, purely elective perception) may see more "
+        "out-of-pocket discontinuation in severe downturns. Overall, NVO's diabetes "
+        "franchise provides a recession-resistant earnings floor while obesity provides "
+        "the cyclical-growth optionality."
+    ),
+    major_risks=[
+        "Tirzepatide (Lilly Mounjaro/Zepbound) competitive risk: LLY's tirzepatide "
+        "demonstrated ~15% weight loss vs ~12-13% for semaglutide in SURMOUNT-5 "
+        "head-to-head trial — NVO must compete on tolerability, dosing convenience, "
+        "and oral formulations",
+        "CagriSema execution risk: Phase 3 REDEFINE-1 results showed ~22.7% weight "
+        "loss but missed the pre-specified superiority threshold vs Wegovy — may limit "
+        "re-rating potential vs tirzepatide",
+        "Manufacturing capacity constraints: global Ozempic/Wegovy shortage has limited "
+        "prescription fills; NVO is investing DKK 65B+ in manufacturing expansion",
+        "US drug pricing: IRA negotiation risk for semaglutide; Ozempic biologics "
+        "exclusivity runs until 2031, but biosimilar entry planning is underway",
+        "Obesity market saturation risk: payer coverage constraints and GLP-1 cost keep "
+        "penetration below 5% of eligible patients — market growth depends on coverage "
+        "expansion",
+    ],
+    valuation_style=(
+        "NVO trades at 25-35x forward P/E as a large-cap European healthcare compounder "
+        "with US-market execution risk. The obesity TAM (1B+ obese globally) supports "
+        "long duration DCF. Key re-rating catalysts: oral semaglutide approval and uptake "
+        "(expands TAM beyond injectable-tolerant patients), CagriSema Phase 3 proving "
+        "~25%+ weight loss. De-rating risk: tirzepatide head-to-head superiority driving "
+        "formulary preference switches, CagriSema Phase 3 miss, US pricing regulation."
+    ),
+    key_metrics=[
+        "Ozempic quarterly revenue and prescription market share (vs Mounjaro)",
+        "Wegovy quarterly revenue and net adds (obesity market penetration)",
+        "Oral semaglutide (Rybelsus) prescription growth",
+        "CagriSema Phase 3 REDEFINE weight loss data vs Wegovy",
+        "Manufacturing supply normalization (fill-and-finish output)",
+        "Insulin franchise revenue trend (structural decline rate)",
+        "Operating margin trajectory (guided ~46%+ long-term)",
+        "SELECT cardiovascular outcomes data impact on payer coverage",
+    ],
+    competitive_advantages=[
+        "Semaglutide first-mover and brand leadership: Ozempic/Wegovy are prescribed "
+        "to ~30M+ patients globally — the brand recognition, physician familiarity, "
+        "and patient community (social media 'Ozempic' brand) create switching costs",
+        "SELECT cardiovascular outcomes trial: Wegovy is the ONLY obesity drug with "
+        "proven 20% reduction in MACE (major adverse cardiovascular events) — this "
+        "transforms obesity treatment from cosmetic to cardiovascular prevention, "
+        "unlocking broader payer coverage",
+        "Oral semaglutide (Rybelsus) platform: NVO leads in oral GLP-1 formulation; "
+        "a successful high-dose oral obesity tablet would open a massive new patient "
+        "population that avoids injections",
+        "Decades of diabetes manufacturing expertise: NVO has manufactured insulin "
+        "and injectable GLP-1 for 100+ years — unique fill-finish scale and quality "
+        "systems give NVO a manufacturing reliability advantage vs pharma new entrants",
+    ],
+    business_model_keywords=[
+        "Ozempic", "Wegovy", "semaglutide", "GLP-1", "obesity", "diabetes",
+        "Rybelsus", "CagriSema", "cagrilintide", "SELECT trial", "MACE",
+        "Mounjaro competition", "insulin", "Tresiba", "cardiovascular outcomes",
+        "manufacturing capacity", "Lars Fruergaard Jørgensen", "weight loss",
+        "oral semaglutide", "SURMOUNT", "REDEFINE",
+    ],
+))
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------

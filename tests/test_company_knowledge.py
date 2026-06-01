@@ -249,3 +249,156 @@ class TestTsmProfile:
 
     def test_tsm_business_model_keywords_at_least_8(self):
         assert len(self.tsm.business_model_keywords) >= 8
+
+
+# ── Priority-1 profiles: GS, NFLX, LLY, NVO ─────────────────────────────────
+
+class TestGsProfile:
+    """Regression tests for the Goldman Sachs knowledge profile."""
+
+    def setup_method(self):
+        self.gs = get_knowledge_profile("GS")
+
+    def test_gs_profile_exists(self):
+        assert self.gs is not None
+
+    def test_gs_has_ficc_keyword(self):
+        assert "FICC" in self.gs.business_model_keywords
+
+    def test_gs_has_rotce_keyword(self):
+        assert "ROTCE" in self.gs.business_model_keywords
+
+    def test_gs_has_investment_banking_keyword(self):
+        kw = self.gs.business_model_keywords
+        assert "investment banking" in kw or "M&A advisory" in kw
+
+    def test_gs_has_marcus_keyword(self):
+        assert "Marcus" in self.gs.business_model_keywords
+
+    def test_gs_primary_revenue_mentions_ficc(self):
+        drivers = " ".join(self.gs.primary_revenue_drivers)
+        assert "FICC" in drivers
+
+    def test_gs_major_risks_mentions_marcus(self):
+        risks = " ".join(self.gs.major_risks).lower()
+        assert "marcus" in risks
+
+    def test_gs_competitive_advantages_mentions_ma_advisory(self):
+        adv = " ".join(self.gs.competitive_advantages).lower()
+        assert "m&a" in adv or "advisory" in adv
+
+    def test_gs_keywords_at_least_8(self):
+        assert len(self.gs.business_model_keywords) >= 8
+
+
+class TestNflxProfile:
+    """Regression tests for the Netflix knowledge profile."""
+
+    def setup_method(self):
+        self.nflx = get_knowledge_profile("NFLX")
+
+    def test_nflx_profile_exists(self):
+        assert self.nflx is not None
+
+    def test_nflx_has_subscriber_keyword(self):
+        assert "subscriber" in self.nflx.business_model_keywords
+
+    def test_nflx_has_password_crackdown_keyword(self):
+        kw = self.nflx.business_model_keywords
+        assert "paid sharing" in kw or "password crackdown" in kw
+
+    def test_nflx_has_arpu_keyword(self):
+        kw = self.nflx.business_model_keywords
+        assert "ARPU" in kw or "ARM" in kw
+
+    def test_nflx_has_ad_tier_keyword(self):
+        kw = self.nflx.business_model_keywords
+        assert "ad-supported tier" in kw or "ad tier" in kw
+
+    def test_nflx_has_content_amortization_keyword(self):
+        kw = self.nflx.business_model_keywords
+        assert "content amortization" in kw
+
+    def test_nflx_primary_revenue_mentions_password_sharing(self):
+        drivers = " ".join(self.nflx.primary_revenue_drivers).lower()
+        assert "password" in drivers or "paid-sharing" in drivers or "sharing" in drivers
+
+    def test_nflx_keywords_at_least_8(self):
+        assert len(self.nflx.business_model_keywords) >= 8
+
+
+class TestLlyProfile:
+    """Regression tests for the Eli Lilly knowledge profile — emphasises GLP-1."""
+
+    def setup_method(self):
+        self.lly = get_knowledge_profile("LLY")
+
+    def test_lly_profile_exists(self):
+        assert self.lly is not None
+
+    def test_lly_has_mounjaro_keyword(self):
+        assert "Mounjaro" in self.lly.business_model_keywords
+
+    def test_lly_has_tirzepatide_keyword(self):
+        assert "tirzepatide" in self.lly.business_model_keywords
+
+    def test_lly_has_zepbound_keyword(self):
+        assert "Zepbound" in self.lly.business_model_keywords
+
+    def test_lly_has_glp1_keyword(self):
+        assert "GLP-1" in self.lly.business_model_keywords
+
+    def test_lly_has_obesity_keyword(self):
+        assert "obesity" in self.lly.business_model_keywords
+
+    def test_lly_mounjaro_is_primary_driver(self):
+        """Mounjaro must appear in the first 2 revenue drivers (highest priority)."""
+        top_two = " ".join(self.lly.primary_revenue_drivers[:2])
+        assert "Mounjaro" in top_two or "tirzepatide" in top_two.lower()
+
+    def test_lly_trulicity_is_declining(self):
+        """Trulicity should be described as declining/legacy, not a growth driver."""
+        profile_text = (
+            self.lly.business_model + " ".join(self.lly.primary_revenue_drivers)
+        ).lower()
+        assert "declin" in profile_text or "legacy" in profile_text or "structural" in profile_text
+
+    def test_lly_keywords_at_least_8(self):
+        assert len(self.lly.business_model_keywords) >= 8
+
+
+class TestNvoProfile:
+    """Regression tests for the Novo Nordisk knowledge profile."""
+
+    def setup_method(self):
+        self.nvo = get_knowledge_profile("NVO")
+
+    def test_nvo_profile_exists(self):
+        assert self.nvo is not None
+
+    def test_nvo_has_ozempic_keyword(self):
+        assert "Ozempic" in self.nvo.business_model_keywords
+
+    def test_nvo_has_wegovy_keyword(self):
+        assert "Wegovy" in self.nvo.business_model_keywords
+
+    def test_nvo_has_semaglutide_keyword(self):
+        assert "semaglutide" in self.nvo.business_model_keywords
+
+    def test_nvo_has_obesity_keyword(self):
+        assert "obesity" in self.nvo.business_model_keywords
+
+    def test_nvo_has_cagrисема_keyword(self):
+        kw = self.nvo.business_model_keywords
+        assert "CagriSema" in kw or "cagrilintide" in kw
+
+    def test_nvo_primary_drivers_mention_ozempic(self):
+        drivers = " ".join(self.nvo.primary_revenue_drivers)
+        assert "Ozempic" in drivers or "semaglutide" in drivers
+
+    def test_nvo_competitive_advantages_mentions_select_trial(self):
+        adv = " ".join(self.nvo.competitive_advantages)
+        assert "SELECT" in adv or "cardiovascular" in adv.lower()
+
+    def test_nvo_keywords_at_least_8(self):
+        assert len(self.nvo.business_model_keywords) >= 8

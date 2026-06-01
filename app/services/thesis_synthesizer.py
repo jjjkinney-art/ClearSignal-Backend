@@ -2642,6 +2642,30 @@ def synthesize_thesis(
     # Stamp dominant analytical dimension (deterministic, pre-LLM)
     thesis.dominant_dimension = dominant_dim_for_thesis
 
+    # Guard: conclusion must never be empty after a successful synthesis.
+    # An empty conclusion is confusing to users and breaks frontend rendering.
+    # Construct a minimal positioning-first fallback from existing thesis content
+    # without making an additional LLM call.
+    if not getattr(thesis, "conclusion", ""):
+        _bull = (getattr(thesis, "bull_thesis", "") or "")[:120].rstrip(".").strip()
+        _bear = (getattr(thesis, "bear_thesis", "") or "")[:80].rstrip(".").strip()
+        _conf = getattr(thesis, "confidence_score", 0.5) or 0.5
+        if _conf >= 0.65:
+            _setup = "a constructive"
+        elif _conf >= 0.45:
+            _setup = "a mixed"
+        else:
+            _setup = "a cautious"
+        thesis.conclusion = (
+            f"{company.ticker} presents {_setup} setup at current levels. "
+            f"Monitor execution against embedded expectations before adjusting exposure."
+        )
+        logger.warning(
+            "[thesis_synthesizer] conclusion was empty after synthesis for %s — "
+            "deterministic fallback applied.",
+            company.ticker,
+        )
+
     # ── [CONFIDENCE_AUDIT] stage 1: LLM raw score ─────────────────────────────
     _ticker_audit = getattr(company, "ticker", "UNKNOWN") or "UNKNOWN"
     _llm_raw_score = thesis.confidence_score
