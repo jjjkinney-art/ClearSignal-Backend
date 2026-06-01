@@ -242,3 +242,201 @@ class TestHighConfBypassScope:
         # resolves (context is not None and meets threshold).
         # We use a deliberately bad query to exercise the not-meets path.
         assert not _would_route_investment("xyzzy gibberish foobarbaz")
+
+
+# ── Severity-1 mis-routing fix: VZ / T / CMCSA / SLB → not Ford ──────────────
+
+class TestSeverity1NotFord:
+    """Regression: VZ, T, CMCSA, SLB were absent from _COMPANY_DB and
+    _ALIAS_MAP, causing the fuzzy matcher to match the English preposition
+    "for" against the alias "ford" (difflib ratio 0.857 → confidence 0.903 →
+    above the 0.85 gate) and route every query to Ford Motor Company (F).
+
+    These tests assert:
+    1. Each ticker resolves to itself, not Ford.
+    2. Ford still resolves correctly.
+    """
+
+    # ------------------------------------------------------------------
+    # VZ — Verizon
+    # ------------------------------------------------------------------
+
+    def test_vz_bare_ticker_resolves_to_verizon(self):
+        er = resolve_entity("VZ")
+        assert er.context is not None
+        assert er.context.ticker == "VZ", f"expected VZ, got {er.context.ticker}"
+        assert er.context.ticker != "F", "VZ must NOT route to Ford"
+
+    def test_vz_thesis_query_not_ford(self):
+        er = resolve_entity("Investment thesis for VZ")
+        assert er.context is not None
+        assert er.context.ticker == "VZ", f"expected VZ, got {er.context.ticker}"
+        assert er.context.ticker != "F", "VZ thesis query must NOT route to Ford"
+
+    def test_verizon_alias_resolves(self):
+        er = resolve_entity("verizon")
+        assert er.context is not None
+        assert er.context.ticker == "VZ"
+
+    def test_verizon_communications_alias_resolves(self):
+        er = resolve_entity("Verizon Communications")
+        assert er.context is not None
+        assert er.context.ticker == "VZ"
+
+    def test_vz_routes_to_investment_pipeline(self):
+        assert _would_route_investment("VZ"), "VZ must reach the investment pipeline"
+
+    # ------------------------------------------------------------------
+    # T — AT&T
+    # ------------------------------------------------------------------
+
+    def test_t_bare_ticker_resolves_to_att(self):
+        er = resolve_entity("T")
+        assert er.context is not None
+        assert er.context.ticker == "T", f"expected T, got {er.context.ticker}"
+        assert er.context.ticker != "F", "T must NOT route to Ford"
+
+    def test_t_thesis_query_not_ford(self):
+        er = resolve_entity("Investment thesis for T")
+        assert er.context is not None
+        assert er.context.ticker == "T", f"expected T, got {er.context.ticker}"
+        assert er.context.ticker != "F", "T thesis query must NOT route to Ford"
+
+    def test_att_alias_resolves(self):
+        er = resolve_entity("AT&T")
+        assert er.context is not None
+        assert er.context.ticker == "T"
+
+    def test_att_no_ampersand_alias_resolves(self):
+        er = resolve_entity("att")
+        assert er.context is not None
+        assert er.context.ticker == "T"
+
+    def test_t_routes_to_investment_pipeline(self):
+        assert _would_route_investment("T"), "T must reach the investment pipeline"
+
+    # ------------------------------------------------------------------
+    # CMCSA — Comcast
+    # ------------------------------------------------------------------
+
+    def test_cmcsa_bare_ticker_resolves_to_comcast(self):
+        er = resolve_entity("CMCSA")
+        assert er.context is not None
+        assert er.context.ticker == "CMCSA", f"expected CMCSA, got {er.context.ticker}"
+        assert er.context.ticker != "F", "CMCSA must NOT route to Ford"
+
+    def test_cmcsa_thesis_query_not_ford(self):
+        er = resolve_entity("Investment thesis for CMCSA")
+        assert er.context is not None
+        assert er.context.ticker == "CMCSA", f"expected CMCSA, got {er.context.ticker}"
+        assert er.context.ticker != "F", "CMCSA thesis query must NOT route to Ford"
+
+    def test_comcast_alias_resolves(self):
+        er = resolve_entity("comcast")
+        assert er.context is not None
+        assert er.context.ticker == "CMCSA"
+
+    def test_xfinity_alias_resolves(self):
+        er = resolve_entity("xfinity")
+        assert er.context is not None
+        assert er.context.ticker == "CMCSA"
+
+    def test_nbcuniversal_alias_resolves(self):
+        er = resolve_entity("nbcuniversal")
+        assert er.context is not None
+        assert er.context.ticker == "CMCSA"
+
+    def test_cmcsa_routes_to_investment_pipeline(self):
+        assert _would_route_investment("CMCSA"), "CMCSA must reach the investment pipeline"
+
+    # ------------------------------------------------------------------
+    # SLB — Schlumberger / SLB
+    # ------------------------------------------------------------------
+
+    def test_slb_bare_ticker_resolves_to_slb(self):
+        er = resolve_entity("SLB")
+        assert er.context is not None
+        assert er.context.ticker == "SLB", f"expected SLB, got {er.context.ticker}"
+        assert er.context.ticker != "F", "SLB must NOT route to Ford"
+
+    def test_slb_thesis_query_not_ford(self):
+        er = resolve_entity("Investment thesis for SLB")
+        assert er.context is not None
+        assert er.context.ticker == "SLB", f"expected SLB, got {er.context.ticker}"
+        assert er.context.ticker != "F", "SLB thesis query must NOT route to Ford"
+
+    def test_schlumberger_alias_resolves(self):
+        er = resolve_entity("schlumberger")
+        assert er.context is not None
+        assert er.context.ticker == "SLB"
+
+    def test_slb_alias_resolves(self):
+        er = resolve_entity("slb")
+        assert er.context is not None
+        assert er.context.ticker == "SLB"
+
+    def test_slb_routes_to_investment_pipeline(self):
+        assert _would_route_investment("SLB"), "SLB must reach the investment pipeline"
+
+    # ------------------------------------------------------------------
+    # Ford still resolves correctly (non-regression)
+    # ------------------------------------------------------------------
+
+    def test_ford_still_resolves(self):
+        er = resolve_entity("ford")
+        assert er.context is not None
+        assert er.context.ticker == "F", f"Ford must still resolve to F, got {er.context.ticker}"
+
+    def test_ford_ticker_still_resolves(self):
+        er = resolve_entity("F")
+        assert er.context is not None
+        assert er.context.ticker == "F"
+
+    def test_ford_motor_alias_still_resolves(self):
+        er = resolve_entity("ford motor")
+        assert er.context is not None
+        assert er.context.ticker == "F"
+
+    def test_investment_thesis_ford_routes_to_ford(self):
+        er = resolve_entity("Investment thesis for Ford Motor")
+        assert er.context is not None
+        assert er.context.ticker == "F"
+
+
+# ── Fix 2: "ford" alias must not fuzzy-match via 3-char "for" token ──────────
+
+class TestFuzzyMinLengthFix:
+    """Regression for Fix 2: raising fuzzy minimum alias length from 4 → 5.
+
+    The preposition "for" (3 chars) is not itself an alias, but difflib
+    would match it against the 4-char alias "ford" with ratio 0.857,
+    yielding confidence 0.903 — above MINIMUM_ROUTE_CONFIDENCE (0.85).
+    Raising the floor to 5 removes 4-char aliases from Step 3 candidates,
+    so "for" can never produce a fuzzy hit on "ford".
+
+    Ford remains reachable via Step 2 (alias_exact "ford" / "ford motor").
+    """
+
+    def test_for_preposition_does_not_route_to_ford(self):
+        """The bare word 'for' must not resolve to Ford."""
+        er = resolve_entity("for")
+        # Either no context, or context must not be Ford
+        if er.context is not None:
+            assert er.context.ticker != "F", (
+                "'for' must not fuzzy-resolve to Ford Motor Company"
+            )
+
+    def test_investment_thesis_for_bare_text_not_ford(self):
+        """'Investment thesis for' (no ticker) must not route to Ford."""
+        er = resolve_entity("Investment thesis for")
+        if er.context is not None:
+            assert er.context.ticker != "F", (
+                "phrase 'Investment thesis for' must not resolve to Ford"
+            )
+
+    def test_four_char_ford_alias_still_exact_matches(self):
+        """The word 'ford' itself must still match Ford via Step 2 (alias_exact)."""
+        er = resolve_entity("ford")
+        assert er.context is not None
+        assert er.context.ticker == "F"
+        assert er.method == "alias_exact"

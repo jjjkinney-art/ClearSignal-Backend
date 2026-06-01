@@ -321,6 +321,14 @@ _COMPANY_DB: dict[str, dict] = {
     "FCX":   {"company_name": "Freeport-McMoRan Inc.",                   "sector": "Materials",                 "industry": "Copper Mining"},
     "NEM":   {"company_name": "Newmont Corporation",                     "sector": "Materials",                 "industry": "Gold Mining"},
     "GOLD":  {"company_name": "Barrick Gold Corporation",                "sector": "Materials",                 "industry": "Gold Mining"},
+
+    # ── Communication Services (Severity-1 fix) ───────────────────────────────
+    "VZ":    {"company_name": "Verizon Communications Inc.",             "sector": "Communication Services",    "industry": "Telecom"},
+    "T":     {"company_name": "AT&T Inc.",                               "sector": "Communication Services",    "industry": "Telecom"},
+    "CMCSA": {"company_name": "Comcast Corporation",                     "sector": "Communication Services",    "industry": "Cable & Satellite"},
+
+    # ── Energy Services (Severity-1 fix) ──────────────────────────────────────
+    "SLB":   {"company_name": "SLB",                                     "sector": "Energy",                    "industry": "Oilfield Services"},
 }
 
 # ---------------------------------------------------------------------------
@@ -1007,6 +1015,34 @@ _ALIAS_MAP: dict[str, str] = {
     "newmont":                         "NEM",
     "barrick gold":                    "GOLD",
     "barrick":                         "GOLD",
+
+    # ── Verizon (Severity-1 fix) ──────────────────────────────────────────────
+    "verizon":                         "VZ",
+    "verizon communications":          "VZ",
+    "vz":                              "VZ",
+
+    # ── AT&T (Severity-1 fix) ─────────────────────────────────────────────────
+    # NOTE: bare "t" is intentionally NOT registered — it is a single-char
+    # stop-word candidate and would create false positives on phrases like
+    # "T-bills" or "t-mobile".  The ticker "T" is handled by exact_ticker
+    # detection (Step 1) via _COMPANY_DB now that "T" is registered there.
+    "at&t":                            "T",
+    "att":                             "T",
+    "at and t":                        "T",
+    "at&t inc":                        "T",
+
+    # ── Comcast (Severity-1 fix) ──────────────────────────────────────────────
+    "comcast":                         "CMCSA",
+    "comcast corporation":             "CMCSA",
+    "cmcsa":                           "CMCSA",
+    "xfinity":                         "CMCSA",
+    "nbcuniversal":                    "CMCSA",
+    "nbc universal":                   "CMCSA",
+
+    # ── SLB / Schlumberger (Severity-1 fix) ───────────────────────────────────
+    "slb":                             "SLB",
+    "schlumberger":                    "SLB",
+    "schlumberger limited":            "SLB",
 }
 
 # Pre-sort alias keys by length (descending) so that the longest match wins.
@@ -1082,6 +1118,12 @@ _CONTEXT_WORDS: frozenset[str] = frozenset({
     "high", "low", "much", "many", "some", "most", "more", "less",
     "because", "since", "given", "despite", "although", "however",
     "currently", "recently", "historically", "going", "forward",
+    # Macro / fixed-income terms that fuzzy-match telecom aliases.
+    # "inversion" has difflib ratio 0.75 with "verizon" →
+    # confidence 0.853 → just above the 0.85 routing gate.
+    # These are economic concepts, not company references.
+    "inversion", "reversion", "diversion", "conversion", "aversion",
+    "version", "versions",
 })
 
 # ---------------------------------------------------------------------------
@@ -1247,13 +1289,16 @@ def _fuzzy_token_match(
     if not normalized:
         return None
 
-    # Exclude very short aliases (< 4 chars) from fuzzy matching.
-    # Short aliases like "arm" (3), "ma" (2), "so" (2) have high difflib
-    # similarity with many ordinary English words ("charm", "macro", "also").
-    # They are always covered by exact_ticker detection (STEP 1) or
-    # word-boundary alias lookup (STEP 2), so excluding them from STEP 3
-    # does not reduce recall on legitimate queries.
-    alias_keys = [k for k in _ALIAS_MAP.keys() if len(k) >= 4]
+    # Exclude very short aliases (< 5 chars) from fuzzy matching.
+    # Short aliases like "ford" (4), "arm" (3), "ma" (2), "so" (2) have high
+    # difflib similarity with many ordinary English words ("for", "charm",
+    # "macro", "also").  The critical case: difflib.SequenceMatcher(None,
+    # "for", "ford").ratio() == 0.857 → confidence 0.903 → above the 0.85
+    # routing threshold, causing any query "… for <missing-ticker> …" to
+    # mis-route to Ford Motor Company.  All 4-char aliases that matter are
+    # covered by exact_ticker detection (STEP 1) or word-boundary alias
+    # lookup (STEP 2), so raising the floor to 5 does not reduce recall.
+    alias_keys = [k for k in _ALIAS_MAP.keys() if len(k) >= 5]
     best_score = 0.0
     best_alias: Optional[str] = None
 
