@@ -2734,6 +2734,38 @@ def synthesize_thesis(
     except Exception as exc:
         logger.warning("[thesis_synthesizer] evidence propagation failed: %r", exc)
 
+    # ── Post-synthesis bullish extraction fallback ────────────────────────────
+    # If top_signals is empty or all bearish after ranking, extract the most
+    # positive sentence from the synthesis bull_thesis and prepend it.
+    #
+    # WHY HERE instead of agent level:
+    # Individual agent overalls are risk-first by design — they enumerate risks
+    # and only mention positives as hedges ("growth is robust, BUT competition…").
+    # The keyword scorer could not find qualifying sentences in that prose even
+    # after the scoring calibration in 6332000.  The synthesis stage distils
+    # all bullish content into a cleanly positive-framed bull_thesis, which
+    # reliably produces a qualifying sentence for every company.
+    #
+    # This fires AFTER conviction modeler inputs are assembled, so the extracted
+    # signal is included in thesis.top_signals when the modeler runs below.
+    try:
+        _has_bullish_top = any(
+            s.direction in ("bullish", "neutral") for s in (thesis.top_signals or [])
+        )
+        if not _has_bullish_top and thesis.bull_thesis:
+            from ..investment_agents._signal_extraction import extract_min_bullish_signal
+            _extracted = extract_min_bullish_signal(
+                thesis.bull_thesis, company, "synthesis", "structural", profile
+            )
+            if _extracted:
+                thesis.top_signals = _extracted + list(thesis.top_signals or [])
+                print(
+                    f"[DIAG] [thesis_synthesizer] post_synthesis_extraction fired "
+                    f"ticker={company.ticker} — prepended bullish signal from bull_thesis"
+                )
+    except Exception as exc:
+        logger.warning("[thesis_synthesizer] post_synthesis_extraction failed: %r", exc)
+
     # ── Phase 4: governance / consistency checks ──────────────────────────────
     warnings = _run_governance_checks(company, valuation, macro, risk, thesis, evidence)
 
