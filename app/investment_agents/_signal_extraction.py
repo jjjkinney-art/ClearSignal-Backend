@@ -1,9 +1,10 @@
 """Post-call signal extraction fallback for investment agents.
 
-When an investment agent returns ``signals=[]`` despite producing a non-empty
-``overall`` analysis text, this module provides a keyword-based extraction
-pass that formalises the most positive sentence in the existing prose into a
-Signal object.
+When an investment agent returns no bullish signals (either ``signals=[]``
+or all signals are bearish/risk) despite producing a non-empty ``overall``
+analysis text, this module provides a keyword-based extraction pass that
+formalises the most positive sentence in the existing prose into a Signal
+object.
 
 Design constraints
 ------------------
@@ -147,7 +148,7 @@ def extract_min_bullish_signal(
         time_horizon="medium_term",
         importance_reason=(
             f"Primary positive factor identified in {agent_name} analysis — "
-            f"extracted from overall assessment when structured signals were absent."
+            f"extracted from overall assessment when no bullish structured signal was generated."
         ),
         source_agent=agent_name,
     )

@@ -178,14 +178,15 @@ def run_market_agent(
             backoff_factor=settings.model_backoff_factor,
         )
         result.evidence_used = [ev.title[:70] for ev in relevant]
-        if not result.signals and result.overall and result.confidence > 0.3:
+        _has_bullish = any(s.direction == "bullish" for s in (result.signals or []))
+        if not _has_bullish and result.overall and result.confidence > 0.3:
             extracted = extract_min_bullish_signal(
                 result.overall, company, _AGENT_NAME, "catalyst", profile
             )
             if extracted:
-                result.signals = extracted
+                result.signals = list(result.signals or []) + extracted
                 print(
-                    f"[DIAG] [{_AGENT_NAME}] signal_extraction fallback fired "
+                    f"[DIAG] [{_AGENT_NAME}] bullish_extraction fired (no_bullish_signals) "
                     f"ticker={company.ticker} extracted={len(extracted)}"
                 )
         return result
