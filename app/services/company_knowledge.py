@@ -2963,6 +2963,1634 @@ _register(CompanyKnowledgeProfile(
 
 
 # ---------------------------------------------------------------------------
+# Severity-2 profiles — 13 companies scoring Q:1–3 in 50-company validation
+# (commit 001092e baseline run, 2026-06-02)
+# ---------------------------------------------------------------------------
+
+_register(CompanyKnowledgeProfile(
+    ticker="HON",
+    company_name="Honeywell International Inc.",
+    business_model=(
+        "Honeywell is a diversified industrial technology company with four segments: "
+        "Aerospace Technologies (jet engines, avionics, defense electronics — ~37% of "
+        "revenue), Industrial Automation (process automation, sensing, connected "
+        "buildings — ~28%), Building Automation (fire, security, HVAC controls, "
+        "building management systems — ~22%), and Energy and Sustainability Solutions "
+        "(UOP refining catalysts, renewable fuels, carbon capture — ~13%).  Honeywell "
+        "sells high-margin software-enabled products and long-cycle aftermarket services "
+        "across multiple verticals, with recurring revenue from installed-base maintenance "
+        "contracts and software subscriptions.  CEO Vimal Kapur is executing a 'Honeywell "
+        "Accelerator' operating system focused on organic growth, margin expansion, and "
+        "capital returns.  In 2024 Honeywell announced plans to spin off the Advanced "
+        "Materials business and explore separation of its Aerospace segment."
+    ),
+    primary_revenue_drivers=[
+        "Aerospace Technologies (~37%): commercial aerospace OEM and aftermarket "
+        "(Garrett turbochargers, avionics suites, auxiliary power units, cabin "
+        "environmental controls); defense electronics, cockpit systems",
+        "Industrial Automation (~28%): Experion distributed control systems, "
+        "process automation software, measurement/sensing for oil & gas and "
+        "chemicals; Honeywell Forge IIoT analytics platform",
+        "Building Automation (~22%): fire detection, access control, HVAC controls, "
+        "Niagara building management platform; Healthy Buildings air quality monitoring",
+        "Energy and Sustainability Solutions (~13%): UOP licensing (refining "
+        "catalysts, polypropylene process technology), sustainable aviation fuel "
+        "technology, connected worker safety solutions",
+    ],
+    recurring_revenue_sources=[
+        "Aerospace aftermarket parts and MRO services (~60% of Aero segment) — "
+        "long-term repair/overhaul contracts with airlines and MRO shops",
+        "Software subscriptions: Honeywell Forge, Experion, Niagara framework "
+        "— connected buildings and industrial automation recurring license fees",
+        "UOP technology licensing and catalyst royalties — repeat business "
+        "as refineries replace catalysts on fixed maintenance cycles",
+        "Long-term defense maintenance contracts and government program of "
+        "record revenues (multi-year DoD and NATO platform production)",
+    ],
+    rate_sensitivity_note=(
+        "Honeywell has moderate interest rate sensitivity.  Higher rates raise the "
+        "cost of commercial aerospace financing (reducing airline orders at the margin), "
+        "but Honeywell's long-cycle defense and aftermarket revenue buffers the impact.  "
+        "The building automation segment benefits from infrastructure investment; rate "
+        "hikes can delay commercial construction, softening new building installations.  "
+        "Honeywell carries ~$16B of long-term debt at mostly fixed rates, so a 100 bps "
+        "rate rise has minimal near-term interest expense impact."
+    ),
+    inflation_pass_through=(
+        "Strong in aerospace: OEM contracts index to raw material and labor cost "
+        "escalators; aftermarket pricing is set at OEM + markup on proprietary parts.  "
+        "Moderate in process automation: long-term contracts with pricing renegotiation "
+        "at renewal.  UOP catalyst pricing is tied to feedstock commodity indices, "
+        "providing natural inflation pass-through.  Overall, Honeywell's technology "
+        "differentiation supports above-inflation price increases in most segments."
+    ),
+    recession_behavior=(
+        "Partially defensive: defense electronics and government aftermarket are "
+        "recession-resistant.  Commercial aerospace new OEM orders decline in recessions "
+        "(airlines defer capex), but installed-base aftermarket (MRO/parts) remains "
+        "relatively stable as existing fleets must be maintained.  Process automation "
+        "and building automation experience order softness when industrial CapEx is cut.  "
+        "Honeywell's diversification across aerospace, buildings, and industrials reduces "
+        "cyclicality relative to pure-play industrial peers."
+    ),
+    major_risks=[
+        "Commercial aerospace cycle: new aircraft production cuts by Boeing/Airbus "
+        "reduce Honeywell OEM revenue; Honeywell Aerospace Technologies is ~30% OEM",
+        "Boeing 737 MAX and 787 production disruptions directly impact Honeywell "
+        "avionics and auxiliary power unit shipments",
+        "Spin-off execution risk: separating Advanced Materials and potentially "
+        "Aerospace creates dis-synergy risk and management distraction during transition",
+        "Industrial automation competition from Emerson, ABB, Siemens, and "
+        "Rockwell Automation in process control and building management systems",
+        "UOP refining technology long-term headwind from energy transition as "
+        "refinery capex shrinks with declining fossil fuel demand",
+        "China exposure (~10% of revenue): geopolitical risk of export controls "
+        "limiting sales of avionics and process automation to Chinese customers",
+    ],
+    valuation_style=(
+        "Honeywell trades at ~20-24x forward P/E and ~15x EV/EBITDA — an industrial "
+        "conglomerate with a software/technology premium versus pure-play cyclicals.  "
+        "The portfolio transformation narrative (higher-margin software, aerospace "
+        "aftermarket, sustainability) supports the premium versus diversified industrials.  "
+        "Key re-rating catalyst: successful spin-offs unlocking sum-of-parts value; "
+        "Aerospace segment trading at 25x+ as a pure-play.  De-rating risk: "
+        "commercial aerospace OEM weakness, missed margin expansion targets."
+    ),
+    key_metrics=[
+        "Organic revenue growth by segment (Aerospace, Industrial Automation, "
+        "Building Automation, Energy Solutions)",
+        "Segment margin expansion (target 25%+ adjusted EBIT margin long-term)",
+        "Honeywell Forge and connected software ARR growth",
+        "Aerospace aftermarket vs OEM revenue split (aftermarket more stable)",
+        "UOP licensing backlog and catalyst cycle timing",
+        "Free cash flow conversion (target 100%+ of net income)",
+        "Spin-off progress: Advanced Materials separation timeline",
+        "Defense backlog and book-to-bill ratio",
+    ],
+    competitive_advantages=[
+        "Avionics and cockpit technology: Honeywell's Primus Epic and Anthem "
+        "integrated cockpit suites are standard on thousands of business jets "
+        "and regional aircraft, creating deep OEM-to-aftermarket lock-in",
+        "Niagara building automation framework: open-protocol BMS platform "
+        "with 500M+ connected data points — the industry standard for integrating "
+        "disparate building systems, used by integrators worldwide",
+        "UOP technology moat: 100+ years of refining and petrochemical process "
+        "IP (Selexol, Benficat, Oleflex) with proprietary catalysts requiring "
+        "Honeywell replacement — high switching costs once a plant is licensed",
+        "Honeywell Forge IIoT: industrial analytics platform connecting millions "
+        "of sensors across refineries and industrial plants, generating data "
+        "network effects that deepen customer switching costs",
+    ],
+    business_model_keywords=[
+        "Vimal Kapur", "Honeywell Accelerator", "Aerospace Technologies",
+        "Industrial Automation", "Building Automation", "Energy and Sustainability",
+        "UOP", "Experion", "Niagara", "Honeywell Forge", "avionics", "auxiliary power unit",
+        "process automation", "connected buildings", "aftermarket", "spin-off",
+        "Advanced Materials", "sustainable aviation fuel", "SAF",
+        "Garrett", "defense electronics", "IIoT",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="CRM",
+    company_name="Salesforce Inc.",
+    business_model=(
+        "Salesforce is the world's largest CRM software company, providing cloud-based "
+        "customer relationship management, sales automation, marketing, analytics, and "
+        "AI-powered enterprise software.  The company operates through a unified "
+        "'Customer 360' platform spanning Sales Cloud, Service Cloud, Marketing Cloud, "
+        "Commerce Cloud, Data Cloud, and MuleSoft integration middleware.  In 2025 "
+        "Salesforce launched Agentforce — autonomous AI agents embedded across the "
+        "platform that perform tasks without human intervention.  The revenue model is "
+        "subscription-based SaaS with multi-year enterprise contracts (average contract "
+        "term 2-3 years), creating predictable recurring revenue.  Marc Benioff "
+        "(founder and CEO) has positioned Salesforce as the leading 'agentic AI' "
+        "enterprise platform.  Key acquisitions include Slack ($27.7B), Tableau ($15.7B), "
+        "and MuleSoft ($6.5B), which are integrated into the Data Cloud ecosystem."
+    ),
+    primary_revenue_drivers=[
+        "Sales Cloud (~23% of subscription revenue): CRM opportunity and pipeline "
+        "management, Einstein Sales AI, revenue intelligence",
+        "Service Cloud (~22%): customer service automation, Einstein bots, "
+        "digital engagement, field service management",
+        "Platform & Other / Data Cloud (~19%): Salesforce Platform (Force.com), "
+        "Heroku, MuleSoft integration, Data Cloud CDP (customer data platform)",
+        "Marketing & Commerce Cloud (~15%): Marketing Cloud engagement, "
+        "Pardot B2B marketing, Commerce Cloud order management",
+        "Slack (~10%): enterprise messaging, workflow automation, channel-based "
+        "collaboration replacing email in enterprise workflows",
+        "Tableau (~7%): business intelligence and data visualization",
+    ],
+    recurring_revenue_sources=[
+        "Multi-year enterprise SaaS subscriptions (~93% of total revenue) — "
+        "average annual contract value $150K+; Fortune 500 customers auto-renew",
+        "Agentforce usage-based revenue: AI agent 'conversations' priced per "
+        "1,000 interactions (~$2/conversation) — new consumption-based layer atop subscriptions",
+        "Professional services and implementation fees (~7%) — typically tied "
+        "to new product expansion rather than churn",
+        "AppExchange ISV ecosystem revenue share — thousands of third-party "
+        "applications creating platform lock-in and incremental revenue",
+    ],
+    rate_sensitivity_note=(
+        "Salesforce is a long-duration growth asset — higher rates directly "
+        "compress its P/E multiple (DCF present value of future cash flows declines).  "
+        "Operationally, higher rates raise enterprise IT budget scrutiny; CFOs "
+        "pressure software vendors on ROI, slowing deal cycles.  However, Salesforce's "
+        "mission-critical CRM seat penetration creates sticky renewals even in tight "
+        "budget environments.  Net revenue retention ~105-110% reflects upsell resilience."
+    ),
+    inflation_pass_through=(
+        "Strong: Salesforce has shifted from volume-based growth to price-led "
+        "growth.  In FY2023-24 the company raised list prices ~9% on core clouds, "
+        "expanded premium Einstein AI add-on modules at higher price points, and "
+        "introduced consumption-based Agentforce pricing.  Near-zero marginal cost "
+        "of software delivery means inflation in labor costs is manageable through "
+        "productivity; gross margins consistently 75%+."
+    ),
+    recession_behavior=(
+        "Moderately resilient: CRM seat licenses are deeply embedded in enterprise "
+        "sales and service operations — removing Salesforce disrupts core revenue "
+        "workflows, making churn during recessions relatively low (~5-8% gross churn).  "
+        "However, new logo growth slows, deal cycles extend, and seat expansion "
+        "contracts face renegotiation.  Salesforce's FY2024 'profitable growth' pivot "
+        "(operating margin expansion from 3% to 30%) demonstrated the company can "
+        "prioritize profitability over headcount growth when macro tightens."
+    ),
+    major_risks=[
+        "AI disruption: Microsoft Copilot (embedded in Teams/Office) and SAP/Oracle "
+        "AI integrated suites could reduce CRM standalone value proposition",
+        "Agentforce monetization uncertainty: usage-based consumption pricing "
+        "ramp is unpredictable; enterprise adoption requires workflow redesign",
+        "Macro-driven deal elongation: enterprise software purchasing freezes "
+        "during recessions disproportionately hit new logo and expansion bookings",
+        "Salesforce's acquisitions (Slack, Tableau, MuleSoft) have underperformed "
+        "revenue growth expectations relative to acquisition price",
+        "Competition from HubSpot (SMB CRM), Microsoft Dynamics (enterprise), "
+        "and vertical SaaS CRM providers eroding market share at the edges",
+    ],
+    valuation_style=(
+        "Salesforce trades at ~25-30x forward P/E and ~20-25x EV/FCF — a "
+        "profitable growth multiple reflecting 15-17% revenue growth and 30%+ "
+        "non-GAAP operating margins.  The Agentforce AI agent monetization "
+        "represents a potential step-change in ARPU that could re-rate the stock "
+        "toward 30x+ if consumption revenue ramps.  Key metrics: cRPO (current "
+        "remaining performance obligations) as forward revenue indicator, "
+        "Agentforce paid seats/conversations, and Data Cloud ARR growth."
+    ),
+    key_metrics=[
+        "Current remaining performance obligations (cRPO) — leading indicator "
+        "of near-term bookings health",
+        "Net revenue retention rate (target 105-110%+) — measures upsell/expansion",
+        "Non-GAAP operating margin (target 33%+ in FY2025)",
+        "Agentforce paid customer count and conversation volume",
+        "Data Cloud net new logos and ARR",
+        "Free cash flow margin (target 30%+)",
+        "Attrition rate and logo churn by customer size",
+    ],
+    competitive_advantages=[
+        "Customer 360 platform breadth: Sales + Service + Marketing + Data Cloud "
+        "integrated on a single platform forces competitors to replicate an entire "
+        "suite rather than displace a single point solution — the largest moat",
+        "Trailhead community and AppExchange ecosystem: 10M+ certified Salesforce "
+        "developers and administrators create a massive talent pool and switching cost — "
+        "enterprises cannot easily retrain their Salesforce-skilled workforce",
+        "Data Cloud advantage: Salesforce has more enterprise customer interaction "
+        "data than any single competitor (1 trillion+ records processed daily) — "
+        "powers more accurate AI models for Einstein and Agentforce",
+        "Marc Benioff brand and enterprise trust: 25+ years as the cloud CRM "
+        "standard makes Salesforce the default enterprise consideration — "
+        "no-compete during procurement is rare; Salesforce wins most deals that go "
+        "to bake-off",
+    ],
+    business_model_keywords=[
+        "Agentforce", "Customer 360", "Sales Cloud", "Service Cloud", "Data Cloud",
+        "MuleSoft", "Tableau", "Slack", "Marc Benioff", "Einstein AI",
+        "CRM", "remaining performance obligations", "RPO", "cRPO",
+        "net revenue retention", "autonomous agents", "agentic AI",
+        "Trailhead", "AppExchange", "non-GAAP operating margin",
+        "Marketing Cloud", "Commerce Cloud",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="AXP",
+    company_name="American Express Company",
+    business_model=(
+        "American Express operates as a closed-loop payments network and premium "
+        "charge card issuer, combining the roles of card network, card issuer, and "
+        "merchant acquirer in a single vertically integrated business.  Unlike Visa/MC "
+        "open networks, AmEx directly owns the customer relationship on both sides of "
+        "the transaction — issuing cards to consumers (particularly premium and "
+        "affluent segments) and signing merchants directly.  Revenue splits roughly: "
+        "discount revenue / merchant fees (~50%), net interest income on card loans "
+        "and revolving balances (~20%), net card fees (~20%), and other (~10%).  "
+        "CEO Stephen Squeri has repositioned AmEx around younger, premium customers — "
+        "millennials and Gen Z now represent 75%+ of new card acquisitions.  "
+        "The Platinum Card, Gold Card, Business Platinum, and Blue Cash Preferred "
+        "are cornerstone products with high annual fee ($250-$695) offset by "
+        "premium travel, dining, and lifestyle benefits."
+    ),
+    primary_revenue_drivers=[
+        "Discount revenue / merchant fees (~50%): ~2.4% merchant discount rate "
+        "on billed business — premium card acceptance fees from airlines, hotels, "
+        "luxury retail, and restaurants; higher than Visa/MC network fees",
+        "Net card fees (~20%): $695 Platinum Card, $250 Gold Card, $595 Business "
+        "Platinum, $0 Blue Cash — structural shift to fee-based revenue "
+        "as premium card holders pay annual fees for curated benefits",
+        "Net interest income (~20%): interest on revolving balances — AmEx "
+        "underweights revolving borrowers vs traditional issuers (lower credit losses)",
+        "Travel and lifestyle benefits partnerships: Delta SkyMiles cobrand "
+        "(11M+ cardholders), Hilton Honors, Marriott Bonvoy — cobrands pay AmEx "
+        "per acquisition and per transaction",
+    ],
+    recurring_revenue_sources=[
+        "Annual card fees from 145M+ cards in force ($695 Platinum + $250 Gold "
+        "creates a near-annuity from cardholders who value the benefits ecosystem)",
+        "Delta, Hilton, Marriott cobrand revenue share — multi-year cobrand "
+        "agreements with high switching costs (Delta deal renewed through 2029+)",
+        "Corporate card program fees from Fortune 500 T&E (travel and entertainment) "
+        "management programs — multi-year enterprise contracts",
+        "Merchant financing and working capital products — AmEx Business Lending "
+        "provides revolving credit to SMB card members",
+    ],
+    rate_sensitivity_note=(
+        "American Express has meaningful interest rate sensitivity on both sides.  "
+        "Rising rates increase AmEx's net interest income on card member loans "
+        "(floating rate assets repriced upward).  However, higher rates also increase "
+        "funding costs (AmEx issues commercial paper and medium-term notes to fund "
+        "its balance sheet).  Net: AmEx is modestly rate-sensitive on NII.  "
+        "More importantly, rate hikes slow discretionary consumer and T&E spending "
+        "(the primary driver of billed business) — a macro headwind to discount revenue."
+    ),
+    inflation_pass_through=(
+        "Natural inflation hedge on discount revenue: higher nominal spending "
+        "volumes (airfares, hotel rates, restaurant prices) directly increase AmEx's "
+        "percentage-of-spend revenue.  Annual card fee increases ($550→$695 Platinum "
+        "in 2023) have been absorbed with minimal churn, demonstrating premium "
+        "cardholders' inelastic demand.  Labor and marketing cost inflation is a "
+        "headwind but manageable given AmEx's 35%+ pre-tax margin."
+    ),
+    recession_behavior=(
+        "Counter-intuitively resilient due to premium customer base: AmEx's "
+        "affluent cardholders have higher job security, lower leverage, and "
+        "maintain spending during mild recessions.  However, T&E billed business "
+        "(airlines, hotels, restaurants) is highly cyclical and collapsed 60% "
+        "during COVID.  Corporate card spending tracks GDP closely.  AmEx "
+        "historically shows lower credit losses than mass-market issuers in "
+        "recessions due to affluent, lower-leverage cardholder profile."
+    ),
+    major_risks=[
+        "Consumer spending slowdown: T&E billed business (travel, dining) is "
+        "the highest-margin revenue stream and most cyclically sensitive",
+        "Merchant acceptance friction: ~10% of US merchants still don't accept "
+        "AmEx due to higher discount fees — limits TAM vs Visa/Mastercard",
+        "Cobrand partner risk: Delta SkyMiles, Hilton Honors are renegotiated "
+        "periodically; losing a major cobrand would be a material revenue hit",
+        "Credit quality deterioration: rising delinquencies among younger "
+        "cardholders (millennial/Gen Z focus) could increase provision expense",
+        "Regulation: Durbin Amendment extension to credit cards could cap "
+        "interchange fees, directly threatening discount revenue",
+    ],
+    valuation_style=(
+        "AmEx trades at ~16-20x forward P/E — a premium to most-market card "
+        "issuers, discount to Visa/Mastercard.  The closed-loop network premium "
+        "reflects better data, higher merchant fees, and lower credit losses.  "
+        "Key re-rating driver: evidence that millennial/Gen Z cardholders maintain "
+        "Platinum/Gold fee payment rates at historical affluent-tier levels.  "
+        "EPS growth driven by billed business growth + net card fee expansion "
+        "+ NII as card loans grow."
+    ),
+    key_metrics=[
+        "Billed business (total spend on AmEx cards — key revenue driver)",
+        "Net card fees growth (annual fee revenue — high-margin recurring)",
+        "Cardmember spending per card (reflects premium cardholder engagement)",
+        "Net interest yield on card member loans",
+        "Provision for credit losses and net write-off rate",
+        "Cards in force by product tier (Platinum, Gold, Green, Blue)",
+        "New card acquisitions and millennial/Gen Z share",
+        "T&E vs everyday spending split (T&E is higher-margin)",
+    ],
+    competitive_advantages=[
+        "Closed-loop network data advantage: AmEx sees both sides of every "
+        "transaction (merchant and cardholder), enabling superior fraud detection, "
+        "targeted offers, and 10x the merchant analytics of open-network competitors",
+        "Premium brand equity: the Centurion Card (Amex Black) and Platinum Card "
+        "are aspirational status symbols with pricing power that Visa/MC cannot "
+        "replicate — cardholders pay $695/year for membership in the AmEx ecosystem",
+        "Benefits ecosystem partnerships: Centurion Lounges, Fine Hotels & Resorts, "
+        "Global Lounge Collection — curated benefits AmEx controls and continuously "
+        "upgrades, making the card incrementally more valuable each year",
+        "Corporate T&E program lock-in: AmEx's Business Travel and Global Corporate "
+        "Payments serve thousands of Fortune 500 companies with integrated expense "
+        "management — 5-10 year enterprise contracts with high switching costs",
+    ],
+    business_model_keywords=[
+        "billed business", "discount revenue", "net card fees", "closed loop",
+        "Stephen Squeri", "Platinum Card", "Gold Card", "Centurion",
+        "millennial", "Gen Z", "T&E", "travel and entertainment",
+        "Delta SkyMiles", "cobrand", "merchant acceptance",
+        "card member spending", "cards in force", "Amex", "American Express",
+        "net interest income", "premium cardholder",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="NKE",
+    company_name="Nike Inc.",
+    business_model=(
+        "Nike is the world's largest designer, marketer, and distributor of athletic "
+        "footwear, apparel, and equipment.  The company does not manufacture products "
+        "directly — it designs products and outsources production to contract factories "
+        "in Vietnam (~50%), Indonesia (~20%), and China (~20%).  Revenue channels: "
+        "Nike Direct (DTC) including Nike.com, Nike App, and company-owned stores "
+        "generates ~45% of total revenue and ~2x the gross margin of wholesale; "
+        "wholesale through retailers (Foot Locker, Dick's Sporting Goods, Nordstrom) "
+        "provides ~55%.  CEO Elliott Hill returned in October 2024 (replacing John Donahoe) "
+        "to restore focus on sport performance, wholesale channel health, and "
+        "product innovation.  Key brands: Nike, Jordan Brand (licensed NBA, NFL, "
+        "MLB uniforms), Converse (~10% of revenue).  Primary competitor: On Running, "
+        "Hoka, New Balance (gaining premium market share); adidas, Puma, Under Armour."
+    ),
+    primary_revenue_drivers=[
+        "Footwear (~68% of revenue): Air Max, Air Force 1, Jordan franchise, "
+        "React and ZoomX running platforms; Jordan Brand accounts for "
+        "$6.5B+ and growing faster than core Nike brand",
+        "Apparel (~27%): performance training apparel, Dri-FIT, Jordan Brand "
+        "apparel, Club America/PSG/Chelsea licensed kits",
+        "Equipment (~5%): balls, bags, protective gear",
+        "Nike Direct (DTC): Nike.com, SNKRS app, Nike App — higher ASP "
+        "and gross margin vs wholesale; ~45% revenue share growing",
+    ],
+    recurring_revenue_sources=[
+        "Nike Membership (300M+ members): SNKRS app and Nike app members "
+        "generate higher LTV, repeat purchase frequency, and first-party data",
+        "Jordan Brand licensing to NBA, NFL, MLB: exclusive leagues/team "
+        "uniform contracts renewed multi-year with escalating fees",
+        "Converse brand (sub-brand with separate positioning targeting "
+        "street culture) — relatively stable $2B+ revenue stream",
+        "Nike+/NRC (Nike Run Club) and NTC fitness platforms — ecosystem "
+        "driving member retention and purchase conversion",
+    ],
+    rate_sensitivity_note=(
+        "Nike has limited direct interest rate sensitivity — the company carries "
+        "moderate debt and generates strong free cash flow ($4-5B annually) that "
+        "funds dividends and buybacks.  Indirectly, higher rates compress consumer "
+        "discretionary spending, particularly for premium footwear ($150+ ASP).  "
+        "Rate hikes also increase Nike's hedging costs on foreign currency (Nike "
+        "reports in USD but generates ~55% of revenue internationally).  "
+        "Valuation compression from higher discount rates is the primary impact "
+        "on the growth-oriented multiple."
+    ),
+    inflation_pass_through=(
+        "Moderate: Nike has raised average selling prices 15-20% over the past "
+        "3 years on core franchises (Air Force 1, Jordan 1) while maintaining "
+        "demand — demonstrating brand pricing power.  However, excess inventory "
+        "cycles (2022-23) forced promotional activity, degrading gross margins.  "
+        "Input cost inflation (labor, materials, freight) has been partially offset "
+        "by DTC channel mix shift (higher margin), strategic pricing, and "
+        "cost reduction under the 'Win Now' restructuring program."
+    ),
+    recession_behavior=(
+        "Moderately defensive: Nike's top-franchise silhouettes (Air Force 1, "
+        "Jordan 1, Dunk) have cultural cachet that sustains demand in mild "
+        "recessions — limited-edition drops maintain pricing power.  In deeper "
+        "recessions, consumers trade down to lower-priced athletic brands (New "
+        "Balance, adidas, Hoka's lower-end lines).  Jordan Brand's premium "
+        "positioning makes it slightly more resilient than core Nike.  "
+        "China represents ~16% of revenue — geopolitical and COVID-related "
+        "disruptions have periodically reduced China Direct revenue."
+    ),
+    major_risks=[
+        "Share loss to On Running, Hoka, New Balance in premium performance "
+        "running: Nike ceded meaningful market share in the $150+ performance "
+        "running category between 2020-2024, now attempting a comeback with "
+        "Vomero 18 and Pegasus Premium",
+        "DTC strategy reversal: Elliott Hill is reinvesting in wholesale "
+        "channel health, but rebuilding retailer relationships after 2021-23 "
+        "inventory push may take 2-3 years",
+        "China geopolitical risk: CITIC backlash from nationalist sentiment "
+        "(Chinese consumers prefer Li-Ning, Anta) reduces China Direct potential",
+        "Excess inventory cycles: seasonal over-ordering creates markdown "
+        "pressure on gross margins every 2-3 years",
+        "Labor and sustainability scrutiny: Vietnamese factory labor practices "
+        "and carbon footprint are ESG concerns that can affect brand perception",
+    ],
+    valuation_style=(
+        "Nike trades at ~25-30x forward P/E — a premium consumer discretionary "
+        "brand multiple reflecting the Jordan franchise pricing power and DTC "
+        "mix-shift gross margin opportunity.  The Elliott Hill turn-around "
+        "narrative could re-rate the stock toward 32-35x on gross margin "
+        "recovery (target return to 46%+ gross margin from current ~44%).  "
+        "De-rating risk: continued share loss in performance running, "
+        "China weakness, or failure to reignite Jordan innovation pipeline."
+    ),
+    key_metrics=[
+        "Revenue by geography (North America, Europe Middle East & Africa, "
+        "China, Asia Pacific Latin America)",
+        "Nike Direct vs wholesale revenue split and gross margin differential",
+        "Gross margin % (key indicator of DTC mix, pricing, and factory cost)",
+        "Inventory growth vs revenue growth (excess inventory signals margin risk)",
+        "Jordan Brand revenue growth (premium segment health indicator)",
+        "Nike Membership size and purchase frequency",
+        "Average selling price (ASP) trends in footwear",
+        "China Direct revenue growth (largest single-market swing factor)",
+    ],
+    competitive_advantages=[
+        "Jordan Brand franchise: Michael Jordan's lifetime deal (Nike pays Jordan "
+        "~$256M/year) locks in cultural capital that no competitor can replicate — "
+        "Jordan retros sell out globally without marketing spend",
+        "Athlete endorsement depth: LeBron James, Serena Williams (posthumous "
+        "brand), Cristiano Ronaldo, Kylian Mbappé, Travis Scott — Nike spends "
+        "$3.5B/year on athletes, creating a moat competitors cannot economically bridge",
+        "SNKRS and consumer data: 300M+ member profiles with purchase history, "
+        "size preferences, and wishlist data enable hyper-targeted launch allocation "
+        "and demand forecasting impossible for DTC-light brands",
+        "Scale manufacturing relationships: Vietnam and Indonesia factory "
+        "partnerships spanning 30+ years — Nike receives priority capacity "
+        "and quality standards that new entrants cannot access",
+    ],
+    business_model_keywords=[
+        "Jordan Brand", "Nike Direct", "DTC", "SNKRS", "Air Max", "Air Force 1",
+        "Elliott Hill", "John Donahoe", "Dunk", "React", "ZoomX",
+        "Dri-FIT", "Nike Membership", "wholesale", "Converse",
+        "gross margin", "inventory", "China Direct", "performance running",
+        "Vomero", "Pegasus", "Win Now", "organic growth",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="BA",
+    company_name="The Boeing Company",
+    business_model=(
+        "Boeing is a global commercial aircraft manufacturer and defense contractor "
+        "with three segments: Commercial Airplanes (BCA — ~45% of revenue), "
+        "Defense Space & Security (BDS — ~35%), and Global Services (BGS — ~20%).  "
+        "BCA designs and sells narrow-body (737 MAX) and wide-body (787 Dreamliner, "
+        "777X) commercial jets to airlines globally; BDS produces military aircraft "
+        "(F-15, F/A-18, P-8), satellites, and launch systems; BGS provides aftermarket "
+        "maintenance, training, and parts.  CEO Kelly Ortberg (appointed September 2024) "
+        "is executing a stabilization plan following the 737 MAX 9 door plug blowout "
+        "(January 2024), a seven-week IAM machinist strike (2024), and multiple FAA "
+        "production rate limitations.  Boeing's long-term order backlog exceeds 5,600 "
+        "aircraft (~$500B), providing multi-year revenue visibility once production "
+        "rates normalize."
+    ),
+    primary_revenue_drivers=[
+        "Commercial Airplanes (~45%): 737 MAX 8/9/10 (narrow-body workhorse — "
+        "target production rate 38/month by 2025, currently ~25/month post-strike); "
+        "787 Dreamliner (wide-body — 5/month production target); 777X (next-gen "
+        "wide-body — delayed until 2025+)",
+        "Defense Space & Security (~35%): F-15EX Eagle II, F/A-18 Super Hornet, "
+        "P-8 Poseidon, KC-46 Pegasus tanker, Space Launch System (SLS), "
+        "Starliner crewed spacecraft (development challenges)",
+        "Global Services (~20%): aftermarket parts, MRO contracts, pilot/tech "
+        "training, modifications — highest-margin segment with recurring revenue",
+    ],
+    recurring_revenue_sources=[
+        "BGS aftermarket parts and MRO: Boeing is the sole-source supplier "
+        "for most proprietary 737 and 787 replacement parts — highly recurring, "
+        "high-margin (~20% operating margin vs BCA near-breakeven currently)",
+        "Long-term US DoD contracts: F-15 production, KC-46 tanker, and other "
+        "multi-year defense programs provide stable government revenue stream",
+        "Training services: Boeing's training centers for pilot simulation and "
+        "maintenance technicians for airlines worldwide",
+        "737 MAX and 787 reorder stream: United, American, Southwest, Ryanair, "
+        "and international carriers have multi-year delivery schedules on order",
+    ],
+    rate_sensitivity_note=(
+        "Boeing has extremely high interest rate sensitivity currently due to its "
+        "distressed balance sheet.  Boeing carries ~$53B of long-term debt (post-strike, "
+        "post-quality crisis capital raises) and is generating significant FCF deficits "
+        "(-$13B in 2024 estimated).  Rising rates increase refinancing costs on "
+        "debt maturing in 2025-2027.  Additionally, airline customers finance new "
+        "aircraft deliveries — higher rates increase financing costs for airlines, "
+        "potentially leading to delivery deferrals, reducing Boeing's cash receipts."
+    ),
+    inflation_pass_through=(
+        "Limited near-term: Boeing's fixed-price defense contracts (KC-46, SLS) "
+        "have created billions in cost overruns as labor and materials inflated — "
+        "Boeing cannot pass through inflation on legacy fixed-price contracts.  "
+        "Commercial aircraft pricing is negotiated at order placement (orders from "
+        "2020-2023 were placed at pre-inflation prices, compressing delivery margins).  "
+        "New orders benefit from higher list prices; Boeing's 737 MAX list price "
+        "has increased ~30% since 2019."
+    ),
+    recession_behavior=(
+        "Highly cyclical: commercial aircraft orders collapse during recessions "
+        "as airline traffic falls and carriers cancel/defer deliveries.  However, "
+        "Boeing's $500B+ backlog provides 6-8 years of delivery coverage even "
+        "with order freezes — near-term delivery rates are more important than "
+        "new orders.  Defense revenue (~35%) provides counter-cyclical stability.  "
+        "BGS aftermarket is resilient — airlines must maintain existing fleets "
+        "regardless of new order activity.  Boeing's 2024 challenges are "
+        "company-specific (quality, strike) rather than demand-driven."
+    ),
+    major_risks=[
+        "FAA production certification: Boeing remains under enhanced FAA "
+        "oversight with production rate caps on 737 MAX — the path to 38/month "
+        "(the earnings recovery target) requires sustained quality metrics "
+        "over 6-12 months of demonstrated compliance",
+        "Fixed-price defense contract losses: KC-46 Pegasus, Starliner, and "
+        "T-7A Red Hawk development programs have collectively lost $10B+ in "
+        "pre-tax charges — structural exposure to cost overruns on legacy contracts",
+        "Balance sheet stress: $53B of debt with $10B+ annual interest/debt "
+        "service requires FCF recovery and potential equity dilution via "
+        "additional share issuance",
+        "Competitive threat: Airbus A320neo family has taken Boeing's market "
+        "share in narrow-body during MAX crises — airlines have diversified away "
+        "from Boeing-only fleets",
+        "777X certification delay: 777X cost program is 5+ years behind "
+        "original schedule, risking large customer defections to A350-1000",
+    ],
+    valuation_style=(
+        "Boeing trades on normalized earnings potential — current earnings are "
+        "severely depressed.  On normalization (~38/month 737 + 5/month 787 by "
+        "2026-2027), Boeing could generate $10-12/share EPS vs current loss.  "
+        "The stock trades at a large discount to historical multiples (20-22x "
+        "normalized P/E on $10 EPS = $200-220 price target range widely cited).  "
+        "Key risk: capital raises diluting the normalized EPS; delivery "
+        "schedule slippage extending the FCF deficit further."
+    ),
+    key_metrics=[
+        "737 MAX monthly production rate (current ~25, target 38/month)",
+        "787 Dreamliner monthly production rate (current 3-4, target 5/month)",
+        "Free cash flow (deeply negative, target return to positive by 2025-2026)",
+        "Net debt and debt-to-EBITDA (leverage recovery timeline)",
+        "Commercial backlog (5,600+ aircraft, ~$500B)",
+        "BDS fixed-price contract charges (KC-46, T-7A, Starliner)",
+        "FAA audit findings and certification milestones",
+        "Deliveries per quarter (revenue recognizes at delivery)",
+    ],
+    competitive_advantages=[
+        "737 and 787 installed base: 10,000+ Boeing jets in service create a "
+        "captive aftermarket parts and services revenue stream — airlines cannot "
+        "easily switch to Airbus-sourced parts for Boeing aircraft",
+        "Defense duopoly: Boeing is one of two US prime defense contractors "
+        "(with Lockheed Martin) for major manned aircraft programs — sole-source "
+        "supplier status on F-15, P-8, and KC-46 programs provides pricing power",
+        "Pilot training ecosystem: Boeing's pilot simulators and training centers "
+        "worldwide create switching costs — airlines that operate 737 MAX have "
+        "invested in Boeing-specific training infrastructure",
+        "Commercial airline backlog stickiness: 5,600-aircraft backlog represents "
+        "years of advance deposits and contractual delivery obligations — even "
+        "severely distressed Boeing retains this forward revenue foundation",
+    ],
+    business_model_keywords=[
+        "737 MAX", "787 Dreamliner", "777X", "Kelly Ortberg", "FAA",
+        "production rate", "IAM strike", "backlog", "Commercial Airplanes",
+        "Defense Space Security", "Global Services", "KC-46", "Starliner",
+        "fixed-price contract", "free cash flow", "deliveries",
+        "narrow-body", "wide-body", "quality crisis", "door plug",
+        "Airbus competition", "F-15", "P-8",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="WMT",
+    company_name="Walmart Inc.",
+    business_model=(
+        "Walmart is the world's largest retailer by revenue, operating through four "
+        "business segments: Walmart US (~65% of revenue), Sam's Club (~12%), "
+        "Walmart International (~22%), and the rapidly-growing Walmart Global "
+        "Advertising / Marketplace (~1%).  The core value proposition — everyday low "
+        "prices (EDLP) enabled by supply chain scale — serves over 240M customers "
+        "weekly across 10,500+ stores and online channels.  CEO Doug McMillon has "
+        "transformed Walmart into an omnichannel retailer: Walmart+ membership "
+        "(100M+ members in the US), InHome delivery, online grocery pickup, and "
+        "the Walmart Connect advertising platform.  The emerging high-margin revenue "
+        "streams (advertising, marketplace seller fees, data monetization via Walmart "
+        "Luminate) are restructuring the profit model toward higher-margin business "
+        "lines atop the low-margin retail base.  Flipkart (India, ~77% owned) and "
+        "Walmex (Mexico/Central America) are Walmart's highest-growth international assets."
+    ),
+    primary_revenue_drivers=[
+        "Walmart US grocery (~60% of US revenue): Walmart is the #1 US grocery "
+        "retailer by market share — EDLP grocery drives traffic for higher-margin "
+        "general merchandise; fresh food, private label Great Value / Bettergoods",
+        "Sam's Club membership fees and merchandise: warehouse club model "
+        "with $50-$110 annual membership generating high-margin recurring income; "
+        "Scan & Go digital checkout raising member engagement",
+        "Walmart+ subscription: $12.95/month ($98/year) — unlimited free delivery, "
+        "fuel discounts, Paramount+ streaming — growing premium membership base",
+        "Walmart Connect advertising platform: ~$3-4B in annual high-margin "
+        "advertising revenue from CPG brands paying for sponsored search and "
+        "display ads in Walmart's physical and digital channels",
+    ],
+    recurring_revenue_sources=[
+        "Walmart+ subscriptions (~$3B+ annual run rate) — monthly/annual "
+        "membership with high retention among grocery-loyal households",
+        "Sam's Club membership fees (~$2B annually) — near-100% gross margin "
+        "line that grows with membership and renewal rate",
+        "Walmart Luminate data licensing: CPG companies pay for POS scan data, "
+        "customer basket analytics, and predictive replenishment insights",
+        "Marketplace seller fees: 3P seller GMV growing 30%+ as Walmart builds "
+        "Amazon-like marketplace; seller fees are high-margin revenue",
+    ],
+    rate_sensitivity_note=(
+        "Walmart benefits from a flight-to-value in high-rate environments: "
+        "consumer spending pressure drives trade-down from premium grocers (Whole "
+        "Foods, Publix) and specialty retailers to Walmart EDLP.  Walmart's "
+        "consumer base over-indexes in lower-income households that react strongly "
+        "to rate/inflation pressure by switching to value channels.  "
+        "Walmart's balance sheet is investment-grade; rate impact on debt "
+        "service is minimal.  Higher rates compress Walmart's P/E given its "
+        "growth-oriented multiple (~25-30x) vs its grocery-anchored earnings base."
+    ),
+    inflation_pass_through=(
+        "Strong competitive advantage during inflation: Walmart's scale "
+        "($600B+ annual purchasing) gives it leverage to hold supplier cost "
+        "increases below inflation.  Private label (Great Value, Equate, "
+        "Sam's Member's Mark) expands in inflationary cycles as consumers "
+        "trade down from national brands.  Rollback pricing investments absorb "
+        "some inflation to maintain price gaps vs competitors."
+    ),
+    recession_behavior=(
+        "Counter-cyclical: Walmart gains grocery market share in recessions "
+        "and inflationary environments as consumers trade down to EDLP.  "
+        "General merchandise (electronics, apparel) declines in recessions, "
+        "but grocery resilience offsets GM weakness.  Walmart's 2009 recession "
+        "performance (+3% comp growth) and 2022-23 inflation benefit demonstrate "
+        "the defensive positioning.  Sam's Club membership retention is very "
+        "high during recessions — warehouse club value proposition strengthens."
+    ),
+    major_risks=[
+        "Amazon grocery competition: Amazon Fresh and Whole Foods growing; "
+        "Amazon Prime delivery convenience competes directly with Walmart+",
+        "General merchandise margin compression from excess inventory cycles "
+        "and promotional activity needed to clear discretionary goods",
+        "Flipkart valuation risk: India e-commerce competitive intensity from "
+        "Amazon India, JioMart, and Reliance Retail — Flipkart margins remain "
+        "deeply negative",
+        "Shrink and theft: organized retail crime increasing shrink as a "
+        "percentage of sales, particularly in urban locations",
+        "Wage inflation: Walmart raised US store associate minimum wage to "
+        "$15/hour+ — ongoing labor cost pressure in a tight job market",
+    ],
+    valuation_style=(
+        "Walmart trades at ~25-30x forward P/E — a premium to traditional "
+        "grocery retail (15x) justified by the advertising/marketplace/data "
+        "earnings mix shift toward higher-margin businesses.  Walmart is "
+        "increasingly valued as a technology/media company layered on top "
+        "of its retail operations.  EPS growth ~10-12% driven by operating "
+        "leverage, advertising growth, and international (Flipkart, Walmex) optionality."
+    ),
+    key_metrics=[
+        "Walmart US comparable sales growth (store + eComm)",
+        "eCommerce penetration (target 25%+ of Walmart US revenue)",
+        "Walmart+ membership count and renewal rate",
+        "Sam's Club comparable sales and membership income",
+        "Global advertising revenue (Walmart Connect + Sam's) — high-margin indicator",
+        "Gross margin % (structural improvement from ad/marketplace mix shift)",
+        "Operating income by segment",
+        "Flipkart GMV and path to profitability",
+    ],
+    competitive_advantages=[
+        "Supply chain scale: Walmart's $600B annual purchasing volume creates "
+        "procurement leverage no retailer can match — private label manufacturing "
+        "relationships, direct sourcing, and CPFR (collaborative planning, "
+        "forecasting, replenishment) with top CPG suppliers",
+        "Physical-digital convergence: 90% of US consumers live within 10 miles "
+        "of a Walmart — enables same-day grocery delivery, pickup, and pharmacy "
+        "services that pure-play e-commerce cannot replicate cost-effectively",
+        "First-party consumer data: 240M weekly customers, 100M+ Walmart+ "
+        "members, Scan & Go at Sam's Club — the most comprehensive US consumer "
+        "basket data outside Amazon",
+        "EDLP pricing model: Walmart's always-on low pricing strategy builds "
+        "customer trust and eliminates the promotional cycle that erodes "
+        "competitors' margins",
+    ],
+    business_model_keywords=[
+        "Doug McMillon", "Walmart+", "EDLP", "Sam's Club", "Flipkart",
+        "Walmex", "Walmart Connect", "Walmart Luminate", "InHome",
+        "everyday low prices", "Great Value", "Bettergoods", "Member's Mark",
+        "comp sales", "eCommerce", "grocery", "advertising",
+        "marketplace", "pickup and delivery", "private label",
+        "scan and go",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="KO",
+    company_name="The Coca-Cola Company",
+    business_model=(
+        "Coca-Cola is a global beverage brand company operating an asset-light "
+        "concentrate/syrup model.  The company manufactures and sells branded "
+        "concentrates and syrups to licensed bottling partners worldwide "
+        "(Coca-Cola FEMSA, Coca-Cola Europacific Partners, Arca Continental, "
+        "Swire Coca-Cola), who produce, bottle, and distribute the finished "
+        "beverages.  This model generates industry-leading operating margins (~30%) "
+        "with minimal capital requirements.  CEO James Quincey has repositioned "
+        "Coca-Cola around a 'total beverage company' strategy: Sparkling Soft "
+        "Drinks (Coke, Sprite, Fanta — ~50%), Juice/Dairy/Plant-based (~15%), "
+        "Hydration/Sports/Coffee/Tea (~25%), and Emerging categories (~10%).  "
+        "Pricing discipline and revenue growth management (RGM) have driven "
+        "consistent organic growth through a mix of volume and price/mix."
+    ),
+    primary_revenue_drivers=[
+        "Sparkling soft drinks concentrate (~50% of net operating revenue): "
+        "Coke trademark (Original, Zero Sugar, Coke Light), Sprite, Fanta, "
+        "Schweppes — pricing leverage from global brand scale",
+        "Juice, Dairy, Plant-based (~15%): Minute Maid, Simply, Innocent, "
+        "fairlife ultra-filtered milk — higher-growth premium segments",
+        "Hydration, Sports, Coffee, Tea (~25%): Powerade, Smartwater, "
+        "Aquarius, Georgia Coffee (Japan), Honest Tea, Fuze Tea",
+        "Monster Energy equity investment (~17% ownership): AmRest joint "
+        "ventures and Monster distribution agreement contributing equity income",
+    ],
+    recurring_revenue_sources=[
+        "Concentrate/syrup supply agreements with bottlers — multi-decade "
+        "franchise agreements create a perpetual revenue stream tied to "
+        "bottler sales volume; Coca-Cola sets concentrate price annually",
+        "Fountain/post-mix syrup: McDonald's, Subway, Burger King, Wendy's "
+        "and other QSR chains are long-term fountain customers with "
+        "proprietary dispensing equipment creating switching costs",
+        "Refranchising income: Coca-Cola receives licensing fees and "
+        "equity income from its partially-owned bottling partners globally",
+        "Powerade and Smartwater retail distribution through bottler network "
+        "— brand growth translates to royalty-equivalent economics",
+    ],
+    rate_sensitivity_note=(
+        "Coca-Cola is a classic defensive, low-interest-rate-sensitivity business.  "
+        "Revenue is primarily US-dollar concentrate (priced to bottlers in USD) "
+        "but 60%+ of income comes from international markets with translation "
+        "FX risk.  A 100 bps rate rise minimally impacts Coca-Cola's operations "
+        "but compresses its premium multiple (Coke trades at 22-25x P/E as a "
+        "quasi-bond/defensive equity).  Coke carries ~$35B of long-term debt; "
+        "most is fixed-rate so refinancing risk is limited near-term."
+    ),
+    inflation_pass_through=(
+        "Very strong over time: Coca-Cola has raised concentrate prices to "
+        "bottlers consistently above inflation — the brand's cultural status "
+        "gives pricing power few consumer staples companies match.  Coke Zero "
+        "Sugar's 10%+ price premium to Diet Coke demonstrates successful "
+        "premiumization.  In 2021-2023, Coca-Cola implemented 12-14% price "
+        "increases globally with volume declines of only 1-3%, a highly "
+        "favorable price elasticity outcome."
+    ),
+    recession_behavior=(
+        "Highly defensive: carbonated soft drinks are affordable treats — "
+        "a $2 Coke at McDonald's is one of the last discretionary items "
+        "consumers eliminate.  Vending, fountain, and grocery channel "
+        "resilience across economic cycles has been demonstrated across "
+        "multiple recessions.  Coca-Cola returned to dividend growth through "
+        "the 2008-2009 recession and COVID (62+ consecutive years of "
+        "dividend increases — Dividend King status).  Latin America and "
+        "Africa volumes tend to grow even in US recessions."
+    ),
+    major_risks=[
+        "Health and wellness secular shift: sugar/calorie concerns reducing "
+        "sparkling category volume in developed markets; growth requires "
+        "accelerating Zero Sugar (currently 15% of trademark volume) and "
+        "premium water/sports categories",
+        "Bottler dependency: if major bottlers (CCEP, FEMSA) face financial "
+        "stress or consolidate, Coca-Cola's distribution execution is at risk",
+        "Emerging market currency volatility: ~60% of revenue from international "
+        "markets with devaluing currencies (Argentina, Nigeria, Egypt) — "
+        "FX translation headwind can mask organic growth",
+        "Water scarcity and sustainability pressure: production requires "
+        "significant water; regulatory and reputational risk in water-stressed regions",
+        "Sugar and plastic packaging regulations in multiple markets "
+        "(sugar taxes in UK, Mexico, South Africa) reduce demand",
+    ],
+    valuation_style=(
+        "Coca-Cola trades at ~22-25x forward P/E — a defensive consumer staples "
+        "premium reflecting its Dividend King status, brand durability, and "
+        "near-monopoly positioning in global sparkling beverages.  "
+        "Organic revenue growth of 5-8% (price/mix + volume) drives mid-single-digit "
+        "EPS growth + 3% dividend yield = total return of 8-10%.  "
+        "Re-rating catalyst: fairlife ultra-premium dairy scaling to $1B+; "
+        "Zero Sugar reaching 25%+ of trademark volume.  De-rating risk: "
+        "sugar tax acceleration, volume share loss to Pepsi in fountain."
+    ),
+    key_metrics=[
+        "Organic revenue growth (price/mix + volume — key performance indicator)",
+        "Unit case volume by category and geography",
+        "Price/mix realization (quarterly — measures pricing execution)",
+        "Comparable EPS growth in constant currency",
+        "Refranchising progress and bottler system health",
+        "Coke Zero Sugar volume growth % (premiumization indicator)",
+        "fairlife net revenue (premium dairy — new growth engine)",
+        "Free cash flow and dividend growth rate",
+    ],
+    competitive_advantages=[
+        "Coca-Cola brand: among the world's 3 most recognized brands — "
+        "120+ years of cultural relevance, McDonald's partnership, FIFA/Olympics "
+        "sponsorship, and universal distribution in 200+ countries creates an "
+        "unassailable brand moat",
+        "Bottler network system: 300+ franchise bottling partners with "
+        "exclusive territorial rights, pre-built cold chain, and established "
+        "trade relationships — Coca-Cola's concentrate model requires no capital "
+        "to access this $40B+ global distribution machine",
+        "Fountain channel lock-in: McDonald's, Subway, Burger King, and major "
+        "stadium/cinema chains use proprietary Coke fountain equipment — "
+        "switching costs are high (equipment replacement, customer habit disruption)",
+        "Premiumization platform: Smartwater, fairlife, innocent (UK), and Costa "
+        "Coffee provide entry points across premium beverage categories where "
+        "Pepsi has limited equivalent scale",
+    ],
+    business_model_keywords=[
+        "James Quincey", "concentrate", "bottler", "unit case volume",
+        "organic revenue growth", "price/mix", "Coke Zero Sugar",
+        "Sprite", "Fanta", "fairlife", "Smartwater", "Minute Maid",
+        "CCEP", "FEMSA", "refranchising", "fountain", "McDonald's",
+        "Dividend King", "sparkling", "trademark Coke",
+        "hydration", "sports", "still beverages",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="CVX",
+    company_name="Chevron Corporation",
+    business_model=(
+        "Chevron is a global integrated energy company operating across the entire "
+        "oil and gas value chain: Upstream (exploration, production — ~80% of earnings), "
+        "Downstream (refining, marketing — ~15%), and Chemicals/Other (~5%).  "
+        "CEO Mike Wirth runs Chevron with a 'returns-focused capital discipline' "
+        "strategy: growing production in the Permian Basin (DJ Basin, Gulf of Mexico), "
+        "expanding international LNG and deepwater assets (Tengiz Kazakhstan expansion "
+        "— TCO project, Gorgon/Wheatstone LNG Australia), and returning excess capital "
+        "to shareholders via aggressive buybacks and dividend growth.  "
+        "The proposed Hess acquisition ($53B, regulatory dispute with ExxonMobil "
+        "over Guyana assets) would add high-value Guyana deepwater barrels.  "
+        "Chevron's 'TCOP' (total cost of production) target of $35-40/BOE "
+        "provides significant free cash flow at $65+ Brent."
+    ),
+    primary_revenue_drivers=[
+        "Permian Basin upstream: Chevron targets 1M+ BOE/day from Permian "
+        "by 2025 — lowest-cost shale basin in the world (~$10-15/BOE operating cost)",
+        "TCO (Tengizchevroil) Kazakhstan: Tengiz Future Growth Project (FGP) "
+        "adding 260,000 BOE/day; TCO is one of the world's largest oil fields",
+        "Australia LNG (Gorgon, Wheatstone): long-term JCC-linked LNG contracts "
+        "supplying Asian utilities — premium pricing above spot LNG",
+        "Gulf of Mexico deepwater: Anchor, Whale, and Jack/St. Malo projects "
+        "providing long-cycle barrels at $15-20/BOE finding cost",
+    ],
+    recurring_revenue_sources=[
+        "Long-term LNG sales agreements (Gorgon/Wheatstone) with JCC-linked "
+        "pricing — Tokyo Gas, Osaka Gas, Chubu Electric, JERA are counterparties "
+        "on 20-year take-or-pay contracts",
+        "Downstream refinery throughput: El Segundo, Richmond, El Paso, and "
+        "Pascagoula refineries with integrated marketing margin",
+        "Chevron Phillips Chemical joint ventures — polyethylene and polypropylene "
+        "capacity generating equity income",
+    ],
+    rate_sensitivity_note=(
+        "Chevron is primarily correlated with Brent/WTI crude prices and LNG "
+        "spot prices rather than interest rates directly.  Higher rates slow "
+        "global economic activity, reducing petroleum demand and oil prices "
+        "at the margin.  Chevron carries ~$25B of long-term debt at mostly "
+        "fixed rates; near-term interest expense impact of rate hikes is modest.  "
+        "Higher rates also reduce project NPVs, but Chevron's capital allocation "
+        "framework uses a $60-70/bbl long-run price deck for investment hurdles — "
+        "a more binding constraint than the interest rate environment."
+    ),
+    inflation_pass_through=(
+        "Natural energy price inflation hedge: Chevron's upstream revenue moves "
+        "directly with oil and LNG prices.  Higher inflation typically coincides "
+        "with higher commodity prices, directly benefiting Chevron's revenue.  "
+        "Cost inflation (oilfield services, labor, steel) is the offsetting risk — "
+        "Chevron's multi-year Permian development contracts and TCO FGP have "
+        "experienced significant cost overruns ($48B original TCO estimate "
+        "increased to $50B+)."
+    ),
+    recession_behavior=(
+        "Highly cyclical with significant balance sheet resilience: Chevron "
+        "maintained its dividend through COVID (oil went negative in April 2020) "
+        "and through the 2015-16 oil price crash, funded by balance sheet.  "
+        "Management commits to dividend continuity with net debt ratio of <30%.  "
+        "In oil price downturns, Chevron reduces upstream CapEx, cutting discretionary "
+        "development spending while protecting base production cash flow from "
+        "existing producing fields.  Permian shale's flexible capital intensity "
+        "(6-month payback at $60+ WTI) allows rapid CapEx cuts."
+    ),
+    major_risks=[
+        "Oil price decline: Brent/WTI below $60/bbl compresses Chevron FCF "
+        "significantly; below $50/bbl dividend coverage becomes stretched",
+        "Hess acquisition risk: ExxonMobil claims preferential rights to Hess's "
+        "Guyana stake — if arbitration goes against Chevron, the Hess deal "
+        "may collapse and Chevron loses its Guyana growth position",
+        "TCO project execution: Tengiz FGP has had multi-year delays and cost "
+        "overruns; first oil from FGP expansion is the biggest near-term catalyst",
+        "Energy transition long-term headwind: global policy shift toward EVs "
+        "and renewables reduces petroleum demand over a 10-20 year horizon",
+        "California refinery regulatory risk: Richmond and El Segundo refineries "
+        "face increasing state environmental regulation",
+    ],
+    valuation_style=(
+        "Chevron trades at ~12-14x forward P/E and 8-10x EV/EBITDA — a cyclical "
+        "energy multiple reflective of oil price uncertainty.  At $80 Brent "
+        "Chevron generates ~$20B FCF, supporting $12B+ in buybacks and dividends.  "
+        "The Hess deal premium (if successful) would add 10-15% to long-term "
+        "NAV through Guyana asset quality.  Key metrics: FCF yield at current oil "
+        "price, production growth ex-TCO, and Permian unit operating costs."
+    ),
+    key_metrics=[
+        "Net oil equivalent production (BOE/day, targeting 3.3M BOE/day by 2027)",
+        "Free cash flow at strip oil price ($70-80 Brent deck)",
+        "Permian Basin production growth and unit operating costs",
+        "TCO FGP progress (first oil from FGP expansion)",
+        "Return on capital employed (ROCE) vs majors",
+        "Dividend per share growth rate (target 5-6% annual growth)",
+        "Net debt ratio (target <20% net debt to capital)",
+        "Buyback program execution ($10-15B annual)",
+    ],
+    competitive_advantages=[
+        "Permian Basin scale: Chevron is one of the three largest Permian producers "
+        "with >3M net acres and 15+ years of inventory at competitive costs — "
+        "lower finding costs and break-even than international deepwater alternatives",
+        "TCO / Tengiz asset: Chevron's 50% stake in the Tengiz field (Kazakhstan) "
+        "is one of the world's lowest-cost large oil fields — FGP expansion adds "
+        "260K BOE/day at $20/BOE finding cost, among the best new-production economics globally",
+        "Australia LNG position: Gorgon and Wheatstone represent 50+ mtpa of LNG "
+        "capacity with long-term Asian utility contracts — a premium stranded asset "
+        "that Chevron has operated for decades with high HSE and operational standards",
+        "Balance sheet conservatism: AA-rated balance sheet with $20B+ liquidity "
+        "allows dividend maintenance through oil price cycles while competitors "
+        "cut dividends — a differentiated trust factor for income investors",
+    ],
+    business_model_keywords=[
+        "Mike Wirth", "Permian Basin", "TCO", "Tengiz", "Hess",
+        "Guyana", "Gorgon", "Wheatstone", "LNG", "BOE",
+        "free cash flow", "buyback", "capital discipline", "TCOP",
+        "refining", "downstream", "net debt ratio", "ROCE",
+        "DJ Basin", "Gulf of Mexico", "Anchor", "Whale",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="SCHW",
+    company_name="The Charles Schwab Corporation",
+    business_model=(
+        "Charles Schwab is the largest publicly traded US broker-dealer and "
+        "bank, serving 34M+ active brokerage accounts and $9T+ in client assets.  "
+        "The company operates across three business lines: Investor Services "
+        "(retail self-directed investing and robo-advisory), Advisor Services "
+        "(custody and trading for ~12,000 independent RIAs), and Banking/Lending "
+        "(client cash, margin lending, pledged asset lending, mortgage).  "
+        "Schwab's revenue model is fundamentally interest-rate sensitive: Net "
+        "Interest Revenue (~55% of total revenue) from cash sweep balances "
+        "(client uninvested cash earns Fed Funds-linked income), margin loans, "
+        "and bank securities portfolios.  CEO Rick Wurster (2024 successor to "
+        "Walt Bettinger) is managing the TD Ameritrade integration (acquired "
+        "2020, $26B) while navigating elevated bank sweep outflows that compressed "
+        "NII in 2022-24 as clients moved cash to money market funds."
+    ),
+    primary_revenue_drivers=[
+        "Net Interest Revenue (~55%): bank sweep deposit income — when Fed "
+        "Funds rate is high, Schwab earns the spread between what it pays on "
+        "client cash sweeps (near-zero historically) and what it earns on "
+        "Treasuries and mortgage-backed securities (~4.5%)",
+        "Asset Management and Administration (~25%): Schwab's proprietary ETFs "
+        "(SCHB, SCHD — $500B+), mutual fund fees, Schwab Intelligent Portfolios "
+        "(robo-advisory, $72B AUM), and advisor platform fees from RIA custody",
+        "Trading Revenue (~15%): commission-free equity trading (since Oct 2019) "
+        "with PFOF (payment for order flow) on equity options and crypto",
+        "Bank Lending (~5%): margin loans, pledged asset lines, "
+        "home equity, and Rocket Mortgage referral partnership",
+    ],
+    recurring_revenue_sources=[
+        "RIA custody fees: Schwab serves ~12,000 independent registered "
+        "investment advisors on its Advisor Services platform — sticky, "
+        "recurring custody/clearing fees based on AUM and transaction volume",
+        "Schwab ETF management fees: $500B+ in proprietary Schwab ETFs "
+        "(SCHB, SCHD, SCHF, SCHX) generate 3-5 bps management fees",
+        "Schwab Intelligent Portfolios Premium ($30/month subscription): "
+        "robo-advisory with unlimited CFP access — growing recurring SaaS-like revenue",
+        "Mutual Fund OneSource platform fees: revenue sharing from third-party "
+        "funds available on the no-transaction-fee platform",
+    ],
+    rate_sensitivity_note=(
+        "Schwab is among the most interest-rate-sensitive major financial companies.  "
+        "Net interest revenue is directly tied to the federal funds rate and the "
+        "yield curve — a 25 bps Fed cut reduces Schwab's NII by ~$100M annually.  "
+        "In 2022-24, as rates rose, clients moved $150B+ of low-yield bank sweeps "
+        "into Treasuries and money market funds (cash sorting), reducing Schwab's "
+        "deposit base and forcing the company to borrow at higher rates via FHLB "
+        "advances.  Schwab carries a large fixed-income HTM (held-to-maturity) "
+        "securities portfolio with unrealized losses at high rate levels."
+    ),
+    inflation_pass_through=(
+        "Indirect: Schwab's primary benefit from inflation is the associated "
+        "higher interest rates that expand NII margins.  Trading revenue is "
+        "relatively inflation-neutral (commission-free equity, PFOF on options).  "
+        "Asset management fees grow with market levels (AUM-based fee model)."
+    ),
+    recession_behavior=(
+        "Mixed: in equity market downturns, Schwab AUM-based management fees "
+        "decline with market values, and client activity/trading often spikes "
+        "then declines.  However, Schwab gains market share during volatile "
+        "periods as investors actively trade (trading revenue increases in "
+        "volatility).  Credit quality on margin loans typically deteriorates "
+        "in recessions as stock collateral falls.  Net: Schwab is mildly "
+        "counter-cyclical on trading but pro-cyclical on AUM-based fees."
+    ),
+    major_risks=[
+        "Cash sorting: elevated Fed Funds rates drive continued client cash "
+        "outflows from bank sweeps to money market funds, reducing NII permanently "
+        "unless Schwab raises sweep rates (which compresses margin)",
+        "PFOF regulatory risk: SEC or congressional action to ban payment for "
+        "order flow would eliminate ~$800M of Schwab's annual trading revenue",
+        "TD Ameritrade integration risk: merging TD's thinkorswim platform and "
+        "client base while retaining RIA relationships is complex; client "
+        "attrition during system migrations",
+        "HTM unrealized losses: Schwab's fixed-income securities portfolio "
+        "has $14B+ unrealized losses that reduce tangible book value; "
+        "forced sale would crystallize losses",
+        "Interest rate cuts: Fed rate normalization reduces NII, compressing "
+        "earnings growth in 2025-2026",
+    ],
+    valuation_style=(
+        "Schwab trades at ~18-22x forward P/E — a financial services multiple "
+        "that discounts near-term NII compression (cash sorting + potential "
+        "rate cuts) against long-term earnings power as the industry leader in "
+        "retail brokerage and RIA custody.  Normalized EPS ($4-5/share) on "
+        "full TD integration and stabilized sweep balances would support a "
+        "20x multiple = $80-100 stock price.  Key metric: bank sweep "
+        "balance stabilization (the single most important forward indicator)."
+    ),
+    key_metrics=[
+        "Net new assets (NNA) — organic growth indicator; target $400B+ annually",
+        "Bank sweep deposit balances (the cash sorting indicator)",
+        "Net interest margin (NIM) and net interest revenue",
+        "Client assets by channel (retail vs RIA vs bank)",
+        "TD Ameritrade integration milestones and cost synergy capture",
+        "Daily average revenue trades (DARTs) — trading activity",
+        "Schwab ETF AUM growth",
+        "Net interest-bearing assets and FHLB borrowings",
+    ],
+    competitive_advantages=[
+        "Scale in RIA custody: Schwab's Advisor Services platform has $4T+ "
+        "in RIA assets under custody — the largest custodian globally, ahead "
+        "of Fidelity Institutional and Pershing; switching costs for RIAs are "
+        "very high (portfolio management system integrations, client data migration)",
+        "Brand trust in retail investing: Schwab pioneered commission-free trading "
+        "and low-cost index investing — the brand is synonymous with investor-first "
+        "positioning among self-directed investors",
+        "thinkorswim platform (from TD): professional-grade options and futures "
+        "trading platform with advanced analytics — the preferred tool for active "
+        "retail traders, creating an ecosystem of experienced users",
+        "Bank integration: Schwab Bank's ability to sweep client cash and cross-sell "
+        "banking products to brokerage clients creates revenue synergies Fidelity "
+        "(privately held) and Robinhood cannot yet replicate at scale",
+    ],
+    business_model_keywords=[
+        "Rick Wurster", "net interest revenue", "bank sweep", "cash sorting",
+        "TD Ameritrade", "thinkorswim", "RIA", "advisor services",
+        "net new assets", "NNA", "Schwab ETF", "SCHD", "SCHB",
+        "payment for order flow", "PFOF", "margin lending",
+        "Schwab Intelligent Portfolios", "HTM portfolio",
+        "FHLB", "sweep deposits", "client assets",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="MDLZ",
+    company_name="Mondelez International Inc.",
+    business_model=(
+        "Mondelez International is the world's largest snacking company, "
+        "selling branded biscuits, chocolate, gum, candy, and cheese/grocery "
+        "products in 150+ countries.  The company was spun off from Kraft Foods "
+        "in 2012.  Core brands: Oreo (biscuits — world's best-selling cookie), "
+        "Cadbury (chocolate — UK and Commonwealth markets), Milka (Europe), "
+        "Toblerone, Chips Ahoy!, Ritz, belVita, Triscuit, Halls.  CEO Dirk Van "
+        "de Put has pursued a 'local first' strategy — building brand relevance "
+        "in emerging markets (India, China, Brazil, Mexico) where the middle class "
+        "is adopting Western-style snacking.  Revenue model: ~80% from biscuits "
+        "(50%) and chocolate (30%); geographic split ~40% developed markets "
+        "(North America, W. Europe) and ~60% emerging markets."
+    ),
+    primary_revenue_drivers=[
+        "Biscuits (~50%): Oreo (global), Chips Ahoy!, Ritz, belVita, Triscuit, "
+        "TUC, LU — Oreo alone is a $5B+ brand globally with market leading "
+        "positions in >50 countries",
+        "Chocolate (~30%): Cadbury Dairy Milk (UK/Australia), Milka (Europe), "
+        "Toblerone, Côte d'Or — Cadbury is the #1 chocolate brand in the "
+        "UK and second globally after Mars",
+        "Gum and Candy (~10%): Trident, Chiclets, Halls cough drops",
+        "Cheese, Grocery, and Other (~10%): Velveeta (licensed from Kraft), "
+        "Philadelphia cream cheese (licensed), Oscar Mayer",
+    ],
+    recurring_revenue_sources=[
+        "Oreo brand in Asia Pacific and emerging markets — secular snacking "
+        "adoption drives recurring category volume growth",
+        "Cadbury Dairy Milk in India: MDL is the category leader and gaining "
+        "market share in a $3B+ and growing Indian chocolate market",
+        "Belg (Belgium) and Kraft brands manufactured under license for "
+        "European grocery retail with annual supply agreements",
+        "E-commerce and gifting channels (Cadbury UK, Oreo Asia) — "
+        "growing DTC gifting and seasonal chocolate revenue streams",
+    ],
+    rate_sensitivity_note=(
+        "Mondelez has low direct interest rate sensitivity.  The company carries "
+        "~$13B of long-term debt at mostly fixed rates; a 100 bps rate rise "
+        "has minimal near-term impact on earnings.  Indirectly, consumer spending "
+        "pressure from higher rates could reduce premium chocolate and gum spending "
+        "(consumers trade down to private label).  EM currency weakness (associated "
+        "with rate differentials) creates FX translation headwinds on the ~40% "
+        "of revenue from emerging markets."
+    ),
+    inflation_pass_through=(
+        "The critical near-term issue for Mondelez is cocoa price inflation.  "
+        "Cocoa futures surged to $12,000+/MT in 2024 from $2,500/MT in 2022 — "
+        "the worst cocoa price crisis in 50 years due to West African crop failures.  "
+        "Mondelez is attempting to pass through cocoa inflation via product price "
+        "increases (reducing pack sizes, raising list prices), but the pace of "
+        "pass-through lags the raw material cost curve by 6-12 months, compressing "
+        "gross margins in the interim."
+    ),
+    recession_behavior=(
+        "Moderately defensive: chocolate and biscuits are affordable, habitual "
+        "indulgences that consumers maintain in mild recessions.  'Lipstick effect' "
+        "dynamics support premium confectionery.  However, severe recessions "
+        "cause trade-down to private label in developed markets.  Emerging markets "
+        "(40% of revenue) are less recession-correlated to developed market cycles — "
+        "India and Africa chocolate demand is driven by middle-class formation "
+        "independent of US/EU recession dynamics."
+    ),
+    major_risks=[
+        "Cocoa price crisis: $12,000+/MT cocoa in 2024 (from $2,500 in 2022) "
+        "dramatically increases COGS for Cadbury and Milka products; "
+        "volume elasticity constrains price recovery speed",
+        "Private label competition: in developed markets (US, UK, Germany), "
+        "retailer own-brand biscuits and chocolate are gaining share as "
+        "consumers seek value alternatives to branded products",
+        "GLP-1 weight loss drug headwind: Ozempic/Wegovy use reduces "
+        "snacking frequency — potential long-term headwind to confectionery demand",
+        "Emerging market currency volatility: ~40% of revenue in "
+        "inflation-prone EM currencies creates FX translation risk",
+        "Health and wellness trend: sugar reduction requirements and "
+        "packaging regulation in EU markets",
+    ],
+    valuation_style=(
+        "Mondelez trades at ~18-22x forward P/E — a quality consumer staples "
+        "growth multiple reflecting Oreo's global market leader status and "
+        "EM snacking growth.  Near-term multiple compression from cocoa inflation "
+        "compressing gross margins has created a 'transitory margin headwind' "
+        "discount.  Long-term re-rating potential from EM chocolate market "
+        "expansion in India, China, and Southeast Asia."
+    ),
+    key_metrics=[
+        "Organic net revenue growth (pricing + volume — key Mondelez KPI)",
+        "Gross margin % (critical: cocoa cost pass-through indicator)",
+        "Volume/mix performance by region",
+        "Emerging market revenue growth (India, China, Brazil)",
+        "Oreo brand net revenue growth by geography",
+        "Cadbury brand performance in UK and India",
+        "Cocoa hedging coverage (% of next 12-month needs hedged)",
+        "Free cash flow conversion and dividend growth",
+    ],
+    competitive_advantages=[
+        "Oreo brand global reach: Oreo is sold in 100+ countries and is the "
+        "world's best-selling cookie — Nabisco manufacturing licenses and "
+        "local production partnerships create a network that would take decades "
+        "to build from scratch; in China, Oreo is the most trusted imported food brand",
+        "Cadbury/Dairy Milk in Commonwealth markets: the #1 chocolate brand "
+        "in the UK, Australia, and India with century-old brand equity that "
+        "Mars and Ferrero cannot easily displace",
+        "Emerging market distribution depth: Mondelez has built direct-to-trade "
+        "distribution networks in India (750,000+ retail outlets), China, and "
+        "Brazil that give it reach in small-format retail unavailable to many competitors",
+        "Innovation pipeline: Oreo collaborations (limited-edition flavors with "
+        "cultural relevance — Pokemon, Lady Gaga, Olympics) maintain cultural "
+        "currency and drive trial purchases without cannibalization of core sales",
+    ],
+    business_model_keywords=[
+        "Oreo", "Cadbury", "Milka", "Toblerone", "Chips Ahoy!",
+        "Dirk Van de Put", "snacking", "biscuits", "chocolate",
+        "cocoa inflation", "Dairy Milk", "belVita", "Ritz",
+        "emerging markets", "organic revenue growth", "volume/mix",
+        "India chocolate", "private label", "gross margin",
+        "GLP-1 headwind", "pack size",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="COP",
+    company_name="ConocoPhillips",
+    business_model=(
+        "ConocoPhillips is the world's largest pure-play E&P (exploration and "
+        "production) company — it produces oil, natural gas, and LNG but does "
+        "not operate refineries or retail fuel stations (unlike integrated majors "
+        "Exxon and Chevron).  CEO Ryan Lance has built Conoco around a 'returns-of-"
+        "and-returns-on-capital' framework: Tier 1 resource quality (breakeven <$40/BOE "
+        "across most of the portfolio), capital discipline (CapEx grows ~5% annually "
+        "regardless of oil price), and shareholder returns (3-tier distribution — "
+        "ordinary dividend + variable dividend + buybacks).  Key assets: Permian Basin "
+        "(Delaware Basin, Midland Basin), Eagle Ford Shale, Bakken, Alaska (North "
+        "Slope — largest Alaska oil producer), Norway North Sea, and Qatar LNG "
+        "(via Qatargas JV).  The Marathon Oil acquisition ($22.5B, 2024) added "
+        "240,000 BOE/day in Permian and Eagle Ford."
+    ),
+    primary_revenue_drivers=[
+        "Lower 48 US production (Permian, Eagle Ford, Bakken — ~55% of production): "
+        "short-cycle shale with 6-12 month capital-to-production cycle; "
+        "breakeven $35-40/BOE WTI equivalent",
+        "Alaska (North Slope, ~15%): Prudhoe Bay, Kuparuk River, Greater Mooses "
+        "Tooth — long-life conventional production; Willow project adds 180K BOE/day",
+        "International LNG and conventional (~30%): Qatar LNG (Qatargas "
+        "train 3 — long-term 20-year SPA contracts), Norway, Australia, Malaysia",
+        "Marathon Oil acquired assets (2024): DJ Basin, Permian additions, "
+        "International Eagle Ford equivalent in South Texas",
+    ],
+    recurring_revenue_sources=[
+        "Qatar LNG long-term SPAs (sale and purchase agreements): 20-year "
+        "take-or-pay contracts with JCC-linked LNG pricing to Japanese and "
+        "Korean utilities — >$2B annual recurring FCF at $10/mmbtu LNG",
+        "Alaska North Slope base production: Prudhoe Bay and Kuparuk have "
+        "operated for 40+ years — stable, low-decline conventional production "
+        "with committed offtake from TAPS (Trans-Alaska Pipeline System)",
+        "Norway Johan Sverdrup JV (Equinor-operated): long-life, low-breakeven "
+        "North Sea production from the world's most carbon-efficient oil field",
+    ],
+    rate_sensitivity_note=(
+        "ConocoPhillips is correlated with WTI and LNG spot prices rather than "
+        "interest rates directly.  The company carries ~$18B of long-term debt "
+        "(including Marathon Oil acquisition debt), mostly fixed-rate.  "
+        "Higher rates marginally increase financing costs on variable-rate "
+        "credit facilities but do not meaningfully impact Conoco's FCF at $70+ WTI.  "
+        "Rate hikes slow global growth, reducing petroleum demand and putting "
+        "pressure on oil prices — the primary indirect risk."
+    ),
+    inflation_pass_through=(
+        "Natural resource inflation hedge: Conoco's upstream revenue moves "
+        "with oil/gas prices.  Input cost inflation (oilfield services, steel, "
+        "labor) compresses unit margins but Conoco has multi-year service "
+        "agreements at fixed rates for Permian drilling programs.  LNG SPAs "
+        "with JCC indexing to oil prices provide natural inflation pass-through "
+        "on the gas side."
+    ),
+    recession_behavior=(
+        "Cyclical but balance-sheet-resilient: Conoco maintained its ordinary "
+        "dividend through COVID (canceled only the variable component) and "
+        "through the 2015-16 oil crash — a differentiated record vs peers.  "
+        "The 3-tier return framework (ordinary dividend + variable + buyback) "
+        "allows capital flexibility during downturns.  At $60 WTI, Conoco "
+        "covers its ordinary dividend and base CapEx; at $40 WTI, the company "
+        "has balance sheet to sustain the dividend for 2+ years."
+    ),
+    major_risks=[
+        "Oil price: Brent/WTI below $55/BOE compresses FCF to near zero on "
+        "the ordinary dividend commitment; below $45 requires balance sheet drawdown",
+        "Marathon acquisition integration: absorbing 15,000+ new Permian and "
+        "Eagle Ford wells requires seamless operating system integration to "
+        "maintain capital efficiency metrics",
+        "Alaska Willow project execution: the 180K BOE/day Willow Arctic project "
+        "has faced environmental/legal challenges and cost escalation risk",
+        "Qatar LNG counterparty risk: Conoco's JCC-priced LNG SPAs are "
+        "dependent on Qatargas political stability and Qatar Petroleum cooperation",
+        "Energy transition: long-term peak oil demand reduces the long-run "
+        "resource value of COP's reserves",
+    ],
+    valuation_style=(
+        "Conoco trades at ~12-15x forward P/E and 8-10x EV/EBITDA — the "
+        "premium E&P multiple justified by Tier 1 cost of supply and rigorous "
+        "capital returns framework.  The sum-of-parts NAV model at $75 WTI "
+        "broadly supports current trading levels.  Re-rating catalyst: "
+        "Marathon integration delivering promised $500M synergies and Willow "
+        "project on-schedule; de-rating risk: oil price below $60, Alaska "
+        "permitting reversal."
+    ),
+    key_metrics=[
+        "Production growth (BOE/day — target +5% CAGR)",
+        "Cost of supply (breakeven WTI per BOE — Tier 1 target <$40/BOE)",
+        "Free cash flow at strip price ($70-80 WTI deck)",
+        "Return of capital (ordinary dividend + variable dividend + buyback)",
+        "Permian production growth (largest growth engine)",
+        "Alaska North Slope production and Willow progress",
+        "LNG volumes and realized LNG price vs JCC formula",
+        "Net debt and leverage ratio post-Marathon acquisition",
+    ],
+    competitive_advantages=[
+        "Tier 1 cost of supply: ConocoPhillips screens among the lowest cost "
+        "of supply per barrel in the industry (~$35/BOE average portfolio breakeven) "
+        "— provides free cash flow at oil prices where competitors are burning cash",
+        "Balance sheet strength: Conoco is AA-rated with net cash or minimal "
+        "net debt; has never missed an ordinary dividend in modern history — "
+        "attracts long-only institutional investors seeking energy exposure "
+        "without balance sheet risk",
+        "Variable return model: the 3-tier return framework (ordinary + variable "
+        "+ buyback) is the most explicit capital discipline framework among E&P "
+        "peers — investors can model returns at different oil price scenarios",
+        "Alaska sovereign asset: North Slope production is one of the most "
+        "geopolitically stable oil producing regions — no OPEC+ exposure, "
+        "US territory, multi-decade production history",
+    ],
+    business_model_keywords=[
+        "Ryan Lance", "cost of supply", "Permian Basin", "Eagle Ford",
+        "Bakken", "Alaska", "North Slope", "Willow", "Marathon Oil",
+        "Qatar LNG", "JCC", "three-tier return", "variable dividend",
+        "ordinary dividend", "BOE", "free cash flow", "Tier 1",
+        "capital discipline", "TAPS", "Johan Sverdrup",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="RTX",
+    company_name="RTX Corporation",
+    business_model=(
+        "RTX Corporation (formerly Raytheon Technologies) is a global aerospace "
+        "and defense company formed by the merger of United Technologies and "
+        "Raytheon in 2020.  Three segments: Collins Aerospace (~33% of revenue — "
+        "aircraft systems, avionics, interiors, nacelles), Pratt & Whitney (~38% — "
+        "commercial and military jet engines), and Raytheon (~29% — missiles, "
+        "radar, electronic warfare, integrated air and missile defense).  "
+        "CEO Chris Calio (2023 successor to Greg Hayes) is managing two concurrent "
+        "crises: the Pratt & Whitney GTF (geared turbofan) powder metal defect "
+        "requiring the inspection and removal of ~3,000 CFM56/GTF engines from "
+        "service (costing $3-7B in charges), and Raytheon's solid-track record "
+        "amid unprecedented global demand for Patriot missiles, Stingers, and "
+        "Javelin systems given Russia-Ukraine and Middle East conflicts."
+    ),
+    primary_revenue_drivers=[
+        "Pratt & Whitney commercial aftermarket (~40% of P&W revenue): "
+        "GTF and V2500 engine overhaul, parts, and maintenance — highest "
+        "margin segment within P&W once GTF inspection charges normalize",
+        "Collins Aerospace aftermarket (~50% of Collins revenue): proprietary "
+        "avionics, cockpit systems, actuation, and nacelle replacement "
+        "parts — sole-source supplier for most OEM hardware",
+        "Raytheon defense bookings: Patriot PAC-3, Stinger, Javelin, "
+        "SPY-6 radar, Tomahawk cruise missiles — record backlog driven "
+        "by NATO rearmament and US DoD modernization",
+        "Military engine revenue (F135 for F-35, F117 for C-17, military "
+        "upgrade/sustainment) — multi-decade program of record",
+    ],
+    recurring_revenue_sources=[
+        "Engine flight hours: Pratt & Whitney's 'power by the hour' or "
+        "Fleet Management Programs (FMP) charge airlines per flight hour "
+        "for GTF and V2500 engine maintenance — recurring, high-margin",
+        "Collins line-replaceable unit (LRU) aftermarket: airlines are "
+        "required to use OEM-approved parts for FAA/EASA certification "
+        "— Collins is sole-source supplier creating a captive aftermarket",
+        "Raytheon Missiles & Defense production program of record revenue: "
+        "Patriot, Stinger, Javelin — multi-year DoD/FMS (foreign military "
+        "sales) contracts approved through the ITAR export process",
+    ],
+    rate_sensitivity_note=(
+        "RTX is moderately interest-rate sensitive.  The company carries ~$30B "
+        "of long-term debt (post-merger integration) at mostly fixed rates.  "
+        "Commercial aerospace financing costs for airline customers (737 MAX, "
+        "A320neo delivery financing) can affect narrowbody engine demand at the "
+        "margin.  Defense contract funding from the US government is independent "
+        "of interest rates.  Valuation compression from higher discount rates "
+        "affects RTX's growth-oriented aerospace aftermarket multiple."
+    ),
+    inflation_pass_through=(
+        "Defense segment: cost-plus contracts pass through inflation to the "
+        "DoD (most RTX development programs).  Fixed-price production contracts "
+        "(Javelin, Patriot production lots) face margin pressure from labor "
+        "and material inflation.  Pratt & Whitney: commercial OEM contracts "
+        "have cost escalation provisions; aftermarket pricing has inflation "
+        "clauses.  GTF powder metal recall charges are a one-time extraordinary "
+        "cost, not structural inflation."
+    ),
+    recession_behavior=(
+        "Significantly defensive: ~50% of revenue is US government defense "
+        "funding (largely insulated from economic cycles).  Commercial aerospace "
+        "aftermarket is resilient (airlines must maintain existing fleets in "
+        "service regardless of recession); new OEM engine deliveries decline "
+        "in severe recessions as airlines defer aircraft orders.  "
+        "Raytheon benefits from geopolitical tension which drives NATO "
+        "rearmament spending independent of US economic conditions."
+    ),
+    major_risks=[
+        "Pratt & Whitney GTF powder metal recall: ~3,000 engines require "
+        "premature shop visits for high-pressure turbine disc inspection; "
+        "total cost estimate $3-7B over 2023-2025; creates AOG (aircraft on "
+        "ground) risk for airline customers and fleet utilization disruption",
+        "Pratt military engine competition: GE's F414 engine competing for "
+        "next-gen programs; NGAD (next generation air dominance) engine selection",
+        "Supply chain constraints: aerospace aerostructures and castings "
+        "bottlenecks limit Collins and Pratt production ramp capacity",
+        "Defense program budget risk: US DoD budget sequestration or "
+        "continuing resolutions delay new contract awards",
+        "F-35 program reliance: ~$2B annual revenue from F135 engine; "
+        "any slowdown in F-35 procurement reduces P&W sustainment revenue",
+    ],
+    valuation_style=(
+        "RTX trades at ~18-22x forward P/E — an aerospace/defense conglomerate "
+        "multiple with a discount to pure-play commercial aerospace (Collins "
+        "Aerospace intrinsically worth 22-25x) offset by Raytheon defense at "
+        "17-18x.  Sum-of-parts analysis suggests the three segments are worth "
+        "more separated than together.  Re-rating catalyst: GTF powder metal "
+        "charges fully quantified, P&W aftermarket recovery, and record Raytheon "
+        "backlog converting to revenue.  De-rating risk: GTF charges exceed "
+        "guidance, commercial aerospace cycle turns negative."
+    ),
+    key_metrics=[
+        "Pratt & Whitney GTF powder metal recall progress (engine inspections "
+        "completed, total cost vs guidance)",
+        "Collins Aerospace organic revenue growth and aftermarket mix",
+        "Raytheon Missiles & Defense bookings and book-to-bill ratio",
+        "Defense backlog ($67B+ — record levels)",
+        "Commercial engine deliveries (GTF, V2500)",
+        "Adjusted EPS and free cash flow conversion",
+        "DoD budget alignment with key programs (Patriot, Javelin, SPY-6)",
+        "Engine flight hours growth (Pratt aftermarket indicator)",
+    ],
+    competitive_advantages=[
+        "Pratt & Whitney GTF engine monopoly on A220, A320neo family: "
+        "GTF (LEAP-1A competes on A320neo, but CFM and Pratt split the market "
+        "~50/50 — on A220, Pratt is sole-source with no CFMI option) creates "
+        "a decades-long aftermarket captive revenue stream for 5,000+ delivered engines",
+        "Collins avionics and nacelle monopoly positions: Collins is sole-source "
+        "supplier of avionics suites on most Boeing and Airbus programs — "
+        "no competitive re-sourcing risk due to FAA certification requirements",
+        "Patriot missile system dominance: the world's most widely deployed "
+        "integrated air and missile defense system in 19+ countries — "
+        "interoperability requirements make Patriot the NATO standard; "
+        "allies buying Patriot creates decades of ammunition and upgrade revenue",
+        "Defense electronics integration depth: Raytheon's SPY-6 AMDR (Air "
+        "and Missile Defense Radar) and Coyote counter-UAS are embedded in "
+        "US Navy and Army programs that have no competitive alternative",
+    ],
+    business_model_keywords=[
+        "Pratt & Whitney", "Collins Aerospace", "Raytheon", "Chris Calio",
+        "geared turbofan", "GTF", "powder metal", "A320neo", "A220",
+        "Patriot", "Stinger", "Javelin", "SPY-6", "F135", "F-35",
+        "Greg Hayes", "aftermarket", "power by the hour",
+        "program of record", "defense backlog", "FMS",
+        "missiles", "electronic warfare",
+    ],
+))
+
+_register(CompanyKnowledgeProfile(
+    ticker="NEE",
+    company_name="NextEra Energy Inc.",
+    business_model=(
+        "NextEra Energy is the world's largest producer of wind and solar energy "
+        "and the parent company of Florida Power & Light (FPL), the largest regulated "
+        "electric utility in the United States, and NextEra Energy Resources (NEER), "
+        "the world's largest generator of renewable energy from wind and solar.  "
+        "CEO John Ketchum manages two distinct businesses: FPL (~65% of earnings) — "
+        "a Florida rate-regulated utility serving 12M+ customers with a committed "
+        "capital plan to add ~20 GW of new solar and battery storage to the FPL rate base "
+        "through 2026+; and NEER (~35% of earnings) — an unregulated merchant/contracted "
+        "renewable IPP that builds and operates wind farms, solar parks, and battery "
+        "storage for utilities, corporations, and munis under 15-20 year PPAs (power "
+        "purchase agreements).  NEE also holds a ~60% limited partner interest in "
+        "NextEra Energy Partners (NEP), a publicly traded renewable yieldco."
+    ),
+    primary_revenue_drivers=[
+        "Florida Power & Light regulated return on equity (~65% of EBIT): "
+        "FPL earns a ~10-11% allowed ROE on its rate base (~$65B and growing "
+        "rapidly with solar/battery addition); customer growth in Florida (fastest- "
+        "growing large utility customer base in the US) supports rate base expansion",
+        "NextEra Energy Resources wind and solar contracted (~25% of EBIT): "
+        "NEER operates 30+ GW of operating wind/solar and signs 15-20 year PPAs "
+        "with investment-grade utilities and corporate offtakers — essentially "
+        "'contracted bonds' with residual value upside",
+        "NextEra Energy Partners (NEP) distributions: NEE collects LP distributions "
+        "from the NEP yieldco (~10% of earnings); NEP owns operational wind/solar "
+        "assets acquired from NEER",
+        "Nuclear baseload (St. Lucie, Turkey Point): FPL operates nuclear plants "
+        "providing low-cost baseload power to Florida customers",
+    ],
+    recurring_revenue_sources=[
+        "FPL rate base revenue: Florida Public Service Commission regulates FPL's "
+        "rates based on cost-of-service + allowed ROE — near-guaranteed revenue "
+        "regardless of economic cycle as long as customers pay bills",
+        "NEER long-term PPAs: 15-20 year fixed-price or CPI-linked power "
+        "purchase agreements with rated utilities (Duke, ConEd, Xcel) — "
+        "contractual cash flows for the life of each wind/solar project",
+        "NEP distributions: NEP pays quarterly distributions to NEE from its "
+        "operating wind and solar assets; distributions have grown 12-15% annually",
+        "Renewable development pipeline: NEER has a record 30+ GW backlog "
+        "of signed but not yet constructed projects — years of visible future earnings",
+    ],
+    rate_sensitivity_note=(
+        "NextEra Energy is the most interest-rate-sensitive utility.  Both FPL "
+        "(cost of equity for rate case filings) and NEER (NPV of long-term PPAs "
+        "discounted at higher rates) are negatively impacted by rate hikes.  "
+        "NEE carries ~$65B of long-term debt; a 100 bps rate rise increases "
+        "annual interest expense ~$300-400M on floating rate facilities and "
+        "refinancing of short-duration debt.  The stock trades as a 'bond "
+        "proxy' — rising interest rates compress NEE's premium multiple, "
+        "as its 3% dividend yield becomes less attractive vs 5% risk-free rates."
+    ),
+    inflation_pass_through=(
+        "Partial: FPL regulated rate filings index O&M costs to a Florida-specific "
+        "inflation formula — some cost increases are automatically recoverable.  "
+        "NEER's PPAs often include CPI-linked escalators (2-3% annual increase) "
+        "for newer contracts.  Construction cost inflation (steel, turbines, "
+        "panels) squeezes development margins on new project builds before "
+        "the signed PPA is locked in.  Equipment supply chains (solar panels, "
+        "wind turbines) have experienced significant cost deflation 2023-2025 "
+        "offsetting inflation in labor and interconnection costs."
+    ),
+    recession_behavior=(
+        "Highly defensive: utility earnings are economically insensitive.  "
+        "FPL residential and commercial customers pay electric bills in "
+        "recessions — Florida's customer growth (retirees, in-migration) "
+        "provides structural volume support.  NEER's contracted renewable "
+        "generation revenue is fixed by PPAs regardless of spot power prices "
+        "or economic conditions.  NEE is widely held as a defensive income "
+        "stock; dividend has grown every year for 30+ consecutive years."
+    ),
+    major_risks=[
+        "Interest rate sensitivity: NEE is among the most rate-sensitive equities "
+        "in the S&P 500 — the stock declined 40%+ in 2022-23 as rates rose; "
+        "the 'growth utility' premium compresses when rates are high",
+        "NextEra Energy Partners (NEP) distribution cut risk: NEP paused "
+        "distribution growth in 2023 due to high interest rates squeezing "
+        "leveraged yieldco economics — NEE must backstop NEP or accept "
+        "reputational damage from partner defaults",
+        "Hurricane exposure: FPL's Florida territory faces 10+ named storms "
+        "annually; significant hurricane damage requires storm cost recovery "
+        "filings and can delay rate case timelines",
+        "Construction cost overruns: renewable project builds face interconnection "
+        "queue delays, materials cost inflation, and workforce shortages",
+        "Regulatory rate case risk: Florida PSC rate cases must be filed every "
+        "4 years; failure to receive allowed ROE increases compresses FPL earnings",
+    ],
+    valuation_style=(
+        "NEE trades at ~20-25x forward P/E — a 'growth utility' premium "
+        "vs regulated utility peers (12-15x) reflecting NEER's 15-20% "
+        "renewable earnings growth and FPL's above-average rate base expansion.  "
+        "The premium contracts and expands with interest rates.  "
+        "At 5%+ risk-free rates, NEE's 3% dividend yield is less compelling; "
+        "at 3% risk-free, the premium expands significantly.  "
+        "Key re-rating catalysts: NEP recovery, power demand growth from data "
+        "centers and AI creating incremental renewable PPA demand in Florida."
+    ),
+    key_metrics=[
+        "FPL rate base growth (target ~$10B/year capital investment)",
+        "NEER renewable backlog (contracted but not built — >30 GW)",
+        "Adjusted EPS growth (target 6-8% CAGR through 2026)",
+        "FPL allowed ROE vs earned ROE in rate case filings",
+        "Wind and solar GW additions per year",
+        "NEP distribution per unit and coverage ratio",
+        "Power purchase agreement (PPA) execution (new signings GW/year)",
+        "FPL customer growth and Florida population migration trends",
+    ],
+    competitive_advantages=[
+        "NEER development scale: 30+ GW of new renewable projects per year "
+        "in development and construction — the largest renewable development "
+        "platform in the world, with procurement scale reducing turbine/panel "
+        "costs 15-20% vs smaller IPPs",
+        "FPL Florida monopoly with growth demographics: regulated utility "
+        "serving the fastest-growing large state in the US — population "
+        "in-migration from northeastern US guarantees customer base expansion "
+        "for decades, compounding rate base growth organically",
+        "Financing advantage: AA-rated balance sheet and NEP yieldco create "
+        "a lower cost of capital for renewable project development than merchant "
+        "IPPs or smaller regulated utilities — critical for winning competitive "
+        "PPA solicitations",
+        "Technology and O&M efficiency: NEE's scale in wind and solar O&M "
+        "(1,000+ wind projects maintained in-house) provides 20-30% lower "
+        "operations cost per MWh vs competitors, enabling lower PPA bids",
+    ],
+    business_model_keywords=[
+        "John Ketchum", "Florida Power & Light", "FPL", "NextEra Energy Resources",
+        "NEER", "NextEra Energy Partners", "NEP", "power purchase agreement",
+        "PPA", "wind", "solar", "battery storage", "rate base",
+        "regulated utility", "renewable energy", "CPI escalator",
+        "allowed ROE", "rate case", "yieldco", "GW backlog",
+        "hurricane", "interconnection", "AI data center demand",
+    ],
+))
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 

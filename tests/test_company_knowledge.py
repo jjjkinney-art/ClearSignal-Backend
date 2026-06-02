@@ -766,3 +766,579 @@ class TestSlbProfile:
 
     def test_slb_keywords_at_least_10(self):
         assert len(self.slb.business_model_keywords) >= 10
+
+
+# ===========================================================================
+# Severity-2 profiles — 13 Q≤3 companies (50-company validation baseline)
+# ===========================================================================
+
+class TestHonProfile:
+    """Honeywell International — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.hon = get_knowledge_profile("HON")
+
+    def test_hon_profile_exists(self):
+        assert self.hon is not None
+
+    def test_hon_ticker_correct(self):
+        assert self.hon.ticker == "HON"
+
+    def test_hon_keywords_contain_vimal_kapur(self):
+        kws = [k.lower() for k in self.hon.business_model_keywords]
+        assert any("vimal" in k or "kapur" in k for k in kws)
+
+    def test_hon_keywords_contain_aerospace(self):
+        kws = " ".join(self.hon.business_model_keywords).lower()
+        assert "aerospace" in kws or "avionics" in kws
+
+    def test_hon_keywords_contain_uop(self):
+        kws = " ".join(self.hon.business_model_keywords).lower()
+        assert "uop" in kws
+
+    def test_hon_keywords_contain_honeywell_forge(self):
+        kws = " ".join(self.hon.business_model_keywords).lower()
+        assert "forge" in kws or "niagara" in kws or "experion" in kws
+
+    def test_hon_primary_drivers_mention_aerospace(self):
+        drivers = " ".join(self.hon.primary_revenue_drivers).lower()
+        assert "aerospace" in drivers
+
+    def test_hon_risks_mention_boeing_or_aerospace_cycle(self):
+        risks = " ".join(self.hon.major_risks).lower()
+        assert "boeing" in risks or "aerospace" in risks or "737" in risks
+
+    def test_hon_competitive_advantages_mention_avionics_or_niagara(self):
+        adv = " ".join(self.hon.competitive_advantages).lower()
+        assert "avionics" in adv or "niagara" in adv or "uop" in adv
+
+    def test_hon_keywords_at_least_10(self):
+        assert len(self.hon.business_model_keywords) >= 10
+
+
+class TestCrmProfile:
+    """Salesforce — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.crm = get_knowledge_profile("CRM")
+
+    def test_crm_profile_exists(self):
+        assert self.crm is not None
+
+    def test_crm_ticker_correct(self):
+        assert self.crm.ticker == "CRM"
+
+    def test_crm_keywords_contain_agentforce(self):
+        kws = " ".join(self.crm.business_model_keywords).lower()
+        assert "agentforce" in kws
+
+    def test_crm_keywords_contain_marc_benioff(self):
+        kws = " ".join(self.crm.business_model_keywords).lower()
+        assert "benioff" in kws
+
+    def test_crm_keywords_contain_data_cloud(self):
+        kws = " ".join(self.crm.business_model_keywords).lower()
+        assert "data cloud" in kws
+
+    def test_crm_keywords_contain_rpo(self):
+        kws = " ".join(self.crm.business_model_keywords).lower()
+        assert "rpo" in kws or "remaining performance" in kws
+
+    def test_crm_primary_drivers_mention_sales_cloud(self):
+        drivers = " ".join(self.crm.primary_revenue_drivers).lower()
+        assert "sales cloud" in drivers
+
+    def test_crm_risks_mention_microsoft_or_ai(self):
+        risks = " ".join(self.crm.major_risks).lower()
+        assert "microsoft" in risks or "ai" in risks or "copilot" in risks
+
+    def test_crm_competitive_advantages_mention_trailhead_or_appexchange(self):
+        adv = " ".join(self.crm.competitive_advantages).lower()
+        assert "trailhead" in adv or "appexchange" in adv
+
+    def test_crm_keywords_at_least_10(self):
+        assert len(self.crm.business_model_keywords) >= 10
+
+
+class TestAxpProfile:
+    """American Express — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.axp = get_knowledge_profile("AXP")
+
+    def test_axp_profile_exists(self):
+        assert self.axp is not None
+
+    def test_axp_ticker_correct(self):
+        assert self.axp.ticker == "AXP"
+
+    def test_axp_keywords_contain_billed_business(self):
+        kws = " ".join(self.axp.business_model_keywords).lower()
+        assert "billed business" in kws
+
+    def test_axp_keywords_contain_stephen_squeri(self):
+        kws = " ".join(self.axp.business_model_keywords).lower()
+        assert "squeri" in kws
+
+    def test_axp_keywords_contain_closed_loop(self):
+        kws = " ".join(self.axp.business_model_keywords).lower()
+        assert "closed loop" in kws
+
+    def test_axp_keywords_contain_net_card_fees(self):
+        kws = " ".join(self.axp.business_model_keywords).lower()
+        assert "net card fees" in kws or "card fees" in kws
+
+    def test_axp_primary_drivers_mention_discount_revenue(self):
+        drivers = " ".join(self.axp.primary_revenue_drivers).lower()
+        assert "discount revenue" in drivers or "merchant" in drivers
+
+    def test_axp_risks_mention_cobrand_or_merchant(self):
+        risks = " ".join(self.axp.major_risks).lower()
+        assert "cobrand" in risks or "merchant" in risks or "delta" in risks
+
+    def test_axp_competitive_advantages_mention_platinum_or_centurion(self):
+        adv = " ".join(self.axp.competitive_advantages).lower()
+        assert "platinum" in adv or "centurion" in adv or "closed-loop" in adv
+
+    def test_axp_keywords_at_least_10(self):
+        assert len(self.axp.business_model_keywords) >= 10
+
+
+class TestNkeProfile:
+    """Nike — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.nke = get_knowledge_profile("NKE")
+
+    def test_nke_profile_exists(self):
+        assert self.nke is not None
+
+    def test_nke_ticker_correct(self):
+        assert self.nke.ticker == "NKE"
+
+    def test_nke_keywords_contain_jordan_brand(self):
+        kws = " ".join(self.nke.business_model_keywords).lower()
+        assert "jordan" in kws
+
+    def test_nke_keywords_contain_dtc(self):
+        kws = " ".join(self.nke.business_model_keywords).lower()
+        assert "dtc" in kws or "direct-to-consumer" in kws
+
+    def test_nke_keywords_contain_elliott_hill(self):
+        kws = " ".join(self.nke.business_model_keywords).lower()
+        assert "elliott" in kws or "hill" in kws
+
+    def test_nke_keywords_contain_snkrs(self):
+        kws = " ".join(self.nke.business_model_keywords).lower()
+        assert "snkrs" in kws
+
+    def test_nke_primary_drivers_mention_footwear(self):
+        drivers = " ".join(self.nke.primary_revenue_drivers).lower()
+        assert "footwear" in drivers or "jordan" in drivers
+
+    def test_nke_risks_mention_on_running_or_hoka(self):
+        risks = " ".join(self.nke.major_risks).lower()
+        assert "on running" in risks or "hoka" in risks or "new balance" in risks
+
+    def test_nke_competitive_advantages_mention_jordan_or_athlete(self):
+        adv = " ".join(self.nke.competitive_advantages).lower()
+        assert "jordan" in adv or "athlete" in adv or "endorsement" in adv
+
+    def test_nke_keywords_at_least_10(self):
+        assert len(self.nke.business_model_keywords) >= 10
+
+
+class TestBaProfile:
+    """Boeing — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.ba = get_knowledge_profile("BA")
+
+    def test_ba_profile_exists(self):
+        assert self.ba is not None
+
+    def test_ba_ticker_correct(self):
+        assert self.ba.ticker == "BA"
+
+    def test_ba_keywords_contain_737_max(self):
+        kws = " ".join(self.ba.business_model_keywords).lower()
+        assert "737 max" in kws or "737" in kws
+
+    def test_ba_keywords_contain_kelly_ortberg(self):
+        kws = " ".join(self.ba.business_model_keywords).lower()
+        assert "ortberg" in kws
+
+    def test_ba_keywords_contain_production_rate(self):
+        kws = " ".join(self.ba.business_model_keywords).lower()
+        assert "production rate" in kws
+
+    def test_ba_keywords_contain_backlog(self):
+        kws = " ".join(self.ba.business_model_keywords).lower()
+        assert "backlog" in kws
+
+    def test_ba_primary_drivers_mention_787(self):
+        drivers = " ".join(self.ba.primary_revenue_drivers).lower()
+        assert "787" in drivers or "dreamliner" in drivers
+
+    def test_ba_risks_mention_faa(self):
+        risks = " ".join(self.ba.major_risks).lower()
+        assert "faa" in risks
+
+    def test_ba_competitive_advantages_mention_aftermarket_or_backlog(self):
+        adv = " ".join(self.ba.competitive_advantages).lower()
+        assert "aftermarket" in adv or "backlog" in adv or "defense" in adv
+
+    def test_ba_keywords_at_least_10(self):
+        assert len(self.ba.business_model_keywords) >= 10
+
+
+class TestWmtProfile:
+    """Walmart — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.wmt = get_knowledge_profile("WMT")
+
+    def test_wmt_profile_exists(self):
+        assert self.wmt is not None
+
+    def test_wmt_ticker_correct(self):
+        assert self.wmt.ticker == "WMT"
+
+    def test_wmt_keywords_contain_walmart_plus(self):
+        kws = " ".join(self.wmt.business_model_keywords).lower()
+        assert "walmart+" in kws or "walmart plus" in kws
+
+    def test_wmt_keywords_contain_edlp(self):
+        kws = " ".join(self.wmt.business_model_keywords).lower()
+        assert "edlp" in kws or "everyday low prices" in kws
+
+    def test_wmt_keywords_contain_sams_club(self):
+        kws = " ".join(self.wmt.business_model_keywords).lower()
+        assert "sam's club" in kws or "sams club" in kws
+
+    def test_wmt_keywords_contain_doug_mcmillon(self):
+        kws = " ".join(self.wmt.business_model_keywords).lower()
+        assert "mcmillon" in kws
+
+    def test_wmt_primary_drivers_mention_grocery(self):
+        drivers = " ".join(self.wmt.primary_revenue_drivers).lower()
+        assert "grocery" in drivers
+
+    def test_wmt_risks_mention_amazon(self):
+        risks = " ".join(self.wmt.major_risks).lower()
+        assert "amazon" in risks
+
+    def test_wmt_competitive_advantages_mention_supply_chain_or_scale(self):
+        adv = " ".join(self.wmt.competitive_advantages).lower()
+        assert "supply chain" in adv or "scale" in adv or "edlp" in adv
+
+    def test_wmt_keywords_at_least_10(self):
+        assert len(self.wmt.business_model_keywords) >= 10
+
+
+class TestKoProfile:
+    """Coca-Cola — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.ko = get_knowledge_profile("KO")
+
+    def test_ko_profile_exists(self):
+        assert self.ko is not None
+
+    def test_ko_ticker_correct(self):
+        assert self.ko.ticker == "KO"
+
+    def test_ko_keywords_contain_james_quincey(self):
+        kws = " ".join(self.ko.business_model_keywords).lower()
+        assert "quincey" in kws
+
+    def test_ko_keywords_contain_concentrate(self):
+        kws = " ".join(self.ko.business_model_keywords).lower()
+        assert "concentrate" in kws
+
+    def test_ko_keywords_contain_unit_case_volume(self):
+        kws = " ".join(self.ko.business_model_keywords).lower()
+        assert "unit case" in kws or "organic revenue" in kws
+
+    def test_ko_keywords_contain_coke_zero_sugar(self):
+        kws = " ".join(self.ko.business_model_keywords).lower()
+        assert "zero sugar" in kws or "coke zero" in kws
+
+    def test_ko_primary_drivers_mention_sparkling(self):
+        drivers = " ".join(self.ko.primary_revenue_drivers).lower()
+        assert "sparkling" in drivers
+
+    def test_ko_risks_mention_health_wellness_or_sugar(self):
+        risks = " ".join(self.ko.major_risks).lower()
+        assert "sugar" in risks or "health" in risks or "wellness" in risks
+
+    def test_ko_competitive_advantages_mention_bottler_or_brand(self):
+        adv = " ".join(self.ko.competitive_advantages).lower()
+        assert "bottler" in adv or "brand" in adv or "fountain" in adv
+
+    def test_ko_keywords_at_least_10(self):
+        assert len(self.ko.business_model_keywords) >= 10
+
+
+class TestCvxProfile:
+    """Chevron — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.cvx = get_knowledge_profile("CVX")
+
+    def test_cvx_profile_exists(self):
+        assert self.cvx is not None
+
+    def test_cvx_ticker_correct(self):
+        assert self.cvx.ticker == "CVX"
+
+    def test_cvx_keywords_contain_mike_wirth(self):
+        kws = " ".join(self.cvx.business_model_keywords).lower()
+        assert "wirth" in kws
+
+    def test_cvx_keywords_contain_permian(self):
+        kws = " ".join(self.cvx.business_model_keywords).lower()
+        assert "permian" in kws
+
+    def test_cvx_keywords_contain_tengiz_or_tco(self):
+        kws = " ".join(self.cvx.business_model_keywords).lower()
+        assert "tengiz" in kws or "tco" in kws
+
+    def test_cvx_keywords_contain_hess(self):
+        kws = " ".join(self.cvx.business_model_keywords).lower()
+        assert "hess" in kws
+
+    def test_cvx_primary_drivers_mention_lng_or_permian(self):
+        drivers = " ".join(self.cvx.primary_revenue_drivers).lower()
+        assert "permian" in drivers or "lng" in drivers
+
+    def test_cvx_risks_mention_oil_price(self):
+        risks = " ".join(self.cvx.major_risks).lower()
+        assert "oil price" in risks or "brent" in risks
+
+    def test_cvx_competitive_advantages_mention_permian_or_balance_sheet(self):
+        adv = " ".join(self.cvx.competitive_advantages).lower()
+        assert "permian" in adv or "balance sheet" in adv or "tengiz" in adv
+
+    def test_cvx_keywords_at_least_10(self):
+        assert len(self.cvx.business_model_keywords) >= 10
+
+
+class TestSchwProfile:
+    """Charles Schwab — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.schw = get_knowledge_profile("SCHW")
+
+    def test_schw_profile_exists(self):
+        assert self.schw is not None
+
+    def test_schw_ticker_correct(self):
+        assert self.schw.ticker == "SCHW"
+
+    def test_schw_keywords_contain_net_interest_revenue(self):
+        kws = " ".join(self.schw.business_model_keywords).lower()
+        assert "net interest revenue" in kws or "net interest" in kws
+
+    def test_schw_keywords_contain_bank_sweep(self):
+        kws = " ".join(self.schw.business_model_keywords).lower()
+        assert "bank sweep" in kws or "sweep" in kws
+
+    def test_schw_keywords_contain_td_ameritrade(self):
+        kws = " ".join(self.schw.business_model_keywords).lower()
+        assert "td ameritrade" in kws or "thinkorswim" in kws
+
+    def test_schw_keywords_contain_ria(self):
+        kws = " ".join(self.schw.business_model_keywords).lower()
+        assert "ria" in kws
+
+    def test_schw_primary_drivers_mention_nii_or_sweep(self):
+        drivers = " ".join(self.schw.primary_revenue_drivers).lower()
+        assert "net interest" in drivers or "sweep" in drivers
+
+    def test_schw_risks_mention_cash_sorting_or_rate(self):
+        risks = " ".join(self.schw.major_risks).lower()
+        assert "cash sorting" in risks or "rate" in risks or "pfof" in risks
+
+    def test_schw_competitive_advantages_mention_ria_custody(self):
+        adv = " ".join(self.schw.competitive_advantages).lower()
+        assert "ria" in adv or "custody" in adv or "thinkorswim" in adv
+
+    def test_schw_keywords_at_least_10(self):
+        assert len(self.schw.business_model_keywords) >= 10
+
+
+class TestMdlzProfile:
+    """Mondelez International — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.mdlz = get_knowledge_profile("MDLZ")
+
+    def test_mdlz_profile_exists(self):
+        assert self.mdlz is not None
+
+    def test_mdlz_ticker_correct(self):
+        assert self.mdlz.ticker == "MDLZ"
+
+    def test_mdlz_keywords_contain_oreo(self):
+        kws = " ".join(self.mdlz.business_model_keywords).lower()
+        assert "oreo" in kws
+
+    def test_mdlz_keywords_contain_cadbury(self):
+        kws = " ".join(self.mdlz.business_model_keywords).lower()
+        assert "cadbury" in kws
+
+    def test_mdlz_keywords_contain_cocoa_inflation(self):
+        kws = " ".join(self.mdlz.business_model_keywords).lower()
+        assert "cocoa" in kws
+
+    def test_mdlz_keywords_contain_dirk_van_de_put(self):
+        kws = " ".join(self.mdlz.business_model_keywords).lower()
+        assert "dirk" in kws or "van de put" in kws
+
+    def test_mdlz_primary_drivers_mention_biscuits_or_chocolate(self):
+        drivers = " ".join(self.mdlz.primary_revenue_drivers).lower()
+        assert "biscuit" in drivers or "chocolate" in drivers
+
+    def test_mdlz_risks_mention_cocoa_price(self):
+        risks = " ".join(self.mdlz.major_risks).lower()
+        assert "cocoa" in risks
+
+    def test_mdlz_competitive_advantages_mention_oreo_or_cadbury(self):
+        adv = " ".join(self.mdlz.competitive_advantages).lower()
+        assert "oreo" in adv or "cadbury" in adv
+
+    def test_mdlz_keywords_at_least_10(self):
+        assert len(self.mdlz.business_model_keywords) >= 10
+
+
+class TestCopProfile:
+    """ConocoPhillips — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.cop = get_knowledge_profile("COP")
+
+    def test_cop_profile_exists(self):
+        assert self.cop is not None
+
+    def test_cop_ticker_correct(self):
+        assert self.cop.ticker == "COP"
+
+    def test_cop_keywords_contain_ryan_lance(self):
+        kws = " ".join(self.cop.business_model_keywords).lower()
+        assert "ryan lance" in kws or "lance" in kws
+
+    def test_cop_keywords_contain_permian(self):
+        kws = " ".join(self.cop.business_model_keywords).lower()
+        assert "permian" in kws
+
+    def test_cop_keywords_contain_cost_of_supply(self):
+        kws = " ".join(self.cop.business_model_keywords).lower()
+        assert "cost of supply" in kws
+
+    def test_cop_keywords_contain_marathon_oil(self):
+        kws = " ".join(self.cop.business_model_keywords).lower()
+        assert "marathon" in kws
+
+    def test_cop_primary_drivers_mention_lower48_or_alaska(self):
+        drivers = " ".join(self.cop.primary_revenue_drivers).lower()
+        assert "permian" in drivers or "alaska" in drivers or "lower 48" in drivers
+
+    def test_cop_risks_mention_oil_price(self):
+        risks = " ".join(self.cop.major_risks).lower()
+        assert "oil price" in risks or "wti" in risks or "brent" in risks
+
+    def test_cop_competitive_advantages_mention_tier1_or_balance_sheet(self):
+        adv = " ".join(self.cop.competitive_advantages).lower()
+        assert "tier 1" in adv or "cost of supply" in adv or "balance sheet" in adv
+
+    def test_cop_keywords_at_least_10(self):
+        assert len(self.cop.business_model_keywords) >= 10
+
+
+class TestRtxProfile:
+    """RTX Corporation — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.rtx = get_knowledge_profile("RTX")
+
+    def test_rtx_profile_exists(self):
+        assert self.rtx is not None
+
+    def test_rtx_ticker_correct(self):
+        assert self.rtx.ticker == "RTX"
+
+    def test_rtx_keywords_contain_pratt_whitney(self):
+        kws = " ".join(self.rtx.business_model_keywords).lower()
+        assert "pratt" in kws or "pratt & whitney" in kws
+
+    def test_rtx_keywords_contain_gtf(self):
+        kws = " ".join(self.rtx.business_model_keywords).lower()
+        assert "gtf" in kws or "geared turbofan" in kws
+
+    def test_rtx_keywords_contain_patriot(self):
+        kws = " ".join(self.rtx.business_model_keywords).lower()
+        assert "patriot" in kws
+
+    def test_rtx_keywords_contain_collins_aerospace(self):
+        kws = " ".join(self.rtx.business_model_keywords).lower()
+        assert "collins" in kws
+
+    def test_rtx_primary_drivers_mention_aftermarket_or_defense(self):
+        drivers = " ".join(self.rtx.primary_revenue_drivers).lower()
+        assert "aftermarket" in drivers or "defense" in drivers or "patriot" in drivers
+
+    def test_rtx_risks_mention_gtf_powder_metal(self):
+        risks = " ".join(self.rtx.major_risks).lower()
+        assert "powder metal" in risks or "gtf" in risks
+
+    def test_rtx_competitive_advantages_mention_gtf_or_patriot(self):
+        adv = " ".join(self.rtx.competitive_advantages).lower()
+        assert "gtf" in adv or "patriot" in adv or "a320neo" in adv
+
+    def test_rtx_keywords_at_least_10(self):
+        assert len(self.rtx.business_model_keywords) >= 10
+
+
+class TestNeeProfile:
+    """NextEra Energy — Severity-2 profile regression tests."""
+
+    def setup_method(self):
+        self.nee = get_knowledge_profile("NEE")
+
+    def test_nee_profile_exists(self):
+        assert self.nee is not None
+
+    def test_nee_ticker_correct(self):
+        assert self.nee.ticker == "NEE"
+
+    def test_nee_keywords_contain_john_ketchum(self):
+        kws = " ".join(self.nee.business_model_keywords).lower()
+        assert "ketchum" in kws
+
+    def test_nee_keywords_contain_fpl(self):
+        kws = " ".join(self.nee.business_model_keywords).lower()
+        assert "fpl" in kws or "florida power" in kws
+
+    def test_nee_keywords_contain_ppa(self):
+        kws = " ".join(self.nee.business_model_keywords).lower()
+        assert "ppa" in kws or "power purchase" in kws
+
+    def test_nee_keywords_contain_neer_or_renewables(self):
+        kws = " ".join(self.nee.business_model_keywords).lower()
+        assert "neer" in kws or "wind" in kws or "solar" in kws
+
+    def test_nee_primary_drivers_mention_fpl_or_regulated(self):
+        drivers = " ".join(self.nee.primary_revenue_drivers).lower()
+        assert "fpl" in drivers or "florida" in drivers or "regulated" in drivers
+
+    def test_nee_risks_mention_interest_rate(self):
+        risks = " ".join(self.nee.major_risks).lower()
+        assert "interest rate" in risks or "rate" in risks or "nep" in risks
+
+    def test_nee_competitive_advantages_mention_scale_or_fpl(self):
+        adv = " ".join(self.nee.competitive_advantages).lower()
+        assert "scale" in adv or "fpl" in adv or "florida" in adv
+
+    def test_nee_keywords_at_least_10(self):
+        assert len(self.nee.business_model_keywords) >= 10
