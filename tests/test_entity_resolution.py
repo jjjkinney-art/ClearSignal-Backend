@@ -233,8 +233,13 @@ class TestStopWordProtection:
     def test_net_is_in_stop_words(self):
         assert "NET" in _TICKER_STOP_WORDS
 
-    def test_snow_is_in_stop_words(self):
-        assert "SNOW" in _TICKER_STOP_WORDS
+    def test_snow_resolves_directly_as_ticker(self):
+        # Severity-1b: SNOW was removed from _TICKER_STOP_WORDS so that direct
+        # ticker queries ("Investment thesis for SNOW") resolve correctly.
+        # Uppercase SNOW on a financial platform almost always refers to Snowflake.
+        er = resolve_entity("SNOW")
+        assert er.context is not None, "SNOW must resolve to Snowflake Inc."
+        assert er.context.ticker == "SNOW"
 
     def test_dash_is_in_stop_words(self):
         assert "DASH" in _TICKER_STOP_WORDS
@@ -248,8 +253,13 @@ class TestStopWordProtection:
     def test_arm_is_in_stop_words(self):
         assert "ARM" in _TICKER_STOP_WORDS
 
-    def test_now_is_in_stop_words(self):
-        assert "NOW" in _TICKER_STOP_WORDS
+    def test_now_resolves_directly_as_ticker(self):
+        # Severity-1b: NOW was removed from _TICKER_STOP_WORDS so that direct
+        # ticker queries ("Investment thesis for NOW") resolve correctly.
+        # Uppercase NOW on a financial platform almost always refers to ServiceNow.
+        er = resolve_entity("NOW")
+        assert er.context is not None, "NOW must resolve to ServiceNow Inc."
+        assert er.context.ticker == "NOW"
 
     def test_protected_generic_tickers_populated(self):
         for ticker in ("AI", "APP", "NET", "SNOW", "DASH", "PATH", "OPEN"):

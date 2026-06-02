@@ -72,8 +72,15 @@ _TICKER_STOP_WORDS: frozenset[str] = frozenset({
     "A", "I", "IT", "IS", "IN", "ON", "OF", "AT", "BE", "BY", "DO", "GO",
     "IF", "NO", "OR", "TO", "UP", "US", "WE", "AN", "AS", "AM", "ARE",
     "ALL", "AND", "BUT", "CAN", "FOR", "GET", "GOT", "HAD", "HAS", "HIM",
-    "HIS", "HOW", "ITS", "LET", "MAY", "ME", "MY", "NEW", "NOT", "NOW",
-    "OFF", "OLD", "OUR", "OUT", "OWN", "SAY", "SHE", "SO", "THE", "TOO",
+    "HIS", "HOW", "ITS", "LET", "MAY", "ME", "MY", "NEW", "NOT",
+    # "NOW" removed (Severity-1b): ServiceNow ticker; uppercase NOW on a financial
+    # platform almost always refers to the ticker, not the English adverb.
+    # Long-form alias "servicenow" still handles natural-language queries.
+    "OFF", "OLD", "OUR", "OUT", "OWN", "SAY", "SHE",
+    # "SO" removed (Severity-1b): Southern Company ticker; uppercase SO in
+    # financial queries almost always refers to the ticker, not a conjunction.
+    # Long-form alias "southern company" still handles natural-language queries.
+    "THE", "TOO",
     "TWO", "USE", "WAS", "WAY", "WHO", "WHY", "WIN", "WITH", "YES", "YET",
     "YOU",
     # ── Protected generic-word tickers ────────────────────────────────────────
@@ -85,13 +92,16 @@ _TICKER_STOP_WORDS: frozenset[str] = frozenset({
     "AI",   # C3.ai — "AI" most commonly means artificial intelligence in prose
     "APP",  # AppLovin — "app" is a ubiquitous English word
     "NET",  # Cloudflare — "net" is a common noun/adjective
-    "SNOW", # Snowflake — "snow" is a weather term
+    # "SNOW" removed (Severity-1b): Snowflake ticker; uppercase SNOW on a financial
+    # platform almost always refers to the ticker, not the weather term. The alias
+    # "snowflake" handles natural-language queries; PROTECTED_GENERIC_TICKERS still
+    # flags genuinely ambiguous low-confidence cases.
     "DASH", # DoorDash — "dash" is a common verb/noun
     "PATH", # UiPath — "path" is a common noun
     "OPEN", # Opendoor — "open" is a common adjective/verb
     "SHOP", # Shopify — "shop" is a common verb/noun (Shopify resolves via alias)
     "ARM",  # Arm Holdings — "arm" is a body part (resolves via "arm holdings" alias)
-    "NOW",  # ServiceNow — "now" is a common adverb (resolves via "servicenow" alias)
+    # "NOW" removed — see first block above.
 })
 
 # ---------------------------------------------------------------------------
@@ -329,6 +339,27 @@ _COMPANY_DB: dict[str, dict] = {
 
     # ── Energy Services (Severity-1 fix) ──────────────────────────────────────
     "SLB":   {"company_name": "SLB",                                     "sector": "Energy",                    "industry": "Oilfield Services"},
+
+    # ── Severity-1b expansion (2026-06-02) ────────────────────────────────────
+    # 12 companies absent from 100-company validation roster; 3 more (NOW/SNOW/SO)
+    # were present but blocked by _TICKER_STOP_WORDS — see stop-words section above.
+    # Financials
+    "CB":    {"company_name": "Chubb Limited",                           "sector": "Financials",                "industry": "Insurance"},
+    # Industrials
+    "ETN":   {"company_name": "Eaton Corporation plc",                   "sector": "Industrials",               "industry": "Electrical Equipment"},
+    "EMR":   {"company_name": "Emerson Electric Co.",                    "sector": "Industrials",               "industry": "Industrial Automation"},
+    # Energy
+    "EOG":   {"company_name": "EOG Resources Inc.",                      "sector": "Energy",                    "industry": "Oil & Gas E&P"},
+    "PSX":   {"company_name": "Phillips 66",                             "sector": "Energy",                    "industry": "Oil Refining"},
+    "OXY":   {"company_name": "Occidental Petroleum Corporation",        "sector": "Energy",                    "industry": "Oil & Gas"},
+    "VLO":   {"company_name": "Valero Energy Corporation",               "sector": "Energy",                    "industry": "Oil Refining"},
+    # Utilities
+    "D":     {"company_name": "Dominion Energy Inc.",                    "sector": "Utilities",                 "industry": "Electric Utilities"},
+    "AEP":   {"company_name": "American Electric Power Company Inc.",    "sector": "Utilities",                 "industry": "Electric Utilities"},
+    "EXC":   {"company_name": "Exelon Corporation",                      "sector": "Utilities",                 "industry": "Electric Utilities"},
+    # Communication Services
+    "TMUS":  {"company_name": "T-Mobile US Inc.",                        "sector": "Communication Services",    "industry": "Telecom"},
+    "CHTR":  {"company_name": "Charter Communications Inc.",             "sector": "Communication Services",    "industry": "Cable & Satellite"},
 }
 
 # ---------------------------------------------------------------------------
@@ -1043,6 +1074,75 @@ _ALIAS_MAP: dict[str, str] = {
     "slb":                             "SLB",
     "schlumberger":                    "SLB",
     "schlumberger limited":            "SLB",
+
+    # ── Severity-1b expansion aliases (2026-06-02) ────────────────────────────
+    # NOW — ServiceNow (no longer a stop word; long-form alias below supplements
+    #        the new exact-ticker resolution for direct ticker queries)
+    "service now":                     "NOW",    # spaced variant
+    "servicenow inc":                  "NOW",
+
+    # SNOW — Snowflake (no longer a stop word)
+    "snowflake inc":                   "SNOW",
+
+    # SO — Southern Company (no longer a stop word)
+    "southern co":                     "SO",     # common abbreviation
+    "southern company the":            "SO",
+
+    # CB — Chubb Limited
+    "chubb":                           "CB",
+    "chubb limited":                   "CB",
+    "chubb insurance":                 "CB",
+
+    # ETN — Eaton Corporation
+    "eaton":                           "ETN",
+    "eaton corporation":               "ETN",
+    "eaton corp":                      "ETN",
+
+    # EMR — Emerson Electric
+    "emerson":                         "EMR",
+    "emerson electric":                "EMR",
+    "emerson electric co":             "EMR",
+
+    # EOG — EOG Resources
+    "eog resources":                   "EOG",
+    "eog":                             "EOG",
+
+    # PSX — Phillips 66
+    "phillips 66":                     "PSX",
+    "phillips66":                      "PSX",
+
+    # OXY — Occidental Petroleum
+    "occidental":                      "OXY",
+    "occidental petroleum":            "OXY",
+    "oxy petroleum":                   "OXY",
+
+    # VLO — Valero Energy
+    "valero":                          "VLO",
+    "valero energy":                   "VLO",
+
+    # D — Dominion Energy
+    "dominion energy":                 "D",
+    "dominion":                        "D",
+
+    # AEP — American Electric Power
+    "american electric power":         "AEP",
+    "aep":                             "AEP",
+
+    # EXC — Exelon
+    "exelon":                          "EXC",
+    "exelon corporation":              "EXC",
+
+    # TMUS — T-Mobile
+    "t-mobile":                        "TMUS",
+    "tmobile":                         "TMUS",
+    "t mobile":                        "TMUS",
+    "t-mobile us":                     "TMUS",
+
+    # CHTR — Charter Communications
+    "charter communications":          "CHTR",
+    "charter":                         "CHTR",
+    "spectrum cable":                  "CHTR",   # consumer brand (specific form to avoid matching "spectrum" alone)
+    "spectrum internet":               "CHTR",
 }
 
 # Pre-sort alias keys by length (descending) so that the longest match wins.
