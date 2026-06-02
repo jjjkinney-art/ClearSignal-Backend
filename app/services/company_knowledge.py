@@ -4590,6 +4590,1412 @@ _register(CompanyKnowledgeProfile(
 ))
 
 
+# ── Palo Alto Networks (PANW) ─────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="PANW",
+    company_name="Palo Alto Networks Inc.",
+    business_model=(
+        "Palo Alto Networks executes a 'platformization' strategy — consolidating "
+        "customers from point products onto three integrated platforms: Strata "
+        "(network security/NGFW), Prisma Cloud (cloud-native application security), "
+        "and Cortex (AI-driven SOC automation via XSIAM).  Revenue is ~78% "
+        "subscription/services and ~22% product hardware."
+    ),
+    primary_revenue_drivers=[
+        "Strata network security — next-gen firewalls + Prisma Access SASE (~45% of revenue)",
+        "Prisma Cloud CNAPP — cloud workload, container, and code security (~20%)",
+        "Cortex XSIAM / XDR — AI-driven SOC replacing legacy SIEM (~15%)",
+        "Product hardware appliances (~22% — declining mix as SaaS grows)",
+    ],
+    recurring_revenue_sources=[
+        "Next-gen security ARR (cNGS ARR) — primary growth KPI, >$4.2B growing ~30% y/y",
+        "Remaining Performance Obligation (RPO) — contracted future revenue visibility",
+        "Prisma Cloud CSPM/CWPP subscription seats",
+        "Cortex XSIAM platform multi-year enterprise contracts",
+    ],
+    rate_sensitivity_note=(
+        "PANW trades at ~50-65x forward earnings. A 100 bps rate rise compresses "
+        "the DCF-derived multiple significantly. However, cybersecurity spend is "
+        "non-discretionary — enterprise security budgets are the last to be cut, "
+        "providing fundamental resilience even as the multiple compresses."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power — cybersecurity is mandatory spending. The "
+        "platformization strategy temporarily compresses billings (free capacity "
+        "offered to consolidating customers) but builds long-term ARR stickiness "
+        "and total-cost-of-ownership advantages."
+    ),
+    recession_behavior=(
+        "Cybersecurity is the most resilient sub-sector of enterprise IT. "
+        "Platformization — consolidating from many point vendors to save budget — "
+        "actually accelerates in downturns as CISOs seek to reduce vendor spend. "
+        "PANW saw billings decelerate but not decline through 2023-24."
+    ),
+    major_risks=[
+        "Microsoft Security — $20B+ business bundled with Azure/M365 competes on "
+        "price; enterprises can get 'good enough' security free with MSFT licenses",
+        "CrowdStrike competition in XDR/endpoint and XSIAM mindshare",
+        "Platformization billings headwind — free capacity offers suppress "
+        "near-term billings and revenue, creating a 3-6 quarter trough",
+        "Nikesh Arora key-person risk as architect of platformization strategy",
+    ],
+    valuation_style=(
+        "Valued on EV/FCF (~40-60x) and EV/ARR. cNGS ARR growth and RPO expansion "
+        "are the primary re-rating metrics. Re-rating catalyst: platformization "
+        "billings recovery and XSIAM displacing SIEM at scale."
+    ),
+    key_metrics=[
+        "Next-gen security ARR (cNGS ARR)",
+        "Remaining Performance Obligation (RPO)",
+        "Billings growth rate",
+        "Platformization customer count (>1,000 target)",
+        "Free cash flow margin (~37-38%)",
+        "XSIAM customer count and ACV",
+    ],
+    competitive_advantages=[
+        "Integrated platform: Strata + Prisma + Cortex share Cortex Data Lake — "
+        "unified telemetry enables AI threat correlation that point products cannot match",
+        "Largest NGFW installed base (~80,000 customers) — switching costs and "
+        "cross-sell foundation for Prisma Cloud and Cortex upsell",
+        "AI-native XSIAM — first mover replacing $4B+ annual SIEM market",
+    ],
+    business_model_keywords=[
+        "platformization", "SASE", "Prisma Cloud", "Cortex", "XSIAM", "XDR",
+        "next-generation firewall", "NGFW", "Strata", "cNGS ARR", "RPO",
+        "CNAPP", "CSPM", "zero trust", "Nikesh Arora", "billings",
+        "cloud-native security", "SOC", "network security",
+    ],
+))
+
+
+# ── Walt Disney Company (DIS) ─────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="DIS",
+    company_name="The Walt Disney Company",
+    business_model=(
+        "Disney monetizes its IP portfolio (Marvel, Star Wars, Pixar, Disney Classic, "
+        "ESPN) across two segments: Entertainment (streaming via Disney+/Hulu/ESPN+, "
+        "theatrical, linear TV via ABC/ESPN/FX) and Experiences (theme parks, cruise "
+        "line, consumer products).  CEO Bob Iger returned in 2022 to restructure "
+        "streaming toward profitability while preserving the parks cash engine."
+    ),
+    primary_revenue_drivers=[
+        "Experiences — Walt Disney World, Disneyland, international parks, cruise "
+        "line (~40% of revenue, ~60% of operating income)",
+        "Entertainment DTC — Disney+, Hulu, ESPN+ streaming (~35%); "
+        "DTC segment reached profitability in fiscal 2024",
+        "Linear Networks — ESPN, ABC, FX, NatGeo (~25%; declining with cord-cutting "
+        "but ESPN still generates $3B+ operating income annually)",
+    ],
+    recurring_revenue_sources=[
+        "Disney+ and Hulu subscription fees (~230M+ combined subscribers)",
+        "ESPN+ streaming subscriptions",
+        "Annual pass holders at Walt Disney World and Disneyland",
+        "Disney Cruise Line advance bookings (12-18 month window)",
+        "Consumer products licensing royalties (Marvel, Star Wars, Disney brand)",
+    ],
+    rate_sensitivity_note=(
+        "Net debt of ~$40B means higher rates increase interest expense directly. "
+        "Parks capex (new rides, ships) is funded at prevailing rates, raising "
+        "project hurdle rates. The stock trades at ~20-24x EPS — moderately "
+        "rate-sensitive multiple."
+    ),
+    inflation_pass_through=(
+        "Strong in parks: Disney raised single-day ticket prices from ~$110 (2019) "
+        "to $189+ (2024) at peak without demand destruction, aided by Genie+ and "
+        "Lightning Lane capacity tools. Streaming raised prices aggressively in "
+        "2023-24 with limited churn aided by password-sharing crackdown."
+    ),
+    recession_behavior=(
+        "Parks are aspirational — families plan Disney trips years in advance and "
+        "prioritize them in household budgets. Per-capita spending in parks rose "
+        "through 2022-23. Theatrical releases are volatile. Streaming is relatively "
+        "sticky. Linear TV advertising is highly cyclical."
+    ),
+    major_risks=[
+        "ESPN cord-cutting — linear ESPN subscriber base eroding; ESPN standalone "
+        "streaming launch requires careful rights negotiation and consumer pricing",
+        "Streaming profitability sustainability — content costs (Marvel, Star Wars) "
+        "must be managed against subscriber growth targets",
+        "China parks — Shanghai Disneyland faces geopolitical and consumer sentiment risk",
+        "Marvel/Star Wars IP fatigue — franchise output must balance quantity vs quality",
+        "Activist investor pressure on cost structure and CEO succession timeline",
+    ],
+    valuation_style=(
+        "Sum-of-parts: Experiences at ~14-16x EBITDA, DTC at a Netflix-like "
+        "revenue multiple once profitably scaled, Linear at a declining cash "
+        "flow multiple. Key re-rating: ESPN streaming success and DTC margin expansion."
+    ),
+    key_metrics=[
+        "Disney+ paid subscribers and ARPU",
+        "DTC segment operating income",
+        "Parks per-capita spending and attendance",
+        "ESPN subscribers (linear + streaming combined)",
+        "Free cash flow (target $8B+/yr)",
+        "Total debt and deleveraging trajectory",
+    ],
+    competitive_advantages=[
+        "IP portfolio depth — Marvel, Star Wars, Pixar, Disney Classic: no competitor "
+        "can match the multi-generational, cross-demographic appeal of this library",
+        "Theme park experiential moat — Disney parks command 2-3x ticket premiums; "
+        "new rides take 5-7 years and $1-2B to build, preventing replication",
+        "Franchise synergy flywheel — single IP generates theatrical, streaming, parks, "
+        "consumer products revenue simultaneously across all channels",
+    ],
+    business_model_keywords=[
+        "Disney+", "Hulu", "ESPN", "ESPN+", "Bob Iger", "Marvel", "Star Wars",
+        "Pixar", "Walt Disney World", "Disneyland", "theme park", "cruise",
+        "DTC", "direct-to-consumer", "cord-cutting", "ARPU", "Genie+",
+        "Lightning Lane", "ABC", "content spending", "IP", "franchise",
+    ],
+))
+
+
+# ── Uber Technologies (UBER) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="UBER",
+    company_name="Uber Technologies Inc.",
+    business_model=(
+        "Uber operates a global two-sided marketplace connecting riders to drivers "
+        "(Mobility) and consumers to restaurants/couriers (Delivery/Uber Eats), "
+        "plus a freight logistics brokerage (Freight).  Revenue is the net take rate "
+        "on Gross Bookings — ~27-29% on Mobility and ~18-19% on Delivery after "
+        "paying driver incentives.  Advertising (~$1B+ run rate) is a high-margin "
+        "emerging revenue layer on top of the marketplace."
+    ),
+    primary_revenue_drivers=[
+        "Mobility (~57% of Gross Bookings) — global ride-hailing; US, LatAm, "
+        "Europe, APAC; highest take rate and margin segment",
+        "Delivery (~41% of Gross Bookings) — Uber Eats food + grocery/alcohol delivery",
+        "Freight (~2%) — digital freight brokerage; volatile with trucking cycle",
+        "Advertising (~$1B+ run rate, rapidly growing) — high-margin CPM/CPC ads",
+    ],
+    recurring_revenue_sources=[
+        "Uber One membership (~30M+ members, $9.99/month) — reduces churn, "
+        "increases Mobility and Eats frequency",
+        "Restaurant sponsored listings on Uber Eats",
+        "Uber for Business corporate travel management contracts",
+    ],
+    rate_sensitivity_note=(
+        "UBER trades at ~25-35x forward EBITDA after its shift to profitability. "
+        "Higher rates modestly compress the multiple. More critically, higher "
+        "rates increase driver vehicle financing costs — can tighten driver supply "
+        "and raise incentive spend, compressing take rates. UBER has net cash "
+        "and minimal direct interest expense sensitivity."
+    ),
+    inflation_pass_through=(
+        "Mixed: dynamic pricing algorithms pass fuel and cost increases to riders, "
+        "but consumer price sensitivity limits sustained fare increases. Driver pay "
+        "inflation is structural in tight supply markets. Advertising revenue is "
+        "fully incremental at near-100% margin."
+    ),
+    recession_behavior=(
+        "Mobility is semi-discretionary — commuters and non-car-owners still need "
+        "rides but leisure trips decline. Gig-economy driver supply increases in "
+        "recessions as workers seek flexible income, easing supply constraints and "
+        "potentially improving take rates. Delivery showed resilience in downturns."
+    ),
+    major_risks=[
+        "Autonomous vehicle disruption — Waymo, Tesla Robotaxi could disintermediate "
+        "Uber's driver network; Uber's counter is to be the AV distribution platform",
+        "Driver classification — AB5-type laws could force employee classification, "
+        "adding ~30% to driver costs and destroying the gig-economy model",
+        "Delivery margin pressure — DoorDash, Instacart compete aggressively in food delivery",
+        "Regulatory market exits (UK, EU driver pay rules)",
+    ],
+    valuation_style=(
+        "Valued on EV/EBITDA (~25-35x) and FCF yield as it reaches sustained "
+        "profitability. Gross Bookings growth, take-rate expansion, and advertising "
+        "revenue are the primary re-rating levers."
+    ),
+    key_metrics=[
+        "Monthly Active Platform Consumers (MAPC)",
+        "Gross Bookings by segment",
+        "Take rate (Mobility and Delivery)",
+        "Adjusted EBITDA and free cash flow",
+        "Trips per MAPC (frequency)",
+        "Uber One membership count",
+        "Advertising revenue run rate",
+    ],
+    competitive_advantages=[
+        "Global network density — 7B+ annual trips across 70+ countries; higher "
+        "density → shorter wait times → more demand → self-reinforcing local network effect",
+        "Cross-platform data flywheel — Mobility + Delivery in one app enables "
+        "Uber One bundling; pure-play competitors (DoorDash, Lyft) lack this",
+        "AV optionality without AV R&D cost — Waymo partnership provides upside "
+        "from autonomous cost reductions without $10B+ internal development burn",
+    ],
+    business_model_keywords=[
+        "Mobility", "Delivery", "Uber Eats", "Gross Bookings", "take rate",
+        "MAPC", "trips", "Uber One", "advertising", "autonomous vehicle",
+        "Waymo", "driver incentives", "Dara Khosrowshahi", "ride-sharing",
+        "gig economy", "food delivery", "freight", "surge pricing", "AB5",
+    ],
+))
+
+
+# ── Intel Corporation (INTC) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="INTC",
+    company_name="Intel Corporation",
+    business_model=(
+        "Intel is an integrated device manufacturer (IDM) designing and fabricating "
+        "semiconductors across client computing (CCG), data center and AI (DCAI), "
+        "network and edge (NEX), Intel Foundry Services (IFS), and Mobileye (ADAS). "
+        "The IDM 2.0 strategy bets that in-house manufacturing — specifically the "
+        "18A process node — will close the gap with TSMC by 2025-26 and attract "
+        "external foundry customers."
+    ),
+    primary_revenue_drivers=[
+        "Client Computing Group (CCG) — Core Ultra CPUs for laptops/desktops (~40% "
+        "of revenue; AI PC cycle with NPU-enabled Meteor/Lunar Lake is the catalyst)",
+        "Data Center & AI (DCAI) — Xeon server CPUs + Gaudi AI accelerators (~25%; "
+        "AMD EPYC taking share rapidly)",
+        "Intel Foundry Services (IFS) — external wafer fabrication (early stage)",
+        "Network & Edge (NEX) (~15%)",
+        "Mobileye (~7% — ADAS/autonomous driving EyeQ chips)",
+    ],
+    recurring_revenue_sources=[
+        "Multi-year OEM supply agreements (HP, Dell, Lenovo PC partnerships)",
+        "Hyperscaler Xeon server refresh cycles (2-4 year replacement cadence)",
+        "Intel Foundry long-term wafer agreements (18A process commitments)",
+        "Mobileye EyeQ automotive production programs (multi-year design wins)",
+    ],
+    rate_sensitivity_note=(
+        "INTC trades at ~20-25x depressed forward P/E. Rising rates raise the cost "
+        "of the massive CapEx program ($20-25B/yr for IDM 2.0), partially offset by "
+        "$8.5B CHIPS Act grants. Higher rates increase the hurdle rate for IFS "
+        "foundry profitability and stress the balance sheet during negative FCF years."
+    ),
+    inflation_pass_through=(
+        "Limited: Intel has lost pricing power in server CPUs to AMD EPYC and in "
+        "AI accelerators to NVIDIA. PC CPU pricing faces pressure from AMD in "
+        "consumer and ARM/Qualcomm Snapdragon X in AI PC. Cost inflation cannot "
+        "be passed through when market share is being lost simultaneously."
+    ),
+    recession_behavior=(
+        "PC market is highly cyclical — CCG revenue collapsed in 2022-23 post-COVID. "
+        "Server CPU refreshes decelerate in downturns. Intel's high fixed-cost "
+        "manufacturing base creates severe operating leverage — revenue decline "
+        "translates to disproportionate earnings collapse vs. fabless AMD."
+    ),
+    major_risks=[
+        "18A node execution — any yield or performance shortfall vs TSMC destroys "
+        "the IFS thesis and strands $100B+ of committed CapEx",
+        "AMD EPYC structural share gains — AMD taking 20%+ of x86 server CPU market",
+        "ARM architecture disruption — Apple M-series, Qualcomm Snapdragon X prove "
+        "ARM outperforms x86 on perf/watt in AI PCs, threatening CCG's core franchise",
+        "Gaudi AI commercial traction — NVIDIA H100/B100 dominance leaves Intel "
+        "fighting for scraps; without hyperscaler adoption Intel misses the AI buildout",
+        "FCF negative during investment cycle — cash burn and balance sheet stress",
+    ],
+    valuation_style=(
+        "Deep value / turnaround — valued on normalized EPS 2-3 years out. Bull case: "
+        "18A works, IFS wins foundry customers, re-rates to hybrid IDM/foundry multiple. "
+        "Bear case: IDM 2.0 fails, Intel splits into fabless designer + divested foundry."
+    ),
+    key_metrics=[
+        "18A process node yield rate vs TSMC N2 equivalent",
+        "DCAI revenue and Gaudi AI accelerator bookings",
+        "AMD server CPU market share (inverse Intel indicator)",
+        "IFS external revenue and wafer starts",
+        "CCG ASP and AI PC attach rate",
+        "Gross margin trajectory (compressed below 40%)",
+        "CapEx and FCF (negative during investment phase)",
+    ],
+    competitive_advantages=[
+        "x86 installed base — billions of lines of x86-optimized enterprise software "
+        "create migration friction; server workloads cannot easily switch to ARM/AMD",
+        "Western IDM geopolitical value — only US-headquartered advanced fab; CHIPS "
+        "Act and EU sovereignty demand provide structural IFS customer pipeline if 18A delivers",
+        "Mobileye ADAS leadership — EyeQ platform with multi-year OEM design win "
+        "pipelines; SuperVision/Chauffeur autonomy platforms in development",
+    ],
+    business_model_keywords=[
+        "IDM 2.0", "Intel Foundry", "IFS", "18A", "Intel 3", "Gaudi", "Xeon",
+        "Core Ultra", "Meteor Lake", "Lunar Lake", "CCG", "DCAI",
+        "Mobileye", "EyeQ", "CHIPS Act", "Pat Gelsinger", "process node",
+        "AI PC", "AMD EPYC", "server CPU", "wafer", "ARM competition",
+    ],
+))
+
+
+# ── Mastercard Inc. (MA) ──────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="MA",
+    company_name="Mastercard Inc.",
+    business_model=(
+        "Mastercard operates the world's second-largest open-loop payment network, "
+        "earning net revenue as a small percentage of Gross Dollar Volume (GDV) "
+        "processed across its network — via assessments, data processing fees, and "
+        "cross-border transaction fees.  Completely asset-light: Mastercard never "
+        "takes credit risk; it is a toll road on global consumer and commercial spending."
+    ),
+    primary_revenue_drivers=[
+        "Domestic assessments (~30% of net revenue) — basis points on domestic GDV switched",
+        "Cross-border volume fees (~30%, highest margin) — premium fee on international "
+        "transactions at 4-6x domestic rate; most economically sensitive segment",
+        "Transaction processing fees (~25%) — per-transaction authorization/clearing fee",
+        "Value-added services (~15%) — cyber/intelligence (NuData, RiskRecon), "
+        "data analytics, loyalty, open banking (Vocalink)",
+    ],
+    recurring_revenue_sources=[
+        "Network participation fees from ~3,200 issuing banks",
+        "Multi-year incentive agreements with major issuers (JPM, Citi) — "
+        "volume rebates recorded as contra-revenue",
+        "Mastercard Cyber & Intelligence annual contracts",
+        "Government and B2B payment services via Mastercard Track and Send",
+    ],
+    rate_sensitivity_note=(
+        "MA trades at ~32-38x forward EPS. Higher rates historically correlate "
+        "with economic expansion and strong consumer spending — NET POSITIVE for "
+        "GDV growth. Unlike banks, MA has zero credit risk and no NIM compression. "
+        "The primary rate sensitivity is multiple compression, not fundamentals."
+    ),
+    inflation_pass_through=(
+        "Exceptional: Mastercard earns a percentage of transaction VALUE — inflation "
+        "inflates nominal GDV mechanically, increasing MA revenue without any volume "
+        "change. High-inflation environments are among the most favorable revenue "
+        "backdrops for payment networks."
+    ),
+    recession_behavior=(
+        "Cyclical on GDV growth — consumer spending slows in downturns. Cross-border "
+        "travel (premium-fee segment) is most economically sensitive. The secular "
+        "cash-to-card shift provides structural tailwind. MA maintained strong FCF "
+        "through the 2020 COVID collapse. Overall earnings are highly resilient."
+    ),
+    major_risks=[
+        "Account-to-account (A2A) disintermediation — FedNow, PIX, UPI, SEPA Instant "
+        "bypass the four-party card network; if A2A reaches consumer scale at "
+        "merchant checkout, GDV could shift without MA earning a fee",
+        "Regulatory interchange caps — EU, Australia, Durbin Amendment reduce issuer "
+        "economics, potentially reducing premium card issuance that drives high GDV",
+        "Big Tech closed-loop networks — Apple Pay/Google Pay use MA rails today "
+        "but could develop independent networks over time",
+        "Sovereign payment nationalism — Russia exclusion (2022) showed geopolitical "
+        "risk of network access being severed in large markets",
+    ],
+    valuation_style=(
+        "Premium multiple (~32-38x P/E) justified by asset-light model (>55% operating "
+        "margin), secular GDV growth, and oligopoly franchise with Visa. "
+        "Re-rating via value-added services reaching 20%+ growth and open banking "
+        "platform (Vocalink) monetization."
+    ),
+    key_metrics=[
+        "Gross Dollar Volume (GDV) — domestic and cross-border",
+        "Switched transaction count and growth",
+        "Cross-border volume as % of GDV",
+        "Value-added services (VAS) revenue growth",
+        "Net revenue yield on GDV",
+        "Rebates and incentives as % of gross revenue",
+        "Operating margin (>55%)",
+    ],
+    competitive_advantages=[
+        "Two-sided oligopoly with Visa — controls ~80% of global general-purpose "
+        "card volume; no new entrant has built a competing global acceptance network "
+        "in 60 years",
+        "Cross-border premium — international transactions earn 4-6x domestic rates; "
+        "globalization of e-commerce disproportionately benefits MA",
+        "Tokenization platform — 25B+ card credentials tokenized; issuers rely on "
+        "MA's token infrastructure, deepening network stickiness",
+    ],
+    business_model_keywords=[
+        "GDV", "gross dollar volume", "cross-border", "switched transactions",
+        "assessments", "tokenization", "NuData", "Vocalink", "open banking",
+        "Mastercard Send", "contactless", "B2B payments", "value-added services",
+        "rebates", "incentives", "account-to-account", "interchange",
+        "payment network", "FedNow", "real-time payments",
+    ],
+))
+
+
+# ── BlackRock Inc. (BLK) ──────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="BLK",
+    company_name="BlackRock Inc.",
+    business_model=(
+        "BlackRock is the world's largest asset manager with ~$10-11T AUM, earning "
+        "fee revenue as a basis-point percentage of assets under management.  The "
+        "iShares ETF franchise is the largest passive investment platform globally. "
+        "Technology services (Aladdin risk-management platform) and alternatives "
+        "(private credit, infrastructure, hedge funds) are higher-margin, faster-growing "
+        "segments diversifying away from fee-compressed passive indexing."
+    ),
+    primary_revenue_drivers=[
+        "Investment advisory and administration fees (~85% of revenue) — blended "
+        "basis-point fee on $10T+ AUM; mix between passive ETFs (~4bps), active (~30bps), "
+        "and alternatives (~75-100bps) determines blended revenue yield",
+        "Technology services — Aladdin platform (~9% of revenue, growing ~10%/yr) "
+        "licensed to 200+ asset managers, insurers, pension funds globally",
+        "Distribution fees and advisory (~6%)",
+    ],
+    recurring_revenue_sources=[
+        "iShares ETF management fees — ~$6T in AUM at ~4bps average = ~$2.4B annually",
+        "Aladdin annual contract value (ACV) — multi-year enterprise SaaS contracts "
+        "with 90%+ renewal rates across 200+ institutional clients",
+        "Alternatives management fees (private credit, infrastructure, real estate) — "
+        "typically 1-1.5% on committed capital",
+        "Performance fees from alternatives (carried interest above hurdle rates)",
+    ],
+    rate_sensitivity_note=(
+        "BLK trades at ~20-24x forward EPS. Higher rates are a DOUBLE-EDGED sword: "
+        "Rising rates reduce equity AUM (market beta drag on stock/bond AUM) but "
+        "increase money market fund inflows (BlackRock manages large MMF complex). "
+        "Higher rates make Aladdin risk modeling more critical, driving platform demand. "
+        "Alternatives AUM (private credit) actually BENEFITS from higher rates — "
+        "direct lending earns wider spreads. Net rate sensitivity is near-neutral."
+    ),
+    inflation_pass_through=(
+        "Asset management fees are contractually percentage-of-AUM — nominal AUM "
+        "grows with inflation over time, passively inflating fee revenue. Fee "
+        "compression in passive is structural and ongoing (iShares fees compressed "
+        "from ~10bps to ~4bps over a decade). Alternatives command durable higher fees."
+    ),
+    recession_behavior=(
+        "AUM falls with markets — in the 2022 bear market, BLK AUM fell ~$1.4T "
+        "and revenue declined. However, Aladdin revenues are subscription-based and "
+        "counter-cyclical (risk software is most valuable in downturns). "
+        "Net inflows historically remain positive even as markets fall, as clients "
+        "continue adding money; it is existing AUM repricing that hurts revenue."
+    ),
+    major_risks=[
+        "Market beta risk — S&P 500 correction of 30% would reduce equity AUM "
+        "by ~$1T+ and compress fee revenue meaningfully",
+        "Fee compression in passive — Vanguard, Fidelity zero-fee funds pressure "
+        "iShares to cut fees; structural long-term margin headwind",
+        "Alternatives performance risk — private credit and infrastructure fund "
+        "returns must justify the 75-100bps fees vs liquid alternatives",
+        "ESG backlash — state pension fund withdrawals ($billions) from BlackRock "
+        "over ESG investing stance (Texas, Florida, other red states)",
+        "GIP acquisition integration — $3B acquisition of Global Infrastructure "
+        "Partners must deliver AUM growth to justify the price",
+    ],
+    valuation_style=(
+        "BLK valued on P/E (~20-24x) and EV/EBITDA, with premium for Aladdin's "
+        "technology business (SaaS multiple). Key re-rating: alternatives AUM "
+        "crossing $400B+ (driving fee mix improvement) and Aladdin revenue growing "
+        "above 15% (proving technology platform is a durable second segment)."
+    ),
+    key_metrics=[
+        "Total AUM ($T) and net new asset flows",
+        "AUM mix: passive vs active vs alternatives",
+        "Blended basis-point fee rate (revenue yield on AUM)",
+        "Aladdin ACV and technology services revenue growth",
+        "Alternatives AUM and fundraising pace",
+        "Operating margin (target ~44-46%)",
+        "Performance fees (alternatives carried interest)",
+    ],
+    competitive_advantages=[
+        "iShares ETF network effect — largest ETF AUM creates tightest bid-ask "
+        "spreads and highest liquidity, attracting more assets in a self-reinforcing cycle; "
+        "no competitor can replicate the $6T iShares liquidity premium",
+        "Aladdin platform stickiness — Aladdin manages risk and operations for "
+        "$20T+ of third-party assets; switching costs are massive (re-implementation "
+        "takes 2-3 years and hundreds of millions in transition cost)",
+        "Alternatives scale — $300B+ alternatives AUM (private credit, infrastructure, "
+        "hedge funds) provides high-margin fee revenue that passive competitors lack",
+    ],
+    business_model_keywords=[
+        "AUM", "iShares", "Aladdin", "ETF", "passive", "active", "alternatives",
+        "private credit", "infrastructure", "Larry Fink", "GIP", "net flows",
+        "basis point", "fee rate", "BlackRock Solutions", "ESG",
+        "money market fund", "Preqin", "eFront", "asset management",
+    ],
+))
+
+
+# ── Philip Morris International (PM) ─────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="PM",
+    company_name="Philip Morris International Inc.",
+    business_model=(
+        "Philip Morris International sells tobacco and nicotine products internationally "
+        "(ex-USA) — combustible cigarettes (Marlboro and local brands) still generating "
+        "the majority of revenue, but rapidly transitioning to smoke-free alternatives: "
+        "IQOS heated tobacco devices and HeatSticks consumables, ZYN nicotine pouches "
+        "(via Swedish Match acquisition, 2022), and Veev e-vapor.  The smoke-free "
+        "transformation targets >50% of revenue from smoke-free products by mid-2025."
+    ),
+    primary_revenue_drivers=[
+        "IQOS / HeatSticks (heated tobacco) — fastest-growing segment; Japan, Italy, "
+        "Germany, Korea, Eastern Europe are core IQOS markets; consumable blades "
+        "drive recurring revenue (~35%+ of net revenue growing to ~50%+)",
+        "Combustible cigarettes (Marlboro and local brands) — declining volume but "
+        "strong pricing power in international markets (~55% of net revenue, declining)",
+        "ZYN nicotine pouches (Swedish Match) — US and Nordic markets; highest "
+        "margin product; ZYN is the leading nicotine pouch brand in the US (~30%+)",
+    ],
+    recurring_revenue_sources=[
+        "IQOS HeatStick blade consumables — users who buy IQOS devices generate "
+        "recurring blade purchases at ~$6-8/pack equivalent ASP",
+        "ZYN can subscriptions via PMI Direct and retail re-purchase",
+        "Combustible cigarette re-purchase (daily habit with high repurchase frequency)",
+    ],
+    rate_sensitivity_note=(
+        "PM trades at ~15-18x forward EPS with a 5-6% dividend yield — a value/yield "
+        "profile. Higher rates compress bond-proxy multiples like PM. "
+        "The $26B Swedish Match acquisition was funded with debt; higher rates "
+        "increase interest expense directly. PM reports in USD but generates most "
+        "revenue outside the US — a stronger dollar compresses reported earnings "
+        "even when local-currency business is healthy."
+    ),
+    inflation_pass_through=(
+        "Exceptional pricing power on both combustibles and smoke-free: "
+        "tobacco is addictive — demand is inelastic to price changes. PM has "
+        "consistently raised combustible cigarette prices above inflation globally. "
+        "IQOS HeatStick pricing has been stable with room to increase as "
+        "the heated tobacco category matures and brand loyalty deepens."
+    ),
+    recession_behavior=(
+        "Tobacco is one of the most recession-resistant consumer staples categories. "
+        "Cigarette demand showed minimal volume decline in every prior recession — "
+        "the addictive product profile insulates demand. PM's geographic diversification "
+        "across Europe, Asia, and LatAm further reduces single-market cyclicality."
+    ),
+    major_risks=[
+        "Regulatory crackdown on heated tobacco — FDA, EU, and individual-country "
+        "regulators could restrict IQOS marketing, flavors, or sales (e.g., "
+        "Australia plain packaging, EU TPD revision)",
+        "ZYN FDA regulatory risk — FDA review of nicotine pouches could impose "
+        "restrictions or marketing bans that curb the fastest-growing segment",
+        "FX headwinds — yen, euro, and EM currency weakness directly compresses "
+        "USD-reported earnings (100 bps EUR/USD move = ~$0.04 EPS impact)",
+        "Combustible volume decline accelerating faster than smoke-free revenue offsets",
+        "Swedish Match debt integration — $26B acquisition debt levels interest coverage",
+    ],
+    valuation_style=(
+        "PM valued on P/E (~15-18x) and dividend yield (~5-6%). The smoke-free "
+        "transformation is a re-rating catalyst — as smoke-free revenue share crosses "
+        "50%, the multiple could expand from a 'tobacco' discount to a 'consumer "
+        "staples growth' premium (~20-22x). ZYN US success is the near-term "
+        "sentiment driver."
+    ),
+    key_metrics=[
+        "IQOS shipment volumes (HeatStick blades) and IQOS user count",
+        "Smoke-free net revenue as % of total (target >50%)",
+        "ZYN can shipments and US market share",
+        "Combustible volume decline rate vs price/mix benefit",
+        "FX-neutral net revenue growth",
+        "Operating margin and FCF (supports $8B+ annual dividend)",
+        "Swedish Match net debt reduction trajectory",
+    ],
+    competitive_advantages=[
+        "IQOS first-mover in heated tobacco — launched in 2014; $10B+ invested in "
+        "device development and regulatory science; 22M+ IQOS users globally; "
+        "BAT and JTI remain years behind in product quality and user base",
+        "Marlboro brand equity — among the most valuable consumer brands globally; "
+        "pricing power in premium combustibles funds the smoke-free transition R&D",
+        "ZYN nicotine pouch category leadership — ZYN launched in the US in 2016 "
+        "and holds ~75% of a $4B+ and rapidly growing category; brand loyalty "
+        "and distribution create durable leadership",
+    ],
+    business_model_keywords=[
+        "IQOS", "HeatSticks", "heated tobacco", "smoke-free", "ZYN",
+        "Swedish Match", "nicotine pouch", "Marlboro", "Japan market",
+        "combustible", "HTU", "Heets", "Terea", "Veev", "e-vapor",
+        "Alain Nassar", "FX", "dividend", "smoke-free transformation",
+        "nicotine", "blade consumable",
+    ],
+))
+
+
+# ── United Parcel Service (UPS) ───────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="UPS",
+    company_name="United Parcel Service Inc.",
+    business_model=(
+        "UPS operates the world's largest package delivery network and a growing "
+        "healthcare/specialized logistics business.  Revenue comes from US Domestic "
+        "Package (~62%), International Package (~22%), and Supply Chain Solutions "
+        "(~16% — healthcare logistics, UPS Capital, freight brokerage).  "
+        "CEO Carol Tomé is executing a 'better not bigger' strategy — prioritizing "
+        "revenue quality (revenue per piece) over volume growth."
+    ),
+    primary_revenue_drivers=[
+        "US Domestic Package — ground and air delivery; SMB mix (higher yield) "
+        "and healthcare expansion are the revenue quality levers (~62% of revenue)",
+        "International Package — export/import ground and air in Europe, Asia, Americas "
+        "(~22%); higher margin than domestic",
+        "Supply Chain Solutions — healthcare logistics (Marken clinical trials, "
+        "specialty pharma), UPS Capital (insurance/financing), freight (~16%)",
+    ],
+    recurring_revenue_sources=[
+        "Annual contract renewals with major shippers (negotiated each fall)",
+        "UPS My Choice membership and SurePost ground network",
+        "Healthcare cold-chain contracts (multi-year specialty pharma agreements)",
+        "UPS Capital insurance and trade financing",
+    ],
+    rate_sensitivity_note=(
+        "UPS trades at ~16-20x forward EPS. Higher rates modestly increase the cost "
+        "of fleet financing (large truck and aircraft fleet) and pension liabilities. "
+        "More importantly, higher rates slow e-commerce growth (consumer credit "
+        "sensitivity) which directly reduces package volume demand. UPS is more "
+        "sensitive to economic growth than to the rate cycle directly."
+    ),
+    inflation_pass_through=(
+        "Moderate: UPS charges fuel surcharges (pass-through) and has implemented "
+        "general rate increases (GRI) of 5-6.9% annually since 2021. However, "
+        "contract customers negotiate caps. Revenue per piece improvement is the "
+        "primary pricing strategy — shifting mix toward SMB and healthcare "
+        "from lower-yield consumer e-commerce."
+    ),
+    recession_behavior=(
+        "Package volume is economically sensitive — industrial production and "
+        "B2B shipments decline in recessions; consumer e-commerce is more resilient. "
+        "The 2022-23 post-COVID normalization hit UPS volume severely as e-commerce "
+        "volumes normalized. Healthcare logistics is more defensive (clinical supply "
+        "chains do not stop in recessions)."
+    ),
+    major_risks=[
+        "Amazon building its own delivery network (AMZN Logistics) — Amazon is "
+        "reducing UPS dependency; Amazon was ~11% of UPS revenue and declining",
+        "Teamsters contract cost increases — 2023 Teamsters contract adds significant "
+        "driver labor cost; annual pay escalation baked into 5-year agreement",
+        "Volume loss to FedEx and regional carriers in e-commerce",
+        "E-commerce structural volume pressure from customer mix improvement "
+        "strategy reducing low-yield volume",
+        "Softening industrial production dragging B2B package volumes",
+    ],
+    valuation_style=(
+        "UPS valued on P/E (~16-20x) and EV/EBITDA. The stock tracks earnings "
+        "per piece (revenue/margin quality) and volume inflection points. "
+        "Re-rating catalyst: healthcare logistics reaching $20B revenue and "
+        "demonstrating a higher-margin, less-cyclical business mix."
+    ),
+    key_metrics=[
+        "Average daily volume (ADV) — domestic and international",
+        "Revenue per piece (yield) — most important quality metric",
+        "Adjusted operating margin by segment",
+        "Healthcare logistics revenue and margin",
+        "SMB volume as % of domestic mix",
+        "Free cash flow and dividend coverage",
+        "Teamsters labor cost per delivery",
+    ],
+    competitive_advantages=[
+        "Integrated air-ground network — UPS owns 280+ aircraft and 125,000+ "
+        "ground vehicles; the cost to replicate this integrated network exceeds "
+        "$100B; regional competitors cannot match overnight/2-day coverage nationally",
+        "ORION and EDGE route optimization — proprietary algorithms reduce driver "
+        "miles; EDGE scheduling AI creates 10-15% productivity improvement vs "
+        "manual scheduling, enabling the 'better not bigger' margin expansion",
+        "Healthcare logistics specialization — Marken (clinical trial logistics), "
+        "temperature-controlled shipping, and regulatory expertise create a "
+        "defensible healthcare moat that pure-play parcel competitors lack",
+    ],
+    business_model_keywords=[
+        "average daily volume", "ADV", "revenue per piece", "revenue quality",
+        "ground", "SurePost", "healthcare logistics", "Marken", "UPS Capital",
+        "ORION", "EDGE", "SMB", "Teamsters", "Carol Tomé", "peak surcharge",
+        "better not bigger", "air freight", "international package",
+        "supply chain", "e-commerce", "Amazon",
+    ],
+))
+
+
+# ── Deere & Company (DE) ──────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="DE",
+    company_name="Deere & Company",
+    business_model=(
+        "Deere manufactures and finances precision agricultural, construction, and "
+        "turf equipment.  The company is transitioning to a technology-led model: "
+        "autonomous tractors, the See & Spray precision herbicide system, JDLink "
+        "telematics, and Operations Center farm management software create a SaaS "
+        "layer atop equipment sales.  John Deere Financial provides equipment "
+        "financing, adding a recurring interest income stream."
+    ),
+    primary_revenue_drivers=[
+        "Production & Precision Agriculture (PPA) — large row-crop equipment "
+        "(8R tractors, S-series combines, ExactEmerge planters) for US/Brazil "
+        "large farms (~50% of equipment revenue)",
+        "Small Agriculture & Turf — smaller tractors, turf/utility; more "
+        "consumer-facing and consumer credit sensitive (~20%)",
+        "Construction & Forestry — excavators, bulldozers, road machinery; "
+        "infrastructure construction cycle dependent (~25%)",
+        "John Deere Financial — equipment financing portfolio (~5% of revenue, "
+        "~15% of operating income; interest income grows with higher rates)",
+    ],
+    recurring_revenue_sources=[
+        "JDLink telematics subscriptions — remote diagnostics and fleet management",
+        "Operations Center farm management software subscriptions",
+        "See & Spray Ultimate and autonomy software licenses (emerging)",
+        "John Deere Financial lease and loan portfolio (recurring interest income)",
+        "Extended warranty and dealer maintenance agreements",
+    ],
+    rate_sensitivity_note=(
+        "DE trades at ~15-20x mid-cycle earnings. Higher rates have two opposing "
+        "effects: John Deere Financial earns higher interest income (positive), "
+        "but higher financing costs reduce farmer equipment purchase propensity "
+        "(negative). Farm income is the dominant demand driver — corn, soybean, "
+        "and wheat prices determine whether farmers can afford new $600K+ combines."
+    ),
+    inflation_pass_through=(
+        "Historically strong: Deere has raised large-ag equipment prices 20-40% "
+        "cumulatively since 2021 with minimal demand destruction due to record "
+        "farm income. However, in a farm income down-cycle, pricing power reverts "
+        "as farmers defer replacement purchases. Steel and component inflation "
+        "compresses margins in upcycles before price increases catch up."
+    ),
+    recession_behavior=(
+        "Highly cyclical in construction but semi-defensive in large ag: US crop "
+        "farmers must eventually replace equipment regardless of macro, driven by "
+        "age of fleet and productivity needs. However, with the equipment fleet "
+        "currently newer than historical averages (post-2021 buying surge), "
+        "replacement demand is likely to trough in 2024-26 as dealers destock."
+    ),
+    major_risks=[
+        "Ag cycle downturn — corn/soybean prices falling from recent highs would "
+        "reduce farm income and defer equipment replacement; dealer inventory "
+        "destocking is already underway in 2024-25",
+        "Precision ag technology commoditization — CNH (Case IH/New Holland) "
+        "and AGCO (Fendt) are investing heavily in autonomy and digital platforms",
+        "Autonomous regulation — self-driving farm equipment requires USDA/state "
+        "approval pathways that may slow the 8R autonomous commercialization",
+        "Trade policy risk — US-China tariffs on soybeans reduce farm income "
+        "and equipment demand; Brazil farm expansion is a partial offset",
+        "Interest rate cycle via John Deere Financial credit losses in downturns",
+    ],
+    valuation_style=(
+        "DE valued on P/E against mid-cycle earnings power (~$20-25/share normalized). "
+        "The market prices a technology optionality premium atop the cyclical base — "
+        "if See & Spray and autonomous 8R tractor generate $5-10/share of SaaS-like "
+        "earnings, the multiple expands significantly beyond traditional ag-equipment peers."
+    ),
+    key_metrics=[
+        "Net equipment sales by segment (PPA, Small Ag, Construction)",
+        "Operating margin by segment",
+        "Equipment order book and dealer inventory days",
+        "Precision agriculture SaaS attached rate (Operations Center users)",
+        "See & Spray Ultimate acres treated",
+        "John Deere Financial portfolio quality (delinquencies)",
+        "Farm income indicators (USDA corn/soybean price and farm cash receipts)",
+    ],
+    competitive_advantages=[
+        "Installed base and dealer network — 5,000+ North American dealer locations "
+        "with trained technicians; switching from John Deere mid-farm-season means "
+        "losing Deere-specific service support in harvest-critical moments",
+        "Precision ag data flywheel — Operations Center has 400M+ acres of farm "
+        "data; AI models trained on this proprietary dataset improve crop yield "
+        "recommendations, increasing SaaS value and switching costs",
+        "See & Spray technology — patented computer-vision system that spots and "
+        "targets individual weeds, reducing herbicide use 77%+; no competitor "
+        "has a commercially deployed equivalent at scale",
+    ],
+    business_model_keywords=[
+        "Production & Precision Agriculture", "PPA", "8R tractor", "ExactEmerge",
+        "JDLink", "Operations Center", "See & Spray", "John Deere Financial",
+        "autonomy", "precision agriculture", "combine", "row crop",
+        "farm income", "corn", "soybean", "John May", "dealer inventory",
+        "SaaS", "ag cycle", "construction machinery",
+    ],
+))
+
+
+# ── Duke Energy Corporation (DUK) ─────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="DUK",
+    company_name="Duke Energy Corporation",
+    business_model=(
+        "Duke Energy is a large regulated electric and gas utility serving "
+        "8.2M+ electric customers across the Carolinas, Florida, Indiana, Ohio, "
+        "and Kentucky.  Earnings are driven by rate-base growth — capital investment "
+        "in grid modernization, renewable energy (solar, wind, battery storage), "
+        "and EV infrastructure earns a regulated return (allowed ROE ~9.5-10%). "
+        "The clean energy transition plan calls for retiring coal and building "
+        "40+ GW of renewable generation by 2035."
+    ),
+    primary_revenue_drivers=[
+        "Duke Energy Carolinas + Duke Energy Progress (NC/SC) — largest segment; "
+        "growing rate base with solar, transmission grid hardening (~40% of earnings)",
+        "Duke Energy Florida — regulated utility in Florida; rate base growing "
+        "with strong population in-migration and solar buildout (~20%)",
+        "Duke Energy Indiana + Ohio + Kentucky — Midwest utilities; coal retirement "
+        "and renewable replacement driving capital deployment (~25%)",
+        "Duke Energy Gas Utilities — Piedmont Natural Gas (NC/SC) and gas distribution (~15%)",
+    ],
+    recurring_revenue_sources=[
+        "Regulated electric distribution tariffs — cost-of-service rates set "
+        "by state utility commissions (NC, SC, FL, IN, OH, KY)",
+        "Regulated natural gas distribution revenue (Piedmont)",
+        "Power purchase agreement (PPA) revenue from renewable generation sold "
+        "to industrial and commercial customers",
+    ],
+    rate_sensitivity_note=(
+        "DUK trades at ~16-19x forward EPS — a defensive utility multiple. "
+        "Duke's stock is highly sensitive to interest rates because: 1) its "
+        "4%+ dividend yield competes directly with 10-year Treasury yields "
+        "(when T-yield rises, utility yield premium shrinks); 2) Duke carries "
+        "$65B+ of long-term debt — higher refinancing rates increase interest "
+        "expense over time; 3) the WACC used in rate cases rises, theoretically "
+        "supporting higher allowed ROE in future rate cases (partial offset)."
+    ),
+    inflation_pass_through=(
+        "Limited but structured: Duke recovers fuel costs through fuel adjustment "
+        "clauses (pass-through to customers). Capital cost inflation is recovered "
+        "through rate base (CapEx added to rate base earns allowed ROE) but with "
+        "a multi-year regulatory lag — cost overruns reduce earned ROE until "
+        "the next rate case. Construction cost inflation on the renewable buildout "
+        "is the primary near-term risk."
+    ),
+    recession_behavior=(
+        "Highly defensive — regulated utility revenue is essentially fixed "
+        "regardless of economic conditions. Duke's service territories include "
+        "residential, commercial, and industrial customers; residential bills are "
+        "inelastic. Industrial load could decline modestly in a deep recession. "
+        "Duke has generated positive EPS in every recession in its history."
+    ),
+    major_risks=[
+        "Regulatory rate case risk — NC/SC utility commissions are the primary "
+        "earnings governors; disallowances of CapEx, below-allowed ROE outcomes, "
+        "or formula rate rejection could compress earnings",
+        "Coal retirement stranded costs — retiring coal plants before the end "
+        "of their depreciable lives creates potential for stranded cost disputes "
+        "where regulators may disallow recovery",
+        "Clean energy capital execution risk — $65B+ of planned CapEx by 2035 "
+        "requires reliable access to capital markets and regulatory approval; "
+        "interest rate increases raise the cost of financing this build",
+        "Hurricane exposure (Carolinas, Florida) — storm damage CapEx can "
+        "temporarily compress earned ROE before cost recovery through securitization",
+        "New nuclear SMR optionality — Duke is studying SMRs; if constructed, "
+        "cost overruns are the primary risk",
+    ],
+    valuation_style=(
+        "Classic regulated utility valuation: P/E (~16-19x), EV/EBITDA (~12-15x), "
+        "and dividend yield (~4-5%). The stock trades at a premium/discount to "
+        "utility peers based on rate base growth rate, regulatory relationship quality, "
+        "and balance sheet strength. Rate base CAGR of 6-7% supports 5-7% EPS CAGR."
+    ),
+    key_metrics=[
+        "Rate base growth (target 6-7% CAGR) by jurisdiction",
+        "Adjusted EPS growth (target 5-7% CAGR)",
+        "CapEx plan execution ($65B+ through 2028)",
+        "Allowed vs earned ROE by subsidiary",
+        "Renewable GW additions per year",
+        "Dividend coverage ratio (payout ~65-70%)",
+        "Long-term debt maturity schedule and refinancing risk",
+        "Industrial load growth (data center and manufacturing)",
+    ],
+    competitive_advantages=[
+        "Regulated monopoly franchise in high-growth Sun Belt territories — "
+        "Carolinas and Florida demographic tailwinds create organic load growth "
+        "without Duke needing to compete for customers",
+        "Scale in renewable procurement — $65B+ renewable buildout provides "
+        "procurement leverage on solar panels and wind turbines; small utilities "
+        "cannot achieve comparable cost reductions",
+        "Integrated utility vertical — Duke owns generation, transmission, "
+        "and distribution in most service territories, allowing vertically-integrated "
+        "recovery of clean energy transition capital across all components",
+    ],
+    business_model_keywords=[
+        "Duke Energy Carolinas", "Duke Energy Florida", "Duke Energy Progress",
+        "Piedmont Natural Gas", "rate base", "capex", "clean energy transition",
+        "coal retirement", "solar", "wind", "battery storage", "grid modernization",
+        "Lynn Good", "allowed ROE", "rate case", "regulated utility",
+        "IRP", "CPCN", "fuel adjustment", "data center load",
+    ],
+))
+
+
+# ── Airbnb Inc. (ABNB) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="ABNB",
+    company_name="Airbnb Inc.",
+    business_model=(
+        "Airbnb operates a global home-sharing and experiences marketplace — hosts list "
+        "properties and experiences; guests book them.  Revenue is service fees charged "
+        "to both hosts (~3% of booking value) and guests (~14-16%), netting to a "
+        "~18-19% take rate on Gross Booking Value (GBV).  The model is fully "
+        "asset-light — Airbnb owns no properties.  CEO Brian Chesky is pursuing "
+        "profitable growth: expanding Rooms (private room in host's home), Experiences, "
+        "and Co-host network to grow supply affordably."
+    ),
+    primary_revenue_drivers=[
+        "Nights and experiences booked — volume driver; ~500M+ nights/yr globally",
+        "Average Daily Rate (ADR) — ~$170-180 globally; mix toward urban and "
+        "international markets is the ADR expansion lever",
+        "Take rate on GBV (~18-19%) — service fee from hosts + guests",
+        "GBV growth = nights × ADR",
+    ],
+    recurring_revenue_sources=[
+        "Host platform access — hosts re-list properties every year",
+        "Superhost loyalty program — top hosts retain annual Superhost status, "
+        "reducing churn from high-quality supply",
+        "Repeat guest booking — 50%+ of bookings from repeat users",
+    ],
+    rate_sensitivity_note=(
+        "ABNB trades at ~25-35x forward EBITDA — a platform premium. "
+        "Higher rates reduce consumer discretionary travel spending (negative for "
+        "GBV). However, Airbnb benefits from the shift to longer stays and remote "
+        "work — these trips are less interest-rate sensitive than vacation travel. "
+        "ABNB has $11B+ of cash and no debt — completely insulated from direct "
+        "interest expense sensitivity."
+    ),
+    inflation_pass_through=(
+        "Partial: ADR has risen with inflation as host pricing follows hotel "
+        "comparable rates. However, Airbnb faces consumer substitution risk at "
+        "very high ADRs — if Airbnb prices match hotels but without hotel-quality "
+        "service guarantees, consumers revert to hotels. Chesky's affordable "
+        "Rooms strategy is a deliberate response to the affordability perception gap."
+    ),
+    recession_behavior=(
+        "Travel is economically sensitive, but Airbnb's value proposition (often "
+        "cheaper than comparable hotels) allows it to gain share in recessions "
+        "as consumers trade down from luxury hotels. Long-stay bookings (28+ nights) "
+        "from remote workers are less cyclical. The 2020 COVID collapse was the "
+        "most severe test — Airbnb recovered to pre-COVID GBV levels by 2021."
+    ),
+    major_risks=[
+        "Short-term rental regulation — NYC, Barcelona, Paris, Amsterdam, and 100+ "
+        "cities have imposed or are considering STR restrictions that reduce "
+        "host supply; regulatory attrition is the single largest supply-side risk",
+        "Booking.com and Expedia competition — alternative accommodation segments "
+        "on OTA platforms are growing, reducing Airbnb's differentiation",
+        "Host supply growth slowdown — adding quality supply in dense urban markets "
+        "is increasingly difficult as regulatory barriers and host economics tighten",
+        "Guest safety/liability incidents — high-profile incidents create reputational "
+        "damage and could trigger regulatory response",
+        "Travel demand cyclicality in APAC where growth is most important",
+    ],
+    valuation_style=(
+        "ABNB valued on EV/EBITDA (~25-35x) and FCF yield. "
+        "The stock rewards nights growth × ADR expansion = GBV acceleration. "
+        "FCF margin (~35-40% of revenue) is already best-in-class for travel platforms. "
+        "Re-rating catalysts: Rooms and Experiences becoming meaningful new verticals "
+        "that expand TAM beyond traditional vacation home rental."
+    ),
+    key_metrics=[
+        "Nights and experiences booked",
+        "Gross Booking Value (GBV)",
+        "Average Daily Rate (ADR)",
+        "Take rate on GBV",
+        "Active listings count",
+        "Free cash flow margin (~35-40%)",
+        "Long-stay share (28+ nights) of total nights",
+        "Geographic mix: APAC penetration",
+    ],
+    competitive_advantages=[
+        "Supply-side brand recognition — 7M+ active listings globally; Airbnb is "
+        "the default destination for hosts listing unique properties or spare rooms; "
+        "network effects make the marketplace increasingly winner-take-most",
+        "Unique inventory — treehouses, castles, private islands, Rooms in local "
+        "hosts' homes; Booking.com and Expedia cannot replicate this inventory type "
+        "because it requires host community trust and a peer-to-peer cultural fit",
+        "Asset-light FCF machine — with no property ownership, Airbnb generates "
+        "~35-40% FCF margins as revenue scales; fixed costs are primarily engineering "
+        "and trust/safety, creating strong operating leverage",
+    ],
+    business_model_keywords=[
+        "GBV", "gross booking value", "nights booked", "ADR", "average daily rate",
+        "take rate", "host", "co-host", "Superhost", "Brian Chesky",
+        "Rooms", "Experiences", "long stay", "APAC", "STR regulation",
+        "free cash flow", "asset-light", "OTA", "vacation rental",
+        "Airbnb-friendly apartments", "unique stays",
+    ],
+))
+
+
+# ── Emerson Electric Co. (EMR) ────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="EMR",
+    company_name="Emerson Electric Co.",
+    business_model=(
+        "Emerson has transformed from a diversified industrial conglomerate into a "
+        "pure-play industrial automation and technology company.  Following the Copeland "
+        "HVAC divestiture (2023) and AspenTech stake acquisition, Emerson operates "
+        "two segments: Intelligent Devices (process/hybrid automation sensors, final "
+        "control, measurement) and Software & Control (AspenTech simulation software, "
+        "DeltaV distributed control system, Ovation DCS for power).  "
+        "CEO Lal Karsanbhai leads the portfolio transformation."
+    ),
+    primary_revenue_drivers=[
+        "Intelligent Devices (~60% of revenue) — process automation measurement "
+        "(Rosemount sensors, Micro Motion flowmeters), final control (Fisher valves, "
+        "Bettis actuators), discrete automation (ASCO valves)",
+        "Software & Control (~40% of revenue) — AspenTech simulation/optimization "
+        "software, DeltaV distributed control systems, Ovation DCS for power",
+        "Service & solutions (~ongoing MRO) — maintenance, calibration, and "
+        "aftermarket parts for installed Fisher, Rosemount, and DeltaV installed base",
+    ],
+    recurring_revenue_sources=[
+        "AspenTech annual subscription licenses (80%+ recurring software revenue)",
+        "Emerson service contracts for installed DeltaV and Ovation DCS systems",
+        "Fisher valve MRO parts and maintenance (large installed base in refining, LNG)",
+        "Rosemount sensor calibration and service agreements",
+    ],
+    rate_sensitivity_note=(
+        "EMR trades at ~20-24x forward P/E. Higher rates do not directly impact "
+        "Emerson's business model, but capital project delays by oil/gas, chemical, "
+        "and power generation customers (who fund large automation CapEx) are "
+        "interest-rate sensitive. Sustained high rates slow industrial project FIDs "
+        "(final investment decisions), reducing automation order intake."
+    ),
+    inflation_pass_through=(
+        "Good: Emerson supplies mission-critical instrumentation and control systems "
+        "for safety-critical processes (LNG trains, refineries, power plants) — "
+        "customers cannot easily switch suppliers mid-project due to qualification "
+        "cycles (18-24 months for process instrument re-qualification). Pricing "
+        "power is moderate-to-strong in sole-sourced instruments."
+    ),
+    recession_behavior=(
+        "Industrial automation is capex-cycle sensitive — new plant construction "
+        "(greenfield) orders are discretionary. However, MRO (maintenance, repair, "
+        "operations) spending on existing Emerson-installed DeltaV/Fisher systems "
+        "is more resilient as plant operators must maintain control system integrity. "
+        "AspenTech software renewal rates are sticky even in downturns."
+    ),
+    major_risks=[
+        "Process industry CapEx cycle — oil/gas, chemical, and LNG final investment "
+        "decisions drive automation backlog; energy price weakness defers projects",
+        "AspenTech integration and minority buyout — Emerson owns ~57% of AspenTech; "
+        "future buyout of minority creates execution and valuation risk",
+        "Competition from ABB, Siemens, Honeywell in DCS — all are investing heavily "
+        "in industrial automation; price competition on large DCS projects is intense",
+        "Energy transition timing — LNG automation is a key growth driver; if LNG "
+        "FIDs slow due to energy policy changes, Emerson's order book contracts",
+    ],
+    valuation_style=(
+        "EMR valued on P/E (~20-24x) and EV/EBITDA (~14-17x). The automation "
+        "software mix improvement (AspenTech) and margin expansion post-portfolio "
+        "transformation are the primary re-rating levers. "
+        "Re-rating catalyst: Intelligent Devices margin reaching 25%+ and "
+        "AspenTech growing ARR at 10%+ consistently."
+    ),
+    key_metrics=[
+        "Orders growth and backlog by segment",
+        "Intelligent Devices operating margin (target ~24-25%)",
+        "AspenTech ARR growth and renewal rate",
+        "Software & Control segment margin",
+        "Organic sales growth (underlying demand ex-currency)",
+        "Free cash flow conversion (>100% net income)",
+        "Energy transition project wins (LNG, hydrogen, CCUS automation)",
+    ],
+    competitive_advantages=[
+        "Fisher valve installed base — Fisher controls the largest share of "
+        "safety-critical final control valves in global LNG, refining, and "
+        "petrochemical processes; re-qualification cycles of 18-24 months mean "
+        "customers rarely switch suppliers on operating plants",
+        "DeltaV DCS ecosystem — Emerson's DeltaV is the leading DCS in life "
+        "sciences (FDA 21 CFR Part 11 compliance) and a top-3 platform in "
+        "refining and chemicals; multi-decade installed base creates replacement cycles",
+        "AspenTech simulation monopoly — AspenTech's Aspen HYSYS and AspenOne "
+        "are the de facto standard for process engineering simulation in "
+        "oil/gas and chemicals; switching costs are measured in re-training "
+        "thousands of engineers",
+    ],
+    business_model_keywords=[
+        "DeltaV", "Ovation", "AspenTech", "HYSYS", "intelligent devices",
+        "final control", "Fisher", "Rosemount", "Micro Motion", "Bettis",
+        "ASCO", "process automation", "DCS", "distributed control",
+        "Lal Karsanbhai", "LNG automation", "industrial automation",
+        "Plantweb", "backlog", "MRO", "energy transition",
+    ],
+))
+
+
+# ── American Electric Power (AEP) ─────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="AEP",
+    company_name="American Electric Power Company Inc.",
+    business_model=(
+        "AEP is one of the largest regulated electric utilities in the US, serving "
+        "5.6M+ customers across 11 states (Texas, Ohio, West Virginia, Oklahoma, "
+        "Indiana, Michigan, Arkansas, Louisiana, Virginia, Kentucky, and New Mexico). "
+        "AEP operates the nation's largest transmission system (40,000+ circuit miles). "
+        "Earnings are rate-base driven — capital invested in grid hardening, clean "
+        "energy transition, and transmission expansion earns a regulated allowed ROE."
+    ),
+    primary_revenue_drivers=[
+        "AEP Texas Central (~15% of earnings) — retail distribution in Texas; "
+        "transmission-only in ERCOT; data center load growth tailwind",
+        "AEP Ohio (~15%) — distribution utility; formula rate with annual updates",
+        "Appalachian Power (VA/WV) (~12%) — regulated generation and distribution",
+        "Southwestern Electric Power (SWEPCO, TX/LA/AR) (~10%)",
+        "AEP Indiana Michigan and Public Service Company of Oklahoma combined (~20%)",
+        "Transmission (AEP Transmission Holdco) (~20% of earnings, growing fastest)",
+    ],
+    recurring_revenue_sources=[
+        "Regulated distribution tariffs set by 11 state utility commissions",
+        "FERC-regulated transmission revenue (formula rates, transmission projects)",
+        "Power purchase agreement revenue from renewable generation",
+    ],
+    rate_sensitivity_note=(
+        "AEP trades at ~14-17x forward EPS — a mid-tier utility multiple. "
+        "AEP carries $45B+ of long-term debt — one of the highest leverage ratios "
+        "in the regulated utility sector. Higher rates directly increase AEP's "
+        "refinancing costs and reduce FCF available for dividends. "
+        "The dividend yield (~4-5%) competes with Treasury yields — rate rises "
+        "compress the yield spread that justifies the utility premium."
+    ),
+    inflation_pass_through=(
+        "Structured: AEP recovers fuel costs via fuel adjustment clauses (pass-through). "
+        "Construction cost inflation is recovered through rate base additions, but "
+        "with a regulatory lag until the next rate case in each of 11 jurisdictions. "
+        "Multi-state regulatory complexity creates longer average lag than single-state peers."
+    ),
+    recession_behavior=(
+        "Highly defensive — regulated utility revenues are quasi-fixed. Industrial "
+        "load (manufacturing, mining in WV, TX) could decline modestly in recessions. "
+        "Data center load growth in Texas and Ohio is incremental and counter-cyclical. "
+        "AEP has positive EPS in every economic cycle historically."
+    ),
+    major_risks=[
+        "Multi-state regulatory risk — 11 states create 11 different regulatory "
+        "relationships; an unfavorable rate case in Ohio or Texas can materially "
+        "impact earnings; WV and OK regulators are more challenging than FL or OH",
+        "High leverage — $45B+ debt with rising rate environment increases "
+        "refinancing costs; AEP's credit rating headroom is narrower than peers",
+        "Coal retirement cost recovery — AEP has the largest remaining coal fleet "
+        "of any major US utility; stranded cost risk from early coal retirements",
+        "Transmission project execution — MISO and SPP transmission expansion "
+        "projects require multi-state approval and can experience cost overruns",
+        "ERCOT deregulation structure limits rate base growth in Texas distribution",
+    ],
+    valuation_style=(
+        "Regulated utility P/E (~14-17x) and EV/EBITDA (~11-13x). AEP trades "
+        "at a slight discount to utility peers due to higher leverage and coal "
+        "exposure. Re-rating catalyst: coal fleet retirement completion and "
+        "data center load growth in Texas and Ohio driving above-average "
+        "rate base investment."
+    ),
+    key_metrics=[
+        "Rate base growth by state (~7-8% CAGR target)",
+        "Adjusted EPS growth (target 6-8% CAGR)",
+        "Transmission revenue and FERC-approved project backlog",
+        "CapEx plan execution ($43B+ through 2028)",
+        "Long-term debt / EBITDA leverage ratio",
+        "Allowed vs earned ROE by subsidiary",
+        "Industrial load trends (TX data centers, WV industrial)",
+    ],
+    competitive_advantages=[
+        "Largest transmission system in the US — 40,000+ circuit miles covering "
+        "two-thirds of the Eastern Interconnection; transmission projects earn "
+        "FERC-authorized returns with formula rates, providing predictable income",
+        "Texas data center load growth — AEP Texas serves the rapidly growing "
+        "Dallas-Fort Worth metroplex and data center corridor; incremental data "
+        "center load earns distribution revenue at high incremental margins",
+        "Vertically integrated position in most states — owning generation, "
+        "transmission, and distribution allows recovery of clean energy transition "
+        "capital across all three components of the regulated stack",
+    ],
+    business_model_keywords=[
+        "AEP Texas", "AEP Ohio", "SWEPCO", "Appalachian Power", "transmission",
+        "rate base", "capex", "formula rate", "FERC", "MISO", "SPP",
+        "coal retirement", "renewable", "solar", "wind", "Bill Fehrman",
+        "allowed ROE", "rate case", "data center load", "grid hardening",
+        "regulated utility", "ERCOT",
+    ],
+))
+
+
+# ── Exelon Corporation (EXC) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="EXC",
+    company_name="Exelon Corporation",
+    business_model=(
+        "Exelon is the largest regulated transmission and distribution (T&D) utility "
+        "in the US following the 2022 spinoff of Constellation Energy (power generation). "
+        "Exelon operates six regulated utilities: ComEd (Illinois, 4M customers), "
+        "PECO (Pennsylvania, 1.7M), BGE (Maryland, 1.3M), Pepco (DC/Maryland, 0.9M), "
+        "Atlantic City Electric (NJ, 0.6M), and Delmarva Power (DE/MD, 0.5M). "
+        "Earnings are 100% regulated — no merchant generation exposure."
+    ),
+    primary_revenue_drivers=[
+        "ComEd (Illinois) (~35% of earnings) — distribution utility under "
+        "multi-year rate plans (MYRP) and performance-based rates; largest single subsidiary",
+        "PECO (Pennsylvania) (~20%) — electric and gas distribution",
+        "BGE (Maryland) (~18%) — electric and gas distribution; "
+        "formula rate with annual true-up",
+        "Pepco Holdings (DC, MD, DE, NJ) (~27%) — Pepco, Atlantic City Electric, "
+        "Delmarva Power; serving DC government and mid-Atlantic corridor",
+    ],
+    recurring_revenue_sources=[
+        "Regulated electric and gas distribution tariffs set by IL, PA, MD, DC, "
+        "NJ, DE utility commissions",
+        "ComEd performance-based rate (formula rate annual reconciliation)",
+        "FERC-regulated transmission revenue",
+        "BGE formula rate annual updates (MD PSC)",
+    ],
+    rate_sensitivity_note=(
+        "EXC trades at ~15-18x forward EPS — a pure-play regulated utility multiple. "
+        "EXC's sensitivity to rates is primarily through multiple compression: "
+        "its 3.5-4% dividend yield competes with Treasuries. EXC carries ~$35B+ "
+        "of long-term debt — rising refinancing costs directly increase interest "
+        "expense. ComEd's multi-year rate plan (MYRP) provides earnings certainty "
+        "but MYRP renewal risk is a regulatory headwind every 4-5 years."
+    ),
+    inflation_pass_through=(
+        "Moderate: fuel and power procurement costs pass through to customers via "
+        "tariff adjustment mechanisms. Capital cost inflation is added to rate base "
+        "and recovered over time, but with regulatory lag. ComEd's formula rate "
+        "provides faster cost recovery than traditional rate cases."
+    ),
+    recession_behavior=(
+        "Highly defensive — T&D utility revenue is essentially volume-insensitive "
+        "for residential customers; commercial and industrial load could decline "
+        "modestly. Exelon's urban service territories (Chicago, DC, Philadelphia, "
+        "Baltimore) have structural demand stability. EPS has been positive through "
+        "every economic cycle."
+    ),
+    major_risks=[
+        "ComEd Illinois regulatory risk — multi-year rate plan (MYRP) renewal by "
+        "Illinois Commerce Commission in 2025-26 is the single largest earnings risk; "
+        "performance metrics (reliability, EV charging) determine allowed ROE",
+        "ComEd federal investigation legacy — corruption investigation related to "
+        "previous management; ongoing compliance requirements add cost",
+        "Interest rate pressure on utility multiples — EXC's premium to book value "
+        "is sensitive to changes in the utility multiple benchmark",
+        "EV and AMI capital recovery — smart meters and EV infrastructure CapEx "
+        "requires timely rate case recovery across six jurisdictions",
+        "Regulatory lag across six jurisdictions — each state has different "
+        "rate case timing and cost recovery mechanisms",
+    ],
+    valuation_style=(
+        "Pure-play regulated utility valued on P/E (~15-18x) and EV/EBITDA (~11-13x). "
+        "EXC trades at a premium to utility peers due to the pure T&D profile "
+        "(no commodity/generation risk). Re-rating catalyst: ComEd MYRP renewal "
+        "confirming allowed ROE and performance incentive structure; "
+        "data center and EV load growth in Chicago and DC driving above-average CapEx."
+    ),
+    key_metrics=[
+        "Rate base growth by utility (~7-8% CAGR)",
+        "Adjusted EPS growth (target 5-7% CAGR)",
+        "ComEd MYRP allowed ROE and performance achievement",
+        "CapEx execution ($29B+ through 2028)",
+        "Dividend payout ratio and coverage",
+        "Credit ratings (target BBB+/A-)",
+        "EV charging infrastructure expansion",
+        "Data center load growth (Chicago, DC corridors)",
+    ],
+    competitive_advantages=[
+        "Largest urban T&D footprint — serving Chicago, DC, Philadelphia, Baltimore, "
+        "and coastal NJ provides unmatched concentration of high-density, high-value "
+        "customers that generate strong revenue per circuit mile",
+        "Pure T&D business model — no merchant generation risk; pure regulated "
+        "earnings are valued at a premium multiple vs integrated utilities with "
+        "commodity exposure",
+        "ComEd multi-year rate plan (MYRP) — formula rate with annual true-up "
+        "provides faster cost recovery and revenue certainty than traditional "
+        "rate cases; reduces regulatory lag significantly vs peers",
+    ],
+    business_model_keywords=[
+        "ComEd", "PECO", "BGE", "Pepco", "Atlantic City Electric", "Delmarva",
+        "T&D", "transmission and distribution", "rate base", "capex",
+        "MYRP", "multi-year rate plan", "formula rate", "Calvin Butler",
+        "Illinois Commerce Commission", "AMI", "smart meters",
+        "EV charging", "grid modernization", "data center load",
+        "performance-based rate", "regulated utility",
+    ],
+))
+
+
+# ── Southern Company (SO) ─────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="SO",
+    company_name="Southern Company",
+    business_model=(
+        "Southern Company is a large regulated utility holding company providing "
+        "electric and natural gas service across Georgia, Alabama, Mississippi, "
+        "and Illinois.  Key subsidiaries: Georgia Power (electric, 2.7M customers), "
+        "Alabama Power (electric, 1.5M), Mississippi Power, Southern Natural Gas, "
+        "and Nicor Gas (Illinois natural gas distribution).  The completion of "
+        "Vogtle Units 3 & 4 — the first new US nuclear reactors in 30+ years — "
+        "adds 2,234 MW of carbon-free baseload generation to Georgia Power's fleet."
+    ),
+    primary_revenue_drivers=[
+        "Georgia Power (~40% of earnings) — regulated electric utility serving "
+        "metro Atlanta and statewide Georgia; rate base growing with renewable "
+        "additions, transmission, and Vogtle nuclear capital recovery",
+        "Alabama Power (~25%) — regulated electric utility in Alabama; "
+        "coal retirement and renewable transition driving capital deployment",
+        "Southern Natural Gas + Southern Company Gas (~20%) — interstate gas "
+        "transmission + Nicor Gas distribution in Illinois (4M customers)",
+        "Southern Power (~10%) — wholesale competitive generation (solar/wind IPP)",
+        "Mississippi Power + other (~5%)",
+    ],
+    recurring_revenue_sources=[
+        "Regulated electric distribution tariffs (Georgia PSC, Alabama PSC, MS PSC)",
+        "FERC-regulated interstate natural gas transmission (Southern Natural Gas)",
+        "Nicor Gas distribution tariffs (Illinois ICC)",
+        "Southern Power wholesale power purchase agreements (multi-year PPAs)",
+    ],
+    rate_sensitivity_note=(
+        "SO trades at ~16-19x forward EPS — a premium utility multiple reflecting "
+        "the attractive Georgia/Alabama service territories. SO carries $55B+ of "
+        "long-term debt, inflated by the $35B+ Vogtle construction financing. "
+        "Higher rates increase interest expense directly and narrow the yield "
+        "spread between SO's 3.5-4% dividend and 10-year Treasuries, compressing "
+        "the utility valuation premium."
+    ),
+    inflation_pass_through=(
+        "Structured: fuel costs pass through via adjustment clauses. Vogtle "
+        "construction cost recovery is structured through Georgia Power rate cases "
+        "and Georgia PSC certificates of public convenience and necessity (CPCN). "
+        "Operating cost inflation on Vogtle (now in-service) is recovered through "
+        "the next Georgia Power rate case."
+    ),
+    recession_behavior=(
+        "Highly defensive — Georgia and Alabama regulated utility revenues are "
+        "quasi-fixed. Metro Atlanta commercial and industrial load could soften "
+        "in a deep recession. Nicor Gas distribution in Illinois serves "
+        "residential heating load which is weather-driven and recession-resistant. "
+        "Southern Company generated positive EPS through every recession historically."
+    ),
+    major_risks=[
+        "Vogtle operational risk — Units 3 & 4 are now in service but operating "
+        "a new AP1000 nuclear design introduces first-of-kind operating learning "
+        "curve; unplanned outages would require replacement power at market prices",
+        "Georgia PSC rate case risk — Vogtle capital recovery and return on "
+        "equity are set by the Georgia Public Service Commission; disallowance "
+        "of construction cost overruns is the primary downside scenario",
+        "Alabama PSC coal retirement costs — Alabama Power has a large coal fleet; "
+        "accelerated retirement creates stranded cost recovery risk",
+        "Nicor Gas Illinois regulatory risk — Illinois Commerce Commission is "
+        "one of the more challenging gas utility regulators",
+        "Interest expense on Vogtle debt — ~$35B+ of construction debt must be "
+        "serviced and gradually amortized through Georgia Power rates",
+    ],
+    valuation_style=(
+        "Premium regulated utility P/E (~16-19x) and EV/EBITDA (~13-15x). "
+        "SO commands a premium to utility peers for: 1) Georgia Power's "
+        "high-growth metro Atlanta service territory; 2) Vogtle nuclear baseload "
+        "providing long-lived carbon-free generation; 3) strong regulatory "
+        "relationship with Georgia PSC historically. Re-rating catalyst: "
+        "Vogtle operating smoothly for 2+ years and data center load growth "
+        "in Georgia driving accelerated rate base investment."
+    ),
+    key_metrics=[
+        "Georgia Power rate base growth and allowed ROE",
+        "Vogtle Units 3 & 4 capacity factors (target ~90%)",
+        "Adjusted EPS growth (target 5-7% CAGR)",
+        "CapEx plan by subsidiary ($40B+ through 2028)",
+        "Long-term debt and Vogtle cost recovery schedule",
+        "Data center load growth in Georgia",
+        "Dividend coverage and payout ratio",
+        "Nicor Gas Illinois rate case outcomes",
+    ],
+    competitive_advantages=[
+        "Georgia Power metro Atlanta monopoly — Atlanta is one of the fastest-growing "
+        "US metros with a booming data center corridor (Google, Microsoft, Meta, AWS "
+        "have significant Georgia data center capacity); load growth drives incremental "
+        "rate base investment without regulatory risk",
+        "Vogtle nuclear fleet — AP1000 nuclear units provide 2,234 MW of carbon-free "
+        "baseload at near-zero marginal cost; in an carbon-constrained environment, "
+        "nuclear baseload is a scarcity asset that no competitor can quickly replicate",
+        "Southern Company Gas scale — Nicor Gas distribution serving 4M Illinois "
+        "customers is one of the largest US gas distribution systems, providing "
+        "scale in gas system upgrades and customer service efficiency",
+    ],
+    business_model_keywords=[
+        "Vogtle", "Georgia Power", "Alabama Power", "Mississippi Power",
+        "Nicor Gas", "Southern Natural Gas", "Daniel Tucker",
+        "nuclear", "AP1000", "rate base", "regulated", "capex",
+        "clean energy", "coal retirement", "carbon-free", "solar",
+        "Georgia PSC", "CPCN", "allowed ROE", "rate case",
+        "data center", "Atlanta", "load growth", "battery storage",
+    ],
+))
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
