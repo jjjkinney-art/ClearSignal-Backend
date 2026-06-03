@@ -11,6 +11,7 @@ import json
 import logging
 import re
 import uuid
+from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 from typing import Dict, List, Any, Optional
 
 # Import schema types explicitly so that type hints in this module are resolvable
@@ -797,46 +798,98 @@ def _run_investment_pipeline(
     # ── Evidence partitioning ─────────────────────────────────────────────────
     partition = partition_evidence(evidence, company)
 
-    # ── Specialist agents ─────────────────────────────────────────────────────
-    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: running 5 specialist agents")
-    try:
-        valuation = run_valuation_agent(
+    # ── Specialist agents (parallel execution) ───────────────────────────────
+    # The five investment agents are stateless and mutually independent — each
+    # reads from its own evidence partition and calls the OpenAI API separately.
+    # Running them in a thread pool cuts the agent-pipeline wall time from
+    # ~20-25 s (sequential × 5) to ~5-8 s (parallel, bound by the slowest call).
+    # This is the primary fix for slow-synthesis companies (AAPL) that otherwise
+    # push total request time past Render's 61 s Nginx proxy_read_timeout.
+    #
+    # Fallback: if the thread pool itself raises, we re-run sequentially so no
+    # request ever fails purely because of the parallelism mechanism.
+    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: running 5 specialist agents (parallel)")
+
+    from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
+
+    def _run_valuation():
+        return run_valuation_agent(
             company, partition.valuation,
             request_id=request_id, profile=profile,
             question_intent=question_intent,
         )
-    except Exception as exc:
-        logger.warning("[router] valuation_agent failed for %s: %r", ticker, exc)
-        from ..schemas import ValuationView
-        valuation = ValuationView(summary="Valuation analysis unavailable.", confidence=0.0)
+
+    def _run_macro():
+        return run_investment_macro_agent(
+            company, partition.macro,
+            request_id=request_id, profile=profile,
+        )
+
+    def _run_risk():
+        return run_risk_agent(
+            company, partition.risk,
+            request_id=request_id, profile=profile,
+        )
+
+    def _run_market():
+        return run_market_agent(
+            company, partition.market,
+            request_id=request_id, profile=profile,
+        )
+
+    def _run_quality():
+        return run_quality_agent(
+            company, partition.quality,
+            request_id=request_id, profile=profile,
+        )
+
+    _agent_tasks = {
+        "valuation": _run_valuation,
+        "macro":     _run_macro,
+        "risk":      _run_risk,
+        "market":    _run_market,
+        "quality":   _run_quality,
+    }
+    _agent_defaults = {
+        "valuation": ValuationView(summary="Valuation analysis unavailable.", confidence=0.0),
+        "macro":     MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0),
+        "risk":      RiskProfile(overall="Risk analysis unavailable.", confidence=0.0),
+        "market":    MarketContext(overall="Market context unavailable.", confidence=0.0),
+        "quality":   QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0),
+    }
 
     try:
-        macro = run_investment_macro_agent(company, partition.macro, request_id=request_id, profile=profile)
-    except Exception as exc:
-        logger.warning("[router] macro_agent failed for %s: %r", ticker, exc)
-        from ..schemas import MacroSensitivity
-        macro = MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0)
+        with ThreadPoolExecutor(max_workers=5) as _pool:
+            _futures: dict[str, Future] = {
+                name: _pool.submit(fn)
+                for name, fn in _agent_tasks.items()
+            }
+        _agent_results = {}
+        for name, fut in _futures.items():
+            try:
+                _agent_results[name] = fut.result()
+            except Exception as exc:
+                logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
+                _agent_results[name] = _agent_defaults[name]
+    except Exception as _pool_exc:
+        # Thread pool failure — fall back to sequential execution
+        logger.warning(
+            "[router] parallel agent pool failed for %s (%r) — falling back to sequential",
+            ticker, _pool_exc,
+        )
+        _agent_results = {}
+        for name, fn in _agent_tasks.items():
+            try:
+                _agent_results[name] = fn()
+            except Exception as exc:
+                logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
+                _agent_results[name] = _agent_defaults[name]
 
-    try:
-        risk = run_risk_agent(company, partition.risk, request_id=request_id, profile=profile)
-    except Exception as exc:
-        logger.warning("[router] risk_agent failed for %s: %r", ticker, exc)
-        from ..schemas import RiskProfile
-        risk = RiskProfile(overall="Risk analysis unavailable.", confidence=0.0)
-
-    try:
-        market = run_market_agent(company, partition.market, request_id=request_id, profile=profile)
-    except Exception as exc:
-        logger.warning("[router] market_agent failed for %s: %r", ticker, exc)
-        from ..schemas import MarketContext
-        market = MarketContext(overall="Market context unavailable.", confidence=0.0)
-
-    try:
-        quality = run_quality_agent(company, partition.quality, request_id=request_id, profile=profile)
-    except Exception as exc:
-        logger.warning("[router] quality_agent failed for %s: %r", ticker, exc)
-        from ..schemas import QualityAssessment
-        quality = QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0)
+    valuation = _agent_results["valuation"]
+    macro     = _agent_results["macro"]
+    risk      = _agent_results["risk"]
+    market    = _agent_results["market"]
+    quality   = _agent_results["quality"]
 
     agents_run = ["valuation", "macro", "risk", "market", "quality"]
     print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: agents_run={agents_run}")
