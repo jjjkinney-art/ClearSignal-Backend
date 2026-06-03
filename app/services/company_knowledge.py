@@ -42,22 +42,27 @@ _register(CompanyKnowledgeProfile(
         "Apple designs and sells premium consumer electronics (iPhone, Mac, iPad, "
         "Apple Watch, AirPods) and a growing portfolio of digital services (App Store, "
         "iCloud, Apple Music, Apple TV+, Apple Pay) monetised through the 2B+ active "
-        "device installed base."
+        "device installed base.  Apple Intelligence — the on-device AI feature suite "
+        "launching across iPhone 16 and M-series Macs — is positioned as the primary "
+        "catalyst for an upgrade supercycle, embedding generative AI capabilities "
+        "(writing tools, image generation, Siri with ChatGPT integration) that create "
+        "a compelling reason to upgrade for the 600M+ iPhones on older hardware."
     ),
     primary_revenue_drivers=[
-        "iPhone (~52% of revenue)",
-        "Services (~25% of revenue, ~72% gross margin)",
-        "Mac (~8%)",
+        "iPhone (~52% of revenue) — upgrade cycle driven by Apple Intelligence AI features",
+        "Services (~25% of revenue, ~72% gross margin) — App Store, iCloud, Apple TV+, "
+        "Apple Music, Apple Pay, Google TAC (~$18-20B/yr search default payment)",
+        "Mac (~8%) — M-series chip leadership; halo from Apple Intelligence",
         "iPad (~7%)",
-        "Wearables / Home / Accessories (~8%)",
+        "Wearables / Home / Accessories (~8%) — Apple Watch, AirPods, Vision Pro",
     ],
     recurring_revenue_sources=[
-        "App Store commissions (15–30% take rate)",
-        "iCloud storage subscriptions",
+        "App Store commissions (15–30% take rate on $90B+ annual App Store GMV)",
+        "iCloud storage subscriptions (1B+ paid iCloud users)",
         "Apple One bundle (Music, TV+, Arcade, Fitness+)",
-        "AppleCare extended warranty",
+        "AppleCare extended warranty (~$10B/yr high-margin)",
         "Apple Pay / Tap-to-Pay interchange participation",
-        "Google TAC (search default on Safari, ~$18–20B/yr)",
+        "Google TAC (search default on Safari, ~$18–20B/yr — at risk from DOJ antitrust)",
     ],
     rate_sensitivity_note=(
         "Apple's premium ~28-30x P/E multiple is DCF-sensitive; a 100 bps rise in the "
@@ -87,13 +92,14 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "China revenue concentration (~19% of total) and supply-chain risk; TSMC "
-        "manufactures all A/M-series chips in Taiwan",
-        "EU and US regulatory scrutiny of App Store monopoly (DMA enforcement could "
-        "force sideloading and reduce take rates)",
-        "Google TAC payment at risk if DOJ antitrust action forces Search default "
-        "competition (represents ~$18-20B/yr in high-margin Services revenue)",
-        "iPhone upgrade cycle elongation as consumers hold devices longer",
-        "Generative AI disruption of Siri and potential loss of AI-native platform relevance",
+        "manufactures all A/M-series chips in Taiwan; Huawei competing for China iPhone share",
+        "EU Digital Markets Act (DMA) enforcement forcing App Store sideloading and "
+        "reducing take rates — estimated 3-5% Services revenue headwind if take rate falls",
+        "Google TAC payment (~$18-20B/yr) at risk if DOJ antitrust action forces Search "
+        "default competition — would be the largest single Services revenue shock in history",
+        "Apple Intelligence underwhelming adoption — if AI features don't drive upgrade "
+        "propensity, the supercycle thesis collapses and iPhone volumes stagnate",
+        "Vision Pro tepid demand at $3,499 — AR/VR not yet a mass market platform",
     ],
     valuation_style=(
         "Market prices AAPL on a blended P/E (~28-30x) with significant weight on "
@@ -101,29 +107,34 @@ _register(CompanyKnowledgeProfile(
         "~35-40x (software multiple), weighted by mix.  As Services becomes a larger "
         "share, the blended multiple expands structurally.  Buyback yield (~3-4%/yr) "
         "provides meaningful EPS accretion that partially offsets multiple compression "
-        "in rising-rate environments."
+        "in rising-rate environments.  Apple Intelligence-driven supercycle could "
+        "justify 30-33x if iPhone ASP lifts and Services attach rate improves."
     ),
     key_metrics=[
-        "iPhone unit volumes and ASP",
-        "Services revenue growth rate and gross margin",
+        "iPhone unit volumes and ASP (Apple Intelligence upgrade propensity)",
+        "Services revenue growth rate and gross margin (~72%)",
         "Active installed base (2B+ devices)",
         "Gross margin (overall target ~44-46%)",
         "Free cash flow ($85-95B/yr range)",
         "Share buybacks (>$85B/yr authorized)",
         "China revenue % of total",
-        "App Store GMV and take rate",
+        "App Store GMV, take rate, and DMA compliance cost",
+        "Apple Intelligence feature adoption rate (new metric)",
     ],
     competitive_advantages=[
         "Tightly integrated hardware-software-services ecosystem that raises switching costs",
-        "A/M-series chip vertical integration delivering best-in-class perf-per-watt",
+        "A/M-series chip vertical integration delivering best-in-class perf-per-watt and "
+        "enabling on-device Apple Intelligence AI processing with privacy advantage",
         "Brand loyalty with ~90%+ iPhone retention in upgrade cycles",
         "App Store platform network effect (developer supply × user demand)",
-        "Privacy positioning as differentiator vs Android",
+        "Privacy positioning as differentiator vs Android and cloud-AI competitors",
+        "Google TAC relationship provides $18-20B/yr risk-free Services revenue floor",
     ],
     business_model_keywords=[
         "iPhone", "Services", "App Store", "iCloud", "installed base", "buyback",
         "China", "Mac", "AppleCare", "ecosystem", "TSMC", "Tim Cook", "M-series",
-        "TAC", "sideloading",
+        "TAC", "sideloading", "Apple Intelligence", "DMA", "Vision Pro", "AI supercycle",
+        "on-device AI", "wearables", "EU Digital Markets Act",
     ],
 ))
 
@@ -135,14 +146,24 @@ _register(CompanyKnowledgeProfile(
     business_model=(
         "NVIDIA designs GPUs and system-on-chip processors, licensing its CUDA parallel "
         "computing platform to hyperscalers and enterprises for AI training and inference, "
-        "while also serving the gaming, automotive, and professional visualization markets."
+        "while also serving the gaming, automotive, and professional visualization markets.  "
+        "The current product cycle — the Blackwell architecture (B100/B200/GB200 GPUs, "
+        "NVL72 rack-scale systems) — represents NVIDIA's largest generational leap, with "
+        "GB200 delivering 30x inference throughput vs H100 at similar TCO.  The inference "
+        "vs training split is shifting: inference workloads (serving deployed AI models) "
+        "are growing faster than training workloads, expanding NVIDIA's addressable market "
+        "beyond model training to production inference infrastructure.  NIM microservices "
+        "(NVIDIA Inference Microservices) represent an emerging software revenue stream, "
+        "monetising the CUDA ecosystem as API calls rather than just hardware shipments."
     ),
     primary_revenue_drivers=[
-        "Data Center (~87% of revenue — H100/H200/B100 GPU clusters, DGX systems, "
-        "InfiniBand networking via Mellanox)",
-        "Gaming (~9% — GeForce RTX consumer GPUs)",
+        "Data Center (~87% of revenue) — Blackwell B100/B200/GB200 GPU clusters "
+        "(replacing H100/H200), DGX/HGX systems, InfiniBand + Ethernet networking "
+        "(Quantum InfiniBand and Spectrum Ethernet via Mellanox)",
+        "Gaming (~9% — GeForce RTX consumer GPUs; AI-enhanced DLSS drives refresh cycle)",
         "Professional Visualization (~2%)",
-        "Automotive (<2% — DRIVE platform)",
+        "Automotive (<2% — DRIVE platform; NVIDIA DRIVE Thor for next-gen vehicles)",
+        "Emerging software / NIM microservices — growing but currently <1% of revenue",
     ],
     recurring_revenue_sources=[
         "CUDA software ecosystem (developer lock-in creates high switching costs)",
@@ -208,8 +229,9 @@ _register(CompanyKnowledgeProfile(
     ],
     business_model_keywords=[
         "GPU", "CUDA", "H100", "H200", "data center", "hyperscaler", "AI accelerator",
-        "NIM", "DLSS", "Grace", "export restrictions", "Jensen Huang", "InfiniBand",
-        "Blackwell", "HBM",
+        "NIM", "export restrictions", "Jensen Huang", "InfiniBand",
+        "Blackwell", "HBM", "GB200", "B200", "NVL72", "inference", "training",
+        "Blackwell cycle", "NIM microservices", "custom ASIC", "CUDA ecosystem",
     ],
 ))
 
@@ -299,7 +321,9 @@ _register(CompanyKnowledgeProfile(
     business_model_keywords=[
         "Azure", "Microsoft 365", "Copilot", "Teams", "OpenAI", "LinkedIn", "GitHub",
         "Activision", "Dynamics", "Xbox Game Pass", "Intelligent Cloud", "seat", "CapEx",
-        "Satya Nadella",
+        "Satya Nadella", "M365 Copilot", "Azure OpenAI Service", "GitHub Copilot",
+        "Productivity & Business Processes", "More Personal Computing",
+        "Copilot monetization", "Azure OpenAI", "AI Copilot",
     ],
 ))
 
@@ -487,14 +511,23 @@ _register(CompanyKnowledgeProfile(
         "Amazon operates three distinct profit pools: AWS cloud computing (the primary "
         "earnings engine), North America and International e-commerce marketplaces "
         "(retail + third-party seller services + advertising), and a growing advertising "
-        "business monetising the purchase-intent signal of 200M+ Prime members."
+        "business monetising the purchase-intent signal of 200M+ Prime members.  "
+        "The primary investment thesis is AWS margin expansion: AWS operating margins "
+        "expanded from ~27% in 2023 toward 35-38% as CapEx moderates and revenue "
+        "scales, generating $100B+ in annualized operating income at scale.  Advertising "
+        "($56B+ annual, near-100% incremental margin) is the second profit engine.  "
+        "AMZN is best valued on an FCF yield or EV/FCF basis (~25-30x FCF), not P/E, "
+        "because retail losses obscure the AWS + Advertising earning power."
     ),
     primary_revenue_drivers=[
         "Online Stores (~22% of revenue — first-party retail)",
         "Third-Party Seller Services (~24% — marketplace fulfillment and commissions)",
-        "AWS (~17% of revenue but ~65-70% of operating income)",
-        "Advertising Services (~8% and growing rapidly — sponsored products/brands)",
-        "Subscription Services (~7% — Prime membership, music, video)",
+        "AWS (~17% of revenue, ~65-70% of operating income — AWS margin expanding "
+        "toward 35-38% as generative AI workloads on Bedrock accelerate)",
+        "Advertising Services (~8% and growing ~20%+/yr — sponsored products, brands; "
+        "near-100% incremental margin — Amazon's second profit engine)",
+        "Subscription Services (~7% — Prime membership $139/yr, music, video, "
+        "Amazon Pharmacy benefits)",
         "Physical Stores (~4% — Whole Foods)",
     ],
     recurring_revenue_sources=[
@@ -559,7 +592,8 @@ _register(CompanyKnowledgeProfile(
     business_model_keywords=[
         "AWS", "Prime", "Marketplace", "Advertising", "Fulfillment", "Graviton",
         "Trainium", "Andy Jassy", "Whole Foods", "FTC", "third-party sellers",
-        "Bedrock", "same-day delivery",
+        "Bedrock", "same-day delivery", "AWS margin", "FCF yield", "Trainium3",
+        "Inferentia3", "Amazon Bedrock", "advertising margin", "EV/FCF",
     ],
 ))
 

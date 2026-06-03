@@ -58,7 +58,7 @@ from ..schemas import (
 from ..structured_output import get_structured_response, extract_json_candidate, repair_data
 from ..model_client import synthesis_client as model_client
 from ..config import settings
-from .depth_guard import check_synthesis_depth
+from .depth_guard import check_synthesis_depth, inject_revenue_context
 from .signal_ranker import (
     rank_signals,
     compress_thesis as _compress_thesis,
@@ -2785,6 +2785,27 @@ def synthesize_thesis(
     depth_warnings = check_synthesis_depth(thesis, company, profile)
     warnings = warnings + depth_warnings
 
+    # ── P3: Revenue-driver context injection when Check 5 fires ──────────────
+    # When the depth guard reports that no primary revenue driver was mentioned,
+    # inject a compact context line into thesis.conclusion so the output always
+    # surfaces key segment data even if the LLM elided it from the main body.
+    _depth_revenue_miss = any(
+        "primary revenue" in w or "revenue drivers" in w
+        for w in depth_warnings
+    )
+    if _depth_revenue_miss and profile is not None:
+        try:
+            thesis = inject_revenue_context(thesis, profile)
+            logger.info(
+                "[depth_guard] revenue_context injected into conclusion for %s",
+                company.ticker,
+            )
+        except Exception as _di_exc:
+            logger.warning(
+                "[depth_guard] revenue_context injection failed (non-fatal): %r",
+                _di_exc,
+            )
+
     # ── Phase 5+: forbidden phrase quality check ──────────────────────────────
     quality_warnings = check_forbidden_phrases(thesis)
     warnings = warnings + quality_warnings
@@ -3249,9 +3270,9 @@ def synthesize_thesis(
     )
 
     # ── Post-synthesis validation (Part 6) ────────────────────────────────────
-    # Deterministic quality checks on the synthesized thesis.  Non-blocking:
-    # violations are logged but do NOT prevent the thesis from being returned.
-    # In a future iteration, hard violations may trigger a targeted retry.
+    # Deterministic quality checks on the synthesized thesis.
+    # Hard violations trigger a targeted single-field retry before falling back
+    # to advisory-only warning mode.
     try:
         from .synthesis_validator import validate_thesis, summarize_validation
         _val_result = validate_thesis(thesis)
@@ -3261,7 +3282,66 @@ def synthesize_thesis(
                 "[synthesis_validator] ticker=%s %s",
                 getattr(company, "ticker", "UNKNOWN"), _val_summary,
             )
-            # Append validator warnings to consistency_warnings (advisory only)
+
+            # ── P2: Targeted retry for MISSING_COMPOUND_RISK ──────────────────
+            # bear_thesis is the only field that needs to change.  Build a
+            # minimal focused prompt, regenerate just that field, validate the
+            # patch, and swap bear_thesis only if the retry passes.
+            _compound_viol = next(
+                (v for v in _val_result.hard_violations
+                 if v.check_id == "MISSING_COMPOUND_RISK"),
+                None,
+            )
+            if _compound_viol is not None:
+                try:
+                    _bear_retry_prompt = (
+                        f"You are a financial analyst writing the bear case for "
+                        f"{company.ticker} ({company.company_name}).\n\n"
+                        f"CURRENT BEAR THESIS (needs improvement):\n"
+                        f"{thesis.bear_thesis}\n\n"
+                        f"REQUIRED FIX: {_compound_viol.remediation_hint}\n\n"
+                        f"Rewrite the bear thesis paragraph.  It must:\n"
+                        f"1. Keep all existing bearish arguments.\n"
+                        f"2. Add at least one compound risk interaction using the format:\n"
+                        f"   '[Factor A] + [Factor B] = [compound outcome that is worse "
+                        f"than either factor alone]'\n"
+                        f"3. Remain one paragraph (200-400 words).\n"
+                        f"4. Be company-specific — reference {company.ticker} by name.\n\n"
+                        f"Return ONLY the updated bear thesis paragraph text. "
+                        f"No JSON, no headings, no explanation."
+                    )
+                    _bear_raw = model_client.call(_bear_retry_prompt)
+                    if _bear_raw and len(_bear_raw.strip()) > 100:
+                        _patched = thesis.model_copy(
+                            update={"bear_thesis": _bear_raw.strip()}
+                        )
+                        _retry_val = validate_thesis(_patched)
+                        _still_failing = any(
+                            v.check_id == "MISSING_COMPOUND_RISK"
+                            for v in _retry_val.hard_violations
+                        )
+                        if not _still_failing:
+                            thesis.bear_thesis = _bear_raw.strip()
+                            logger.info(
+                                "[synthesis_validator] MISSING_COMPOUND_RISK patched "
+                                "via bear_thesis retry for %s",
+                                company.ticker,
+                            )
+                            # Remove the now-resolved warning from the list
+                            _val_result = _retry_val
+                        else:
+                            logger.info(
+                                "[synthesis_validator] compound_risk retry did not "
+                                "resolve for %s — keeping original with warning",
+                                company.ticker,
+                            )
+                except Exception as _cr_exc:
+                    logger.warning(
+                        "[synthesis_validator] compound_risk retry failed (non-fatal): %r",
+                        _cr_exc,
+                    )
+
+            # Append remaining hard validator warnings to consistency_warnings
             for _vv in _val_result.violations:
                 if _vv.severity == "hard":
                     thesis.consistency_warnings.append(

@@ -170,7 +170,12 @@ class TestSynthesizeThesisWithMockedLLM:
             mock_client.call.return_value = _mock_thesis_json()
             result = synthesize_thesis(company, valuation, macro, risk, market, quality, evidence)
 
-        mock_client.call.assert_called_once()
+        # The synthesiser makes at least one LLM call for the primary synthesis.
+        # A compound-risk retry may add a second call — assert ≥1 so this test
+        # remains valid regardless of retry behaviour.
+        assert mock_client.call.call_count >= 1, (
+            f"Expected at least 1 LLM call, got {mock_client.call.call_count}"
+        )
         assert isinstance(result, InvestmentThesis)
         assert result.ticker == "AAPL"
         assert result.evidence_count == 3

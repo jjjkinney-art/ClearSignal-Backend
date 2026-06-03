@@ -296,9 +296,11 @@ class TestSynthesisDirectAnswer:
                 original_user_question=APPLE_RATES_QUESTION,
             )
 
-        # The prompt passed to the LLM must embed the original question
-        call_args = mock_client.call.call_args
-        prompt_sent = call_args[0][0] if call_args[0] else call_args[1].get("prompt", "")
+        # The original synthesis prompt (first LLM call) must embed the user's question.
+        # A compound-risk retry may add a second call with a different prompt; use
+        # call_args_list[0] to assert against the primary synthesis call.
+        first_call = mock_client.call.call_args_list[0]
+        prompt_sent = first_call[0][0] if first_call[0] else first_call[1].get("prompt", "")
         assert APPLE_RATES_QUESTION in prompt_sent
 
     def test_no_question_produces_empty_direct_answer_from_mock(self, monkeypatch):

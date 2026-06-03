@@ -5,11 +5,22 @@ Checks that synthesised theses are genuinely company-specific rather than
 generic macro summaries with company names inserted.  Warnings are appended
 to InvestmentThesis.consistency_warnings by the synthesiser (same pattern
 as the Phase 4 governance checks).
+
+Severity-4 changes (2026-06-03)
+--------------------------------
+* Check 5 now accepts sub-product names inside driver parentheses as
+  alternative match terms (e.g. "Azure" matches "Intelligent Cloud (... Azure
+  IaaS/PaaS ...)").  Eliminates false positives where the LLM correctly
+  names the product but not the official segment label.
+* inject_revenue_context() — called by the synthesiser when Check 5 fires
+  — appends a compact revenue breakdown line to thesis.conclusion so the
+  output always surfaces key business model context even when the LLM elides it.
 """
 
 from __future__ import annotations
 
-from typing import List, Optional
+import re
+from typing import List, Optional, Tuple
 
 from ..schemas import CompanyContext, CompanyKnowledgeProfile, InvestmentThesis
 
@@ -41,6 +52,43 @@ _VALUATION_TERMS = (
     "ev/",
     "price-to",
 )
+
+
+def _driver_alternatives(driver: str) -> List[str]:
+    """Return a list of match terms for a single revenue driver string.
+
+    The primary term is everything before the first '(' or ','.  Additional
+    terms are extracted from the parenthetical content: the portion after
+    '—' or ':' is split on commas and the first word of each token is added
+    when it is at least 3 characters long.
+
+    Example
+    -------
+    "Intelligent Cloud (~43% of revenue — Azure IaaS/PaaS, SQL Server)"
+        → ["Intelligent Cloud", "Azure", "SQL"]
+
+    "AWS (~17% of revenue, ~65-70% of operating income)"
+        → ["AWS"]
+    """
+    main = driver.split("(")[0].split(",")[0].strip()
+    alternatives: List[str] = [main] if main else []
+
+    # Extract from inside parentheses
+    paren_match = re.search(r"\(([^)]+)\)", driver)
+    if paren_match:
+        paren = paren_match.group(1)
+        # Focus on the part after an em-dash or colon
+        for sep in ("—", "–", ":"):
+            if sep in paren:
+                paren = paren.split(sep, 1)[1]
+                break
+        for token in paren.split(","):
+            word = token.strip().split()[0].rstrip("/").strip() if token.strip() else ""
+            # Skip percentage tokens and short tokens
+            if len(word) >= 3 and not word.startswith("~") and not word.startswith("%"):
+                alternatives.append(word)
+
+    return alternatives
 
 
 def check_synthesis_depth(
@@ -122,12 +170,14 @@ def check_synthesis_depth(
         )
 
     # ── Check 5: primary revenue driver mention (requires profile) ────────────
+    # Severity-4 improvement: accept sub-product names inside parentheses as
+    # alternatives to the official segment label.  A thesis that mentions "Azure"
+    # satisfies the "Intelligent Cloud" driver check; a thesis that mentions
+    # "Ozempic" satisfies the "GLP-1 diabetes" driver check.
     if profile is not None and profile.primary_revenue_drivers:
-        # Strip parenthetical annotations (e.g. "iPhone (~52% of revenue)" → "iphone")
-        # so the check matches the core product/segment name rather than the full
-        # annotated string (which would never appear verbatim in the thesis text).
         driver_mentioned = any(
-            driver.split("(")[0].split(",")[0].strip().lower() in full_text_lower
+            any(alt.lower() in full_text_lower
+                for alt in _driver_alternatives(driver))
             for driver in profile.primary_revenue_drivers
             if driver.split("(")[0].split(",")[0].strip()
         )
@@ -139,3 +189,48 @@ def check_synthesis_depth(
             )
 
     return warnings
+
+
+def inject_revenue_context(
+    thesis: InvestmentThesis,
+    profile: CompanyKnowledgeProfile,
+) -> InvestmentThesis:
+    """Append a compact revenue context line to thesis.conclusion.
+
+    Called by the synthesiser when Check 5 fires and cannot be resolved via
+    profile keyword matching.  Ensures the output always surfaces the top-3
+    revenue drivers even when the LLM elides segment-level detail.
+
+    The injected line is prefixed with a delimiter so the frontend can strip
+    or style it separately if desired.
+
+    Returns the mutated thesis (modifies in-place via attribute assignment).
+    """
+    if not profile.primary_revenue_drivers:
+        return thesis
+
+    # Take the top 3 drivers, strip verbose parenthetical detail for readability
+    top3: List[str] = []
+    for drv in profile.primary_revenue_drivers[:3]:
+        # Keep the main name and the first parenthetical token (e.g. "~17% of revenue")
+        main = drv.split("(")[0].strip()
+        paren_match = re.search(r"\(([^)]+)\)", drv)
+        pct = ""
+        if paren_match:
+            first_token = paren_match.group(1).split(",")[0].split("—")[0].strip()
+            if first_token:
+                pct = f" ({first_token})"
+        top3.append(f"{main}{pct}")
+
+    context_line = (
+        f" | Business model context: "
+        + "; ".join(top3)
+        + "."
+    )
+
+    existing = thesis.conclusion or ""
+    # Avoid double-injection on retry paths
+    if "Business model context:" not in existing:
+        thesis.conclusion = existing.rstrip() + context_line
+
+    return thesis
