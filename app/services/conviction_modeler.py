@@ -1433,13 +1433,29 @@ def _compute_directional_stance(
             f"is elevated — patience is required before adding.",
         )
 
-    # ── Hold — balanced ───────────────────────────────────────────────────────
-    if final_score >= 0.52:
+    # ── Hold — moderate conviction (dead-zone closure) ───────────────────────
+    # Closes the gap at final_score 0.42–0.51 with fragility < 0.58.
+    #
+    # Before this rule, companies with:
+    #   0.42 ≤ final_score < 0.52   AND   fragility < 0.58
+    # fell through both Hold conditions and received "Avoid" — an incorrect
+    # classification for high-quality businesses (MSFT, NVDA, AMZN) where the
+    # conviction modeler has already applied fragility and asymmetry multiplier
+    # penalties.  A final_score that survives to 0.42–0.51 after those penalties
+    # represents "thesis intact, expectation bar moderate-to-elevated" — Hold, not
+    # Avoid.  "Avoid" implies risk/reward is unfavorable; at 42–51% confidence on
+    # a quality business with moderate fragility, that is too harsh.
+    #
+    # Calibration note: the confidence score is NOT changed here.  The conviction
+    # modeler already discounted fragility and asymmetry multiplicatively before
+    # arriving at final_score.  Classifying the resulting score as Avoid would be
+    # a second penalty on top of penalties already applied.
+    if final_score >= 0.42:
         return (
             "Hold",
-            f"The {ticker} thesis remains directionally intact but lacks a clear catalyst "
-            f"to re-rate near-term. Conviction is insufficient to initiate or add without "
-            f"a reset in expectations.",
+            f"The {ticker} thesis is directionally intact but conviction sits at a "
+            f"moderate level — the evidence base and expectation setup do not yet "
+            f"support adding. Monitor for a catalyst or valuation reset before acting.",
         )
 
     # ── Avoid ─────────────────────────────────────────────────────────────────
