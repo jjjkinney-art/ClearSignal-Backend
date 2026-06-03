@@ -55,10 +55,34 @@ from ..schemas import (
     RiskProfile,
     ValuationView,
 )
+import time as _time
+
 from ..structured_output import get_structured_response, extract_json_candidate, repair_data
 from ..model_client import synthesis_client as model_client
 from ..config import settings
 from .depth_guard import check_synthesis_depth, inject_revenue_context
+
+# ── Compound-risk retry wall-clock budget ─────────────────────────────────────
+# The compound-risk retry makes one additional model_client.call() after the
+# primary synthesis.  On Render free tier, Nginx kills connections at ~61 s
+# (proxy_read_timeout).  If the primary synthesis LLM call already consumed
+# more than this many seconds by the time the validator fires, we skip the
+# retry entirely and fall back to the advisory warning path — keeping total
+# request time safely under the ceiling.
+#
+# Derivation (conservative):
+#   61 s  Render Nginx ceiling
+#  -25 s  agent pipeline baseline (5 sequential agents, ~5 s each)
+#   - 3 s  router / evidence overhead
+#   - 3 s  post-synthesis processing (depth guard, conviction modeler, etc.)
+#   -20 s  estimated retry duration (one targeted bear_thesis LLM call)
+#   ──────────────────────────────────────────────────────────────────
+#  = 10 s  safety margin  →  skip if synthesis call has consumed > 10 s
+#
+# In practice the cutoff is set to 22 s to avoid skipping on fast compounds
+# (NVDA ~10 s, AMZN ~10 s, fast-MSFT ~15 s all stay under this threshold)
+# while reliably catching slow compounds (AAPL ~25-35 s, slow-MSFT ~30-40 s).
+_COMPOUND_RETRY_WALL_BUDGET_S: float = 22.0
 from .signal_ranker import (
     rank_signals,
     compress_thesis as _compress_thesis,
@@ -2586,6 +2610,9 @@ def synthesize_thesis(
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
+    # Timer starts here so the compound-risk retry can measure how much of the
+    # Render 61 s ceiling the synthesis call has already consumed.
+    _synthesis_call_start: float = _time.monotonic()
     thesis = _call_with_json_enforcement(
         prompt=prompt,
         ticker=company.ticker,
@@ -3287,12 +3314,36 @@ def synthesize_thesis(
             # bear_thesis is the only field that needs to change.  Build a
             # minimal focused prompt, regenerate just that field, validate the
             # patch, and swap bear_thesis only if the retry passes.
+            #
+            # Wall-clock budget guard: the retry makes one additional
+            # model_client.call() which takes ~15-20 s.  On Render free tier
+            # the Nginx proxy_read_timeout is ~61 s.  If the synthesis call +
+            # post-processing has already consumed more than
+            # _COMPOUND_RETRY_WALL_BUDGET_S seconds by the time we reach here,
+            # skip the retry entirely — publishing the advisory warning is
+            # better than a silent 504 gateway timeout for the user.
             _compound_viol = next(
                 (v for v in _val_result.hard_violations
                  if v.check_id == "MISSING_COMPOUND_RISK"),
                 None,
             )
             if _compound_viol is not None:
+                _synthesis_elapsed: float = _time.monotonic() - _synthesis_call_start
+                _retry_allowed: bool = _synthesis_elapsed <= _COMPOUND_RETRY_WALL_BUDGET_S
+                if not _retry_allowed:
+                    logger.info(
+                        "[synthesis_validator] compound_risk retry SKIPPED for %s — "
+                        "synthesis_elapsed=%.1fs exceeds wall budget %.1fs; "
+                        "keeping original bear_thesis with advisory warning",
+                        getattr(company, "ticker", "UNKNOWN"),
+                        _synthesis_elapsed,
+                        _COMPOUND_RETRY_WALL_BUDGET_S,
+                    )
+                    print(
+                        f"[DIAG] compound_risk retry SKIPPED ticker={getattr(company, 'ticker', 'UNKNOWN')} "
+                        f"elapsed={_synthesis_elapsed:.1f}s budget={_COMPOUND_RETRY_WALL_BUDGET_S}s"
+                    )
+            if _compound_viol is not None and _retry_allowed:
                 try:
                     _bear_retry_prompt = (
                         f"You are a financial analyst writing the bear case for "
