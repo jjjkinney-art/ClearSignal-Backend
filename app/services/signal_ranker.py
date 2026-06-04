@@ -781,6 +781,100 @@ def rank_signals(
     return result
 
 
+# ── Phase 2 Lever 3: Question-intent signal reweighting ───────────────────────
+
+# Map from question_intent → signal_types that should be promoted to top_signals[:3].
+# Signals whose type is in the priority set are sorted before all others.
+# Within each tier the original composite-importance order is preserved so that
+# the highest-scoring question-relevant signal leads.
+_INTENT_SIGNAL_PRIORITY_TYPES: Dict[str, set] = {
+    "competitive_position": {"structural", "quality"},
+    "macro_sensitivity":    {"macro", "cyclical"},
+    "valuation_stance":     {"valuation", "structural"},
+    "risk_assessment":      {"risk"},
+    "business_model":       {"quality", "structural"},
+}
+
+
+def reweight_signals_for_intent(
+    ranked: RankedSignalSet,
+    question_intent: Optional[str],
+) -> RankedSignalSet:
+    """Re-order ranked signals so question-relevant signal types surface first.
+
+    The synthesis prompt injects ``ranked.top_signals[:3]`` with a hard MUST-address
+    mandate.  Without this reweighting those three slots are always filled by the
+    highest composite-importance signals (typically company-specific structural
+    signals regardless of question type).  This function promotes signals whose
+    ``signal_type`` matches the question intent, ensuring the MUST-address mandate
+    anchors on question-relevant content.
+
+    The reweighting is conservative:
+    - Only ``top_signals`` (the bullish/neutral pool) is reordered.
+    - ``top_risks`` is unchanged so bear-case anchoring is stable.
+    - ``secondary_signals`` absorbs demoted signals so nothing is dropped.
+    - Original composite scores are preserved within each priority tier.
+    - Returns the original ``ranked`` unchanged when ``question_intent`` is
+      ``None``, unknown, or when there are no matching signals.
+
+    Parameters
+    ----------
+    ranked : RankedSignalSet
+        Output of ``rank_signals()``.
+    question_intent : Optional[str]
+        Detected question intent from ``_detect_question_intent()``.
+
+    Returns
+    -------
+    RankedSignalSet with reordered ``top_signals`` and adjusted ``secondary_signals``.
+    """
+    if not question_intent:
+        return ranked
+    priority_types = _INTENT_SIGNAL_PRIORITY_TYPES.get(question_intent)
+    if not priority_types:
+        return ranked
+
+    # Combine top_signals + secondary_signals for the candidate pool.
+    # top_risks is left entirely untouched.
+    candidate_pool = list(ranked.top_signals or []) + list(ranked.secondary_signals or [])
+
+    if not candidate_pool:
+        return ranked
+
+    # Partition into priority-type signals and others, preserving original order
+    # within each tier (original composite score ordering is maintained implicitly
+    # because rank_signals() already sorted by composite importance).
+    priority_sigs = [s for s in candidate_pool if s.signal_type in priority_types]
+    other_sigs    = [s for s in candidate_pool if s.signal_type not in priority_types]
+
+    reordered = priority_sigs + other_sigs
+
+    new_top_signals      = reordered[:3]
+    new_secondary_signals = reordered[3:]
+
+    # Rebuild all_ranked: preserve existing non-bullish/neutral signals from all_ranked
+    # by substituting only the positions occupied by old top/secondary signals.
+    old_top_secondary_ids = {id(s) for s in candidate_pool}
+    passthrough = [s for s in (ranked.all_ranked or [])
+                   if id(s) not in old_top_secondary_ids]
+    new_all_ranked = new_top_signals + new_secondary_signals + passthrough
+
+    print(
+        f"[DIAG] SIGNAL REWEIGHT: intent={question_intent!r} "
+        f"priority_types={priority_types} "
+        f"priority_count={len(priority_sigs)} other_count={len(other_sigs)} "
+        f"new_top={[s.signal_type for s in new_top_signals]}"
+    )
+
+    return RankedSignalSet(
+        top_signals=new_top_signals,
+        top_risks=list(ranked.top_risks or []),
+        secondary_signals=new_secondary_signals,
+        noise=list(ranked.noise or []),
+        all_ranked=new_all_ranked,
+    )
+
+
 # ── Thesis compression ────────────────────────────────────────────────────────
 
 def compress_thesis(

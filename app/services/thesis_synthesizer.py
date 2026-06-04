@@ -85,6 +85,7 @@ from .depth_guard import check_synthesis_depth, inject_revenue_context
 _COMPOUND_RETRY_WALL_BUDGET_S: float = 22.0
 from .signal_ranker import (
     rank_signals,
+    reweight_signals_for_intent,
     compress_thesis as _compress_thesis,
     check_forbidden_phrases,
     propagate_evidence_refs,
@@ -257,6 +258,16 @@ _DEPTH_DIRECTIVES: Dict[str, str] = {
         "CRITICAL ENFORCEMENT: Both bull_thesis and bear_thesis anchor on specific "
         "revenue/margin mechanics. macro_sensitivity is a one-liner."
     ),
+}
+
+# Phase 2 Lever 1: map question_intent → dominant_dim override.
+# Used in _build_synthesis_prompt() and exported for tests.
+_INTENT_TO_DOMINANT_DIM: Dict[str, str] = {
+    "competitive_position": "operational",   # bull/bear anchored on product/moat mechanics
+    "macro_sensitivity":    "macro",          # macro_sensitivity DEEP, valuation COMPRESSED
+    "risk_assessment":      "regulatory",     # bear_thesis DEEP — closest structural proxy
+    # valuation_stance intentionally omitted: keyword scoring already converges on "valuation"
+    # for most megacap names, and the existing valuation_stance block handles it.
 }
 
 
@@ -958,6 +969,100 @@ def _agent_block(label: str, overall: str, confidence: float) -> str:
     )
 
 
+# ── Phase 2 Lever 2: Question-aware agent sub-field injection ─────────────────
+
+def _build_agent_summaries(
+    valuation: "ValuationView",
+    macro: "MacroSensitivity",
+    risk: "RiskProfile",
+    market: "MarketContext",
+    quality: "QualityAssessment",
+    question_intent: Optional[str] = None,
+) -> str:
+    """Build the specialist-agent summaries block for the synthesis prompt.
+
+    Phase 2 Lever 2: when ``question_intent`` is set, inject the single most
+    question-relevant sub-field alongside each agent's ``.overall`` summary.
+    This surfaces the depth content that Phase 1 emphasis blocks produced
+    (``rate_sensitivity``, ``moat``, ``competitive_risk``, etc.) into the
+    synthesis prompt so the LLM can anchor on it rather than only on ``.overall``.
+
+    Injection is additive — ``.overall`` is always included; sub-fields append
+    immediately after the relevant agent block under an indented "→ <label>:" line.
+    The injected text is kept verbatim from the agent field so the synthesis LLM
+    sees exactly what the specialist agent produced for the relevant dimension.
+    """
+    # Per-intent: agent-label → list of (sub-label, field-value) pairs to inject.
+    # Keys must match the label strings passed to _agent_block exactly.
+    sub_field_injections: Dict[str, List[tuple]] = {}
+
+    if question_intent == "competitive_position":
+        sub_field_injections = {
+            "Business Quality": [
+                ("Moat detail",            getattr(quality, "moat",             "") or ""),
+            ],
+            "Risk Profile": [
+                ("Competitive risk detail", getattr(risk,    "competitive_risk", "") or ""),
+            ],
+            "Market Context": [
+                ("Sentiment/competitive",   getattr(market,  "sentiment",        "") or ""),
+            ],
+        }
+    elif question_intent == "macro_sensitivity":
+        sub_field_injections = {
+            "Macro Sensitivity": [
+                ("Rate sensitivity detail", getattr(macro,   "rate_sensitivity",  "") or ""),
+                ("Recession risk detail",   getattr(macro,   "recession_risk",    "") or ""),
+            ],
+            "Business Quality": [
+                ("Revenue durability",      getattr(quality, "revenue_durability","") or ""),
+            ],
+        }
+    elif question_intent == "valuation_stance":
+        sub_field_injections = {
+            "Valuation": [
+                ("P/E assessment",          getattr(valuation, "pe_assessment",        "") or ""),
+                ("Discount-rate sensitivity", getattr(valuation, "discount_sensitivity","") or ""),
+            ],
+            "Business Quality": [
+                ("Operating quality",       getattr(quality,   "operating_quality",    "") or ""),
+            ],
+        }
+    elif question_intent == "risk_assessment":
+        sub_field_injections = {
+            "Risk Profile": [
+                ("Competitive risk detail", getattr(risk, "competitive_risk", "") or ""),
+                ("Regulatory risk detail",  getattr(risk, "regulatory_risk",  "") or ""),
+                ("Debt / balance sheet",    getattr(risk, "debt_risk",        "") or ""),
+            ],
+            "Business Quality": [
+                ("Capital allocation risk", getattr(quality, "capital_allocation", "") or ""),
+            ],
+        }
+
+    def _enriched_block(label: str, overall: str, confidence: float) -> str:
+        base = _agent_block(label, overall, confidence)
+        extras = sub_field_injections.get(label, [])
+        if not extras:
+            return base
+        detail_lines = []
+        for sub_label, sub_text in extras:
+            stripped = (sub_text or "").strip()
+            if stripped:
+                detail_lines.append(f"  → {sub_label}: {stripped}")
+        if detail_lines:
+            base = base + "\n" + "\n".join(detail_lines)
+        return base
+
+    return "\n\n".join([
+        _enriched_block("Valuation",         valuation.overall, valuation.confidence),
+        _enriched_block("Macro Sensitivity",  macro.overall,     macro.confidence),
+        _enriched_block("Risk Profile",       risk.overall,      risk.confidence),
+        _enriched_block("Market Context",     market.overall,    market.confidence),
+        _enriched_block("Business Quality",   quality.overall,   quality.confidence),
+    ])
+
+
 # ── JSON field schema description (injected into prompt) ─────────────────────
 
 _THESIS_SCHEMA_DESCRIPTION = """\
@@ -1156,14 +1261,14 @@ def _build_synthesis_prompt(
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoid circular import
     question_intent: Optional[str] = None,
 ) -> str:
-    # Plain-text agent summaries — NO markdown headings to avoid bleeding into output
-    agent_summaries = "\n\n".join([
-        _agent_block("Valuation", valuation.overall, valuation.confidence),
-        _agent_block("Macro Sensitivity", macro.overall, macro.confidence),
-        _agent_block("Risk Profile", risk.overall, risk.confidence),
-        _agent_block("Market Context", market.overall, market.confidence),
-        _agent_block("Business Quality", quality.overall, quality.confidence),
-    ])
+    # Plain-text agent summaries with question-aware sub-field injection (Phase 2 Lever 2).
+    # For each question_intent, the most analytically relevant sub-field from the
+    # corresponding agent is appended alongside .overall so the synthesis LLM sees
+    # the depth content produced by Phase 1 emphasis blocks (moat, rate_sensitivity,
+    # competitive_risk, etc.) rather than only the summary sentence.
+    agent_summaries = _build_agent_summaries(
+        valuation, macro, risk, market, quality, question_intent=question_intent
+    )
 
     key_risks_txt = "\n".join(f"- {r}" for r in risk.key_risks) or "None identified."
     catalysts_txt = "\n".join(f"- {c}" for c in market.recent_catalysts) or "None identified."
@@ -1239,7 +1344,14 @@ def _build_synthesis_prompt(
         profile_keywords_hint = ""
 
     # Detect dominant analytical dimension for asymmetric depth allocation (R2)
-    dominant_dim         = _detect_dominant_dimension(macro, risk, valuation, ranked)
+    dominant_dim = _detect_dominant_dimension(macro, risk, valuation, ranked)
+
+    # Phase 2 Lever 1: override keyword-scored dominant_dim with question_intent when
+    # present.  The user's explicit question is a stronger analytical signal than
+    # keyword frequency in agent output text.  Uses module-level _INTENT_TO_DOMINANT_DIM.
+    if question_intent in _INTENT_TO_DOMINANT_DIM:
+        dominant_dim = _INTENT_TO_DOMINANT_DIM[question_intent]
+
     dominant_dim_block   = _DEPTH_DIRECTIVES.get(dominant_dim, "")
     section_priority_tag = _build_section_priority_block(dominant_dim)
 
@@ -1373,7 +1485,94 @@ def _build_synthesis_prompt(
             f"Also set `valuation_stance` in the thesis output to one of: "
             f'"overpriced" | "fairly_valued" | "underpriced" | "cannot_determine"\n\n'
         )
+    elif original_user_question and question_intent == "competitive_position":
+        # Phase 2 Lever 4: section-level mandates for competitive/moat questions.
+        # Extends beyond direct_answer to anchor bull_thesis, bear_thesis,
+        # core_debate, and valuation_view on competitive mechanics.
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — COMPETITIVE / MOAT QUESTION:\n"
+            f"direct_answer (2 sentences REQUIRED):\n"
+            f"  Sentence 1 — Name {ticker}'s primary moat source and whether it is "
+            f"strengthening or weakening vs the named competitor or threat.\n"
+            f"  Sentence 2 — Name the single biggest competitive risk: specific "
+            f"competitor, specific product/workload at risk, specific market-share estimate.\n"
+            f"  FORBIDDEN: Opening with generic company description.\n"
+            f"bull_thesis — COMPETITIVE ANCHOR REQUIRED:\n"
+            f"  MUST lead with moat mechanics — switching costs, ecosystem lock-in, "
+            f"network effects, or IP. Name the SPECIFIC structural advantage and why it "
+            f"compounds. MUST NOT open with valuation or rate discussion.\n"
+            f"bear_thesis — COMPETITIVE ANCHOR REQUIRED:\n"
+            f"  MUST anchor on moat erosion or competitive displacement. Name the competitor, "
+            f"the specific product/workload segment at risk, the market-share estimate at "
+            f"stake, and ONE second-order effect if the moat erodes.\n"
+            f"core_debate — COMPETITIVE FRAMING REQUIRED:\n"
+            f'  Write as an open competitive question, e.g.: '
+            f'"Can {ticker}\'s [primary product] hold market share against [competitor] '
+            f'as [competitive threat] accelerates?"\n'
+            f"valuation_view — MOAT-LINKED SENTENCE:\n"
+            f'  One sentence: "At ~[X]x forward [metric], the market is pricing in '
+            f'[moat-holds / moat-erodes scenario]."\n\n'
+        )
+    elif original_user_question and question_intent == "macro_sensitivity":
+        # Phase 2 Lever 4: section-level mandates for macro/rate questions.
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — MACRO / RATE QUESTION:\n"
+            f"direct_answer (2 sentences REQUIRED):\n"
+            f"  Sentence 1 — State the PRIMARY transmission channel: "
+            f"[rate/macro move] → [specific mechanism] → [specific P&L or multiple impact] "
+            f"for {ticker}. Quantify direction and magnitude.\n"
+            f"  Sentence 2 — Name {ticker}'s most important offset or insulation: "
+            f"recurring revenue, rate-insensitive earnings, balance sheet, pricing power.\n"
+            f"macro_sensitivity — DEEPEST SECTION FOR THIS QUESTION:\n"
+            f"  3+ sentences REQUIRED. Lead with the transmission mechanism name, "
+            f"quantify magnitude, then second-order effect specific to {ticker}.\n"
+            f"  FORBIDDEN: 'Rates affect growth stocks' — must trace through {ticker}'s "
+            f"specific revenue structure.\n"
+            f"bull_thesis — MACRO OFFSET REQUIRED:\n"
+            f"  MUST include the macro offset or insulation mechanism — why is {ticker} "
+            f"partially protected from the scenario asked about?\n"
+            f"bear_thesis — MACRO TRANSMISSION REQUIRED:\n"
+            f"  MUST anchor on the specific macro transmission channel in the question "
+            f"(rate rise / cut / recession / inflation) traced to a specific {ticker} "
+            f"P&L line or multiple compression pathway.\n"
+            f"core_debate — MACRO FRAMING REQUIRED:\n"
+            f'  Write as an open macro question, e.g.: '
+            f'"Can {ticker}\'s earnings durability offset [specific macro headwind] '
+            f'if [scenario] persists longer than consensus expects?"\n'
+            f"valuation_view — MACRO-MULTIPLE LINK:\n"
+            f"  One sentence: how does the current macro regime affect the multiple — "
+            f"compression or expansion, and under what scenario does it inflect?\n\n"
+        )
+    elif original_user_question and question_intent == "risk_assessment":
+        # Phase 2 Lever 4: section-level mandates for risk questions.
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — RISK QUESTION:\n"
+            f"direct_answer (2 sentences REQUIRED):\n"
+            f"  Sentence 1 — Name {ticker}'s #1 risk: the specific mechanism, who it "
+            f"comes from, and what P&L line or structural position it threatens.\n"
+            f"  Sentence 2 — State the trigger that would confirm the risk is materializing.\n"
+            f"bear_thesis — MOST ANALYTICALLY SUBSTANTIVE SECTION FOR THIS QUESTION:\n"
+            f"  MUST enumerate 2 distinct risks: (1) primary — named mechanism + revenue "
+            f"at risk + trigger; (2) secondary — the compounding effect when primary "
+            f"risk materializes.\n"
+            f"  MUST NOT open with 'The biggest risk is…' — lead with the mechanism.\n"
+            f"bull_thesis — RISK MITIGATION REQUIRED:\n"
+            f"  MUST address what has to happen for each named risk to NOT materialize — "
+            f"probability-weighted upside if risks resolve.\n"
+            f"key_risks — EXHAUSTIVE REQUIRED:\n"
+            f"  Include mechanism, revenue at risk, and trigger for each entry.\n"
+            f"core_debate — RISK TRADE-OFF FRAMING:\n"
+            f'  Write as a risk trade-off question, e.g.: '
+            f'"Does {ticker}\'s [primary risk] now outweigh its [primary upside]?"\n'
+            f"what_changes_the_thesis — RISK-RESOLUTION EVENTS PRIORITIZED:\n"
+            f"  Name the specific data points that would confirm or deny the primary risk.\n\n"
+        )
     elif original_user_question:
+        # Generic anchor for investment_thesis / business_model / other intents —
+        # mandates direct_answer only (same behavior as Phase 1).
         question_anchor_block = (
             f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
             f"QUESTION-ANCHORED DIRECT ANSWER RULES (mandatory for \"direct_answer\" field):\n"
@@ -2596,6 +2795,11 @@ def synthesize_thesis(
             valuation, macro, risk, market, quality,
             company=company, profile=profile,
         )
+        # Phase 2 Lever 3: reweight top_signals by question_intent so the hard
+        # MUST-address mandate in the synthesis prompt points at question-relevant
+        # signal types rather than always the highest composite-importance signals.
+        if question_intent and ranked is not None:
+            ranked = reweight_signals_for_intent(ranked, question_intent)
     except Exception as exc:
         logger.warning("[thesis_synthesizer] signal_ranker failed: %r — continuing", exc)
         ranked = None
