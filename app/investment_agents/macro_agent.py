@@ -73,10 +73,67 @@ def _empty_output(reason: str = "") -> MacroSensitivity:
     )
 
 
+def _build_question_emphasis_block(
+    question_intent: Optional[str],
+    question: Optional[str],
+    company: CompanyContext,
+) -> str:
+    """Build a question-specific emphasis block for the macro prompt.
+
+    Tells the macro agent which transmission channel to lead with and which
+    aspects of macro sensitivity are most relevant to the user's actual question.
+    Returns an empty string when no emphasis shift is needed.
+    """
+    ticker = company.ticker
+    q_display = f'"{question}"' if question else "the user's question"
+
+    if question_intent == "macro_sensitivity":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"This is a direct macro/rate sensitivity question. Lead with the SPECIFIC "
+            f"transmission channel requested:\n"
+            f"  1. Name the exact mechanism (e.g. rate cut → lower discount rate → multiple "
+            f"expansion on {ticker}'s long-duration cash flows).\n"
+            f"  2. Quantify the directional magnitude where evidence supports it "
+            f"(e.g. '100bps move → ~3-4 turn P/E impact').\n"
+            f"  3. Name the second-order effect specific to {ticker} "
+            f"(e.g. capex cost, debt service, customer demand response).\n"
+            f"  Make `rate_sensitivity` the highest-depth field.\n\n"
+        )
+    if question_intent == "valuation_stance":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is assessing {ticker}'s current valuation. Emphasise:\n"
+            f"  1. How current rate levels affect the discount rate embedded in {ticker}'s "
+            f"multiple — does the current rate environment support or threaten the multiple?\n"
+            f"  2. What macro scenario would cause multiple compression vs expansion.\n"
+            f"  3. Whether macro conditions are a tailwind or headwind for the valuation thesis.\n\n"
+        )
+    if question_intent == "competitive_position":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about {ticker}'s competitive moat. Connect macro to moat:\n"
+            f"  1. Does the macro environment (rates, capex cycle) strengthen or weaken "
+            f"{ticker}'s competitive position relative to peers?\n"
+            f"  2. How do macro conditions affect {ticker}'s ability to sustain investment "
+            f"in its moat (R&D, capex, pricing power)?\n\n"
+        )
+    if question_intent == "risk_assessment":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is focused on downside risks. Emphasise macro tail risks:\n"
+            f"  1. What is the specific recession or rate-shock scenario most damaging to {ticker}?\n"
+            f"  2. Name the revenue line or margin most vulnerable to the macro downside case.\n\n"
+        )
+    return ""
+
+
 def _build_prompt(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> str:
     """Build the macro agent prompt."""
     evidence_block = "\n".join(
@@ -86,6 +143,8 @@ def _build_prompt(
     sector_line = f"Sector: {company.sector}" if company.sector else ""
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
+
+    question_emphasis = _build_question_emphasis_block(question_intent, question, company)
 
     if profile is not None:
         company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
@@ -112,7 +171,7 @@ MACRO SPECIFICITY REQUIRED:
 {context_lines}
 
 {company_context_block}
-EVIDENCE:
+{question_emphasis}EVIDENCE:
 {evidence_block}
 
 Using the macro evidence above, answer the following for this company:
@@ -148,28 +207,43 @@ Rules:
 JSON:"""
 
 
-def run_macro_agent(
+def run_investment_macro_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> MacroSensitivity:
     """Run the macro specialist agent.
 
     Filters evidence to macro-relevant items, builds a focused prompt,
     calls the LLM via get_structured_response, and returns a MacroSensitivity.
     Degrades gracefully if evidence is empty or the LLM call fails.
+
+    Parameters
+    ----------
+    question_intent : Optional[str]
+        Detected intent from _detect_question_intent().  Drives which macro
+        transmission channel to lead with (e.g. ``"macro_sensitivity"`` puts
+        rate/FRED analysis first; ``"competitive_position"`` connects macro
+        to moat durability).
+    question : Optional[str]
+        The user's verbatim question, injected into the emphasis block so the
+        agent knows the exact framing to address.
     """
     relevant = _filter_evidence(evidence, company)
     print(
         f"[DIAG] [{_AGENT_NAME}] ticker={company.ticker} "
-        f"relevant_evidence={len(relevant)}/{len(evidence)}"
+        f"relevant_evidence={len(relevant)}/{len(evidence)} "
+        f"question_intent={question_intent!r}"
     )
 
     if not relevant:
         return _empty_output("No macro-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant, profile)
+    prompt = _build_prompt(company, relevant, profile,
+                           question_intent=question_intent, question=question)
     try:
         result: MacroSensitivity = get_structured_response(
             prompt,
@@ -199,3 +273,9 @@ def run_macro_agent(
             exc,
         )
         return _empty_output(f"LLM error: {exc}")
+
+
+# Backward-compatibility alias — external tests and the legacy router path
+# reference run_macro_agent by its original name.  This alias keeps them
+# working without a breaking rename.
+run_macro_agent = run_investment_macro_agent

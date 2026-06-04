@@ -58,7 +58,8 @@ from .evidence_partitioner import partition_evidence
 from .providers import retrieve_market_evidence
 from ..investment_agents import (
     run_valuation_agent,
-    run_macro_agent as run_investment_macro_agent,
+    run_investment_macro_agent,
+    run_macro_agent,   # legacy path alias (router line ~1525)
     run_risk_agent,
     run_market_agent,
     run_quality_agent,
@@ -823,24 +824,32 @@ def _run_investment_pipeline(
         return run_investment_macro_agent(
             company, partition.macro,
             request_id=request_id, profile=profile,
+            question_intent=question_intent,
+            question=question,
         )
 
     def _run_risk():
         return run_risk_agent(
             company, partition.risk,
             request_id=request_id, profile=profile,
+            question_intent=question_intent,
+            question=question,
         )
 
     def _run_market():
         return run_market_agent(
             company, partition.market,
             request_id=request_id, profile=profile,
+            question_intent=question_intent,
+            question=question,
         )
 
     def _run_quality():
         return run_quality_agent(
             company, partition.quality,
             request_id=request_id, profile=profile,
+            question_intent=question_intent,
+            question=question,
         )
 
     _agent_tasks = {

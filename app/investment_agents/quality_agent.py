@@ -74,10 +74,72 @@ def _empty_output(reason: str = "") -> QualityAssessment:
     )
 
 
+def _build_question_emphasis_block(
+    question_intent: Optional[str],
+    question: Optional[str],
+    company: CompanyContext,
+) -> str:
+    """Build a question-specific emphasis block for the quality prompt.
+
+    Tells the quality agent which business-quality dimension to lead with
+    based on the user's actual question.  Returns empty string for default intent.
+    """
+    ticker = company.ticker
+    q_display = f'"{question}"' if question else "the user's question"
+
+    if question_intent == "competitive_position":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"This is a direct moat question. Make `moat` the highest-depth field:\n"
+            f"  1. Enumerate {ticker}'s specific moat sources in order of durability "
+            f"(switching costs, network effects, IP, brand, cost leadership).\n"
+            f"  2. Assess which moat source is STRENGTHENING vs WEAKENING right now "
+            f"and why — name the competitive dynamic driving the change.\n"
+            f"  3. If the question compares two {ticker} products/segments (e.g. Azure vs M365), "
+            f"compare their moat depth, revenue trajectory, and competitive defensibility "
+            f"directly in `moat`.\n\n"
+        )
+    if question_intent == "valuation_stance":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is assessing {ticker}'s valuation. Emphasise quality factors that "
+            f"justify or challenge the current premium:\n"
+            f"  1. `operating_quality` must lead — FCF yield, conversion rate, and whether "
+            f"the current multiple is supported by structural margin durability.\n"
+            f"  2. `capital_allocation` must address whether {ticker}'s buyback/dividend "
+            f"program provides earnings-per-share floor support.\n"
+            f"  3. What quality premium does the current price imply — is it earned or borrowed?\n\n"
+        )
+    if question_intent == "macro_sensitivity":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about macro exposure. Emphasise defensive quality:\n"
+            f"  1. `revenue_durability` must lead — what share of {ticker}'s revenue is "
+            f"contracted, subscription, or otherwise insulated from macro deterioration?\n"
+            f"  2. Assess {ticker}'s pricing power under the specific macro scenario asked about "
+            f"(rate rise / rate cut / recession / inflation).\n"
+            f"  3. Is {ticker}'s FCF profile counter-cyclical, cyclical, or acyclical?\n\n"
+        )
+    if question_intent == "risk_assessment":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is focused on risks. Surface quality-side risks:\n"
+            f"  1. Name the specific quality dimensions most at risk — moat erosion, "
+            f"management execution failure, FCF deterioration.\n"
+            f"  2. `moat` must include a deterioration scenario — what would cause "
+            f"{ticker}'s competitive advantages to weaken materially?\n"
+            f"  3. Identify any capital-allocation red flags (dilutive M&A, payout "
+            f"unsustainability, R&D yield declining).\n\n"
+        )
+    return ""
+
+
 def _build_prompt(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> str:
     """Build the quality agent prompt."""
     evidence_block = "\n".join(
@@ -87,6 +149,8 @@ def _build_prompt(
     sector_line = f"Sector: {company.sector}" if company.sector else ""
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
+
+    question_emphasis = _build_question_emphasis_block(question_intent, question, company)
 
     if profile is not None:
         company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
@@ -113,7 +177,7 @@ QUALITY SPECIFICITY REQUIRED:
 {context_lines}
 
 {company_context_block}
-EVIDENCE (company profile, financial quality indicators):
+{question_emphasis}EVIDENCE (company profile, financial quality indicators):
 {evidence_block}
 
 Based on the company profile and financial evidence above, assess the following:
@@ -157,6 +221,8 @@ def run_quality_agent(
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> QualityAssessment:
     """Run the quality specialist agent.
 
@@ -164,17 +230,29 @@ def run_quality_agent(
     FCF, moat indicators), builds a focused prompt, calls the LLM via
     get_structured_response, and returns a QualityAssessment. Degrades
     gracefully if evidence is empty or the LLM call fails.
+
+    Parameters
+    ----------
+    question_intent : Optional[str]
+        Drives which quality dimension to lead with.  ``"competitive_position"``
+        → deep moat decomposition; ``"valuation_stance"`` → FCF and capital
+        return quality; ``"macro_sensitivity"`` → revenue durability and
+        defensiveness.
+    question : Optional[str]
+        The user's verbatim question, injected into the emphasis block.
     """
     relevant = _filter_evidence(evidence, company)
     print(
         f"[DIAG] [{_AGENT_NAME}] ticker={company.ticker} "
-        f"relevant_evidence={len(relevant)}/{len(evidence)}"
+        f"relevant_evidence={len(relevant)}/{len(evidence)} "
+        f"question_intent={question_intent!r}"
     )
 
     if not relevant:
         return _empty_output("No quality-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant, profile)
+    prompt = _build_prompt(company, relevant, profile,
+                           question_intent=question_intent, question=question)
     try:
         result: QualityAssessment = get_structured_response(
             prompt,

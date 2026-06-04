@@ -73,10 +73,70 @@ def _empty_output(reason: str = "") -> MarketContext:
     )
 
 
+def _build_question_emphasis_block(
+    question_intent: Optional[str],
+    question: Optional[str],
+    company: CompanyContext,
+) -> str:
+    """Build a question-specific emphasis block for the market prompt.
+
+    Tells the market agent which market signals to surface first and how
+    to frame the debate context around what the user actually asked.
+    Returns empty string for default intent.
+    """
+    ticker = company.ticker
+    q_display = f'"{question}"' if question else "the user's question"
+
+    if question_intent == "competitive_position":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about {ticker}'s competitive moat. Prioritise:\n"
+            f"  1. Competitive market signals — competitor announcements, product launches, "
+            f"customer win/loss news, and market-share data for {ticker} vs peers.\n"
+            f"  2. Analyst sentiment specifically about {ticker}'s competitive positioning "
+            f"(upgrades/downgrades citing moat durability).\n"
+            f"  3. `sentiment` field must address whether the market views {ticker}'s "
+            f"competitive position as strengthening or weakening.\n\n"
+        )
+    if question_intent == "valuation_stance":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking whether {ticker} is fairly valued. Prioritise:\n"
+            f"  1. Analyst price-target changes, upgrade/downgrade clusters, and consensus "
+            f"price-target vs current price for {ticker}.\n"
+            f"  2. Positioning signals — is the stock crowded long or has sentiment shifted?\n"
+            f"  3. `sentiment` field must state whether analyst community sees upside or "
+            f"downside from current levels, citing specific targets.\n\n"
+        )
+    if question_intent == "macro_sensitivity":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about macro exposure. Prioritise:\n"
+            f"  1. How recent macro signals (rate moves, growth data) have affected {ticker} "
+            f"stock price and analyst estimates.\n"
+            f"  2. Sector rotation signals — is the market moving toward or away from "
+            f"{ticker}'s sector as macro conditions evolve?\n"
+            f"  3. `momentum` field must connect recent price action to the macro catalyst.\n\n"
+        )
+    if question_intent == "risk_assessment":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about risks. Prioritise negative catalysts:\n"
+            f"  1. Surface bearish analyst calls, guidance miss reports, and risk-event news "
+            f"for {ticker}.\n"
+            f"  2. `recent_catalysts` must include any negative catalysts or warning signals "
+            f"from evidence, not just positive ones.\n"
+            f"  3. `sentiment` must note any clustering of bearish views or downgrade cycles.\n\n"
+        )
+    return ""
+
+
 def _build_prompt(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> str:
     """Build the market context agent prompt."""
     evidence_block = "\n".join(
@@ -86,6 +146,8 @@ def _build_prompt(
     sector_line = f"Sector: {company.sector}" if company.sector else ""
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
+
+    question_emphasis = _build_question_emphasis_block(question_intent, question, company)
 
     if profile is not None:
         company_context_block = f"""=== COMPANY-SPECIFIC CONTEXT ===
@@ -111,7 +173,7 @@ CATALYST SPECIFICITY REQUIRED:
 {context_lines}
 
 {company_context_block}
-EVIDENCE (recent news, price data, analyst commentary):
+{question_emphasis}EVIDENCE (recent news, price data, analyst commentary):
 {evidence_block}
 
 Based on the news and market evidence above, assess the following:
@@ -152,23 +214,36 @@ def run_market_agent(
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> MarketContext:
     """Run the market context specialist agent.
 
     Filters evidence to news and market-relevant items, builds a focused prompt,
     calls the LLM via get_structured_response, and returns a MarketContext.
     Degrades gracefully if evidence is empty or the LLM call fails.
+
+    Parameters
+    ----------
+    question_intent : Optional[str]
+        Drives which market signals to surface first.  ``"competitive_position"``
+        → competitor news and moat-focused analyst calls; ``"valuation_stance"``
+        → price-target changes and positioning data.
+    question : Optional[str]
+        The user's verbatim question, injected into the emphasis block.
     """
     relevant = _filter_evidence(evidence, company)
     print(
         f"[DIAG] [{_AGENT_NAME}] ticker={company.ticker} "
-        f"relevant_evidence={len(relevant)}/{len(evidence)}"
+        f"relevant_evidence={len(relevant)}/{len(evidence)} "
+        f"question_intent={question_intent!r}"
     )
 
     if not relevant:
         return _empty_output("No market-context-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant, profile)
+    prompt = _build_prompt(company, relevant, profile,
+                           question_intent=question_intent, question=question)
     try:
         result: MarketContext = get_structured_response(
             prompt,

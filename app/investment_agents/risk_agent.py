@@ -72,10 +72,64 @@ def _empty_output(reason: str = "") -> RiskProfile:
     )
 
 
+def _build_question_emphasis_block(
+    question_intent: Optional[str],
+    question: Optional[str],
+    company: CompanyContext,
+) -> str:
+    """Build a question-specific emphasis block for the risk prompt.
+
+    Tells the risk agent which risk category to lead with based on what
+    the user actually asked about.  Returns empty string for default intent.
+    """
+    ticker = company.ticker
+    q_display = f'"{question}"' if question else "the user's question"
+
+    if question_intent == "risk_assessment":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"This is a direct risk question. Make your analysis comprehensive and risk-first:\n"
+            f"  1. Lead `overall` with the single highest-severity risk to the {ticker} thesis.\n"
+            f"  2. `key_risks` must be exhaustive — list every material risk named in evidence.\n"
+            f"  3. Each risk must name the specific {ticker} revenue line, customer segment, "
+            f"or competitive dynamic at stake — no generic sector risks.\n\n"
+        )
+    if question_intent == "competitive_position":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about competitive moat. Lead with competitive risks:\n"
+            f"  1. Make `competitive_risk` the highest-depth field — name specific "
+            f"competitors, disruption vectors, and market-share loss mechanisms for {ticker}.\n"
+            f"  2. Identify the specific moat element most at risk and why.\n"
+            f"  3. Quantify the market-share impact if the moat erodes (revenue at risk).\n\n"
+        )
+    if question_intent == "valuation_stance":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is assessing {ticker}'s valuation. Emphasise risks that could "
+            f"compress the multiple:\n"
+            f"  1. Lead with estimate-cut risk — what could cause consensus EPS to step down?\n"
+            f"  2. Name the guidance miss scenario most likely to trigger a de-rating.\n"
+            f"  3. Identify any balance-sheet risk that challenges the premium multiple.\n\n"
+        )
+    if question_intent == "macro_sensitivity":
+        return (
+            f"QUESTION FOCUS — USER IS ASKING: {q_display}\n"
+            f"The user is asking about macro exposure. Lead with macro-linked risks:\n"
+            f"  1. What is the specific rate-shock or recession scenario most damaging to "
+            f"{ticker}'s revenue or margins?\n"
+            f"  2. Does {ticker}'s debt structure create refinancing risk in a higher-rate env?\n"
+            f"  3. Name the customer segment most vulnerable to macro deterioration.\n\n"
+        )
+    return ""
+
+
 def _build_prompt(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> str:
     """Build the risk agent prompt."""
     evidence_block = "\n".join(
@@ -85,6 +139,8 @@ def _build_prompt(
     sector_line = f"Sector: {company.sector}" if company.sector else ""
     industry_line = f"Industry: {company.industry}" if company.industry else ""
     context_lines = "\n".join(filter(None, [sector_line, industry_line]))
+
+    question_emphasis = _build_question_emphasis_block(question_intent, question, company)
 
     if profile is not None:
         major_risks_block = "\n".join(f"  - {r}" for r in profile.major_risks)
@@ -111,7 +167,7 @@ RISK SPECIFICITY REQUIRED:
 {context_lines}
 
 {company_context_block}
-EVIDENCE (SEC filings, balance-sheet data, and related sources):
+{question_emphasis}EVIDENCE (SEC filings, balance-sheet data, and related sources):
 {evidence_block}
 
 Based on the SEC filing and balance-sheet evidence above, assess the following:
@@ -151,6 +207,8 @@ def run_risk_agent(
     evidence: List[RetrievedEvidence],
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
+    question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> RiskProfile:
     """Run the risk specialist agent.
 
@@ -158,17 +216,28 @@ def run_risk_agent(
     builds a focused prompt, calls the LLM via get_structured_response,
     and returns a RiskProfile. Degrades gracefully if evidence is empty
     or the LLM call fails.
+
+    Parameters
+    ----------
+    question_intent : Optional[str]
+        Drives which risk category to lead with.  ``"risk_assessment"`` → full
+        comprehensive risk list; ``"competitive_position"`` → competitive_risk
+        as anchor; ``"valuation_stance"`` → estimate-cut and de-rating risks.
+    question : Optional[str]
+        The user's verbatim question, injected into the emphasis block.
     """
     relevant = _filter_evidence(evidence, company)
     print(
         f"[DIAG] [{_AGENT_NAME}] ticker={company.ticker} "
-        f"relevant_evidence={len(relevant)}/{len(evidence)}"
+        f"relevant_evidence={len(relevant)}/{len(evidence)} "
+        f"question_intent={question_intent!r}"
     )
 
     if not relevant:
         return _empty_output("No risk-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant, profile)
+    prompt = _build_prompt(company, relevant, profile,
+                           question_intent=question_intent, question=question)
     try:
         result: RiskProfile = get_structured_response(
             prompt,
