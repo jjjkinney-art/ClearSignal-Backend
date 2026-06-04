@@ -2737,21 +2737,71 @@ def _build_what_increases_conviction(
     dims:                ConvictionDimensions,
     company:             CompanyContext,
     uncertainty_drivers: List[str],
+    question_intent:     Optional[str] = None,
 ) -> str:
     """Build the ``what_increases_conviction`` field — PM-grade next steps.
 
     Company-specific drivers are injected into the template wherever the gap dimension
     maps to an actionable data event or market development.
+
+    Phase 3: when ``question_intent`` is set, the output is further tailored to name
+    the specific confirming / disconfirming signal most relevant to what the user asked.
+    This prevents the ``valuation_certainty`` template from dominating all question types.
     """
     gap_dim  = _dominant_gap(dims)
     template = _WHAT_INCREASES_TEMPLATES.get(gap_dim, "")
     ticker   = company.ticker or "this company"
 
+    driver_1 = uncertainty_drivers[0] if uncertainty_drivers else f"{ticker}-specific developments"
+    driver_2 = uncertainty_drivers[1] if len(uncertainty_drivers) > 1 else ""
+
+    # ── Phase 3: question-intent override ────────────────────────────────────
+    # When the user's question has a specific analytical dimension, produce a
+    # confirming + disconfirming signal pair anchored on that dimension rather
+    # than the generic gap-dimension template.  Returns early so the gap-dim
+    # branches below do not fire.
+    if question_intent and question_intent not in ("investment_thesis", None):
+        if question_intent == "competitive_position":
+            return (
+                f"CONFIRMING: Market-share data or enterprise win/loss announcements "
+                f"showing {ticker} holding or gaining vs key competitors in {driver_1} "
+                f"would be the highest-value conviction signal. "
+                f"DISCONFIRMING: A competitor announcement of workload migration away from "
+                f"{ticker}, or a pricing concession that signals moat erosion, would be the "
+                f"primary signal to watch."
+            )
+        elif question_intent == "macro_sensitivity":
+            macro_event = driver_1 if "rate" in driver_1.lower() or "macro" in driver_1.lower() \
+                          else "rate path and economic cycle"
+            return (
+                f"CONFIRMING: The next Fed decision or inflation print confirming a rate "
+                f"trajectory supportive of {ticker}'s multiple would be the clearest "
+                f"conviction catalyst. "
+                f"DISCONFIRMING: A hawkish surprise or deterioration in {macro_event} "
+                f"beyond consensus expectations would signal the macro transmission mechanism "
+                f"is working against the thesis."
+            )
+        elif question_intent == "valuation_stance":
+            return (
+                f"CONFIRMING: An earnings beat with raised guidance on {driver_1}, or an "
+                f"analyst upgrade cluster citing improving risk/reward at current multiples, "
+                f"would confirm the valuation is justified. "
+                f"DISCONFIRMING: A guidance cut, estimate revision downward, or multiple "
+                f"de-rate triggered by a {ticker}-specific miss would be the primary "
+                f"disconfirming trigger to watch."
+            )
+        elif question_intent == "risk_assessment":
+            return (
+                f"RISK-MATERIALIZING: {driver_1} — if this develops adversely, treat it as "
+                f"confirmation the primary risk is playing out. "
+                f"RISK-RESOLUTION: Conversely, a clear announcement or data point that "
+                f"structurally removes {driver_1} from the risk register would be the "
+                f"highest-value de-risking signal for {ticker}."
+            )
+
+    # ── Default: existing gap-dimension logic (unchanged) ────────────────────
     if not uncertainty_drivers:
         return template
-
-    driver_1 = uncertainty_drivers[0]
-    driver_2 = uncertainty_drivers[1] if len(uncertainty_drivers) > 1 else ""
 
     if gap_dim == "macro_certainty":
         return (
@@ -2816,6 +2866,7 @@ def compute_conviction(
     ranked:              Optional[Any] = None,
     governance_warnings: Optional[List[str]] = None,
     profile:             Optional[CompanyKnowledgeProfile] = None,
+    question_intent:     Optional[str] = None,
 ) -> ConvictionResult:
     """Compute institutional-grade conviction score and reasoning.
 
@@ -2827,6 +2878,10 @@ def compute_conviction(
     ranked              : Optional RankedSignalSet from rank_signals().
     governance_warnings : Consistency warning strings from _run_governance_checks().
     profile             : Optional company knowledge profile.
+    question_intent     : Detected question intent from _detect_question_intent().
+                          When set, ``what_increases_conviction`` is branched by intent
+                          to produce a confirming + disconfirming signal pair anchored on
+                          the dimension the user actually asked about.
 
     Returns
     -------
@@ -2983,7 +3038,9 @@ def compute_conviction(
         dims, final_score, company, should_compress, compression_reasons, uncertainty_drivers,
         evidence=evidence, valuation=valuation,
     )
-    what_increases = _build_what_increases_conviction(dims, company, uncertainty_drivers)
+    what_increases = _build_what_increases_conviction(
+        dims, company, uncertainty_drivers, question_intent=question_intent
+    )
 
     # ── Analysis Foundation (user-facing structured provenance) ───────────────
     _af_evidence, _af_constraints, _af_sources = _build_analysis_foundation(

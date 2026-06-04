@@ -3228,6 +3228,7 @@ def synthesize_thesis(
             ranked              = ranked,
             governance_warnings = warnings,
             profile             = profile,
+            question_intent     = question_intent,
         )
         # Conviction modeler is ALWAYS authoritative — it replaces the LLM score entirely.
         # The LLM score is an initial read; the modeler applies dimensional decomposition,

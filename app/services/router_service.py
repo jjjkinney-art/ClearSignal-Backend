@@ -669,6 +669,19 @@ _VALUATION_STANCE_PATTERNS: tuple = (
     "p/e too high", "pe too high", "pe ratio too", "multiple too",
     "stretched valuation", "stretched multiple", "stretched multiple",
     "discount to", "premium to peers", "cheap relative",
+    # Phase 3 additions: multiple-compression and valuation-justification phrasing
+    # that previously fell through to investment_thesis.
+    # "multiple compress" matches "multiple compress" directly.
+    # "multiple to compress" matches "What would cause X's multiple to compress?" phrasing.
+    "multiple compress", "multiple compression",
+    "multiple to compress", "multiple de-rate", "multiple derate",
+    "p/e compress", "p/e compression", "p/e to compress",
+    "pe compress", "pe compression", "pe to compress",
+    "justify valuation", "valuation justified",
+    "justify its valuation", "justify the valuation",
+    "justify a valuation", "valuation to compress",
+    "valuation compress", "de-rate", "derate",
+    "cause the multiple", "cause its multiple",
 )
 
 _MACRO_SENSITIVITY_PATTERNS: tuple = (
@@ -687,6 +700,14 @@ _COMPETITIVE_PATTERNS: tuple = (
     "competitive position", "market share", "moat", "versus",
     "compared to", "better than", "worse than", "vs ",
     "competitive advantage", "differentiat",
+    # Phase 3 additions: exposure and custom-silicon phrasing that previously
+    # fell through to investment_thesis (e.g. "How exposed is NVDA to custom chips?").
+    "exposed to", "exposure to",
+    "custom chip", "custom silicon", "custom asic",
+    "hyperscaler", "in-house chip",
+    "market share threat", "competitive threat",
+    "market share loss", "losing share", "ceding share",
+    "displacement risk", "platform displacement",
 )
 
 
