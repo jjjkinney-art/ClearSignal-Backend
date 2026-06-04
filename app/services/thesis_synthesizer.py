@@ -260,12 +260,15 @@ _DEPTH_DIRECTIVES: Dict[str, str] = {
     ),
 }
 
-# Phase 2 Lever 1: map question_intent → dominant_dim override.
+# Phase 2 Lever 1 + Phase 3 extension: map question_intent → dominant_dim override.
 # Used in _build_synthesis_prompt() and exported for tests.
 _INTENT_TO_DOMINANT_DIM: Dict[str, str] = {
     "competitive_position": "operational",   # bull/bear anchored on product/moat mechanics
     "macro_sensitivity":    "macro",          # macro_sensitivity DEEP, valuation COMPRESSED
     "risk_assessment":      "regulatory",     # bear_thesis DEEP — closest structural proxy
+    # Phase 3 additions:
+    "investment_thesis":    "operational",   # business model durability question → operating mechanics
+    "business_model":       "operational",   # same treatment — unit economics / revenue quality
     # valuation_stance intentionally omitted: keyword scoring already converges on "valuation"
     # for most megacap names, and the existing valuation_stance block handles it.
 }
@@ -1039,6 +1042,20 @@ def _build_agent_summaries(
                 ("Capital allocation risk", getattr(quality, "capital_allocation", "") or ""),
             ],
         }
+    elif question_intent in ("investment_thesis", "business_model"):
+        # Phase 3: surface business model quality sub-fields so the synthesis LLM
+        # anchors the thesis on revenue durability and operating quality rather than
+        # defaulting to a generic company overview.
+        sub_field_injections = {
+            "Business Quality": [
+                ("Revenue durability",  getattr(quality,   "revenue_durability",  "") or ""),
+                ("Operating quality",   getattr(quality,   "operating_quality",   "") or ""),
+            ],
+            "Valuation": [
+                ("Growth view",         getattr(valuation, "growth_view",          "") or ""),
+                ("Margin trend",        getattr(valuation, "margin_trend",         "") or ""),
+            ],
+        }
 
     def _enriched_block(label: str, overall: str, confidence: float) -> str:
         base = _agent_block(label, overall, confidence)
@@ -1061,6 +1078,110 @@ def _build_agent_summaries(
         _enriched_block("Market Context",     market.overall,    market.confidence),
         _enriched_block("Business Quality",   quality.overall,   quality.confidence),
     ])
+
+
+# ── Phase 3: Secondary-section mandates per question_intent ──────────────────
+
+def _build_secondary_section_mandates(
+    ticker: str,
+    question_intent: Optional[str],
+) -> str:
+    """Build per-intent mandates for the 4 secondary sections that still converge.
+
+    Phase 2 differentiated primary sections (bull_thesis, bear_thesis, core_debate,
+    direct_answer, macro_sensitivity, valuation_view) via dominant_dim override,
+    sub-field injection, and section anchor mandates.  Four secondary sections
+    remained at 55–75% overlap because they lacked per-intent instructions:
+
+      • one_sentence_thesis  — defaults to generic company positioning
+      • key_drivers          — Azure/AI always leads regardless of question
+      • what_increases_conviction — generic earnings catalysts for all questions
+      • conclusion           — 2-sentence COMPRESSED with no intent-specific framing
+
+    This function returns a short, targeted mandate block for all four sections
+    that redirects each toward the dimension the user actually asked about.
+    Injected immediately after the question_anchor_block in the synthesis prompt.
+    Returns empty string for None intent (backward compat).
+    """
+    if not question_intent:
+        return ""
+
+    if question_intent == "competitive_position":
+        return (
+            f"SECONDARY SECTION MANDATES — COMPETITIVE QUESTION:\n"
+            f"  one_sentence_thesis: State the competitive verdict — "
+            f"'{ticker} moat is [strengthening/stable/eroding] because [specific dynamic].'\n"
+            f"  key_drivers: 1ST DRIVER MUST BE A COMPETITIVE FACTOR "
+            f"(moat durability, market-share trajectory, switching-cost depth). "
+            f"Do NOT lead with a macro or valuation driver.\n"
+            f"  what_increases_conviction: Name 1 CONFIRMING signal (market-share data, "
+            f"enterprise win rate, renewal metric) AND 1 DISCONFIRMING signal (competitor "
+            f"win announcement, workload-migration data). Not generic earnings beats.\n"
+            f"  conclusion: End with the competitive outcome + monitoring trigger — "
+            f"'Hold / add if [competitive metric] confirms moat durability; "
+            f"reduce if [specific competitive risk] materializes.'\n\n"
+        )
+    elif question_intent == "macro_sensitivity":
+        return (
+            f"SECONDARY SECTION MANDATES — MACRO QUESTION:\n"
+            f"  one_sentence_thesis: State the macro setup verdict — "
+            f"'{ticker} is [defensively positioned / rate-sensitive / cyclically exposed] "
+            f"because [specific transmission mechanism].'\n"
+            f"  key_drivers: 1ST DRIVER MUST BE A MACRO/RATE FACTOR "
+            f"(rate path, economic cycle, capex-cycle sensitivity). "
+            f"Do NOT lead with a competitive or product driver.\n"
+            f"  what_increases_conviction: Name 1 MACRO CONFIRMING signal "
+            f"(Fed action, CPI/PCE print, enterprise IT spend survey, yield-curve move) AND "
+            f"1 MACRO DISCONFIRMING signal. Not product-launch or competitive news.\n"
+            f"  conclusion: End with rate-scenario-dependent positioning — "
+            f"'Constructive if [rate/macro scenario]; reduce exposure if [adverse macro scenario].'\n\n"
+        )
+    elif question_intent == "valuation_stance":
+        return (
+            f"SECONDARY SECTION MANDATES — VALUATION QUESTION:\n"
+            f"  one_sentence_thesis: State the valuation verdict explicitly — "
+            f"'At ~[X]x forward [metric], {ticker} is [overpriced/fairly valued/underpriced] "
+            f"because [primary valuation anchor].'\n"
+            f"  key_drivers: 1ST DRIVER MUST BE A VALUATION/MULTIPLE DRIVER "
+            f"(multiple expansion/compression catalyst, earnings revision trajectory, "
+            f"analyst consensus vs current price). Not a moat or product driver.\n"
+            f"  what_increases_conviction: Name 1 VALUATION CONFIRMING signal "
+            f"(earnings beat, analyst upgrade cluster, PT revision) AND "
+            f"1 VALUATION DISCONFIRMING signal (guidance cut, multiple re-rate trigger).\n"
+            f"  conclusion: End with explicit entry/exit levels — "
+            f"'Add at [X]x [metric]; avoid above [Y]x [metric].'\n\n"
+        )
+    elif question_intent == "risk_assessment":
+        return (
+            f"SECONDARY SECTION MANDATES — RISK QUESTION:\n"
+            f"  one_sentence_thesis: State the risk-adjusted verdict — "
+            f"'The risk-reward for {ticker} is [favorable/balanced/unfavorable] because "
+            f"[primary risk] is [priced/underpriced/mispriced] at current levels.'\n"
+            f"  key_drivers: 1ST DRIVER MUST BE THE PRIMARY RISK FACTOR "
+            f"(the mechanism that most threatens the thesis). Not a growth or moat driver.\n"
+            f"  what_increases_conviction: Name 1 RISK-MATERIALIZING signal (the trigger "
+            f"that confirms the risk is real) AND 1 RISK-RESOLUTION signal (the data point "
+            f"that takes the risk off the table).\n"
+            f"  conclusion: End with the risk-monitoring stance — "
+            f"'Monitor [specific trigger]; reduce if [risk event]; add if [risk resolves].'\n\n"
+        )
+    elif question_intent in ("investment_thesis", "business_model"):
+        return (
+            f"SECONDARY SECTION MANDATES — BUSINESS MODEL / THESIS QUESTION:\n"
+            f"  one_sentence_thesis: Frame as business model durability verdict — "
+            f"'{ticker}'s [primary revenue engine] is [accelerating/stable/at risk] "
+            f"because [specific operating mechanic or unit economic].'\n"
+            f"  key_drivers: 1ST DRIVER MUST BE A BUSINESS MODEL DRIVER "
+            f"(revenue durability, unit economics, operating leverage, pricing power). "
+            f"Not a rate or competitive driver.\n"
+            f"  what_increases_conviction: Name 1 EXECUTION CONFIRMING signal "
+            f"(ARR growth, gross-margin expansion, FCF conversion, seat/unit additions) AND "
+            f"1 EXECUTION DISCONFIRMING signal (miss vs consensus, guidance cut, "
+            f"churn signal, pricing-power erosion).\n"
+            f"  conclusion: End with business model verdict + execution trigger — "
+            f"'Thesis intact if [operating metric] holds; reassess if [execution risk] appears.'\n\n"
+        )
+    return ""
 
 
 # ── JSON field schema description (injected into prompt) ─────────────────────
@@ -1570,9 +1691,35 @@ def _build_synthesis_prompt(
             f"what_changes_the_thesis — RISK-RESOLUTION EVENTS PRIORITIZED:\n"
             f"  Name the specific data points that would confirm or deny the primary risk.\n\n"
         )
+    elif original_user_question and question_intent in ("investment_thesis", "business_model"):
+        # Phase 3 Lever 4: first-class anchor for business model / full-thesis questions.
+        # Previously this fell through to the generic block below, giving no section-specific
+        # mandates. Now directs bull/bear/core_debate to anchor on business model mechanics.
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — BUSINESS MODEL / INVESTMENT THESIS QUESTION:\n"
+            f"direct_answer (2 sentences REQUIRED):\n"
+            f"  Sentence 1 — State whether {ticker}'s primary business model driver "
+            f"is sustainable under the scenario asked about. Be specific about the mechanism "
+            f"(revenue engine, unit economics, or operating leverage).\n"
+            f"  Sentence 2 — Name the single most important operating metric to watch "
+            f"for confirming or denying the thesis (ARR growth, gross margin, FCF conversion, "
+            f"seat/unit growth rate).\n"
+            f"bull_thesis — BUSINESS MODEL ANCHOR REQUIRED:\n"
+            f"  MUST anchor on business model durability — recurring revenue compounding, "
+            f"operating leverage trajectory, unit economics, or pricing power. "
+            f"Lead with the SPECIFIC mechanism that makes the thesis self-reinforcing. "
+            f"MUST NOT open with a macro or competitive discussion.\n"
+            f"bear_thesis — EXECUTION RISK REQUIRED:\n"
+            f"  MUST anchor on execution or model risk — what breaks the recurring revenue "
+            f"trajectory, what compresses operating leverage, or what degrades unit economics. "
+            f"Name the specific operating metric that would crack first.\n"
+            f"core_debate — BUSINESS MODEL FRAMING REQUIRED:\n"
+            f'  Frame as: "Is {ticker}\'s [primary growth driver] durable enough to '
+            f'[sustain/justify] [the current earnings expectation or valuation multiple]?"\n\n'
+        )
     elif original_user_question:
-        # Generic anchor for investment_thesis / business_model / other intents —
-        # mandates direct_answer only (same behavior as Phase 1).
+        # Generic anchor for other unrecognized intents — mandates direct_answer only.
         question_anchor_block = (
             f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
             f"QUESTION-ANCHORED DIRECT ANSWER RULES (mandatory for \"direct_answer\" field):\n"
@@ -1592,6 +1739,11 @@ def _build_synthesis_prompt(
     else:
         question_anchor_block = ""
 
+    # Phase 3: build secondary section mandates for the 4 convergence-prone sections.
+    # Injected after question_anchor_block so both primary and secondary mandates are
+    # contiguous in the "instruction" region of the prompt.
+    secondary_mandates_block = _build_secondary_section_mandates(ticker, question_intent)
+
     return f"""You are a senior investment analyst producing an institutional-quality investment thesis.
 
 CRITICAL OUTPUT RULES — READ FIRST:
@@ -1606,7 +1758,7 @@ COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
 {biz_model_section}
-{market_regime_block}{recent_events_block}{narrative_state_block}{core_debate_mandate_block}{expectation_delta_block}{historical_reasoning_block}{question_anchor_block}{ranked_signals_section}
+{market_regime_block}{recent_events_block}{narrative_state_block}{core_debate_mandate_block}{expectation_delta_block}{historical_reasoning_block}{question_anchor_block}{secondary_mandates_block}{ranked_signals_section}
 SPECIALIST AGENT OUTPUTS:
 {agent_summaries}
 
