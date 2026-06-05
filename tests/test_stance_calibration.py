@@ -193,10 +193,13 @@ class TestMetaProfile:
         )
 
     def test_meta_buy_at_cheap_regime(self):
-        """META at genuinely cheap valuation (regime='cheap') → Buy is appropriate.
+        """META at genuinely cheap valuation (regime='cheap') → Accumulate in Phase 5A.
 
-        The durable-compounder Accumulate rule excludes 'cheap' regime, so Buy fires
-        for high-conviction durable compounders at deep-value entry points.
+        Phase 5A removed 'cheap' from the Durable Accumulate exclusion list.
+        The val_stance floor now prevents most companies from being labelled 'cheap'
+        from evidence-suppressed fragility. When a durable compounder IS genuinely
+        cheap (rare after the fix), Accumulate is appropriate — methodical entry on
+        weakness rather than aggressive Buy all at once.
         """
         stance, _ = _run_stance(
             final_score = 0.72,
@@ -206,8 +209,9 @@ class TestMetaProfile:
             regime      = "cheap",
             durability  = 0.72,
         )
-        assert stance in ("Buy", "Aggressive Buy"), (
-            f"META at cheap regime should be Buy (durable rule excludes cheap); got {stance!r}."
+        assert stance in ("Accumulate", "Aggressive Buy"), (
+            f"META at cheap regime with high durability should be Accumulate in Phase 5A "
+            f"(cheap exclusion removed from Durable Accumulate); got {stance!r}."
         )
 
 

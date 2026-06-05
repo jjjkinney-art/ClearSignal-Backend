@@ -284,65 +284,76 @@ class TestFix2AccumulateOrdering:
     # regime="fair"
 
     def test_cost_like_high_score_low_frag_fair_is_accumulate(self):
-        """COST-like: score=0.713, frag=0.23, dur=0.63, regime=fair → Accumulate."""
+        """COST-like: score=0.713, frag=0.23, dur=0.70, regime=fair → Accumulate.
+
+        Phase 5A: durability threshold raised 0.60 → 0.68.  Test updated to
+        use dur=0.70 which clearly clears the new threshold.
+        """
         stance = _run(
             final_score = 0.713,
             frag        = 0.23,
             ta          = 0.72,
-            durability  = 0.63,
+            durability  = 0.70,    # Phase 5A: ≥ 0.68 required for Durable Accumulate
             regime      = "fair",
             ticker      = "COST",
         )
         assert stance == "Accumulate", (
-            f"COST-like (score=0.713, dur=0.63, regime=fair) should be Accumulate after "
-            f"Phase 4A Fix 2; got {stance!r}. Durable compounder rule must fire before "
-            "Buy (explicit)."
+            f"COST-like (score=0.713, dur=0.70, regime=fair) should be Accumulate after "
+            f"Phase 5A (threshold 0.68); got {stance!r}. Durable compounder rule must "
+            "fire before Buy (explicit)."
         )
 
     def test_cost_exact_durability_threshold_fires(self):
-        """Exactly at durability=0.60 threshold → Accumulate fires."""
+        """Exactly at durability=0.68 threshold (Phase 5A) → Accumulate fires."""
         stance = _run(
             final_score = 0.70,
             frag        = 0.25,
             ta          = 0.68,
-            durability  = 0.60,    # exactly at threshold
+            durability  = 0.68,    # Phase 5A: exactly at new threshold
             regime      = "fair",
             ticker      = "COST",
         )
         assert stance == "Accumulate", (
-            f"durability=0.60 exactly at threshold should be Accumulate; got {stance!r}."
+            f"durability=0.68 exactly at Phase 5A threshold should be Accumulate; "
+            f"got {stance!r}."
         )
 
     # ── JPM-like scenario ─────────────────────────────────────────────────────
     # JPM: score=0.688, frag~0.25, ta~0.68, durability~0.62, regime="fair"
 
     def test_jpm_like_high_score_low_frag_fair_is_accumulate(self):
-        """JPM-like: score=0.688, frag=0.25, dur=0.62, regime=fair → Accumulate."""
+        """JPM-like: score=0.688, frag=0.25, dur=0.70, regime=fair → Accumulate.
+
+        Phase 5A: durability threshold raised to 0.68; updated dur to 0.70.
+        """
         stance = _run(
             final_score = 0.688,
             frag        = 0.25,
             ta          = 0.68,
-            durability  = 0.62,
+            durability  = 0.70,    # Phase 5A: ≥ 0.68 required
             regime      = "fair",
             ticker      = "JPM",
         )
         assert stance == "Accumulate", (
-            f"JPM-like (score=0.688, dur=0.62, regime=fair) should be Accumulate after "
-            f"Phase 4A Fix 2; got {stance!r}."
+            f"JPM-like (score=0.688, dur=0.70, regime=fair) should be Accumulate; "
+            f"got {stance!r}."
         )
 
     def test_jpm_at_attractive_regime_is_accumulate(self):
-        """JPM at attractive regime with high durability → still Accumulate."""
+        """JPM at attractive regime with high durability → still Accumulate.
+
+        Phase 5A: updated dur to 0.70 (≥ 0.68 required).
+        """
         stance = _run(
             final_score = 0.688,
             frag        = 0.30,
             ta          = 0.68,
-            durability  = 0.62,
+            durability  = 0.70,    # Phase 5A: ≥ 0.68 required
             regime      = "attractive",
             ticker      = "JPM",
         )
         assert stance == "Accumulate", (
-            f"JPM at attractive regime with dur=0.62 should be Accumulate; got {stance!r}."
+            f"JPM at attractive regime with dur=0.70 should be Accumulate; got {stance!r}."
         )
 
     # ── COST at stretched regime (existing behavior) ──────────────────────────
@@ -394,22 +405,30 @@ class TestFix2AccumulateOrdering:
     # ── Buy preserved for high-durability at cheap regime ────────────────────
 
     def test_buy_fires_for_high_durability_at_cheap_regime(self):
-        """Phase 4A: cheap regime excludes durable Accumulate → Buy fires."""
+        """Phase 5A: cheap regime NO LONGER excludes durable Accumulate.
+
+        Phase 4A had cheap regime blocking Durable Accumulate (routing to Buy).
+        Phase 5A removed "cheap" from the Durable Accumulate exclusion list.
+        The val_stance floor now prevents most companies from being labelled
+        "cheap" when they are actually fairly valued — so genuine "cheap" regime
+        is rare. When it does occur for a durable compounder, Accumulate is
+        appropriate (methodical entry on weakness).
+        """
         stance = _run(
             final_score = 0.72,
             frag        = 0.25,
             ta          = 0.70,
-            durability  = 0.75,    # high durability
-            regime      = "cheap",  # cheap = genuine deep value → Buy OK
+            durability  = 0.75,    # high durability — clears Phase 5A threshold
+            regime      = "cheap",  # Phase 5A: no longer excludes Durable Accumulate
             ticker      = "COST",
         )
-        assert stance in ("Buy", "Aggressive Buy"), (
-            f"COST at cheap regime should be Buy even with high durability; got {stance!r}. "
-            "Cheap regime excludes the durable Accumulate gate — deep value warrants Buy."
+        assert stance in ("Accumulate", "Aggressive Buy"), (
+            f"COST at cheap regime with high durability should be Accumulate in "
+            f"Phase 5A (cheap exclusion removed); got {stance!r}."
         )
 
     def test_buy_fires_for_high_durability_msft_at_cheap(self):
-        """MSFT at cheap regime (durable Accumulate excluded) → Buy."""
+        """MSFT at cheap regime → Accumulate in Phase 5A (cheap exclusion removed)."""
         stance = _run(
             final_score = 0.72,
             frag        = 0.25,
@@ -418,8 +437,8 @@ class TestFix2AccumulateOrdering:
             regime      = "cheap",
             ticker      = "MSFT",
         )
-        assert stance in ("Buy", "Aggressive Buy"), (
-            f"MSFT at cheap regime should be Buy; got {stance!r}."
+        assert stance in ("Accumulate", "Aggressive Buy"), (
+            f"MSFT at cheap regime should be Accumulate in Phase 5A; got {stance!r}."
         )
 
     # ── Accumulate does not fire below durability threshold ──────────────────
@@ -466,12 +485,12 @@ class TestFix2AccumulateOrdering:
     # ── Phase 4A combined: both fixes working together ────────────────────────
 
     def test_cost_high_score_is_not_sell_and_is_accumulate(self):
-        """COST: score=0.713 — should be Accumulate (Fix 2), definitely not Sell."""
+        """COST: score=0.713, dur=0.70 — Accumulate (Phase 5A threshold), never Sell."""
         stance = _run(
             final_score = 0.713,
             frag        = 0.23,
             ta          = 0.72,
-            durability  = 0.63,
+            durability  = 0.70,    # Phase 5A: ≥ 0.68 required for Durable Accumulate
             regime      = "fair",
             ticker      = "COST",
         )

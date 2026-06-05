@@ -346,20 +346,20 @@ class TestPhase4ARegressionGuard:
     """Verify that Phase 4B changes do not break Phase 4A fixes."""
 
     def test_cost_still_accumulate(self):
-        """COST (dur=0.63, score=0.713, fair) → Accumulate (Phase 4A Fix 2)."""
+        """COST (dur=0.70, score=0.713, fair) → Accumulate (Phase 5A threshold 0.68)."""
         dims = _dims(frag=0.23, asym=0.18, ta=0.72)
         stance, _ = _compute_directional_stance(
             0.713, dims, "durable setup", _company("COST"),
-            expectation_regime="fair", durability_score=0.63,
+            expectation_regime="fair", durability_score=0.70,  # Phase 5A: ≥ 0.68
         )
         assert stance == "Accumulate", f"COST regression: expected Accumulate, got {stance}"
 
     def test_jpm_still_accumulate(self):
-        """JPM (dur=0.62, score=0.688, fair) → Accumulate (Phase 4A Fix 2)."""
+        """JPM (dur=0.70, score=0.688, fair) → Accumulate (Phase 5A threshold 0.68)."""
         dims = _dims(frag=0.25, asym=0.20, ta=0.68)
         stance, _ = _compute_directional_stance(
             0.688, dims, "durable setup", _company("JPM"),
-            expectation_regime="fair", durability_score=0.62,
+            expectation_regime="fair", durability_score=0.70,  # Phase 5A: ≥ 0.68
         )
         assert stance == "Accumulate", f"JPM regression: expected Accumulate, got {stance}"
 

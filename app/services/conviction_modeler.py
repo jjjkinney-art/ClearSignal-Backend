@@ -1297,8 +1297,9 @@ def _compute_directional_stance(
     dims:               "ConvictionDimensions",
     setup_label:        str,
     company:            "CompanyContext",
-    expectation_regime: str   = "fair",   # NEW — regime from _classify_expectation_regime
-    durability_score:   float = 0.50,     # NEW — business durability [0, 1]
+    expectation_regime: str   = "fair",   # regime from _classify_expectation_regime
+    durability_score:   float = 0.50,     # business durability [0, 1]
+    val_stance:         str   = "",       # Phase 5A — valuation agent stance
 ) -> Tuple[str, str]:
     """Derive a directional stance and institutional reasoning from the conviction output.
 
@@ -1309,29 +1310,34 @@ def _compute_directional_stance(
 
     Stance vocabulary (ordered from most to least constructive):
       "Aggressive Buy"  — exceptional setup: very high conviction, low fragility
-      "Buy"             — solid setup: clear upside asymmetry, attractive/cheap regime
+      "Buy"             — solid setup: clear upside asymmetry, underpriced/cheap regime
       "Accumulate"      — durable compounder at fair/attractive valuation; add on dips
-      "Hold"            — thesis intact but expectation bar elevated; no urgent add
+      "Hold"            — quality business at fair valuation; expectation bar elevated
       "Tactical"        — short-term catalyst window; limited structural conviction
       "Avoid"           — weak evidence or fragile setup; risk/reward unfavorable
       "Sell"            — structural conviction break; deteriorating evidence base
 
-    Design rules (Phase 3 calibration)
+    Design rules (Phase 5A calibration)
     ------------------------------------
-    - BUY requires clear upside asymmetry (low frag + high ta) AND a regime that
-      is not stretched/euphoric/bubble.  Quality alone is insufficient.
-    - ACCUMULATE captures durable compounders at fair/attractive valuation where
-      expectations are partially priced-in but the structural thesis is intact.
-    - Regime-gating: stretched/euphoric/bubble regimes block Buy (broad) from firing.
+    - DURABLE ACCUMULATE requires durability ≥ 0.68 (raised from 0.60) — reserves
+      the Accumulate stance for businesses with strong structural moats. Durability
+      0.60–0.68 quality businesses land in Durable Hold instead.
+    - DURABLE HOLD (new Phase 5A rule): quality businesses (dur ≥ 0.55) at fair
+      valuation (val_stance="fairly_valued") with manageable fragility → Hold.
+      This captures the NVDA/GS/NKE-class companies correctly.
+    - BUY requires clear upside asymmetry AND valuation not "overpriced". Buy is
+      blocked for "overpriced" companies regardless of score.
+    - val_stance="" (unknown / not provided) is treated permissively — existing
+      tests without val_stance are unaffected.
+    - Regime-gating: stretched/euphoric/bubble regimes block Buy from firing.
     - Early Avoid: euphoric/bubble + low conviction → Avoid before other rules.
-    - Reasoning must reference the expectation context, not just score.
-    - Language must be institutional: no "BUY because fundamentals are strong."
     """
     frag   = dims.expectation_fragility
     asym   = dims.expectation_asymmetry
     ta     = dims.thesis_alignment
     vc     = dims.valuation_certainty
     ticker = (company.ticker or "the company").upper()
+    _vs    = (val_stance or "").lower()
 
     # ── Early Avoid: euphoric/bubble regime + insufficient conviction ─────────
     # When the market is pricing perfection, only very high conviction survives.
@@ -1354,25 +1360,28 @@ def _compute_directional_stance(
             f"Low fragility and strong cross-signal alignment support adding size.",
         )
 
-    # ── Accumulate (durable compounder — Phase 4A: moved above Buy) ─────────
-    # Phase 4A calibration: this rule fires BEFORE Buy (explicit) and Buy (broad).
-    # Durable compounders (durability ≥ 0.60) at fair/attractive/stretched valuation
-    # should Accumulate rather than Buy — quality is recognised but the entry does
-    # not offer the asymmetry required for a full Buy call.
+    # ── Accumulate (durable compounder — Phase 5A calibration) ──────────────
+    # Phase 5A changes vs Phase 4A:
+    #   1. Durability threshold raised 0.60 → 0.68.  Reserves Accumulate for
+    #      top-tier compounders (COST/MSFT/TSM/NEE class).  Quality businesses
+    #      with durability 0.55–0.68 route to the new Durable Hold rule instead.
+    #   2. "cheap" removed from regime exclusion list. The Phase 5A regime
+    #      classifier now prevents most companies from being labelled "cheap"
+    #      when val_stance="fairly_valued", so the exclusion is no longer needed
+    #      to protect Buy from Accumulate. The rare genuinely cheap company at
+    #      dur ≥ 0.68 should still Accumulate (buy on weakness), not be pushed
+    #      to Buy (which implies immediate entry).
+    #   3. val_stance gate added: "overpriced" blocks Accumulate. Accumulate
+    #      requires fair/underpriced or unknown valuation context.
     #
-    # Threshold change: 0.65 → 0.60 to capture COST/JPM-class businesses that
-    # lack a CompanyKnowledgeProfile and compute durability ~0.60-0.64 from
-    # QA text + evidence layers alone.
-    #
-    # Regime exclusions (Phase 4A):
-    #   "cheap"          → genuine deep-value entry; Buy is appropriate even for
-    #                       durable compounders at genuinely cheap valuations.
-    #   "euphoric"/"bubble" → blocked by the early Avoid gate above.
-    #
-    # Examples: COST (0.713, fair, dur~0.63) → Accumulate. JPM (0.688, fair, dur~0.62)
-    # → Accumulate.  META (0.63, attractive, dur=0.72) → Accumulate.
-    if (durability_score >= 0.60 and final_score >= 0.58 and frag < 0.40
-            and expectation_regime not in ("cheap", "euphoric", "bubble")):
+    # Examples: COST(dur=0.84,fair)→Accum. TSM(dur=0.74,fair)→Accum.
+    #           NVDA(dur=0.67,fair) FAILS dur threshold → Durable Hold.
+    #           GS(dur=0.70,fair)→Accum (model limitation: profile rates franchise).
+    if (durability_score >= 0.68
+            and final_score >= 0.58
+            and frag < 0.40
+            and _vs not in ("overpriced",)
+            and expectation_regime not in ("euphoric", "bubble")):
         return (
             "Accumulate",
             f"{ticker} is a durable compounder with a high-quality business, but the "
@@ -1380,11 +1389,39 @@ def _compute_directional_stance(
             f"full Buy. The thesis is intact; add on pullbacks rather than at spot.",
         )
 
+    # ── Durable Hold (new Phase 5A rule) ─────────────────────────────────────
+    # Quality businesses (durability 0.55–0.68) at explicitly fair valuation
+    # should Hold — the structural moat is intact but the current pricing already
+    # reflects operational strength, leaving limited margin for adding.
+    #
+    # This rule fires only when:
+    #   - val_stance is explicitly "fairly_valued" (not unknown/empty)
+    #   - durability is quality-tier (≥ 0.55) but below Accumulate threshold
+    #   - frag is low (durable business, not a fragile setup)
+    #   - score is in the investable range (≥ 0.55)
+    #
+    # Captures: NVDA, GS, NKE, LLY, HON, NFLX, T, VZ — high-quality businesses
+    # where the investment case is sound but the valuation is fully recognised.
+    # Does NOT fire for val_stance="" (unknown) — backward-compatible with tests.
+    if (_vs == "fairly_valued"
+            and durability_score >= 0.55
+            and frag < 0.40
+            and final_score >= 0.55):
+        return (
+            "Hold",
+            f"{ticker} is a quality business where current pricing already reflects "
+            f"operational strength — the setup favours patience rather than adding at "
+            f"spot. The thesis holds; monitor for a valuation reset before acting.",
+        )
+
     # ── Buy (explicit) ────────────────────────────────────────────────────────
     # High-conviction, manageable expectation risk, regime supports entry.
-    # Now fires for: durability < 0.60, OR regime == "cheap" with high conviction.
+    # Phase 5A: "overpriced" companies blocked from Buy regardless of score.
     # Regime gate: stretched/euphoric/bubble block this rule.
-    if (final_score >= 0.68 and frag < 0.40 and ta > 0.60
+    if (final_score >= 0.68
+            and frag < 0.40
+            and ta > 0.60
+            and _vs not in ("overpriced",)
             and expectation_regime not in ("stretched", "euphoric", "bubble")):
         return (
             "Buy",
@@ -1408,7 +1445,10 @@ def _compute_directional_stance(
     # ── Buy (broad) — regime-gated ────────────────────────────────────────────
     # Solid conviction with manageable expectation risk — blocked in
     # stretched/euphoric/bubble regimes where quality is already priced.
-    if (final_score >= 0.62 and frag < 0.58
+    # Phase 5A: "overpriced" companies blocked from Buy via val_stance gate.
+    if (final_score >= 0.62
+            and frag < 0.58
+            and _vs not in ("overpriced",)
             and expectation_regime not in ("stretched", "euphoric", "bubble")):
         return (
             "Buy",
@@ -1942,16 +1982,44 @@ def _classify_expectation_regime(
     attractive_thresh = _REGIME_ATTRACTIVE + dur_adj
 
     if expectation_fragility >= bubble_thresh:
-        return "bubble"
-    if expectation_fragility >= euphoric_thresh:
-        return "euphoric"
-    if expectation_fragility >= stretched_thresh:
-        return "stretched"
-    if expectation_fragility >= fair_thresh:
-        return "fair"
-    if expectation_fragility >= attractive_thresh:
-        return "attractive"
-    return "cheap"
+        frag_regime = "bubble"
+    elif expectation_fragility >= euphoric_thresh:
+        frag_regime = "euphoric"
+    elif expectation_fragility >= stretched_thresh:
+        frag_regime = "stretched"
+    elif expectation_fragility >= fair_thresh:
+        frag_regime = "fair"
+    elif expectation_fragility >= attractive_thresh:
+        frag_regime = "attractive"
+    else:
+        frag_regime = "cheap"
+
+    # Phase 5A: valuation-stance floor.
+    # Low fragility reflects durable business quality — it does NOT imply cheap
+    # valuation. A company can have frag=0.20 (durable moat) while trading at a
+    # fair or stretched multiple. Evidence-boosted EQ suppresses fragility to
+    # 0.13–0.25 for most quality businesses, causing the frag-based classifier
+    # to label them "cheap" even when the valuation agent says "fairly_valued."
+    #
+    # The val_stance from the valuation agent overrides the cheap/attractive
+    # classification when it carries an explicit opinion:
+    #   "fairly_valued" → minimum regime "fair"      (never cheap or attractive)
+    #   "overpriced"    → minimum regime "stretched" (never cheap/attractive/fair)
+    #
+    # This prevents the Durable Accumulate rule from being gated off (it excludes
+    # "cheap") for companies that are merely durable, not genuinely cheap.
+    _REGIME_RANK: dict = {
+        "cheap": 0, "attractive": 1, "fair": 2,
+        "stretched": 3, "euphoric": 4, "bubble": 5,
+    }
+    _VAL_FLOOR: dict = {
+        "fairly_valued": "fair",
+        "overpriced":    "stretched",
+    }
+    val_floor = _VAL_FLOOR.get(vs)
+    if val_floor and _REGIME_RANK.get(frag_regime, 0) < _REGIME_RANK[val_floor]:
+        return val_floor
+    return frag_regime
 
 
 def _classify_expectation_shift_severity(
@@ -3069,6 +3137,7 @@ def compute_conviction(
         final_score, dims, setup_label, company,
         expectation_regime = _exp_regime,
         durability_score   = durability_score,
+        val_stance         = _val_stance,       # Phase 5A: valuation gate
     )
 
     # ── Reasoning and what_increases_conviction ───────────────────────────────
