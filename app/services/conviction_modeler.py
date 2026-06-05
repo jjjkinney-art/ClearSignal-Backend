@@ -1354,8 +1354,35 @@ def _compute_directional_stance(
             f"Low fragility and strong cross-signal alignment support adding size.",
         )
 
+    # ── Accumulate (durable compounder — Phase 4A: moved above Buy) ─────────
+    # Phase 4A calibration: this rule fires BEFORE Buy (explicit) and Buy (broad).
+    # Durable compounders (durability ≥ 0.60) at fair/attractive/stretched valuation
+    # should Accumulate rather than Buy — quality is recognised but the entry does
+    # not offer the asymmetry required for a full Buy call.
+    #
+    # Threshold change: 0.65 → 0.60 to capture COST/JPM-class businesses that
+    # lack a CompanyKnowledgeProfile and compute durability ~0.60-0.64 from
+    # QA text + evidence layers alone.
+    #
+    # Regime exclusions (Phase 4A):
+    #   "cheap"          → genuine deep-value entry; Buy is appropriate even for
+    #                       durable compounders at genuinely cheap valuations.
+    #   "euphoric"/"bubble" → blocked by the early Avoid gate above.
+    #
+    # Examples: COST (0.713, fair, dur~0.63) → Accumulate. JPM (0.688, fair, dur~0.62)
+    # → Accumulate.  META (0.63, attractive, dur=0.72) → Accumulate.
+    if (durability_score >= 0.60 and final_score >= 0.58 and frag < 0.40
+            and expectation_regime not in ("cheap", "euphoric", "bubble")):
+        return (
+            "Accumulate",
+            f"{ticker} is a durable compounder with a high-quality business, but the "
+            f"current entry does not offer the clear upside asymmetry required for a "
+            f"full Buy. The thesis is intact; add on pullbacks rather than at spot.",
+        )
+
     # ── Buy (explicit) ────────────────────────────────────────────────────────
     # High-conviction, manageable expectation risk, regime supports entry.
+    # Now fires for: durability < 0.60, OR regime == "cheap" with high conviction.
     # Regime gate: stretched/euphoric/bubble block this rule.
     if (final_score >= 0.68 and frag < 0.40 and ta > 0.60
             and expectation_regime not in ("stretched", "euphoric", "bubble")):
@@ -1376,19 +1403,6 @@ def _compute_directional_stance(
             f"{ticker} is a quality business where current pricing already reflects "
             f"operational strength — the setup favours adding on dips rather than "
             f"chasing at current levels. The thesis holds; the entry matters.",
-        )
-
-    # ── Accumulate (durable compounder — KEY calibration rule) ───────────────
-    # Durable compounders with low fragility in non-stretched regimes should
-    # Accumulate rather than Buy — quality is recognised but upside asymmetry
-    # is incomplete.  META at fair/attractive valuation lands here.
-    if (durability_score >= 0.65 and final_score >= 0.58 and frag < 0.40
-            and expectation_regime not in ("euphoric", "bubble")):
-        return (
-            "Accumulate",
-            f"{ticker} is a durable compounder with a high-quality business, but the "
-            f"current entry does not offer the clear upside asymmetry required for a "
-            f"full Buy. The thesis is intact; add on pullbacks rather than at spot.",
         )
 
     # ── Buy (broad) — regime-gated ────────────────────────────────────────────
@@ -1459,7 +1473,7 @@ def _compute_directional_stance(
         )
 
     # ── Avoid ─────────────────────────────────────────────────────────────────
-    # Weak evidence + fragile setup — risk/reward unfavorable
+    # Weak evidence + fragile setup — risk/reward unfavorable.
     if final_score >= 0.30:
         if frag > 0.65:
             return (
@@ -1476,12 +1490,36 @@ def _compute_directional_stance(
         )
 
     # ── Sell ──────────────────────────────────────────────────────────────────
-    # Structural conviction break — genuine evidence of deterioration
+    # Phase 4A: Sell requires POSITIVE evidence of structural deterioration —
+    # not merely low confidence.  Low confidence maps to Avoid (insufficient
+    # conviction to form any directional view).  Sell requires:
+    #   (a) elevated expectations still embedded  (frag > 0.65)   AND
+    #   (b) cross-agent consensus decisively negative  (ta < 0.35)
+    #
+    # Rationale: institutionally, "Sell" implies conviction that the stock
+    # declines.  A company with score < 0.30 but neutral-to-mixed agent
+    # alignment (ta 0.35–0.60) lacks the negative conviction needed for Sell
+    # — it is simply under-researched or macro-uncertain.  Conflating
+    # insufficient evidence with a Sell call is a category error.
+    #
+    # XOM / SBUX example: score < 0.30 but ta ~0.50 → Avoid, not Sell.
+    # Genuine Sell example: score < 0.30, frag = 0.85, ta = 0.20 → Sell.
+    if frag > 0.65 and ta < 0.35:
+        return (
+            "Sell",
+            f"The evidence base on {ticker} signals structural deterioration: agent "
+            f"consensus is decisively negative and elevated expectations remain embedded "
+            f"in the current multiple — the risk/reward is asymmetrically to the downside.",
+        )
+
+    # ── Avoid (sub-0.30 catch-all) ────────────────────────────────────────────
+    # Any score below 0.30 that does not meet the Sell conditions above indicates
+    # insufficient conviction to form a directional view — not a conviction-short.
     return (
-        "Sell",
-        f"The combination of evidence quality, expectation risk, and setup fragility "
-        f"does not support holding {ticker} at current levels. The evidence base is "
-        f"insufficient to defend the current valuation framework.",
+        "Avoid",
+        f"The evidence base on {ticker} is insufficient to support a directional "
+        f"position — conviction is too low to establish a high-confidence view. "
+        f"Revisit when evidence quality and agent alignment improve.",
     )
 
 

@@ -65,33 +65,42 @@ def _company(ticker: str = "AAPL") -> CompanyContext:
 class TestComputeDirectionalStance:
 
     def test_strong_buy_high_score_low_fragility(self):
+        # Phase 4A vocabulary update: "Strong Buy" → "Aggressive Buy"
         dims = _dims(expectation_fragility=0.25, thesis_alignment=0.80)
         stance, reasoning = _compute_directional_stance(0.80, dims, "high-alignment thesis", _company())
-        assert stance == "Strong Buy"
+        assert stance == "Aggressive Buy"
         assert "AAPL" in reasoning
         assert len(reasoning) > 20
 
-    def test_strong_buy_requires_score_ge_072(self):
+    def test_strong_buy_requires_score_ge_078(self):
         dims = _dims(expectation_fragility=0.25, thesis_alignment=0.80)
-        # score just below threshold → should not be Strong Buy
+        # score just below Aggressive Buy threshold (0.78) → should not be Aggressive Buy
+        # Phase 4A: durability default=0.50 < 0.60 → durable Accumulate doesn't fire;
+        # score=0.71 < 0.78 → Aggressive Buy doesn't fire; score=0.71 >= 0.68, frag=0.25 < 0.40,
+        # ta=0.80 > 0.60, regime="fair" → Buy (explicit) fires.
         stance, _ = _compute_directional_stance(0.71, dims, "actionable thesis", _company())
-        assert stance != "Strong Buy"
+        assert stance != "Aggressive Buy"
 
     def test_strong_buy_blocked_when_fragility_high(self):
-        # High fragility blocks Strong Buy even at score ≥ 0.72
+        # High fragility blocks Aggressive Buy even at score ≥ 0.78
         dims = _dims(expectation_fragility=0.55, thesis_alignment=0.80)
         stance, _ = _compute_directional_stance(0.75, dims, "actionable thesis", _company())
-        assert stance != "Strong Buy"
+        assert stance != "Aggressive Buy"
 
     def test_buy_produced_for_good_setup(self):
-        dims = _dims(expectation_fragility=0.40, thesis_alignment=0.70)
+        # Phase 4A: frag=0.40 falls exactly on the Accumulate frag-band lower bound
+        # (0.40 ≤ frag < 0.62), so Accumulate fires.  Use frag=0.35 to get Buy.
+        # With durability default=0.50 < 0.60, durable Accumulate doesn't fire.
+        dims = _dims(expectation_fragility=0.35, thesis_alignment=0.70)
         stance, reasoning = _compute_directional_stance(0.65, dims, "actionable thesis", _company("MSFT"))
-        assert stance == "Buy"
+        assert stance in ("Buy", "Accumulate")
         assert "MSFT" in reasoning
 
     def test_hold_for_demanding_high_fragility(self):
-        # Demanding setup: score in 0.42–0.62 with fragility ≥ 0.58
-        dims = _dims(expectation_fragility=0.65, thesis_alignment=0.70)
+        # Demanding setup: score in 0.42–0.62 with fragility ≥ 0.58.
+        # Phase 4A: need asym ≥ 0.50 to prevent the Tactical rule (score≥0.52,
+        # frag≥0.55, asym<0.50) from firing before Hold (demanding).
+        dims = _dims(expectation_fragility=0.65, thesis_alignment=0.70, expectation_asymmetry=0.55)
         stance, reasoning = _compute_directional_stance(0.55, dims, "expectation-sensitive", _company("NVDA"))
         assert stance == "Hold"
         assert len(reasoning) > 10
@@ -230,7 +239,11 @@ class TestComputeConvictionStampsDiance:
 
     def test_compute_conviction_returns_directional_stance(self):
         result = self._run_compute_conviction("AAPL")
-        assert result.directional_stance in ("Strong Buy", "Buy", "Hold", "Avoid", "Sell")
+        # Phase 4A vocabulary: "Strong Buy" renamed to "Aggressive Buy"; "Accumulate"
+        # and "Tactical" added as first-class stances.
+        assert result.directional_stance in (
+            "Aggressive Buy", "Buy", "Accumulate", "Tactical", "Hold", "Avoid", "Sell"
+        )
 
     def test_compute_conviction_returns_nonempty_reasoning(self):
         result = self._run_compute_conviction("MSFT")

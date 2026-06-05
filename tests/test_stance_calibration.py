@@ -172,19 +172,42 @@ class TestMetaProfile:
             f"Accumulate reasoning must explain the entry context. Got: {reasoning!r}"
         )
 
-    def test_meta_with_explicit_buy_params_does_buy(self):
-        """If META truly has clear asymmetry (low frag + very high score), Buy is correct."""
+    def test_meta_accumulate_at_attractive_regime(self):
+        """Phase 4A: META (durability=0.72) at attractive regime → Accumulate, not Buy.
+
+        Even with score=0.72 and frag=0.30, the durable-compounder Accumulate rule
+        fires first (durability≥0.60, score≥0.58, frag<0.40, regime not cheap/euphoric/bubble).
+        To get Buy for META, regime must be 'cheap' (deep-value entry).
+        """
         stance, _ = _run_stance(
             final_score = 0.72,
-            frag        = 0.30,     # genuinely low
+            frag        = 0.30,
             ta          = 0.68,
             ticker      = "META",
             regime      = "attractive",
             durability  = 0.72,
         )
-        # At genuinely low fragility, explicit Buy should fire
+        assert stance == "Accumulate", (
+            f"META (durability=0.72) at attractive regime should be Accumulate after "
+            f"Phase 4A; got {stance!r}. Durable compounder rule fires before Buy (explicit)."
+        )
+
+    def test_meta_buy_at_cheap_regime(self):
+        """META at genuinely cheap valuation (regime='cheap') → Buy is appropriate.
+
+        The durable-compounder Accumulate rule excludes 'cheap' regime, so Buy fires
+        for high-conviction durable compounders at deep-value entry points.
+        """
+        stance, _ = _run_stance(
+            final_score = 0.72,
+            frag        = 0.28,
+            ta          = 0.70,
+            ticker      = "META",
+            regime      = "cheap",
+            durability  = 0.72,
+        )
         assert stance in ("Buy", "Aggressive Buy"), (
-            f"META with clear asymmetry (score=0.72, frag=0.30) should be Buy; got {stance!r}."
+            f"META at cheap regime should be Buy (durable rule excludes cheap); got {stance!r}."
         )
 
 
@@ -284,8 +307,15 @@ class TestMicrosoftProfile:
             f"Accumulate; got {stance!r}."
         )
 
-    def test_msft_buy_when_clear_asymmetry(self):
-        """MSFT with clear asymmetry (score >= 0.68) and attractive regime → Buy."""
+    def test_msft_accumulate_when_high_durability_attractive(self):
+        """Phase 4A: MSFT with durability=0.78 in attractive regime → Accumulate (not Buy).
+
+        The durable-compounder Accumulate rule (durability≥0.60, score≥0.58, frag<0.40,
+        regime not cheap/euphoric/bubble) fires BEFORE Buy (explicit) in Phase 4A.
+        High-durability names at fair/attractive valuation should Accumulate, not Buy —
+        quality is recognised but the entry does not offer the asymmetry for a full Buy.
+        To reach Buy, the regime must be 'cheap' OR durability must be < 0.60.
+        """
         stance, _ = _run_stance(
             final_score = 0.69,
             frag        = 0.34,
@@ -294,8 +324,10 @@ class TestMicrosoftProfile:
             regime      = "attractive",
             durability  = 0.78,
         )
-        assert stance in ("Buy", "Aggressive Buy"), (
-            f"MSFT with score=0.69, frag=0.34, attractive regime should be Buy; got {stance!r}."
+        assert stance == "Accumulate", (
+            f"MSFT (durability=0.78) at attractive regime should be Accumulate after "
+            f"Phase 4A rule reorder; got {stance!r}. Durable compounder at fair/attractive "
+            "valuation → Accumulate. To get Buy, regime must be 'cheap'."
         )
 
     def test_msft_not_buy_at_stretched_regime(self):
