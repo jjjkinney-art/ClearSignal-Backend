@@ -6046,6 +6046,985 @@ _register(CompanyKnowledgeProfile(
 ))
 
 
+# ── AbbVie Inc. (ABBV) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="ABBV",
+    company_name="AbbVie Inc.",
+    business_model=(
+        "AbbVie is a research-based specialty biopharmaceutical company generating revenue "
+        "primarily through its immunology franchise (Skyrizi, Rinvoq, Humira), neuroscience "
+        "portfolio (Vraylar, Ubrelvy, Atogepant), and the Allergan Aesthetics platform "
+        "(Botox Cosmetic, Juvederm, Botox Therapeutic) acquired in 2020.  The post-Humira "
+        "transition is well advanced: Skyrizi and Rinvoq together are on track for combined "
+        "revenue exceeding $24B by 2027, more than replacing Humira's peak earnings contribution."
+    ),
+    primary_revenue_drivers=[
+        "Skyrizi (risankizumab) — IL-23 inhibitor approved for plaque psoriasis, PsA, "
+        "Crohn's disease, and ulcerative colitis; multi-indication launch drives >$12B target",
+        "Rinvoq (upadacitinib) — selective JAK1 inhibitor approved in RA, PsA, AS, UC, "
+        "atopic dermatitis, Crohn's; fastest-growing drug in AbbVie's portfolio",
+        "Humira — eroding from biosimilar competition (US LOE 2023) but still >$8B; "
+        "ex-US protected by local patent schedules through 2025–2027",
+        "Allergan Aesthetics (~$6.5B) — Botox Cosmetic and Juvederm filler portfolio; "
+        "Botox Therapeutic serves migraine, spasticity, and overactive bladder indications",
+        "Neuroscience (~$4B+) — Vraylar (bipolar/MDD), Ubrelvy/Atogepant (migraine); "
+        "CGRP antagonist class is a durable recurring prescription category",
+    ],
+    recurring_revenue_sources=[
+        "Skyrizi and Rinvoq patient adherence programs — biologic specialty drugs with "
+        "12-month initiation and maintenance therapy cycles; adherence rates above 85% "
+        "once patients respond, creating predictable recurring prescription revenue",
+        "Botox Therapeutic maintenance injection schedule — patients receive injections "
+        "every 12 weeks for chronic migraine, spasticity, and overactive bladder; "
+        "physician practice loyalty and reimbursement infrastructure create a sticky cycle",
+        "Allergan Aesthetics loyalty platform — Botox Cosmetic and Juvederm multi-session "
+        "treatment protocols through the Allē loyalty program (8M+ enrolled members) "
+        "with repeat-visit economics similar to a subscription model",
+        "Neuroscience CGRP preventive prescriptions — Ubrelvy and Atogepant are oral "
+        "CGRP blockers taken daily or on-demand; preventive migraine therapy is a "
+        "multi-year maintenance category with high refill persistence",
+    ],
+    rate_sensitivity_note=(
+        "AbbVie's ~11-13x forward P/E is already low relative to large-cap pharma peers, "
+        "reflecting the Humira biosimilar overhang.  DCF sensitivity to the 10-year rate "
+        "is moderate — the pipeline's NPV is not a long-duration growth optionality story; "
+        "Skyrizi and Rinvoq are already approved and revenue-generating.  The company "
+        "carries ~$60B of debt (from the Allergan acquisition) at fixed rates averaging "
+        "~3.5%, providing insulation from near-term refinancing pressure.  A rising-rate "
+        "environment increases interest expense on any floating tranche (~$5B) modestly. "
+        "The dividend (~4.5% yield) is supported by >$20B annual free cash flow, making "
+        "the yield sustainable independent of rate level."
+    ),
+    inflation_pass_through=(
+        "Strong: AbbVie's branded biologic and specialty drug portfolio commands list prices "
+        "set through the US commercial and managed-care rebate framework.  The Inflation "
+        "Reduction Act (IRA) drug pricing negotiation program applies to Medicare Part D "
+        "high-expenditure drugs — Skyrizi and Rinvoq are subject to pricing negotiation "
+        "in later program phases.  However, biologic manufacturing cost inflation is "
+        "manageable relative to AbbVie's 80%+ gross margins.  International pricing "
+        "(ex-US) is reference-priced and government-negotiated, with less inflation "
+        "pass-through than the US commercial channel."
+    ),
+    recession_behavior=(
+        "Highly resilient — specialty pharmaceuticals for autoimmune disease, aesthetics, "
+        "and neurology are non-discretionary and essential for patients already on therapy. "
+        "Prescription volumes for chronic-disease biologics (Skyrizi, Rinvoq, Humira) are "
+        "stable through economic cycles: patients do not stop treatment due to recessions. "
+        "The Botox Therapeutic segment (migraine, spasticity) is medically driven and "
+        "defensive.  Allergan Aesthetics (cosmetic Botox, Juvederm) has mild cyclical "
+        "exposure as an elective medical aesthetic — but repeat patients show high loyalty. "
+        "AbbVie maintained its dividend and grew EPS through every economic downturn in its "
+        "corporate history."
+    ),
+    major_risks=[
+        "Humira revenue erosion from biosimilar competition — US biosimilars launched in "
+        "2023 with over 10 entrants; AbbVie's protected international markets expire "
+        "through 2025–2027, creating a multi-year revenue headwind requiring Skyrizi/Rinvoq "
+        "ramp to fully offset the biosimilar impact",
+        "IRA Medicare drug pricing negotiation for Skyrizi and Rinvoq — these drugs are "
+        "candidates for negotiation in Phase 3+ of the IRA program (post-2026); the net "
+        "price reduction (currently unknown) could reduce AbbVie's US immunology revenue "
+        "and require pricing strategy adjustment in Medicare accounts",
+        "Oncology pipeline execution: AbbVie has invested significantly in oncology "
+        "(NavitoclaxPlus ADC platform, ABBV-CLS-484 PD-1 combinations) but the competitive "
+        "oncology market requires multiple Phase III readouts to demonstrate differentiation "
+        "— this pipeline is an upside optionality layer, not a near-term earnings driver",
+        "Allergan Aesthetics sensitivity to consumer confidence: cosmetic Botox and "
+        "Juvederm filler volumes declined 4-8% during the 2022-23 consumer spending "
+        "deceleration; a consumer-led recession could reduce aesthetics revenue mid-single-digits",
+        "Neuroscience CNS pipeline setbacks: AbbVie has multiple late-stage psychiatric "
+        "and neurological programs (emraclidine for schizophrenia, others); a Phase III "
+        "readout below efficacy thresholds would require pipeline capital reallocation "
+        "but would not impair the core immunology or aesthetics business",
+    ],
+    valuation_style=(
+        "AbbVie trades at 11-13x forward P/E and approximately 9-11x forward EBITDA, "
+        "reflecting the Humira LOE overhang that depressed the multiple below large-cap "
+        "pharma peers.  As the market recognizes Skyrizi and Rinvoq's combined trajectory "
+        "toward $24B+ by 2027, the multiple should re-rate toward 14-16x — the typical "
+        "large-cap pharma range for a company with durable earnings visibility.  "
+        "The ~4.5% dividend yield adds to total return and is supported by >$20B annual "
+        "free cash flow.  Sum-of-parts: immunology franchise (~$16-18B FCF at run-rate), "
+        "aesthetics (~$2B FCF), and neuroscience (~$1.5B FCF) support the current "
+        "enterprise multiple with potential upside from oncology pipeline milestones."
+    ),
+    key_metrics=[
+        "Skyrizi net revenue by indication (psoriasis, IBD, PsA)",
+        "Rinvoq net revenue and patient share in atopic dermatitis and RA",
+        "Humira LOE erosion curve (US biosimilar market share)",
+        "Allergan Aesthetics volume growth (Botox unit sales, Juvederm fill rates)",
+        "Combined Skyrizi + Rinvoq trajectory toward $24B by 2027 AbbVie guidance",
+        "Free cash flow (>$20B/yr target) and debt repayment schedule",
+        "Adjusted EPS growth (targeting 5-8% CAGR post-LOE trough)",
+        "IRA negotiation list inclusion timeline for Skyrizi/Rinvoq",
+    ],
+    competitive_advantages=[
+        "Biologic immunology franchise depth: Skyrizi (IL-23) and Rinvoq (JAK1) cover "
+        "overlapping indications in dermatology, rheumatology, and gastroenterology, "
+        "giving AbbVie commercial leverage and label extension optionality across "
+        "autoimmune therapeutic categories that pure-play competitors cannot match",
+        "Botox brand durability: Allergan's Botox has >50% aesthetic injector market "
+        "share built over 30 years; physician training relationships, the Allē loyalty "
+        "program, and dosing expertise create a switching-cost moat against biosimilar "
+        "Botox entrants (Daxxify, Jeuveau)",
+        "Established specialty pharma commercial infrastructure: AbbVie's patient support "
+        "programs (myAbbVie Assist), prior-authorization navigation, and specialty pharmacy "
+        "relationships lower barriers for new drug launches into the same physician "
+        "networks that already prescribe Humira, Skyrizi, and Rinvoq",
+        "CGRP neurology leadership: Ubrelvy (gepant acute) and Atogepant (gepant preventive) "
+        "have established neurologist prescribing patterns in a migraine market that is "
+        "growing as awareness and diagnosis rates increase; neurologist loyalty to "
+        "established CGRP agents reduces new entrant attack success",
+        "Manufacturing and supply chain: AbbVie's large-molecule biologic manufacturing "
+        "facilities (North Chicago, Puerto Rico) provide strategic resilience; the Humira "
+        "biosimilar entry required >10 competitors years of investment to replicate — "
+        "the manufacturing moat is structural, not just patent-based",
+    ],
+    business_model_keywords=[
+        "Skyrizi", "Rinvoq", "Humira", "biosimilar", "AbbVie", "Allergan",
+        "Botox", "Juvederm", "immunology", "IL-23", "JAK1", "aesthetics",
+        "Vraylar", "Ubrelvy", "Atogepant", "CGRP", "neuroscience",
+        "autoimmune", "IBD", "psoriasis", "atopic dermatitis", "IRA negotiation",
+        "Allē", "patient adherence", "specialty pharmacy", "LOE",
+    ],
+))
+
+
+# ── Prologis, Inc. (PLD) ──────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="PLD",
+    company_name="Prologis, Inc.",
+    business_model=(
+        "Prologis is the world's largest industrial real estate investment trust, "
+        "owning and operating approximately 1.2 billion square feet of logistics and "
+        "distribution facilities across 19 countries.  The business model centers on "
+        "leasing high-throughput warehouses and distribution centers to e-commerce "
+        "operators, third-party logistics providers, and manufacturers at locations "
+        "adjacent to major ports, airports, and dense urban consumption centers — "
+        "locations that cannot be replicated.  Prologis generates development profit "
+        "by building new facilities at yields above its cost of capital and earns "
+        "recurring NOI growth from multi-year lease escalators averaging 3-4%/yr."
+    ),
+    primary_revenue_drivers=[
+        "Same-store rental NOI growth (~55% of total revenue) — contractual rent "
+        "escalators (3-4%/yr) on 5-7 year average lease terms drive predictable growth",
+        "New lease commencements at market rent (~20% above in-place rents at many "
+        "locations) as leases expire and reset to current market levels",
+        "Development pipeline starts (~$5-7B/yr at 6-8% stabilized yields) — Prologis "
+        "develops on its owned land bank and sells stabilized assets at a gain or holds "
+        "for recurring NOI",
+        "Third-party capital management (co-investment ventures with sovereign wealth "
+        "funds, pension funds) generates management fees and promote income",
+        "PLD Essentials platform — energy, sustainable solutions, and supply chain "
+        "services sold to Prologis tenants beyond the physical lease",
+    ],
+    recurring_revenue_sources=[
+        "Multi-year lease agreements (average 5-7 year initial terms) with contractual "
+        "rent escalators of 3-4%/yr embedded into base rent — Prologis's lease structure "
+        "is the industrial REIT equivalent of a multi-year contract with predictable "
+        "annual step-ups",
+        "PLD Essentials subscription platform — on-site solar generation, EV charging, "
+        "LED retrofits, and energy management services sold as recurring subscription "
+        "packages to tenants in Prologis buildings; ~$1B+ addressable revenue by 2027",
+        "Fund management and co-investment fees from third-party capital ventures "
+        "(PELF, PELP, Prologis Japan Fund) — asset management fees of 0.5-1.0% on "
+        "$80B+ of third-party AUM generate high-margin, recurring advisory income",
+        "Development fee income — Prologis earns construction management and development "
+        "fees from its co-investment fund vehicles during the development phase of "
+        "new speculative and build-to-suit projects",
+    ],
+    rate_sensitivity_note=(
+        "Prologis trades at ~20-24x forward AFFO, reflecting the scarcity premium of "
+        "its irreplaceable port-adjacent land bank.  Industrial REIT AFFO multiples "
+        "are moderately rate-sensitive (longer-duration cash flows), but Prologis's "
+        "3-4% annual rent escalators provide a natural inflation/rate hedge that "
+        "mitigates pure DCF compression.  The ~$35B of long-term debt (largely fixed "
+        "at sub-3% from the low-rate issuance window) insulates near-term interest "
+        "expense from rising rates.  A sustained rate-elevated environment compresses "
+        "the AFFO multiple but also reduces competitive development activity, which "
+        "tightens market rents and supports Prologis's NOI growth trajectory."
+    ),
+    inflation_pass_through=(
+        "Excellent: Prologis's lease escalators (3-4%/yr) are contractually embedded and "
+        "provide direct inflation pass-through on the existing portfolio.  New leases are "
+        "signed at current market rents — in high-demand coastal markets (Southern "
+        "California, New Jersey, Seattle), market rents have increased 40-60% above "
+        "in-place rents, creating substantial embedded NOI upside.  Construction cost "
+        "inflation increases new development cost but simultaneously creates barriers "
+        "to competitive supply, supporting market rent levels in Prologis's core markets."
+    ),
+    recession_behavior=(
+        "Highly resilient — logistics and e-commerce infrastructure is non-discretionary "
+        "for Prologis's tenant base.  Amazon, FedEx, UPS, DHL, and large 3PLs require "
+        "distribution capacity regardless of economic cycles.  During the 2020 COVID "
+        "shock, Prologis's occupancy never fell below 95% and rent collections stayed "
+        "above 97%.  E-commerce growth is a secular demand driver — every $1B increase "
+        "in e-commerce sales requires approximately 1.25M sqft of logistics space.  "
+        "The near-term risk is overbuilding: speculative supply additions in 2022-23 "
+        "reduced absorption in some Sun Belt markets, temporarily softening market rents "
+        "below prior peaks.  However, coastal and port-adjacent markets (LA, NJ) remain "
+        "structurally constrained with near-zero available land."
+    ),
+    major_risks=[
+        "Supply over-delivery in Sun Belt and secondary markets — Prologis and peers "
+        "significantly expanded speculative development in 2021-22, creating temporary "
+        "absorption shortfalls in Phoenix, Dallas, and Chicago where land constraints "
+        "are less severe than coastal markets",
+        "Interest rate sensitivity on AFFO yield — as Treasury rates rise, the AFFO "
+        "yield spread to risk-free narrows, compressing Prologis's premium AFFO multiple "
+        "and making acquisitions and development less accretive on an IRR basis",
+        "E-commerce demand normalization — the COVID-driven e-commerce pull-forward "
+        "caused Amazon and 3PL tenants to contract excess space in 2022-23; if secular "
+        "e-commerce penetration growth plateaus, new supply absorption slows",
+        "Near-shoring and manufacturing reshoring complexity — while near-shoring "
+        "is a long-term driver of domestic distribution demand, the transition adds "
+        "uncertainty to net new lease demand timing and mix",
+        "Currency risk from international operations (~25% of NOI from Japan, Europe, "
+        "Latin America) — a strengthening US dollar reduces international NOI contribution "
+        "on an as-reported basis",
+    ],
+    valuation_style=(
+        "Prologis is priced at 20-24x forward AFFO, a premium to net lease and retail "
+        "REITs, reflecting the irreplaceability of its port-adjacent portfolio and "
+        "the embedded rent growth from in-place-to-market rent spreads.  The development "
+        "pipeline adds NAV-accretive returns above the cost of capital — the spread "
+        "between stabilized yield (~6-7%) and cap rate (~4-5%) generates meaningful "
+        "equity creation per development cycle.  Same-store NOI growth of 4-6%/yr, "
+        "combined with a 3% AFFO yield, supports double-digit total return expectations "
+        "at current pricing.  The near-term re-rating catalyst is absorption of the "
+        "2022-23 supply overhang and confirmation of rent growth acceleration in 2025-26."
+    ),
+    key_metrics=[
+        "Same-store NOI growth (target 4-6%/yr)",
+        "In-place to market rent spread (embedded lease mark-to-market upside)",
+        "Development starts (volume, stabilized yield vs cost of capital spread)",
+        "Occupancy rate (target 95-97%)",
+        "Net lease commencements vs expirations (absorption of Sun Belt supply)",
+        "PLD Essentials platform revenue ramp",
+        "Leverage (Debt/EBITDA target ~5x)",
+        "Third-party capital AUM and fee income",
+    ],
+    competitive_advantages=[
+        "Port-adjacent land bank irreplaceability: Prologis owns infill industrial land "
+        "within 30 minutes of the Ports of Los Angeles/Long Beach, Port of NY/NJ, and "
+        "major Southeast Asia-facing ports — this land cannot be replicated as entitlement "
+        "timelines for new industrial sites in these markets exceed 10-15 years",
+        "Largest global logistics network: Prologis's 19-country platform allows "
+        "multinational tenants (Amazon, DHL, Ceva Logistics) to standardize facility "
+        "formats and lease terms globally under a single relationship — a convenience "
+        "no regional REIT competitor can offer",
+        "PLD Essentials recurring services platform: the addition of energy, sustainability, "
+        "and supply chain analytics services as recurring revenue streams diversifies "
+        "Prologis's earnings beyond physical rent and provides switching costs for tenants "
+        "already integrated into the Prologis energy management infrastructure",
+        "Development entitlement pipeline: Prologis has a land bank and pre-entitled "
+        "sites for 200M+ sqft of future development — delivering 3-5 years of competitive "
+        "advantage before competing developers can enter the same submarkets",
+        "Tenant concentration in logistics essential players: Amazon (~7% of revenue), "
+        "FedEx, UPS, DHL, and XPO Logistics are investment-grade tenants with operational "
+        "necessity to occupy industrial real estate near consumers — providing stable "
+        "occupancy even in periods of broader REIT demand softness",
+    ],
+    business_model_keywords=[
+        "Prologis", "industrial REIT", "logistics", "e-commerce", "port-adjacent",
+        "same-store NOI", "rent escalator", "AFFO", "development pipeline",
+        "PLD Essentials", "infill", "3PL", "Amazon", "FedEx", "Sun Belt",
+        "absorption", "mark-to-market rent", "NOI growth", "entitlement",
+        "co-investment", "build-to-suit", "cap rate", "land bank",
+    ],
+))
+
+
+# ── Equinix, Inc. (EQIX) ─────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="EQIX",
+    company_name="Equinix, Inc.",
+    business_model=(
+        "Equinix is the world's largest carrier-neutral data center operator, running "
+        "260+ International Business Exchange (IBX) data centers across 70+ metro areas "
+        "in 33 countries.  The core thesis is the interconnection platform: Equinix "
+        "collocates enterprise, cloud, and network customers in the same physical "
+        "facilities, enabling direct private cross-connects between parties at low "
+        "latency and high bandwidth.  Each new customer added to an IBX campus increases "
+        "the interconnection density — a network flywheel that competitor data centers "
+        "cannot replicate without Equinix's existing ecosystem.  Revenue is structured "
+        "as monthly recurring fees for colocation (power + space) and interconnection "
+        "(cross-connect + virtual fabric charges)."
+    ),
+    primary_revenue_drivers=[
+        "Colocation (~75% of revenue) — recurring monthly fees for space (cabinets/cages) "
+        "and power (kW) in Equinix IBX data centers; average contract term 3-5 years",
+        "Interconnection (~15% of revenue, >25% gross margin) — cross-connect fees for "
+        "physical fiber connections and Equinix Fabric virtual connections between "
+        "co-located customers; 460,000+ interconnections with near-zero marginal cost",
+        "Managed infrastructure services (~10%) — Smart Hands (on-site technical support), "
+        "remote hands, equipment installation, and power management services",
+        "xScale hyperscaler JV pre-leased capacity — Equinix develops hyperscale campuses "
+        "for Microsoft Azure, Google Cloud, and AWS through JV structures, contributing "
+        "development profit and management fee income",
+    ],
+    recurring_revenue_sources=[
+        "Multi-year colocation contracts (average 3-5 year terms) with annual escalators "
+        "of 2-3% — Equinix's base colocation MRR is locked in through long-term leases; "
+        "churn rates below 3% annually on the installed base",
+        "Interconnection subscription fees — physical cross-connects and Equinix Fabric "
+        "virtual connections are billed monthly as recurring subscription-like services; "
+        "460,000+ connections in place generate predictable MRR with near-100% margin "
+        "on incremental connection additions",
+        "Managed infrastructure service contracts — Smart Hands and remote managed "
+        "services billed under rolling service contract agreements renewed annually "
+        "or upon facility renewal; the operational dependency creates high renewal rates",
+        "xScale joint venture management fees — ongoing asset management and "
+        "development oversight fees from JV vehicles (Equinix-GIC JV, others) "
+        "contribute high-margin recurring advisory income tied to deployed AUM",
+    ],
+    rate_sensitivity_note=(
+        "EQIX trades at ~25-30x forward AFFO, pricing in the recurring-revenue quality "
+        "and AI-driven demand tailwind.  As a long-duration REIT, the AFFO multiple is "
+        "moderately rate-sensitive — a 100 bps rise in the 10-year compresses the fair "
+        "AFFO multiple by approximately 2-3 turns on standard DCF mechanics.  However, "
+        "Equinix's MRR growth of 8-10%/yr and interconnection pricing power partially "
+        "offset multiple compression.  The balance sheet carries ~$18B of long-term debt, "
+        "largely issued at fixed rates during low-rate windows.  Refinancing risk is "
+        "manageable as debt matures in a laddered schedule through 2035+."
+    ),
+    inflation_pass_through=(
+        "Moderate-to-strong: Equinix's multi-year colocation contracts include 2-3% "
+        "annual escalators that provide partial pass-through of operating cost inflation. "
+        "Power costs are a significant operating expense (~25% of revenue) — rising "
+        "electricity prices in Europe and Singapore have created short-term margin "
+        "compression.  However, Equinix has implemented power cost surcharges on "
+        "new and renewing contracts in high-cost markets.  The interconnection segment "
+        "is nearly 100% gross margin with no direct inflation exposure."
+    ),
+    recession_behavior=(
+        "Mission-critical and highly resilient — enterprise digital infrastructure "
+        "spending continued to grow through the 2008-09 and 2020 recessions as "
+        "organizations accelerated cloud migration.  Equinix colocation is non-discretionary "
+        "for financial services, network carriers, and cloud platforms that operate "
+        "24/7 — a bank cannot move its trading infrastructure out of Equinix New York "
+        "LD4 or NY5 during a recession.  Interconnection revenue is especially sticky: "
+        "the cost of moving physical cross-connects to a competing facility (rewiring, "
+        "testing, disruption) far exceeds the incremental cost savings.  Secular AI "
+        "and cloud migration trends are recession-resistant multi-year demand drivers."
+    ),
+    major_risks=[
+        "Hyperscaler competition: Amazon (AWS), Microsoft Azure, and Google are building "
+        "their own large-scale data center campuses in major metros, potentially reducing "
+        "their incremental colocation demand from Equinix as they internalize more workloads",
+        "Power constraints in key markets: Northern Virginia (the world's largest data "
+        "center market) and Singapore face utility grid constraints that limit new "
+        "data center development — Equinix's expansion pipeline may be gated by power "
+        "availability even where demand is robust",
+        "Europe geopolitical and regulatory risk: GDPR data residency requirements, "
+        "EU energy regulations, and the European Cloud Infrastructure Regulation create "
+        "compliance complexity for Equinix's pan-European platform",
+        "Premium AFFO multiple compression risk: at 25-30x AFFO, Equinix is priced for "
+        "sustained 8-10%/yr MRR growth; a deceleration to 5-6% from supply additions "
+        "or demand normalization would compress the multiple significantly",
+        "Customer concentration in financial services and cloud: Equinix's top 20 customers "
+        "represent a significant portion of interconnection revenue — a consolidation in "
+        "the financial services sector (megabank merger) could reduce interconnection "
+        "density in key IBX campuses",
+    ],
+    valuation_style=(
+        "Equinix is priced at 25-30x forward AFFO, reflecting the recurring-revenue "
+        "quality of its colocation and interconnection model and the AI infrastructure "
+        "demand tailwind.  MRR growth of 8-10%/yr drives the premium AFFO multiple vs "
+        "net lease or retail REITs.  The interconnection flywheel — each new customer "
+        "increases the density of peering options for all others — is the structural "
+        "justification for the AFFO premium.  Hyperscaler xScale pre-commitment provides "
+        "forward revenue visibility on new campus development.  At current pricing, the "
+        "AFFO yield (~3-4%) is low, reflecting the market's expectation of sustained "
+        "double-digit MRR growth from AI infrastructure spending acceleration."
+    ),
+    key_metrics=[
+        "Monthly Recurring Revenue (MRR) growth and churn rate",
+        "Interconnection revenue growth and cross-connect additions",
+        "AFFO per share growth (target 8-10%/yr)",
+        "Utilization rate by region (Americas, EMEA, Asia-Pacific)",
+        "xScale hyperscaler pre-commitment and JV deployment pace",
+        "Power capacity additions vs demand pipeline",
+        "Cabinet billing density (kW/cabinet)",
+        "EBITDA margin trend and power cost pass-through execution",
+    ],
+    competitive_advantages=[
+        "Carrier-neutral interconnection ecosystem: 1,800+ network service providers "
+        "connect inside Equinix campuses — this density creates a locked-in ecosystem "
+        "where every enterprise, cloud, and network customer is reachable without "
+        "traversing the public internet; this network of networks cannot be replicated "
+        "by a new entrant starting from zero",
+        "Network density flywheel: each new customer co-located in an IBX campus "
+        "increases the interconnection options for all existing customers, making "
+        "Equinix's facilities progressively more valuable as the ecosystem grows; "
+        "competitor data centers with lower density cannot offer equivalent "
+        "interconnection reach at comparable latency",
+        "Global platform breadth: 260+ data centers across 70+ metros on 5 continents "
+        "enable multinational enterprises to standardize on Equinix for cross-border "
+        "interconnection — a capability no regional data center operator can replicate",
+        "AI infrastructure positioning: GPU cluster colocation and distributed training "
+        "infrastructure demand is driving a new wave of enterprise and hyperscaler "
+        "colocation demand that favors Equinix's power-dense IBX campus architecture "
+        "and its proximity to network on-ramps for AI model serving",
+        "Real estate scarcity in tech metro markets: Equinix owns or controls data "
+        "center campuses in Northern Virginia, Chicago, Singapore, Amsterdam, and "
+        "Frankfurt — markets with severe power and land constraints that prevent "
+        "competitive new supply from matching Equinix's established ecosystem footprint",
+    ],
+    business_model_keywords=[
+        "EQIX", "Equinix", "IBX", "International Business Exchange", "colocation",
+        "interconnection", "MRR", "cross-connect", "Equinix Fabric", "carrier-neutral",
+        "xScale", "Smart Hands", "AFFO", "data center", "peering", "AI infrastructure",
+        "Northern Virginia", "Singapore", "Amsterdam", "cloud on-ramp",
+        "network density", "hyperscaler", "power density", "monthly recurring",
+    ],
+))
+
+
+# ── Occidental Petroleum Corporation (OXY) ───────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="OXY",
+    company_name="Occidental Petroleum Corporation",
+    business_model=(
+        "Occidental Petroleum is a large integrated oil and gas company with three "
+        "operating segments: Oil and Gas (the Permian Basin E&P core), OxyChem "
+        "(chlorovinyls and performance chemicals — one of North America's largest "
+        "chlorine and caustic soda producers), and Midstream & Marketing.  The 2024 "
+        "CrownRock acquisition ($12B) added 94,000 net acres in the Midland Basin, "
+        "making OXY one of the top three Permian producers by volume.  Berkshire "
+        "Hathaway holds a ~28% common equity stake plus $10B of preferred stock, "
+        "providing a strategic balance sheet anchor.  OXY's emerging Carbon Capture, "
+        "Utilization, and Storage (CCUS) platform — including the Stratos Direct Air "
+        "Capture plant (1 MtCO₂/yr capacity) — represents a long-term emissions-reduction "
+        "business line that does not yet contribute to free cash flow."
+    ),
+    primary_revenue_drivers=[
+        "Permian Basin Oil and Gas production (~65% of earnings) — Midland and Delaware "
+        "Basin oil at ~1.3 MMboe/d post-CrownRock; realized oil price is the primary "
+        "earnings lever; breakeven ~$40/bbl WTI on a cash basis",
+        "OxyChem (~20% of earnings) — chlorovinyls (PVC, VCM, EDC) and performance "
+        "chemicals for industrial markets; earnings diversify OXY's pure-play E&P risk",
+        "International operations (~10%) — Middle East/North Africa production sharing "
+        "agreements (UAE, Oman, Algeria) provide production and cash flow outside the US",
+        "Midstream & Marketing (~5%) — Western Midstream Partners (WES) equity stake "
+        "provides gathering, processing, and transportation fee income",
+    ],
+    recurring_revenue_sources=[
+        "Permian Basin oil and gas production revenue — continuous daily production from "
+        "the Midland Basin Wolfcamp and Spraberry formations; volumes are predictable "
+        "from existing well inventory, providing revenue continuity across commodity cycles",
+        "Western Midstream Partners (WES) midstream fee income — OXY's equity stake in "
+        "WES generates quarterly distribution income from fee-based gathering and "
+        "processing of third-party and OXY production in the DJ and Delaware Basins",
+    ],
+    rate_sensitivity_note=(
+        "OXY carries approximately $18-20B of long-term debt post-CrownRock, with a "
+        "target leverage ratio of 1.0x Net Debt/EBITDA at $70/bbl WTI.  Rising rates "
+        "increase refinancing costs on maturing debt tranches, slowing deleveraging "
+        "progress.  The stock trades at 4-6x EV/EBITDA through-cycle, a commodity-sector "
+        "multiple that is less sensitive to discount rate changes than growth stocks.  "
+        "However, as a capital-intensive producer, OXY's development drilling program "
+        "is funded by internal cash flow; rising rates increase the hurdle rate for "
+        "incremental Permian development decisions."
+    ),
+    inflation_pass_through=(
+        "Partial: OXY's E&P revenue moves directly with oil and gas commodity prices, "
+        "which have historically risen with broad inflation cycles.  However, oilfield "
+        "services costs (drilling, completion, sand, water disposal) also inflate in "
+        "commodity upcycles, partially offsetting E&P margin expansion.  OxyChem "
+        "has moderate pricing power — chlorine-caustic soda pricing is market-driven "
+        "with a 6-12 month lag relative to energy feedstock costs.  The CCUS "
+        "business has contractual carbon removal pricing (45Q tax credit floor)."
+    ),
+    recession_behavior=(
+        "Cyclical and commodity-dependent — OXY's earnings are closely tied to WTI oil "
+        "prices.  Permian Basin production volumes are stable (OXY does not shut in "
+        "wells in mild downturns), but realizations are volatile: a $10/bbl decline in "
+        "WTI reduces annual EBITDA by approximately $600-700M.  OxyChem provides a "
+        "partially defensive earnings contribution — chemicals demand is less correlated "
+        "to oil prices than E&P revenue, offering resilience in energy downturns while "
+        "industrial chemicals demand softens in broader recessions.  OXY suspended its "
+        "common dividend in 2020 during COVID — demonstrating the cyclical exposure to "
+        "oil price dislocations.  The Berkshire preferred dividend ($800M/yr) is a fixed "
+        "senior cash obligation that reduces financial flexibility in downturns."
+    ),
+    major_risks=[
+        "Commodity price risk — OXY's earnings are leveraged to WTI oil prices; a "
+        "sustained decline to $55-60/bbl WTI would constrain free cash flow below "
+        "the Berkshire preferred dividend obligation and slow the CrownRock deleveraging "
+        "timeline significantly",
+        "CrownRock leverage burden — the $12B acquisition added substantial debt to the "
+        "balance sheet; Net Debt/EBITDA above 2.0x at cycle-trough oil prices creates "
+        "refinancing pressure and could require equity issuance or asset sales if oil "
+        "markets deteriorate before the deleveraging plan is complete",
+        "CCUS technology and commercialization uncertainty — Stratos Direct Air Capture "
+        "is the first commercial-scale DAC facility; capital cost per tonne of CO₂ "
+        "removed remains significantly above the 45Q credit level, requiring further "
+        "scale and cost reduction before CCUS contributes positive FCF",
+        "Permian Basin water management costs — high-volume unconventional production "
+        "generates large quantities of produced water requiring disposal and recycling; "
+        "increasing regulatory scrutiny on wastewater injection wells adds operational "
+        "cost and potential production curtailment risk",
+        "Berkshire preferred cost and governance — the $10B preferred stock carries an "
+        "$800M/yr dividend obligation that is senior to common equity; while Berkshire's "
+        "28% ownership provides strategic support, the preferred term restricts OXY's "
+        "capital allocation flexibility relative to peers with cleaner capital structures",
+    ],
+    valuation_style=(
+        "OXY is priced on an EV/EBITDA multiple (4-6x through-cycle) and free cash flow "
+        "yield (~7-10% at $75/bbl WTI), consistent with large-cap US E&P peers.  The "
+        "Berkshire Hathaway 28% equity stake and $10B preferred holding provide a "
+        "structural balance sheet backstop — Berkshire's continued accumulation at "
+        "various price levels signals long-term confidence in OXY's Permian Basin "
+        "position and earnings durability.  The CrownRock acquisition premium to "
+        "current market pricing reflects the strategic scarcity of Midland Basin "
+        "tier-1 acreage.  The CCUS program is not in current EV/EBITDA models — "
+        "it represents an incremental long-term business if DAC costs decline to "
+        "the $100-150/tonne range.  Free cash flow allocation priority: debt repayment "
+        "first, dividend restoration second, buybacks and CCUS capital third."
+    ),
+    key_metrics=[
+        "WTI oil price (primary earnings driver)",
+        "Permian Basin net production (MMboe/d, targeting 1.4+ post-CrownRock integration)",
+        "Free cash flow at various WTI price decks ($65, $70, $75, $80/bbl scenarios)",
+        "Net Debt/EBITDA ratio (target 1.0x at $70/bbl; current post-CrownRock ~2.0x+)",
+        "OxyChem earnings contribution (PVC and caustic soda pricing)",
+        "Berkshire preferred retirement timeline and common dividend reinstatement",
+        "WES distribution coverage ratio",
+        "Stratos DAC plant availability and cost per tonne of CO₂ removed",
+    ],
+    competitive_advantages=[
+        "Permian Basin tier-1 acreage position: the CrownRock acquisition secured 94,000 "
+        "net acres in the core Midland Basin with breakeven costs below $40/bbl WTI — "
+        "among the lowest in the US unconventional industry; this acreage position "
+        "cannot be acquired at current market prices given the scarcity of remaining "
+        "tier-1 blocks in the core Midland formation",
+        "OxyChem integrated chemicals: as one of North America's largest chlorine and "
+        "caustic soda producers, OxyChem provides earnings diversification against "
+        "pure-play E&P volatility and generates FCF through oil price downturns when "
+        "industrial chemical markets are less correlated to energy prices",
+        "CCUS technology leadership: OXY's 1PointFive subsidiary and the Stratos "
+        "Direct Air Capture plant give it first-mover operational experience in DAC "
+        "technology — a potential long-term strategic advantage if carbon removal "
+        "markets develop and DAC costs decline toward commercial viability",
+    ],
+    business_model_keywords=[
+        "OXY", "Occidental", "Permian Basin", "Midland Basin", "CrownRock",
+        "OxyChem", "WTI", "breakeven", "EV/EBITDA", "FCF yield",
+        "Berkshire Hathaway", "preferred stock", "CCUS", "Direct Air Capture",
+        "Stratos", "Western Midstream", "WES", "deleveraging", "chlorovinyls",
+        "PVC", "caustic soda", "45Q", "production volumes",
+    ],
+))
+
+
+# ── American Tower Corporation (AMT) ─────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="AMT",
+    company_name="American Tower Corporation",
+    business_model=(
+        "American Tower is the largest independent owner-operator of wireless "
+        "communications tower infrastructure in the world, with approximately 40,000 "
+        "macro cell towers in the United States and more than 100,000 international "
+        "tower sites across Africa, Asia, Latin America, and Europe.  Revenue is "
+        "generated through long-term non-cancellable tower lease agreements with wireless "
+        "carriers (AT&T, T-Mobile, Verizon in the US; Airtel, Jio, Claro, others "
+        "internationally), earning monthly rent for each tenant antenna on the tower. "
+        "Each tower can host multiple tenants — adding a second or third tenant at near-"
+        "zero marginal cost creates extremely high incremental EBITDA margins (~90%+)."
+    ),
+    primary_revenue_drivers=[
+        "US tower leasing (~40% of revenue) — long-term leases with AT&T, T-Mobile, "
+        "and Verizon averaging 10-15 years with annual escalators of 3%",
+        "International tower leasing (~55% of revenue) — tower portfolios in India, "
+        "Africa, Latin America, and Europe with local carrier leases tied to "
+        "inflation-linked or fixed escalators",
+        "Data centers (CoreSite) (~5% of revenue) — 25 data centers in 8 US markets "
+        "following partial disposition of the CoreSite portfolio",
+    ],
+    recurring_revenue_sources=[
+        "US non-cancellable tower lease revenue — AT&T, T-Mobile, and Verizon pay "
+        "fixed monthly rents under master lease agreements that are contractually "
+        "non-cancellable with 10-15 year initial terms and built-in annual escalators; "
+        "the three major carriers represent ~65-70% of US tower revenue",
+        "International tower lease income — inflation-linked escalators on African "
+        "and Latin American leases provide recurring revenue with partial currency "
+        "and inflation hedge; Asia (India) tower leases are tied to multi-year "
+        "spectrum deployment commitments by Airtel and Jio",
+    ],
+    rate_sensitivity_note=(
+        "AMT is one of the most rate-sensitive REITs in the index.  The tower REIT "
+        "model discounts long-dated, relatively stable AFFO streams over 30-50 year "
+        "tower asset lives — making the AFFO multiple highly sensitive to the 10-year "
+        "Treasury level.  Each 100 bps increase in the 10-year rate compresses AMT's "
+        "fair AFFO multiple by approximately 2-3 turns.  The CoreSite acquisition "
+        "($10B in 2022) added significantly to AMT's leverage at the peak of the "
+        "low-rate cycle, inflating Net Debt/EBITDA to 7-8x and creating a dual "
+        "headwind of rate-driven AFFO multiple compression and higher refinancing costs. "
+        "The current pricing reflects this leverage-rate double impact — an AFFO yield "
+        "of 4-5% offering thin spread over 10-year Treasuries at elevated rate levels."
+    ),
+    inflation_pass_through=(
+        "Good for US towers: the 3% annual escalator on US leases is contractually "
+        "embedded and provides inflation pass-through above current targets.  "
+        "International escalators are inflation-linked in many markets (Africa, "
+        "Latin America), providing stronger real-rate protection.  However, "
+        "ground rent costs (AMT leases the land under ~80% of US towers) also "
+        "escalate with inflation, partially offsetting lease revenue inflation gains."
+    ),
+    recession_behavior=(
+        "Tower lease revenue is highly resilient — wireless carriers are contractually "
+        "obligated to pay rent regardless of economic conditions; 5G densification "
+        "capex commitments by AT&T and T-Mobile are multi-year government spectrum "
+        "license requirements, not discretionary spending.  Occupancy rates on US "
+        "towers stayed above 97% through 2008-09 and COVID.  However, AMT's high "
+        "leverage (~7-8x Net Debt/EBITDA from the CoreSite acquisition cycle) "
+        "introduces financial risk in prolonged rate-elevated or credit-tightening "
+        "environments — the debt service burden limits dividend growth and share "
+        "buyback capacity relative to a lower-leveraged tower operator."
+    ),
+    major_risks=[
+        "Carrier consolidation risk — T-Mobile's Sprint acquisition led to incremental "
+        "tower lease churn as Sprint/T-Mobile rationalized overlapping sites; further "
+        "carrier M&A (DISH dissolution, US Cellular acquisitions) could trigger "
+        "another round of lease terminations and renegotiations",
+        "CoreSite legacy leverage — the $10B CoreSite data center acquisition added "
+        "debt at near-peak valuations in 2022; with data center dispositions, the "
+        "debt burden relative to tower AFFO is still elevated at 7-8x Net Debt/EBITDA, "
+        "constraining AMT's financial flexibility vs peers Crown Castle and SBA",
+        "Foreign exchange headwinds — approximately 50% of AMT revenue is generated "
+        "internationally; depreciation of African (Nigerian naira, South African rand), "
+        "Latin American (Brazilian real, Chilean peso), and emerging market currencies "
+        "reduces reported USD revenue significantly in strong-dollar environments",
+        "5G small cell and CBRS spectrum deployment — hyperscaler-driven small cell "
+        "deployment and private network buildout favors street furniture and neutral "
+        "host models over AMT's macro cell tower economics; Crown Castle's US fiber "
+        "small cell portfolio is better positioned for dense urban 5G densification",
+        "International regulatory risk — tower operations in Nigeria, South Africa, "
+        "India, and Brazil are subject to local spectrum allocation, tower sharing "
+        "mandates, and currency repatriation restrictions that can impair the "
+        "economics of AMT's international tower portfolios",
+    ],
+    valuation_style=(
+        "American Tower is priced on a P/AFFO multiple (~20-22x) and forward AFFO "
+        "yield (~4-5%).  The tower REIT historically commanded a 25-30x P/AFFO "
+        "premium reflecting the non-cancellable lease structure and multi-year 5G "
+        "densification demand runway.  The CoreSite leverage cycle compressed the "
+        "multiple from 28-30x to ~20x — the current P/AFFO reflects the elevated "
+        "debt profile rather than any structural deterioration in tower fundamentals. "
+        "At current pricing, the AFFO yield offers limited spread over 10-year "
+        "Treasuries, making AMT a rate-duration trade as much as a tower infrastructure "
+        "business.  The deleveraging pathway (CoreSite dispositions, organic AFFO "
+        "growth, debt repayment) is the key re-rating catalyst."
+    ),
+    key_metrics=[
+        "AFFO per share growth (organic, ex-FX)",
+        "Net Debt/EBITDA ratio (target <6x; current ~7-8x post-CoreSite)",
+        "US tower leasing revenue growth and churn rate",
+        "International tower revenue (ex-FX growth vs currency headwinds)",
+        "CoreSite AFFO contribution and disposition progress",
+        "AFFO yield vs 10-year Treasury spread",
+        "New tenant additions (colocations) per quarter",
+        "Ground rent escalation vs lease revenue escalation",
+    ],
+    competitive_advantages=[
+        "US macro tower portfolio scale: 40,000+ sites with 95%+ multi-tenant "
+        "occupancy in a market where new tower permitting requires 18-24 months and "
+        "local zoning restrictions severely limit new tower construction; Prologis's "
+        "US market position is effectively a regulated infrastructure monopoly in "
+        "many local markets",
+        "Non-cancellable master lease agreements: AT&T, T-Mobile, and Verizon are "
+        "locked into 10-15 year non-cancellable leases with built-in 3% escalators "
+        "— a contractual revenue floor that no competitive new tower entrant can "
+        "displace without the carrier physically relocating antenna equipment",
+        "International emerging market tower presence: 100,000+ international towers "
+        "in high-density urban markets where smartphone penetration and data consumption "
+        "are growing rapidly provide exposure to secular wireless data demand growth "
+        "that is structurally independent of US market maturity",
+    ],
+    business_model_keywords=[
+        "American Tower", "AMT", "tower lease", "carrier", "AFFO", "P/AFFO",
+        "AT&T", "T-Mobile", "Verizon", "colocation", "CoreSite", "5G",
+        "densification", "master lease", "escalator", "Net Debt/EBITDA",
+        "international towers", "Africa", "India", "Latin America",
+        "Crown Castle", "small cell", "non-cancellable", "ground rent",
+    ],
+))
+
+
+# ── Realty Income Corporation (O) ─────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="O",
+    company_name="Realty Income Corporation",
+    business_model=(
+        "Realty Income is the largest publicly traded net lease REIT, owning more than "
+        "15,000 single-tenant commercial properties net leased to approximately 1,500 "
+        "tenants across retail, convenience, industrial, and gaming categories.  Under "
+        "the triple-net lease structure, tenants pay base rent plus all property taxes, "
+        "maintenance, and insurance — creating a highly predictable, low-volatility AFFO "
+        "stream.  Realty Income markets itself as 'The Monthly Dividend Company,' "
+        "having paid 607+ consecutive monthly dividends with 30+ consecutive annual "
+        "dividend increases (S&P 500 Dividend Aristocrat).  Scale is the primary "
+        "competitive advantage — Realty Income can access lower borrowing costs and "
+        "better tenant relationships than smaller net lease peers."
+    ),
+    primary_revenue_drivers=[
+        "US net lease retail rent (~65% of revenue) — convenience, drug store, home "
+        "improvement, quick service restaurant, grocery, and discount retail tenants; "
+        "Dollar General, Walgreens, 7-Eleven, and FedEx are the largest tenants",
+        "US industrial and gaming net lease rent (~15%) — industrial tenants (FedEx "
+        "distribution, Amazon fulfillment) and gaming properties (Bellagio, MGM Grand "
+        "Las Vegas) diversify beyond traditional retail formats",
+        "International (UK and Europe) net lease (~20%) — post-Spirit Realty merger "
+        "and Encore UK expansion; European tenants provide geographic diversification "
+        "and euro-denominated AFFO",
+    ],
+    recurring_revenue_sources=[
+        "Triple-net lease rent from single-tenant retail and industrial properties — "
+        "long-term leases (average initial term 10-15 years) with contractual escalators "
+        "of 1-2%/yr; lease expirations are staggered, and Realty Income's 99% historical "
+        "occupancy provides revenue continuity through the lease cycle",
+        "Monthly AFFO distributions supported by 99% occupancy and diversified tenant "
+        "base — Realty Income's AFFO per share has grown in every year since its 1994 "
+        "NYSE listing, supported by the structural predictability of triple-net lease cash "
+        "flows regardless of property operating costs or tax fluctuations",
+    ],
+    rate_sensitivity_note=(
+        "Realty Income is structurally rate-sensitive — the stock is held as a bond "
+        "proxy by yield-seeking institutional investors, and its AFFO yield of 5-6% "
+        "is compared directly to 10-year Treasury rates.  As the 10-year rate rises "
+        "toward 4.5-5%, the AFFO yield spread compresses and Realty Income's premium "
+        "P/AFFO multiple contracts, reducing the stock price even if underlying AFFO "
+        "grows.  Realty Income issues long-term unsecured bonds to fund acquisitions — "
+        "in rising-rate environments, the acquisition spread (cap rate minus borrowing "
+        "cost) narrows, slowing AFFO-accretive deal activity.  The company carries "
+        "~$25B of long-term debt, largely at fixed rates with a laddered maturity "
+        "schedule through 2040+."
+    ),
+    inflation_pass_through=(
+        "Moderate: Realty Income's leases include 1-2% annual escalators that partially "
+        "offset inflation but lag CPI in high-inflation environments.  Some leases "
+        "include CPI-linked bumps, providing better inflation protection on a minority "
+        "of the portfolio.  Tenant health is the more direct inflation exposure — if "
+        "consumer inflation erodes discretionary spending, Realty Income's retail "
+        "tenants (convenience, drug store, QSR) tend to be non-discretionary and "
+        "see limited traffic impact."
+    ),
+    recession_behavior=(
+        "Highly defensive overall — Realty Income's tenant base is concentrated in "
+        "non-discretionary categories: Dollar General, Dollar Tree, 7-Eleven, "
+        "Walgreens, and grocery-anchored formats that serve everyday spending needs. "
+        "Occupancy held above 98% during the 2008-09 recession and the 2020 COVID "
+        "shock (some temporary rent deferral agreements were negotiated with fitness "
+        "and theater tenants).  However, Realty Income remains sensitive to consumer "
+        "health in aggregate — a wave of retail tenant bankruptcies (Bed Bath & Beyond, "
+        "Rite Aid) temporarily elevated vacancy and required re-tenanting costs that "
+        "reduced AFFO in the short term.  The pharmacy format faces structural headwinds "
+        "from e-commerce prescription delivery (Amazon Pharmacy) and GLP-1 drug impacts."
+    ),
+    major_risks=[
+        "Interest rate sensitivity on AFFO yield spread — at elevated 10-year Treasury "
+        "rates (4.5-5%), Realty Income's AFFO yield offers thin spread over risk-free, "
+        "compressing the P/AFFO multiple and limiting the accretion from acquisition-led "
+        "AFFO growth",
+        "Pharmacy and drug store tenant structural risk — Walgreens (~4% of rent) and "
+        "CVS (~1%) face structural headwinds from Amazon Pharmacy, e-commerce "
+        "prescription delivery, and GLP-1 drug adoption reducing pharmacy visit "
+        "frequency; Walgreens has been closing hundreds of locations",
+        "Retail tenant bankruptcy risk — Realty Income's concentration in retail formats "
+        "exposes AFFO to sporadic large-tenant bankruptcies (Rite Aid, Bed Bath & Beyond) "
+        "requiring re-tenanting at potentially lower rents or with capital expenditure",
+        "Spirit Realty and Encore UK integration complexity — the Spirit merger and "
+        "European expansion added portfolio concentration in previously unfamiliar "
+        "geographies and tenant profiles; integration discipline and European market "
+        "dynamics differ from the core US net lease thesis",
+        "AFFO payout ratio constraints — Realty Income pays out ~75% of AFFO as "
+        "dividends, leaving limited retained earnings for organic balance sheet "
+        "strengthening; growth depends on continuous access to the capital markets "
+        "at favorable borrowing costs",
+    ],
+    valuation_style=(
+        "Realty Income is priced on a P/AFFO multiple (~15-17x) and AFFO yield (~5-6%), "
+        "with institutional investors comparing the dividend yield directly to "
+        "10-year Treasuries and investment-grade corporate bond yields.  In low-rate "
+        "environments (2015-2021), Realty Income commanded a 20-22x AFFO premium for "
+        "its Dividend Aristocrat status and 99% occupancy track record.  At current "
+        "rate levels, the P/AFFO has compressed to 15-17x — fairly priced as an income "
+        "vehicle if rates stabilize, but subject to further multiple compression if "
+        "the 10-year rate rises above 5%.  The monthly dividend track record (607+ "
+        "consecutive payments) and investment-grade tenant base support the current "
+        "AFFO yield floor compared to lower-credit net lease peers."
+    ),
+    key_metrics=[
+        "AFFO per share growth (target 3-5%/yr)",
+        "Occupancy rate (target 98-99%)",
+        "Lease spreads on renewals vs expirations",
+        "AFFO yield vs 10-year Treasury spread",
+        "Acquisition volume and cap rate spread vs borrowing cost",
+        "Walgreens and pharmacy tenant concentration and rent coverage",
+        "UK and European portfolio performance",
+        "Monthly dividend coverage ratio (AFFO payout ratio)",
+    ],
+    competitive_advantages=[
+        "Investment-grade tenant base: approximately 85% of Realty Income rent is paid "
+        "by tenants rated investment-grade (BBB- or above) or with investment-grade "
+        "parent companies — the credit quality is structurally superior to smaller "
+        "net lease peers that accept sub-investment-grade tenants for higher cap rates",
+        "Dividend Aristocrat track record: 607+ consecutive monthly dividends and 30+ "
+        "consecutive annual dividend increases provide institutional yield mandates with "
+        "predictability that creates a stable investor base and supports the P/AFFO premium",
+        "Scale-driven borrowing cost advantage: Realty Income's $60B+ enterprise size "
+        "and investment-grade balance sheet (Baa1/BBB+) allows it to borrow at 20-50 "
+        "basis points below smaller net lease peers — a persistent acquisition spread "
+        "advantage that compounds over a multi-decade acquisition program",
+    ],
+    business_model_keywords=[
+        "Realty Income", "net lease", "triple-net", "AFFO", "P/AFFO",
+        "monthly dividend", "Dividend Aristocrat", "Dollar General", "Walgreens",
+        "7-Eleven", "occupancy", "lease escalator", "investment-grade tenant",
+        "Spirit Realty", "Encore UK", "cap rate", "acquisition spread",
+        "pharmacy", "convenience", "payout ratio", "bond proxy",
+    ],
+))
+
+
+# ── Simon Property Group, Inc. (SPG) ─────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="SPG",
+    company_name="Simon Property Group, Inc.",
+    business_model=(
+        "Simon Property Group is the largest US mall REIT, owning 95+ premium malls, "
+        "Premium Outlet centers, and The Mills properties across the US, Canada, and "
+        "international partnerships in Asia and Europe.  Simon's thesis is that Class A "
+        "destination malls and premium outlet centers in prime trade areas are resilient "
+        "against e-commerce disruption because they serve an experiential function — "
+        "dining, entertainment, and social commerce — that cannot be substituted by "
+        "online shopping.  Revenue is generated primarily through base rent and "
+        "percentage rent participation in tenant sales, with the premium outlet channel "
+        "(Simon Premium Outlets, The Mills) showing stronger traffic and sales than "
+        "enclosed mall formats."
+    ),
+    primary_revenue_drivers=[
+        "Class A mall and Premium Outlet base rent (~70% of revenue) — long-term "
+        "lease agreements with specialty retail, anchor department stores, dining, "
+        "and entertainment tenants; Simon's top properties command the highest "
+        "rent per square foot of any US mall operator",
+        "Percentage rent participation (~10%) — above-breakpoint sales trigger "
+        "additional rent tied to tenant performance; strong consumer spending "
+        "environments boost percentage rent meaningfully",
+        "Premium Outlets and The Mills (~20%) — Simon Premium Outlets (Woodbury Common, "
+        "Sawgrass Mills, others) benefit from tourist and outlet shopper traffic that "
+        "is partially insulated from direct e-commerce competition on luxury goods",
+    ],
+    recurring_revenue_sources=[
+        "Base mall rent from Class A and Premium Outlet tenants — long-term lease "
+        "agreements (typically 5-10 year initial terms) with fixed annual rent steps; "
+        "Simon's occupancy above 94% provides revenue continuity across lease cycles",
+        "Percentage rent participation tied to tenant sales performance — recurring "
+        "quarterly revenue from above-breakpoint tenant sales in Premium Outlet and "
+        "Class A mall locations; this revenue stream is tied to consumer spending trends",
+    ],
+    rate_sensitivity_note=(
+        "Simon Property Group carries ~$30B of long-term debt and trades at ~12-14x "
+        "forward FFO — a discount to industrial and net lease REITs reflecting the "
+        "structural e-commerce risk premium on enclosed mall assets.  As a "
+        "capital-intensive REIT, Simon's cost of debt refinancing matters: the company "
+        "issued a significant portion of its long-term debt at 2-4% rates in 2020-22, "
+        "and future refinancing at 5-6% would increase interest expense.  The FFO "
+        "multiple is moderately rate-sensitive — Simon's strong anchor redevelopment "
+        "pipeline adds long-dated FFO uplift that is discounted at the prevailing rate."
+    ),
+    inflation_pass_through=(
+        "Moderate: Simon's fixed annual rent steps (typically 2-3%/yr) provide partial "
+        "inflation pass-through below CPI in high-inflation environments.  Percentage "
+        "rent rises with nominal tenant sales, which inflate with consumer prices, "
+        "providing an indirect inflation link.  Construction and redevelopment costs "
+        "(anchor box conversions) inflate significantly — Simon's transformation of "
+        "department store anchors to mixed-use has become more expensive, though "
+        "incremental FFO from the redeveloped space is also inflation-adjusted."
+    ),
+    recession_behavior=(
+        "Partially resilient — Simon's Class A mall and Premium Outlet properties "
+        "maintained occupancy above 93% through the 2020 COVID shock (after temporary "
+        "closures) and have recovered strongly.  Premium Outlets are less discretionary "
+        "than traditional malls — value-seeking shoppers and international tourists "
+        "sustain Woodbury Common and Las Vegas Premium Outlets through economic "
+        "downturns.  However, Simon's enclosed mall tenant base includes discretionary "
+        "apparel retailers (Gap, H&M, Forever 21) that experience meaningful same-store "
+        "sales declines in recessions, reducing percentage rent and putting pressure on "
+        "lease renewal spreads.  Department store anchor closures (Macy's, JCPenney) "
+        "require costly re-tenanting and temporary income gaps."
+    ),
+    major_risks=[
+        "E-commerce structural pressure on apparel — apparel and footwear (Simon's "
+        "two largest tenant categories) continue to lose share to online retailers; "
+        "while Simon's Class A properties are more resilient than B and C malls, the "
+        "structural shift in discretionary apparel spending toward e-commerce creates "
+        "ongoing lease renewal headwinds and lower long-term base rent growth",
+        "Department store anchor closures — Macy's, Nordstrom, and JCPenney closures "
+        "require Simon to invest $100-300M per anchor box in redevelopment to convert "
+        "spaces to mixed-use; during the multi-year redevelopment, the space is "
+        "temporarily vacant and generates no rent, impairing near-term FFO",
+        "REIT leverage at 6-7x Debt/EBITDA — Simon's balance sheet leverage is higher "
+        "than industrial and net lease REITs, limiting financial flexibility in "
+        "rate-elevated environments and reducing the FFO multiple vs lower-leverage peers",
+        "Consumer discretionary sensitivity — Simon's Class A mall tenant base "
+        "includes significant discretionary retail exposure (fashion, electronics, "
+        "luxury accessories) that softens in consumer spending contractions",
+        "Redevelopment execution risk — converting large anchor boxes to mixed-use "
+        "(hotel, residential, entertainment, office) requires complex zoning, "
+        "construction management, and tenanting; delays or cost overruns impair the "
+        "projected FFO return on the redevelopment capital",
+    ],
+    valuation_style=(
+        "Simon Property Group trades at ~12-14x forward FFO and an AFFO yield of "
+        "5-7%, at a discount to industrial and net lease REITs reflecting the mall "
+        "format risk premium.  The market prices SPG as a high-quality mall operator "
+        "with meaningful redevelopment upside potential — Premium Outlet occupancy "
+        "above 98% and Class A mall demand justify a premium to the broader mall peer "
+        "group, but not to industrial or net lease formats.  The near-term re-rating "
+        "catalyst is confirmation that department store anchor redevelopments generate "
+        "projected FFO spreads and that tenant diversification toward experiential "
+        "formats (dining, fitness, healthcare, co-working) is offsetting apparel lease "
+        "headwinds in the portfolio."
+    ),
+    key_metrics=[
+        "Comparable property NOI growth (same-store)",
+        "Occupancy rate (Class A malls vs Premium Outlets)",
+        "Lease spreads on renewals (new rent vs expiring rent)",
+        "Percentage rent as % of total revenue (consumer spending indicator)",
+        "Anchor redevelopment pipeline: number of boxes in progress and projected FFO yield",
+        "Malls Debt/EBITDA leverage ratio",
+        "Dividend coverage ratio (FFO payout ratio)",
+        "International Premium Outlet traffic and sales productivity",
+    ],
+    competitive_advantages=[
+        "Class A trophy mall portfolio irreplaceability: Simon's top 50 properties "
+        "(Woodbury Common, Sawgrass Mills, The Forum Shops at Caesars) are high-traffic "
+        "destination assets in major MSAs that cannot be replicated — new enclosed mall "
+        "development in the US has been effectively zero since 2007, making Simon's "
+        "existing Class A portfolio a structural scarcity asset",
+        "Simon Premium Outlets and The Mills dominant position: the premium outlet "
+        "channel is more resilient than traditional mall formats, benefiting from "
+        "international tourist traffic and brand manufacturer use of outlet channels "
+        "for inventory management; Simon's outlet portfolio has the highest sales "
+        "productivity per square foot of any outlet operator in the US",
+        "Tenant diversification toward experiential formats: Simon has redirected "
+        "anchor re-tenanting toward dining, entertainment, healthcare, and fitness "
+        "tenants — uses that are e-commerce resistant and drive traffic for the "
+        "in-line retailers; more than 25% of rent now comes from non-apparel tenants",
+    ],
+    business_model_keywords=[
+        "Simon Property Group", "SPG", "Class A mall", "Premium Outlets",
+        "Woodbury Common", "Sawgrass Mills", "enclosed mall", "AFFO", "FFO",
+        "anchor redevelopment", "Macy's", "Nordstrom", "apparel",
+        "percentage rent", "same-store NOI", "occupancy", "experiential",
+        "P/FFO", "Dividend Aristocrat", "e-commerce", "outlet channel",
+        "redevelopment", "mixed-use", "luxury retail",
+    ],
+))
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
