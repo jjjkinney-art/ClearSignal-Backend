@@ -520,7 +520,14 @@ def _detect_dominant_dimension(
 
     # Boost dimension when the macro or risk agent has low confidence
     # (unresolved uncertainty is itself the dominant issue)
-    if macro.confidence < 0.58:
+    # Phase 4B calibration: threshold lowered 0.58 → 0.35.
+    # The old 0.58 threshold fired for nearly every company (most macro agents
+    # return confidence 0.40–0.55 on standard analyses), artificially elevating
+    # macro to dominant_dim for operationally-driven businesses like AMZN and NEE.
+    # The new threshold 0.35 reserves the macro boost for genuinely unresolved
+    # macro regimes (e.g. Fed pivot inflection points, tariff shock quarters)
+    # where macro uncertainty truly dominates the investment case.
+    if macro.confidence < 0.35:
         scores["macro"] += 2.0
     if valuation.confidence < 0.55:
         scores["valuation"] += 1.5

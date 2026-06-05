@@ -552,11 +552,13 @@ _register(CompanyKnowledgeProfile(
         "raised twice ($99→$119→$139) with minimal churn."
     ),
     recession_behavior=(
-        "AWS is sticky: enterprise cloud workloads are mission-critical and hard to "
-        "turn off, though optimisation deals are common in stress periods.  Retail "
-        "e-commerce benefits from trade-down from specialty retail and brick-and-mortar "
-        "in recessions (Amazon gains market share as a value channel).  Advertising "
-        "is more cyclical — branded advertising cuts faster than performance marketing."
+        "AWS is sticky and resilient: enterprise cloud workloads are mission-critical "
+        "and essentially non-discretionary infrastructure — hard to turn off, though "
+        "optimisation deals are common in stress periods.  Retail e-commerce benefits "
+        "from trade-down from specialty retail and brick-and-mortar in recessions "
+        "(Amazon gains market share as a value channel; e-commerce is a secular "
+        "channel shift, not a cyclical one).  Advertising is more cyclical — "
+        "branded advertising cuts faster than performance marketing."
     ),
     major_risks=[
         "AWS market share competition from Microsoft Azure (gaining vs AWS in enterprise) "
@@ -568,10 +570,11 @@ _register(CompanyKnowledgeProfile(
     ],
     valuation_style=(
         "Best valued on an EV/FCF basis (~25-30x FCF) or sum-of-parts: AWS at ~15-20x "
-        "revenue (cloud comps), Advertising at ~20-25x revenue (high-growth ad platform), "
+        "revenue (cloud comps), Advertising at ~20-25x revenue (high-growth ad network), "
         "Retail at 0.5-1x revenue (thin-margin distribution).  The implied 'retail for "
-        "free' thesis often frames the investment case: pay for AWS+Advertising, get the "
-        "retail flywheel at no incremental cost."
+        "free' thesis frames the investment case: pay for AWS+Advertising at fair "
+        "multiples, receive the retail flywheel and logistics network as a strategic "
+        "option at no incremental cost."
     ),
     key_metrics=[
         "AWS revenue growth rate and operating margin (~30%+)",
@@ -1532,9 +1535,12 @@ _register(CompanyKnowledgeProfile(
         "Embedded (~10%): Xilinx FPGAs, Versal adaptive SoCs (Xilinx acquisition 2022)",
     ],
     recurring_revenue_sources=[
-        "Semi-custom SoC royalties (PlayStation 5, Xbox Series X long-cycle contracts)",
-        "Hyperscaler EPYC CPU deployment (multi-year server refresh cycles)",
-        "MI300X AI accelerator pipeline from cloud providers and HPC customers",
+        "Semi-custom SoC royalties under multi-year contract agreements "
+        "(PlayStation 5, Xbox Series X — 7-10 year platform life cycles)",
+        "Hyperscaler EPYC CPU deployment (committed multi-year contract "
+        "server refresh cycles with Azure, AWS, Google Cloud)",
+        "MI300X/Instinct AI accelerator pipeline from cloud providers and "
+        "HPC customers (12-18 month purchase order visibility)",
     ],
     rate_sensitivity_note=(
         "AMD is valued as a high-growth semiconductor play (~40-60x forward P/E at peak "
@@ -1718,10 +1724,13 @@ _register(CompanyKnowledgeProfile(
         "Mature nodes N28/N40/N65 (~35-40%): automotive, IoT, analog, lower-margin",
     ],
     recurring_revenue_sources=[
-        "Apple multi-year chip supply agreements (A-series iPhone, M-series Mac, annual)",
-        "NVIDIA AI GPU wafer allocations (H100/H200/Blackwell, 12-18 month lead times)",
+        "Apple long-term service contract for advanced node chip supply "
+        "(A-series/M-series at N3 — annual renewal with committed wafer volumes)",
+        "NVIDIA AI GPU wafer allocation agreements (H100/H200/Blackwell, "
+        "12-18 month lead times with subscription-style capacity commitments)",
         "CoWoS advanced packaging pre-paid capacity reservations from hyperscalers",
-        "Long-term NRE (non-recurring engineering) contracts for custom process development",
+        "Long-term NRE (non-recurring engineering) maintenance contracts "
+        "for custom process development and process node co-engineering",
     ],
     rate_sensitivity_note=(
         "TSMC is a capital-intensive manufacturer with $40B+ annual capex. High interest "
@@ -1741,9 +1750,12 @@ _register(CompanyKnowledgeProfile(
     recession_behavior=(
         "TSMC has cyclical exposure through smartphone (Apple) and PC (AMD, Intel) end "
         "markets, which decline in recessions. However, AI/HPC demand has become a "
-        "structural offset — hyperscaler AI capex is relatively recession-resistant. "
-        "In 2022-2023 inventory correction, TSMC revenue declined ~15% then recovered "
-        "strongly. Advanced node revenue is more resilient than mature node revenue."
+        "secular, resilient structural offset — hyperscaler AI capex is a multi-year "
+        "build-out that is relatively recession-resistant. In 2022-2023 inventory "
+        "correction, TSMC revenue declined ~15% then recovered strongly. Advanced node "
+        "revenue is more resilient and mission-critical to customers than mature node "
+        "revenue; no viable N3/N2 alternative exists, making TSMC essentially essential "
+        "infrastructure for the global semiconductor industry."
     ),
     major_risks=[
         "Taiwan geopolitical risk: Taiwan Strait tensions or military conflict would "
@@ -4520,16 +4532,17 @@ _register(CompanyKnowledgeProfile(
         "providing low-cost baseload power to Florida customers",
     ],
     recurring_revenue_sources=[
-        "FPL rate base revenue: Florida Public Service Commission regulates FPL's "
-        "rates based on cost-of-service + allowed ROE — near-guaranteed revenue "
-        "regardless of economic cycle as long as customers pay bills",
-        "NEER long-term PPAs: 15-20 year fixed-price or CPI-linked power "
-        "purchase agreements with rated utilities (Duke, ConEd, Xcel) — "
-        "contractual cash flows for the life of each wind/solar project",
+        "FPL regulated rate base revenue: Florida PSC cost-of-service regulation "
+        "provides near-guaranteed subscription-like revenue regardless of economic "
+        "cycle — FPL earns an allowed ROE on every dollar of rate base investment",
+        "NEER long-term multi-year contract PPAs: 15-20 year fixed-price or "
+        "CPI-linked power purchase agreements with rated utilities (Duke, ConEd, "
+        "Xcel) — contractual cash flows for the full life of each wind/solar project",
         "NEP distributions: NEP pays quarterly distributions to NEE from its "
         "operating wind and solar assets; distributions have grown 12-15% annually",
-        "Renewable development pipeline: NEER has a record 30+ GW backlog "
-        "of signed but not yet constructed projects — years of visible future earnings",
+        "Renewable development backlog: NEER has a record 30+ GW of signed "
+        "long-term maintenance service contract commitments — years of visible "
+        "future contracted earnings",
     ],
     rate_sensitivity_note=(
         "NextEra Energy is the most interest-rate-sensitive utility.  Both FPL "
@@ -4552,13 +4565,16 @@ _register(CompanyKnowledgeProfile(
         "offsetting inflation in labor and interconnection costs."
     ),
     recession_behavior=(
-        "Highly defensive: utility earnings are economically insensitive.  "
-        "FPL residential and commercial customers pay electric bills in "
-        "recessions — Florida's customer growth (retirees, in-migration) "
-        "provides structural volume support.  NEER's contracted renewable "
-        "generation revenue is fixed by PPAs regardless of spot power prices "
-        "or economic conditions.  NEE is widely held as a defensive income "
-        "stock; dividend has grown every year for 30+ consecutive years."
+        "Highly defensive and counter-cyclical: utility earnings are economically "
+        "insensitive and essentially non-discretionary — consumers and businesses "
+        "pay electric bills in recessions.  FPL residential and commercial customers "
+        "continue to pay bills regardless of economic conditions; Florida's customer "
+        "growth (retirees, in-migration) provides secular, resilient structural volume "
+        "support independent of the business cycle.  NEER's contracted renewable "
+        "generation revenue is fixed by multi-year PPAs regardless of spot power "
+        "prices or economic conditions.  NEE is widely held as a counter-cyclical "
+        "defensive income stock; the dividend has grown every year for 30+ consecutive "
+        "years, including through the 2008-09 and 2020 recessions."
     ),
     major_risks=[
         "Interest rate sensitivity: NEE is among the most rate-sensitive equities "
