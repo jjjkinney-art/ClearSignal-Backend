@@ -6539,8 +6539,8 @@ _register(CompanyKnowledgeProfile(
     recession_behavior=(
         "Cyclical and commodity-dependent — OXY's earnings are closely tied to WTI oil "
         "prices.  Permian Basin production volumes are stable (OXY does not shut in "
-        "wells in mild downturns), but realizations are volatile: a $10/bbl decline in "
-        "WTI reduces annual EBITDA by approximately $600-700M.  OxyChem provides a "
+        "wells in mild downturns), but realizations fluctuate with oil prices — a $10/bbl "
+        "WTI decline reduces annual EBITDA by approximately $600-700M.  OxyChem provides a "
         "partially defensive earnings contribution — chemicals demand is less correlated "
         "to oil prices than E&P revenue, offering resilience in energy downturns while "
         "industrial chemicals demand softens in broader recessions.  OXY suspended its "
@@ -6673,7 +6673,7 @@ _register(CompanyKnowledgeProfile(
         "escalate with inflation, partially offsetting lease revenue inflation gains."
     ),
     recession_behavior=(
-        "Tower lease revenue is highly resilient — wireless carriers are contractually "
+        "Tower lease revenue is highly resilient and stable — wireless carriers are contractually "
         "obligated to pay rent regardless of economic conditions; 5G densification "
         "capex commitments by AT&T and T-Mobile are multi-year government spectrum "
         "license requirements, not discretionary spending.  Occupancy rates on US "
@@ -6816,8 +6816,8 @@ _register(CompanyKnowledgeProfile(
         "Walgreens, and grocery-anchored formats that serve everyday spending needs. "
         "Occupancy held above 98% during the 2008-09 recession and the 2020 COVID "
         "shock (some temporary rent deferral agreements were negotiated with fitness "
-        "and theater tenants).  However, Realty Income remains sensitive to consumer "
-        "health in aggregate — a wave of retail tenant bankruptcies (Bed Bath & Beyond, "
+        "and theater tenants).  However, Realty Income remains exposed to tenant "
+        "financial health — a wave of retail tenant bankruptcies (Bed Bath & Beyond, "
         "Rite Aid) temporarily elevated vacancy and required re-tenanting costs that "
         "reduced AFFO in the short term.  The pharmacy format faces structural headwinds "
         "from e-commerce prescription delivery (Amazon Pharmacy) and GLP-1 drug impacts."
@@ -6946,8 +6946,9 @@ _register(CompanyKnowledgeProfile(
     recession_behavior=(
         "Partially resilient — Simon's Class A mall and Premium Outlet properties "
         "maintained occupancy above 93% through the 2020 COVID shock (after temporary "
-        "closures) and have recovered strongly.  Premium Outlets are less discretionary "
-        "than traditional malls — value-seeking shoppers and international tourists "
+        "closures) and have recovered strongly.  Premium Outlets provide a partially "
+        "defensive revenue base: they are less discretionary than traditional malls — "
+        "value-seeking shoppers and international tourists "
         "sustain Woodbury Common and Las Vegas Premium Outlets through economic "
         "downturns.  However, Simon's enclosed mall tenant base includes discretionary "
         "apparel retailers (Gap, H&M, Forever 21) that experience meaningful same-store "
