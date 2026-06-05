@@ -7027,6 +7027,3274 @@ _register(CompanyKnowledgeProfile(
 
 
 # ---------------------------------------------------------------------------
+# Phase 6 — Coverage Expansion  (35 new profiles)
+# ---------------------------------------------------------------------------
+
+# ── Financials ───────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="WFC",
+    company_name="Wells Fargo & Company",
+    business_model=(
+        "Wells Fargo is one of the four largest US commercial banks, operating "
+        "consumer banking, commercial banking, corporate and investment banking, "
+        "and wealth and investment management.  Revenue is generated through net "
+        "interest income on loans and deposits, fee-based services, and mortgage "
+        "origination and servicing.  The company operates under a Federal Reserve "
+        "asset cap imposed in 2018, limiting balance sheet growth until the cap "
+        "is lifted."
+    ),
+    primary_revenue_drivers=[
+        "Net interest income (~55%) — spread on $950B+ loan and securities portfolio "
+        "funded by $1.3T deposit base; NII is highly sensitive to interest-rate moves",
+        "Fee-based services (~30%) — wealth management advisory fees, card fees, "
+        "deposit and treasury management fees, and mortgage banking income",
+        "Mortgage banking (~15%) — origination and servicing income from one of the "
+        "largest US mortgage platforms; cyclically sensitive to rates and housing",
+    ],
+    recurring_revenue_sources=[
+        "Net interest income from the commercial and consumer loan portfolio "
+        "generates recurring spread revenue tied to floating-rate benchmarks",
+        "Fee-based banking services including deposit fees, wire transfer fees, "
+        "and wealth advisory income provide repeating non-interest revenue",
+    ],
+    rate_sensitivity_note=(
+        "Wells Fargo is among the most asset-sensitive large US banks; rising rates "
+        "substantially boost NII while falling rates compress spread income.  "
+        "The Fed asset cap limits deposit repricing optionality.  "
+        "P/TBV and P/E are the primary valuation anchors."
+    ),
+    inflation_pass_through=(
+        "Moderate: loan repricing tracks floating-rate benchmarks providing "
+        "partial inflation pass-through; operating cost inflation (salaries, "
+        "technology) is a partial offset."
+    ),
+    recession_behavior=(
+        "Wells Fargo generates stable net interest income from its diversified "
+        "loan book and demonstrates resilient fee-based revenue from its retail "
+        "banking franchise.  However, commercial and consumer credit quality has "
+        "cyclical exposure to economic downturns, elevating loan-loss provisions."
+    ),
+    major_risks=[
+        "Federal Reserve asset cap — WFC cannot grow its balance sheet beyond "
+        "~$1.95T until the Fed lifts the 2018 consent order; this constrains "
+        "loan growth and deposit gathering relative to unrestricted peers",
+        "Credit cycle exposure — consumer and commercial loan charge-offs rise "
+        "materially in recessions; CRE office and auto lending are elevated-risk "
+        "pockets given current vacancy and rate dynamics",
+        "Mortgage banking revenue volatility — origination volume collapses in "
+        "high-rate environments, reducing non-interest income significantly "
+        "and creating earnings variability",
+        "Regulatory and reputational overhang — ongoing consent orders and "
+        "heightened scrutiny from regulators raise compliance costs and "
+        "constrain strategic flexibility vs peers",
+    ],
+    valuation_style=(
+        "WFC trades at 1.1-1.4x tangible book and 10-12x forward earnings, "
+        "a discount to JPM reflecting the asset cap and execution uncertainty.  "
+        "The re-rating catalyst is Federal Reserve removal of the consent order, "
+        "which would allow balance sheet growth and improve P/TBV toward peers.  "
+        "FCF yield supports a growing dividend and buyback program."
+    ),
+    key_metrics=[
+        "Net interest margin (NIM) and net interest income growth",
+        "Efficiency ratio (non-interest expense / revenue)",
+        "Return on tangible common equity (ROTCE)",
+        "Net charge-off rate by loan category",
+        "Tangible book value per share growth",
+    ],
+    competitive_advantages=[
+        "Dominant retail deposit franchise with 4,200+ branches and $1.3T deposit "
+        "base providing low-cost funding across US consumer and commercial segments",
+        "Leading US mortgage origination and servicing platform with deep "
+        "geographic penetration and servicer scale across conforming and jumbo loans",
+        "Established commercial banking relationships across middle market, "
+        "large corporate, and government segments providing diversified fee income",
+    ],
+    business_model_keywords=[
+        "WFC", "Wells Fargo", "net interest income", "NIM", "asset cap",
+        "consent order", "mortgage banking", "P/TBV", "ROTCE", "deposit",
+        "commercial banking", "wealth management", "loan loss provision",
+        "Federal Reserve", "tangible book",
+    ],
+))
+
+# ── Semiconductors ───────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="QCOM",
+    company_name="Qualcomm Incorporated",
+    business_model=(
+        "Qualcomm operates two core segments: QCT (chips — Snapdragon SoCs, "
+        "modems, RF, IoT, and automotive) and QTL (patent licensing — royalties "
+        "from smartphone OEMs on handset ASPs).  QTL is high-margin (~70% EBIT) "
+        "and contributes disproportionately to earnings despite lower revenue share.  "
+        "Qualcomm is expanding beyond smartphones into automotive (Snapdragon Digital "
+        "Chassis) and IoT/PC segments to diversify from handset dependence."
+    ),
+    primary_revenue_drivers=[
+        "QCT chip revenue (~85%) — Snapdragon SoCs for Android flagships, modems "
+        "for Apple, automotive infotainment and ADAS chips; cyclical with handset cycles",
+        "QTL licensing revenue (~15%) — per-device royalties from smartphone OEMs; "
+        "highly recurring, asset-light, and high-margin",
+        "Automotive chip revenue — growing contribution from Snapdragon Digital "
+        "Chassis for cockpit, ADAS, and C-V2X connectivity systems",
+    ],
+    recurring_revenue_sources=[
+        "QTL patent royalty income from global smartphone OEM licensing agreements "
+        "generates high-margin recurring fee revenue tied to handset unit volumes",
+        "Snapdragon SoC chip orders from Android and automotive OEM customers "
+        "provide quarterly revenue tied to device production cycles",
+    ],
+    rate_sensitivity_note=(
+        "Qualcomm is not directly rate-sensitive.  EV/EBITDA and P/E are primary "
+        "valuation anchors.  Higher rates reduce the present-value of licensing "
+        "streams and compress semiconductor multiples broadly."
+    ),
+    inflation_pass_through=(
+        "Moderate: QTL royalties are ASP-linked, providing some inflation "
+        "pass-through.  QCT chip pricing is competitive; input cost inflation "
+        "from TSMC foundry pricing flows through with a lag."
+    ),
+    recession_behavior=(
+        "Qualcomm generates stable QTL royalty income from its patent portfolio "
+        "and demonstrates resilient licensing cash flows through handset cycles.  "
+        "However, QCT chip revenue has cyclical exposure to smartphone replacement "
+        "demand and OEM inventory correction periods."
+    ),
+    major_risks=[
+        "Apple modem in-housing — Apple is developing its own 5G modem and plans "
+        "to reduce QCOM modem dependence; this creates a meaningful revenue "
+        "cliff risk as Apple transitions away from Snapdragon X modems",
+        "Smartphone market concentration — ~60% of QCT revenue is handset-exposed; "
+        "weak global smartphone upgrade cycles (2022-23 pattern) reduce chip "
+        "volumes and create earnings volatility",
+        "QTL licensing dispute risk — Qualcomm's patent licensing model has faced "
+        "antitrust challenges globally; adverse legal outcomes could impair royalty "
+        "rates or licensee compliance",
+        "China market dependency — Qualcomm derives ~60% of revenue from China-based "
+        "OEMs; US-China trade restrictions and Huawei dynamics create geopolitical risk",
+    ],
+    valuation_style=(
+        "QCOM trades at 12-16x forward earnings and 8-10x EV/EBITDA, at a discount "
+        "to fabless peers reflecting Apple modem risk and handset concentration.  "
+        "The automotive and IoT re-rating thesis requires execution on non-handset "
+        "TAM expansion.  FCF yield and dividend growth support the investment case."
+    ),
+    key_metrics=[
+        "QCT chip revenue by end market (handset, auto, IoT)",
+        "QTL licensing revenue and royalty rate per device",
+        "Automotive pipeline bookings (multi-year design wins)",
+        "Apple modem revenue as % of QCT",
+        "EV/EBITDA vs. fabless semiconductor peers",
+    ],
+    competitive_advantages=[
+        "Snapdragon mobile SoC leadership in Android premium and mid-range segments "
+        "with deep ecosystem integration across camera, AI, and connectivity IP",
+        "QTL patent licensing portfolio covering essential 3G/4G/5G standards "
+        "providing recurring, high-margin royalty income with global enforceability",
+        "Automotive semiconductor expansion with Snapdragon Digital Chassis "
+        "design wins at BMW, Stellantis, GM, and other Tier-1 automakers",
+    ],
+    business_model_keywords=[
+        "QCOM", "Qualcomm", "Snapdragon", "QTL", "QCT", "5G modem",
+        "patent royalty", "Apple modem", "Snapdragon Digital Chassis",
+        "handset SoC", "automotive semiconductor", "P/E", "EV/EBITDA",
+        "fabless", "RF front-end",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="TXN",
+    company_name="Texas Instruments Incorporated",
+    business_model=(
+        "Texas Instruments is the global leader in analog and embedded "
+        "semiconductors, shipping 80,000+ products to 100,000+ customers across "
+        "industrial, automotive, personal electronics, communications, and "
+        "enterprise end markets.  TI's differentiation lies in its 300mm "
+        "manufacturing advantage (lowest cost per chip in analog), its vast "
+        "product catalog providing revenue diversity, and its direct-to-customer "
+        "sales model that builds long-duration design-win relationships."
+    ),
+    primary_revenue_drivers=[
+        "Analog chips (~75%) — power management, signal chain, amplifiers, "
+        "and data converters sold to industrial and automotive OEMs; long "
+        "product lifecycles and high customer switching costs",
+        "Embedded processors (~25%) — microcontrollers and digital signal "
+        "processors for industrial control, motor drive, and automotive ADAS",
+        "Industrial and automotive end markets (~65% combined) — structural "
+        "share shift toward higher-margin, longer-cycle customers",
+    ],
+    recurring_revenue_sources=[
+        "Long-term industrial and automotive customer design wins generate "
+        "recurring analog chip order flow over 5-10 year product lifecycles",
+        "Direct-to-customer sales program provides repeat quarterly order "
+        "revenue from OEM production schedules and safety-stock replenishment",
+    ],
+    rate_sensitivity_note=(
+        "TI is not directly rate-sensitive.  P/E and FCF yield are primary "
+        "valuation anchors.  TI's capital return policy (60-80% FCF to "
+        "dividends+buybacks) is a key valuation support."
+    ),
+    inflation_pass_through=(
+        "Good: TI's 300mm internal manufacturing provides structural cost "
+        "advantages vs. peers sourcing from TSMC; pricing power on "
+        "proprietary analog products supports margin stability in inflation."
+    ),
+    recession_behavior=(
+        "Texas Instruments generates stable revenue from its diverse industrial "
+        "and automotive customer base and demonstrates resilient through-cycle "
+        "cash flows.  However, industrial CapEx and automotive production schedules "
+        "have cyclical sensitivity to economic slowdowns and inventory corrections."
+    ),
+    major_risks=[
+        "Analog semiconductor inventory cycle — the 2022-24 inventory correction "
+        "showed that even diversified analog demand can experience multi-quarter "
+        "destocking; recovery timelines are difficult to predict precisely",
+        "Industrial CapEx sensitivity — factory automation and industrial "
+        "equipment purchasing is procyclical; TI's 65%+ industrial/auto mix "
+        "creates above-average cyclical earnings sensitivity",
+        "300mm capacity expansion timing — TI's $15B+ US fab investment "
+        "(Sherman, Texas) adds substantial depreciation ahead of demand "
+        "recovery, pressuring near-term FCF and ROIC",
+        "Competitive pricing pressure — ADI and Microchip compete directly "
+        "in analog; while TI has manufacturing advantages, price competition "
+        "limits long-run pricing power in commoditized analog products",
+    ],
+    valuation_style=(
+        "TI trades at 25-35x forward P/E and 20-25x EV/EBITDA — a structural "
+        "premium to analog peers reflecting FCF conversion quality and capital "
+        "return commitment.  The investment thesis centers on through-cycle "
+        "FCF yield of 3-5% and consistent dividend growth.  P/FCF is the most "
+        "reliable valuation anchor given TI's manufacturing investment cycle."
+    ),
+    key_metrics=[
+        "Revenue by end market (industrial, automotive, personal electronics)",
+        "Gross margin and operating margin through the cycle",
+        "Free cash flow per share and FCF conversion",
+        "Capital return (dividends + buybacks) as % of FCF",
+        "300mm wafer capacity utilization",
+    ],
+    competitive_advantages=[
+        "300mm analog wafer manufacturing cost structure — TI's in-house "
+        "300mm fabs produce analog chips at significantly lower cost per die "
+        "than peers relying on external 200mm foundries",
+        "Broadest analog product catalog with 80,000+ SKUs enabling "
+        "single-source supply relationships with industrial OEMs at scale",
+        "Direct-to-customer sales model with dedicated field application "
+        "engineers building multi-year design-in relationships at OEM accounts",
+    ],
+    business_model_keywords=[
+        "TXN", "Texas Instruments", "analog semiconductor", "embedded processor",
+        "300mm", "industrial", "automotive", "power management", "signal chain",
+        "design win", "FCF yield", "P/E", "capital return", "ADI", "Microchip",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="MU",
+    company_name="Micron Technology, Inc.",
+    business_model=(
+        "Micron is the only US-based manufacturer of DRAM and NAND memory, "
+        "operating fabs in Idaho, Virginia, Japan, Taiwan, and Singapore.  "
+        "DRAM (~65% of revenue) serves data center servers, mobile phones, "
+        "and PCs.  NAND (~35%) serves SSDs for enterprise storage, client PCs, "
+        "and mobile.  Micron is the primary supplier of HBM3E (high-bandwidth "
+        "memory) for NVIDIA H100/H200 GPUs, creating a high-value AI data "
+        "center revenue stream alongside the commodity memory cycle."
+    ),
+    primary_revenue_drivers=[
+        "DRAM (~65%) — server DRAM for hyperscale data centers, mobile LPDRAM "
+        "for smartphones, PC DRAM; pricing is highly cyclical with supply/demand",
+        "NAND (~35%) — enterprise SSDs, client SSDs, managed NAND for mobile; "
+        "NAND pricing is more volatile than DRAM due to lower market concentration",
+        "HBM3E for AI workloads — sole US-source HBM supplier for NVIDIA A100/H100 "
+        "GPU clusters; high-ASP, margin-accretive, and supply-constrained",
+    ],
+    recurring_revenue_sources=[
+        "DRAM supply contracts with hyperscale cloud providers and server OEM "
+        "customers provide quarterly volume commitments at market pricing",
+        "NAND SSD supply agreements with PC OEM and enterprise storage accounts "
+        "generate recurring order flow tied to production schedules",
+    ],
+    rate_sensitivity_note=(
+        "Micron is not directly rate-sensitive.  P/E, EV/EBITDA on normalized "
+        "earnings, and P/book are the primary valuation anchors across the memory "
+        "cycle.  Capital-intensive fabs require ongoing debt financing."
+    ),
+    inflation_pass_through=(
+        "Low on commodity memory (pricing is market-driven, not cost-plus).  "
+        "HBM3E pricing is more favorable and partially cost-plus given supply constraints."
+    ),
+    recession_behavior=(
+        "Micron generates stable production volumes from its global DRAM and NAND "
+        "fabs and demonstrates resilient long-run demand from secular data growth.  "
+        "However, memory ASPs have severe cyclical exposure to supply-demand imbalances, "
+        "resulting in dramatic revenue and margin swings across the memory cycle."
+    ),
+    major_risks=[
+        "Memory pricing cycle — DRAM and NAND ASPs can fall 50-70% in down cycles "
+        "as oversupply from Samsung and SK Hynix floods the market; Micron's "
+        "earnings swing dramatically with the industry supply/demand balance",
+        "Samsung and SK Hynix competitive intensity — Korean memory manufacturers "
+        "have historically cross-subsidized memory operations through downturns, "
+        "prolonging pricing pressure beyond what supply reduction discipline would imply",
+        "China geopolitical risk — Micron's China revenue (~10-15%) was "
+        "restricted by Chinese regulators in 2023; further restrictions or "
+        "fab access limitations pose material revenue risk",
+        "HBM capacity execution — Micron's ramp of HBM3E capacity for AI "
+        "customers requires complex packaging and testing; yield and delivery "
+        "execution determine whether Micron captures its full AI allocation",
+    ],
+    valuation_style=(
+        "MU trades at 8-15x forward P/E on normalized mid-cycle earnings, with "
+        "peak-cycle P/E artificially low and trough-cycle P/E meaninglessly high.  "
+        "The investment thesis requires a view on the memory cycle timing and "
+        "HBM3E TAM expansion from AI infrastructure.  EV/normalized EBITDA and "
+        "P/book are more reliable through-cycle anchors than trailing multiples."
+    ),
+    key_metrics=[
+        "DRAM and NAND ASP trends (quarter-over-quarter)",
+        "Gross margin by segment (DRAM vs. NAND vs. HBM)",
+        "HBM3E revenue and market share vs. Samsung and SK Hynix",
+        "Inventory days (industry and Micron-specific destocking progress)",
+        "Capital expenditure as % of revenue vs. depreciation",
+    ],
+    competitive_advantages=[
+        "Only US-headquartered DRAM and NAND manufacturer with geopolitical "
+        "importance for US semiconductor supply chain independence",
+        "HBM3E leadership for AI GPU memory — Micron is the primary non-Korean "
+        "HBM supplier for NVIDIA, capturing margin-accretive AI memory demand",
+        "1-beta DRAM node technology maintaining competitive cost structure "
+        "with Samsung and SK Hynix at advanced process nodes",
+    ],
+    business_model_keywords=[
+        "MU", "Micron", "DRAM", "NAND", "HBM3E", "memory cycle",
+        "high-bandwidth memory", "NVIDIA", "server DRAM", "enterprise SSD",
+        "Samsung", "SK Hynix", "P/book", "normalized earnings", "EV/EBITDA",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="AMAT",
+    company_name="Applied Materials, Inc.",
+    business_model=(
+        "Applied Materials is the world's largest semiconductor equipment company "
+        "by revenue, providing deposition (CVD, PVD, ALD), etch, CMP, "
+        "metrology/inspection, and thermal processing tools.  Customers include "
+        "TSMC, Samsung, Intel, and SK Hynix.  Applied's breadth across the "
+        "wafer fabrication flow — from deposition through inspection — provides "
+        "more complete process coverage than any single competitor.  Advanced "
+        "packaging equipment is a fast-growing incremental segment."
+    ),
+    primary_revenue_drivers=[
+        "Semiconductor Systems (~75%) — front-end wafer fabrication equipment "
+        "for logic, DRAM, and NAND; revenue highly correlated with WFE spend",
+        "Applied Global Services (~20%) — spare parts, consumables, and "
+        "process support; more stable than equipment revenue across the cycle",
+        "Display (~5%) — equipment for OLED and LCD display manufacturing",
+    ],
+    recurring_revenue_sources=[
+        "Spare parts and consumable orders from the global installed base of "
+        "deposition and etch tools generate recurring revenue between equipment cycles",
+        "Process support and equipment upgrade programs at leading-edge fabs "
+        "provide annual revenue from installed tool performance optimization",
+    ],
+    rate_sensitivity_note=(
+        "AMAT is not directly rate-sensitive.  EV/EBITDA and P/E on normalized "
+        "WFE spend are the primary valuation anchors.  Higher rates reduce "
+        "semiconductor CapEx budgets over time, creating an indirect headwind."
+    ),
+    inflation_pass_through=(
+        "Good: semiconductor equipment is custom-configured and high-value; "
+        "AMAT has pricing power on new tool configurations and aftermarket "
+        "parts given captive installed base relationships."
+    ),
+    recession_behavior=(
+        "Applied Materials generates stable services revenue from its global "
+        "installed base and demonstrates resilient long-run demand from secular "
+        "semiconductor content growth.  However, WFE (wafer fabrication equipment) "
+        "spending has cyclical sensitivity to fab utilization and chipmaker CapEx budgets."
+    ),
+    major_risks=[
+        "WFE spending cycle — semiconductor equipment revenue can decline 20-30% "
+        "in down cycles as chipmakers defer capacity additions; 2022-23 showed "
+        "memory WFE cuts of 40-50% while logic/foundry was more resilient",
+        "TSMC/Samsung customer concentration — top 2-3 customers represent "
+        "a large portion of systems revenue; changes in their CapEx outlook "
+        "have an outsized impact on AMAT's quarterly revenue",
+        "China export controls — AMAT's China revenue (~30%) is subject to BIS "
+        "advanced chip equipment restrictions; escalation of controls would "
+        "impair China systems revenue materially",
+        "ASML EUV dependency — leading-edge logic nodes increasingly use EUV "
+        "patterning from ASML, creating a segment where AMAT cannot participate "
+        "directly and must rely on etch/deposition adjacencies",
+    ],
+    valuation_style=(
+        "AMAT trades at 15-20x forward P/E and 12-15x EV/EBITDA on normalized "
+        "WFE spending, with premium reflecting services mix and process breadth.  "
+        "The investment thesis is secular semiconductor content growth (AI, EVs, "
+        "advanced packaging) driving above-GDP WFE spend over a 5-7 year cycle.  "
+        "FCF yield and buyback capacity support the multiple."
+    ),
+    key_metrics=[
+        "WFE (wafer fabrication equipment) market share by process step",
+        "Services revenue as % of total (cycle stability indicator)",
+        "China revenue as % of total (export control exposure)",
+        "Backlog and order book vs. prior quarter",
+        "Gross margin trend by segment (Systems vs. Services)",
+    ],
+    competitive_advantages=[
+        "Broadest equipment portfolio spanning deposition, etch, CMP, "
+        "and inspection — enabling single-vendor process integration across "
+        "the wafer fabrication flow for logic, DRAM, and NAND",
+        "Large installed base creating a captive aftermarket for parts, "
+        "consumables, and upgrades — more predictable than new tool revenue",
+        "Advanced packaging equipment leadership in hybrid bonding, "
+        "RDL deposition, and die-to-wafer bonding for AI chiplet architectures",
+    ],
+    business_model_keywords=[
+        "AMAT", "Applied Materials", "semiconductor equipment", "WFE",
+        "deposition", "CVD", "ALD", "etch", "CMP", "metrology",
+        "TSMC", "advanced packaging", "EV/EBITDA", "P/E", "wafer fab",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="LRCX",
+    company_name="Lam Research Corporation",
+    business_model=(
+        "Lam Research is the global leader in plasma etch and CVD/ALD "
+        "deposition equipment, holding approximately 45% of the global etch "
+        "market.  Lam's tools are essential for 3D NAND manufacturing (etch "
+        "depth is the key process challenge) and for advanced logic nodes "
+        "where high-aspect-ratio etch is critical.  Customer Support Business "
+        "Group (CSBG) — spare parts, upgrades, and service — contributes "
+        "~35% of revenue with above-average margin stability."
+    ),
+    primary_revenue_drivers=[
+        "Systems revenue (~65%) — plasma etch, CVD, and ALD tools sold to "
+        "NAND, DRAM, and logic fabs; highly correlated with NAND WFE spend",
+        "Customer Support Business Group (~35%) — chamber parts, upgrades, "
+        "and process support; more recurring and cycle-resilient than systems",
+        "3D NAND etch intensity — each additional storage layer in 3D NAND "
+        "requires incremental Lam etch and deposition steps, providing a "
+        "structural growth driver from NAND stack height increases",
+    ],
+    recurring_revenue_sources=[
+        "Chamber component and replacement parts revenue from the global "
+        "installed base of etch and CVD tools at NAND and logic fabs",
+        "Fab process support and equipment upgrade orders from existing "
+        "customer accounts seeking yield improvement on installed tool fleets",
+    ],
+    rate_sensitivity_note=(
+        "LRCX is not directly rate-sensitive.  EV/EBITDA and P/E on normalized "
+        "NAND and logic WFE are primary valuation anchors.  Capital return "
+        "via buybacks supports per-share earnings growth."
+    ),
+    inflation_pass_through=(
+        "Good: Lam's custom etch chambers and chamber parts have limited "
+        "commodity substitutes; aftermarket pricing is captive to installed base."
+    ),
+    recession_behavior=(
+        "Lam Research generates stable CSBG revenue from its installed tool base "
+        "and demonstrates resilient long-run demand from 3D NAND layer count growth.  "
+        "However, NAND WFE spending has cyclical exposure to memory pricing cycles "
+        "and fab utilization decisions by Samsung, SK Hynix, and Micron."
+    ),
+    major_risks=[
+        "NAND WFE cycle — Lam's revenue is more NAND-concentrated than AMAT "
+        "or KLAC; memory capex cuts of 40-50% in down cycles create above-average "
+        "revenue headwinds relative to logic-weighted semiconductor equipment peers",
+        "Customer concentration — Samsung and SK Hynix together represent "
+        ">40% of Lam revenue; Korean memory capex decisions drive material "
+        "quarterly revenue variability",
+        "China export controls — Lam's China revenue (~30%) is subject to BIS "
+        "restrictions on advanced NAND and DRAM equipment; further tightening "
+        "would impair systems revenue materially",
+        "3D NAND technology transitions — if chipmakers slow NAND layer count "
+        "increases (QLC/PLC) or transition to alternative memory architectures, "
+        "etch intensity per wafer pass could grow slower than expected",
+    ],
+    valuation_style=(
+        "LRCX trades at 18-22x forward P/E and 13-16x EV/EBITDA on normalized "
+        "NAND WFE, with premium to peers reflecting etch dominance and CSBG mix.  "
+        "The investment thesis is 3D NAND layer count increasing to 400+ layers "
+        "requiring disproportionate etch intensity and Lam tool additions.  "
+        "FCF conversion and buyback capacity support capital return."
+    ),
+    key_metrics=[
+        "NAND WFE market share (etch + deposition)",
+        "CSBG revenue as % of total (cycle resilience metric)",
+        "China revenue as % of total (export control sensitivity)",
+        "3D NAND average layer count in customer fabs (etch intensity driver)",
+        "Gross margin by segment (Systems vs. CSBG)",
+    ],
+    competitive_advantages=[
+        "~45% global etch market share with deep process integration at all "
+        "major NAND and logic fabs, creating high switching costs for established "
+        "process recipes built around Lam chamber performance",
+        "Co-development relationships with TSMC, Samsung, and Micron at "
+        "leading nodes — Lam engineers are embedded in customer process "
+        "development labs, creating early-node design-win advantages",
+        "CSBG installed base monetization — 60,000+ installed tools worldwide "
+        "generating captive, recurring parts and upgrade revenue with "
+        "above-systems-average gross margin",
+    ],
+    business_model_keywords=[
+        "LRCX", "Lam Research", "plasma etch", "CVD", "ALD", "3D NAND",
+        "CSBG", "chamber parts", "NAND WFE", "Samsung", "SK Hynix",
+        "EV/EBITDA", "P/E", "etch market share", "layer count",
+    ],
+))
+
+# ── Healthcare ───────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="MRK",
+    company_name="Merck & Co., Inc.",
+    business_model=(
+        "Merck is a global pharmaceutical leader with Keytruda (pembrolizumab) "
+        "as the world's best-selling cancer immunotherapy, Gardasil (HPV vaccine), "
+        "Lagevrio (COVID antiviral), and a broad pipeline in oncology, vaccines, "
+        "and infectious disease.  Animal health (Merck Animal Health) contributes "
+        "~10% of revenue with durable companion animal and livestock franchises.  "
+        "Keytruda loss-of-exclusivity in 2028 is the primary medium-term transition "
+        "risk, partially mitigated by MK-7684A and other successor programs."
+    ),
+    primary_revenue_drivers=[
+        "Keytruda (~45% of revenue) — approved in 40+ cancer indications across "
+        "1L/2L monotherapy and combination regimens; standard of care in NSCLC, "
+        "melanoma, MSI-H, and expanding rapidly in earlier-stage settings",
+        "Gardasil HPV vaccine (~15%) — global standard of care for HPV prevention; "
+        "particularly strong in China through Zhifei distribution agreement",
+        "Animal health, Lagevrio, and hospital products (~40%) — diversified "
+        "revenue streams providing stability across oncology growth cycles",
+    ],
+    recurring_revenue_sources=[
+        "Keytruda patient adherence to long-term maintenance immunotherapy protocols "
+        "drives recurring prescription refill volume across approved indications",
+        "Gardasil multi-year contract vaccine supply agreements with national "
+        "immunization programs and school-based vaccination campaigns",
+        "Animal health subscription-based preventive care (Bravecto, NexGard, "
+        "Nobivac) drives recurring companion animal and livestock pharmaceutical revenue",
+        "Oncology maintenance therapy dosing cycles across Merck hospital and "
+        "specialty pharmacy accounts deliver predictable infusion center volume",
+    ],
+    rate_sensitivity_note=(
+        "Merck is not directly rate-sensitive.  P/E and FCF yield are the primary "
+        "valuation anchors.  Keytruda LOE in 2028 compresses the P/E multiple vs "
+        "peers with longer-dated pipeline coverage; FCF yield of 4-6% supports "
+        "the base case even in a post-Keytruda revenue step-down scenario."
+    ),
+    inflation_pass_through=(
+        "Good: branded pharmaceuticals have historically held pricing power above "
+        "CPI.  The IRA drug price negotiation applies to Keytruda from ~2028, "
+        "introducing some pricing risk on the post-LOE biologics franchise."
+    ),
+    recession_behavior=(
+        "Merck's pharmaceutical demand is stable through economic cycles as oncology "
+        "and vaccine treatments are essential.  Keytruda immunotherapy demonstrates "
+        "resilient utilization from non-elective cancer care decisions.  Merck's "
+        "medicines serve mission-critical therapeutic areas with secular demand from "
+        "aging global populations and expanding cancer screening programs."
+    ),
+    major_risks=[
+        "Keytruda loss-of-exclusivity in 2028 — Keytruda generates ~$25B+ annually "
+        "and faces biosimilar competition from 2028; the revenue cliff requires "
+        "successful pipeline launches (MK-7684A, subcutaneous formulation) to offset",
+        "IRA drug price negotiation — Keytruda is subject to Medicare price "
+        "negotiation from ~2028, which may reduce oncology reimbursement and "
+        "compress the peak sales trajectory in the US market",
+        "China Gardasil headwind — Zhifei distribution channel destocking and "
+        "China national HPV vaccination program policy changes created a $3B+ "
+        "revenue shortfall in 2023-24, with limited visibility on recovery timing",
+        "Pipeline execution risk — successor programs (MK-7684A TIGIT combo, "
+        "islatravir HIV, sotatercept) need to demonstrate Phase 3 efficacy to "
+        "bridge the post-Keytruda revenue gap; development setbacks are costly",
+        "Animal health competitive pressure — Zoetis and Elanco compete aggressively "
+        "in companion animal parasiticides; Bravecto chewable faces growing competition",
+    ],
+    valuation_style=(
+        "MRK trades at 11-15x forward earnings and a FCF yield of 5-7%, embedding "
+        "a significant discount for Keytruda LOE risk in 2028.  The investment thesis "
+        "requires confidence in MK-7684A and subcutaneous Keytruda as durable revenue "
+        "bridges.  P/E relative to sector is depressed by the LOE discount; "
+        "an investor taking a positive view on the pipeline is paid to wait."
+    ),
+    key_metrics=[
+        "Keytruda revenue by indication and line of therapy",
+        "Gardasil China volume and channel inventory normalization",
+        "Pipeline Phase 3 readouts (MK-7684A, islatravir, sotatercept)",
+        "Animal health revenue growth vs. Zoetis",
+        "FCF yield and dividend growth sustainability post-2028",
+    ],
+    competitive_advantages=[
+        "Keytruda oncology franchise — dominant PD-1 immunotherapy with 40+ "
+        "approved indications, massive clinical trial investment, and physician "
+        "familiarity creating switching resistance even as biosimilars approach",
+        "Gardasil HPV vaccine global leadership — only vaccine approved for "
+        "9-valent HPV prevention with established school-based vaccination programs "
+        "across 130+ countries and expanding adolescent immunization coverage",
+        "Merck Animal Health companion animal scale — Bravecto oral flea/tick, "
+        "NexGard heartworm prevention, and Nobivac vaccines provide recurring "
+        "veterinarian-dispensed revenue with loyal pet owner adherence",
+        "Global biologic manufacturing network — large-scale fermentation and "
+        "fill-finish capacity supports Keytruda supply and future biologic pipeline",
+        "Regulatory expertise and oncology clinical development capability — "
+        "Merck's oncology clinical infrastructure has produced more approvals "
+        "than any pharma peer in the past decade",
+    ],
+    business_model_keywords=[
+        "MRK", "Merck", "Keytruda", "pembrolizumab", "Gardasil", "HPV vaccine",
+        "Lagevrio", "oncology", "immunotherapy", "PD-1", "NSCLC", "melanoma",
+        "animal health", "Bravecto", "LOE", "FCF yield", "P/E", "biosimilar",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="ABT",
+    company_name="Abbott Laboratories",
+    business_model=(
+        "Abbott is a diversified healthcare company spanning medical devices "
+        "(FreeStyle Libre CGM, cardiac rhythm, electrophysiology, vascular), "
+        "diagnostics (core laboratory, rapid testing, molecular), nutrition "
+        "(Similac, Ensure, PediaSure), and established pharmaceuticals.  "
+        "FreeStyle Libre continuous glucose monitoring is the world's most "
+        "widely used CGM system, generating high-margin, recurring sensor "
+        "revenue from 6+ million active users.  Diversification across "
+        "four segments provides resilience against single-segment headwinds."
+    ),
+    primary_revenue_drivers=[
+        "Medical devices (~50%) — FreeStyle Libre CGM, Electrophysiology "
+        "(EnSite X), cardiac rhythm management, and neuromodulation; "
+        "Libre alone represents ~$6B revenue and growing double-digits",
+        "Diagnostics (~25%) — core laboratory immunoassay and clinical "
+        "chemistry analyzers, rapid COVID/flu/RSV point-of-care tests, "
+        "and molecular diagnostics (Alinity m); base lab business is recurring",
+        "Nutrition (~15%) and Established Pharma (~10%) — pediatric/adult "
+        "nutritionals and branded generics in emerging markets",
+    ],
+    recurring_revenue_sources=[
+        "FreeStyle Libre CGM sensor subscription programs drive recurring "
+        "consumable purchases as diabetic patients replace sensors every 14 days",
+        "Hospital diagnostic reagent service contract agreements for Alinity "
+        "and Architect analyzer installed base generate recurring reagent pulls",
+        "Patient adherence to continuous nutrition therapy (Similac, Ensure, "
+        "PediaSure) drives repeat institutional and retail purchasing",
+        "Medical device maintenance agreements for cardiac monitoring and "
+        "vascular intervention installed base in hospital systems",
+    ],
+    rate_sensitivity_note=(
+        "Abbott is not directly rate-sensitive.  P/E and EV/EBITDA are "
+        "the primary valuation anchors.  FreeStyle Libre's international "
+        "revenue (~60% of Libre) creates currency translation exposure."
+    ),
+    inflation_pass_through=(
+        "Good: Libre sensor pricing is above commodity; diagnostic reagent "
+        "pricing has cost-plus components; nutrition products carry brand premiums."
+    ),
+    recession_behavior=(
+        "Abbott's medical device and diagnostic utilization is stable through "
+        "economic cycles as patient care is essential.  FreeStyle Libre CGM "
+        "adoption is resilient given the non-elective nature of diabetic management.  "
+        "Abbott's diversified business model provides mission-critical products "
+        "across multiple healthcare segments with secular demand from chronic "
+        "disease prevalence and aging populations."
+    ),
+    major_risks=[
+        "FreeStyle Libre competition from Dexcom G7 — Dexcom's G7 and G6 "
+        "compete directly in the CGM market; Libre's price advantage and "
+        "over-the-counter positioning are key differentiators but market "
+        "share competition is intensifying in the US",
+        "Diabetes technology disruption from GLP-1 drugs — widespread adoption "
+        "of GLP-1 agonists (Ozempic, Wegovy) in Type 2 diabetes may reduce "
+        "CGM adoption rates and long-run Libre addressable market",
+        "Post-COVID diagnostics normalization — Abbott's rapid COVID testing "
+        "contributed $7B+ in peak revenue; the normalization to endemic testing "
+        "levels created a multi-year revenue reset in the diagnostics segment",
+        "Nutrition quality control risk — Abbott's Sturgis formula plant "
+        "shutdown in 2022 demonstrated vulnerability to regulatory action "
+        "on manufacturing quality, with multi-quarter revenue and reputational impact",
+    ],
+    valuation_style=(
+        "ABT trades at 22-27x forward earnings and 16-20x EV/EBITDA, at a "
+        "premium to diversified medical device peers reflecting Libre CGM "
+        "growth and multi-segment resilience.  The investment thesis centers "
+        "on Libre doubling its active user base and electrophysiology (pulse "
+        "field ablation) becoming a $1B+ incremental revenue contributor.  "
+        "FCF yield of 3-4% supports dividend growth and capital return."
+    ),
+    key_metrics=[
+        "FreeStyle Libre revenue and active user count",
+        "Diagnostics base business revenue ex-COVID rapid tests",
+        "Electrophysiology revenue (EP ablation market share)",
+        "Nutrition segment margin recovery",
+        "EV/EBITDA vs. diversified healthcare peers",
+    ],
+    competitive_advantages=[
+        "FreeStyle Libre CGM global market leadership with 6+ million active "
+        "users — the most widely used continuous glucose monitor globally with "
+        "sensor form factor advantages over Dexcom",
+        "Diagnostics installed base of Alinity and Architect analyzers in "
+        "hospital core laboratories creating captive reagent pull revenue with "
+        "high switching costs for clinical laboratory operators",
+        "Consumer nutrition brand equity (Similac, Ensure, PediaSure) with "
+        "pediatric and adult nutritional dominance in institutional and retail "
+        "channels across developed and emerging markets",
+        "Electrophysiology procedural technology leadership — Volt PFA and "
+        "EnSite X mapping system position Abbott for EP ablation market share "
+        "gains in atrial fibrillation treatment",
+        "Diversified business model provides single-company exposure to "
+        "medical devices, diagnostics, nutrition, and pharma — unique "
+        "multi-segment resilience vs. pure-play device or diagnostics peers",
+    ],
+    business_model_keywords=[
+        "ABT", "Abbott", "FreeStyle Libre", "CGM", "Dexcom", "Alinity",
+        "Similac", "Ensure", "cardiac rhythm", "electrophysiology",
+        "diabetes monitoring", "diagnostics", "P/E", "EV/EBITDA", "pulse field ablation",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="TMO",
+    company_name="Thermo Fisher Scientific Inc.",
+    business_model=(
+        "Thermo Fisher is the world's leading life science tools and services "
+        "company, providing analytical instruments, reagents and consumables, "
+        "biopharma contract manufacturing (CMO), CRO services, and specialty "
+        "diagnostics.  Revenue is generated through four segments: Life Science "
+        "Solutions, Analytical Instruments, Specialty Diagnostics, and "
+        "Laboratory Products.  Approximately 50% of revenue is recurring "
+        "(reagents, consumables, services) providing stability across capital "
+        "equipment cycles."
+    ),
+    primary_revenue_drivers=[
+        "Life Science Solutions (~35%) — PCR reagents, cell culture media, "
+        "antibodies, gene expression; highly recurring consumable pull",
+        "Pharma Services (CMO/CRO) (~20%) — contract drug manufacturing and "
+        "clinical services for biopharma customers; multi-year contract revenue",
+        "Analytical Instruments (~20%) — mass spectrometers, chromatography, "
+        "electron microscopes; capital equipment with aftermarket support",
+        "Laboratory Products and Services (~25%) — lab supplies, clinical trials "
+        "logistics, and Fisher Scientific channel distribution",
+    ],
+    recurring_revenue_sources=[
+        "Research reagent and consumable subscription programs at biopharma "
+        "and academic accounts provide highly recurring laboratory supply revenue",
+        "Biopharmaceutical contract manufacturing multi-year contract agreements "
+        "for drug substance and drug product supply to pharma developers",
+        "Analytical instrument service contract agreements covering preventive "
+        "maintenance and calibration of mass spec and chromatography systems",
+        "Laboratory equipment maintenance agreements for installed base of "
+        "chromatography, spectroscopy, and electron microscopy systems",
+    ],
+    rate_sensitivity_note=(
+        "Thermo Fisher is not directly rate-sensitive.  P/E and EV/EBITDA are "
+        "primary valuation anchors.  Higher rates slow biopharma capital deployment "
+        "and VC-funded biotech spending, creating an indirect demand headwind."
+    ),
+    inflation_pass_through=(
+        "Good: proprietary reagents and consumables carry pricing power; "
+        "CMO services include cost-pass-through provisions; "
+        "Fisher Scientific channel distribution has commodity components."
+    ),
+    recession_behavior=(
+        "Life science research spending is mission-critical for drug development "
+        "pipelines.  Biopharma CMO and clinical manufacturing demand is resilient "
+        "to economic cycles.  Laboratory consumable utilization is stable due to "
+        "ongoing research programs.  Diagnostic testing volumes are essential for "
+        "healthcare delivery with secular growth from outsourced biopharma services "
+        "and multi-omics research."
+    ),
+    major_risks=[
+        "Biopharma CapEx and R&D spending cycle — large pharma and biotech "
+        "can defer instrument purchases and reduce lab supply orders in budget "
+        "constraint periods; 2022-24 biopharma funding drought created instrument "
+        "and consumable headwinds above base business",
+        "Academic and government funding variability — NIH funding levels and "
+        "grant cycle timing affect instrument and reagent purchasing; budget "
+        "continuing resolutions create order timing uncertainty",
+        "China market slowdown — TMO's China revenue (~10%) decelerated sharply "
+        "in 2022-23 as local competitors gained share and COVID testing demand "
+        "normalized; China instruments market remains soft",
+        "PPD CRO business integration — acquisition of PPD added contract research "
+        "capabilities but also integration execution requirements and exposure "
+        "to biotech funding cycles for drug development program initiation",
+    ],
+    valuation_style=(
+        "TMO trades at 22-28x forward earnings and 15-18x EV/EBITDA, at a premium "
+        "to instrument peers reflecting CMO/CRO mix, recurring consumable base, "
+        "and M&A integration discipline.  The investment thesis requires "
+        "biopharma spending normalization and instrument cycle recovery.  "
+        "FCF yield of 3-4% supports capital allocation flexibility."
+    ),
+    key_metrics=[
+        "Life Science Solutions organic growth (reagents and consumables)",
+        "Pharma Services revenue growth and CMO order book",
+        "Analytical Instruments bookings vs. prior quarter",
+        "China revenue growth (biopharma spend recovery)",
+        "Adjusted EPS growth and FCF conversion",
+    ],
+    competitive_advantages=[
+        "Instrumentation installed base stickiness — analytical instruments "
+        "are integrated into research workflows; switching costs from software, "
+        "methods, and training lock in Thermo Fisher's mass spec and chromatography "
+        "customers for 7-10+ year replacement cycles",
+        "Biopharma CMO/CRO scale — Thermo Fisher's Patheon CMO and PPD CRO "
+        "capabilities create an end-to-end outsourcing partner for drug development, "
+        "differentiated from pure instrument vendors",
+        "Consumables captivity — proprietary cell culture media, PCR reagents, "
+        "and antibodies sold through Fischer Scientific create recurring pull "
+        "from laboratories with limited switching alternatives",
+        "Acquisition integration track record — Thermo Fisher has successfully "
+        "integrated Life Technologies, PPD, and other acquisitions, demonstrating "
+        "serial M&A compounding capability",
+        "Global laboratory supply chain scale — Fisher Scientific distribution "
+        "serves 300,000+ customers with next-day delivery of 750,000+ lab products, "
+        "creating unmatched distribution breadth",
+    ],
+    business_model_keywords=[
+        "TMO", "Thermo Fisher", "life science tools", "reagent", "consumable",
+        "biopharma CMO", "CRO", "mass spectrometry", "chromatography",
+        "Fisher Scientific", "PCR", "cell culture", "P/E", "EV/EBITDA",
+        "biomanufacturing", "Patheon",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="PFE",
+    company_name="Pfizer Inc.",
+    business_model=(
+        "Pfizer is a global pharmaceutical company with a portfolio spanning "
+        "oncology (Ibrance, Xtandi partnership, Lorbrena), vaccines (Prevnar, "
+        "Comirnaty), antivirals (Paxlovid, Nirmatrelvir), hospital products, "
+        "and internal medicine.  Revenue peaked in 2022 from COVID vaccine and "
+        "Paxlovid sales (~$55B), then normalized sharply.  The $43B Seagen "
+        "acquisition (2023) added an ADC oncology platform.  Pfizer is executing "
+        "cost reduction and pipeline prioritization to offset the post-COVID "
+        "revenue step-down."
+    ),
+    primary_revenue_drivers=[
+        "Oncology (~25%) — Ibrance CDK4/6, Xtandi co-promotion, Eliquis "
+        "co-ownership, and Seagen ADC portfolio (Padcev, Tukysa, Adcetris)",
+        "Vaccines (~20%) — Prevnar 20 pneumococcal, Comirnaty COVID-19 vaccine "
+        "(declining); Abrysvo RSV vaccine (new launch)",
+        "Hospital and antivirals (~20%) — Paxlovid COVID antiviral (endemic "
+        "demand), Sulperazon, Zyvox, and IV hospital products",
+        "Internal medicine, rare disease, and Seagen integration (~35%)",
+    ],
+    recurring_revenue_sources=[
+        "Branded prescription refill volume from Ibrance, Eliquis, and Prevnar "
+        "commercial franchises provides recurring revenue from established products",
+        "Government and hospital contracted pharmaceutical supply agreements "
+        "generate institutional purchasing volume across multiple product categories",
+    ],
+    rate_sensitivity_note=(
+        "Pfizer is not directly rate-sensitive.  P/E and EV/EBITDA on normalized "
+        "post-COVID earnings are the primary valuation anchors.  The stock trades "
+        "at trough multiples reflecting pipeline execution uncertainty."
+    ),
+    inflation_pass_through=(
+        "Moderate: branded pharmaceuticals carry pricing power, partially offset "
+        "by IRA Medicare negotiation and PBM rebate dynamics."
+    ),
+    recession_behavior=(
+        "Pfizer generates stable revenue from its established pharmaceutical "
+        "franchise and demonstrates resilient prescription volumes from defensive "
+        "medicine categories.  However, COVID-related product demand has cyclical "
+        "exposure to variant dynamics and government procurement decisions."
+    ),
+    major_risks=[
+        "Post-COVID revenue normalization — Comirnaty and Paxlovid revenue "
+        "declined from $35B+ peak to $10B+ endemic run rate; the gap must be "
+        "filled by pipeline launches and Seagen integration contribution",
+        "Seagen ADC integration execution — $43B acquisition requires oncology "
+        "commercial execution across Padcev, Tukysa, and Adcetris ADCs; "
+        "ADC market competition is intensifying from AstraZeneca and Daiichi",
+        "Loss of exclusivity wave — multiple Pfizer products face LOE through "
+        "2030 including Xeljanz, Vyndaqel, and elranatamab; biosimilar entries "
+        "create revenue headwinds concurrent with Seagen integration costs",
+        "IRA drug price negotiation — Eliquis (co-owned with BMS) is subject "
+        "to Medicare price negotiation, reducing one of Pfizer's most important "
+        "revenue contributors",
+    ],
+    valuation_style=(
+        "PFE trades at 9-12x forward P/E and 8-10x EV/EBITDA on normalized "
+        "earnings, near trough multiples for a large-cap pharmaceutical.  "
+        "The dividend yield of 5-6% provides income support while the pipeline "
+        "recovery plays out.  EV/EBITDA relative to LOE-adjusted peers is the "
+        "most appropriate through-cycle metric given revenue step-down dynamics."
+    ),
+    key_metrics=[
+        "Paxlovid and Comirnaty revenue (endemic trajectory vs. guidance)",
+        "Seagen ADC portfolio sales growth (Padcev, Tukysa, Adcetris)",
+        "Adjusted cost savings progress vs. $4B target",
+        "Late-stage pipeline readouts (danuglipron, marstacimab, others)",
+        "Dividend coverage ratio (FCF vs. dividend payout)",
+    ],
+    competitive_advantages=[
+        "Global pharmaceutical manufacturing and distribution scale — Pfizer's "
+        "100+ manufacturing sites and cold-chain logistics supported the fastest "
+        "vaccine rollout in history",
+        "Prevnar pneumococcal vaccine franchise — Prevnar 20 maintains market "
+        "leadership in the $6B+ pneumococcal vaccine market with pediatric "
+        "and adult immunization schedule entrenchment",
+        "Seagen ADC oncology pipeline — Padcev, Tukysa, and Adcetris provide "
+        "exposure to the high-growth ADC oncology segment with multiple approved "
+        "indications and pipeline combinations",
+    ],
+    business_model_keywords=[
+        "PFE", "Pfizer", "Paxlovid", "Comirnaty", "Prevnar", "Ibrance",
+        "Eliquis", "Seagen", "ADC", "oncology", "COVID antiviral",
+        "P/E", "EV/EBITDA", "LOE", "dividend yield",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="MDT",
+    company_name="Medtronic plc",
+    business_model=(
+        "Medtronic is the world's largest pure-play medical device company, "
+        "operating in Cardiovascular (~40%), Neuroscience (~25%), Medical "
+        "Surgical (~25%), and Diabetes (~10%).  Products include pacemakers, "
+        "defibrillators, spinal cord stimulators, robotic surgery (Hugo), "
+        "insulin pumps, and surgical energy tools.  Revenue is ~55% US and "
+        "~45% international.  The company is executing a multi-year efficiency "
+        "program while managing the Hugo robotic surgery ramp against Intuitive's "
+        "da Vinci dominance."
+    ),
+    primary_revenue_drivers=[
+        "Cardiovascular (~40%) — cardiac rhythm management (pacemakers, ICDs, "
+        "CRT), structural heart (TAVR with Evolut), coronary and peripheral "
+        "vascular; relatively stable with procedure volume growth",
+        "Neuroscience (~25%) — spinal cord stimulation, deep brain stimulation, "
+        "ENT, and cranial neurosurgery; procedure-dependent revenue",
+        "Medical Surgical (~25%) — surgical energy, monitoring, robotics (Hugo); "
+        "hospital CapEx sensitive segment",
+        "Diabetes (~10%) — insulin pumps (MiniMed) and CGM (Guardian sensor); "
+        "facing competitive pressure from Abbott FreeStyle Libre",
+    ],
+    recurring_revenue_sources=[
+        "Long-term hospital purchasing agreements for cardiac rhythm management "
+        "systems and neuromodulation devices provide volume commitment revenue",
+        "Device replacement cycle revenue from implanted cardiac pacemakers, "
+        "ICDs, and spinal cord stimulators with 5-10 year battery replacement "
+        "timing creates predictable upgrade volume",
+    ],
+    rate_sensitivity_note=(
+        "Medtronic is not directly rate-sensitive.  P/E and EV/EBITDA are "
+        "primary valuation anchors.  Currency translation is a material factor "
+        "given 45%+ international revenue.  MDT trades at a discount to peers "
+        "reflecting execution uncertainty on Hugo robotics and diabetes."
+    ),
+    inflation_pass_through=(
+        "Moderate: medical device pricing faces hospital GPO pressure; "
+        "implantable devices have more pricing power than commodity devices."
+    ),
+    recession_behavior=(
+        "Medtronic generates stable procedure volumes from its cardiac and "
+        "neuromodulation device franchises and demonstrates resilient hospital "
+        "purchasing from the defensive nature of arrhythmia and pain therapy.  "
+        "However, hospital CapEx for Hugo robotic surgery and large capital "
+        "equipment has cyclical sensitivity to hospital budget constraints."
+    ),
+    major_risks=[
+        "Hugo robotic surgery ramp vs. Intuitive Surgical's da Vinci — "
+        "Medtronic's Hugo system needs to gain surgeon adoption in a market "
+        "where Intuitive has dominant installed base and training entrenchment",
+        "Diabetes segment competitive pressure — Abbott FreeStyle Libre and "
+        "Dexcom are taking CGM share from Medtronic Guardian; insulin pump "
+        "market is also pressured by Insulet OmniPod",
+        "Hospital CapEx and elective procedure volume sensitivity — hospital "
+        "staffing shortages and budget pressures delay robotic surgery capital "
+        "purchases and reduce elective spine and ENT procedure volumes",
+        "Currency translation headwinds — MDT's 45%+ international revenue "
+        "creates USD appreciation headwinds that reduce reported earnings "
+        "and complicate multi-year guidance delivery",
+    ],
+    valuation_style=(
+        "MDT trades at 14-17x forward P/E and 12-14x EV/EBITDA, at a discount "
+        "to the medical device peer group reflecting Hugo execution risk and "
+        "diabetes competitive pressure.  The re-rating catalyst is Hugo "
+        "procedure volume acceleration and diabetes segment stabilization.  "
+        "FCF yield of 4-5% and a 3%+ dividend yield support income investors."
+    ),
+    key_metrics=[
+        "Hugo robotic surgery procedure volume and installed base growth",
+        "Cardiovascular revenue growth vs. ABBV and Edwards Lifesciences",
+        "Diabetes revenue trend (MiniMed vs. Abbott Libre and Tandem)",
+        "Adjusted operating margin improvement trajectory",
+        "FCF conversion and dividend sustainability",
+    ],
+    competitive_advantages=[
+        "Cardiac rhythm management leadership — pacemakers, ICDs, and CRT "
+        "devices with decades of installed base, clinical evidence, and "
+        "electrophysiologist training entrenchment",
+        "Spinal cord stimulation and deep brain stimulation — proprietary "
+        "neurostimulation technology with multi-year clinical outcome data "
+        "differentiating from competition",
+        "Global medical device commercial infrastructure — 90+ country presence "
+        "with direct sales forces and hospital relationship depth enabling "
+        "cross-selling across cardiovascular, neuro, and surgical portfolios",
+    ],
+    business_model_keywords=[
+        "MDT", "Medtronic", "cardiac rhythm management", "pacemaker", "ICD",
+        "Hugo robotic surgery", "spinal cord stimulation", "MiniMed", "TAVR",
+        "Evolut", "deep brain stimulation", "P/E", "EV/EBITDA", "da Vinci",
+    ],
+))
+
+# ── Consumer ──────────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="HD",
+    company_name="The Home Depot, Inc.",
+    business_model=(
+        "Home Depot is the world's largest home improvement retailer, "
+        "operating 2,300+ US stores and serving both DIY consumers and "
+        "professional contractors (Pro).  Pro customers (~55% of sales) are "
+        "the structural growth driver — tradespeople, property managers, and "
+        "MRO contractors who spend at higher basket sizes and return more "
+        "frequently.  HD Supply (sold in 2020) and Pro ecosystem investments "
+        "are deepening the professional relationship through credit, delivery, "
+        "and job-site services."
+    ),
+    primary_revenue_drivers=[
+        "Pro contractor revenue (~55%) — licensed trades (plumbers, electricians, "
+        "painters) and property managers purchasing lumber, fixtures, MRO, and "
+        "installation materials; Pro ARPU 3-5x higher than DIY customers",
+        "DIY consumer (~45%) — home repair, lawn and garden, paint, appliances; "
+        "discretionary renovation spending is housing-market sensitive",
+        "Interconnected (digital + stores) — ~15% of sales initiated online; "
+        "buy-online-pickup-in-store and same-day delivery for Pro accounts",
+    ],
+    recurring_revenue_sources=[
+        "Pro Xtra loyalty membership program drives recurring professional "
+        "contractor purchasing through volume discounts and job lot quantity pricing",
+        "Contractor and property manager maintenance supply purchasing for "
+        "repair-and-replace and preventive upkeep drives repeat basket transactions",
+        "Home installation service contract revenue from kitchen, bath, "
+        "flooring, and roofing program installations in existing homes",
+        "HD Pro subscription account relationships with commercial customers "
+        "generate multi-location procurement volume and loyalty",
+    ],
+    rate_sensitivity_note=(
+        "Home Depot is meaningfully rate-sensitive — higher mortgage rates "
+        "suppress existing home turnover, which is the primary demand driver "
+        "for home improvement spending.  The 'lock-in effect' (homeowners "
+        "staying put rather than selling) temporarily supports repair spend "
+        "but reduces renovation appetite.  EV/EBITDA and P/E are the anchors."
+    ),
+    inflation_pass_through=(
+        "Good: lumber, building materials, and branded product pricing "
+        "is market-driven; HD passes commodity inflation through prices "
+        "and benefits from nominal pricing on lumber super-cycles."
+    ),
+    recession_behavior=(
+        "Home Depot's home maintenance and repair spending is resilient as "
+        "homeowners maintain essential property upkeep regardless of the "
+        "economic cycle.  Pro contractor demand is stable driven by repair "
+        "and remodel activity.  HD's MRO supplies are defensive must-replace "
+        "categories.  Secular aging of the US housing stock supports replacement "
+        "demand with mission-critical plumbing, electrical, and HVAC needs."
+    ),
+    major_risks=[
+        "Housing market slowdown — existing home sales below 4M units "
+        "suppress renovation project initiation; Fed rate hikes 2022-24 "
+        "created the longest US housing market freeze in modern history",
+        "Consumer spending contraction — DIY discretionary renovation "
+        "spending (kitchen/bath remodels, large projects) declines "
+        "materially in consumer uncertainty environments",
+        "Lowe's competitive pressure — LOW is a direct format competitor "
+        "with a comparable Pro push; geographic and format competition "
+        "limits HD's pricing power in overlapping markets",
+        "Commodity input cost volatility — lumber and building materials "
+        "deflation reduces transaction values and comps even on flat unit volumes",
+    ],
+    valuation_style=(
+        "HD trades at 22-28x forward P/E and 16-20x EV/EBITDA, at a premium "
+        "to Lowe's reflecting Pro ecosystem depth and execution consistency.  "
+        "The investment thesis requires housing market normalization — each "
+        "200bps decline in the 30-year mortgage rate adds 500K+ existing home "
+        "sales and an estimated $1-2B in incremental HD revenue.  "
+        "FCF yield of 2-3% supports a growing dividend and buyback program."
+    ),
+    key_metrics=[
+        "Comparable-store sales growth (overall and Pro vs. DIY)",
+        "Average ticket and transactions per store",
+        "Pro customer mix as % of total sales",
+        "US existing home sales (leading demand indicator)",
+        "Operating leverage (margin expansion at positive comp)",
+    ],
+    competitive_advantages=[
+        "Scale purchasing power — HD's $160B+ revenue provides the lowest "
+        "vendor cost-of-goods across every building material and tool category, "
+        "enabling everyday-low-pricing and category leadership",
+        "Pro ecosystem depth — Pro Xtra loyalty, dedicated Pro sales desk, "
+        "job-site delivery, tool rental, and volume pricing create multi-touch "
+        "switching costs for professional contractors at scale",
+        "Private label product mix — HDX, Husky, Glacier Bay, and Vigoro "
+        "brands command premium margins while providing HD exclusive SKUs "
+        "unavailable at competing home improvement retailers",
+        "Supply chain and distribution infrastructure — 25+ distribution "
+        "centers and direct-to-job-site delivery for Pro orders enable "
+        "same-day and next-day fulfillment at store footprint scale",
+        "Store network density and brand equity — 2,300+ US stores within "
+        "10 miles of ~90% of US households, creating unmatched convenience "
+        "for repair and maintenance urgency purchasing",
+    ],
+    business_model_keywords=[
+        "HD", "Home Depot", "Pro Xtra", "Pro contractor", "MRO",
+        "home improvement", "repair and remodel", "lumber", "building materials",
+        "housing market", "Lowe's", "P/E", "EV/EBITDA", "existing home sales",
+        "FCF yield", "tool rental",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="MCD",
+    company_name="McDonald's Corporation",
+    business_model=(
+        "McDonald's is the world's largest fast food franchisor with 40,000+ "
+        "restaurants in 100+ countries, approximately 95% franchised.  Revenue "
+        "comes from royalties and rents from franchisees (~65%) and "
+        "company-operated restaurant sales (~35%).  The franchise model generates "
+        "high-margin, asset-light royalty income while franchisees bear food "
+        "cost, labor, and capital investment risk.  Digital ordering and "
+        "loyalty (MyMcDonald's Rewards) is a strategic investment to drive "
+        "frequency and personalized offers."
+    ),
+    primary_revenue_drivers=[
+        "Franchise revenues (~65%) — royalties (% of franchisee system sales) "
+        "and rent from franchised restaurant properties; high-margin, recurring",
+        "Company-operated restaurant sales (~35%) — fully owned locations "
+        "in select markets; more volatile with food cost and labor dynamics",
+        "International growth — 70%+ of restaurants outside the US; "
+        "IOM (International Operated Markets) and IDL segments provide "
+        "geographic diversification across Europe, APAC, and LatAm",
+    ],
+    recurring_revenue_sources=[
+        "Franchise royalty fee income from global franchisee system sales "
+        "generates recurring, asset-light revenue tied to restaurant traffic",
+        "Long-term rent income from franchised restaurant properties "
+        "owned by McDonald's provides contracted lease revenue",
+    ],
+    rate_sensitivity_note=(
+        "McDonald's is moderately rate-sensitive due to $40B+ debt load "
+        "used to fund its real estate model and buybacks.  Rising rates "
+        "increase interest expense and compress the EV/EBITDA multiple.  "
+        "P/E and FCF yield are primary valuation anchors."
+    ),
+    inflation_pass_through=(
+        "Good: franchisee-level menu price increases pass food and labor "
+        "inflation to consumers; McDonald's royalties are % of system sales "
+        "and therefore benefit from nominal price increases."
+    ),
+    recession_behavior=(
+        "McDonald's franchise royalty income is stable across consumer spending "
+        "cycles and demonstrates resilient traffic from value-seeking consumers "
+        "trading down to quick-service dining.  However, premium-priced menu "
+        "items and delivery orders have cyclical sensitivity to consumer "
+        "spending patterns and competitive fast-casual alternatives."
+    ),
+    major_risks=[
+        "Value perception and traffic headwinds — 2024 consumer pushback on "
+        "fast food price increases created comparable transaction declines; "
+        "McDonald's needs to balance franchisee economics with consumer "
+        "affordability to restore traffic growth",
+        "Franchisee profitability pressure — rising labor costs, food "
+        "inflation, and equipment investments squeeze franchisee cash-on-cash "
+        "returns, potentially reducing network expansion ambitions",
+        "Brand reputation and food safety incidents — any system-wide food "
+        "safety issue creates immediate traffic deterioration and lasting "
+        "brand damage, as demonstrated by the 2024 E. coli outbreak",
+        "Digital and delivery competitive intensity — Chipotle, Chick-fil-A, "
+        "and delivery aggregators compete for the same consumer occasions; "
+        "loyalty program ROI requires ongoing investment to maintain frequency",
+    ],
+    valuation_style=(
+        "MCD trades at 22-28x forward P/E and 20-24x EV/EBITDA, commanding "
+        "a premium for franchise model quality and global scale.  The dividend "
+        "yield of 2-2.5% and consistent payout growth attract income investors.  "
+        "EV/EBITDA relative to QSR peers is the most reliable cross-cycle anchor."
+    ),
+    key_metrics=[
+        "Global comparable sales growth (US vs. IOM vs. IDL)",
+        "Average unit volume (AUV) by market",
+        "Digital sales as % of system sales",
+        "Franchisee cash-on-cash returns",
+        "Net restaurant count growth",
+    ],
+    competitive_advantages=[
+        "Franchise royalty model — 95% franchised structure generates "
+        "high-margin recurring income while franchisees absorb capital "
+        "and operational risk",
+        "Global brand recognition — McDonald's Golden Arches is among the "
+        "most recognized brands globally, enabling rapid market entry and "
+        "consumer trust",
+        "Real estate portfolio — McDonald's ownership of prime restaurant "
+        "locations provides rent income and embedded asset appreciation "
+        "independent of food service revenues",
+    ],
+    business_model_keywords=[
+        "MCD", "McDonald's", "franchise royalty", "QSR", "quick-service",
+        "MyMcDonald's Rewards", "system sales", "IOM", "IDL", "Big Mac",
+        "franchisee", "P/E", "EV/EBITDA", "same-store sales", "traffic",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="SBUX",
+    company_name="Starbucks Corporation",
+    business_model=(
+        "Starbucks is the world's largest premium coffeehouse chain with "
+        "36,000+ stores globally, split between company-operated (~51%) and "
+        "licensed (~49%).  Revenue is generated from company-operated beverage "
+        "and food sales, licensed store royalties, and consumer packaged goods "
+        "licensing.  The Starbucks Rewards loyalty program (34M+ active US "
+        "members) drives frequency and digital ordering.  China (~18% of stores) "
+        "is a high-growth but execution-challenged market."
+    ),
+    primary_revenue_drivers=[
+        "US company-operated stores (~60% of revenue) — beverages, food, "
+        "and merchandise at ~17,000 US locations; traffic and ticket "
+        "driven by Rewards loyalty and customization",
+        "International (~30%) — China company-operated stores and licensed "
+        "stores across Japan, UK, Canada, and Southeast Asia",
+        "Channel Development (~10%) — Nestlé Global Coffee Alliance royalties "
+        "from Starbucks-branded products sold in grocery and foodservice",
+    ],
+    recurring_revenue_sources=[
+        "Licensed store and royalty fee income from international licensed "
+        "partner locations provides recurring asset-light revenue",
+        "Repeat customer coffee purchases through Starbucks Rewards loyalty "
+        "program generate high-frequency recurring store traffic",
+    ],
+    rate_sensitivity_note=(
+        "Starbucks is not directly rate-sensitive.  P/E and EV/EBITDA are "
+        "primary valuation anchors.  Highly leveraged capital structure "
+        "($15B+ net debt) from aggressive buyback program limits financial "
+        "flexibility and increases refinancing cost sensitivity."
+    ),
+    inflation_pass_through=(
+        "Good: premium positioning allows menu price increases; coffee bean "
+        "cost inflation is partially hedged; labor cost inflation is a "
+        "challenge given barista wage increases and unionization pressure."
+    ),
+    recession_behavior=(
+        "Starbucks generates stable loyalty-driven repeat visits from its "
+        "core premium coffee customer base and demonstrates resilient revenue "
+        "from habitual morning occasion purchasing.  However, premium beverage "
+        "spending has cyclical sensitivity to consumer budget pressure and "
+        "trade-down to home brewing and value quick-service alternatives."
+    ),
+    major_risks=[
+        "China execution challenges — Starbucks China faced traffic declines "
+        "from local competitor (Luckin Coffee) share gains, economic softness, "
+        "and consumer nationalism; China revenue recovery is uncertain",
+        "US traffic headwinds — 2023-24 comparable transaction declines "
+        "from mobile order congestion, barista speed issues, and value "
+        "perception misalignment require operational turnaround execution",
+        "Unionization and labor cost pressure — Starbucks Workers United "
+        "organizing campaigns increase labor cost, reduce operational flexibility, "
+        "and create brand management complications",
+        "Premium positioning competitive pressure — Dutch Bros, Blackrock Coffee, "
+        "and QSR value coffee from McDonald's and Dunkin' compete for "
+        "occasions at the $5-7 beverage price point",
+    ],
+    valuation_style=(
+        "SBUX trades at 20-26x forward P/E and 16-19x EV/EBITDA, at a discount "
+        "to historic norms reflecting traffic weakness and China uncertainty.  "
+        "The investment thesis requires new CEO Brian Niccol's operational "
+        "improvements to restore US comparable transaction growth and China "
+        "strategic clarity.  Dividend yield of 2.5-3% provides income support."
+    ),
+    key_metrics=[
+        "US comparable transaction growth (vs. ticket growth)",
+        "China comparable sales growth and operating margin",
+        "Active Rewards members and digital order % of transactions",
+        "Store operating margin (US company-operated)",
+        "New store openings vs. closures by market",
+    ],
+    competitive_advantages=[
+        "Starbucks Rewards loyalty ecosystem — 34M+ active US members "
+        "drive above-average visit frequency, pre-ordering, and personalized "
+        "marketing that creates switching costs vs. independent coffeehouses",
+        "Brand premium positioning and customization culture — Starbucks "
+        "has created a beverage customization culture that drives ticket "
+        "inflation and consumer attachment to the personalized drink experience",
+        "Nestlé Global Coffee Alliance — $7.15B upfront from Nestlé provides "
+        "CPG distribution royalties and expands Starbucks brand reach into "
+        "grocery and foodservice channels without capital investment",
+    ],
+    business_model_keywords=[
+        "SBUX", "Starbucks", "Starbucks Rewards", "loyalty", "premium coffee",
+        "China", "licensed store", "Nestlé", "Brian Niccol", "comparable sales",
+        "barista", "P/E", "EV/EBITDA", "mobile order", "Dutch Bros",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="TGT",
+    company_name="Target Corporation",
+    business_model=(
+        "Target is a large-format general merchandise retailer operating "
+        "~1,950 US stores, positioning between mass market (Walmart) and "
+        "specialty retail.  ~50% of revenue is from food and essentials; "
+        "~50% from discretionary categories (apparel, home, electronics, "
+        "toys).  Target Circle loyalty and the RedCard (debit/credit) "
+        "drive repeat visits and provide a ~5% discount funded by "
+        "reduced interchange cost.  Same-day services (Drive Up, Shipt, "
+        "Order Pickup) have become a competitive differentiation."
+    ),
+    primary_revenue_drivers=[
+        "Food and essentials (~50%) — grocery, beverages, household "
+        "essentials, personal care, and pharmacy; stable and traffic-driving",
+        "Discretionary categories (~50%) — apparel, home furnishings, "
+        "electronics, toys, beauty, and sporting goods; higher-margin "
+        "but more economically sensitive",
+        "Same-day fulfillment — Drive Up curbside and Shipt same-day "
+        "delivery have driven incremental visit frequency from convenience-focused shoppers",
+    ],
+    recurring_revenue_sources=[
+        "Recurring consumer staple and essential purchases from Target's "
+        "food, household, and personal care categories drive repeat traffic",
+        "Target Circle loyalty program repeat volume from 100M+ enrolled "
+        "members generates habitual visit patterns and basket size lift",
+    ],
+    rate_sensitivity_note=(
+        "Target is not directly rate-sensitive.  P/E and EV/EBITDA are "
+        "primary valuation anchors.  Higher rates reduce housing activity "
+        "which is correlated with home furnishings category spending."
+    ),
+    inflation_pass_through=(
+        "Moderate: Target competes on price with Walmart and Amazon; "
+        "aggressive margin protection during inflation required costly "
+        "inventory markdowns in 2022-23 that impaired profitability."
+    ),
+    recession_behavior=(
+        "Target generates stable same-store traffic from its everyday "
+        "grocery and household essential categories and demonstrates resilient "
+        "guest loyalty through its Target Circle program.  However, Target's "
+        "apparel and home merchandise mix has cyclical sensitivity to "
+        "consumer spending patterns and discretionary purchase timing."
+    ),
+    major_risks=[
+        "Inventory management and merchandise execution — Target's 2022 "
+        "inventory overhang required $1B+ in markdowns and drove significant "
+        "margin compression; a repeat requires difficult merchandising bets",
+        "Walmart and Amazon competitive pricing pressure — both competitors "
+        "have structural advantages (Walmart's grocery density, Amazon's "
+        "Prime ecosystem) that constrain Target's price positioning latitude",
+        "Shrink and retail theft — Target has cited elevated shrink in urban "
+        "stores as a margin headwind; store closures in high-shrink markets "
+        "risk undermining its urban and suburban footprint strategy",
+        "Discretionary category spending shifts — weakening consumer sentiment "
+        "accelerates trade-down within Target's own categories and to value "
+        "competitors, particularly in apparel and home decor",
+    ],
+    valuation_style=(
+        "TGT trades at 13-17x forward P/E and 9-12x EV/EBITDA, at a "
+        "discount to Walmart reflecting higher discretionary mix and "
+        "margin execution uncertainty.  The investment thesis requires "
+        "operating margin recovery to the 6%+ range and same-store sales "
+        "growth outperformance vs. mass-market peers.  "
+        "Dividend yield of 3-4% provides income support."
+    ),
+    key_metrics=[
+        "Comparable sales growth (traffic vs. ticket)",
+        "Gross margin (inventory management and shrink indicator)",
+        "Operating margin vs. guidance range",
+        "Same-day services penetration (Drive Up, Shipt, Order Pickup)",
+        "Own-brand (private label) sales as % of total",
+    ],
+    competitive_advantages=[
+        "Own-brand private label strength — Good & Gather, Cat & Jack, "
+        "Threshold, and Brightroom provide differentiated, margin-accretive "
+        "exclusive products unavailable at competitors",
+        "RedCard loyalty ecosystem — 5% discount drives payment capture, "
+        "reduces interchange costs, and creates habitual Target-first "
+        "purchase behavior among enrolled members",
+        "Same-day fulfillment model — store-as-hub Drive Up and Shipt same-day "
+        "delivery provides e-commerce convenience without dedicated fulfillment "
+        "center infrastructure costs",
+    ],
+    business_model_keywords=[
+        "TGT", "Target", "Target Circle", "Drive Up", "Shipt", "RedCard",
+        "private label", "Good & Gather", "general merchandise", "same-day",
+        "Walmart", "Amazon", "P/E", "EV/EBITDA", "operating margin",
+    ],
+))
+
+# ── Industrials ───────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="ETN",
+    company_name="Eaton Corporation plc",
+    business_model=(
+        "Eaton is a global power management company serving electrical, "
+        "aerospace, vehicle, and hydraulics markets.  The Electrical Americas "
+        "and Electrical Global segments (~65% of EBIT) provide switchgear, "
+        "UPS systems, circuit breakers, power distribution units, and EV "
+        "charging infrastructure.  Data center power management is Eaton's "
+        "fastest-growing end market.  Aerospace provides hydraulics, actuation, "
+        "and fuel systems for commercial and military aircraft."
+    ),
+    primary_revenue_drivers=[
+        "Electrical Americas (~40%) — power distribution, UPS, surge protection, "
+        "and EV charging; driven by data center build-out and grid hardening",
+        "Electrical Global (~25%) — industrial switchgear, building electrical, "
+        "and power quality products across Europe, Asia, and Middle East",
+        "Aerospace (~15%) — hydraulic actuation, fuel management, and "
+        "environmental control systems for Boeing, Airbus, and defense programs",
+        "Vehicle and eMobility (~20%) — powertrain components and EV "
+        "charging solutions for commercial and light vehicle manufacturers",
+    ],
+    recurring_revenue_sources=[
+        "Electrical infrastructure multi-year contract projects for data center "
+        "operators, utilities, and industrial facilities provide sustained project revenue",
+        "UPS system and switchgear maintenance agreements covering installed base "
+        "of critical power equipment in data centers and hospitals",
+        "Aerospace component service contract revenue from commercial airline "
+        "and defense program overhaul and spares programs",
+        "Power monitoring and analytics subscription programs for building "
+        "management systems and industrial energy optimization platforms",
+    ],
+    rate_sensitivity_note=(
+        "Eaton is not directly rate-sensitive.  EV/EBITDA and P/E are primary "
+        "valuation anchors.  Data center and grid investment cycles are the "
+        "key demand drivers, less sensitive to interest rates than consumer "
+        "or housing markets."
+    ),
+    inflation_pass_through=(
+        "Good: electrical components and switchgear carry pricing power "
+        "from backlog dynamics and lead times; Eaton raised prices substantially "
+        "in 2021-23 with limited volume impact."
+    ),
+    recession_behavior=(
+        "Eaton's electrical infrastructure demand is mission-critical for data "
+        "centers, utilities, and hospitals.  Power management systems are "
+        "essential for uninterrupted operations in critical facilities.  "
+        "Secular electrification tailwinds from AI data center growth, EV charging, "
+        "and grid hardening provide resilient demand independent of economic cycles.  "
+        "Eaton's stable backlog and aerospace aftermarket provide earnings visibility."
+    ),
+    major_risks=[
+        "Data center CapEx cycle risk — hyperscale data center construction "
+        "programs are subject to AI infrastructure spending confidence; a "
+        "pullback in cloud CapEx commitments would reduce electrical backlog",
+        "Utility grid investment pacing — IRA-driven transmission and grid "
+        "hardening investment requires utility rate case approvals and financing; "
+        "delays reduce backlog conversion timing",
+        "Aerospace OEM production rate variability — Boeing and Airbus delivery "
+        "rate reductions impact Eaton's aerospace systems volume; "
+        "the 737 MAX production resumption and 787 ramp are key variables",
+        "Competitive intensity from Schneider Electric and ABB — both European "
+        "peers compete directly in switchgear and UPS; Eaton's North America "
+        "market leadership faces competition in global expansion markets",
+    ],
+    valuation_style=(
+        "ETN trades at 25-32x forward P/E and 18-22x EV/EBITDA, at a premium "
+        "to industrial peers reflecting data center electrical exposure and "
+        "secular electrification tailwinds.  The investment thesis requires "
+        "continued AI infrastructure investment driving data center electrical "
+        "backlog growth.  FCF yield of 2-3% supports dividend growth."
+    ),
+    key_metrics=[
+        "Electrical Americas organic revenue growth and backlog",
+        "Data center revenue as % of Electrical Americas",
+        "Aerospace systems revenue growth vs. OEM production rates",
+        "EV charging unit shipments and market share",
+        "Operating margin by segment (Electrical vs. Aerospace)",
+    ],
+    competitive_advantages=[
+        "Data center power management leadership — Eaton's UPS systems, "
+        "PDUs, and row-based power distribution are the default specification "
+        "for hyperscale and colocation data centers globally",
+        "Electrical systems expertise and certification — Eaton's switchgear, "
+        "circuit breakers, and panelboards are specified by architects and "
+        "engineers for decades-long service in mission-critical installations",
+        "Aerospace component certification and installed base — Eaton holds "
+        "FAA/EASA certification for hydraulics, fuel, and actuation systems "
+        "on commercial and military aircraft, creating multi-decade aftermarket",
+        "Grid infrastructure positioning — Eaton's transformer, medium-voltage "
+        "switchgear, and grid automation products are essential for utility "
+        "transmission and distribution hardening programs",
+        "Electrification and EV charging portfolio — Eaton's commercial EV "
+        "charging infrastructure and eMobility drivetrain components position "
+        "it for the multi-decade vehicle electrification transition",
+    ],
+    business_model_keywords=[
+        "ETN", "Eaton", "power management", "UPS", "switchgear", "data center",
+        "electrical infrastructure", "grid hardening", "EV charging", "aerospace",
+        "Schneider Electric", "ABB", "P/E", "EV/EBITDA", "electrification",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="CAT",
+    company_name="Caterpillar Inc.",
+    business_model=(
+        "Caterpillar is the world's largest manufacturer of construction and "
+        "mining equipment, diesel and natural gas engines, industrial gas "
+        "turbines, and diesel-electric locomotives.  Three segments: "
+        "Construction Industries (~40%), Resource Industries/Mining (~25%), "
+        "and Energy & Transportation (~35%).  Cat Financial provides equipment "
+        "financing to dealers and customers.  The dealer network (3,800+ dealers) "
+        "provides distribution, parts, and service coverage globally."
+    ),
+    primary_revenue_drivers=[
+        "Construction Industries (~40%) — excavators, backhoe loaders, "
+        "compact equipment for construction, infrastructure, and quarrying",
+        "Resource Industries (~25%) — large mining trucks (793, 797), "
+        "electric rope shovels, and underground mining equipment",
+        "Energy & Transportation (~35%) — reciprocating engines for gas "
+        "compression, oil and gas, marine, rail, and power generation",
+    ],
+    recurring_revenue_sources=[
+        "Dealer network replacement part and component orders from global "
+        "operating machine fleet generate recurring aftermarket revenue",
+        "Cat Financial dealer and customer financing income from equipment "
+        "loans and leases provides recurring fee and interest income",
+    ],
+    rate_sensitivity_note=(
+        "Caterpillar is moderately rate-sensitive — higher rates increase "
+        "Cat Financial cost of funds and reduce equipment financing affordability.  "
+        "EV/EBITDA on normalized mid-cycle earnings and P/E are the primary anchors."
+    ),
+    inflation_pass_through=(
+        "Good: Caterpillar has substantial pricing power on large mining "
+        "equipment and passed 15-20%+ price increases in 2021-23 "
+        "while maintaining volume."
+    ),
+    recession_behavior=(
+        "Caterpillar generates stable aftermarket parts revenue from its "
+        "global operating machine fleet and demonstrates resilient services "
+        "income from dealer network maintenance activities.  However, new "
+        "equipment orders have cyclical exposure to construction and mining "
+        "CapEx cycles that can decline 30-40% in severe downturns."
+    ),
+    major_risks=[
+        "Construction and mining CapEx cycle — equipment orders are highly "
+        "procyclical; infrastructure spending slowdowns and commodity price "
+        "declines can cause multi-quarter order cancellations and dealer "
+        "inventory destocking",
+        "China construction slowdown — real estate sector weakness in China "
+        "has reduced excavator demand significantly; China recovery "
+        "timeline remains uncertain given property market deleveraging",
+        "Commodity price sensitivity — mining equipment demand is directly "
+        "correlated with commodity prices (copper, gold, coal, iron ore); "
+        "prolonged commodity bear markets reduce miner CapEx conviction",
+        "Electrification transition — battery-electric construction and "
+        "mining equipment will eventually replace diesel; Caterpillar "
+        "must invest in zero-emission products while defending diesel margins",
+    ],
+    valuation_style=(
+        "CAT trades at 16-22x forward P/E and 12-15x EV/EBITDA on mid-cycle "
+        "normalized earnings, with peak-cycle P/E artificially compressed.  "
+        "Mid-cycle EV/EBITDA and FCF yield are the most reliable valuation "
+        "anchors.  Dividend growth history and buyback capacity support "
+        "capital return to shareholders through the cycle."
+    ),
+    key_metrics=[
+        "Order backlog by segment (Construction, Mining, Energy & Transport)",
+        "Dealer inventory months of supply",
+        "Services revenue as % of total (cycle resilience)",
+        "OPACC (operating profit after capital charge) by segment",
+        "Cat Financial portfolio quality (30-day past due rates)",
+    ],
+    competitive_advantages=[
+        "Global dealer distribution network — 3,800+ dealers in 190+ countries "
+        "provide unmatched parts availability, service coverage, and customer "
+        "proximity for machine uptime support",
+        "Cat Financial captive financing — provides equipment affordability "
+        "to dealers and customers while generating recurring interest income "
+        "and building Caterpillar's equipment ecosystem stickiness",
+        "Brand and price premium — Caterpillar commands 10-20% price premiums "
+        "vs. Komatsu, Deere, and Hitachi on large mining equipment due to "
+        "reliability reputation and resale value",
+    ],
+    business_model_keywords=[
+        "CAT", "Caterpillar", "excavator", "mining truck", "Cat Financial",
+        "dealer network", "construction equipment", "aftermarket", "Komatsu",
+        "mid-cycle", "P/E", "EV/EBITDA", "CapEx cycle", "Resource Industries",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="GE",
+    company_name="GE Aerospace",
+    business_model=(
+        "GE Aerospace (formerly General Electric) is a pure-play jet engine "
+        "manufacturer following the spinoffs of GE HealthCare (2023) and "
+        "GE Vernova power and energy (2024).  GE Aerospace provides LEAP "
+        "and GE9X engines for commercial aircraft, T700/T408 engines for "
+        "military rotorcraft, and F110/F404 turbofans for fighter jets.  "
+        "The Services segment (~70% of operating profit) includes spare parts, "
+        "overhaul, and long-term shop visit billing for the 40,000+ installed "
+        "commercial engine fleet — highly recurring and high-margin."
+    ),
+    primary_revenue_drivers=[
+        "Commercial Engines (~30% of revenue) — LEAP-1A/1B for A320neo and "
+        "737 MAX, GE9X for 777X; new engine deliveries tied to aircraft build rates",
+        "Commercial Services (~45%) — spare parts and shop visits for installed "
+        "LEAP, CF6, GE90, and CFM56 engine fleets; revenue tied to flight hours",
+        "Defense Engines and Services (~25%) — T700 for Black Hawk, F110 for "
+        "F-16, T408 for CH-53K; long-term government program revenue",
+    ],
+    recurring_revenue_sources=[
+        "Commercial jet engine spare parts revenue from installed base of "
+        "40,000+ LEAP, CF6, GE90, and CFM56 engines across global airlines",
+        "Long-term engine shop visit billing tied to flight hours across "
+        "commercial airline fleets at CFM International and GE direct accounts",
+    ],
+    rate_sensitivity_note=(
+        "GE Aerospace is not directly rate-sensitive.  P/E and EV/EBITDA "
+        "are primary valuation anchors.  Commercial airline capacity expansion "
+        "drives flight hour growth and aftermarket demand."
+    ),
+    inflation_pass_through=(
+        "Good: engine spare parts and shop visit pricing is contractually "
+        "indexed to inflation and labor rates in long-term service agreements."
+    ),
+    recession_behavior=(
+        "GE Aerospace generates stable defense engine revenue from multi-year "
+        "government contracts and demonstrates resilient aftermarket services "
+        "from the non-deferrable nature of engine overhauls.  However, "
+        "commercial engine deliveries have cyclical exposure to airline "
+        "CapEx programs and aircraft narrowbody production rates."
+    ),
+    major_risks=[
+        "Boeing production rate risk — GE Aerospace's LEAP-1B is the sole "
+        "engine on the 737 MAX; Boeing production disruptions directly "
+        "reduce new engine deliveries and delay installed base growth",
+        "LEAP durability and services revenue timing — higher-than-expected "
+        "LEAP engine durability (fewer shop visits) delays services revenue "
+        "growth relative to the installed base size",
+        "CFM RISE open-fan development — the next-generation open-fan "
+        "architecture requires substantial R&D investment (Safran partnership) "
+        "with long-dated payback and technology execution risk",
+        "Commercial aviation demand volatility — airline traffic is "
+        "sensitive to recession, geopolitical events, and pandemic disruptions; "
+        "flight hour reductions directly impair aftermarket revenue",
+    ],
+    valuation_style=(
+        "GE Aerospace trades at 28-35x forward P/E and 20-25x EV/EBITDA, "
+        "at a premium to defense peers reflecting commercial services mix "
+        "and LEAP installed base growth.  The investment thesis centers on "
+        "shop visit volume acceleration as the LEAP fleet ages into first "
+        "overhaul cycles.  FCF yield of 3-4% supports capital return."
+    ),
+    key_metrics=[
+        "Commercial engine shipments (LEAP-1A/1B and GE9X)",
+        "Shop visit growth and average shop visit revenue",
+        "Spare parts revenue and flight hour trends",
+        "Defense engine revenue and program backlog",
+        "Free cash flow conversion from earnings",
+    ],
+    competitive_advantages=[
+        "LEAP engine installed base — 3,000+ LEAP engines in service on "
+        "A320neo and 737 MAX fleets create a growing captive aftermarket "
+        "for spare parts and shop visits at above-average margins",
+        "GE90 and GE9X widebody dominance — the GE90 powers 100% of "
+        "777 classics and the GE9X is the sole engine on the 777X, "
+        "providing a captive aftermarket on the world's largest widebody fleet",
+        "CFM International joint venture with Safran — the world's largest "
+        "jet engine company by deliveries, combining GE and Safran technology "
+        "to provide LEAP and CFM56 engines to the global narrowbody fleet",
+    ],
+    business_model_keywords=[
+        "GE", "GE Aerospace", "LEAP engine", "GE9X", "CFM", "Safran",
+        "shop visit", "aftermarket", "Boeing", "737 MAX", "A320neo",
+        "T700", "defense engines", "P/E", "EV/EBITDA", "flight hours",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="LMT",
+    company_name="Lockheed Martin Corporation",
+    business_model=(
+        "Lockheed Martin is the world's largest defense contractor by revenue, "
+        "operating in Aeronautics (F-35, F-22, C-130J), Missiles and Fire "
+        "Control (PAC-3, HIMARS, Javelin), Rotary and Mission Systems "
+        "(Black Hawk, Sikorsky, Aegis), and Space Systems (GPS, missile "
+        "defense).  Approximately 70% of revenue comes from the US government; "
+        "30% from international FMS (Foreign Military Sales).  The F-35 "
+        "program (~25% of revenue) is the backbone of both production and "
+        "long-term sustainment revenue."
+    ),
+    primary_revenue_drivers=[
+        "Aeronautics (~40%) — F-35 Lightning II production (100-140 aircraft/yr "
+        "target) and sustainment, F-22 modernization, C-130J tanker deliveries",
+        "Missiles and Fire Control (~20%) — PAC-3 Patriot interceptors, "
+        "HIMARS rocket artillery, Javelin missiles; elevated demand from "
+        "Ukraine conflict and global rearmament",
+        "Rotary and Mission Systems (~25%) — Black Hawk, CH-53K, Sikorsky "
+        "helicopters, Aegis naval combat systems, and cybersecurity programs",
+        "Space Systems (~15%) — GPS III satellites, Next-Gen OPIR missile "
+        "warning, ground-based missile defense, and classified programs",
+    ],
+    recurring_revenue_sources=[
+        "US government defense program appropriations provide recurring "
+        "annual funding for F-35 production, PAC-3 interceptors, and "
+        "classified programs through multi-year budgeted authorizations",
+        "Sustainment and modification order revenue from fielded fleets "
+        "of F-35, C-130J, Black Hawk, and Aegis systems provide predictable "
+        "aftermarket activity from existing defense inventories",
+    ],
+    rate_sensitivity_note=(
+        "Lockheed Martin is not directly rate-sensitive.  P/E and EV/EBITDA "
+        "are primary valuation anchors.  Defense budget politics and NATO "
+        "spending commitments (2% GDP target) drive long-term demand outlook."
+    ),
+    inflation_pass_through=(
+        "Moderate: US government cost-plus and fixed-price development "
+        "contracts have different inflation exposure; FFP production "
+        "contracts limit cost pass-through on mature programs."
+    ),
+    recession_behavior=(
+        "Lockheed Martin generates stable US government revenue from "
+        "multi-year defense program appropriations and demonstrates "
+        "resilient international FMS order flow from NATO and allied partners.  "
+        "However, defense budget authorization has cyclical dependency on "
+        "congressional appropriations and continuing resolutions that can "
+        "delay program starts and delivery schedules."
+    ),
+    major_risks=[
+        "F-35 program execution and cost overruns — TR-3 software and Block "
+        "4 capability delays have slowed deliveries and increased per-unit "
+        "cost; failure to resolve production technical issues impairs "
+        "both near-term revenue and long-run sustainment economics",
+        "US defense budget pressure — debt ceiling negotiations and "
+        "discretionary spending caps constrain defense topline growth; "
+        "continuing resolutions prevent multi-year procurement commitments",
+        "Fixed-price development contract losses — LMT's CH-53K and "
+        "classified program fixed-price development contracts have generated "
+        "significant charges when technical complexity exceeds initial estimates",
+        "Sikorsky rotorcraft competition — Bell V-280 Valor (Textron) "
+        "won the FLRAA program over Sikorsky-Boeing SB>1, reducing "
+        "Lockheed's share of the US Army helicopter replacement market",
+    ],
+    valuation_style=(
+        "LMT trades at 16-20x forward P/E and 13-16x EV/EBITDA, at a "
+        "slight discount to RTX reflecting F-35 program uncertainty and "
+        "lower commercial aerospace exposure.  The dividend yield of 2.5-3% "
+        "and consistent buybacks support shareholder returns.  "
+        "FCF yield of 5-6% is an attractive anchor for defense income investors."
+    ),
+    key_metrics=[
+        "F-35 deliveries and TR-3 software certification progress",
+        "PAC-3 and HIMARS order backlog from NATO and allied partners",
+        "Total backlog (12-month and total) as a revenue coverage ratio",
+        "Free cash flow conversion from earnings",
+        "International FMS revenue as % of total",
+    ],
+    competitive_advantages=[
+        "F-35 program sole-source position — Lockheed is the only F-35 "
+        "manufacturer globally; once a nation operates F-35s, sustainment "
+        "revenue flows to LMT for decades with no alternative supplier",
+        "Aegis combat system and integrated air defense — Aegis is the "
+        "US Navy's and allied navies' primary surface ship combat system "
+        "with a captive multi-decade upgrade and sustainment program",
+        "Missiles and fire control franchise — PAC-3 Patriot, HIMARS, "
+        "Javelin, and THAAD are the core Western precision strike and air "
+        "defense systems, with demand accelerating from global rearmament",
+    ],
+    business_model_keywords=[
+        "LMT", "Lockheed Martin", "F-35", "PAC-3", "HIMARS", "Aegis",
+        "Javelin", "Black Hawk", "Sikorsky", "defense contractor",
+        "FMS", "sustainment", "P/E", "EV/EBITDA", "defense budget",
+    ],
+))
+
+# ── Energy ────────────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="PSX",
+    company_name="Phillips 66",
+    business_model=(
+        "Phillips 66 is a diversified downstream energy company operating "
+        "refining (~60% of operating income), midstream (Phillips 66 Partners "
+        "NGL fractionation and pipelines), chemicals (CPChem joint venture "
+        "with Chevron), and marketing and specialties.  The NGL/midstream "
+        "and CPChem segments provide fee-based and margin-resilient income "
+        "streams that differentiate PSX from pure refining peers."
+    ),
+    primary_revenue_drivers=[
+        "Refining (~55%) — 12 US and European refineries processing crude "
+        "oil into gasoline, diesel, jet fuel, and petrochemicals; "
+        "profitability driven by crack spreads",
+        "Midstream (~20%) — NGL fractionation, pipelines, and terminal "
+        "operations via DCP Midstream and WRB Refining JV",
+        "Chemicals (~15%) — CPChem JV with Chevron producing ethylene, "
+        "polyethylene, and specialty chemicals globally",
+        "Marketing and Specialties (~10%) — branded fuel marketing and "
+        "lubricant specialties",
+    ],
+    recurring_revenue_sources=[
+        "Midstream NGL fractionation throughput fee income from pipeline "
+        "and terminal capacity agreements provides contracted revenue",
+        "CPChem chemical manufacturing income from capacity utilization "
+        "generates recurring integrated margin contribution",
+    ],
+    rate_sensitivity_note=(
+        "PSX is not directly rate-sensitive.  EV/EBITDA on through-cycle "
+        "normalized earnings and P/E are primary anchors.  "
+        "Refining margins are driven by crude spreads and product demand."
+    ),
+    inflation_pass_through=(
+        "Good on refining: product prices pass through to consumers; "
+        "moderate on chemicals and midstream where contracts limit repricing."
+    ),
+    recession_behavior=(
+        "Phillips 66 generates stable midstream fee income from its NGL "
+        "pipeline and fractionation capacity and demonstrates resilient "
+        "transportation fuel demand from domestic driving activity.  However, "
+        "refining crack spreads have cyclical exposure to global crude oil "
+        "markets and regional product demand balances."
+    ),
+    major_risks=[
+        "Refining margin compression — crack spreads are highly volatile "
+        "and can compress to near-zero in periods of oversupply or demand "
+        "weakness, eliminating refining segment earnings",
+        "Refinery asset disposition and complexity management — PSX's "
+        "European refinery footprint creates geographic complexity and "
+        "exposure to European energy policy transitions",
+        "CPChem commodity chemical cycle — ethylene and polyethylene "
+        "margins are cyclical; new capacity additions (especially from "
+        "the Middle East) can suppress margins for multiple years",
+        "Energy transition risk — declining long-run gasoline demand from "
+        "EV adoption reduces refined product demand; PSX's renewable fuels "
+        "positioning (Rodeo Renewables) mitigates but doesn't eliminate this",
+    ],
+    valuation_style=(
+        "PSX trades at 8-12x forward P/E and 6-9x EV/EBITDA on normalized "
+        "mid-cycle refining margins.  The diversified model (refining + "
+        "midstream + chemicals) commands a modest premium to pure refining "
+        "peers.  Dividend yield of 3-4% and buybacks support capital return.  "
+        "FCF yield is highly variable with crack spread cycles."
+    ),
+    key_metrics=[
+        "Refining utilization and crack spreads (capture rate)",
+        "CPChem operating rate and ethylene margin",
+        "Midstream NGL pipeline throughput volumes",
+        "Return on capital employed (ROCE) through the cycle",
+        "Dividend coverage and buyback capacity at mid-cycle earnings",
+    ],
+    competitive_advantages=[
+        "Diversified downstream model providing midstream and chemicals "
+        "income streams that buffer pure refining margin volatility",
+        "CPChem joint venture with Chevron providing integrated petrochemical "
+        "capacity with global ethylene and polyethylene distribution",
+        "US Gulf Coast refining complexity — PSX's Sweeny and Lake Charles "
+        "refineries have high Nelson complexity indices enabling processing "
+        "of discounted heavy and sour crude grades",
+    ],
+    business_model_keywords=[
+        "PSX", "Phillips 66", "refining", "crack spread", "CPChem", "NGL",
+        "midstream", "ethylene", "DCP Midstream", "Rodeo Renewables",
+        "P/E", "EV/EBITDA", "downstream energy", "petrochemical",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="EOG",
+    company_name="EOG Resources, Inc.",
+    business_model=(
+        "EOG Resources is a leading US independent E&P company focused on "
+        "low-cost unconventional oil and gas development in the Permian Basin "
+        "(Delaware and Midland), Eagle Ford, Utica, and Dorado (natural gas).  "
+        "EOG differentiates through proprietary data analytics (EOG's 'college "
+        "of petroleum engineering' culture), premium drilling inventory, and "
+        "capital discipline — targeting double-premium return thresholds "
+        "of 60%+ at conservative oil price assumptions."
+    ),
+    primary_revenue_drivers=[
+        "Crude oil (~55% of revenue) — Permian and Eagle Ford production "
+        "at sub-$40/bbl full-cycle breakeven; oil volumes growing mid-single digits",
+        "Natural gas and NGLs (~30%) — Dorado dry gas discovery and "
+        "associated gas from oil plays; Dorado is a multi-decade gas resource",
+        "Crude oil differentials and marketing — EOG's own gathering, "
+        "treating, and marketing infrastructure reduces differential exposure",
+    ],
+    recurring_revenue_sources=[
+        "Crude oil production volumes from Permian and Eagle Ford unconventional "
+        "wells provide recurring commodity revenue from continuous drilling programs",
+        "Natural gas and NGL sales from Dorado and associated gas assets "
+        "generate recurring revenue as production grows with development activity",
+    ],
+    rate_sensitivity_note=(
+        "EOG is not directly rate-sensitive.  EV/EBITDA on mid-cycle oil prices "
+        "and FCF yield are the primary valuation anchors.  "
+        "Capital discipline at sub-$50 oil targets a self-funding model."
+    ),
+    inflation_pass_through=(
+        "Limited: EOG sells at market prices; operational efficiency "
+        "improvements partially offset oilfield service cost inflation."
+    ),
+    recession_behavior=(
+        "EOG Resources generates stable production from its unconventional "
+        "oil and gas assets and demonstrates resilient free cash flow from "
+        "its low-cost, high-return drilling inventory.  However, realized "
+        "oil and gas prices have cyclical exposure to global commodity "
+        "markets, and EOG reduces drilling activity when returns fall "
+        "below its premium thresholds."
+    ),
+    major_risks=[
+        "Oil price cycle — WTI at $50/bbl compresses EOG's FCF significantly; "
+        "sustained sub-$55 oil would require rig count cuts and dividend "
+        "coverage pressure on the regular plus special dividend program",
+        "Permian Basin depletion and inventory quality — premium Tier 1 "
+        "locations are finite; as EOG moves to Tier 2 inventory, per-well "
+        "returns and breakevens will gradually deteriorate",
+        "Takeaway infrastructure constraints — Permian crude and gas "
+        "takeaway capacity expansions are necessary to prevent basis blowouts; "
+        "Waha gas hub differentials can go deeply negative in peak production periods",
+        "Regulatory and environmental risk — methane regulations, produced "
+        "water disposal rules, and federal lands permitting create "
+        "operational and development uncertainty",
+    ],
+    valuation_style=(
+        "EOG trades at 10-14x forward P/E and 5-7x EV/EBITDA at mid-cycle "
+        "oil prices, with a total dividend yield (regular plus variable) of "
+        "3-5%.  FCF yield at $75 WTI is a key investment anchor; EOG targets "
+        "25-30% FCF return to shareholders.  EV/2P reserves provides a "
+        "net asset valuation cross-check."
+    ),
+    key_metrics=[
+        "Oil production growth rate vs. capital budget",
+        "Well-level rate of return at flat $60/bbl WTI",
+        "Premium inventory runway (remaining double-premium wells)",
+        "Regular plus special dividend capacity at current oil prices",
+        "Dorado natural gas reserves and development pace",
+    ],
+    competitive_advantages=[
+        "Premium drilling inventory in Permian Basin and Eagle Ford — "
+        "EOG's proprietary exploration identified high-return acreage positions "
+        "with sub-$30/bbl full-cycle costs in core development areas",
+        "Capital return discipline with double-premium investment threshold — "
+        "EOG only drills wells returning 60%+ at $40 oil, resulting in "
+        "above-peer cash returns and balance sheet strength through cycles",
+        "Dorado dry gas discovery — multi-decade natural gas resource in "
+        "South Texas with low development costs positioning EOG for "
+        "LNG export market growth",
+    ],
+    business_model_keywords=[
+        "EOG", "EOG Resources", "Permian Basin", "Eagle Ford", "Dorado",
+        "unconventional E&P", "double-premium", "WTI", "shale", "Delaware Basin",
+        "special dividend", "FCF yield", "EV/EBITDA", "natural gas",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="DVN",
+    company_name="Devon Energy Corporation",
+    business_model=(
+        "Devon Energy is a US-focused independent E&P company operating "
+        "in the Delaware Basin (Permian), Eagle Ford, Anadarko, Powder "
+        "River Basin, and Williston Basin.  Devon pioneered the fixed-plus-"
+        "variable dividend framework in 2021, sharing cash flow directly "
+        "with shareholders in high-price environments.  Delaware Basin "
+        "represents ~55% of production and is the primary growth engine."
+    ),
+    primary_revenue_drivers=[
+        "Oil production (~65% of revenue) — Delaware Basin and Eagle Ford "
+        "crude oil at competitive breakeven costs; volumes growing low-single "
+        "digits on maintenance-level capital",
+        "Natural gas and NGLs (~35%) — Anadarko and associated gas from "
+        "oil plays; Midland Basin natural gas has Waha hub price exposure",
+        "Fixed-plus-variable dividend — cash flow above fixed costs "
+        "returns 10% of discretionary cash to shareholders as variable dividends",
+    ],
+    recurring_revenue_sources=[
+        "Crude oil production revenue from Delaware Basin and Anadarko Basin "
+        "assets provides recurring commodity revenue from ongoing development",
+        "Fixed-plus-variable dividend payout sharing production economics "
+        "with shareholders generates predictable base income at mid-cycle prices",
+    ],
+    rate_sensitivity_note=(
+        "Devon is not directly rate-sensitive.  EV/EBITDA at mid-cycle oil "
+        "and FCF yield are primary valuation anchors.  "
+        "WTI at $65-70 supports the fixed dividend at maintenance production."
+    ),
+    inflation_pass_through=(
+        "Limited: oil sells at market; operating cost inflation from oilfield "
+        "services is partially offset by operational efficiency improvements."
+    ),
+    recession_behavior=(
+        "Devon Energy generates stable oil and gas production from its "
+        "Delaware and Anadarko Basin assets and demonstrates resilient cash "
+        "generation from its low-breakeven cost structure.  However, realized "
+        "oil prices have cyclical exposure to global demand and supply "
+        "dynamics, compressing DVN's variable dividend in weak commodity environments."
+    ),
+    major_risks=[
+        "WTI oil price sensitivity — Devon's variable dividend collapses "
+        "at sub-$55 WTI; at $50 oil, the payout model provides only the "
+        "fixed $0.22/quarter dividend with minimal variable component",
+        "Delaware Basin acreage concentration — 55%+ of production from "
+        "one basin creates geographic concentration; any infrastructure, "
+        "regulatory, or operational issue has outsized impact",
+        "Waha gas price exposure — associated gas from Permian production "
+        "is priced at Waha hub, which can trade deeply negative in periods "
+        "of takeaway constraint, impairing realized gas prices",
+        "M&A integration risk — Devon's acquisition of RimRock and other "
+        "bolt-on acreage requires integration without disrupting core "
+        "Delaware Basin development efficiency",
+    ],
+    valuation_style=(
+        "DVN trades at 8-12x forward P/E and 4-6x EV/EBITDA at mid-cycle "
+        "oil.  Total dividend yield (fixed plus variable) of 4-7% at $75 WTI "
+        "is the primary income investment anchor.  FCF yield drives the "
+        "variable dividend and buyback capacity above the fixed payout."
+    ),
+    key_metrics=[
+        "Delaware Basin oil production growth and well-level returns",
+        "Total dividend payout (fixed plus variable) at current strip pricing",
+        "FCF generation at $60/$70/$80 WTI scenarios",
+        "Net debt reduction pace and leverage ratio",
+        "Waha natural gas differential to Henry Hub",
+    ],
+    competitive_advantages=[
+        "Delaware Basin low-cost acreage with sub-$35/bbl full-cycle "
+        "breakeven on core development locations providing strong returns "
+        "at mid-cycle commodity prices",
+        "Fixed-plus-variable dividend framework — share of cash flow return "
+        "aligns shareholders with commodity price upside and provides "
+        "transparent capital return policy",
+        "Scale in Anadarko and Powder River basins providing diversified "
+        "production base beyond Delaware concentration",
+    ],
+    business_model_keywords=[
+        "DVN", "Devon Energy", "Delaware Basin", "Anadarko", "Eagle Ford",
+        "fixed-plus-variable dividend", "WTI", "shale E&P", "Permian",
+        "variable dividend", "FCF yield", "EV/EBITDA", "Waha",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="MPC",
+    company_name="Marathon Petroleum Corporation",
+    business_model=(
+        "Marathon Petroleum is the largest US petroleum refiner by throughput "
+        "capacity (~3M bpd across 13 refineries) and a midstream MLP general "
+        "partner through MPLX LP.  The Refining & Marketing segment processes "
+        "crude oil into gasoline, distillates, and asphalt.  MPLX provides "
+        "gathering, processing, fractionation, and transportation services "
+        "with fee-based, more predictable cash flows than refining."
+    ),
+    primary_revenue_drivers=[
+        "Refining & Marketing (~85%) — refined product sales at Midwest, "
+        "Gulf Coast, and West Coast refineries; profitability depends on "
+        "regional crack spreads and crude oil differentials",
+        "Midstream via MPLX (~15% of operating income) — NGL gathering, "
+        "fractionation, and pipeline fee income; more stable than refining",
+        "Speedway (sold 2021) — retail fuel and convenience store network "
+        "was divested to 7-Eleven; MPC is now a pure refining + midstream story",
+    ],
+    recurring_revenue_sources=[
+        "Refinery throughput revenues from crude oil processing capacity "
+        "at 13 US petroleum refineries serving domestic product markets",
+        "MPLX midstream pipeline and storage fee income from long-term "
+        "gathering, fractionation, and transportation capacity agreements",
+    ],
+    rate_sensitivity_note=(
+        "MPC is not directly rate-sensitive.  EV/EBITDA on mid-cycle "
+        "refining margins is the primary valuation anchor.  "
+        "MPLX distributions provide partial yield support through the cycle."
+    ),
+    inflation_pass_through=(
+        "Good on refining: refined product prices pass through to consumers; "
+        "moderate on MPLX fee-based contracts."
+    ),
+    recession_behavior=(
+        "Marathon Petroleum generates stable MPLX midstream fee income from "
+        "its pipeline and fractionation capacity agreements and demonstrates "
+        "resilient transportation fuel demand from domestic driving activity.  "
+        "However, refining crack spreads have cyclical exposure to crude "
+        "oil market dynamics and regional refined product supply balances."
+    ),
+    major_risks=[
+        "Refining margin cycle — crack spreads in MPC's Midwest and Gulf "
+        "Coast markets can compress sharply in periods of global product "
+        "oversupply or demand destruction, eliminating refining profitability",
+        "Crude oil differential exposure — MPC's Midwest refineries process "
+        "WTI Midland and Canadian heavy crudes; differential narrowing reduces "
+        "the feedstock advantage vs. coastal and European refiners",
+        "Renewable fuel transition — California Low Carbon Fuel Standard and "
+        "federal RFS mandates create compliance cost and transition risk "
+        "for conventional petroleum refiners",
+        "MPLX unit price risk — MPC's MPLX GP interest creates balance "
+        "sheet and earnings exposure to MPLX unit price fluctuations",
+    ],
+    valuation_style=(
+        "MPC trades at 7-11x forward P/E and 5-8x EV/EBITDA on normalized "
+        "mid-cycle crack spreads.  The MPLX distribution yield and MPC's "
+        "buyback capacity provide income and capital return support.  "
+        "Refining mid-cycle EV/EBITDA cross-checked with MPLX GP interest "
+        "provides the most consistent through-cycle valuation anchor."
+    ),
+    key_metrics=[
+        "Refining throughput and capture rate vs. benchmark crack spreads",
+        "MPLX distributable cash flow and coverage ratio",
+        "Cumulative buyback capacity at current cash flow",
+        "Midcontinent vs. Gulf Coast crack spread trends",
+        "Renewable diesel and sustainable aviation fuel capacity investments",
+    ],
+    competitive_advantages=[
+        "Largest US refiner scale providing procurement, logistics, and "
+        "optimization advantages across 3M bpd of combined capacity",
+        "MPLX midstream integration — fee-based NGL and pipeline income "
+        "buffers pure refining margin volatility and provides stable cash flows",
+        "Midwest refining positioning — access to discounted WTI Midland "
+        "and Canadian heavy crude enhances feedstock economics vs. coastal peers",
+    ],
+    business_model_keywords=[
+        "MPC", "Marathon Petroleum", "refining", "MPLX", "crack spread",
+        "NGL", "throughput", "Midwest refining", "distillate", "gasoline",
+        "P/E", "EV/EBITDA", "midstream", "Canadian crude",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="VLO",
+    company_name="Valero Energy Corporation",
+    business_model=(
+        "Valero is the world's largest independent petroleum refiner by "
+        "throughput capacity (~3.2M bpd across 15 refineries in US, Canada, "
+        "and UK).  Valero's refinery network spans Gulf Coast, West Coast, "
+        "Mid-Continent, and international locations.  Diamond Green Diesel "
+        "(50/50 JV with Darling Ingredients) is the world's largest renewable "
+        "diesel facility, providing a growing low-carbon revenue stream "
+        "that differentiates VLO from pure petroleum refining peers."
+    ),
+    primary_revenue_drivers=[
+        "Refining (~90%) — distillate, gasoline, jet fuel, and petrochemicals "
+        "from complex Gulf Coast and international refineries; "
+        "profitability dependent on crack spreads and crude differentials",
+        "Renewable Diesel via Diamond Green (~7%) — renewable diesel produced "
+        "from animal fats and vegetable oils sold under LCFS and RIN credits",
+        "Ethanol (~3%) — corn ethanol production from 11 US plants generating "
+        "RIN credits and commodity ethanol revenue",
+    ],
+    recurring_revenue_sources=[
+        "Refinery throughput revenues from 15 petroleum refineries and "
+        "two ethanol plants processing commodity feedstocks into finished fuels",
+        "Diamond Green Diesel renewable processing fee income from "
+        "continuous renewable diesel production at Port Arthur and Norco facilities",
+    ],
+    rate_sensitivity_note=(
+        "Valero is not directly rate-sensitive.  EV/EBITDA on mid-cycle "
+        "crack spreads is the primary valuation anchor.  "
+        "Diamond Green Diesel adds diversification from LCFS and RIN credit values."
+    ),
+    inflation_pass_through=(
+        "Good: refined product prices pass through energy inflation to consumers; "
+        "Diamond Green renewable diesel benefits from LCFS credit prices."
+    ),
+    recession_behavior=(
+        "Valero generates stable throughput revenue from its diverse refinery "
+        "network and demonstrates resilient transportation fuel demand from "
+        "domestic vehicle miles traveled.  However, global refining crack "
+        "spreads have cyclical exposure to crude oil supply dynamics and "
+        "regional refined product demand fluctuations."
+    ),
+    major_risks=[
+        "Refining margin cycle — global crack spreads drove exceptional "
+        "2022-23 earnings but normalized in 2024; further normalization "
+        "or global recession would reduce VLO's earnings sharply",
+        "LCFS and RIN credit value volatility — Diamond Green Diesel "
+        "profitability depends on California LCFS credit prices and "
+        "federal RIN values, which are subject to regulatory changes",
+        "Energy transition risk — long-run EV adoption reduces transportation "
+        "fuel demand; VLO's renewable diesel pivot mitigates but does not "
+        "eliminate the risk of secular petroleum demand decline",
+        "Gulf Coast hurricane and infrastructure risk — VLO's concentration "
+        "in the US Gulf Coast creates geographic weather and infrastructure "
+        "disruption exposure",
+    ],
+    valuation_style=(
+        "VLO trades at 7-10x forward P/E and 5-7x EV/EBITDA on normalized "
+        "mid-cycle crack spreads, near the low end of the refining peer group.  "
+        "Dividend yield of 3-4% and buyback capacity at cycle earnings provide "
+        "capital return.  Diamond Green Diesel provides upside to LCFS credit "
+        "pricing.  EV/normalized EBITDA is the most reliable through-cycle anchor."
+    ),
+    key_metrics=[
+        "Throughput capacity utilization and capture rate",
+        "Diamond Green Diesel production volumes and blended margin",
+        "Gulf Coast 3-2-1 crack spread vs. actual capture",
+        "LCFS credit prices ($/tonne CO2)",
+        "Capital return (dividends + buybacks) as % of FCF at mid-cycle",
+    ],
+    competitive_advantages=[
+        "World's largest independent refiner scale — 3.2M bpd capacity "
+        "provides unmatched procurement, optimization, and crude flexibility "
+        "across the refining portfolio",
+        "Diamond Green Diesel low-carbon positioning — world's largest "
+        "renewable diesel facility provides differentiated access to "
+        "LCFS credits and renewable fuel standards compliance value",
+        "Gulf Coast heavy crude processing expertise — Valero's complex "
+        "Gulf Coast refineries can process the widest range of cheap "
+        "heavy sour crudes, providing structural feedstock advantage",
+    ],
+    business_model_keywords=[
+        "VLO", "Valero", "refining", "crack spread", "Diamond Green Diesel",
+        "renewable diesel", "LCFS", "RIN", "Gulf Coast", "throughput",
+        "P/E", "EV/EBITDA", "ethanol", "mid-cycle",
+    ],
+))
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="SRE",
+    company_name="Sempra",
+    business_model=(
+        "Sempra is a diversified energy infrastructure company with three "
+        "segments: SoCalGas (Southern California gas distribution), SDG&E "
+        "(San Diego electric and gas distribution), and Sempra Infrastructure "
+        "(LNG export terminals and Mexico natural gas pipelines).  Port Arthur "
+        "LNG and Cameron LNG are Sempra's primary infrastructure growth "
+        "drivers, positioning the company as a key US LNG export facilitator "
+        "for European and Asian energy security customers."
+    ),
+    primary_revenue_drivers=[
+        "SoCalGas and SDG&E (~55%) — regulated gas and electric distribution "
+        "utility with CPUC-authorized rate of return; captive Southern California "
+        "customer base",
+        "Sempra Infrastructure (~30%) — LNG export terminal fee income from "
+        "Port Arthur LNG and Cameron LNG; long-term offtake agreements "
+        "with major energy companies",
+        "Oncor Texas utility (equity investment, ~15%) — regulated electric "
+        "distribution in fast-growing Texas, providing earnings growth",
+    ],
+    recurring_revenue_sources=[
+        "SoCalGas and SDG&E CPUC-regulated rate base revenues from captive "
+        "residential and commercial customers provide recurring utility earnings",
+        "Sempra Infrastructure LNG export terminal fee income from long-term "
+        "offtake capacity reservations at Port Arthur and Cameron LNG facilities",
+    ],
+    rate_sensitivity_note=(
+        "Sempra is rate-sensitive: regulated utilities earn CPUC-authorized "
+        "returns tied to cost of capital; rising rates increase the authorized "
+        "ROE but also the discount rate applied to future earnings, compressing "
+        "P/E.  LNG infrastructure provides partial rate insensitivity."
+    ),
+    inflation_pass_through=(
+        "Good: CPUC rate cases allow cost recovery including inflation in "
+        "O&M and CapEx.  LNG offtake contracts are indexed to commodity prices."
+    ),
+    recession_behavior=(
+        "Sempra generates stable regulated utility revenues from its captive "
+        "Southern California gas and electric distribution territory and "
+        "demonstrates resilient LNG terminal fee income from long-term offtake "
+        "commitments.  However, Sempra Infrastructure project development has "
+        "cyclical sensitivity to LNG demand expectations and partner financing."
+    ),
+    major_risks=[
+        "SoCalGas wildfire and methane liability — Southern California Gas "
+        "serves the densest US natural gas distribution territory; pipeline "
+        "safety incidents (Aliso Canyon 2015) created $1B+ liabilities and "
+        "regulatory scrutiny that continues to affect capital program approval",
+        "Port Arthur LNG development risk — the $13B+ Port Arthur LNG Phase 1 "
+        "is a complex infrastructure project; cost overruns, permitting delays, "
+        "or offtake counterparty credit issues could impair returns",
+        "California energy policy risk — California's aggressive decarbonization "
+        "policy creates long-run demand risk for SoCalGas gas distribution "
+        "as the state mandates electrification of buildings and appliances",
+        "Oncor regulatory risk — Texas utility earnings depend on PUCT rate "
+        "decisions; storm recovery and grid hardening costs add uncertainty",
+    ],
+    valuation_style=(
+        "SRE trades at 14-18x forward P/E and 12-15x EV/EBITDA, at a premium "
+        "to pure US utilities reflecting LNG infrastructure growth optionality.  "
+        "Dividend yield of 3-4% provides income support.  "
+        "Regulated utility P/E is supplemented by LNG terminal NPV analysis "
+        "for the infrastructure segment."
+    ),
+    key_metrics=[
+        "SoCalGas and SDG&E authorized rate base growth",
+        "Port Arthur LNG Phase 1 construction progress and offtake agreements",
+        "Oncor rate base and Texas customer growth",
+        "EPS growth trajectory from infrastructure segment ramp",
+        "Dividend coverage ratio from operating cash flows",
+    ],
+    competitive_advantages=[
+        "Southern California monopoly gas distribution franchise — SoCalGas "
+        "is the largest US natural gas distribution utility with an irreplaceable "
+        "service territory in Los Angeles and surrounding counties",
+        "Port Arthur LNG export scale — Sempra's LNG export capacity positions "
+        "it as a strategic US LNG infrastructure provider for European and "
+        "Asian energy security diversification",
+        "Oncor Texas growth exposure — equity investment in Oncor provides "
+        "access to high-growth Texas electric utility earnings without "
+        "direct operational risk",
+    ],
+    business_model_keywords=[
+        "SRE", "Sempra", "SoCalGas", "SDG&E", "Port Arthur LNG", "Cameron LNG",
+        "Oncor", "CPUC", "utility", "LNG export", "regulated rate base",
+        "P/E", "EV/EBITDA", "dividend yield", "California",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="PCG",
+    company_name="PG&E Corporation",
+    business_model=(
+        "PG&E Corporation is the parent of Pacific Gas and Electric Company, "
+        "a regulated electric and natural gas utility serving 16 million "
+        "people across 70,000 square miles in Northern and Central California.  "
+        "PG&E emerged from bankruptcy in 2020 following wildfire liability "
+        "from the 2017-18 Camp Fire and North Bay Fires.  The company "
+        "is executing a massive grid hardening program (~$50B over 10 years) "
+        "to reduce ignition risk while building out EV charging and clean "
+        "energy transmission infrastructure."
+    ),
+    primary_revenue_drivers=[
+        "Electric distribution (~65%) — CPUC-regulated rate base revenues "
+        "from 5.5 million electric customers in Northern California; rate "
+        "base growing rapidly from grid hardening and undergrounding",
+        "Natural gas distribution (~25%) — regulated gas distribution "
+        "for 4.6 million gas customers; gas distribution faces long-run "
+        "electrification headwind in California",
+        "Electric transmission (~10%) — FERC-regulated transmission "
+        "infrastructure providing bulk power delivery",
+    ],
+    recurring_revenue_sources=[
+        "CPUC-regulated electric distribution rate base revenues from "
+        "Northern California residential and commercial customer accounts",
+        "Natural gas transmission and distribution fee income from "
+        "PG&E's Northern California service territory captive accounts",
+    ],
+    rate_sensitivity_note=(
+        "PG&E is meaningfully rate-sensitive: its CPUC-authorized ROE is "
+        "benchmarked to interest rates; higher rates compress P/E multiples "
+        "and increase cost of equity for the large ongoing CapEx program.  "
+        "The $50B grid hardening investment requires continuous external financing."
+    ),
+    inflation_pass_through=(
+        "Good: CPUC rate cases allow capital and O&M cost recovery; "
+        "wildfire insurance and undergrounding cost recovery is the "
+        "key regulatory battleground."
+    ),
+    recession_behavior=(
+        "PG&E generates stable regulated utility revenue from its captive "
+        "Northern California customer base and demonstrates resilient "
+        "electric and gas distribution income from the non-elective nature "
+        "of energy use.  However, PG&E's capital recovery timeline has "
+        "cyclical sensitivity to CPUC rate case decisions and financing conditions."
+    ),
+    major_risks=[
+        "Wildfire liability recurrence — despite grid hardening, PG&E "
+        "still faces ignition risk in high-fire-threat districts; a major "
+        "wildfire caused by PG&E infrastructure could trigger catastrophic "
+        "liability exceeding the California Wildfire Fund backstop",
+        "CPUC rate case disallowances — California regulators routinely "
+        "disallow portions of PG&E's requested rate base additions; "
+        "undergrounding cost recovery is particularly contentious",
+        "Financing requirement scale — PG&E's $50B+ grid hardening program "
+        "requires sustained equity and debt issuance, diluting existing "
+        "shareholders and increasing balance sheet leverage",
+        "Gas distribution decline — California's mandated building "
+        "electrification will reduce PG&E gas customers over time, "
+        "requiring rate base reclassification and stranded asset risk",
+    ],
+    valuation_style=(
+        "PCG trades at 11-15x forward P/E and 10-13x EV/EBITDA, at a "
+        "discount to California utilities reflecting wildfire recurrence "
+        "and financing overhang risk.  The investment thesis requires "
+        "confidence in the California Wildfire Fund backstop and CPUC "
+        "support for grid hardening cost recovery.  Dividend yield of 2-3%."
+    ),
+    key_metrics=[
+        "Grid hardening capital spend (miles undergrounded per year)",
+        "CPUC rate case outcomes and authorized rate base growth",
+        "Wildfire ignition metrics (EPSS and outage statistics)",
+        "California Wildfire Fund coverage adequacy",
+        "EPS growth trajectory from rate base expansion",
+    ],
+    competitive_advantages=[
+        "Northern California monopoly electric and gas franchise — "
+        "PG&E serves the Bay Area, Silicon Valley, and Central Valley "
+        "with no competitive alternative for distribution service",
+        "Grid hardening capital investment program — $50B+ in grid "
+        "modernization creates a multi-decade regulated rate base growth "
+        "opportunity that supports EPS compounding",
+        "Clean energy infrastructure positioning — PG&E's transmission "
+        "infrastructure is essential for Northern California's renewable "
+        "energy integration and EV charging expansion",
+    ],
+    business_model_keywords=[
+        "PCG", "PG&E", "CPUC", "wildfire", "grid hardening", "undergrounding",
+        "Northern California", "Bay Area", "California Wildfire Fund",
+        "regulated utility", "P/E", "EV/EBITDA", "rate base", "electrification",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="WEC",
+    company_name="WEC Energy Group, Inc.",
+    business_model=(
+        "WEC Energy Group is a Midwest regulated electric and natural gas "
+        "utility holding company serving 4.6 million customers across "
+        "Wisconsin, Illinois, Michigan, and Minnesota through subsidiaries "
+        "We Energies, WPS, MG&E, and North Shore Gas.  WEC is "
+        "consistently ranked among the top utility operators for regulatory "
+        "relationships, operations reliability, and dividend growth, earning "
+        "premium multiple vs. peers.  Clean energy investments (wind, solar, "
+        "battery storage) provide rate base growth opportunity."
+    ),
+    primary_revenue_drivers=[
+        "Wisconsin electric and gas (~70%) — We Energies and WPS serve "
+        "Milwaukee and Green Bay metro areas with PSCW-regulated earnings",
+        "Illinois and Michigan gas (~20%) — Peoples Energy and North Shore "
+        "Gas serve Chicago area with ICC-regulated earnings",
+        "Infrastructure and investment (~10%) — equity investments in "
+        "American Transmission Company and wind/solar generation assets",
+    ],
+    recurring_revenue_sources=[
+        "Regulated electric distribution revenues from Wisconsin and Illinois "
+        "service territories under multi-year approved rate structures",
+        "Natural gas distribution fee income from captive residential and "
+        "commercial accounts across the Midwest service territory",
+    ],
+    rate_sensitivity_note=(
+        "WEC is rate-sensitive: P/E compression occurs as bond yields "
+        "rise and utility dividend yields become less competitive.  "
+        "PSCW and ICC authorized returns track long-term treasury yields "
+        "with a regulatory lag.  P/E of 19-23x is typical in normal "
+        "rate environments."
+    ),
+    inflation_pass_through=(
+        "Good: fuel and purchased power cost recovery clauses pass "
+        "energy commodity inflation through to customers; O&M inflation "
+        "is partially recovered in rate cases."
+    ),
+    recession_behavior=(
+        "WEC Energy generates stable regulated utility revenues from its "
+        "Midwest residential and commercial customer base and demonstrates "
+        "resilient earnings from the PSCW and ICC regulatory compacts.  "
+        "However, industrial customer electric demand has cyclical sensitivity "
+        "to Midwest manufacturing activity and economic conditions."
+    ),
+    major_risks=[
+        "Rate case lag risk — WEC's authorized returns are reset periodically; "
+        "during high-inflation periods, actual costs can exceed authorized "
+        "recovery levels until the next rate case is approved",
+        "Clean energy transition capital requirements — Wisconsin's clean "
+        "energy mandates require substantial wind, solar, and storage investment "
+        "that must be financed while maintaining credit metrics",
+        "Weather and demand variability — Midwest weather creates "
+        "heating and cooling degree-day variability that affects quarterly "
+        "earnings relative to assumptions in rate structures",
+        "Gas distribution long-term risk — natural gas distribution faces "
+        "secular pressure from building electrification mandates in states "
+        "beyond Wisconsin's current regulatory jurisdiction",
+    ],
+    valuation_style=(
+        "WEC trades at 18-23x forward P/E and 15-18x EV/EBITDA, at a premium "
+        "to utility peers reflecting consistent earnings growth, regulatory "
+        "relationship quality, and dividend growth track record.  "
+        "Dividend yield of 3-4% with 7%+ EPS growth target.  "
+        "P/E relative to 10-year treasury yield is the most reliable anchor."
+    ),
+    key_metrics=[
+        "Rate base growth (% per year from clean energy and infrastructure)",
+        "PSCW and ICC authorized ROE vs. earned ROE",
+        "EPS growth trajectory vs. 5-7% long-term guidance",
+        "Dividend growth rate (26+ consecutive years of increases)",
+        "Customer growth rate (WI and IL economic activity indicator)",
+    ],
+    competitive_advantages=[
+        "Midwest utility monopoly franchise — WEC's regulated service "
+        "territories have no competitive alternative for electric and "
+        "gas distribution, providing captive customer base revenue certainty",
+        "Regulatory relationship quality — WEC is consistently recognized "
+        "for constructive PSCW and ICC regulatory relationships, facilitating "
+        "cost recovery and timely rate case resolutions",
+        "Dividend growth track record — 26+ consecutive years of dividend "
+        "increases demonstrates earnings quality and management capital discipline",
+    ],
+    business_model_keywords=[
+        "WEC", "WEC Energy", "We Energies", "Wisconsin utility", "PSCW",
+        "natural gas distribution", "clean energy", "P/E", "EV/EBITDA",
+        "dividend growth", "regulated utility", "Midwest", "rate base",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="ED",
+    company_name="Consolidated Edison, Inc.",
+    business_model=(
+        "Consolidated Edison is a regulated electric, gas, and steam utility "
+        "serving New York City and Westchester County through Con Edison "
+        "(CECONY) and Orange and Rockland Utilities.  CECONY serves "
+        "3.4 million electric, 1.1 million gas, and 1,700 steam customers "
+        "in New York City — the most dense and complex utility service "
+        "territory in the US.  Clean Energy Businesses (sold 2023) transferred "
+        "renewable development activities, refocusing ED on pure regulated utility."
+    ),
+    primary_revenue_drivers=[
+        "CECONY electric distribution (~60%) — NYC and Westchester electric "
+        "customers under NYPSC-approved multi-year rate plans; largest "
+        "urban electric utility in the US",
+        "CECONY gas distribution (~25%) — gas service to 1.1 million NYC "
+        "and Westchester customers; vulnerable to electrification policy",
+        "CECONY steam (~5%) and O&R (~10%) — Manhattan steam district "
+        "heating and Orange & Rockland electric/gas service",
+    ],
+    recurring_revenue_sources=[
+        "ConEd NYPSC-regulated electric distribution revenues from "
+        "3.5 million New York City and Westchester customer accounts",
+        "Natural gas distribution revenues from New York City residential "
+        "and commercial accounts under multi-year rate agreements",
+    ],
+    rate_sensitivity_note=(
+        "Con Edison is rate-sensitive: NYC regulatory environment is "
+        "constructive but complex; P/E compresses meaningfully as utility "
+        "yields rise relative to risk-free rates.  Con Edison's credit "
+        "quality (A-rated) provides financing access across rate cycles."
+    ),
+    inflation_pass_through=(
+        "Good: NYPSC rate cases include fuel adjustment clauses and "
+        "capital cost recovery provisions that pass inflation through "
+        "to customers with a regulatory lag."
+    ),
+    recession_behavior=(
+        "Con Edison generates stable regulated utility revenues from its "
+        "captive New York City customer base and demonstrates resilient "
+        "earnings from the NYPSC regulatory structure.  However, "
+        "commercial and industrial electric demand has cyclical sensitivity "
+        "to NYC economic activity and office occupancy levels."
+    ),
+    major_risks=[
+        "New York City regulatory policy — NYPSC rate decisions and NY "
+        "Climate Leadership and Community Protection Act (CLCPA) mandates "
+        "require substantial clean energy investment that must be financed "
+        "while managing customer rate affordability constraints",
+        "Gas distribution transition risk — New York's All-Electric Buildings "
+        "Act (Local Law 154) bans new gas hookups in NYC buildings, creating "
+        "long-term gas distribution customer attrition and stranded asset risk",
+        "Infrastructure aging and reliability — Con Edison's NYC underground "
+        "electric and steam infrastructure is among the oldest in the US; "
+        "reliability incidents attract regulatory scrutiny and capital requirements",
+        "Climate change physical risk — increased extreme weather events "
+        "(Hurricane Sandy, heat events) create storm recovery costs and "
+        "infrastructure hardening requirements beyond normal rate recovery",
+    ],
+    valuation_style=(
+        "ED trades at 15-19x forward P/E and 13-16x EV/EBITDA, at a slight "
+        "discount to premium utilities reflecting NYC regulatory complexity "
+        "and gas distribution transition risk.  Dividend yield of 3.5-4.5% "
+        "with a 49-year consecutive increase track record.  "
+        "P/E relative to long-term treasuries is the primary valuation anchor."
+    ),
+    key_metrics=[
+        "NYPSC rate case outcomes and authorized ROE",
+        "Electric and gas capital investment program (CLCPA compliance)",
+        "Gas customer attrition from NYC all-electric building mandates",
+        "Storm recovery cost and regulatory lag",
+        "Dividend growth rate and coverage ratio",
+    ],
+    competitive_advantages=[
+        "New York City monopoly electric and gas franchise — CECONY "
+        "is the sole electric and gas distribution provider for the "
+        "world's most economically dense urban market with no competitive "
+        "alternative",
+        "Manhattan steam district heating — unique 105-year-old urban "
+        "steam distribution network serving 1,700 Manhattan buildings "
+        "with zero competitive substitute",
+        "Dividend Aristocrat track record — 49+ consecutive years of "
+        "dividend increases reflecting regulatory reliability and "
+        "management's earnings quality commitment",
+    ],
+    business_model_keywords=[
+        "ED", "Con Edison", "ConEd", "CECONY", "New York City utility",
+        "NYPSC", "steam", "Manhattan", "Dividend Aristocrat", "CLCPA",
+        "regulated utility", "P/E", "EV/EBITDA", "all-electric buildings",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="AWK",
+    company_name="American Water Works Company, Inc.",
+    business_model=(
+        "American Water Works is the largest publicly traded US water and "
+        "wastewater utility, serving 14+ million people across 24 states.  "
+        "The Regulated Businesses segment (~87% of earnings) operates water "
+        "and wastewater systems under state public utility commission "
+        "authorizations.  The Market-Based Business segment includes "
+        "military installation water and wastewater operations and home "
+        "warranty services.  AWK is a pure-play water utility with a "
+        "fragmented acquisition opportunity in the 50,000+ US water systems."
+    ),
+    primary_revenue_drivers=[
+        "Regulated water utilities (~80%) — customer water and wastewater "
+        "usage charges under state PUC authorized rates; revenue relatively "
+        "insensitive to economic cycles",
+        "Regulated wastewater (~7%) — wastewater treatment services in "
+        "adjacent geographies to water distribution footprint",
+        "Military installation contracts (~8%) and home warranty (~5%) — "
+        "long-term government contracts for base water operations",
+    ],
+    recurring_revenue_sources=[
+        "Regulated water and wastewater rate base revenues from 14 million "
+        "customer connections across 24 regulated state service territories",
+        "Military installation water and wastewater contract income from "
+        "Army and Air Force base operations programs",
+    ],
+    rate_sensitivity_note=(
+        "AWK is rate-sensitive: P/E and dividend yield are compressed by "
+        "rising bond yields.  AWK's premium P/E (22-28x) is justified by "
+        "above-average rate base growth from acquisitions and infrastructure "
+        "investment, but compresses toward the utility peer group average "
+        "in high-rate environments."
+    ),
+    inflation_pass_through=(
+        "Good: water utility rate cases include cost recovery for "
+        "infrastructure investment and O&M inflation."
+    ),
+    recession_behavior=(
+        "American Water Works generates stable water utility revenues from "
+        "its 14 million customer connection base and demonstrates resilient "
+        "essential water service demand through economic cycles.  However, "
+        "industrial and commercial water demand has cyclical sensitivity "
+        "to manufacturing activity and commercial real estate occupancy."
+    ),
+    major_risks=[
+        "Per-capita water use decline — conservation mandates and efficient "
+        "appliances reduce residential water consumption per customer, "
+        "requiring rate case increases to maintain allowed revenue levels",
+        "Infrastructure investment capital requirements — aging US water "
+        "infrastructure (lead service line replacement, pipe renewal) "
+        "requires multi-decade capital investment financed through rate "
+        "increases and equity issuance",
+        "State regulatory risk — 24-state diversification reduces single-state "
+        "risk, but adverse rate case outcomes in large states (NJ, PA, MO) "
+        "create meaningful earnings headwinds",
+        "Acquisition integration risk — AWK's fragmented water system "
+        "acquisition strategy is central to growth; overpaying or "
+        "operational underperformance on acquired systems reduces returns",
+    ],
+    valuation_style=(
+        "AWK trades at 22-27x forward P/E and 18-22x EV/EBITDA, at a "
+        "premium to regulated utility peers reflecting water utility "
+        "scarcity, acquisition growth, and essential service defensiveness.  "
+        "Dividend yield of 2-2.5% with 15%+ EPS growth target from "
+        "rate base expansion.  P/E premium to utilities reflects growth premium."
+    ),
+    key_metrics=[
+        "Rate base growth (organic + acquisitions per year)",
+        "Allowed ROE vs. earned ROE by state",
+        "Acquisition pipeline (municipal water system privatizations)",
+        "Adjusted EPS growth trajectory",
+        "Lead service line replacement pace (regulatory mandate compliance)",
+    ],
+    competitive_advantages=[
+        "Largest US water utility franchise providing geographic "
+        "diversification across 24 states with scale-based regulatory "
+        "expertise and management depth unavailable to small utilities",
+        "Fragmented acquisition opportunity — 50,000+ US community water "
+        "systems are potential acquisition targets; AWK's capital and "
+        "regulatory expertise enables roll-up economics",
+        "Essential water service defensiveness — water is the most "
+        "critical utility service with political and social protection "
+        "from rate shock and service interruption",
+    ],
+    business_model_keywords=[
+        "AWK", "American Water Works", "water utility", "wastewater",
+        "regulated water", "rate base", "military installation", "PUC",
+        "water privatization", "P/E", "EV/EBITDA", "lead service line",
+        "dividend yield", "acquisition growth",
+    ],
+))
+
+# ── Communications & Services ─────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="TMUS",
+    company_name="T-Mobile US, Inc.",
+    business_model=(
+        "T-Mobile US is the second-largest US wireless carrier by revenue, "
+        "with 120+ million customers following the Sprint merger in 2020.  "
+        "T-Mobile operates a nationwide 5G network (mid-band 2.5GHz and "
+        "mmWave) and competes against AT&T and Verizon as the 'Un-carrier' "
+        "with simplified pricing, no-contract plans, and a customer experience "
+        "focus.  Postpaid phone net adds, ARPU growth, and network quality "
+        "are the primary competitive metrics."
+    ),
+    primary_revenue_drivers=[
+        "Postpaid services (~65%) — monthly recurring ARPU from postpaid "
+        "phone, tablet, and home internet customers; churn rate is key",
+        "Prepaid services (~10%) — Metro by T-Mobile brand serving "
+        "value-conscious consumers; stable with lower ARPU",
+        "Equipment revenue (~15%) and wholesale/other (~10%) — device "
+        "financing and leasing tied to postpaid customer acquisition",
+    ],
+    recurring_revenue_sources=[
+        "Postpaid wireless subscriber monthly ARPU revenue from 120+ million "
+        "customer accounts provides highly recurring service fee income",
+        "Business and enterprise wireless fee income from commercial accounts "
+        "and government contracts provides institutional service revenue",
+    ],
+    rate_sensitivity_note=(
+        "T-Mobile has $70B+ net debt from the Sprint acquisition and "
+        "is sensitive to refinancing cost.  P/E and EV/EBITDA are primary "
+        "valuation anchors.  Free cash flow yield is the key capital return metric "
+        "given TMUS's history of share buybacks funded by FCF."
+    ),
+    inflation_pass_through=(
+        "Moderate: T-Mobile has raised prices on legacy plans, "
+        "but wireless pricing is fundamentally competitive; "
+        "network investment inflation is a cost headwind."
+    ),
+    recession_behavior=(
+        "T-Mobile generates stable postpaid subscriber revenue from its "
+        "nationwide wireless network and demonstrates resilient ARPU from "
+        "its Un-carrier pricing positioning.  However, prepaid customer "
+        "mix and device financing volumes have cyclical sensitivity to "
+        "consumer spending confidence and wireless competitive pricing dynamics."
+    ),
+    major_risks=[
+        "Wireless market saturation — US wireless penetration is near 100%; "
+        "growth requires share gains from AT&T and Verizon rather than "
+        "new customer additions, intensifying competitive pricing pressure",
+        "5G home internet cannibalization of cable — T-Mobile's FWA "
+        "home internet growth attacks cable operators, potentially "
+        "triggering aggressive cable wireless response via MVNO pricing",
+        "Sprint integration legacy costs — Sprint network shutdown complete "
+        "but legacy IT systems, real estate, and workforce cost "
+        "synergies are still being realized",
+        "ARPU growth sustainability — T-Mobile's postpaid ARPU is below "
+        "AT&T and Verizon; price increases to close the gap risk "
+        "churn to lower-cost alternatives",
+    ],
+    valuation_style=(
+        "TMUS trades at 18-23x forward P/E and 8-10x EV/EBITDA, at a "
+        "premium to VZ and T reflecting superior growth and network quality.  "
+        "FCF yield of 4-6% and buyback program are the primary capital return "
+        "anchors.  EV/EBITDA relative to cable and wireline peers provides "
+        "cross-sector valuation context."
+    ),
+    key_metrics=[
+        "Postpaid net customer additions (phone vs. home internet)",
+        "Postpaid phone ARPU growth (vs. AT&T and Verizon)",
+        "Postpaid phone churn rate",
+        "Free cash flow per share and buyback capacity",
+        "5G mid-band network coverage vs. AT&T and Verizon",
+    ],
+    competitive_advantages=[
+        "Mid-band 5G spectrum holdings — TMUS's 2.5GHz mid-band spectrum "
+        "from Sprint acquisition is the most valuable 5G spectrum asset "
+        "in the US, providing nationwide coverage and capacity advantages",
+        "Nationwide 5G network coverage quality — third-party metrics "
+        "consistently rate T-Mobile's 5G network fastest and most available "
+        "in the US, supporting subscriber acquisition and retention",
+        "Un-carrier brand and customer experience positioning — simplified "
+        "pricing, no-term contracts, and Magenta customer service create "
+        "above-average satisfaction and below-average postpaid churn",
+    ],
+    business_model_keywords=[
+        "TMUS", "T-Mobile", "5G", "postpaid", "ARPU", "Un-carrier",
+        "Sprint merger", "mid-band spectrum", "FWA home internet", "Metro",
+        "AT&T", "Verizon", "P/E", "EV/EBITDA", "FCF yield",
+    ],
+))
+
+# ── Real Estate ───────────────────────────────────────────────────────────────
+
+_register(CompanyKnowledgeProfile(
+    ticker="PSA",
+    company_name="Public Storage",
+    business_model=(
+        "Public Storage is the world's largest self-storage REIT, operating "
+        "3,000+ storage facilities with 216M+ sq ft of rentable space across "
+        "the US and Europe (Shurgard).  The self-storage model is operationally "
+        "simple — month-to-month rental agreements, minimal tenant improvement "
+        "capital, and high operating leverage — generating above-average "
+        "REIT margins.  PSA's brand, pricing technology (dynamic pricing "
+        "algorithms), and digital marketing leadership differentiate it from "
+        "local self-storage operators."
+    ),
+    primary_revenue_drivers=[
+        "US self-storage (~85%) — month-to-month rentals from residential "
+        "and small business customers; demand tied to life events (moving, "
+        "downsizing, divorce, military deployment) more than economic cycle",
+        "Shurgard Europe (~12%) — PSA's European self-storage JV with "
+        "200+ properties in Western Europe, particularly UK and France",
+        "Tenant insurance and ancillary revenue (~3%) — protection programs "
+        "and merchandise (locks, boxes) sold at point of rental",
+    ],
+    recurring_revenue_sources=[
+        "Month-to-month self-storage rental income from 3,000+ facilities "
+        "provides recurring revenue from the broad US consumer and SMB base",
+        "Ancillary tenant protection program revenue from enrolled customers "
+        "provides repeating fee income alongside monthly rental payments",
+    ],
+    rate_sensitivity_note=(
+        "Public Storage is rate-sensitive: REIT multiples compress with "
+        "rising interest rates; PSA's floating-rate debt exposure adds "
+        "direct cost sensitivity.  AFFO yield and P/FFO are the primary anchors."
+    ),
+    inflation_pass_through=(
+        "Excellent: self-storage monthly rents reset on notice (30-60 days); "
+        "PSA can raise in-place rents to market pricing rapidly, "
+        "providing strong near-term inflation pass-through."
+    ),
+    recession_behavior=(
+        "Public Storage generates stable self-storage rental income from "
+        "life-event-driven consumer demand and demonstrates resilient occupancy "
+        "across economic cycles.  However, self-storage new supply development "
+        "and pricing competition have cyclical sensitivity to construction "
+        "activity and consumer household formation trends."
+    ),
+    major_risks=[
+        "New self-storage supply — development of new self-storage facilities "
+        "in PSA's key markets (Sun Belt, suburban metros) creates occupancy "
+        "and rate pressure that takes 18-24 months to absorb",
+        "Oversaturation in core markets — PSA's strongest markets (LA, Miami, "
+        "Houston) attracted aggressive new supply in 2019-23; occupancy "
+        "recovery from supply peaks takes multiple years",
+        "Revenue management technology commoditization — PSA's pricing "
+        "algorithm advantage may be replicated by Extra Space, CubeSmart, "
+        "and Life Storage, reducing the pricing-tech moat",
+        "Interest rate impact on AFFO multiple — rising rates compress "
+        "the AFFO multiple PSA commands; at 5%+ 10-year yields, "
+        "AFFO yield expansion reduces REIT P/AFFO multiples",
+    ],
+    valuation_style=(
+        "PSA trades at 20-26x forward AFFO and a 3-4% AFFO yield, "
+        "at a premium to self-storage peers reflecting brand, scale, "
+        "and pricing technology leadership.  AFFO per share growth of "
+        "5-8% annually supports the premium multiple.  Cap rate of "
+        "4.5-5.5% for self-storage assets underpins NAV-based valuation."
+    ),
+    key_metrics=[
+        "Same-store revenue growth (occupancy x rate per sq ft)",
+        "In-place rate vs. street rate (pricing power indicator)",
+        "Occupancy trend in top 10 markets",
+        "Development pipeline (new supply threat indicator)",
+        "AFFO per share growth and payout ratio",
+    ],
+    competitive_advantages=[
+        "Largest self-storage REIT scale — 3,000+ US facilities providing "
+        "national brand recognition, digital marketing reach, and "
+        "institutional capital access unmatched by regional operators",
+        "Digital marketing and pricing technology leadership — PSA's "
+        "dynamic pricing algorithms and online rental conversion capability "
+        "drive above-average revenue per sq ft vs. local operators",
+        "Shurgard European partnership and brand — co-ownership of European "
+        "self-storage market leader provides geographic diversification "
+        "and early-stage European market consolidation exposure",
+    ],
+    business_model_keywords=[
+        "PSA", "Public Storage", "self-storage", "REIT", "Shurgard",
+        "month-to-month", "AFFO", "FFO", "occupancy", "same-store revenue",
+        "storage rental", "dynamic pricing", "P/AFFO", "cap rate",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="EQR",
+    company_name="Equity Residential",
+    business_model=(
+        "Equity Residential is a leading apartment REIT owning and operating "
+        "80,000+ apartment units in high-barrier coastal markets: Boston, "
+        "New York, Washington DC, Seattle, San Francisco, Southern California, "
+        "Denver, and Austin.  Sam Zell-founded, EQR targets affluent renters "
+        "(household income $150K+) in supply-constrained urban and suburban "
+        "markets where new apartment construction is limited by zoning, "
+        "permitting, and construction costs."
+    ),
+    primary_revenue_drivers=[
+        "Apartment rental income (~95%) — monthly rent from 80,000+ units "
+        "in coastal gateway markets; rent growth tied to employment and "
+        "housing affordability dynamics in each market",
+        "Non-residential and ancillary income (~5%) — parking, storage, "
+        "pet fees, package services, and commercial ground floor leases",
+        "Development and repositioning — EQR develops and redevelops "
+        "properties in its target markets to add NAV-accretive units",
+    ],
+    recurring_revenue_sources=[
+        "Apartment rental income from 80,000+ units in coastal gateway "
+        "markets provides recurring monthly residential lease revenue",
+        "Ancillary resident income from parking, storage, pet fees, "
+        "and amenity services generates repeating supplemental revenue",
+    ],
+    rate_sensitivity_note=(
+        "EQR is rate-sensitive: REIT multiples compress with rising rates; "
+        "EQR's coastal market positioning reduces somewhat vs. Sun Belt "
+        "REIT peers.  AFFO yield and P/FFO are the primary valuation anchors."
+    ),
+    inflation_pass_through=(
+        "Good: coastal apartment rents are market-driven without rent control "
+        "in most EQR jurisdictions; inflation drives wage growth supporting "
+        "above-CPI rent increases in high-demand markets."
+    ),
+    recession_behavior=(
+        "Equity Residential generates stable apartment rental income from "
+        "its high-income coastal renter base and demonstrates resilient "
+        "occupancy in supply-constrained gateway markets.  However, "
+        "coastal office employment and tech sector layoffs have cyclical "
+        "sensitivity that can impair apartment demand in SF, Seattle, and NYC."
+    ),
+    major_risks=[
+        "Coastal market rent control expansion — San Francisco, New York, "
+        "and Los Angeles have implemented or expanded rent stabilization "
+        "ordinances that limit EQR's ability to achieve market-rate rent "
+        "increases on occupied units",
+        "Tech sector and coastal employment sensitivity — EQR's San "
+        "Francisco and Seattle markets are highly dependent on tech "
+        "employment; tech layoffs in 2022-23 created negative net absorption",
+        "Multifamily supply in Sun Belt markets — EQR's expansion to "
+        "Austin and Denver exposed it to markets with heavy new apartment "
+        "supply, pressuring occupancy and rent growth",
+        "Remote work structural impact — reduced office utilization may "
+        "structurally reduce demand for urban apartments in gateway "
+        "cities relative to pre-COVID norms",
+    ],
+    valuation_style=(
+        "EQR trades at 18-24x forward AFFO and a 3.5-4.5% AFFO yield, "
+        "at a modest premium to apartment peers reflecting coastal market "
+        "quality.  AFFO per share growth of 5-8% and NOI margin above 65% "
+        "support the multiple.  Cap rate of 4-5% for coastal apartments "
+        "provides NAV cross-check."
+    ),
+    key_metrics=[
+        "Same-store revenue growth (rent per unit x occupancy)",
+        "Net absorption by market (demand vs. new supply)",
+        "Renewal rent growth vs. new lease spreads",
+        "AFFO per share growth and payout ratio",
+        "Development pipeline completion and lease-up timeline",
+    ],
+    competitive_advantages=[
+        "Coastal gateway market positioning in supply-constrained "
+        "urban and suburban markets where zoning and permitting limit "
+        "new apartment construction, protecting EQR's pricing power",
+        "High-income renter demographic ($150K+ household income) "
+        "providing above-average ability to absorb rent increases "
+        "and below-average vacancy sensitivity to economic stress",
+        "Scale property management and technology — EQR's centralized "
+        "property management and leasing technology provides operating "
+        "leverage on 80,000 units",
+    ],
+    business_model_keywords=[
+        "EQR", "Equity Residential", "apartment REIT", "multifamily",
+        "coastal market", "AFFO", "FFO", "occupancy", "same-store NOI",
+        "Boston", "New York", "Seattle", "San Francisco", "P/AFFO",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="VICI",
+    company_name="VICI Properties Inc.",
+    business_model=(
+        "VICI Properties is the largest US experiential REIT, owning "
+        "50+ gaming and hospitality properties including Caesars Palace, "
+        "MGM Grand, The Venetian, and Mandalay Bay.  VICI operates exclusively "
+        "as a landlord through triple-net leases with casino operators (Caesars "
+        "and MGM as anchor tenants), with 100% rent coverage and CPI-linked "
+        "annual rent escalators.  VICI has been an S&P 500 constituent since "
+        "2022 and has never missed a rent payment since formation in 2017."
+    ),
+    primary_revenue_drivers=[
+        "Casino and gaming property rental income (~90%) — triple-net "
+        "lease rent from Caesars Entertainment (~45%) and MGM Resorts (~40%); "
+        "leases have 15-35 year initial terms with extension options",
+        "Golf and experiential properties (~7%) — Chelsea Piers, Cabot "
+        "golf resorts, and bowling venues diversifying beyond gaming",
+        "Loan and investment income (~3%) — bridge loans to experiential "
+        "real estate operators pending acquisition",
+    ],
+    recurring_revenue_sources=[
+        "Long-term casino property triple-net lease income from Caesars "
+        "and MGM provides contractual, CPI-indexed rent with 100% coverage",
+        "Gaming REIT base rent escalations tied to CPI and fixed "
+        "annual rent step-ups generate predictable rent growth",
+    ],
+    rate_sensitivity_note=(
+        "VICI is rate-sensitive: net lease REITs with long-duration leases "
+        "are bond proxies; rising rates compress P/AFFO multiples.  "
+        "AFFO yield of 5-6.5% is the primary investment anchor."
+    ),
+    inflation_pass_through=(
+        "Good: VICI's master lease agreements include CPI-linked rent "
+        "escalators (typically 2% floor with CPI cap) providing "
+        "partial inflation pass-through on in-place rents."
+    ),
+    recession_behavior=(
+        "VICI Properties generates stable triple-net lease rental income "
+        "from Caesars and MGM master lease agreements and demonstrates "
+        "resilient and defensive rent collection through economic cycles from "
+        "investment-grade tenants.  However, gaming operator revenues have "
+        "cyclical exposure to consumer entertainment spending and travel patterns."
+    ),
+    major_risks=[
+        "Tenant concentration risk — Caesars Entertainment and MGM together "
+        "represent ~85% of VICI revenue; a financial distress event at "
+        "either tenant would create significant rent coverage pressure",
+        "Gaming industry disruption from online gambling — iGaming and "
+        "online sports betting growth could structurally reduce physical "
+        "casino visitation over time, impairing tenant rent coverage ratios",
+        "REIT leverage and interest rate sensitivity — VICI's 5.5-6.5x "
+        "Net Debt/EBITDA leverage is elevated vs. net lease peers; "
+        "refinancing at higher rates increases interest expense materially",
+        "Experiential diversification execution risk — VICI's non-gaming "
+        "experiential acquisitions (golf, bowling) are smaller-scale and "
+        "require operating expertise beyond pure casino landlord skills",
+    ],
+    valuation_style=(
+        "VICI trades at 14-18x forward AFFO and an AFFO yield of 5-6%, "
+        "at a slight discount to O (Realty Income) reflecting gaming "
+        "tenant concentration.  CPI rent escalators and 100% rent "
+        "collection history justify a premium vs. other casino REITs.  "
+        "Cap rate of 5.5-6.5% for Las Vegas Strip assets provides NAV cross-check."
+    ),
+    key_metrics=[
+        "Rent coverage ratio by master lease (Caesars and MGM)",
+        "AFFO per share growth (rent escalator contribution)",
+        "Experiential non-gaming asset acquisition pipeline",
+        "Net Debt/EBITDA and debt maturity profile",
+        "Tenant gaming revenue health (Las Vegas Strip and regional)",
+    ],
+    competitive_advantages=[
+        "Irreplaceable Las Vegas Strip casino properties — Caesars Palace, "
+        "MGM Grand, and The Venetian are among the most recognized "
+        "hotel-casino assets in the world with no substitution possibility",
+        "Triple-net lease structure with investment-grade tenants — "
+        "100% NNN leases with Caesars and MGM provide operating cost "
+        "insulation and long-term rent visibility with CPI escalators",
+        "Blue-chip gaming operator tenant base — Caesars and MGM are "
+        "investment-grade rated, publicly accountable tenants with "
+        "100% rent coverage and contractual escalation commitments",
+    ],
+    business_model_keywords=[
+        "VICI", "VICI Properties", "gaming REIT", "Caesars", "MGM",
+        "Las Vegas Strip", "triple-net lease", "AFFO", "FFO",
+        "casino property", "CPI escalator", "P/AFFO", "cap rate",
+        "experiential REIT", "Caesars Palace",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="WELL",
+    company_name="Welltower Inc.",
+    business_model=(
+        "Welltower is the largest healthcare REIT and largest owner of "
+        "senior housing and outpatient medical properties globally.  Three "
+        "segments: Senior Housing Operating (SHOP, ~55% of NOI), Senior "
+        "Housing Triple-Net (~15%), and Outpatient Medical (15%) and "
+        "Health Systems (~15%).  SHOP properties are operated in a "
+        "revenue-sharing joint venture structure where Welltower retains "
+        "operating upside from aging demographic demand and occupancy recovery."
+    ),
+    primary_revenue_drivers=[
+        "Senior Housing Operating (SHOP, ~55%) — assisted living, "
+        "independent living, and memory care communities operated with "
+        "management partners; occupancy and rate drive NOI growth",
+        "Outpatient Medical (~20%) — medical office buildings and outpatient "
+        "surgery centers leased to health systems and physician groups",
+        "Senior Housing Triple-Net (~15%) and Health Systems (~10%) — "
+        "long-term leased senior housing and hospital properties",
+    ],
+    recurring_revenue_sources=[
+        "Senior housing operating portfolio NOI from assisted living "
+        "and independent living communities provides recurring occupancy-based revenue",
+        "Outpatient medical building and long-term care lease income "
+        "from healthcare operators provides contracted recurring rental revenue",
+    ],
+    rate_sensitivity_note=(
+        "Welltower is rate-sensitive: REIT multiples compress with rising "
+        "rates; WELL's SHOP growth story partially offsets rate sensitivity "
+        "with above-average AFFO growth.  AFFO yield and P/AFFO are the "
+        "primary valuation anchors."
+    ),
+    inflation_pass_through=(
+        "Good in SHOP: senior housing rental rates are market-driven "
+        "and can be raised annually; labor inflation is the key cost challenge "
+        "given senior housing's labor-intensive care model."
+    ),
+    recession_behavior=(
+        "Welltower generates stable outpatient medical building revenue "
+        "from long-term healthcare operator leases and demonstrates resilient "
+        "SHOP demand from the non-discretionary nature of senior housing "
+        "placement decisions.  However, senior housing occupancy has cyclical "
+        "sensitivity to household wealth effects and COVID-related demand "
+        "disruptions."
+    ),
+    major_risks=[
+        "Senior housing labor cost inflation — SHOP communities are labor-"
+        "intensive; labor shortages and wage inflation in the 2021-23 period "
+        "compressed margins materially; a repeat would impair SHOP NOI growth",
+        "Senior housing oversupply in certain markets — development of new "
+        "assisted living and independent living communities in Sun Belt and "
+        "suburban markets can pressure occupancy recovery in WELL's portfolio",
+        "Operating leverage in SHOP — the revenue-sharing SHOP structure "
+        "means Welltower bears full operating cost risk (labor, food, utilities) "
+        "and sees amplified EBITDA swings relative to occupancy changes",
+        "Health system tenant credit risk — outpatient medical leases "
+        "with regional health systems carry credit exposure to hospital "
+        "operating margin pressure",
+    ],
+    valuation_style=(
+        "WELL trades at 30-38x forward AFFO and a 2-3% AFFO yield, "
+        "at a premium to REIT peers reflecting the SHOP secular growth "
+        "story from aging demographics.  AFFO per share growth of 10-15% "
+        "justifies the premium multiple.  Cap rate of 5.5-6.5% for senior "
+        "housing properties provides NAV cross-check."
+    ),
+    key_metrics=[
+        "SHOP same-store NOI growth (occupancy x rate)",
+        "Senior housing occupancy trend vs. 2019 pre-COVID baseline",
+        "SHOP labor cost per occupied unit",
+        "Outpatient medical lease renewal spreads",
+        "AFFO per share growth and guidance range",
+    ],
+    competitive_advantages=[
+        "Largest senior housing REIT scale with 85,000+ senior housing "
+        "and care units providing unmatched portfolio diversification, "
+        "operator partnership depth, and capital market access",
+        "Secular aging demographic demand — the 80+ year old population "
+        "in the US is projected to double by 2040, creating structural "
+        "demand growth for assisted living and memory care",
+        "Operator partnership model — Welltower's deep relationships with "
+        "Sunrise, Discovery, Cogir, and other senior housing operators "
+        "provide management expertise and portfolio expansion capability",
+    ],
+    business_model_keywords=[
+        "WELL", "Welltower", "senior housing", "SHOP", "assisted living",
+        "independent living", "memory care", "outpatient medical", "AFFO",
+        "FFO", "aging demographics", "Sunrise", "P/AFFO", "cap rate",
+        "healthcare REIT",
+    ],
+))
+
+
+_register(CompanyKnowledgeProfile(
+    ticker="AMH",
+    company_name="American Homes 4 Rent",
+    business_model=(
+        "American Homes 4 Rent is the second-largest single-family rental "
+        "REIT, owning 60,000+ homes across Sun Belt and Mountain West markets "
+        "including Atlanta, Phoenix, Dallas, Charlotte, Tampa, and Nashville.  "
+        "AMH operates both an acquisition/renovation strategy (buying existing "
+        "homes) and a build-to-rent (BTR) strategy through its AMH Development "
+        "program, constructing purpose-built rental communities with amenities "
+        "targeting the suburban family renter demographic."
+    ),
+    primary_revenue_drivers=[
+        "Single-family home rental income (~90%) — monthly rent from "
+        "60,000+ homes in Sun Belt and Mountain West markets; "
+        "demand driven by housing affordability and lifestyle flexibility",
+        "Build-to-rent (BTR) development (~10% of growth CapEx) — AMH "
+        "constructs purpose-built rental communities at 5-7% development "
+        "yield vs. 4-5% acquisition cap rates",
+        "Ancillary resident income — smart home technology fees, pet fees, "
+        "parking, and storage generate supplemental revenue per occupied home",
+    ],
+    recurring_revenue_sources=[
+        "Single-family home rental income from 60,000+ homes across "
+        "Sun Belt and high-growth markets provides monthly residential rent",
+        "Ancillary resident income from smart home technology and "
+        "pet and parking fees generates repeating supplemental revenue",
+    ],
+    rate_sensitivity_note=(
+        "AMH is rate-sensitive: REIT multiples compress with rising rates; "
+        "BTR development yields also compress vs. financing costs.  "
+        "AFFO yield and P/FFO are the primary valuation anchors.  "
+        "High rates support single-family rental demand (reduces "
+        "for-sale home affordability and drives renters to AMH)."
+    ),
+    inflation_pass_through=(
+        "Good: single-family lease rents reset at lease renewal "
+        "(typically 12-month leases); AMH can raise rents to market "
+        "annually, providing good inflation pass-through in strong markets."
+    ),
+    recession_behavior=(
+        "American Homes 4 Rent generates stable rental income from its "
+        "Sun Belt single-family home portfolio and demonstrates resilient "
+        "occupancy from the lifestyle flexibility demand driver for "
+        "single-family renting.  However, Sun Belt multifamily supply "
+        "and for-sale home price declines have cyclical sensitivity to "
+        "consumer confidence and housing market conditions."
+    ),
+    major_risks=[
+        "Sun Belt apartment supply competition — AMH's single-family "
+        "homes compete with new multifamily construction in Atlanta, "
+        "Phoenix, and Dallas; excess apartment supply in 2023-25 created "
+        "lease rate compression in AMH's core markets",
+        "Home price and acquisition yield compression — rising home prices "
+        "reduce cap rates on acquired homes; AMH's BTR strategy partially "
+        "offsets this by developing below market acquisition costs",
+        "Regulatory risk on institutional homeownership — political "
+        "opposition to institutional single-family rental ownership could "
+        "result in state or federal legislation limiting investor purchases "
+        "of single-family homes",
+        "Property tax and insurance cost increases — Sun Belt states "
+        "have experienced significant property tax reassessments and "
+        "homeowner insurance premium increases, pressuring NOI margins",
+    ],
+    valuation_style=(
+        "AMH trades at 22-28x forward AFFO and a 3-4% AFFO yield, "
+        "at a premium to peer Invitation Homes reflecting BTR development "
+        "capability.  AFFO per share growth of 7-10% from build-to-rent "
+        "delivery and rent growth justifies the premium.  Cap rate of "
+        "4.5-5.5% for Sun Belt single-family homes provides NAV support."
+    ),
+    key_metrics=[
+        "Same-property revenue growth (rent x occupancy)",
+        "Build-to-rent deliveries and projected development yield",
+        "Sun Belt occupancy trend vs. new apartment supply",
+        "AFFO per share growth and payout ratio",
+        "Acquisition cap rate vs. BTR development yield spread",
+    ],
+    competitive_advantages=[
+        "Sun Belt housing shortage positioning — AMH's 60,000+ homes "
+        "in undersupplied Sun Belt markets benefit from household formation "
+        "migration from coastal metros to lower-cost Sun Belt cities",
+        "Build-to-rent community development capability — AMH's proprietary "
+        "BTR construction program adds homes at 5-7% yields vs. 4-5% "
+        "acquisition cap rates, creating above-market returns on growth",
+        "Single-family rental scale and technology — AMH's centralized "
+        "property management, maintenance tracking, and resident app "
+        "provide operating leverage and resident satisfaction improvements",
+    ],
+    business_model_keywords=[
+        "AMH", "American Homes 4 Rent", "single-family rental", "REIT",
+        "build-to-rent", "Sun Belt", "Atlanta", "Phoenix", "Dallas",
+        "BTR", "AFFO", "FFO", "P/AFFO", "cap rate", "occupancy",
+    ],
+))
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 
