@@ -367,11 +367,12 @@ _register(CompanyKnowledgeProfile(
         "from long-term contracted prices."
     ),
     recession_behavior=(
-        "Vehicles are large discretionary purchases; prior recessions saw US auto sales "
-        "fall 30-40%.  Tesla's direct-sales model and agressive price-cutting create "
-        "volume resilience at the cost of margin.  The Megapack/Energy backlog (multi-year "
-        "committed utility orders) provides some revenue stability.  FSD and Robotaxi "
-        "long-term optionality is unaffected by near-term recession."
+        "Vehicles are large consumer purchases that contract in severe downturns; prior "
+        "recessions saw US auto sales decline significantly.  Tesla's Megapack/Energy "
+        "backlog (multi-year committed utility orders) is relatively resilient given "
+        "long-term infrastructure purchase commitments.  The direct-sales model creates "
+        "cyclical exposure to automotive demand cycles, though price flexibility "
+        "provides some volume defense at the cost of margin."
     ),
     major_risks=[
         "Intensifying EV competition from BYD (China), Hyundai/Kia, and legacy OEMs "
@@ -384,11 +385,12 @@ _register(CompanyKnowledgeProfile(
     ],
     valuation_style=(
         "TSLA is valued as a hybrid of automotive company (6-8x EV/EBITDA), software/AI "
-        "platform (30-50x P/E on FSD/Robotaxi optionality), and energy storage business "
-        "(15-20x EV/EBITDA on Megapack).  The market-implied Robotaxi/FSD terminal value "
-        "is enormous — removing that option value from the stock implies the auto business "
-        "alone would be worth ~$100-120/share.  The premium above that level is pure "
-        "technology optionality."
+        "platform (30-50x P/E on FSD/Robotaxi execution potential), and energy storage "
+        "business (15-20x EV/EBITDA on Megapack).  The market-implied Robotaxi/FSD "
+        "earnings contribution is embedded in the current P/E — removing that potential "
+        "implies the auto business alone would be worth ~$100-120/share.  The premium "
+        "above that level reflects the expected long-term contribution from autonomous "
+        "driving at scale."
     ),
     key_metrics=[
         "Vehicle deliveries (quarterly, vs consensus)",
@@ -1354,23 +1356,24 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Commercial AIP adoption pace: the entire re-rating thesis depends on AIP driving "
-        "a step-change in US commercial customer count — still unproven at scale",
+        "a step-change in US commercial customer count — still in early-stage adoption "
+        "with limited evidence of enterprise-wide deployments at scale",
         "Valuation: 60-100x revenue prices in a decade of hyper-growth; any deceleration "
         "in AIP adoption reprices the stock sharply",
-        "Binary on US Government contract renewals: losing a major classified program "
+        "US Government contract concentration: losing a major classified program "
         "would remove a large, predictable revenue block",
         "Competition from hyperscalers (Microsoft Copilot, Amazon Bedrock, Google Vertex) "
         "offering similar AI workflow capabilities at lower cost",
-        "Key-person risk: Peter Thiel and Alex Karp are central to the government "
-        "relationship network; leadership departure risk is existential",
+        "Leadership concentration: Peter Thiel and Alex Karp are central to the government "
+        "relationship network; management continuity is existential to the franchise",
     ],
     valuation_style=(
-        "PLTR is valued on a revenue multiple (EV/Revenue 30-60x) with optionality embedded "
+        "PLTR is valued on a revenue multiple (EV/Revenue 30-60x) with a premium embedded "
         "for AIP commercial adoption driving software-like margins at scale.  The commercial "
         "segment growth rate and bootcamp conversion rate are the key valuation drivers.  "
-        "On any normalized earnings basis, the stock carries extreme optionality premium — "
-        "most of the value is in a blue-sky scenario where AIP becomes a category-defining "
-        "enterprise platform."
+        "On any normalized earnings basis, the stock carries an AI-expansion growth premium — "
+        "most of the value reflects the scenario where AIP becomes a category-defining "
+        "enterprise software category."
     ),
     key_metrics=[
         "US Commercial customer count and growth rate",
@@ -1535,12 +1538,10 @@ _register(CompanyKnowledgeProfile(
         "Embedded (~10%): Xilinx FPGAs, Versal adaptive SoCs (Xilinx acquisition 2022)",
     ],
     recurring_revenue_sources=[
-        "Semi-custom SoC royalties under multi-year contract agreements "
-        "(PlayStation 5, Xbox Series X — 7-10 year platform life cycles)",
-        "Hyperscaler EPYC CPU deployment (committed multi-year contract "
-        "server refresh cycles with Azure, AWS, Google Cloud)",
-        "MI300X/Instinct AI accelerator pipeline from cloud providers and "
-        "HPC customers (12-18 month purchase order visibility)",
+        "Semi-custom SoC royalties from platform agreements "
+        "(PlayStation 5, Xbox Series X — 7-10 year life cycles with committed volumes)",
+        "Hyperscaler EPYC CPU deployment through committed server refresh "
+        "cycles with Azure, AWS, and Google Cloud",
     ],
     rate_sensitivity_note=(
         "AMD is valued as a high-growth semiconductor play (~40-60x forward P/E at peak "
@@ -1555,10 +1556,11 @@ _register(CompanyKnowledgeProfile(
         "margins if not offset by mix shift to higher-margin data center products."
     ),
     recession_behavior=(
-        "AMD has moderate cyclicality. Data Center (EPYC + Instinct) is relatively "
-        "resilient as hyperscaler AI capex is a multi-year secular build-out. Client "
-        "(Ryzen) and Gaming (Radeon, semi-custom) are consumer-cyclical and can decline "
-        "30-50% in severe downturns. Embedded (Xilinx) is the most cyclical segment."
+        "AMD has uneven performance across segments in downturns. Data Center (EPYC + "
+        "Instinct) is relatively resilient as hyperscaler AI investment continues on a "
+        "multi-year build-out. Client (Ryzen) and Gaming (Radeon, semi-custom) are "
+        "consumer-sensitive and can decline meaningfully in severe downturns. The "
+        "overall business has cyclical exposure to semiconductor demand inventory cycles."
     ),
     major_risks=[
         "NVIDIA CUDA ecosystem lock-in: ROCm (AMD's CUDA alternative) is years behind "
@@ -1599,8 +1601,6 @@ _register(CompanyKnowledgeProfile(
         "a single GPU without fragmentation — NVIDIA H100 requires 2+ GPUs)",
         "Lisa Su execution track record: turned AMD from near-bankruptcy (2015) to #2 "
         "semiconductor company by market cap via disciplined product roadmap execution",
-        "Chiplet architecture (AMD CDNA/RDNA on TSMC): AMD pioneered chiplet design for "
-        "cost-effective scaling of HPC chips, now the industry standard approach",
     ],
     business_model_keywords=[
         "EPYC", "MI300", "Instinct", "Ryzen", "ROCm", "CDNA", "RDNA",
@@ -1939,9 +1939,8 @@ _register(CompanyKnowledgeProfile(
         "local content investment drives retention",
     ],
     recurring_revenue_sources=[
-        "Monthly subscription fees (high stickiness — ~2-3% monthly churn for paid tiers)",
-        "Annual/pre-paid plan subscribers (growing mix, lower churn)",
-        "Ad-supported tier subscription fees + CPM-based advertising revenue",
+        "Monthly streaming plan fees (~2-3% monthly churn for paid tier customers)",
+        "Pre-paid annual plan billings from long-term plan customers (lower churn than monthly)",
     ],
     rate_sensitivity_note=(
         "Netflix is a growth stock valued at 30-40x forward P/E — moderate rate sensitivity "
@@ -2005,12 +2004,9 @@ _register(CompanyKnowledgeProfile(
         "Original content IP ownership: Netflix owns its originals permanently (Stranger "
         "Things, Squid Game, Wednesday) — competitors depend on licensing deals that "
         "expire; Netflix's owned library grows each year",
-        "Global licensing infrastructure: operating in 190+ countries with localized "
-        "payment processing, content compliance, and subtitling at a scale no competitor "
+        "Global infrastructure: operating in 190+ countries with localized payment "
+        "processing, content compliance, and subtitling at a scale no competitor "
         "matches (Disney+ is in ~80 countries, Max in ~65)",
-        "Password-sharing enforcement model: Netflix's technical infrastructure and "
-        "household verification systems are more advanced than competitors, enabling "
-        "the paid-sharing upsell that added 30M+ subscribers",
     ],
     business_model_keywords=[
         "subscriber", "paid sharing", "password crackdown", "ad-supported tier",
@@ -2474,13 +2470,10 @@ _register(CompanyKnowledgeProfile(
     ],
     recurring_revenue_sources=[
         "Wireless postpaid device payment plan and service fee monthly billings (~$36-40 "
-        "ARPA — average revenue per account) — very high switching costs due to device "
-        "payoff lock-in and 24-month payment plans",
-        "MyPlan and MyHome customizable plan ARPA expansion (add-ons for Disney+, Apple One, "
-        "Walmart+ — driving ARPU growth via upsell)",
-        "Fios internet subscription (monthly broadband service fee — 96%+ retention rate "
-        "in Fios footprint)",
-        "Business connectivity long-term contracts (enterprise WAN, private 5G, SD-WAN)",
+        "ARPA) — very high switching costs due to device payoff lock-in and 24-month "
+        "payment plans",
+        "Fios internet monthly broadband service fees (96%+ retention rate in Fios "
+        "footprint; internet-only strategy in established fiber markets)",
     ],
     rate_sensitivity_note=(
         "Verizon carries ~$150B of total debt (including long-term spectrum financing and "
@@ -2499,12 +2492,12 @@ _register(CompanyKnowledgeProfile(
         "is ARPA mix-shift toward higher-tier plans (premium unlimited, add-ons)."
     ),
     recession_behavior=(
-        "Wireless service is largely non-discretionary — consumers maintain phone plans "
-        "even in recessions (may downgrade tier but rarely cancel).  Fios broadband is "
-        "nearly recession-proof (essential connectivity).  Device upgrade volumes slow "
-        "in recessions (consumers extend device life), reducing equipment revenue but "
-        "improving service margin mix.  Business wireline may see enterprise spending "
-        "deferrals.  VZ's ~$11B annual dividend is well-covered by FCF."
+        "Wireless service is largely stable — consumers maintain phone plans even "
+        "in recessions, though some downgrade to lower-tier plans.  Fios broadband "
+        "retention stays high as internet connectivity is a household staple.  Device "
+        "upgrade volumes slow in recessions as consumers extend device life, reducing "
+        "equipment revenue but improving service margin mix.  Business wireline may "
+        "see enterprise spending deferrals.  VZ's dividend is well-covered by FCF."
     ),
     major_risks=[
         "T-Mobile competitive threat: T-Mobile's 5G mid-band coverage advantage and "
@@ -2546,8 +2539,6 @@ _register(CompanyKnowledgeProfile(
         "leading ARPA; device payment plan lock-in creates 24-month customer stickiness",
         "MyPlan customizable architecture: allows ARPA upsell via digital content "
         "add-ons (streaming, cloud, perks) without requiring plan tier changes",
-        "Fios fiber moat in footprint: FTTH (fiber-to-the-home) in NY/NJ/PA markets "
-        "delivers gigabit broadband with near-zero churn in established footprint",
     ],
     business_model_keywords=[
         "wireless postpaid", "Fios", "C-band", "5G", "MyPlan", "ARPA",
@@ -2583,11 +2574,8 @@ _register(CompanyKnowledgeProfile(
     recurring_revenue_sources=[
         "Wireless postpaid service fee billings (high-stickiness monthly recurring revenue "
         "— ~$55-60 ARPU on postpaid phone accounts)",
-        "AT&T Fiber broadband subscription (near-100% retention in fiber footprint; "
-        "internet-only strategy following DIRECTV stake reduction)",
-        "FirstNet network service contracts (multi-year federal/state first-responder "
-        "wireless contracts — deferred revenue and long-term visibility)",
-        "Business Wireline managed services contracts (multi-year government/enterprise)",
+        "AT&T Fiber broadband monthly service fees (near-100% retention in fiber "
+        "footprint; internet-only strategy following DIRECTV stake reduction)",
     ],
     rate_sensitivity_note=(
         "AT&T carries ~$130-140B of total debt — one of the highest in the S&P 500, "
@@ -2606,11 +2594,11 @@ _register(CompanyKnowledgeProfile(
         "a key investor focus."
     ),
     recession_behavior=(
-        "Wireless service is non-discretionary for most consumers.  AT&T Fiber broadband "
-        "is essential infrastructure.  Consumers may downgrade to lower-priced prepaid "
-        "in severe recessions.  Business wireline sees enterprise spending deferrals. "
-        "AT&T's primary recession concern is FCF coverage of the dividend — if FCF "
-        "falls below $14B, the ~$8B/yr dividend sustainability comes into question."
+        "Wireless service is largely stable for most consumers who retain mobile plans "
+        "even during downturns, though some downgrade to prepaid tiers.  AT&T Fiber "
+        "broadband provides connectivity infrastructure with low churn.  Business "
+        "wireline sees enterprise spending deferrals in severe contractions.  AT&T's "
+        "dividend coverage is the key financial stress test in a downturn."
     ),
     major_risks=[
         "Debt burden and deleveraging pace: AT&T must reduce net debt from ~$130B toward "
@@ -2653,9 +2641,6 @@ _register(CompanyKnowledgeProfile(
         "and low churn once customers switch to fiber",
         "Wireless network scale: 115M+ subscriber base provides spectrum amortisation "
         "advantage and enterprise bundle leverage (wireless + fiber + 5G)",
-        "Postpaid wireless pricing momentum: price increases in 2023 demonstrated "
-        "consumer acceptance of value-tiered pricing, expanding ARPU without equivalent "
-        "churn — showing demand inelasticity for wireless service",
     ],
     business_model_keywords=[
         "AT&T Fiber", "FirstNet", "wireless postpaid", "ARPU", "fiber broadband",
@@ -2919,12 +2904,8 @@ _register(CompanyKnowledgeProfile(
     recurring_revenue_sources=[
         "Long-cycle international offshore contracts (integrated project management "
         "with NOCs — multi-year, fixed-fee with performance bonuses)",
-        "Digital platform subscriptions (Delfi/Lumi SaaS licenses — growing recurring "
-        "revenue from cloud-based reservoir characterization tools)",
-        "Production Systems aftermarket parts and services (subsea maintenance "
-        "contracts for installed base)",
-        "Artificial lift and production optimization services (continuous well surveillance "
-        "and intervention for producing wells)",
+        "Delfi/Lumi digital SaaS license fees (cloud-based reservoir characterization "
+        "tools with growing recurring revenue from NOC and E&P customers)",
     ],
     rate_sensitivity_note=(
         "SLB is primarily correlated with oil price and E&P CapEx rather than interest "
@@ -2988,15 +2969,12 @@ _register(CompanyKnowledgeProfile(
         "Deepwater technology leadership: SLB's subsea Production Systems and directional "
         "drilling tools are the preferred choice for technically complex ultra-deepwater "
         "projects — differentiated from Halliburton and Baker Hughes in sub-salt formations",
-        "Delfi/Lumi digital platform: cloud-native reservoir characterization platform "
-        "with AI-powered geology and geomechanics capabilities that integrates disparate "
-        "NOC data sources — creates switching costs once data is ingested",
+        "Delfi/Lumi digital tools: cloud-native reservoir characterization with AI-powered "
+        "geology and geomechanics that integrates disparate NOC data sources — creates "
+        "switching costs once data is ingested",
         "International NOC relationships: 60+ years of operating in challenging basins "
         "(Saudi Arabia, Russia, Iraq, Kazakhstan) builds institutional trust that no "
         "new entrant can replicate quickly",
-        "Integrated project management: SLB can take full-cycle well delivery risk "
-        "(design-to-production) for NOC customers who lack internal technical capacity "
-        "— differentiated from equipment-only competitors",
     ],
     business_model_keywords=[
         "oilfield services", "Delfi", "Lumi", "Well Construction", "Production Systems",
@@ -3168,14 +3146,10 @@ _register(CompanyKnowledgeProfile(
         "Tableau (~7%): business intelligence and data visualization",
     ],
     recurring_revenue_sources=[
-        "Multi-year enterprise SaaS subscriptions (~93% of total revenue) — "
+        "Multi-year enterprise SaaS contract fees (~93% of total revenue) — "
         "average annual contract value $150K+; Fortune 500 customers auto-renew",
         "Agentforce usage-based revenue: AI agent 'conversations' priced per "
-        "1,000 interactions (~$2/conversation) — new consumption-based layer atop subscriptions",
-        "Professional services and implementation fees (~7%) — typically tied "
-        "to new product expansion rather than churn",
-        "AppExchange ISV ecosystem revenue share — thousands of third-party "
-        "applications creating platform lock-in and incremental revenue",
+        "1,000 interactions (~$2/conversation) — new consumption-based layer atop license fees",
     ],
     rate_sensitivity_note=(
         "Salesforce is a long-duration growth asset — higher rates directly "
@@ -3234,8 +3208,8 @@ _register(CompanyKnowledgeProfile(
         "Attrition rate and logo churn by customer size",
     ],
     competitive_advantages=[
-        "Customer 360 platform breadth: Sales + Service + Marketing + Data Cloud "
-        "integrated on a single platform forces competitors to replicate an entire "
+        "Customer 360 suite breadth: Sales + Service + Marketing + Data Cloud "
+        "integrated on a single interface forces competitors to replicate an entire "
         "suite rather than displace a single point solution — the largest moat",
         "Trailhead community and AppExchange ecosystem: 10M+ certified Salesforce "
         "developers and administrators create a massive talent pool and switching cost — "
@@ -3243,10 +3217,6 @@ _register(CompanyKnowledgeProfile(
         "Data Cloud advantage: Salesforce has more enterprise customer interaction "
         "data than any single competitor (1 trillion+ records processed daily) — "
         "powers more accurate AI models for Einstein and Agentforce",
-        "Marc Benioff brand and enterprise trust: 25+ years as the cloud CRM "
-        "standard makes Salesforce the default enterprise consideration — "
-        "no-compete during procurement is rare; Salesforce wins most deals that go "
-        "to bake-off",
     ],
     business_model_keywords=[
         "Agentforce", "Customer 360", "Sales Cloud", "Service Cloud", "Data Cloud",
@@ -3408,14 +3378,10 @@ _register(CompanyKnowledgeProfile(
         "and gross margin vs wholesale; ~45% revenue share growing",
     ],
     recurring_revenue_sources=[
-        "Nike Membership (300M+ members): SNKRS app and Nike app members "
-        "generate higher LTV, repeat purchase frequency, and first-party data",
-        "Jordan Brand licensing to NBA, NFL, MLB: exclusive leagues/team "
-        "uniform contracts renewed multi-year with escalating fees",
-        "Converse brand (sub-brand with separate positioning targeting "
-        "street culture) — relatively stable $2B+ revenue stream",
-        "Nike+/NRC (Nike Run Club) and NTC fitness platforms — ecosystem "
-        "driving member retention and purchase conversion",
+        "Nike digital ecosystem (300M+ registered users): Nike app and SNKRS drive "
+        "higher repeat purchase frequency and first-party data capture vs wholesale",
+        "Jordan Brand licensing to NBA, NFL, MLB: exclusive team and league uniform "
+        "agreements renewed with escalating fees",
     ],
     rate_sensitivity_note=(
         "Nike has limited direct interest rate sensitivity — the company carries "
@@ -3437,14 +3403,13 @@ _register(CompanyKnowledgeProfile(
         "cost reduction under the 'Win Now' restructuring program."
     ),
     recession_behavior=(
-        "Moderately defensive: Nike's top-franchise silhouettes (Air Force 1, "
-        "Jordan 1, Dunk) have cultural cachet that sustains demand in mild "
-        "recessions — limited-edition drops maintain pricing power.  In deeper "
-        "recessions, consumers trade down to lower-priced athletic brands (New "
-        "Balance, adidas, Hoka's lower-end lines).  Jordan Brand's premium "
-        "positioning makes it slightly more resilient than core Nike.  "
-        "China represents ~16% of revenue — geopolitical and COVID-related "
-        "disruptions have periodically reduced China Direct revenue."
+        "Nike's top-franchise silhouettes (Air Force 1, Jordan 1, Dunk) have "
+        "cultural cachet that sustains demand in mild recessions — limited-edition "
+        "drops maintain pricing power.  In deeper recessions, consumers trade down "
+        "to lower-priced athletic brands (New Balance, adidas, Hoka's lower-end lines).  "
+        "Jordan Brand's premium positioning makes it slightly more resilient than core "
+        "Nike in downturns.  China represents ~16% of revenue with periodic "
+        "geopolitical headwinds impacting China Direct."
     ),
     major_risks=[
         "Share loss to On Running, Hoka, New Balance in premium performance "
@@ -3485,15 +3450,12 @@ _register(CompanyKnowledgeProfile(
         "Jordan Brand franchise: Michael Jordan's lifetime deal (Nike pays Jordan "
         "~$256M/year) locks in cultural capital that no competitor can replicate — "
         "Jordan retros sell out globally without marketing spend",
-        "Athlete endorsement depth: LeBron James, Serena Williams (posthumous "
-        "brand), Cristiano Ronaldo, Kylian Mbappé, Travis Scott — Nike spends "
-        "$3.5B/year on athletes, creating a moat competitors cannot economically bridge",
-        "SNKRS and consumer data: 300M+ member profiles with purchase history, "
-        "size preferences, and wishlist data enable hyper-targeted launch allocation "
-        "and demand forecasting impossible for DTC-light brands",
-        "Scale manufacturing relationships: Vietnam and Indonesia factory "
-        "partnerships spanning 30+ years — Nike receives priority capacity "
-        "and quality standards that new entrants cannot access",
+        "Athlete endorsement depth: LeBron James, Cristiano Ronaldo, Kylian Mbappé, "
+        "Travis Scott — Nike spends $3.5B/year on athletes, creating a moat "
+        "competitors cannot economically bridge",
+        "SNKRS and consumer data: 300M+ registered user profiles with purchase history "
+        "and wishlist data enable hyper-targeted launch allocation and demand "
+        "forecasting impossible for DTC-light brands",
     ],
     business_model_keywords=[
         "Jordan Brand", "Nike Direct", "DTC", "SNKRS", "Air Max", "Air Force 1",
@@ -3536,12 +3498,8 @@ _register(CompanyKnowledgeProfile(
         "BGS aftermarket parts and MRO: Boeing is the sole-source supplier "
         "for most proprietary 737 and 787 replacement parts — highly recurring, "
         "high-margin (~20% operating margin vs BCA near-breakeven currently)",
-        "Long-term US DoD contracts: F-15 production, KC-46 tanker, and other "
+        "Long-term US DoD programs: F-15 production, KC-46 tanker, and other "
         "multi-year defense programs provide stable government revenue stream",
-        "Training services: Boeing's training centers for pilot simulation and "
-        "maintenance technicians for airlines worldwide",
-        "737 MAX and 787 reorder stream: United, American, Southwest, Ryanair, "
-        "and international carriers have multi-year delivery schedules on order",
     ],
     rate_sensitivity_note=(
         "Boeing has extremely high interest rate sensitivity currently due to its "
@@ -3617,9 +3575,6 @@ _register(CompanyKnowledgeProfile(
         "Pilot training ecosystem: Boeing's pilot simulators and training centers "
         "worldwide create switching costs — airlines that operate 737 MAX have "
         "invested in Boeing-specific training infrastructure",
-        "Commercial airline backlog stickiness: 5,600-aircraft backlog represents "
-        "years of advance deposits and contractual delivery obligations — even "
-        "severely distressed Boeing retains this forward revenue foundation",
     ],
     business_model_keywords=[
         "737 MAX", "787 Dreamliner", "777X", "Kelly Ortberg", "FAA",
@@ -4924,10 +4879,12 @@ _register(CompanyKnowledgeProfile(
         "be passed through when market share is being lost simultaneously."
     ),
     recession_behavior=(
-        "PC market is highly cyclical — CCG revenue collapsed in 2022-23 post-COVID. "
-        "Server CPU refreshes decelerate in downturns. Intel's high fixed-cost "
-        "manufacturing base creates severe operating leverage — revenue decline "
-        "translates to disproportionate earnings collapse vs. fabless AMD."
+        "PC market has cyclical sensitivity — CCG revenue collapsed in 2022-23 "
+        "post-COVID. Server CPU refreshes decelerate in downturns.  Intel's "
+        "fixed-cost manufacturing base creates significant operating leverage.  "
+        "However, the secular demand for AI PC and the growing Intel Foundry "
+        "external wafer business provide a resilient long-term demand foundation "
+        "that partially offsets near-term cyclical pressure."
     ),
     major_risks=[
         "18A node execution — any yield or performance shortfall vs TSMC destroys "
@@ -5270,10 +5227,8 @@ _register(CompanyKnowledgeProfile(
         "specialty pharma), UPS Capital (insurance/financing), freight (~16%)",
     ],
     recurring_revenue_sources=[
-        "Annual contract renewals with major shippers (negotiated each fall)",
-        "UPS My Choice membership and SurePost ground network",
-        "Healthcare cold-chain contracts (multi-year specialty pharma agreements)",
-        "UPS Capital insurance and trade financing",
+        "Annual volume agreements with major shippers (negotiated each fall)",
+        "Healthcare cold-chain logistics (multi-year specialty pharma supply agreements)",
     ],
     rate_sensitivity_note=(
         "UPS trades at ~16-20x forward EPS. Higher rates modestly increase the cost "
@@ -5291,10 +5246,11 @@ _register(CompanyKnowledgeProfile(
     ),
     recession_behavior=(
         "Package volume is economically sensitive — industrial production and "
-        "B2B shipments decline in recessions; consumer e-commerce is more resilient. "
-        "The 2022-23 post-COVID normalization hit UPS volume severely as e-commerce "
-        "volumes normalized. Healthcare logistics is more defensive (clinical supply "
-        "chains do not stop in recessions)."
+        "B2B shipments decline in recessions; consumer e-commerce demand is more "
+        "resilient through moderate slowdowns.  The 2022-23 post-COVID normalization "
+        "hit UPS volume severely as e-commerce normalized.  Healthcare logistics "
+        "provides revenue stability as clinical supply chains continue regardless "
+        "of economic conditions."
     ),
     major_risks=[
         "Amazon building its own delivery network (AMZN Logistics) — Amazon is "
@@ -5589,10 +5545,11 @@ _register(CompanyKnowledgeProfile(
     ),
     recession_behavior=(
         "Travel is economically sensitive, but Airbnb's value proposition (often "
-        "cheaper than comparable hotels) allows it to gain share in recessions "
-        "as consumers trade down from luxury hotels. Long-stay bookings (28+ nights) "
-        "from remote workers are less cyclical. The 2020 COVID collapse was the "
-        "most severe test — Airbnb recovered to pre-COVID GBV levels by 2021."
+        "cheaper than comparable hotels) allows it to gain share in downturns as "
+        "consumers trade down from luxury hotels.  Long-stay bookings (28+ nights) "
+        "from remote workers are relatively resilient during economic softness.  "
+        "The 2020 COVID collapse was the most severe stress test — Airbnb recovered "
+        "to pre-COVID GBV levels by 2021."
     ),
     major_risks=[
         "Short-term rental regulation — NYC, Barcelona, Paris, Amsterdam, and 100+ "

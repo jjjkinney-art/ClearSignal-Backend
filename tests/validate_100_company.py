@@ -696,7 +696,10 @@ def run_validation() -> None:
     print(f"NO-PROFILE IMPACT ANALYSIS (35 companies without profiles)")
     print(f"{'─'*50}")
     print(f"  No-profile total:     {np_total:3d}")
-    print(f"  No-profile correct:   {np_correct:3d}  ({np_correct/np_total*100:.1f}%)")
+    if np_total > 0:
+        print(f"  No-profile correct:   {np_correct:3d}  ({np_correct/np_total*100:.1f}%)")
+    else:
+        print(f"  No-profile correct:   n/a  (all companies now profiled)")
     print(f"  Buy-broad override:   {np_buy_override:3d}  (got Buy despite non-Buy expected)")
     print(f"  Profiled accuracy:    "
           f"{correct - np_correct}/{total - np_total} "
@@ -716,8 +719,10 @@ def run_validation() -> None:
     print(f"{'='*80}")
 
     # ── #1: Profile coverage gap ─────────────────────────────────────────────
+    n_errors = total - correct
+    pct_of_errors = lambda n: f"{n/n_errors*100:.0f}%" if n_errors else "n/a"
     print(f"\n  #1 MOST COMMON — PROFILE COVERAGE GAP ({len(np_issues)} errors, "
-          f"{len(np_issues)/(total-correct)*100:.0f}% of errors)")
+          f"{pct_of_errors(len(np_issues))} of errors)")
     print(f"     35 companies have no CompanyKnowledgeProfile.")
     print(f"     → dur defaults to 0.40 (base-only); Durable Hold needs dur≥0.55,")
     print(f"       Durable Accumulate needs dur≥0.68 — neither fires without a profile.")
@@ -733,7 +738,7 @@ def run_validation() -> None:
 
     # ── #2: Profile over-calibration ─────────────────────────────────────────
     print(f"\n  #2 MOST COMMON — PROFILE OVER-CALIBRATION ({len(overcal_issues)} errors, "
-          f"{len(overcal_issues)/(total-correct)*100:.0f}% of errors)")
+          f"{pct_of_errors(len(overcal_issues))} of errors)")
     print(f"     Profiled Hold-expected companies compute Layer 1 durability ≥ 0.68,")
     print(f"     causing Durable Accumulate to fire instead of Durable Hold.")
     print(f"     These profiles were likely designed in an earlier phase with generous")
@@ -745,7 +750,7 @@ def run_validation() -> None:
 
     # ── #3: Calibration threshold miss (dur < 0.55 for Hold targets) ─────────
     print(f"\n  #3 CALIBRATION MISS — HOLD DUR < 0.55 ({len(cal_issues)} errors, "
-          f"{len(cal_issues)/(total-correct)*100:.0f}% of errors)")
+          f"{pct_of_errors(len(cal_issues))} of errors)")
     print(f"     Profiled Hold-expected companies with durability below the 0.55")
     print(f"     Durable Hold threshold fall through to Buy-broad.")
     print(f"     These are high-risk companies (TSLA, PLTR, ABNB, INTC) whose")
@@ -817,7 +822,10 @@ def run_validation() -> None:
     print(f"  Profiled company accuracy:   "
           f"{correct-np_correct}/{total-np_total} "
           f"({(correct-np_correct)/(total-np_total)*100:.1f}%)")
-    print(f"  No-profile accuracy:         {np_correct}/{np_total} ({np_correct/np_total*100:.1f}%)")
+    if np_total > 0:
+        print(f"  No-profile accuracy:         {np_correct}/{np_total} ({np_correct/np_total*100:.1f}%)")
+    else:
+        print(f"  No-profile accuracy:         n/a  (0 unprofileed companies remain)")
     print(f"  False positives (too bullish): {len(fps)}")
     print(f"  False negatives (too bearish): {len(fns)}")
     print()
