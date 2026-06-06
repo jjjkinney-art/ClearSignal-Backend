@@ -462,3 +462,111 @@ class TestDirectAnswerOverwrite:
         assert result.direct_answer == synthesized_answer, (
             f"thesis.direct_answer should keep synthesized value when pre_synthesized_answer is empty"
         )
+
+
+# ===========================================================================
+# Polisher alignment — direct_answer 4-sentence cap
+# ===========================================================================
+
+class TestPolisherDirectAnswerCap:
+    """Verify thesis_polisher allows 4-sentence direct_answer (Phase 4 fix).
+
+    This test locks the _SENTENCE_LIMITS['direct_answer'] value at 4 so that
+    any future regression (someone reverting it to 2) is caught immediately
+    before it reaches production and silently truncates Q-First answers.
+    """
+
+    def test_direct_answer_sentence_limit_is_4(self):
+        """_SENTENCE_LIMITS['direct_answer'] must be 4, not 2."""
+        from app.services.thesis_polisher import _SENTENCE_LIMITS
+        limit = _SENTENCE_LIMITS.get("direct_answer")
+        assert limit == 4, (
+            f"_SENTENCE_LIMITS['direct_answer'] is {limit!r} but must be 4. "
+            "Reverting to 2 truncates Q-First 4-sentence answers post-polish."
+        )
+
+    def test_4_sentence_direct_answer_survives_polishing(self):
+        """A 4-sentence Q-First direct_answer must not be truncated by enforce_concision."""
+        from app.services.thesis_polisher import enforce_concision
+        from app.schemas import InvestmentThesis
+
+        four_sentence_answer = (
+            "At ~40x forward P/E, the market is pricing in approximately 25% compound "
+            "revenue growth over 5 years to justify the multiple at a terminal ~22x. "
+            "Analyst consensus projects ~20% revenue CAGR, which falls short of the "
+            "implied 25% by 5 percentage points. "
+            "Historical analog: Cisco in 2000 carried a ~40x multiple requiring ~30% "
+            "growth — they fell short, leading to a significant stock rerating. "
+            "The implied rate is achievable near-term but requires sustained hyperscaler "
+            "spend; the key variable is H100 backlog in Q2."
+        )
+        thesis = InvestmentThesis(
+            ticker="NVDA",
+            company_name="NVIDIA Corporation",
+            bull_thesis="Strong data center momentum drives upside.",
+            bear_thesis="Capex deceleration could pressure margins.",
+            conclusion="Constructive on NVDA at current levels.",
+            confidence_score=0.7,
+            direct_answer=four_sentence_answer,
+        )
+        polished = enforce_concision(thesis)
+        # The 4-sentence answer must survive unchanged
+        assert polished.direct_answer == four_sentence_answer, (
+            f"4-sentence Q-First answer was truncated by enforce_concision.\n"
+            f"Original ({len(four_sentence_answer)} chars): {four_sentence_answer[:120]}...\n"
+            f"After polish ({len(polished.direct_answer)} chars): {polished.direct_answer[:120]}..."
+        )
+
+    def test_2_sentence_direct_answer_still_passes(self):
+        """A legacy 2-sentence direct_answer must still pass through unchanged."""
+        from app.services.thesis_polisher import enforce_concision
+        from app.schemas import InvestmentThesis
+
+        two_sentence_answer = (
+            "At ~35x forward P/E, the market prices in sustained high growth for NVIDIA's "
+            "data center revenue. This is supported by CUDA ecosystem lock-in and the "
+            "expanding AI inference workload pipeline."
+        )
+        thesis = InvestmentThesis(
+            ticker="NVDA",
+            company_name="NVIDIA Corporation",
+            bull_thesis="Strong momentum.",
+            bear_thesis="Execution risk.",
+            conclusion="Constructive.",
+            confidence_score=0.7,
+            direct_answer=two_sentence_answer,
+        )
+        polished = enforce_concision(thesis)
+        assert polished.direct_answer == two_sentence_answer, (
+            "2-sentence direct_answer should pass through enforce_concision unchanged"
+        )
+
+    def test_5_sentence_direct_answer_is_trimmed_to_4(self):
+        """A 5-sentence answer (malformed Q-First output) must be trimmed to 4 sentences."""
+        from app.services.thesis_polisher import enforce_concision
+        from app.schemas import InvestmentThesis
+
+        five_sentence_answer = (
+            "Sentence one about the multiple. "
+            "Sentence two about consensus. "
+            "Sentence three about historical analog. "
+            "Sentence four about achievability. "
+            "Sentence five that should be trimmed."
+        )
+        thesis = InvestmentThesis(
+            ticker="NVDA",
+            company_name="NVIDIA Corporation",
+            bull_thesis="Strong momentum.",
+            bear_thesis="Execution risk.",
+            conclusion="Constructive.",
+            confidence_score=0.7,
+            direct_answer=five_sentence_answer,
+        )
+        polished = enforce_concision(thesis)
+        # Must be trimmed: 5 sentences → 4 sentences
+        assert "Sentence five" not in polished.direct_answer, (
+            "5th sentence should be trimmed when direct_answer limit is 4"
+        )
+        assert "Sentence four" in polished.direct_answer, (
+            "4th sentence must be preserved (limit is 4, not 3)"
+        )

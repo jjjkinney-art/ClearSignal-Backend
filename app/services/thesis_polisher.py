@@ -112,8 +112,12 @@ def extract_core_mechanisms(text: str) -> Set[str]:
 # macro) must add only incremental information not already in direct_answer or
 # the ranked signals, so shorter prose forces higher signal density.
 _SENTENCE_LIMITS: Dict[str, int] = {
-    # ── Top-level (stay compressed — terminal-density hero layer) ──────────────
-    "direct_answer":    2,   # mechanism + company-specific offset — stays tight
+    # ── Top-level ─────────────────────────────────────────────────────────────────
+    # direct_answer raised from 2 → 4 (Phase 4): the Q-First question_answerer_agent
+    # produces up to 4 sentences (metric/multiple → quantification → analog → implication).
+    # Capping at 2 was silently truncating the Q-First answer post-overwrite.
+    # conclusion stays at 2 — it is the thesis positioning sentence, not Q&A.
+    "direct_answer":    4,   # Q-First: multiple/mechanism + quant + analog + implication
     "conclusion":       2,   # inflection condition + positioning — stays tight
     # ── Analytical depth layer (hierarchically richer than top-level) ──────────
     # These sections MUST explain WHY the thesis works / breaks, not just assert it.
@@ -278,7 +282,8 @@ def enforce_concision(thesis: InvestmentThesis) -> InvestmentThesis:
     Sentence targets (hierarchical — top-level stays compressed, analytical depth
     sections allow more sentences so operating leverage / second-order effects survive)
     ---------------------------------------------------------------------------------
-    direct_answer    : 2 sentences  — mechanism + offset (ultra-compressed hero layer)
+    direct_answer    : 4 sentences  — Q-First: multiple/quant + consensus + analog + implication
+                       (raised from 2 in Phase 4 to preserve Q-First question_answerer output)
     conclusion       : 2 sentences  — inflection condition + positioning
     bull_thesis      : 4 sentences  — driver + mechanism + leverage/capital + confirmation
     bear_thesis      : 4 sentences  — transmission + second-order + downside path + catalyst
