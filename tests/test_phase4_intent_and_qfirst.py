@@ -286,7 +286,7 @@ class TestQuestionAnswererAgentStructure:
         company = CompanyContext(ticker="NVDA", company_name="NVIDIA Corporation")
 
         with patch("app.investment_agents.question_answerer_agent.model_client") as mock_mc:
-            mock_mc.client.chat.completions.create.side_effect = RuntimeError("LLM unavailable")
+            mock_mc.call.side_effect = RuntimeError("LLM unavailable")
             result = run_question_answerer(
                 question="What is the implied growth rate?",
                 intent="implied_growth_rate",

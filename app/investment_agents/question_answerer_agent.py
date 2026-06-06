@@ -29,7 +29,6 @@ from typing import List, Optional
 
 from ..schemas import CompanyContext, CompanyKnowledgeProfile, RetrievedEvidence
 from ..model_client import model_client
-from ..config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -633,27 +632,17 @@ def run_question_answerer(
         f"intent={intent!r} evidence={len(selected_evidence)} items"
     )
 
+    _system = (
+        "You are a precise financial analyst. Follow the TASK instructions exactly. "
+        "Return ONLY the requested plain-text sentences. "
+        "Do not add headers, bullet points, or JSON."
+    )
     try:
-        from openai.types.chat import ChatCompletionMessageParam
-        messages: list[ChatCompletionMessageParam] = [
-            {
-                "role": "system",
-                "content": (
-                    "You are a precise financial analyst. Follow the TASK instructions exactly. "
-                    "Return ONLY the requested plain-text sentences. "
-                    "Do not add headers, bullet points, or JSON."
-                ),
-            },
-            {"role": "user", "content": prompt},
-        ]
-        response = model_client.client.chat.completions.create(
-            model=settings.openai_model,
-            messages=messages,
-            temperature=0.3,   # Lower temperature for precision
-            max_tokens=600,    # 4-6 sentences fits in ~400 tokens; 600 gives headroom
+        raw = model_client.call(
+            prompt=prompt,
+            system_prompt=_system,
         )
-        raw = response.choices[0].message.content or ""
-        answer = raw.strip()
+        answer = (raw or "").strip()
         if not answer:
             logger.warning(
                 "[question_answerer] empty response for %s intent=%s",
