@@ -1063,6 +1063,69 @@ def _build_agent_summaries(
                 ("Margin trend",        getattr(valuation, "margin_trend",         "") or ""),
             ],
         }
+    # ── Phase 4 intents: surface the most relevant sub-fields ─────────────────
+    elif question_intent == "implied_growth_rate":
+        sub_field_injections = {
+            "Valuation": [
+                ("P/E assessment",      getattr(valuation, "pe_assessment",        "") or ""),
+                ("Growth view",         getattr(valuation, "growth_view",          "") or ""),
+                ("Relative value",      getattr(valuation, "relative_value",       "") or ""),
+            ],
+        }
+    elif question_intent == "timing_lag":
+        sub_field_injections = {
+            "Macro Sensitivity": [
+                ("Rate sensitivity",    getattr(macro,    "rate_sensitivity",      "") or ""),
+                ("Recession risk",      getattr(macro,    "recession_risk",        "") or ""),
+            ],
+            "Valuation": [
+                ("Growth view",         getattr(valuation, "growth_view",          "") or ""),
+            ],
+        }
+    elif question_intent == "quantitative_threshold":
+        sub_field_injections = {
+            "Risk Profile": [
+                ("Competitive risk",    getattr(risk,     "competitive_risk",      "") or ""),
+                ("Debt / balance sheet",getattr(risk,     "debt_risk",             "") or ""),
+            ],
+            "Valuation": [
+                ("Discount sensitivity",getattr(valuation,"discount_sensitivity",  "") or ""),
+                ("P/E assessment",      getattr(valuation, "pe_assessment",        "") or ""),
+            ],
+        }
+    elif question_intent == "metric_ordering":
+        sub_field_injections = {
+            "Macro Sensitivity": [
+                ("Recession risk",      getattr(macro,    "recession_risk",        "") or ""),
+            ],
+            "Business Quality": [
+                ("Revenue durability",  getattr(quality,   "revenue_durability",   "") or ""),
+                ("Operating quality",   getattr(quality,   "operating_quality",    "") or ""),
+            ],
+            "Valuation": [
+                ("Margin trend",        getattr(valuation, "margin_trend",         "") or ""),
+            ],
+        }
+    elif question_intent == "segment_ranking":
+        sub_field_injections = {
+            "Business Quality": [
+                ("Moat detail",         getattr(quality,   "moat",                 "") or ""),
+                ("Revenue durability",  getattr(quality,   "revenue_durability",   "") or ""),
+            ],
+            "Valuation": [
+                ("Relative value",      getattr(valuation, "relative_value",       "") or ""),
+            ],
+        }
+    elif question_intent == "historical_precedent":
+        sub_field_injections = {
+            "Valuation": [
+                ("P/E assessment",      getattr(valuation, "pe_assessment",        "") or ""),
+                ("Relative value",      getattr(valuation, "relative_value",       "") or ""),
+            ],
+            "Business Quality": [
+                ("Operating quality",   getattr(quality,   "operating_quality",    "") or ""),
+            ],
+        }
 
     def _enriched_block(label: str, overall: str, confidence: float) -> str:
         base = _agent_block(label, overall, confidence)
@@ -1213,9 +1276,13 @@ Examples: "Is Services growth durable enough to offset hardware cyclicality?" \
 / "Can Meta sustain margin discipline while reaccelerating capex?" \
 / "Is the market underestimating rate duration risk for Apple?" \
 Sound like a real PM discussion topic, not a research abstract.
-  "direct_answer"           : string — 2 sentences that directly answer the user's exact \
-question. MUST open with the mechanism. MUST name one company-specific offset or amplifier. \
-MUST NOT open with a generic company overview.
+  "direct_answer"           : string — up to 4 sentences that directly answer the user's \
+exact question. MUST open with the mechanism, metric, or ranking the question asks about. \
+MUST name one company-specific offset, amplifier, or data point. \
+MUST NOT open with a generic company overview. \
+For implied_growth_rate, timing_lag, quantitative_threshold, metric_ordering, \
+segment_ranking, and historical_precedent intents: use the full 4-sentence format \
+specified in the question anchor block above. For other intents: 2 sentences minimum.
   "bull_thesis"             : string — 3-4 sentence institutional bull case. \
 Sentence 1: primary upside driver with economic transmission mechanism. \
 Sentence 2: operating leverage, margin structure, or capital allocation effect that amplifies it. \
@@ -1388,6 +1455,7 @@ def _build_synthesis_prompt(
     ranked: Optional[RankedSignalSet] = None,
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoid circular import
     question_intent: Optional[str] = None,
+    pre_synthesized_answer: Optional[str] = None,
 ) -> str:
     # Plain-text agent summaries with question-aware sub-field injection (Phase 2 Lever 2).
     # For each question_intent, the most analytically relevant sub-field from the
@@ -1698,6 +1766,139 @@ def _build_synthesis_prompt(
             f"what_changes_the_thesis — RISK-RESOLUTION EVENTS PRIORITIZED:\n"
             f"  Name the specific data points that would confirm or deny the primary risk.\n\n"
         )
+    # ── Phase 4: six new specific-answer intents ─────────────────────────────
+    elif original_user_question and question_intent == "implied_growth_rate":
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — IMPLIED GROWTH RATE QUESTION:\n"
+            f"direct_answer (4 sentences REQUIRED):\n"
+            f"  Sentence 1 — State {ticker}'s current forward P/E or EV/Revenue multiple "
+            f"and the implied compound revenue or EPS CAGR that multiple requires over 3–5 years "
+            f"(assume 10% discount rate if unspecified). Quantify: '~[X]x forward P/E implies "
+            f"~[Y]% compound growth over [N] years.'\n"
+            f"  Sentence 2 — State the current analyst consensus growth estimate and whether "
+            f"it meets, exceeds, or falls short of the implied rate.\n"
+            f"  Sentence 3 — Name 1–2 historical analogs (company, period, multiple entry point, "
+            f"growth outcome) — did those companies sustain the implied rate?\n"
+            f"  Sentence 4 — State whether the implied growth rate is achievable, stretched, or "
+            f"requires execution perfection, and what single data point would confirm or deny it.\n"
+            f"  FORBIDDEN: Opening with generic company description.\n"
+            f"  FORBIDDEN: Answering with 'the market believes growth is strong.'\n"
+            f"valuation_view — GROWTH-RATE ANCHOR REQUIRED:\n"
+            f"  Lead with the specific multiple and the implied growth rate.\n"
+            f"  MANDATORY: Use 'at ~[X]x, the market is paying for [Y]% compound growth' language.\n\n"
+        )
+    elif original_user_question and question_intent == "timing_lag":
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — TIMING LAG QUESTION:\n"
+            f"direct_answer (4 sentences REQUIRED):\n"
+            f"  Sentence 1 — State the typical lag in quarters between the upstream decision "
+            f"(capex cut / order cancellation / policy change) and the downstream revenue "
+            f"impact on {ticker}. Give a specific range: 'typically [X]–[Y] quarters.'\n"
+            f"  Sentence 2 — Explain the causal chain with specific mechanism: "
+            f"[upstream decision] → [order book / backlog / contract stage] → "
+            f"[{ticker} revenue line affected]. Name the specific revenue segment.\n"
+            f"  Sentence 3 — Quantify the magnitude: what % of {ticker}'s revenue is "
+            f"exposed to this lag pathway at current run-rates?\n"
+            f"  Sentence 4 — Name the leading indicator {ticker} discloses or management "
+            f"cites that provides earliest visibility into the lag materializing.\n"
+            f"  FORBIDDEN: Vague timing ('several quarters', 'some time').\n"
+            f"  FORBIDDEN: Omitting the specific revenue segment name.\n"
+            f"macro_sensitivity — DEEPEST SECTION FOR THIS QUESTION:\n"
+            f"  Lead with the causal chain. State the lag range explicitly.\n"
+            f"  Name the leading indicator and where it is disclosed (earnings call / 10-Q).\n\n"
+        )
+    elif original_user_question and question_intent == "quantitative_threshold":
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — QUANTITATIVE THRESHOLD QUESTION:\n"
+            f"direct_answer (4 sentences REQUIRED):\n"
+            f"  Sentence 1 — State the specific financial exposure from evidence "
+            f"(e.g. '$17B commercial real estate office exposure' or "
+            f"'Data Center represents ~55% of revenue'). Name the dollar amount or %.\n"
+            f"  Sentence 2 — State the threshold: 'At a [X]% loss / decline rate, "
+            f"EPS would be impacted by approximately [Y]%. Compute from evidence data.\n"
+            f"  Sentence 3 — Compare to historical precedent: what loss / decline rate "
+            f"occurred in the most comparable stress period, and what was the actual impact?\n"
+            f"  Sentence 4 — State the probability scenario and the single trigger that "
+            f"would confirm the threshold is being approached.\n"
+            f"  FORBIDDEN: Refusing to quantify ('the impact would depend on many factors').\n"
+            f"  FORBIDDEN: Answering with multiple / thesis discussion instead of the threshold.\n"
+            f"bear_thesis — THRESHOLD MECHANICS REQUIRED:\n"
+            f"  MUST anchor on the quantified threshold — name the exposure size, "
+            f"the loss rate that matters, and the resulting EPS/ROE impact.\n"
+            f"key_risks — QUANTIFIED REQUIRED:\n"
+            f"  Each risk entry must include the exposure size and the threshold that triggers impact.\n\n"
+        )
+    elif original_user_question and question_intent == "metric_ordering":
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — METRIC ORDERING QUESTION:\n"
+            f"direct_answer (4 sentences REQUIRED):\n"
+            f"  Sentence 1 — Name the metric that deteriorates FIRST and state the "
+            f"causal mechanism: why does this metric lead the others in a downturn? "
+            f"Be specific to {ticker}'s business model (e.g. 'comparable store sales "
+            f"leads because they are reported monthly with no smoothing').\n"
+            f"  Sentence 2 — Name the metric that deteriorates SECOND and explain the "
+            f"causal link to the first (why does it follow, with what lag).\n"
+            f"  Sentence 3 — Name the metric that is most RECESSION-RESISTANT and "
+            f"explain the structural reason (contract length, membership model, etc.).\n"
+            f"  Sentence 4 — State the one metric an investor should watch weekly/monthly "
+            f"as the earliest recession signal for {ticker}.\n"
+            f"  FORBIDDEN: Listing metrics without causal ordering ('all metrics would decline').\n"
+            f"  FORBIDDEN: Generic macro discussion without {ticker}-specific mechanism.\n"
+            f"macro_sensitivity — METRIC-CHAIN REQUIRED:\n"
+            f"  Lead with the specific metric ordering. Name ALL metrics the question asks "
+            f"about and rank them explicitly.\n"
+            f"bear_thesis — DETERIORATION SEQUENCE REQUIRED:\n"
+            f"  Walk through the deterioration sequence in causal order.\n\n"
+        )
+    elif original_user_question and question_intent == "segment_ranking":
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — SEGMENT RANKING QUESTION:\n"
+            f"direct_answer (4 sentences REQUIRED):\n"
+            f"  Sentence 1 — State the ranking explicitly: '#1: [segment] because "
+            f"[primary moat source]. #2: [segment] because [reason]. #3: [segment] "
+            f"because [reason].' Name ALL segments from the question.\n"
+            f"  Sentence 2 — Explain the #1 segment's moat in structural terms: "
+            f"switching costs, network effects, regulatory protection, IP, or "
+            f"distribution advantage. Quantify the margin or retention rate.\n"
+            f"  Sentence 3 — Explain the most vulnerable segment's Achilles heel — "
+            f"what specific threat could displace it or compress its margin.\n"
+            f"  Sentence 4 — Name the ONE metric that could change the ranking if it "
+            f"materially shifts (e.g. 'if cloud renewal rates drop below 90%, "
+            f"Intelligent Cloud falls to #3').\n"
+            f"  FORBIDDEN: 'All segments have strong moats.'\n"
+            f"  FORBIDDEN: Omitting any segment named in the question.\n"
+            f"bull_thesis — SEGMENT MOAT ANCHOR REQUIRED:\n"
+            f"  Lead with the #1 segment moat and why it compounds over time.\n"
+            f"bear_thesis — WEAKEST SEGMENT ANCHOR REQUIRED:\n"
+            f"  Lead with the weakest segment's structural vulnerability.\n\n"
+        )
+    elif original_user_question and question_intent == "historical_precedent":
+        question_anchor_block = (
+            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
+            f"SECTION MANDATES — HISTORICAL PRECEDENT QUESTION:\n"
+            f"direct_answer (4 sentences REQUIRED):\n"
+            f"  Sentence 1 — Name the best historical analog: company, time period, "
+            f"the relevant metric trajectory (e.g. 'Cisco 1999–2001: 50x revenue "
+            f"multiple, then demand pulled forward reversed sharply').\n"
+            f"  Sentence 2 — State the key SIMILARITY between the historical case and "
+            f"{ticker}'s current situation — what makes this a valid analog?\n"
+            f"  Sentence 3 — State the key DIFFERENCE — what structural factor makes "
+            f"{ticker}'s situation more or less favorable than the historical case?\n"
+            f"  Sentence 4 — State the implication: if the analog holds, what happens "
+            f"to {ticker}'s multiple or growth trajectory over the relevant period?\n"
+            f"  FORBIDDEN: 'There is no direct historical precedent.'\n"
+            f"  FORBIDDEN: Vague analogies without naming a specific company and period.\n"
+            f"valuation_view — HISTORICAL MULTIPLE COMPARISON REQUIRED:\n"
+            f"  Compare current multiple to the historical analog's entry multiple.\n"
+            f"  State whether current entry is more/less attractive than the analog.\n\n"
+        )
+    # ── End Phase 4 ───────────────────────────────────────────────────────────
+
     elif original_user_question and question_intent in ("investment_thesis", "business_model"):
         # Phase 3 Lever 4: first-class anchor for business model / full-thesis questions.
         # Previously this fell through to the generic block below, giving no section-specific
@@ -1746,6 +1947,29 @@ def _build_synthesis_prompt(
     else:
         question_anchor_block = ""
 
+    # Phase 4 (Option B): if a pre_synthesized_answer was produced by the Q-First
+    # question_answerer_agent, append a directive to the question_anchor_block
+    # instructing the synthesis LLM to use it verbatim for the direct_answer field.
+    # The thesis sections (bull, bear, conclusion) are instructed to build around it
+    # rather than to produce their own independent direct_answer from scratch.
+    if pre_synthesized_answer:
+        _qa_inject = (
+            f"\n\nPRE-SYNTHESIZED DIRECT ANSWER (Phase 4 Q-First — MANDATORY):\n"
+            f"The following direct answer was produced by a dedicated question-answering "
+            f"agent before this synthesis call. It uses the company knowledge profile and "
+            f"retrieved evidence to produce a specific, quantified answer.\n\n"
+            f"  direct_answer = \"\"\"\n{pre_synthesized_answer}\n\"\"\"\n\n"
+            f"INSTRUCTIONS FOR THIS SYNTHESIS:\n"
+            f"1. Use the pre-synthesized direct_answer above VERBATIM in the "
+            f"\"direct_answer\" JSON field — do NOT rewrite, summarize, or replace it.\n"
+            f"2. Build your bull_thesis, bear_thesis, and conclusion to ELABORATE and "
+            f"SUPPORT the direct answer above — not to contradict or ignore it.\n"
+            f"3. The direct_answer field in your JSON output MUST match the pre-synthesized "
+            f"answer above exactly (character-for-character). It will be overwritten "
+            f"post-synthesis in any case, but matching it signals you read it.\n"
+        )
+        question_anchor_block = question_anchor_block + _qa_inject
+
     # Phase 3: build secondary section mandates for the 4 convergence-prone sections.
     # Injected after question_anchor_block so both primary and secondary mandates are
     # contiguous in the "instruction" region of the prompt.
@@ -1780,7 +2004,11 @@ SUPPORTING EVIDENCE:
 
 {live_data_provenance_block}SECTION CONTRACT — EACH SECTION HAS ONE JOB AND MUST NOT POACH FROM OTHERS:
 
-  direct_answer     → ONLY answers the user's exact question. 2 sentences maximum.
+  direct_answer     → ONLY answers the user's exact question. 2–4 sentences.
+                      For Phase 4 intents (implied_growth_rate, timing_lag,
+                      quantitative_threshold, metric_ordering, segment_ranking,
+                      historical_precedent): follow the 4-sentence format exactly
+                      as specified in the question anchor block above.
                       Does NOT summarise the business, repeat the conclusion, or
                       discuss the market debate.
 
@@ -2874,6 +3102,7 @@ def synthesize_thesis(
     original_user_question: Optional[str] = None,
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoids circular import at module level
     question_intent: Optional[str] = None,
+    pre_synthesized_answer: Optional[str] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -2883,19 +3112,26 @@ def synthesize_thesis(
 
     Parameters
     ----------
-    company               : Normalised company identity.
-    valuation             : Output from run_valuation_agent().
-    macro                 : Output from run_macro_agent().
-    risk                  : Output from run_risk_agent().
-    market                : Output from run_market_agent().
-    quality               : Output from run_quality_agent().
-    evidence              : Full evidence list (all agents' inputs combined).
-    request_id            : Optional trace ID forwarded to model client.
-    profile               : Optional CompanyKnowledgeProfile; enables richer prompting
-                            and depth-guard checks when supplied.
-    original_user_question: The user's verbatim question. When supplied the synthesiser
-                            produces a ``direct_answer`` field that specifically addresses
-                            the question before the broader thesis.
+    company                : Normalised company identity.
+    valuation              : Output from run_valuation_agent().
+    macro                  : Output from run_macro_agent().
+    risk                   : Output from run_risk_agent().
+    market                 : Output from run_market_agent().
+    quality                : Output from run_quality_agent().
+    evidence               : Full evidence list (all agents' inputs combined).
+    request_id             : Optional trace ID forwarded to model client.
+    profile                : Optional CompanyKnowledgeProfile; enables richer prompting
+                             and depth-guard checks when supplied.
+    original_user_question : The user's verbatim question. When supplied the synthesiser
+                             produces a ``direct_answer`` field that specifically addresses
+                             the question before the broader thesis.
+    pre_synthesized_answer : Optional direct_answer pre-generated by the Q-First
+                             question_answerer_agent (Phase 4 / Option B).
+                             When set and non-empty, it is (a) injected into the
+                             synthesis prompt so the thesis is built around it, and
+                             (b) used to overwrite thesis.direct_answer post-synthesis,
+                             ensuring the Q-First answer is not overwritten by the
+                             synthesis LLM.
 
     Returns
     -------
@@ -2970,6 +3206,7 @@ def synthesize_thesis(
         ranked=ranked,
         prior_snapshot=prior_snapshot,
         question_intent=question_intent,
+        pre_synthesized_answer=pre_synthesized_answer,
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
@@ -3475,6 +3712,20 @@ def synthesize_thesis(
         thesis = polish_thesis(thesis)
     except Exception as exc:
         logger.warning("[thesis_synthesizer] thesis_polisher failed: %r — skipping", exc)
+
+    # ── Phase 4 (Option B): overwrite direct_answer with Q-First pre-synthesized answer ──
+    # Applied AFTER polish_thesis so the polisher's 2-sentence truncation rule does
+    # not trim the Q-First answer (which uses up to 4 sentences for specificity).
+    # The synthesis LLM has already built its thesis sections around the pre-synthesized
+    # answer (it was injected into the prompt via _qa_inject).  We overwrite here to
+    # guarantee the verbatim Q-First answer is what the API returns.
+    if pre_synthesized_answer:
+        thesis.direct_answer = pre_synthesized_answer
+        print(
+            f"[thesis_synthesizer] direct_answer overwritten with Q-First answer "
+            f"({len(pre_synthesized_answer)} chars) for {company.ticker} "
+            f"(applied after polish)"
+        )
 
     # ── Phase 5g: Sync compressed_thesis.one_sentence_thesis after polishing ──
     # compress_hero_thesis() in polish_thesis() strips the conviction bracket

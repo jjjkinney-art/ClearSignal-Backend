@@ -682,6 +682,12 @@ _VALUATION_STANCE_PATTERNS: tuple = (
     "justify a valuation", "valuation to compress",
     "valuation compress", "de-rate", "derate",
     "cause the multiple", "cause its multiple",
+    # Phase 4 additions: premium-justification phrasing for peer-comparison
+    # valuation questions (e.g. V-P2: "Is the premium structurally justified…
+    # what metric would cause it to compress?")
+    "premium structurally", "premium justified", "premium warranted",
+    "premium sustainable", "justify the premium", "is the premium",
+    "cause it to compress",
 )
 
 _MACRO_SENSITIVITY_PATTERNS: tuple = (
@@ -694,6 +700,10 @@ _RISK_ASSESSMENT_PATTERNS: tuple = (
     "what are the risks", "biggest risk", "main risk", "key risk",
     "downside risk", "worst case", "what could go wrong",
     "regulatory risk", "competitive threat",
+    # Phase 4 additions: geopolitical / transmission-channel questions
+    # (e.g. R-P1: "What is the most likely earnings transmission channel…")
+    "transmission channel", "earnings transmission", "earnings channel",
+    "how should investors discount",
 )
 
 _COMPETITIVE_PATTERNS: tuple = (
@@ -711,20 +721,104 @@ _COMPETITIVE_PATTERNS: tuple = (
 )
 
 
+# ── Phase 4: fine-grained question-type intents ───────────────────────────────
+# These six new categories are more specific than the existing five and are
+# checked FIRST in _detect_question_intent so they take priority when their
+# patterns match (e.g. "typical lag" is more specific than "hyperscaler").
+
+_IMPLIED_GROWTH_PATTERNS: tuple = (
+    "implied growth rate", "implied revenue", "implied 5-year", "implied 3-year",
+    "market is pricing in", "market pricing in", "priced in growth",
+    "what growth rate", "what revenue growth", "what cagr",
+    "growth the market", "growth priced into",
+    "what is the market pricing", "market prices in",
+)
+
+_HISTORICAL_PRECEDENT_PATTERNS: tuple = (
+    "historical precedent", "prior cycle", "has any company ever",
+    "comparable period", "when has", "what happened when",
+    "historically when", "past precedent", "historical analog",
+    "previous cycle", "what did any", "has ever sustained",
+    "semiconductor precedent", "tech precedent", "historical example",
+    "similar period", "historical analog", "analog to",
+)
+
+_METRIC_ORDERING_PATTERNS: tuple = (
+    "deteriorates first", "declines first", "falls first",
+    "which metric", "which of", "what degrades", "what cracks first",
+    "ordering of", "which comes first", "first to decline",
+    "which deteriorates", "most sharply", "which breaks first",
+    "first and most",
+)
+
+_TIMING_LAG_PATTERNS: tuple = (
+    "typical lag", "lag between", "what is the lag",
+    "how many quarters", "how long until", "time between",
+    "revenue lag", "capex lag", "decision to revenue",
+    "lag from", "quarters before", "months before",
+    "how long does it take", "resulting", "before the",
+)
+
+_QUANTITATIVE_THRESHOLD_PATTERNS: tuple = (
+    "at what rate", "what loss rate", "what level causes",
+    "at what point", "what threshold", "break-even", "breakeven",
+    "what loan loss", "what charge-off", "quantify the",
+    "eps impact", "roe impact", "bps impact",
+    "quantify", "what revenue decline", "what margin decline",
+    "at what growth", "at what multiple",
+)
+
+_SEGMENT_RANKING_PATTERNS: tuple = (
+    "which segment", "widest moat", "rank the segment",
+    "which business unit", "best segment", "strongest segment",
+    "weakest segment", "widest economic moat",
+    "rank in order", "most durable segment",
+    "which division", "most protected",
+    # Detects phrasing like "widest moat — Productivity, Intelligent Cloud…"
+    "moat —", "moat—",
+)
+
+
 def _detect_question_intent(question: str) -> str:
     """Classify the user's question into a fine-grained intent.
 
-    Returns one of:
-      'valuation_stance'    — "Is X overpriced?" / "Is X fairly valued?"
-      'macro_sensitivity'   — "How would rates affect X?"
-      'risk_assessment'     — "What are X's biggest risks?"
-      'competitive_position'— "How does X compare to competitors?"
-      'investment_thesis'   — default full-thesis intent
+    Returns one of (in priority order):
+      'implied_growth_rate'  — "What growth rate does the current multiple price in?"
+      'timing_lag'           — "What is the typical lag between capex and revenue?"
+      'quantitative_threshold' — "At what loss rate does this impact EPS materially?"
+      'metric_ordering'      — "Which metric deteriorates first in a recession?"
+      'segment_ranking'      — "Which segment has the widest moat?"
+      'historical_precedent' — "What historical precedent exists for X?"
+      'valuation_stance'     — "Is X overpriced?" / "Is X fairly valued?"
+      'macro_sensitivity'    — "How would rates affect X?"
+      'risk_assessment'      — "What are X's biggest risks?"
+      'competitive_position' — "How does X compare to competitors?"
+      'investment_thesis'    — default full-thesis intent
+
+    The new six intents (Phase 4) are checked before the legacy five because
+    they use more specific patterns that would otherwise fall through to a
+    coarser category (e.g. "hyperscaler" triggering competitive_position
+    when the question is really about timing lags).
 
     Used to drive depth allocation, evidence retrieval, and answer framing.
     """
     q = question.lower()
 
+    # ── Phase 4 intents — checked first (most specific) ──────────────────────
+    if any(p in q for p in _IMPLIED_GROWTH_PATTERNS):
+        return "implied_growth_rate"
+    if any(p in q for p in _TIMING_LAG_PATTERNS):
+        return "timing_lag"
+    if any(p in q for p in _QUANTITATIVE_THRESHOLD_PATTERNS):
+        return "quantitative_threshold"
+    if any(p in q for p in _METRIC_ORDERING_PATTERNS):
+        return "metric_ordering"
+    if any(p in q for p in _SEGMENT_RANKING_PATTERNS):
+        return "segment_ranking"
+    if any(p in q for p in _HISTORICAL_PRECEDENT_PATTERNS):
+        return "historical_precedent"
+
+    # ── Legacy intents — checked after Phase 4 ───────────────────────────────
     if any(p in q for p in _VALUATION_STANCE_PATTERNS):
         return "valuation_stance"
     if any(p in q for p in _MACRO_SENSITIVITY_PATTERNS):
@@ -820,17 +914,31 @@ def _run_investment_pipeline(
     # ── Evidence partitioning ─────────────────────────────────────────────────
     partition = partition_evidence(evidence, company)
 
-    # ── Specialist agents (parallel execution) ───────────────────────────────
+    # ── Phase 4 (Option B): Q-First question answering pass ───────────────────
+    # Generate a direct_answer BEFORE the thesis synthesis runs.  This call
+    # uses the verbatim question + CompanyKnowledgeProfile + evidence to produce
+    # a specific 4-sentence answer that is NOT derived from the conviction thesis.
+    # The pre-synthesized answer is then passed to synthesize_thesis, which
+    # injects it into the synthesis prompt and overwrites the synthesized
+    # direct_answer field with it post-synthesis.
+    #
+    # For investment_thesis and business_model intents the Q-First pass adds only
+    # marginal value (the synthesis mandates are already adequate) — but it runs
+    # in the same thread pool as the 5 agents so there is no wall-time cost.
+    # On failure it returns "" and synthesis falls back to mandate-only mode.
+    from ..investment_agents.question_answerer_agent import run_question_answerer
+
+    # ── Specialist agents + Q-First (parallel execution) ─────────────────────
     # The five investment agents are stateless and mutually independent — each
     # reads from its own evidence partition and calls the OpenAI API separately.
     # Running them in a thread pool cuts the agent-pipeline wall time from
     # ~20-25 s (sequential × 5) to ~5-8 s (parallel, bound by the slowest call).
-    # This is the primary fix for slow-synthesis companies (AAPL) that otherwise
-    # push total request time past Render's 61 s Nginx proxy_read_timeout.
+    # Q-First runs as a 6th task in the same pool; it adds no additional latency
+    # since the bottleneck is the slowest of the 5 agents.
     #
     # Fallback: if the thread pool itself raises, we re-run sequentially so no
     # request ever fails purely because of the parallelism mechanism.
-    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: running 5 specialist agents (parallel)")
+    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: running 5 specialist agents + Q-First (parallel)")
 
     from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
 
@@ -839,6 +947,7 @@ def _run_investment_pipeline(
             company, partition.valuation,
             request_id=request_id, profile=profile,
             question_intent=question_intent,
+            question=question,
         )
 
     def _run_macro():
@@ -873,23 +982,34 @@ def _run_investment_pipeline(
             question=question,
         )
 
+    def _run_question_answerer():
+        return run_question_answerer(
+            question=question,
+            intent=question_intent,
+            company=company,
+            profile=profile,
+            evidence=evidence,
+        )
+
     _agent_tasks = {
-        "valuation": _run_valuation,
-        "macro":     _run_macro,
-        "risk":      _run_risk,
-        "market":    _run_market,
-        "quality":   _run_quality,
+        "valuation":          _run_valuation,
+        "macro":              _run_macro,
+        "risk":               _run_risk,
+        "market":             _run_market,
+        "quality":            _run_quality,
+        "question_answerer":  _run_question_answerer,  # Phase 4 Q-First
     }
     _agent_defaults = {
-        "valuation": ValuationView(summary="Valuation analysis unavailable.", confidence=0.0),
-        "macro":     MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0),
-        "risk":      RiskProfile(overall="Risk analysis unavailable.", confidence=0.0),
-        "market":    MarketContext(overall="Market context unavailable.", confidence=0.0),
-        "quality":   QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0),
+        "valuation":         ValuationView(summary="Valuation analysis unavailable.", confidence=0.0),
+        "macro":             MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0),
+        "risk":              RiskProfile(overall="Risk analysis unavailable.", confidence=0.0),
+        "market":            MarketContext(overall="Market context unavailable.", confidence=0.0),
+        "quality":           QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0),
+        "question_answerer": "",  # Q-First default: empty string (fallback to mandate-only)
     }
 
     try:
-        with ThreadPoolExecutor(max_workers=5) as _pool:
+        with ThreadPoolExecutor(max_workers=6) as _pool:
             _futures: dict[str, Future] = {
                 name: _pool.submit(fn)
                 for name, fn in _agent_tasks.items()
@@ -915,13 +1035,19 @@ def _run_investment_pipeline(
                 logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
                 _agent_results[name] = _agent_defaults[name]
 
-    valuation = _agent_results["valuation"]
-    macro     = _agent_results["macro"]
-    risk      = _agent_results["risk"]
-    market    = _agent_results["market"]
-    quality   = _agent_results["quality"]
+    valuation            = _agent_results["valuation"]
+    macro                = _agent_results["macro"]
+    risk                 = _agent_results["risk"]
+    market               = _agent_results["market"]
+    quality              = _agent_results["quality"]
+    pre_synthesized_answer = _agent_results.get("question_answerer", "") or ""
 
-    agents_run = ["valuation", "macro", "risk", "market", "quality"]
+    print(
+        f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+        f"pre_synthesized_answer={'set' if pre_synthesized_answer else 'empty'} "
+        f"({len(pre_synthesized_answer)} chars)"
+    )
+    agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
     print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: agents_run={agents_run}")
 
     # ── Thesis synthesis ──────────────────────────────────────────────────────
@@ -945,6 +1071,7 @@ def _run_investment_pipeline(
             original_user_question=question,
             question_intent=question_intent,
             prior_snapshot=prior_snapshot,
+            pre_synthesized_answer=pre_synthesized_answer,
         )
     except Exception as exc:
         logger.warning("[router] synthesize_thesis failed for %s: %r", ticker, exc)

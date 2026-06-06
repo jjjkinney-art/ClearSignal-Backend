@@ -79,6 +79,7 @@ def _build_prompt(
     evidence: List[RetrievedEvidence],
     profile: Optional[CompanyKnowledgeProfile] = None,
     question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> str:
     """Build the valuation agent prompt."""
     evidence_block = "\n".join(
@@ -145,11 +146,87 @@ explain what data is missing in `valuation_stance_reasoning`.
     else:
         stance_block = ""
 
+    # ── Verbatim question guidance (Phase 4) ─────────────────────────────────
+    # When the verbatim question is available, inject a focused instruction
+    # block so the valuation agent produces output that directly supports
+    # the question-answerer and synthesis layers.  Enabled for all question
+    # intents except valuation_stance (which already has its own full mandate).
+    if question and question_intent not in ("valuation_stance", None, ""):
+        _q_intent_hints = {
+            "implied_growth_rate": (
+                f"The user's question is about the IMPLIED GROWTH RATE embedded in "
+                f"{company.ticker}'s current multiple. MANDATORY:\n"
+                f"  - In `pe_assessment`: state the current forward P/E or EV/Revenue "
+                f"explicitly, then compute what compound revenue CAGR that multiple "
+                f"implies over 3–5 years (use discount rate 10% if unspecified).\n"
+                f"  - In `growth_view`: state the analyst consensus growth rate and "
+                f"whether it meets or falls short of the implied rate.\n"
+                f"  - In `relative_value`: name 1–2 historical periods or peers where "
+                f"a similar multiple was sustained — and the outcome.\n"
+                f"  - In `overall`: lead with the implied CAGR figure."
+            ),
+            "quantitative_threshold": (
+                f"The user is asking for a QUANTITATIVE THRESHOLD — what level of "
+                f"[revenue decline / margin compression / loss rate] causes material "
+                f"earnings impact. MANDATORY:\n"
+                f"  - In `pe_assessment`: cite the specific financial exposure from "
+                f"evidence (e.g. loan book size, segment revenue at risk).\n"
+                f"  - In `discount_sensitivity`: compute the EPS or ROE impact at "
+                f"the threshold scenario from evidence data.\n"
+                f"  - In `overall`: lead with the quantified threshold and impact."
+            ),
+            "metric_ordering": (
+                f"The user is asking WHICH METRIC deteriorates first. MANDATORY:\n"
+                f"  - In `margin_trend`: name the specific margin or unit-economics "
+                f"line that leads in a downturn and explain the causal mechanism.\n"
+                f"  - In `growth_view`: explain which growth metric follows and why.\n"
+                f"  - In `overall`: rank at least 2 metrics by order of deterioration."
+            ),
+            "segment_ranking": (
+                f"The user is asking to RANK SEGMENTS by moat width or quality. "
+                f"MANDATORY:\n"
+                f"  - In `relative_value`: compare the segments named in the question "
+                f"on margin profile, switching cost, and growth rate.\n"
+                f"  - In `overall`: state a ranked order (#1, #2, #3) with the "
+                f"primary reason for each ranking."
+            ),
+            "timing_lag": (
+                f"The user is asking about TIMING LAGS (decision → revenue impact). "
+                f"MANDATORY:\n"
+                f"  - In `growth_view`: state the causal chain from the upstream "
+                f"decision to the revenue line, naming the number of quarters lag.\n"
+                f"  - In `overall`: lead with the specific lag estimate in quarters."
+            ),
+            "historical_precedent": (
+                f"The user is asking for HISTORICAL PRECEDENT. MANDATORY:\n"
+                f"  - In `relative_value`: name the best historical analog — company, "
+                f"period, metric trajectory — and whether the current situation is "
+                f"more or less favorable.\n"
+                f"  - In `pe_assessment`: compare current multiple to the historical "
+                f"period's entry multiple.\n"
+                f"  - In `overall`: lead with the most relevant historical comparison."
+            ),
+        }
+        _q_hint = _q_intent_hints.get(question_intent, "")
+        if _q_hint:
+            question_guidance_block = (
+                f"\nQUESTION-SPECIFIC GUIDANCE (Phase 4):\n"
+                f'USER\'S EXACT QUESTION: "{question}"\n\n'
+                f"{_q_hint}\n"
+            )
+        else:
+            question_guidance_block = (
+                f"\nUSER'S EXACT QUESTION (orient your analysis to this): "
+                f'"{question}"\n'
+            )
+    else:
+        question_guidance_block = ""
+
     return f"""You are a specialist valuation analyst. Analyse {company.company_name} ({company.ticker}).
 {context_lines}
 
 {company_context_block}
-{stance_block}
+{stance_block}{question_guidance_block}
 EVIDENCE:
 {evidence_block}
 
@@ -210,6 +287,7 @@ def run_valuation_agent(
     request_id: Optional[str] = None,
     profile: Optional[CompanyKnowledgeProfile] = None,
     question_intent: Optional[str] = None,
+    question: Optional[str] = None,
 ) -> ValuationView:
     """Run the valuation specialist agent.
 
@@ -235,7 +313,7 @@ def run_valuation_agent(
     if not relevant:
         return _empty_output("No valuation-relevant evidence available.")
 
-    prompt = _build_prompt(company, relevant, profile, question_intent=question_intent)
+    prompt = _build_prompt(company, relevant, profile, question_intent=question_intent, question=question)
     try:
         result: ValuationView = get_structured_response(
             prompt,
