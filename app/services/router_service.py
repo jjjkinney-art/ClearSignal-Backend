@@ -1187,6 +1187,47 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _has_intent,
     )
 
+    # ── Fast path: explicit company_name + investment intent ─────────────────
+    # When the caller supplies a non-empty company_name and the question has
+    # investment intent, resolve the company directly and route to the full
+    # investment pipeline without the text-detection detour.
+    #
+    # Why this is needed: the text-detection block above (lines 1118-1175) is
+    # intentionally skipped when company_name is non-empty, so _text_detected_company
+    # stays None and the investment pipeline is never reached via the existing
+    # gate at line 1201.  Questions containing competitor names would therefore
+    # fall through to the old keyword-routing path and receive a template equity
+    # analysis that ignores the specific question asked.
+    #
+    # This block only fires for company_analysis intent.  market_question,
+    # investing_education, portfolio_question, and general_fallback intents are
+    # excluded so they continue to reach the general-finance agent as expected.
+    _NON_COMPANY_INTENTS = frozenset({
+        "market_question", "investing_education", "portfolio_question", "general_fallback"
+    })
+    if (
+        request.company_name.strip()
+        and _has_intent
+        and request.intent not in _NON_COMPANY_INTENTS
+    ):
+        _explicit_company = detect_company(request.company_name.strip())
+        if _explicit_company is not None:
+            request_id = str(uuid.uuid4())
+            logger.info(
+                json.dumps({
+                    "event": "company_route_explicit",
+                    "request_id": request_id,
+                    "company_name": request.company_name,
+                    "detected_ticker": _explicit_company.ticker,
+                    "question": request.question[:120],
+                })
+            )
+            return _run_investment_pipeline(
+                company=_explicit_company,
+                question=request.question,
+                request_id=request_id,
+            )
+
     # Route to full investment pipeline when a company is detected from question
     # text AND the question has investment intent — OR when the entity was
     # resolved with high confidence (exact ticker or alias match), which

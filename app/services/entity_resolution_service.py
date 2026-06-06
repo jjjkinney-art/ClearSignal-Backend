@@ -462,23 +462,31 @@ def resolve_for_analysis(
 ) -> EntityResolutionResult:
     """Resolve entity for the analysis pipeline.
 
-    Tries the full user_question first (has richer context), falls back to
-    company_hint.  Returns an EntityResolutionResult suitable for populating
-    AnalysisResponse entity fields.
+    When company_hint (the AnalysisRequest.company_name field) is explicitly
+    provided and resolves successfully, it is treated as authoritative.  The
+    user_question is only used as primary resolution text when company_hint is
+    absent or fails to match any known entity.
+
+    This prevents questions that mention competitor names (e.g. "Costco trades
+    at a premium vs Walmart") from resolving to the wrong company.
 
     Parameters
     ----------
     user_question : str
         The full natural-language user question from AnalysisRequest.
     company_hint : str
-        The company_name field from AnalysisRequest (may be pre-extracted
-        by the frontend or passed as raw query text).
+        The company_name field from AnalysisRequest.  Treated as authoritative
+        when non-empty and resolvable.
     """
-    # Choose the richer text as primary.  If user_question is provided and
-    # longer, use it as primary and company_hint as fallback.
-    if user_question and len(user_question) > len(company_hint):
+    # When an explicit company_hint is provided, resolve it first and return
+    # immediately on success.  Do NOT use user_question as primary — questions
+    # routinely mention competitors and sector peers whose names would otherwise
+    # override the caller's intended company.
+    if company_hint.strip():
+        result = resolve_query(company_hint.strip(), "")
+        if result.canonical_ticker:
+            return result
+    # company_hint absent or unresolvable — fall back to question text as primary.
+    if user_question:
         return resolve_query(user_question, company_hint)
-    elif company_hint:
-        return resolve_query(company_hint, user_question)
-    else:
-        return resolve_query(user_question, "")
+    return EntityResolutionResult(resolution_method="not_found")
