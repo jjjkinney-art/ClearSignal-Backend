@@ -113,11 +113,17 @@ class Settings(BaseSettings):
 
     # Synthesis-specific timeout.  The thesis synthesiser produces a large
     # structured JSON (~1,200-1,800 output tokens).  Under OpenAI load,
-    # gpt-4o-mini may take 30-40 s.  A 40 s timeout allows synthesis to
-    # complete on the first attempt without triggering the retry loop, which
-    # would push total pipeline time well over the Render 61 s Nginx ceiling.
-    # Evidence(10s) + agents(12s) + synthesis(≤38s) = ≤60s → safely under limit.
-    synthesis_timeout: float = 40.0
+    # gpt-4o-mini may take 25-35 s.  A 35 s timeout allows synthesis to
+    # complete on the first attempt without triggering the retry loop.
+    # Evidence(parallel ~8s) + agents(parallel ~12s) + synthesis(≤35s) + post(3s) = ≤58s.
+    synthesis_timeout: float = 35.0
+
+    # Maximum retries for the synthesis call.  Unlike agent calls (max_retries=3),
+    # synthesis retries are catastrophic: a single retry adds 35s and pushes the
+    # total pipeline over Render's 61s Nginx ceiling.  Set to 1 (no retry on
+    # timeout).  When synthesis is slow and times out, the pipeline returns a
+    # fallback thesis immediately rather than retrying and timing out Nginx.
+    synthesis_max_retries: int = 1
 
     # Maximum number of retries for model calls.  Each failed attempt will
     # trigger an exponential backoff before retrying.  This value is

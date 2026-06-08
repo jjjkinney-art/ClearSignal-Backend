@@ -939,49 +939,71 @@ def _run_investment_pipeline(
         f"question_intent={question_intent!r}"
     )
 
-    # ── Evidence retrieval ────────────────────────────────────────────────────
-    # Market evidence: FMP + SEC + NewsAPI (company-specific + macro topics)
+    # ── Evidence retrieval (parallel) ────────────────────────────────────────
+    # The four evidence sources are independent HTTP calls.  Running them in
+    # parallel cuts wall time from sum(each) ≈ 12-30s to max(each) ≈ 5-12s.
+    # This uses the same ThreadPoolExecutor pattern as the agent pool below.
     _t_evidence = time.time()
     detected_topics = _detect_topics(question)
-    market_evidence = retrieve_market_evidence(
-        question=question,
-        detected_topics=detected_topics,
-        company=ticker,
-    )
-    # FRED macro evidence — interest rates, inflation, yield curve
-    fred_evidence = retrieve_general_finance_evidence(question)
-    evidence = market_evidence + fred_evidence
 
-    # ── Always-on FMP evidence ────────────────────────────────────────────────
-    # Live valuation ratios and analyst estimates are fetched for ALL company
-    # queries, not just valuation_stance questions.  This ensures every thesis
-    # has real P/E, EV/EBITDA, and consensus price-target data so the
-    # confidence calibrator can confirm coverage rather than penalise gaps.
+    def _fetch_market_evidence():
+        return retrieve_market_evidence(
+            question=question,
+            detected_topics=detected_topics,
+            company=ticker,
+        )
+
+    def _fetch_fred_evidence():
+        return retrieve_general_finance_evidence(question)
+
+    def _fetch_valuation_ratios():
+        try:
+            return fetch_valuation_ratios(ticker) or []
+        except Exception as _e:
+            logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, _e)
+            return []
+
+    def _fetch_analyst_estimates():
+        try:
+            return fetch_analyst_estimates(ticker) or []
+        except Exception as _e:
+            logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _e)
+            return []
+
+    _ev_tasks = {
+        "market":    _fetch_market_evidence,
+        "fred":      _fetch_fred_evidence,
+        "valuation": _fetch_valuation_ratios,
+        "estimates": _fetch_analyst_estimates,
+    }
+    _ev_results: dict = {}
     try:
-        _val_ratios = fetch_valuation_ratios(ticker)
-        if _val_ratios:
-            evidence = evidence + _val_ratios
-            print(
-                f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
-                f"appended {len(_val_ratios)} valuation_ratios item(s)"
-            )
-    except Exception as _exc:
-        logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, _exc)
-    try:
-        _analyst_ests = fetch_analyst_estimates(ticker)
-        if _analyst_ests:
-            evidence = evidence + _analyst_ests
-            print(
-                f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
-                f"appended {len(_analyst_ests)} analyst_estimates item(s)"
-            )
-    except Exception as _exc:
-        logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _exc)
+        with ThreadPoolExecutor(max_workers=4) as _ev_pool:
+            _ev_futures = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
+        for k, fut in _ev_futures.items():
+            try:
+                _ev_results[k] = fut.result()
+            except Exception as _e:
+                logger.warning("[router] evidence task %s failed: %r", k, _e)
+                _ev_results[k] = []
+    except Exception as _pool_exc:
+        logger.warning("[router] evidence pool failed (%r) — falling back to sequential", _pool_exc)
+        for k, fn in _ev_tasks.items():
+            try:
+                _ev_results[k] = fn()
+            except Exception as _e:
+                _ev_results[k] = []
+
+    market_evidence: list = _ev_results.get("market", [])
+    fred_evidence:   list = _ev_results.get("fred",   [])
+    _val_ratios:     list = _ev_results.get("valuation", [])
+    _analyst_ests:   list = _ev_results.get("estimates", [])
+    evidence = market_evidence + fred_evidence + _val_ratios + _analyst_ests
 
     print(
-        f"[TIMING] [{ticker}] evidence_retrieval={time.time()-_t_evidence:.2f}s "
-        f"market_evidence={len(market_evidence)} "
-        f"fred_evidence={len(fred_evidence)} "
+        f"[TIMING] [{ticker}] evidence_retrieval(parallel)={time.time()-_t_evidence:.2f}s "
+        f"market={len(market_evidence)} fred={len(fred_evidence)} "
+        f"val_ratios={len(_val_ratios)} estimates={len(_analyst_ests)} "
         f"total={len(evidence)}"
     )
 

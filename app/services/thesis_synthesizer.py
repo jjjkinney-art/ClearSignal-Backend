@@ -3280,10 +3280,15 @@ def synthesize_thesis(
     # Timer starts here so the compound-risk retry can measure how much of the
     # Render 61 s ceiling the synthesis call has already consumed.
     _synthesis_call_start: float = _time.monotonic()
+    # Use synthesis_max_retries (default: 1) instead of model_max_retries (3).
+    # A synthesis retry adds synthesis_timeout(35s) per attempt — on Render free
+    # tier one retry alone pushes total pipeline past the 61s Nginx ceiling.
+    # synthesis_max_retries=1 means: one attempt, no retry on timeout.
+    _synthesis_max_retries = getattr(settings, "synthesis_max_retries", 1)
     thesis = _call_with_json_enforcement(
         prompt=prompt,
         ticker=company.ticker,
-        max_retries=settings.model_max_retries,
+        max_retries=_synthesis_max_retries,
         backoff_factor=settings.model_backoff_factor,
         request_id=request_id,
     )

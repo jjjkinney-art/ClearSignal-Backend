@@ -258,6 +258,6 @@ synthesis_client = ModelClient(
     temperature=settings.temperature,
     max_tokens=settings.synthesis_max_tokens,
     timeout=settings.synthesis_timeout,
-    max_retries=settings.model_max_retries,
+    max_retries=settings.synthesis_max_retries,
     backoff_factor=settings.model_backoff_factor,
 )
