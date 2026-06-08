@@ -83,11 +83,13 @@ class Settings(BaseSettings):
 
     # Maximum output tokens for the thesis synthesis call.  Set lower than
     # max_tokens to keep synthesis output concise and reduce generation time.
-    # The full InvestmentThesis JSON is ~1,100-1,400 tokens minimum; 1536
-    # gives a 10-30% buffer while keeping synthesis within the Render 61 s
-    # Nginx ceiling (1536 tokens × 54 tok/s worst-case = 28s generation time).
-    # Override via SYNTHESIS_MAX_TOKENS if a richer synthesis is needed.
-    synthesis_max_tokens: int = 1536
+    # The full InvestmentThesis JSON minimum is ~1,100 tokens.  1200 gives a
+    # ~9% buffer over the minimum while keeping generation time to:
+    #   1200 tokens × 54 tok/s (worst typical load) = 22s  ← fits in 27s budget
+    #   1200 tokens × 30 tok/s (extreme load) = 40s        ← synthesis times out,
+    #                                                         fallback thesis returned
+    # Override via SYNTHESIS_MAX_TOKENS if richer synthesis is needed.
+    synthesis_max_tokens: int = 1200
 
     temperature: float = 0.0
 
@@ -127,12 +129,13 @@ class Settings(BaseSettings):
     # API to respond before giving up.  The model client uses this value.
     model_timeout: float = 30.0
 
-    # Synthesis-specific timeout.  With synthesis_max_tokens=1536, gpt-4o-mini
-    # generates at most 1536 output tokens.  At 54 tok/s (worst-case load) that
-    # takes 28s.  A 30s timeout gives a 2s margin while keeping total pipeline
-    # under Render's 61s Nginx ceiling:
-    #   evidence_parallel(~10s) + agents_parallel(~12s) + synthesis(≤30s) + post(3s) = ≤55s
-    synthesis_timeout: float = 30.0
+    # Synthesis-specific timeout.  With synthesis_max_tokens=1200, gpt-4o-mini
+    # generates at most 1200 output tokens.  At 54 tok/s (worst typical load) =
+    # 22s.  A 27s timeout gives a 5s margin.
+    # Pipeline budget (with compound retry disabled, evidence hard-capped at 10s):
+    #   evidence(≤10s) + agents(≤15.5s) + synthesis(≤27.5s) + post(3s) = ≤56s
+    # 5s margin inside Render's 61s Nginx proxy_read_timeout.
+    synthesis_timeout: float = 27.0
 
     # Maximum retries for the synthesis call.  Unlike agent calls (max_retries=3),
     # synthesis retries are catastrophic: a single retry adds 35s and pushes the

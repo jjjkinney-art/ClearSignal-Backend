@@ -1013,17 +1013,18 @@ def _run_investment_pipeline(
     # makes 5 sequential HTTP calls at 8s each = up to 40s.  Blocking here
     # kills the Render 61s budget before agents even start.
     #
-    # Instead: submit all tasks, use concurrent.futures.wait(timeout=12) to
-    # collect whatever completes within 12s, then abandon the rest.
+    # Instead: submit all tasks, use concurrent.futures.wait(timeout=10) to
+    # collect whatever completes within 10s, then abandon the rest.
     # shutdown(wait=False) lets the abandoned threads finish in the background.
     #
-    # Pipeline budget after this fix:
-    #   evidence(≤12s) + agents(≤15.5s) + synthesis(≤30.5s) + post(3s) = ≤61s
+    # Pipeline budget (compound retry disabled, synthesis_timeout=27s):
+    #   evidence(≤10s) + agents(≤15.5s) + synthesis(≤27.5s) + post(3s) = ≤56s
+    # 5s margin inside Render's 61s Nginx proxy_read_timeout.
     _ev_pool = ThreadPoolExecutor(max_workers=7)
     try:
         _ev_futures_map = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
-        # Wait for ALL futures, hard-capped at 12s total wall time
-        _cf_wait(list(_ev_futures_map.values()), timeout=12, return_when=ALL_COMPLETED)
+        # Wait for ALL futures, hard-capped at 10s total wall time
+        _cf_wait(list(_ev_futures_map.values()), timeout=10, return_when=ALL_COMPLETED)
         for k, fut in _ev_futures_map.items():
             if fut.done():
                 try:

@@ -79,10 +79,13 @@ from .depth_guard import check_synthesis_depth, inject_revenue_context
 #   ──────────────────────────────────────────────────────────────────
 #  = 10 s  safety margin  →  skip if synthesis call has consumed > 10 s
 #
-# In practice the cutoff is set to 22 s to avoid skipping on fast compounds
-# (NVDA ~10 s, AMZN ~10 s, fast-MSFT ~15 s all stay under this threshold)
-# while reliably catching slow compounds (AAPL ~25-35 s, slow-MSFT ~30-40 s).
-_COMPOUND_RETRY_WALL_BUDGET_S: float = 22.0
+# Set to 0.0 on Render free tier: the compound retry adds 15-30s to the
+# synthesis phase, pushing the total pipeline past the hard 61s Nginx
+# proxy_read_timeout.  With budget=0.0, synthesis_elapsed is always >0s,
+# so the retry is always skipped.  The main synthesis still produces a
+# complete bear thesis; the compound-risk patch is a quality enhancement
+# that can be re-enabled when moving to a paid tier with a longer timeout.
+_COMPOUND_RETRY_WALL_BUDGET_S: float = 0.0
 from .signal_ranker import (
     rank_signals,
     reweight_signals_for_intent,
