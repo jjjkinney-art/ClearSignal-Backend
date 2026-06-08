@@ -246,14 +246,18 @@ model_client = ModelClient(
 )
 
 # Dedicated client for the thesis synthesiser.  Uses settings.synthesis_model
-# (default: gpt-4o-mini; override via SYNTHESIS_MODEL env var).  Shares the
-# same API key, timeouts, and retry policy as the main client.
+# (default: gpt-4o-mini; override via SYNTHESIS_MODEL env var).
+# Uses settings.synthesis_timeout (default: 40 s) instead of model_timeout
+# (30 s) so slow synthesis calls (32-38 s) complete on the first attempt
+# rather than timing out and triggering the retry loop.  Uses
+# synthesis_max_tokens (default: 2048) to cap output length and reduce
+# generation time.
 synthesis_client = ModelClient(
     api_key=settings.openai_api_key,
     model=settings.synthesis_model,
     temperature=settings.temperature,
-    max_tokens=settings.max_tokens,
-    timeout=settings.model_timeout,
+    max_tokens=settings.synthesis_max_tokens,
+    timeout=settings.synthesis_timeout,
     max_retries=settings.model_max_retries,
     backoff_factor=settings.model_backoff_factor,
 )

@@ -65,6 +65,14 @@ class Settings(BaseSettings):
     synthesis_model: str = "gpt-4o-mini"
 
     max_tokens: int = 4096
+
+    # Maximum output tokens for the thesis synthesis call.  Set lower than
+    # max_tokens to keep synthesis output concise and reduce generation time.
+    # The full InvestmentThesis JSON is ~1,200-1,800 tokens; 2048 gives ample
+    # headroom without triggering gpt-4o-mini timeouts.
+    # Override via SYNTHESIS_MAX_TOKENS if a richer synthesis is needed.
+    synthesis_max_tokens: int = 2048
+
     temperature: float = 0.0
 
     # Enable or disable retrieval of external data for grounding.  When
@@ -102,6 +110,14 @@ class Settings(BaseSettings):
     # Model timeout in seconds.  Controls how long to wait for the OpenAI
     # API to respond before giving up.  The model client uses this value.
     model_timeout: float = 30.0
+
+    # Synthesis-specific timeout.  The thesis synthesiser produces a large
+    # structured JSON (~1,200-1,800 output tokens).  Under OpenAI load,
+    # gpt-4o-mini may take 30-40 s.  A 40 s timeout allows synthesis to
+    # complete on the first attempt without triggering the retry loop, which
+    # would push total pipeline time well over the Render 61 s Nginx ceiling.
+    # Evidence(10s) + agents(12s) + synthesis(≤38s) = ≤60s → safely under limit.
+    synthesis_timeout: float = 40.0
 
     # Maximum number of retries for model calls.  Each failed attempt will
     # trigger an exponential backoff before retrying.  This value is
