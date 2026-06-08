@@ -543,6 +543,75 @@ RULES:
 """,
 }
 
+# ── Sprint 1 P1: macro_cross_company template ────────────────────────────────
+# This template fires when the question asks about a macro event (jobs report,
+# CPI, Fed decision, etc.) AND names a specific company ("but specifically Nvidia").
+# The critical sequencing constraint:
+#   Sentence 1 = macro mechanism FIRST (event → rates → sector multiples)
+#   Sentence 2 = company's valuation sensitivity to that macro move
+#   Sentence 3 = company-specific offset or insulation (moat, pricing power, etc.)
+#   Sentence 4 = net verdict
+#
+# This prevents the legacy failure mode where the DA opens with CUDA/AI demand
+# (company-thesis-first) instead of answering how the macro event transmits
+# through rates and multiples before reaching the company.
+_INTENT_PROMPTS["macro_cross_company"] = """\
+You are a financial analyst. Your ONE job is to answer this specific question:
+
+USER'S EXACT QUESTION: "{question}"
+
+COMPANY: {name} ({ticker})
+
+{profile_block}
+
+EVIDENCE:
+{evidence_block}
+
+TASK: Produce a precise 4-sentence direct answer. The question asks about a
+MACRO EVENT and its specific impact on {ticker}. You MUST answer in this order:
+
+Sentence 1 — THE MACRO MECHANISM FIRST (not the company).
+  Describe how the macro event in the question (jobs report, CPI, Fed decision, etc.)
+  transmits to SECTOR-LEVEL multiples and rate expectations.
+  Format: "[Event] signals [rate direction] → [mechanism: tighter/looser financial conditions]
+  → tech multiples [compress/expand] because [duration / discount rate logic].
+  A [stronger/weaker than expected] reading [implies X for rates], which would
+  [compress/expand] forward P/E multiples by approximately [range]."
+  Use actual market logic. Do NOT open with the company or its products.
+
+Sentence 2 — {ticker}'s VALUATION SENSITIVITY to the macro move.
+  Where does {ticker} sit in the rate/multiple sensitivity spectrum?
+  Is it high-duration (long-dated FCF, AI premium, high P/E)? Or more insulated
+  (hardware cycle, pricing power, commodity exposure)?
+  Format: "For {ticker} specifically, the [rate/multiple] move matters because
+  the stock trades at ~[X]x forward [P/E / EV-EBITDA], embedding [AI/growth/other]
+  premium that depends on [rate assumption]. A [X]bps rate move historically
+  corresponds to ~[Y]% multiple compression for stocks at this valuation."
+  Use evidence data for the multiple if available.
+
+Sentence 3 — {ticker}'s COMPANY-SPECIFIC OFFSET or amplifier.
+  ONLY NOW discuss {ticker}'s business-specific factors (CUDA moat, recurring
+  revenue, hyperscaler demand, pricing discipline, etc.) and whether they
+  insulate from or amplify the macro effect.
+  Format: "[{ticker}'s specific structural factor] [insulates from / amplifies]
+  the [macro effect] because [specific mechanism from profile or evidence].
+  [Quantify if possible: 'X% of revenue is [rate-insensitive/recurring/contracted]']."
+
+Sentence 4 — NET VERDICT for {ticker}.
+  Given macro transmission (S1) + valuation sensitivity (S2) + company offset (S3),
+  what is the net directional impact on {ticker}?
+  Format: "Net: [jobs data stronger/weaker than expected] is [net positive / net negative /
+  mixed] for {ticker} — the [macro compression / macro relief] [is offset by / is amplified by]
+  [specific company factor], leaving the stock [more resilient / more exposed] than
+  the average tech name."
+
+RULES:
+- Sentence 1 MUST be about the macro event and sector multiples, NOT the company.
+- Do NOT start with company description, CUDA, AI demand, or products.
+- The company-specific analysis belongs only in Sentences 3–4.
+- Return ONLY the 4-sentence answer as plain text. No JSON, no headers, no bullet points.
+"""
+
 # Use business_model as an alias for investment_thesis
 _INTENT_PROMPTS["business_model"] = _INTENT_PROMPTS["investment_thesis"]
 # Use macro_sensitivity (Q-First provides lighter-touch — the macro agent covers depth)

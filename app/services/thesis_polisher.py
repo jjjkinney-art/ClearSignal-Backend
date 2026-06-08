@@ -128,6 +128,11 @@ _SENTENCE_LIMITS: Dict[str, int] = {
     "bear_thesis":      4,   # risk transmission + second-order effect + downside pathway + catalyst
     "valuation_view":   2,   # multiple structure/implicit pricing + sensitivity/segment contribution
     "macro_sensitivity": 2,  # primary channel + magnitude / directional bias
+    # ── Sprint 1 P2: Why-Not-X counter-thesis ─────────────────────────────────
+    # 3 sentences: (1) bull assumption named, (2) counter-scenario, (3) leading tell.
+    # Capped at 3 to force PM-grade compression on what is intentionally a
+    # single-narrative field (not a risk list).
+    "why_not":          3,   # assumption + counter-scenario + leading-indicator tell
 }
 
 # ── Filler opener patterns (refinement 1) ─────────────────────────────────────
@@ -173,6 +178,10 @@ _SECTION_PRIORITY: Tuple[str, ...] = (
     "bear_thesis",
     "valuation_view",
     "macro_sensitivity",
+    # Sprint 1 P2: why_not is lower priority than bear_thesis but should not be
+    # fully suppressed — it adds the counter-thesis framing that bear_thesis lacks.
+    # Placed last so it only loses dedup ties against the above sections.
+    "why_not",
 )
 
 # Jaccard threshold for cross-section sentence dedup.
@@ -1135,6 +1144,7 @@ def _apply_institutional_language(thesis: InvestmentThesis) -> InvestmentThesis:
         "direct_answer", "bull_thesis", "bear_thesis",
         "conclusion", "valuation_view", "macro_sensitivity",
         "one_sentence_thesis",  # hero thesis gets institutional rewrites too
+        "why_not",              # Sprint 1 P2: counter-thesis prose
     )
     updates: Dict[str, str] = {}
 

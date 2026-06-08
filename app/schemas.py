@@ -984,6 +984,48 @@ class QualityAssessment(BaseModel):
     signals: List[Signal] = Field(default_factory=list)
 
 
+class ThresholdZone(BaseModel):
+    """A named metric zone that separates bull, base, and bear paths for a thesis.
+
+    Sprint 1 (2026-06-08) — generated alongside the investment thesis to give
+    investors explicit breakpoints: above the bull threshold the thesis
+    strengthens; below the bear threshold it breaks.  Displayed in the
+    frontend Decision Dashboard above the expandable deep-research sections.
+    """
+
+    metric: str = Field(
+        ...,
+        description=(
+            "The metric this zone tracks. Company-specific, not generic. "
+            "Examples: 'Data Center Revenue Growth YoY', 'Forward P/E', "
+            "'10Y Treasury Yield', 'Gross Margin', 'iPhone Units'."
+        ),
+    )
+    bull_threshold: str = Field(
+        ...,
+        description=(
+            "The level above which the bull case is intact. "
+            "Format: '>[value][unit]' or specific phrasing, e.g. '>25%', '>$40B', '<3.5%'."
+        ),
+    )
+    bear_threshold: str = Field(
+        ...,
+        description=(
+            "The level below which the thesis breaks and re-rating risk is real. "
+            "Format: '<[value][unit]', e.g. '<15%', '<$30B', '>5.0%'."
+        ),
+    )
+    rationale: str = Field(
+        default="",
+        description=(
+            "One sentence explaining why this specific metric and zone matter "
+            "for this thesis. Company-specific, mechanism-first. "
+            "Example: 'Data center growth above 25% validates hyperscaler CapEx "
+            "cycle is intact; below 15% signals demand front-loading has ended.'"
+        ),
+    )
+
+
 class InvestmentThesis(BaseModel):
     """Synthesised investment thesis produced by the thesis synthesiser.
 
@@ -1427,6 +1469,38 @@ class InvestmentThesis(BaseModel):
             "git_commit (str). "
             "Surfaced in DEV mode to verify live backend is running Phase 6 matrix code. "
             "Empty dict when synthesis fails before the matrix check runs."
+        ),
+    )
+
+    # ── Sprint 1 Intelligence Fields (2026-06-08) ─────────────────────────────
+    # Three new fields produced by the Sprint 1 intelligence improvements:
+    #
+    #   why_not              — the single strongest counter-thesis (P2: Why-Not-X)
+    #   threshold_zones      — explicit bull/bear breakpoints per key metric (P3)
+    #
+    # These fields are optional-by-default so all existing code paths that
+    # construct InvestmentThesis directly continue to work without modification.
+
+    why_not: str = Field(
+        default="",
+        description=(
+            "2-3 sentences answering: 'Why might the bull thesis be wrong?' "
+            "This is NOT a risk list — it is the single most compelling alternative "
+            "scenario that would invalidate the bull case. Structurally distinct from "
+            "bear_thesis (which narrates risk transmission); why_not names the "
+            "fundamental assumption the bull case depends on and states what "
+            "evidence or event would reveal that assumption to be false. "
+            "Sprint 1 P2. Rendered in the 'Counter-Thesis' drawer."
+        ),
+    )
+    threshold_zones: List[ThresholdZone] = Field(
+        default_factory=list,
+        description=(
+            "2-3 named metric zones that define the bull/bear breakpoints for "
+            "this thesis. Each zone names a key metric, a bull threshold (above "
+            "which the thesis strengthens), a bear threshold (below which it "
+            "breaks), and a one-sentence rationale. "
+            "Sprint 1 P3. Rendered as the Decision Dashboard above expandable sections."
         ),
     )
 

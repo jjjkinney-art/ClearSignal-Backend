@@ -148,6 +148,9 @@ _THESIS_FIELDS = (
     "what_changes_the_thesis",
     "what_increases_conviction",
     "conclusion",
+    # Sprint 1 fields (2026-06-08)
+    "why_not",          # P2: Why-Not-X counter-thesis
+    "threshold_zones",  # P3: bull/bear breakpoint zones
 )
 
 # Markdown heading patterns used for recovery detection
@@ -1437,7 +1440,52 @@ CATALYST CALENDAR REQUIREMENT (Part 5 — MANDATORY when applicable):
     "time_horizon": "tactical",
     "time_horizon_rationale": "Binary earnings event within 2 weeks makes this tactical"
   }
-  BAD: Vague timing ("soon"), generic catalyst ("upcoming results"), no asymmetry framing. """
+  BAD: Vague timing ("soon"), generic catalyst ("upcoming results"), no asymmetry framing.
+
+SPRINT 1 INTELLIGENCE FIELDS (MANDATORY — do not omit):
+
+  "why_not" : string — 2-3 sentences answering: "Why might the bull thesis be WRONG?" \
+This is NOT a repeat of bear_thesis. It is the single strongest alternative scenario that \
+would invalidate the core bull assumption. \
+\
+STRUCTURE (follow this order): \
+  Sentence 1 → Name the core assumption the bull case depends on. \
+    Format: "The bull case rests on the assumption that [specific assumption]." \
+  Sentence 2 → State the alternative scenario that would prove that assumption false. \
+    Format: "The counter-thesis: [what would have to be true / what evidence or event would \
+    reveal the assumption is wrong]." \
+  Sentence 3 → Name the leading indicator that would confirm the counter-thesis is materializing. \
+    Format: "The tell: [specific metric, event, or data point] falling/rising to [threshold] \
+    would signal the bull case has broken." \
+\
+GOOD: "The bull case rests on the assumption that hyperscaler CapEx appetite remains structurally \
+elevated and is not front-loaded demand. The counter-thesis: if hyperscaler guidance in Q3 signals \
+even a one-quarter pause, Nvidia's data center revenue would likely miss the ~$40B run rate the \
+multiple currently prices in. The tell: data center revenue growth decelerating below 15% YoY for \
+two consecutive quarters would confirm front-loading, not durability." \
+BAD: "There are risks to the bull thesis including competition and valuation." (That's a risk list.) \
+BAD: Repeating what's already in bear_thesis. why_not must add a NEW analytical angle.
+
+  "threshold_zones" : array of 2-3 objects, each with: \
+    "metric"          : string — specific metric name (company-specific, not generic) \
+    "bull_threshold"  : string — level above which the bull case is intact (e.g. ">25%", ">$40B") \
+    "bear_threshold"  : string — level below which the thesis breaks (e.g. "<15%", "<3.5%") \
+    "rationale"       : string — one sentence explaining why this zone matters for THIS thesis \
+\
+Rules for threshold_zones: \
+  - Choose metrics that ACTUALLY drive this thesis, not generic ones. \
+  - For growth companies: data center revenue growth, forward P/E, FCF yield. \
+  - For macro-sensitive names: treasury yield, rate sensitivity metric. \
+  - Always include at least one VALUATION metric and one FUNDAMENTAL metric. \
+  - Bull/bear thresholds should be ASYMMETRIC when the thesis is asymmetric. \
+\
+GOOD example zone: \
+  { "metric": "Data Center Revenue Growth YoY", \
+    "bull_threshold": ">25%", \
+    "bear_threshold": "<15%", \
+    "rationale": "Growth above 25% validates hyperscaler CapEx is structural; below 15% signals front-loading." } \
+\
+BAD: { "metric": "Revenue", "bull_threshold": "up", "bear_threshold": "down" } — not specific enough. """
 
 
 # ── Synthesis prompt ──────────────────────────────────────────────────────────

@@ -696,6 +696,74 @@ _MACRO_SENSITIVITY_PATTERNS: tuple = (
     "recession", "yield curve", "fed", "interest rate",
 )
 
+# ── Sprint 1 P1: macro-cross-company intent ───────────────────────────────────
+# Fires when a question combines a macro trigger (report, Fed, CPI, rates) with
+# explicit company-specific framing ("but specifically [company]", "for Nvidia",
+# "and how does that affect [ticker]"). This is MORE specific than macro_sensitivity
+# because the user wants both the sector-level macro chain AND the named company's
+# individual exposure.  It is checked BEFORE macro_sensitivity so it takes priority.
+#
+# The macro trigger set deliberately mirrors the economic-data terms added to
+# _CONTEXT_WORDS in company_detection.py (FCX regression fix, 2026-06-08).
+# These terms identify questions about macro events rather than companies, but
+# here we detect them *alongside* company-specificity signals.
+_MACRO_TRIGGER_TERMS: frozenset = frozenset({
+    "jobs report", "job report", "nonfarm payroll", "payroll report",
+    "cpi", "ppi", "inflation report", "inflation data",
+    "fed decision", "fed rate", "fomc", "rate decision",
+    "gdp report", "gdp data", "economic report", "economic data",
+    "employment report", "unemployment report", "jobless claims",
+    "rate hike", "rate cut", "interest rate decision",
+})
+# A question crosses into macro_cross_company when it also carries a company-
+# specificity signal: "but specifically", "especially for", "particularly for",
+# "and specifically", "and for", combined with stock/ticker/shares framing.
+_MACRO_CROSS_COMPANY_SIGNALS: tuple = (
+    "but specifically",
+    "specifically for",
+    "but especially",
+    "especially for",
+    "particularly for",
+    "in particular for",
+    "and specifically",
+    "and for nvidia", "and for apple", "and for tesla", "and for meta",
+    "and for microsoft", "and for amazon", "and for google",
+    "and for alphabet",
+    "impact on nvidia", "impact on apple", "impact on tesla",
+    "impact on meta", "impact on microsoft", "impact on amazon",
+    "for nvidia stock", "for apple stock", "for tesla stock",
+    "for nvda", "for aapl", "for tsla", "for msft", "for amzn",
+    "for googl", "for meta", "for goog",
+    # Generic: "and how does that affect [company]"
+    "how does that affect",
+    "how would that affect",
+    "what does that mean for",
+    "what does this mean for",
+)
+
+
+def _is_macro_cross_company(question: str) -> bool:
+    """Return True when the question mixes a macro trigger with company-specific framing.
+
+    Uses two-gate detection:
+      Gate 1 — at least one macro trigger term is present (jobs report, CPI, etc.)
+      Gate 2 — at least one company-specificity signal is present
+               ("but specifically Nvidia", "for NVDA stock", etc.)
+
+    Checked BEFORE macro_sensitivity in _detect_question_intent so it takes
+    priority for the cross-over pattern.
+
+    Regression test:
+      "How will the latest jobs report impact tech stocks generally but
+       specifically Nvidia stock?" → True
+      "How will the Fed decision affect bank stocks?" → False (no company signal)
+    """
+    q_lower = question.lower()
+    has_macro = any(term in q_lower for term in _MACRO_TRIGGER_TERMS)
+    if not has_macro:
+        return False
+    return any(sig in q_lower for sig in _MACRO_CROSS_COMPANY_SIGNALS)
+
 _RISK_ASSESSMENT_PATTERNS: tuple = (
     "what are the risks", "biggest risk", "main risk", "key risk",
     "downside risk", "worst case", "what could go wrong",
@@ -790,6 +858,7 @@ def _detect_question_intent(question: str) -> str:
       'segment_ranking'      — "Which segment has the widest moat?"
       'historical_precedent' — "What historical precedent exists for X?"
       'valuation_stance'     — "Is X overpriced?" / "Is X fairly valued?"
+      'macro_cross_company'  — "How will the jobs report impact tech stocks but specifically Nvidia?" (Sprint 1 P1)
       'macro_sensitivity'    — "How would rates affect X?"
       'risk_assessment'      — "What are X's biggest risks?"
       'competitive_position' — "How does X compare to competitors?"
@@ -821,6 +890,11 @@ def _detect_question_intent(question: str) -> str:
     # ── Legacy intents — checked after Phase 4 ───────────────────────────────
     if any(p in q for p in _VALUATION_STANCE_PATTERNS):
         return "valuation_stance"
+    # Sprint 1 P1: macro_cross_company is more specific than macro_sensitivity —
+    # check it first so "how will jobs report affect NVDA specifically" gets the
+    # sequenced macro→company DA instead of the generic macro template.
+    if _is_macro_cross_company(question):
+        return "macro_cross_company"
     if any(p in q for p in _MACRO_SENSITIVITY_PATTERNS):
         return "macro_sensitivity"
     if any(p in q for p in _RISK_ASSESSMENT_PATTERNS):
