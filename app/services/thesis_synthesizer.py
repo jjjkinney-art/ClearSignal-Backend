@@ -1297,6 +1297,16 @@ Sentence 2: second-order effect (e.g. buyback ROI falls as rates rise, OR channe
 builds as demand softens, compounding margin pressure). \
 Sentence 3: realistic downside pathway — what multiple/EPS scenario materialises and why. \
 Sentence 4 (optional): the specific catalyst that triggers the bear case.
+  "why_not"                 : string — MANDATORY. 3 sentences. \
+Sentence 1: "The bull case rests on the assumption that [specific assumption the bull thesis depends on]." \
+Sentence 2: "The counter-thesis: [alternative scenario that would prove that assumption false]." \
+Sentence 3: "The tell: [specific metric or event] [falling/rising] to [threshold] would signal the bull case has broken." \
+This is NOT a repeat of bear_thesis — it must name a NEW analytical angle and include a specific leading indicator. \
+See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance and examples.
+  "threshold_zones"         : array of 2-3 objects — MANDATORY. Each object: \
+{"metric": string, "bull_threshold": string, "bear_threshold": string, "rationale": string}. \
+Choose metrics that actually drive THIS thesis. Must include ≥1 valuation metric AND ≥1 fundamental metric. \
+See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance and examples.
   "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
   "key_risks"               : array of 4 strings — top investment risks, ranked by severity
   "valuation_view"          : string — 2 sentences on valuation structure. \
