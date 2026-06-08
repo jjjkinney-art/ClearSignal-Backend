@@ -57,6 +57,9 @@ from .providers.fmp_provider import fetch_valuation_ratios, fetch_analyst_estima
 from .company_knowledge import get_profile_for_company
 from .evidence_partitioner import partition_evidence
 from .providers import retrieve_market_evidence
+from .providers import fmp_provider as _fmp_provider
+from .providers import sec_provider as _sec_provider
+from .providers import news_provider as _news_provider
 from ..investment_agents import (
     run_valuation_agent,
     run_investment_macro_agent,
@@ -939,19 +942,43 @@ def _run_investment_pipeline(
         f"question_intent={question_intent!r}"
     )
 
-    # ── Evidence retrieval (parallel) ────────────────────────────────────────
-    # The four evidence sources are independent HTTP calls.  Running them in
-    # parallel cuts wall time from sum(each) ≈ 12-30s to max(each) ≈ 5-12s.
-    # This uses the same ThreadPoolExecutor pattern as the agent pool below.
+    # ── Evidence retrieval (7-task parallel pool) ────────────────────────────
+    # Previously `retrieve_market_evidence` was called as ONE parallel task but
+    # internally made 4 sequential HTTP calls (FMP→SEC→NewsAPI co→NewsAPI macro)
+    # = 12-16s wall time.  Now each provider is its own independent task in a
+    # 7-worker pool.  Wall time = max(slowest provider) ≈ 4-8s instead of
+    # 12-16s.  Saves ~6-10s, bringing total pipeline under the 61s ceiling:
+    #   evidence(8s) + agents(15s) + synthesis(30s) + post(3s) = 56s.
     _t_evidence = time.time()
     detected_topics = _detect_topics(question)
 
-    def _fetch_market_evidence():
-        return retrieve_market_evidence(
-            question=question,
-            detected_topics=detected_topics,
-            company=ticker,
-        )
+    def _fetch_fmp():
+        try:
+            return _fmp_provider.fetch_company_evidence(ticker) or []
+        except Exception as _e:
+            logger.warning("[router] fmp evidence failed for %s: %r", ticker, _e)
+            return []
+
+    def _fetch_sec():
+        try:
+            return _sec_provider.fetch_recent_filings(ticker) or []
+        except Exception as _e:
+            logger.warning("[router] sec evidence failed for %s: %r", ticker, _e)
+            return []
+
+    def _fetch_news_company():
+        try:
+            return _news_provider.fetch_company_news(ticker) or []
+        except Exception as _e:
+            logger.warning("[router] news/company failed for %s: %r", ticker, _e)
+            return []
+
+    def _fetch_news_macro():
+        try:
+            return _news_provider.fetch_macro_news(detected_topics) or []
+        except Exception as _e:
+            logger.warning("[router] news/macro failed: %r", _e)
+            return []
 
     def _fetch_fred_evidence():
         return retrieve_general_finance_evidence(question)
@@ -971,14 +998,17 @@ def _run_investment_pipeline(
             return []
 
     _ev_tasks = {
-        "market":    _fetch_market_evidence,
+        "fmp":       _fetch_fmp,
+        "sec":       _fetch_sec,
+        "news_co":   _fetch_news_company,
+        "news_macro":_fetch_news_macro,
         "fred":      _fetch_fred_evidence,
         "valuation": _fetch_valuation_ratios,
         "estimates": _fetch_analyst_estimates,
     }
     _ev_results: dict = {}
     try:
-        with ThreadPoolExecutor(max_workers=4) as _ev_pool:
+        with ThreadPoolExecutor(max_workers=7) as _ev_pool:
             _ev_futures = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
         for k, fut in _ev_futures.items():
             try:
@@ -994,17 +1024,22 @@ def _run_investment_pipeline(
             except Exception as _e:
                 _ev_results[k] = []
 
-    market_evidence: list = _ev_results.get("market", [])
-    fred_evidence:   list = _ev_results.get("fred",   [])
+    _fmp_ev:     list = _ev_results.get("fmp",       [])
+    _sec_ev:     list = _ev_results.get("sec",       [])
+    _news_co:    list = _ev_results.get("news_co",   [])
+    _news_macro: list = _ev_results.get("news_macro",[])
+    market_evidence: list = _fmp_ev + _sec_ev + _news_co + _news_macro
+    fred_evidence:   list = _ev_results.get("fred",      [])
     _val_ratios:     list = _ev_results.get("valuation", [])
     _analyst_ests:   list = _ev_results.get("estimates", [])
     evidence = market_evidence + fred_evidence + _val_ratios + _analyst_ests
 
     print(
-        f"[TIMING] [{ticker}] evidence_retrieval(parallel)={time.time()-_t_evidence:.2f}s "
-        f"market={len(market_evidence)} fred={len(fred_evidence)} "
-        f"val_ratios={len(_val_ratios)} estimates={len(_analyst_ests)} "
-        f"total={len(evidence)}"
+        f"[TIMING] [{ticker}] evidence_retrieval(7-parallel)={time.time()-_t_evidence:.2f}s "
+        f"fmp={len(_fmp_ev)} sec={len(_sec_ev)} "
+        f"news_co={len(_news_co)} news_macro={len(_news_macro)} "
+        f"fred={len(fred_evidence)} val_ratios={len(_val_ratios)} "
+        f"estimates={len(_analyst_ests)} total={len(evidence)}"
     )
 
     # ── Company knowledge profile ─────────────────────────────────────────────
