@@ -149,8 +149,10 @@ _THESIS_FIELDS = (
     "what_increases_conviction",
     "conclusion",
     # Sprint 1 fields (2026-06-08)
-    "why_not",          # P2: Why-Not-X counter-thesis
-    "threshold_zones",  # P3: bull/bear breakpoint zones
+    "why_not",          # P2: Why-Not-X counter-thesis (4-sentence with invalidation)
+    "threshold_zones",  # P3: bull/bear breakpoint zones (always 3 zones)
+    # Phase 8 fields (2026-06-08)
+    "verdict_rationale",  # Phase 8: 1-sentence verdict card rationale
 )
 
 # Markdown heading patterns used for recovery detection
@@ -1279,13 +1281,33 @@ Examples: "Is Services growth durable enough to offset hardware cyclicality?" \
 / "Can Meta sustain margin discipline while reaccelerating capex?" \
 / "Is the market underestimating rate duration risk for Apple?" \
 Sound like a real PM discussion topic, not a research abstract.
-  "direct_answer"           : string — up to 4 sentences that directly answer the user's \
-exact question. MUST open with the mechanism, metric, or ranking the question asks about. \
-MUST name one company-specific offset, amplifier, or data point. \
-MUST NOT open with a generic company overview. \
+  "verdict_rationale"       : string — MANDATORY. Exactly 1 sentence. The bottom-line \
+rationale for the directional verdict (directional_stance). State the primary mechanism \
+and the current expectation setup in plain language. \
+MUST NOT repeat directional_stance_reasoning verbatim — this is the verdict card summary. \
+GOOD: "Data center revenue growing 122% YoY ahead of consensus gives the bull case the \
+evidence it needs — the setup is constructive at current multiples." \
+GOOD: "CRE losses remain manageable and consensus already prices in elevated provisions — \
+risk/reward is balanced." \
+GOOD: "Membership renewal rates and ticket size expansion are decelerating into a multiple \
+that assumes continued execution — the setup is not yet compelling." \
+BAD: "The company has strong fundamentals." (Generic.) \
+BAD: Any sentence that does not name the specific mechanism driving the verdict.
+  "direct_answer"           : string — EXACTLY 4 sentences that directly answer the user's \
+exact question. ABSOLUTE RULE: Sentence 1 must state the verdict or conclusion — never \
+company background. \
+MANDATORY 4-sentence structure: \
+  Sentence 1: State the conclusion/verdict directly. What is the answer? One clear claim. \
+  Sentence 2: Name the primary mechanism — HOW the conclusion is supported. \
+  Sentence 3: Name the most important metric or threshold — the specific data point or level \
+    that makes this argument concrete. \
+  Sentence 4: State what would change the view — the single most important condition. \
+MUST NOT open with company background, company history, or "X is a leading provider of..." \
+MUST NOT bury the conclusion in sentence 3 or 4. \
 For implied_growth_rate, timing_lag, quantitative_threshold, metric_ordering, \
-segment_ranking, and historical_precedent intents: use the full 4-sentence format \
-specified in the question anchor block above. For other intents: 2 sentences minimum.
+segment_ranking, and historical_precedent intents: use this 4-sentence format always. \
+GOOD opening: "Nvidia's data center setup is constructive — the question is duration, not direction." \
+BAD opening: "Nvidia is a leading AI chip designer that produces..." (company background first)
   "bull_thesis"             : string — 3-4 sentence institutional bull case. \
 Sentence 1: primary upside driver with economic transmission mechanism. \
 Sentence 2: operating leverage, margin structure, or capital allocation effect that amplifies it. \
@@ -1297,16 +1319,23 @@ Sentence 2: second-order effect (e.g. buyback ROI falls as rates rise, OR channe
 builds as demand softens, compounding margin pressure). \
 Sentence 3: realistic downside pathway — what multiple/EPS scenario materialises and why. \
 Sentence 4 (optional): the specific catalyst that triggers the bear case.
-  "why_not"                 : string — MANDATORY. 3 sentences. \
+  "why_not"                 : string — MANDATORY. 4 sentences that answer: \
+"What would prove this analysis wrong?" \
 Sentence 1: "The bull case rests on the assumption that [specific assumption the bull thesis depends on]." \
 Sentence 2: "The counter-thesis: [alternative scenario that would prove that assumption false]." \
 Sentence 3: "The tell: [specific metric or event] [falling/rising] to [threshold] would signal the bull case has broken." \
-This is NOT a repeat of bear_thesis — it must name a NEW analytical angle and include a specific leading indicator. \
+Sentence 4: "This analysis would be wrong if [specific invalidation condition — name the data point or event that would \
+flip the conclusion]." \
+This is NOT a repeat of bear_thesis — it must name a NEW analytical angle with a specific leading indicator \
+AND an explicit invalidation condition. \
 See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance and examples.
-  "threshold_zones"         : array of 2-3 objects — MANDATORY. Each object: \
-{"metric": string, "bull_threshold": string, "bear_threshold": string, "rationale": string}. \
-Choose metrics that actually drive THIS thesis. Must include ≥1 valuation metric AND ≥1 fundamental metric. \
-See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance and examples.
+  "threshold_zones"         : array of EXACTLY 3 objects — MANDATORY. NEVER leave empty. \
+Each object: {"metric": string, "bull_threshold": string, "bear_threshold": string, "rationale": string}. \
+REQUIRED: Always include 3 zones: (1) primary valuation metric, (2) primary operating/fundamental metric, \
+(3) a risk or macro metric specific to this thesis. \
+If you are unsure what thresholds to use, pick the 3 metrics that most directly determine whether the \
+thesis succeeds or fails — then state the breakpoint levels. This dashboard MUST render for every response. \
+Choose metrics that actually drive THIS thesis. See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance.
   "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
   "key_risks"               : array of 4 strings — top investment risks, ranked by severity
   "valuation_view"          : string — 2 sentences on valuation structure. \
@@ -1454,11 +1483,11 @@ CATALYST CALENDAR REQUIREMENT (Part 5 — MANDATORY when applicable):
 
 SPRINT 1 INTELLIGENCE FIELDS (MANDATORY — do not omit):
 
-  "why_not" : string — 2-3 sentences answering: "Why might the bull thesis be WRONG?" \
-This is NOT a repeat of bear_thesis. It is the single strongest alternative scenario that \
-would invalidate the core bull assumption. \
+  "why_not" : string — 4 sentences answering: "What would prove this analysis wrong?" \
+This is NOT a repeat of bear_thesis. It is the single strongest counter-thesis that \
+would invalidate the core bull assumption, with an explicit invalidation condition. \
 \
-STRUCTURE (follow this order): \
+STRUCTURE (follow this order, all 4 sentences required): \
   Sentence 1 → Name the core assumption the bull case depends on. \
     Format: "The bull case rests on the assumption that [specific assumption]." \
   Sentence 2 → State the alternative scenario that would prove that assumption false. \
@@ -1467,14 +1496,19 @@ STRUCTURE (follow this order): \
   Sentence 3 → Name the leading indicator that would confirm the counter-thesis is materializing. \
     Format: "The tell: [specific metric, event, or data point] falling/rising to [threshold] \
     would signal the bull case has broken." \
+  Sentence 4 → State the explicit invalidation condition — what data or event would flip the analysis. \
+    Format: "This analysis would be wrong if [specific condition] — [consequence]." \
 \
 GOOD: "The bull case rests on the assumption that hyperscaler CapEx appetite remains structurally \
 elevated and is not front-loaded demand. The counter-thesis: if hyperscaler guidance in Q3 signals \
 even a one-quarter pause, Nvidia's data center revenue would likely miss the ~$40B run rate the \
 multiple currently prices in. The tell: data center revenue growth decelerating below 15% YoY for \
-two consecutive quarters would confirm front-loading, not durability." \
+two consecutive quarters would confirm front-loading, not durability. This analysis would be wrong \
+if hyperscaler CapEx guidance accelerates above $200B for FY26 — that would validate structurally \
+elevated demand and make the current multiple defensible." \
 BAD: "There are risks to the bull thesis including competition and valuation." (That's a risk list.) \
-BAD: Repeating what's already in bear_thesis. why_not must add a NEW analytical angle.
+BAD: Repeating what's already in bear_thesis. why_not must add a NEW analytical angle. \
+BAD: Omitting sentence 4. All 4 sentences are required.
 
   "threshold_zones" : array of 2-3 objects, each with: \
     "metric"          : string — specific metric name (company-specific, not generic) \

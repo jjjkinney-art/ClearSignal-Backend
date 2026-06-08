@@ -1359,6 +1359,21 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Phase 8 — Verdict card rationale ─────────────────────────────────────
+    # One-sentence rationale for the verdict card rendered immediately below
+    # the Core Question.  Distinct from directional_stance_reasoning (which
+    # contextualises the stance badge); this is the bottom-line investment
+    # case in a single sentence — mechanism + current setup quality.
+    verdict_rationale: str = Field(
+        default="",
+        description=(
+            "One sentence: the bottom-line rationale for the directional verdict. "
+            "Mechanism + expectation setup in plain language. "
+            "NOT a repetition of directional_stance_reasoning. "
+            "Phase 8 — Verdict Card."
+        ),
+    )
+
     # ── Analysis Foundation (Phase 2 — user-facing structured provenance) ─────
     # Clean, institutional content for the Analysis Foundation collapsible section.
     # No GAP_* codes, no internal telemetry labels, no dimension field names.
