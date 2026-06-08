@@ -113,6 +113,7 @@ async def health() -> dict:
     except Exception:
         version = "unknown"
 
+    from .config import settings as _s
     return {
         "status":       "ok",
         "service":      "clearsignal-backend",
@@ -120,6 +121,13 @@ async def health() -> dict:
         "timestamp":    _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
         "environment":  environment,
         "build_commit": git_commit,
+        # Config telemetry — verify timeout/retry values are actually live on Render
+        "cfg_agent_timeout":        getattr(_s, "agent_timeout", "MISSING"),
+        "cfg_agent_max_retries":    getattr(_s, "agent_max_retries", "MISSING"),
+        "cfg_synthesis_timeout":    getattr(_s, "synthesis_timeout", "MISSING"),
+        "cfg_synthesis_max_tokens": getattr(_s, "synthesis_max_tokens", "MISSING"),
+        "cfg_synthesis_max_retries":getattr(_s, "synthesis_max_retries", "MISSING"),
+        "cfg_agent_model":          getattr(_s, "agent_model", "MISSING"),
     }
 
 
