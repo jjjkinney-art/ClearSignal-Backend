@@ -230,28 +230,33 @@ class ModelClient:
 
 # Instantiate the specialist-agent client.  This instance is shared by the 5
 # parallel investment agents (valuation, macro, risk, market, quality) and the
-# Q-First question-answerer agent.  Uses settings.agent_model (default:
-# gpt-4o-mini) to keep the parallel agent wall-time well under the Render
-# free-tier Nginx 61-second proxy_read_timeout ceiling.
-# Override AGENT_MODEL=gpt-4o in the environment when max reasoning depth is
-# needed — but expect ~10-15 s extra latency per request at peak OpenAI load.
+# Q-First question-answerer agent.  Uses:
+#   agent_model   (default: gpt-4o-mini)  — faster than gpt-4o; keeps wall-time low
+#   agent_timeout (default: 15 s)         — investment agents generate compact
+#                                           structured outputs (~200-500 tokens);
+#                                           gpt-4o-mini finishes in 2-15 s under
+#                                           normal load.  A 15 s cap guarantees
+#                                           agent wall time never exceeds 15 s.
+#   agent_max_retries (default: 1)        — no retry; retrying at 15 s pushes
+#                                           total pipeline over Render's 61 s
+#                                           Nginx ceiling.  Timeout → safe default.
+# Pipeline budget: evidence(10s) + agents(15s) + synthesis(30s) + post(3s) = 58s.
 model_client = ModelClient(
     api_key=settings.openai_api_key,
     model=settings.agent_model,
     temperature=settings.temperature,
     max_tokens=settings.max_tokens,
-    timeout=settings.model_timeout,
-    max_retries=settings.model_max_retries,
+    timeout=getattr(settings, "agent_timeout", 15.0),
+    max_retries=getattr(settings, "agent_max_retries", 1),
     backoff_factor=settings.model_backoff_factor,
 )
 
 # Dedicated client for the thesis synthesiser.  Uses settings.synthesis_model
 # (default: gpt-4o-mini; override via SYNTHESIS_MODEL env var).
-# Uses settings.synthesis_timeout (default: 40 s) instead of model_timeout
-# (30 s) so slow synthesis calls (32-38 s) complete on the first attempt
-# rather than timing out and triggering the retry loop.  Uses
-# synthesis_max_tokens (default: 2048) to cap output length and reduce
-# generation time.
+# synthesis_timeout=30s: 1536 tokens × 54 tok/s (worst case) = 28s; 30s gives
+# a 2s margin.  synthesis_max_tokens=1536: caps output length.
+# synthesis_max_retries=1: a retry adds 30s and pushes the total pipeline past
+# Render's 61s Nginx ceiling — on timeout we return a fallback thesis instead.
 synthesis_client = ModelClient(
     api_key=settings.openai_api_key,
     model=settings.synthesis_model,

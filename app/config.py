@@ -59,6 +59,21 @@ class Settings(BaseSettings):
     # AGENT_MODEL in the environment when higher reasoning depth is needed.
     agent_model: str = "gpt-4o-mini"
 
+    # Timeout for individual investment agent calls (seconds).
+    # Investment agents receive large evidence-rich prompts but generate compact
+    # structured outputs (~200-500 tokens).  gpt-4o-mini at worst-case 30 tok/s
+    # takes 7-17s.  A 15s timeout covers 95%+ of agent calls under normal load
+    # while ensuring agent wall time never exceeds 15s even in the worst case.
+    # When an agent times out, it falls back to its safe default (empty model).
+    # Pipeline budget: evidence(10s) + agents(15s) + synthesis(30s) + post(3s) = 58s.
+    agent_timeout: float = 15.0
+
+    # Retries for individual investment agent calls.  With agent_timeout=15s,
+    # retrying is catastrophic: 3 retries × 15s = 45s per agent.  Set to 1
+    # (no retry on timeout).  Agent failures fall back to safe defaults and
+    # synthesis continues with the available agent outputs.
+    agent_max_retries: int = 1
+
     # Model used exclusively by the thesis synthesiser.  Defaults to a
     # faster, cheaper model; override via SYNTHESIS_MODEL in the environment
     # or .env file when higher capability is required.
