@@ -1233,6 +1233,10 @@ _CONTEXT_WORDS: frozenset[str] = frozenset({
     "jobs", "payroll", "payrolls", "nonfarm", "nonfarm payroll",
     "employment", "unemployment", "cpi", "ppi", "gdp", "pce",
     "fomc", "minutes", "survey", "surveys", "data", "release",
+    # Common adjectives / adverbs that survive context-word stripping and
+    # fuzzy-match company aliases at the 0.55 candidate threshold.
+    # "recent" → stripped to residual tokens that match TMUS/FCX/REGN at 0.55-0.63.
+    "recent", "recently",
     # "tech" fuzzy-matches "bio n tech" (BNTX alias) as a 2-gram window
     # ("on tech" → 0.824).  "tech" is a generic sector abbreviation, not
     # a company name.  Long-form "technology"/"technologies" already blocked.

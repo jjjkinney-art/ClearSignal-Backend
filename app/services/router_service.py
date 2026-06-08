@@ -1388,10 +1388,26 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     # When entity resolution failed (confidence 0.0) but we have candidate
     # matches, return a structured suggestion response instead of falling
     # silently to a generic general-finance answer.
+    #
+    # Minimum confidence guard (added 2026-06-08):
+    # Only fire Did You Mean when at least one candidate clears 0.70.
+    # Candidates below that threshold are noise matches where common English
+    # words (e.g. "recent", "to us") fuzzy-match company aliases at the
+    # 0.55 collection cutoff.  Firing Did You Mean on such noise turns pure
+    # macro queries ("jobs report", "Fed decision", "bank stocks") into
+    # confusing company-suggestion responses.  Legitimate typo cases
+    # ("Nvidiaa", "Microsof", "Freeprot-McMoRan") always produce at least
+    # one candidate above 0.70.
+    _DYM_MIN_CONFIDENCE = 0.70
+    _has_quality_candidates = (
+        _entity_resolution is not None
+        and any(score >= _DYM_MIN_CONFIDENCE for _, _, score in _entity_resolution.candidates)
+    )
     if (
         _entity_resolution is not None
         and _entity_resolution.context is None
         and _has_intent
+        and _has_quality_candidates
     ):
         request_id = str(uuid.uuid4())
         candidates = _entity_resolution.candidates[:3]
