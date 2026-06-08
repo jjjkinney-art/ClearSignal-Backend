@@ -1173,8 +1173,10 @@ def _run_investment_pipeline(
     # `with ThreadPoolExecutor` (its __exit__ calls shutdown(wait=True) which
     # blocks until all 6 agents complete, which could be up to 15.5s each,
     # but we want a hard Python-side wall cap in addition to the httpx timeout).
-    # Wall cap = 16s  (agent_timeout=15s + 1s margin).
-    _AGENT_WALL_CAP_S = 16.0
+    # Wall cap = 14s  (agent_timeout=15s - 1s: agents at 14-15s would timeout
+    # at httpx level anyway; 2s savings reallocated to synthesis budget).
+    # Budget: evidence(≤10) + agents(≤14) + synthesis(≤34) + post(≤0.5) = 58.5s
+    _AGENT_WALL_CAP_S = 14.0
     _agent_pool = ThreadPoolExecutor(max_workers=6)
     _agent_results: dict = {}
     try:
@@ -1216,13 +1218,13 @@ def _run_investment_pipeline(
     agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
 
     # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
-    # Wall cap = 31s  (synthesis_timeout=30s + 1s margin).
+    # Wall cap = 34s  (synthesis_timeout=33s + 1s margin).
     # This is a second line of defence after the httpx synthesis_timeout:
     # if httpx doesn't fire (e.g. OpenAI streaming partial chunks), the
-    # concurrent.futures.wait(timeout=31) ensures synthesis never exceeds 31s.
-    # Budget: evidence(≤10) + agents(≤16) + synthesis(≤31) + post(≤0.5) = ≤57.5s
+    # concurrent.futures.wait(timeout=34) ensures synthesis never exceeds 34s.
+    # Budget: evidence(≤10) + agents(≤14) + synthesis(≤34) + post(≤0.5) = ≤58.5s
     _t_synthesis = time.time()
-    _SYNTHESIS_WALL_CAP_S = 31.0
+    _SYNTHESIS_WALL_CAP_S = 34.0
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
     try:

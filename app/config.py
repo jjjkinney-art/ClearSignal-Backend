@@ -130,13 +130,13 @@ class Settings(BaseSettings):
     model_timeout: float = 30.0
 
     # Synthesis-specific timeout.  With synthesis_max_tokens=1200, gpt-4o-mini
-    # generates at most 1200 output tokens.  At 30 tok/s (extreme Render load) =
-    # 40s.  A 30s timeout balances completion rate against timeout risk.
-    # Observed synthesis latency on Render: 25-30s.  30s timeout catches 90%+.
-    # Python-side wall cap (_SYNTHESIS_WALL_CAP_S=31) fires 1s after httpx.
-    # Pipeline budget: evidence(≤10s) + agents(≤16s) + synthesis(≤31s) + post(0.5s) = ≤57.5s
-    # 3.5s margin inside Render's 61s Nginx proxy_read_timeout.
-    synthesis_timeout: float = 30.0
+    # generates at most 1200 output tokens.  Observed synthesis latency on Render:
+    # 26-34s depending on OpenAI load and evidence density.  33s catches ~90%+.
+    # Python-side wall cap (_SYNTHESIS_WALL_CAP_S=34) fires 1s after httpx.
+    # Pipeline budget: evidence(≤10s) + agents(≤14s) + synthesis(≤34s) + post(0.5s) = ≤58.5s
+    # 2.5s margin inside Render's 61s Nginx proxy_read_timeout.
+    # Agent wall cap reduced to 14s (from 16s) to free 2s for synthesis headroom.
+    synthesis_timeout: float = 33.0
 
     # Maximum retries for the synthesis call.  Unlike agent calls (max_retries=3),
     # synthesis retries are catastrophic: a single retry adds 35s and pushes the
