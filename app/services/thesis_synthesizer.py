@@ -1281,33 +1281,14 @@ Examples: "Is Services growth durable enough to offset hardware cyclicality?" \
 / "Can Meta sustain margin discipline while reaccelerating capex?" \
 / "Is the market underestimating rate duration risk for Apple?" \
 Sound like a real PM discussion topic, not a research abstract.
-  "verdict_rationale"       : string — MANDATORY. Exactly 1 sentence. The bottom-line \
-rationale for the directional verdict (directional_stance). State the primary mechanism \
-and the current expectation setup in plain language. \
-MUST NOT repeat directional_stance_reasoning verbatim — this is the verdict card summary. \
-GOOD: "Data center revenue growing 122% YoY ahead of consensus gives the bull case the \
-evidence it needs — the setup is constructive at current multiples." \
-GOOD: "CRE losses remain manageable and consensus already prices in elevated provisions — \
-risk/reward is balanced." \
-GOOD: "Membership renewal rates and ticket size expansion are decelerating into a multiple \
-that assumes continued execution — the setup is not yet compelling." \
-BAD: "The company has strong fundamentals." (Generic.) \
-BAD: Any sentence that does not name the specific mechanism driving the verdict.
-  "direct_answer"           : string — EXACTLY 4 sentences that directly answer the user's \
-exact question. ABSOLUTE RULE: Sentence 1 must state the verdict or conclusion — never \
-company background. \
-MANDATORY 4-sentence structure: \
-  Sentence 1: State the conclusion/verdict directly. What is the answer? One clear claim. \
-  Sentence 2: Name the primary mechanism — HOW the conclusion is supported. \
-  Sentence 3: Name the most important metric or threshold — the specific data point or level \
-    that makes this argument concrete. \
-  Sentence 4: State what would change the view — the single most important condition. \
-MUST NOT open with company background, company history, or "X is a leading provider of..." \
-MUST NOT bury the conclusion in sentence 3 or 4. \
-For implied_growth_rate, timing_lag, quantitative_threshold, metric_ordering, \
-segment_ranking, and historical_precedent intents: use this 4-sentence format always. \
-GOOD opening: "Nvidia's data center setup is constructive — the question is duration, not direction." \
-BAD opening: "Nvidia is a leading AI chip designer that produces..." (company background first)
+  "verdict_rationale"       : string — MANDATORY. 1 sentence. Mechanism + expectation setup. \
+NOT a repeat of directional_stance_reasoning. Name the specific driver behind the verdict. \
+GOOD: "Data center revenue growing 122% YoY ahead of consensus — setup is constructive at current multiples."
+  "direct_answer"           : string — EXACTLY 4 sentences answering the user's question. \
+S1: verdict/conclusion first — NEVER company background. S2: primary mechanism. \
+S3: key metric or threshold. S4: what would change the view. \
+GOOD S1: "Nvidia's data center setup is constructive — the question is duration, not direction." \
+BAD S1: any sentence that opens with company history or "X is a leading provider of..."
   "bull_thesis"             : string — 3-4 sentence institutional bull case. \
 Sentence 1: primary upside driver with economic transmission mechanism. \
 Sentence 2: operating leverage, margin structure, or capital allocation effect that amplifies it. \
@@ -1319,23 +1300,17 @@ Sentence 2: second-order effect (e.g. buyback ROI falls as rates rise, OR channe
 builds as demand softens, compounding margin pressure). \
 Sentence 3: realistic downside pathway — what multiple/EPS scenario materialises and why. \
 Sentence 4 (optional): the specific catalyst that triggers the bear case.
-  "why_not"                 : string — MANDATORY. 4 sentences that answer: \
-"What would prove this analysis wrong?" \
-Sentence 1: "The bull case rests on the assumption that [specific assumption the bull thesis depends on]." \
-Sentence 2: "The counter-thesis: [alternative scenario that would prove that assumption false]." \
-Sentence 3: "The tell: [specific metric or event] [falling/rising] to [threshold] would signal the bull case has broken." \
-Sentence 4: "This analysis would be wrong if [specific invalidation condition — name the data point or event that would \
-flip the conclusion]." \
-This is NOT a repeat of bear_thesis — it must name a NEW analytical angle with a specific leading indicator \
-AND an explicit invalidation condition. \
-See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance and examples.
-  "threshold_zones"         : array of EXACTLY 3 objects — MANDATORY. NEVER leave empty. \
-Each object: {"metric": string, "bull_threshold": string, "bear_threshold": string, "rationale": string}. \
-REQUIRED: Always include 3 zones: (1) primary valuation metric, (2) primary operating/fundamental metric, \
-(3) a risk or macro metric specific to this thesis. \
-If you are unsure what thresholds to use, pick the 3 metrics that most directly determine whether the \
-thesis succeeds or fails — then state the breakpoint levels. This dashboard MUST render for every response. \
-Choose metrics that actually drive THIS thesis. See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance.
+  "why_not"                 : string — MANDATORY. 4 sentences: \
+S1: "The bull case rests on the assumption that [assumption]." \
+S2: "The counter-thesis: [alternative scenario that breaks that assumption]." \
+S3: "The tell: [metric/event] [falling/rising] to [threshold] would signal the bull case has broken." \
+S4: "This analysis would be wrong if [specific invalidation condition]." \
+NOT a repeat of bear_thesis — must name a NEW angle with leading indicator + invalidation. \
+See SPRINT 1 INTELLIGENCE FIELDS section below for full guidance.
+  "threshold_zones"         : array of 3 objects — MANDATORY, never empty. \
+Include: (1) valuation metric, (2) operating/fundamental metric, (3) risk/macro metric. \
+Each: {"metric": string, "bull_threshold": string, "bear_threshold": string, "rationale": string}. \
+See SPRINT 1 INTELLIGENCE FIELDS section below for guidance.
   "key_drivers"             : array of 4 strings — top value drivers, ranked by importance
   "key_risks"               : array of 4 strings — top investment risks, ranked by severity
   "valuation_view"          : string — 2 sentences on valuation structure. \
