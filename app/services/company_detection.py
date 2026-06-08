@@ -1224,6 +1224,30 @@ _CONTEXT_WORDS: frozenset[str] = frozenset({
     # These are economic concepts, not company references.
     "inversion", "reversion", "diversion", "conversion", "aversion",
     "version", "versions",
+    # Economic report terms that fuzzy-match company aliases.
+    # "report" has difflib ratio 0.857 with "freeport" (FCX alias) →
+    # causes "jobs report", "earnings report", "CPI report" etc. to
+    # mis-route to Freeport-McMoRan.  All variants blocked here.
+    "report", "reports", "reported", "reporting",
+    # Related macro data-release terms with similar fuzzy-match risk.
+    "jobs", "payroll", "payrolls", "nonfarm", "nonfarm payroll",
+    "employment", "unemployment", "cpi", "ppi", "gdp", "pce",
+    "fomc", "minutes", "survey", "surveys", "data", "release",
+    # "tech" fuzzy-matches "bio n tech" (BNTX alias) as a 2-gram window
+    # ("on tech" → 0.824).  "tech" is a generic sector abbreviation, not
+    # a company name.  Long-form "technology"/"technologies" already blocked.
+    "tech",
+    # "fed" fuzzy-matches "fedex" (FDX alias) at ratio 0.75.
+    # In financial prose "fed" almost always means Federal Reserve, not FedEx.
+    # FedEx resolves correctly via the "fedex" alias_exact path.
+    "fed",
+    # "bank" fuzzy-matches "us bank" (USB / US Bancorp) at ratio 0.727.
+    # "bank stocks", "bank sector", "banking" queries must not route to USB.
+    # US Bancorp resolves correctly via "us bancorp" / "usb" alias_exact.
+    "bank",
+    # "lender" fuzzy-matches "linde" (LIN) at ratio 0.727.
+    # Generic lending/credit sector language must not route to Linde plc.
+    "lender", "lenders",
 })
 
 # ---------------------------------------------------------------------------
