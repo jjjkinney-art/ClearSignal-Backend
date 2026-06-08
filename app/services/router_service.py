@@ -624,7 +624,7 @@ def _detect_intent(question: str) -> str:
 # full 5-agent investment pipeline rather than the general finance path.
 _INVESTMENT_INTENT_KEYWORDS: frozenset = frozenset([
     "stock", "stocks", "share", "shares", "equity", "invest", "investment",
-    "bull", "bear", "thesis", "valuation", "affect", "impact", "exposure",
+    "bull", "bear", "thesis", "valuation", "affect", "impact", "exposure", "exposed",
     "attractive", "buy", "sell", "hold", "overweight", "underweight",
     "target price", "price target", "earnings", "revenue", "margin", "margins",
     "moat", "competitive", "risk", "risks", "outlook", "forecast",
@@ -1216,12 +1216,13 @@ def _run_investment_pipeline(
     agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
 
     # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
-    # Wall cap = 28s  (synthesis_timeout=27s + 1s margin).
+    # Wall cap = 31s  (synthesis_timeout=30s + 1s margin).
     # This is a second line of defence after the httpx synthesis_timeout:
     # if httpx doesn't fire (e.g. OpenAI streaming partial chunks), the
-    # concurrent.futures.wait(timeout=28) ensures synthesis never exceeds 28s.
+    # concurrent.futures.wait(timeout=31) ensures synthesis never exceeds 31s.
+    # Budget: evidence(≤10) + agents(≤16) + synthesis(≤31) + post(≤0.5) = ≤57.5s
     _t_synthesis = time.time()
-    _SYNTHESIS_WALL_CAP_S = 28.0
+    _SYNTHESIS_WALL_CAP_S = 31.0
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
     try:
