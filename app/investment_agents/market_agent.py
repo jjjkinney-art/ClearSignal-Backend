@@ -249,7 +249,7 @@ def run_market_agent(
             prompt,
             MarketContext,
             model_client,
-            max_retries=settings.model_max_retries,
+            max_retries=getattr(settings, "agent_max_retries", 1),
             backoff_factor=settings.model_backoff_factor,
         )
         result.evidence_used = [ev.title[:70] for ev in relevant]
