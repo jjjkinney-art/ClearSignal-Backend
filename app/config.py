@@ -68,10 +68,11 @@ class Settings(BaseSettings):
 
     # Maximum output tokens for the thesis synthesis call.  Set lower than
     # max_tokens to keep synthesis output concise and reduce generation time.
-    # The full InvestmentThesis JSON is ~1,200-1,800 tokens; 2048 gives ample
-    # headroom without triggering gpt-4o-mini timeouts.
+    # The full InvestmentThesis JSON is ~1,100-1,400 tokens minimum; 1536
+    # gives a 10-30% buffer while keeping synthesis within the Render 61 s
+    # Nginx ceiling (1536 tokens × 54 tok/s worst-case = 28s generation time).
     # Override via SYNTHESIS_MAX_TOKENS if a richer synthesis is needed.
-    synthesis_max_tokens: int = 2048
+    synthesis_max_tokens: int = 1536
 
     temperature: float = 0.0
 
@@ -111,12 +112,12 @@ class Settings(BaseSettings):
     # API to respond before giving up.  The model client uses this value.
     model_timeout: float = 30.0
 
-    # Synthesis-specific timeout.  The thesis synthesiser produces a large
-    # structured JSON (~1,200-1,800 output tokens).  Under OpenAI load,
-    # gpt-4o-mini may take 25-35 s.  A 35 s timeout allows synthesis to
-    # complete on the first attempt without triggering the retry loop.
-    # Evidence(parallel ~8s) + agents(parallel ~12s) + synthesis(≤35s) + post(3s) = ≤58s.
-    synthesis_timeout: float = 35.0
+    # Synthesis-specific timeout.  With synthesis_max_tokens=1536, gpt-4o-mini
+    # generates at most 1536 output tokens.  At 54 tok/s (worst-case load) that
+    # takes 28s.  A 30s timeout gives a 2s margin while keeping total pipeline
+    # under Render's 61s Nginx ceiling:
+    #   evidence_parallel(~10s) + agents_parallel(~12s) + synthesis(≤30s) + post(3s) = ≤55s
+    synthesis_timeout: float = 30.0
 
     # Maximum retries for the synthesis call.  Unlike agent calls (max_retries=3),
     # synthesis retries are catastrophic: a single retry adds 35s and pushes the
