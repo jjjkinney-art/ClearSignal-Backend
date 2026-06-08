@@ -12,7 +12,7 @@ import logging
 import re
 import time
 import uuid
-from concurrent.futures import ThreadPoolExecutor, Future, as_completed
+from concurrent.futures import ThreadPoolExecutor, Future, as_completed, wait as _cf_wait, ALL_COMPLETED
 from typing import Dict, List, Any, Optional
 
 # Import schema types explicitly so that type hints in this module are resolvable
@@ -1007,22 +1007,42 @@ def _run_investment_pipeline(
         "estimates": _fetch_analyst_estimates,
     }
     _ev_results: dict = {}
+    # ── Hard 12s ceiling on evidence collection ──────────────────────────────
+    # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
+    # shutdown(wait=True) which blocks until ALL tasks complete.  FMP alone
+    # makes 5 sequential HTTP calls at 8s each = up to 40s.  Blocking here
+    # kills the Render 61s budget before agents even start.
+    #
+    # Instead: submit all tasks, use concurrent.futures.wait(timeout=12) to
+    # collect whatever completes within 12s, then abandon the rest.
+    # shutdown(wait=False) lets the abandoned threads finish in the background.
+    #
+    # Pipeline budget after this fix:
+    #   evidence(≤12s) + agents(≤15.5s) + synthesis(≤30.5s) + post(3s) = ≤61s
+    _ev_pool = ThreadPoolExecutor(max_workers=7)
     try:
-        with ThreadPoolExecutor(max_workers=7) as _ev_pool:
-            _ev_futures = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
-        for k, fut in _ev_futures.items():
-            try:
-                _ev_results[k] = fut.result()
-            except Exception as _e:
-                logger.warning("[router] evidence task %s failed: %r", k, _e)
+        _ev_futures_map = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
+        # Wait for ALL futures, hard-capped at 12s total wall time
+        _cf_wait(list(_ev_futures_map.values()), timeout=12, return_when=ALL_COMPLETED)
+        for k, fut in _ev_futures_map.items():
+            if fut.done():
+                try:
+                    _ev_results[k] = fut.result()
+                except Exception as _e:
+                    logger.warning("[router] evidence task %s failed: %r", k, _e)
+                    _ev_results[k] = []
+            else:
+                logger.warning("[router] evidence task %s abandoned (>12s wall time)", k)
                 _ev_results[k] = []
     except Exception as _pool_exc:
-        logger.warning("[router] evidence pool failed (%r) — falling back to sequential", _pool_exc)
+        logger.warning("[router] evidence pool error (%r) — falling back to sequential", _pool_exc)
         for k, fn in _ev_tasks.items():
             try:
                 _ev_results[k] = fn()
             except Exception as _e:
                 _ev_results[k] = []
+    finally:
+        _ev_pool.shutdown(wait=False)  # Don't block — let abandoned tasks finish in background
 
     _fmp_ev:     list = _ev_results.get("fmp",       [])
     _sec_ev:     list = _ev_results.get("sec",       [])
