@@ -1168,32 +1168,36 @@ def _run_investment_pipeline(
         "question_answerer": "",  # Q-First default: empty string (fallback to mandate-only)
     }
 
+    # ── Agent pool with hard wall-clock cap ──────────────────────────────────
+    # Use the same wait(timeout) pattern as the evidence pool — do NOT use
+    # `with ThreadPoolExecutor` (its __exit__ calls shutdown(wait=True) which
+    # blocks until all 6 agents complete, which could be up to 15.5s each,
+    # but we want a hard Python-side wall cap in addition to the httpx timeout).
+    # Wall cap = 16s  (agent_timeout=15s + 1s margin).
+    _AGENT_WALL_CAP_S = 16.0
+    _agent_pool = ThreadPoolExecutor(max_workers=6)
+    _agent_results: dict = {}
     try:
-        with ThreadPoolExecutor(max_workers=6) as _pool:
-            _futures: dict[str, Future] = {
-                name: _pool.submit(fn)
-                for name, fn in _agent_tasks.items()
-            }
-        _agent_results = {}
-        for name, fut in _futures.items():
-            try:
-                _agent_results[name] = fut.result()
-            except Exception as exc:
-                logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
+        _agent_futures: dict[str, Future] = {
+            name: _agent_pool.submit(fn)
+            for name, fn in _agent_tasks.items()
+        }
+        _cf_wait(list(_agent_futures.values()), timeout=_AGENT_WALL_CAP_S, return_when=ALL_COMPLETED)
+        for name, fut in _agent_futures.items():
+            if fut.done():
+                try:
+                    _agent_results[name] = fut.result()
+                except Exception as exc:
+                    logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
+                    _agent_results[name] = _agent_defaults[name]
+            else:
+                logger.warning("[router] %s_agent abandoned (>%.0fs wall cap) for %s", name, _AGENT_WALL_CAP_S, ticker)
                 _agent_results[name] = _agent_defaults[name]
     except Exception as _pool_exc:
-        # Thread pool failure — fall back to sequential execution
-        logger.warning(
-            "[router] parallel agent pool failed for %s (%r) — falling back to sequential",
-            ticker, _pool_exc,
-        )
-        _agent_results = {}
-        for name, fn in _agent_tasks.items():
-            try:
-                _agent_results[name] = fn()
-            except Exception as exc:
-                logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
-                _agent_results[name] = _agent_defaults[name]
+        logger.warning("[router] agent pool error for %s (%r)", ticker, _pool_exc)
+        _agent_results = {name: _agent_defaults[name] for name in _agent_tasks}
+    finally:
+        _agent_pool.shutdown(wait=False)
 
     valuation            = _agent_results["valuation"]
     macro                = _agent_results["macro"]
@@ -1211,8 +1215,13 @@ def _run_investment_pipeline(
     )
     agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
 
-    # ── Thesis synthesis ──────────────────────────────────────────────────────
+    # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
+    # Wall cap = 28s  (synthesis_timeout=27s + 1s margin).
+    # This is a second line of defence after the httpx synthesis_timeout:
+    # if httpx doesn't fire (e.g. OpenAI streaming partial chunks), the
+    # concurrent.futures.wait(timeout=28) ensures synthesis never exceeds 28s.
     _t_synthesis = time.time()
+    _SYNTHESIS_WALL_CAP_S = 28.0
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
     try:
@@ -1220,8 +1229,8 @@ def _run_investment_pipeline(
     except Exception as exc:
         logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
 
-    try:
-        thesis = synthesize_thesis(
+    def _run_synthesis():
+        return synthesize_thesis(
             company=company,
             valuation=valuation,
             macro=macro,
@@ -1235,19 +1244,39 @@ def _run_investment_pipeline(
             prior_snapshot=prior_snapshot,
             pre_synthesized_answer=pre_synthesized_answer,
         )
-    except Exception as exc:
-        logger.warning("[router] synthesize_thesis failed for %s: %r", ticker, exc)
-        from ..schemas import InvestmentThesis
-        thesis = InvestmentThesis(
-            ticker=ticker,
-            company_name=company.company_name,
-            bull_thesis="Synthesis unavailable.",
-            bear_thesis="Synthesis unavailable.",
-            conclusion="Could not synthesize an investment thesis.",
-            confidence_score=0.0,
-            key_drivers=[],
-            key_risks=[],
-        )
+
+    from ..schemas import InvestmentThesis as _InvestmentThesis
+    _thesis_fallback = _InvestmentThesis(
+        ticker=ticker,
+        company_name=company.company_name,
+        bull_thesis="Synthesis unavailable (wall cap exceeded).",
+        bear_thesis="Synthesis unavailable (wall cap exceeded).",
+        conclusion="Could not synthesize — wall cap exceeded.",
+        confidence_score=0.0,
+        key_drivers=[],
+        key_risks=[],
+    )
+    _syn_pool = ThreadPoolExecutor(max_workers=1)
+    try:
+        _syn_fut = _syn_pool.submit(_run_synthesis)
+        _cf_wait([_syn_fut], timeout=_SYNTHESIS_WALL_CAP_S, return_when=ALL_COMPLETED)
+        if _syn_fut.done():
+            try:
+                thesis = _syn_fut.result()
+            except Exception as exc:
+                logger.warning("[router] synthesize_thesis raised for %s: %r", ticker, exc)
+                thesis = _thesis_fallback
+        else:
+            logger.warning(
+                "[router] synthesis wall cap exceeded (%.0fs) for %s — using fallback",
+                _SYNTHESIS_WALL_CAP_S, ticker,
+            )
+            thesis = _thesis_fallback
+    except Exception as _syn_exc:
+        logger.warning("[router] synthesis pool error for %s: %r", ticker, _syn_exc)
+        thesis = _thesis_fallback
+    finally:
+        _syn_pool.shutdown(wait=False)
 
     print(
         f"[TIMING] [{ticker}] synthesis={time.time()-_t_synthesis:.2f}s "
@@ -1382,6 +1411,7 @@ def _run_investment_pipeline(
             "detected_ticker": ticker,
             "detected_company": company.company_name,
             "evidence_count": len(evidence),
+            "pipeline_elapsed_s": round(time.time() - _pipeline_t0, 2),
         },
     )
 
