@@ -228,11 +228,16 @@ class ModelClient:
                 raise
 
 
-# Instantiate a default client using environment settings.  This instance
-# is used by the investment agents and general chat.
+# Instantiate the specialist-agent client.  This instance is shared by the 5
+# parallel investment agents (valuation, macro, risk, market, quality) and the
+# Q-First question-answerer agent.  Uses settings.agent_model (default:
+# gpt-4o-mini) to keep the parallel agent wall-time well under the Render
+# free-tier Nginx 61-second proxy_read_timeout ceiling.
+# Override AGENT_MODEL=gpt-4o in the environment when max reasoning depth is
+# needed — but expect ~10-15 s extra latency per request at peak OpenAI load.
 model_client = ModelClient(
     api_key=settings.openai_api_key,
-    model=settings.openai_model,
+    model=settings.agent_model,
     temperature=settings.temperature,
     max_tokens=settings.max_tokens,
     timeout=settings.model_timeout,

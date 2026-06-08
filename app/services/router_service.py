@@ -10,6 +10,7 @@ replaced with machine learning or LLM‑based routing in the future.
 import json
 import logging
 import re
+import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed
 from typing import Dict, List, Any, Optional
@@ -925,16 +926,22 @@ def _run_investment_pipeline(
     AgentAnswerResponse with pipeline="investment_thesis".
     """
     ticker = company.ticker
+    _pipeline_t0 = time.time()
 
     # ── Question intent detection ─────────────────────────────────────────────
     # Classify the user's question before evidence retrieval so that
     # valuation_stance questions get extra FMP evidence appended after the
     # standard cap.  This intent flows through the entire pipeline.
+    _t_intent = time.time()
     question_intent = _detect_question_intent(question)
-    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: question_intent={question_intent!r}")
+    print(
+        f"[TIMING] [{ticker}] intent_detection={time.time()-_t_intent:.2f}s "
+        f"question_intent={question_intent!r}"
+    )
 
     # ── Evidence retrieval ────────────────────────────────────────────────────
     # Market evidence: FMP + SEC + NewsAPI (company-specific + macro topics)
+    _t_evidence = time.time()
     detected_topics = _detect_topics(question)
     market_evidence = retrieve_market_evidence(
         question=question,
@@ -972,7 +979,7 @@ def _run_investment_pipeline(
         logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _exc)
 
     print(
-        f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+        f"[TIMING] [{ticker}] evidence_retrieval={time.time()-_t_evidence:.2f}s "
         f"market_evidence={len(market_evidence)} "
         f"fred_evidence={len(fred_evidence)} "
         f"total={len(evidence)}"
@@ -1012,7 +1019,8 @@ def _run_investment_pipeline(
     #
     # Fallback: if the thread pool itself raises, we re-run sequentially so no
     # request ever fails purely because of the parallelism mechanism.
-    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: running 5 specialist agents + Q-First (parallel)")
+    _t_agents = time.time()
+    print(f"[TIMING] [{ticker}] starting 6 parallel agents (agent_model used by model_client)")
 
     from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
 
@@ -1116,15 +1124,17 @@ def _run_investment_pipeline(
     quality              = _agent_results["quality"]
     pre_synthesized_answer = _agent_results.get("question_answerer", "") or ""
 
+    _agents_elapsed = time.time() - _t_agents
     print(
-        f"[DIAG] INVESTMENT PIPELINE [{ticker}]: "
+        f"[TIMING] [{ticker}] parallel_agents={_agents_elapsed:.2f}s "
         f"pre_synthesized_answer={'set' if pre_synthesized_answer else 'empty'} "
-        f"({len(pre_synthesized_answer)} chars)"
+        f"({len(pre_synthesized_answer)} chars) "
+        f"elapsed_so_far={time.time()-_pipeline_t0:.2f}s"
     )
     agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
-    print(f"[DIAG] INVESTMENT PIPELINE [{ticker}]: agents_run={agents_run}")
 
     # ── Thesis synthesis ──────────────────────────────────────────────────────
+    _t_synthesis = time.time()
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
     try:
@@ -1160,6 +1170,11 @@ def _run_investment_pipeline(
             key_drivers=[],
             key_risks=[],
         )
+
+    print(
+        f"[TIMING] [{ticker}] synthesis={time.time()-_t_synthesis:.2f}s "
+        f"total_pipeline={time.time()-_pipeline_t0:.2f}s"
+    )
 
     # ── Stamp question intent + propagate valuation stance ───────────────────
     # Ensure question_intent is always on the thesis so the frontend / API

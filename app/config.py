@@ -52,6 +52,13 @@ class Settings(BaseSettings):
     # Model used by the investment agents and general chat.
     openai_model: str = "gpt-4o"
 
+    # Model used by the 5 specialist investment agents (valuation, macro, risk,
+    # market, quality) + the Q-First question-answerer agent.  Defaults to
+    # gpt-4o-mini to keep the 6 parallel agent calls well under the Render
+    # free-tier Nginx 61-second proxy_read_timeout ceiling.  Override via
+    # AGENT_MODEL in the environment when higher reasoning depth is needed.
+    agent_model: str = "gpt-4o-mini"
+
     # Model used exclusively by the thesis synthesiser.  Defaults to a
     # faster, cheaper model; override via SYNTHESIS_MODEL in the environment
     # or .env file when higher capability is required.
