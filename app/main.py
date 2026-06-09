@@ -26,10 +26,25 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # type: ignore[type-arg]
-    """FastAPI lifespan handler: runs startup diagnostics, then yields."""
+    """FastAPI lifespan handler: startup diagnostics + DB init, then DB shutdown."""
     print_startup_diagnostics()
+
+    # Phase 9A — initialise persistence layer (no-op when DATABASE_URL is empty)
+    try:
+        from .config import settings as _settings
+        from .db import init_db
+        await init_db(_settings.database_url)
+    except Exception as _exc:
+        logger.warning("[startup] persistence layer init failed (non-fatal): %r", _exc)
+
     yield
-    # Shutdown: nothing to clean up currently.
+
+    # Phase 9A — dispose DB engine on shutdown
+    try:
+        from .db import close_db
+        await close_db()
+    except Exception as _exc:
+        logger.warning("[shutdown] persistence layer close failed (non-fatal): %r", _exc)
 
 
 def create_app() -> FastAPI:

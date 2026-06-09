@@ -2343,3 +2343,120 @@ class MorningBriefV2(BaseModel):
         description="Concatenated brief text for backward compatibility",
     )
     market_regime_note: str = Field(default="")
+
+
+# ── Phase 9B: Thesis Evolution API schemas ────────────────────────────────────
+
+from datetime import datetime as _datetime  # noqa: E402
+
+
+class ThesisVersionSummary(BaseModel):
+    """Compact view of one ThesisVersion — used inside delta list items."""
+    id: str
+    created_at: _datetime
+    question: str = ""
+    directional_stance: str = ""
+    confidence_score: float = 0.0
+    direct_answer: str = ""
+    verdict_rationale: str = ""
+
+
+class ThesisDeltaSummary(BaseModel):
+    """One entry in the evolution timeline list (no full thesis text)."""
+    delta_id: str
+    created_at: _datetime
+    magnitude: str                    # "minor" | "moderate" | "material"
+    stance_changed: bool
+    conviction_delta: float           # signed: negative = conviction fell
+    bull_thesis_similarity: float     # 0–1 Jaccard
+    bear_thesis_similarity: float
+    changed_fields: List[str]
+    from_version: ThesisVersionSummary
+    to_version: ThesisVersionSummary
+
+
+class EvolutionResponse(BaseModel):
+    """Full evolution history for one ticker."""
+    ticker: str
+    company_name: str
+    total_versions: int
+    total_queries: int
+    last_stance: str = ""
+    last_confidence: float = 0.0
+    dominant_concern: str = ""
+    deltas: List[ThesisDeltaSummary]
+
+
+class ThesisVersionFull(BaseModel):
+    """Full version data — used in the single-delta detail endpoint."""
+    id: str
+    created_at: _datetime
+    question: str = ""
+    directional_stance: str = ""
+    confidence_score: float = 0.0
+    bull_thesis: str = ""
+    bear_thesis: str = ""
+    verdict_rationale: str = ""
+    direct_answer: str = ""
+    why_not: str = ""
+    conclusion: str = ""
+    threshold_zones: Any = None
+
+
+class InlineDiffStats(BaseModel):
+    """Word-level statistics for one changed field (no raw text)."""
+    similarity: float
+    from_word_count: int
+    to_word_count: int
+
+
+class ThesisDeltaFull(BaseModel):
+    """Full diff for a single delta — returned by the detail endpoint."""
+    delta_id: str
+    ticker: str
+    magnitude: str
+    stance_changed: bool
+    conviction_delta: float
+    bull_thesis_similarity: float
+    bear_thesis_similarity: float
+    changed_fields: List[str]
+    from_version: ThesisVersionFull
+    to_version: ThesisVersionFull
+    inline_diff: Dict[str, InlineDiffStats]
+
+
+class LatestChangeCard(BaseModel):
+    """Data for the LatestChangeCard UI component."""
+    ticker: str
+    company_name: str
+    version_id: str
+    created_at: _datetime
+    question: str = ""
+    directional_stance: str = ""
+    confidence_score: float = 0.0
+    direct_answer: str = ""
+    verdict_rationale: str = ""
+    last_delta: Optional[Dict[str, Any]] = None   # null when only one version
+
+
+class MaterialChangeFeedItem(BaseModel):
+    """One item in the cross-ticker material change feed."""
+    ticker: str
+    company_name: str
+    delta_id: str
+    created_at: _datetime
+    magnitude: str
+    stance_changed: bool
+    from_stance: str = ""
+    to_stance: str = ""
+    conviction_delta: float
+    question: str = ""
+    headline: str
+    concern_tags: List[str] = Field(default_factory=list)
+
+
+class MaterialChangeFeedResponse(BaseModel):
+    """Paginated material change feed."""
+    feed: List[MaterialChangeFeedItem]
+    next_cursor: Optional[str] = None
+    has_more: bool = False

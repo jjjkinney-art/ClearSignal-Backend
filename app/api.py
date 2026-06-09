@@ -114,6 +114,32 @@ async def health() -> dict:
         version = "unknown"
 
     from .config import settings as _s
+
+    # Phase 9B: DB health gate — exposed for production validation
+    db_enabled = False
+    db_table_count = 0
+    try:
+        from .db.connection import _db_enabled as _dbe, _engine as _eng
+        db_enabled = bool(_dbe)
+        if _eng is not None:
+            from sqlalchemy import inspect as _inspect, text as _text
+            async with _eng.connect() as _conn:
+                # Count tables visible in the default schema
+                _result = await _conn.execute(
+                    _text(
+                        "SELECT COUNT(*) FROM information_schema.tables "
+                        "WHERE table_schema = 'public'"
+                    )
+                    if not str(_eng.url).startswith("sqlite")
+                    else _text(
+                        "SELECT COUNT(*) FROM sqlite_master WHERE type='table'"
+                    )
+                )
+                row = _result.fetchone()
+                db_table_count = int(row[0]) if row else 0
+    except Exception:
+        pass
+
     return {
         "status":       "ok",
         "service":      "clearsignal-backend",
@@ -121,6 +147,9 @@ async def health() -> dict:
         "timestamp":    _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
         "environment":  environment,
         "build_commit": git_commit,
+        # Phase 9B: DB health gate
+        "db_enabled":    db_enabled,
+        "db_table_count": db_table_count,
         # Config telemetry — verify timeout/retry values are actually live on Render
         "cfg_agent_timeout":        getattr(_s, "agent_timeout", "MISSING"),
         "cfg_agent_max_retries":    getattr(_s, "agent_max_retries", "MISSING"),
@@ -438,7 +467,7 @@ async def analyze(request: AnalysisRequest, http_request: Request) -> AnalysisRe
     summary="Ask a question to a specialist agent",
     tags=["questions"],
 )
-async def ask_question(request: QuestionRequest):
+async def ask_question(request: QuestionRequest, http_request: Request):
     """Route a user question to the appropriate agent and return its answer.
 
     Uses StreamingResponse with periodic keepalive newlines to prevent
@@ -453,6 +482,11 @@ async def ask_question(request: QuestionRequest):
         which is valid per RFC 8259.  browser fetch().json() and all
         compliant JSON parsers accept leading whitespace.
 
+    Phase 9A persistence:
+      After the JSON body is yielded, a fire-and-forget asyncio task
+      writes the analysis result to the persistence layer.  This never
+      blocks the response and degrades gracefully when DATABASE_URL is unset.
+
     Pipeline budget (unchanged):
       evidence(≤10 s) + agents(≤16 s) + synthesis(≤55 s httpx / ≤56 s wall)
       = ≤82 s total.  Keepalive at t≈25 s resets Nginx; response arrives
@@ -463,6 +497,15 @@ async def ask_question(request: QuestionRequest):
     from fastapi.responses import StreamingResponse
 
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
+
+    # Extract session ID for persistence correlation — prefer X-Session-ID,
+    # fall back to X-Request-ID injected by the timing middleware.
+    _session_id: str = (
+        http_request.headers.get("X-Session-ID", "")
+        or http_request.headers.get("X-Request-ID", "")
+        or getattr(getattr(http_request, "state", None), "request_id", "")
+        or ""
+    )
 
     async def _generate():
         loop = _asyncio.get_running_loop()          # always the active loop
@@ -484,6 +527,22 @@ async def ask_question(request: QuestionRequest):
         # Retrieve result and emit JSON body.
         try:
             result = await fut
+
+            # Phase 9A: fire-and-forget persistence (never blocks response).
+            try:
+                from .db.persistence import persist_analysis_result as _persist
+                _asyncio.create_task(
+                    _persist(
+                        question=request.question,
+                        company_name=request.company_name,
+                        session_id=_session_id,
+                        result=result,
+                    ),
+                    name=f"persist-{_session_id[:8]}",
+                )
+            except Exception as _p_exc:
+                logger.debug("[ask] persistence task creation failed (non-fatal): %r", _p_exc)
+
             yield _json.dumps(result.model_dump()).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)
@@ -501,6 +560,151 @@ async def ask_question(request: QuestionRequest):
         media_type="application/json",
         headers={"X-Accel-Buffering": "no"},
     )
+
+
+# ── Phase 9B: Thesis Evolution endpoints ─────────────────────────────────────
+
+@router.get(
+    "/ticker/{ticker}/evolution",
+    summary="Thesis evolution timeline for a ticker",
+    tags=["evolution"],
+)
+async def get_ticker_evolution(
+    ticker: str,
+    limit: int = Query(default=20, ge=1, le=100),
+    min_magnitude: str = Query(default="minor", pattern="^(minor|moderate|material)$"),
+    since: Optional[str] = Query(default=None, description="ISO datetime cursor for pagination"),
+) -> dict:
+    """Return the full thesis evolution timeline for a ticker.
+
+    Each delta entry contains summary versions (no full bull/bear text).
+    Use GET /ticker/{ticker}/evolution/{delta_id} to expand a specific delta.
+
+    Returns 404 when the ticker has no history.
+    Returns 200 with empty deltas list when there is only one version.
+    """
+    from .db.connection import get_session
+    from .db.repositories.evolution_repo import get_evolution_with_versions
+    from datetime import datetime as _dt
+
+    since_dt = None
+    if since:
+        try:
+            since_dt = _dt.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid 'since' datetime format")
+
+    async with get_session() as session:
+        ticker_upper = ticker.upper()
+        result = await get_evolution_with_versions(
+            session=session,
+            ticker=ticker_upper,
+            limit=limit,
+            min_magnitude=min_magnitude,
+            since=since_dt,
+        )
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"No history for ticker: {ticker.upper()}")
+    return result
+
+
+@router.get(
+    "/ticker/{ticker}/evolution/{delta_id}",
+    summary="Full diff for a single thesis delta",
+    tags=["evolution"],
+)
+async def get_delta_detail(ticker: str, delta_id: str) -> dict:
+    """Return full thesis text for both versions of a specific delta.
+
+    Includes inline_diff word-count stats for each changed field.
+    Used by the DiffCard component when the user expands a timeline item.
+
+    Returns 404 when delta_id does not exist for this ticker.
+    """
+    from .db.connection import get_session
+    from .db.repositories.evolution_repo import get_delta_full
+
+    async with get_session() as session:
+        result = await get_delta_full(
+            session=session,
+            ticker=ticker.upper(),
+            delta_id=delta_id,
+        )
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"Delta {delta_id} not found for {ticker.upper()}")
+    return result
+
+
+@router.get(
+    "/ticker/{ticker}/latest",
+    summary="Latest thesis version and most recent change summary",
+    tags=["evolution"],
+)
+async def get_ticker_latest(ticker: str) -> dict:
+    """Return the most recent ThesisVersion for a ticker plus last delta metadata.
+
+    Used by the LatestChangeCard UI component.
+    last_delta is null when there is only one version (nothing to diff against).
+
+    Returns 404 when the ticker has no recorded history.
+    """
+    from .db.connection import get_session
+    from .db.repositories.evolution_repo import get_latest_change_card
+
+    async with get_session() as session:
+        result = await get_latest_change_card(
+            session=session,
+            ticker=ticker.upper(),
+        )
+
+    if result is None:
+        raise HTTPException(status_code=404, detail=f"No history for ticker: {ticker.upper()}")
+    return result
+
+
+@router.get(
+    "/material-changes",
+    summary="Cross-ticker material change feed",
+    tags=["evolution"],
+)
+async def get_material_changes(
+    limit: int = Query(default=20, ge=1, le=100),
+    since: Optional[str] = Query(default=None, description="ISO datetime pagination cursor"),
+    tickers: Optional[str] = Query(default=None, description="Comma-separated ticker filter"),
+) -> dict:
+    """Return the cross-ticker material change feed.
+
+    Shows only material-magnitude deltas that are debounce_visible=True
+    (one per ticker per UTC calendar day — the largest |conviction_delta|).
+
+    Paginate using the next_cursor value from the previous response.
+    """
+    from .db.connection import get_session
+    from .db.repositories.evolution_repo import get_material_changes_feed
+    from datetime import datetime as _dt
+
+    since_dt = None
+    if since:
+        try:
+            since_dt = _dt.fromisoformat(since.replace("Z", "+00:00"))
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Invalid 'since' datetime format")
+
+    ticker_list = None
+    if tickers:
+        ticker_list = [t.strip().upper() for t in tickers.split(",") if t.strip()]
+
+    async with get_session() as session:
+        result = await get_material_changes_feed(
+            session=session,
+            limit=limit,
+            since=since_dt,
+            tickers=ticker_list,
+        )
+
+    return result
 
 
 # ── Exchange short-name normalisation ─────────────────────────────────────────

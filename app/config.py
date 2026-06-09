@@ -177,6 +177,17 @@ class Settings(BaseSettings):
 
     # Circuit breaker cooldown in seconds before half-open probe.
     circuit_cooldown_s: float = 60.0
+
+    # ── Phase 9A: Persistence layer ───────────────────────────────────────────
+    # SQLAlchemy async database URL.  Supports two drivers:
+    #   asyncpg  — postgresql+asyncpg://user:pass@host/db    (Render production)
+    #   aiosqlite — sqlite+aiosqlite:///./dev.db             (local development)
+    #
+    # When empty, the persistence layer is disabled via a null-object pattern —
+    # all persistence calls become no-ops so the API continues to work without
+    # a database configured.  Set DATABASE_URL in your .env or Render environment
+    # to enable persistence.
+    database_url: str = ""
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:
