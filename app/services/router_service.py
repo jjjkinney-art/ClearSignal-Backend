@@ -1007,24 +1007,24 @@ def _run_investment_pipeline(
         "estimates": _fetch_analyst_estimates,
     }
     _ev_results: dict = {}
-    # ── Hard 8s ceiling on evidence collection ───────────────────────────────
+    # ── Hard 10s ceiling on evidence collection ──────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
     # shutdown(wait=True) which blocks until ALL tasks complete.  FMP alone
     # makes 5 sequential HTTP calls at 8s each = up to 40s.  Blocking here
-    # kills the Render 61s budget before agents even start.
+    # would exhaust the pipeline budget before agents even start.
     #
-    # Instead: submit all tasks, use concurrent.futures.wait(timeout=8) to
-    # collect whatever completes within 8s, then abandon the rest.
+    # Instead: submit all tasks, use concurrent.futures.wait(timeout=10) to
+    # collect whatever completes within 10s, then abandon the rest.
     # shutdown(wait=False) lets the abandoned threads finish in the background.
     #
-    # Reduced from 10s to 8s to free 2s for synthesis headroom:
-    # Pipeline budget: evidence(≤8s) + agents(≤14s) + synthesis(≤38s) + post(≤0.5s) = ≤60.5s
-    # 0.5s margin inside Render's 61s Nginx proxy_read_timeout.
+    # On Render Starter (120s proxy_read_timeout), the full healthy cap of 10s
+    # is restored.  Pipeline budget: evidence(≤10) + agents(≤16) + synthesis(≤56)
+    # + post(≤0.5) = ≤82.5s — well inside the 120s Render Starter limit.
     _ev_pool = ThreadPoolExecutor(max_workers=7)
     try:
         _ev_futures_map = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
-        # Wait for ALL futures, hard-capped at 8s total wall time
-        _cf_wait(list(_ev_futures_map.values()), timeout=8, return_when=ALL_COMPLETED)
+        # Wait for ALL futures, hard-capped at 10s total wall time
+        _cf_wait(list(_ev_futures_map.values()), timeout=10, return_when=ALL_COMPLETED)
         for k, fut in _ev_futures_map.items():
             if fut.done():
                 try:
@@ -1033,7 +1033,7 @@ def _run_investment_pipeline(
                     logger.warning("[router] evidence task %s failed: %r", k, _e)
                     _ev_results[k] = []
             else:
-                logger.warning("[router] evidence task %s abandoned (>8s wall time)", k)
+                logger.warning("[router] evidence task %s abandoned (>10s wall time)", k)
                 _ev_results[k] = []
     except Exception as _pool_exc:
         logger.warning("[router] evidence pool error (%r) — falling back to sequential", _pool_exc)
@@ -1173,10 +1173,9 @@ def _run_investment_pipeline(
     # `with ThreadPoolExecutor` (its __exit__ calls shutdown(wait=True) which
     # blocks until all 6 agents complete, which could be up to 15.5s each,
     # but we want a hard Python-side wall cap in addition to the httpx timeout).
-    # Wall cap = 14s  (agent_timeout=15s - 1s: agents at 14-15s would timeout
-    # at httpx level anyway; 2s savings reallocated to synthesis budget).
-    # Budget: evidence(≤10) + agents(≤14) + synthesis(≤34) + post(≤0.5) = 58.5s
-    _AGENT_WALL_CAP_S = 14.0
+    # Wall cap = 16s  (agent_timeout=15s + 1s margin for httpx exception propagation).
+    # On Render Starter: budget evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = 82.5s
+    _AGENT_WALL_CAP_S = 16.0
     _agent_pool = ThreadPoolExecutor(max_workers=6)
     _agent_results: dict = {}
     try:
@@ -1218,13 +1217,14 @@ def _run_investment_pipeline(
     agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
 
     # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
-    # Wall cap = 38s  (synthesis_timeout=37s + 1s margin).
+    # Wall cap = 56s  (synthesis_timeout=55s + 1s margin).
     # This is a second line of defence after the httpx synthesis_timeout:
     # if httpx doesn't fire (e.g. OpenAI streaming partial chunks), the
-    # concurrent.futures.wait(timeout=38) ensures synthesis never exceeds 38s.
-    # Budget: evidence(≤8) + agents(≤14) + synthesis(≤38) + post(≤0.5) = ≤60.5s
+    # concurrent.futures.wait(timeout=56) ensures synthesis never exceeds 56s.
+    # On Render Starter (120s proxy_read_timeout):
+    #   evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = ≤82.5s
     _t_synthesis = time.time()
-    _SYNTHESIS_WALL_CAP_S = 38.0
+    _SYNTHESIS_WALL_CAP_S = 56.0
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
     try:

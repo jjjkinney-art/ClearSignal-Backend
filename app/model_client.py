@@ -253,11 +253,11 @@ model_client = ModelClient(
 
 # Dedicated client for the thesis synthesiser.  Uses settings.synthesis_model
 # (default: gpt-4o-mini; override via SYNTHESIS_MODEL env var).
-# synthesis_timeout=30s: allows synthesis to complete at 27-30s observed latency.
-# synthesis_max_tokens=1200: caps output length.
-# synthesis_max_retries=1: a retry adds 30s and pushes the total pipeline past
-# Render's 61s Nginx ceiling — on timeout we return a fallback thesis instead.
-# Python-side wall cap (_SYNTHESIS_WALL_CAP_S=31) fires 1s after httpx timeout.
+# synthesis_timeout=55s: on Render Starter (120s proxy_read_timeout), synthesis
+# can safely run up to 55s.  1536 tokens × 45 tok/s (typical) = 42s — fits well.
+# synthesis_max_tokens=1536: full field budget; all 22+ InvestmentThesis fields.
+# synthesis_max_retries=1: a retry adds 55s — on timeout return fallback instead.
+# Python-side wall cap (_SYNTHESIS_WALL_CAP_S=56) fires 1s after httpx timeout.
 synthesis_client = ModelClient(
     api_key=settings.openai_api_key,
     model=settings.synthesis_model,

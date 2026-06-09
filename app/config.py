@@ -83,13 +83,13 @@ class Settings(BaseSettings):
 
     # Maximum output tokens for the thesis synthesis call.  Set lower than
     # max_tokens to keep synthesis output concise and reduce generation time.
-    # The full InvestmentThesis JSON minimum is ~1,100 tokens.  1200 gives a
-    # ~9% buffer over the minimum while keeping generation time to:
-    #   1200 tokens × 54 tok/s (worst typical load) = 22s  ← fits in 27s budget
-    #   1200 tokens × 30 tok/s (extreme load) = 40s        ← synthesis times out,
-    #                                                         fallback thesis returned
+    # The full InvestmentThesis JSON requires ~1,100 tokens minimum; 1536 gives
+    # a comfortable buffer so all 22+ fields are fully populated at quality.
+    # On Render Starter (120s proxy_read_timeout), synthesis_timeout=55s means
+    # gpt-4o-mini at 30 tok/s worst case: TTFT(12) + 1536/30 = 63s → fits in 55s
+    # budget at typical load (45 tok/s: 8 + 34 = 42s).
     # Override via SYNTHESIS_MAX_TOKENS if richer synthesis is needed.
-    synthesis_max_tokens: int = 1200
+    synthesis_max_tokens: int = 1536
 
     temperature: float = 0.0
 
@@ -129,15 +129,15 @@ class Settings(BaseSettings):
     # API to respond before giving up.  The model client uses this value.
     model_timeout: float = 30.0
 
-    # Synthesis-specific timeout.  With synthesis_max_tokens=1200, gpt-4o-mini
-    # generates at most 1200 output tokens.  Observed synthesis latency on Render:
-    # 26-38s depending on OpenAI load and evidence density.  37s catches ~95%+.
-    # Python-side wall cap (_SYNTHESIS_WALL_CAP_S=38) fires 1s after httpx.
-    # Pipeline budget: evidence(≤8s) + agents(≤14s) + synthesis(≤38s) + post(≤0.5s) = ≤60.5s
-    # 0.5s margin inside Render's 61s Nginx proxy_read_timeout.
-    # Evidence cap reduced to 8s (from 10s) to free 2s for synthesis headroom.
-    # Agent wall cap reduced to 14s (from 16s) to free 2s for synthesis headroom.
-    synthesis_timeout: float = 37.0
+    # Synthesis-specific timeout.  On Render Starter (120s proxy_read_timeout),
+    # synthesis can safely run 55s.  With synthesis_max_tokens=1536 and gpt-4o-mini
+    # at typical 45 tok/s: TTFT(8) + 1536/45 = 42s — fits cleanly in 55s.
+    # At worst-case 30 tok/s load: TTFT(12) + 1536/30 = 63s → synthesis_timeout
+    # fires at 55s; fallback returned.  ~95% of requests complete within 55s.
+    # Python-side wall cap (_SYNTHESIS_WALL_CAP_S=56) fires 1s after httpx.
+    # Pipeline budget: evidence(≤10s) + agents(≤16s) + synthesis(≤56s) + post(≤0.5s) = ≤82.5s
+    # Well inside Render Starter's 120s proxy_read_timeout.
+    synthesis_timeout: float = 55.0
 
     # Maximum retries for the synthesis call.  Unlike agent calls (max_retries=3),
     # synthesis retries are catastrophic: a single retry adds 35s and pushes the
