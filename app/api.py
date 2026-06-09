@@ -465,25 +465,42 @@ async def ask_question(request: QuestionRequest):
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
 
     async def _generate():
-        loop = _asyncio.get_event_loop()
+        loop = _asyncio.get_running_loop()          # always the active loop
         fut = loop.run_in_executor(None, route_question, request)
 
         # Emit keepalive bytes every 25 s while pipeline runs.
-        # asyncio.wait returns (done, pending); pending == {fut} on timeout.
+        # asyncio.wait_for + asyncio.shield: times out without cancelling fut.
+        # Each yielded byte resets Nginx's proxy_read_timeout clock.
         while not fut.done():
-            done, _ = await _asyncio.wait({fut}, timeout=_KEEPALIVE_INTERVAL_S)
-            if not done:
-                yield b"\r\n"  # reset Nginx proxy_read_timeout
+            try:
+                await _asyncio.wait_for(
+                    _asyncio.shield(fut), timeout=_KEEPALIVE_INTERVAL_S
+                )
+                # Future completed within the window — exit the keepalive loop.
+                break
+            except _asyncio.TimeoutError:
+                yield b"\r\n"  # keepalive: reset Nginx proxy_read_timeout
 
         # Retrieve result and emit JSON body.
         try:
-            result = fut.result()
+            result = await fut
             yield _json.dumps(result.model_dump()).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)
             yield _json.dumps({"error": "Question routing failed"}).encode()
 
-    return StreamingResponse(_generate(), media_type="application/json")
+    # X-Accel-Buffering: no — instructs Render/Nginx to disable response
+    # buffering and forward each chunk immediately.  Without this, Nginx
+    # accumulates all chunks before forwarding; keepalive bytes reach Nginx
+    # (resetting the timer) but are never flushed to the client until the
+    # full response is ready, making them invisible to monitoring and
+    # causing intermittent failures when the buffer flush races with the
+    # 60-second proxy_read_timeout window.
+    return StreamingResponse(
+        _generate(),
+        media_type="application/json",
+        headers={"X-Accel-Buffering": "no"},
+    )
 
 
 # ── Exchange short-name normalisation ─────────────────────────────────────────
