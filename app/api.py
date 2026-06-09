@@ -435,16 +435,55 @@ async def analyze(request: AnalysisRequest, http_request: Request) -> AnalysisRe
 
 @router.post(
     "/ask",
-    response_model=AgentAnswerResponse,
     summary="Ask a question to a specialist agent",
     tags=["questions"],
 )
-async def ask_question(request: QuestionRequest) -> AgentAnswerResponse:
-    """Route a user question to the appropriate agent and return its answer."""
-    try:
-        return route_question(request)
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail="Question routing failed") from exc
+async def ask_question(request: QuestionRequest):
+    """Route a user question to the appropriate agent and return its answer.
+
+    Uses StreamingResponse with periodic keepalive newlines to prevent
+    Render Nginx proxy_read_timeout (hard-coded 60 s, not user-configurable
+    at any tier) from dropping the connection on long synthesis calls.
+
+    Protocol:
+      - While route_question() is running, emit b"\\r\\n" every 25 s.
+        Each byte resets Nginx's proxy_read_timeout clock.
+      - When synthesis completes, emit the full JSON body and close.
+      - The response is application/json with optional leading whitespace,
+        which is valid per RFC 8259.  browser fetch().json() and all
+        compliant JSON parsers accept leading whitespace.
+
+    Pipeline budget (unchanged):
+      evidence(≤10 s) + agents(≤16 s) + synthesis(≤55 s httpx / ≤56 s wall)
+      = ≤82 s total.  Keepalive at t≈25 s resets Nginx; response arrives
+      well before the second Nginx window expires at t≈85 s.
+    """
+    import asyncio as _asyncio
+    import json as _json
+    from fastapi.responses import StreamingResponse
+
+    _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
+
+    async def _generate():
+        loop = _asyncio.get_event_loop()
+        fut = loop.run_in_executor(None, route_question, request)
+
+        # Emit keepalive bytes every 25 s while pipeline runs.
+        # asyncio.wait returns (done, pending); pending == {fut} on timeout.
+        while not fut.done():
+            done, _ = await _asyncio.wait({fut}, timeout=_KEEPALIVE_INTERVAL_S)
+            if not done:
+                yield b"\r\n"  # reset Nginx proxy_read_timeout
+
+        # Retrieve result and emit JSON body.
+        try:
+            result = fut.result()
+            yield _json.dumps(result.model_dump()).encode()
+        except Exception as exc:
+            logger.warning("[ask] route_question raised: %r", exc)
+            yield _json.dumps({"error": "Question routing failed"}).encode()
+
+    return StreamingResponse(_generate(), media_type="application/json")
 
 
 # ── Exchange short-name normalisation ─────────────────────────────────────────
