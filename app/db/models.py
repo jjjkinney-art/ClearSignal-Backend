@@ -59,13 +59,15 @@ except Exception:  # pragma: no cover
 
 
 def _json_col(**kwargs):
-    """Return a JSON/JSONB column compatible with both PostgreSQL and SQLite."""
-    try:
-        from sqlalchemy.dialects.postgresql import JSONB
-        return Column(JSONB, **kwargs)
-    except Exception:  # pragma: no cover
-        from sqlalchemy import JSON
-        return Column(JSON, **kwargs)
+    """Return a JSON column compatible with both PostgreSQL (JSONB in migrations) and SQLite.
+
+    Uses SQLAlchemy's base JSON type so the ORM layer works with both engines.
+    PostgreSQL production databases define the column as JSONB in the SQL migration
+    (003_historical_evidence.sql), giving full JSONB semantics there.  The ORM
+    only needs a type that can read/write the column — JSON suffices for both.
+    """
+    from sqlalchemy import JSON
+    return Column(JSON, **kwargs)
 
 
 class Base(DeclarativeBase):
@@ -304,5 +306,56 @@ class BriefingSession(Base):
     # status: "pending" | "generated" | "delivered"
     status = Column(String(20), nullable=False, default="pending")
     metadata_json = Column(Text, nullable=False, default="{}")  # JSON
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 10. historical_analogs  (Phase 9F — Historical Evidence Engine)
+# ---------------------------------------------------------------------------
+
+class HistoricalAnalog(Base):
+    """Curated historical analog instance for the Evidence Engine.
+
+    Each row represents one (company or sector) × (episode) × (mechanism)
+    combination.  Rows are seeded from app/db/data/historical_analogs.json
+    and are read-only at runtime — the scoring / retrieval engine in
+    app/evidence_engine.py operates on the in-memory list returned by the repo.
+    """
+
+    __tablename__ = "historical_analogs"
+
+    id              = Column(String(36), primary_key=True, default=_uuid)
+
+    # Identity
+    label           = Column(String(200), nullable=False, unique=True)
+    episode         = Column(String(200), nullable=False, default="")
+    entity_ticker   = Column(String(20),  nullable=True)
+    sector          = Column(String(60),  nullable=False, default="")
+    business_model  = Column(String(60),  nullable=False, default="")
+    quality_rating  = Column(String(20),  nullable=False, default="moderate")
+
+    # Setup fingerprint (matched against SetupFingerprint)
+    mechanism           = Column(String(60),  nullable=False, index=True)
+    concern_tags        = _json_col(nullable=False, default=list)  # List[str]
+    valuation_regime    = Column(String(40),  nullable=False, default="")
+    growth_phase        = Column(String(40),  nullable=False, default="")
+    macro_regime        = Column(String(40),  nullable=False, default="")
+
+    # Outcome payload
+    event_start          = Column(Date,    nullable=True)
+    event_end            = Column(Date,    nullable=True)
+    drawdown_pct         = Column(Float,   nullable=True)
+    time_to_trough_days  = Column(Integer, nullable=True)
+    time_to_recover_days = Column(Integer, nullable=True)
+    outcome_summary      = Column(Text,    nullable=False, default="")
+    reaction_series      = _json_col(nullable=False, default=list)  # Phase 9G: [{t, px_rel}]
+
+    # Credibility anchors
+    why_relevant     = Column(Text,        nullable=False, default="")
+    disanalogy       = Column(Text,        nullable=False)  # NOT NULL: trivia guard
+    base_rate_note   = Column(Text,        nullable=False, default="")
+    data_confidence  = Column(String(20),  nullable=False, default="moderate")
+    source_note      = Column(String(400), nullable=False, default="")
 
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)

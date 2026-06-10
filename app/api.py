@@ -636,6 +636,52 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 logger.debug("[ask] 9C post-dispatch memory stamp failed (non-fatal): %r", _post_exc)
                 _result_dict = result.model_dump()
 
+            # ── Phase 9F: Post-dispatch historical evidence stamp ─────────────
+            # Runs after Phase 9C memory stamp.  Uses _result_dict already built
+            # above.  Fails silently — never blocks or modifies the response
+            # unless analogs are found.
+            try:
+                _9f_thesis = (
+                    _result_dict.get("answer", {}).get("investment_thesis")
+                    if isinstance(_result_dict.get("answer"), dict)
+                    else None
+                )
+                if isinstance(_9f_thesis, dict) and _9f_thesis.get("historical_evidence") is None:
+                    _9f_ticker = (
+                        result.routing.get("detected_ticker")
+                        or result.company
+                        or _pre_dispatch_ticker
+                    )
+                    from .evidence_engine import build_fingerprint as _build_fp, retrieve_historical_analogs as _retrieve_analogs
+                    from .db import get_session as _gs9f
+                    from .db.repositories.evidence_repo import get_all_analogs as _get_analogs
+                    _9f_fp = _build_fp(
+                        question=body.question,
+                        thesis_dict=_9f_thesis,
+                        ticker=_9f_ticker,
+                    )
+                    async with _gs9f() as _s9f:
+                        _9f_all = await _get_analogs(_s9f)
+                    _9f_results = _retrieve_analogs(_9f_all, _9f_fp)
+                    if _9f_results:
+                        _9f_thesis["historical_evidence"] = {
+                            "analogs": _9f_results,
+                            "retrieval_note": None,
+                        }
+                        logger.debug(
+                            "[ask] 9F evidence stamped: %d analogs for %s (top mechanism: %s)",
+                            len(_9f_results),
+                            _9f_ticker,
+                            _9f_results[0].get("mechanism") if _9f_results else "n/a",
+                        )
+                    else:
+                        _9f_thesis["historical_evidence"] = {
+                            "analogs": [],
+                            "retrieval_note": "No strong historical analog found for this setup.",
+                        }
+            except Exception as _9f_exc:
+                logger.debug("[ask] 9F post-dispatch evidence stamp failed (non-fatal): %r", _9f_exc)
+
             yield _json.dumps(_result_dict).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)

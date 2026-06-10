@@ -1477,6 +1477,18 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Phase 9F — Historical Evidence Engine ─────────────────────────────────
+    # Post-dispatch only. Never injected into the synthesis prompt.
+    # None when no analog meets the relevance floor, or when DB is unavailable.
+    historical_evidence: Optional["HistoricalEvidence"] = Field(
+        default=None,
+        description=(
+            "Historical analogs retrieved post-dispatch by the Evidence Engine. "
+            "Matched on setup and mechanism, never on outcome alone. "
+            "None when no strong analog exists or persistence is disabled."
+        ),
+    )
+
     # ── Catalyst Calendar (Part 5 — Catalyst Calendar Awareness) ────────────
     # Optional structured catalyst context — populated when stance is Tactical
     # or when evidence contains near-term catalyst proximity signals.
@@ -2508,3 +2520,40 @@ class MaterialChangeFeedResponse(BaseModel):
     feed: List[MaterialChangeFeedItem]
     next_cursor: Optional[str] = None
     has_more: bool = False
+
+
+# ---------------------------------------------------------------------------
+# Phase 9F — Historical Evidence Engine
+# ---------------------------------------------------------------------------
+
+class HistoricalAnalogItem(BaseModel):
+    """One retrieved historical analog, scored against the current setup fingerprint."""
+
+    label: str = Field(description="Unique human-readable label, e.g. 'Cisco Systems 2000 — telecom infrastructure overbuild'")
+    episode: str = Field(default="", description="Short episode name")
+    entity_ticker: Optional[str] = Field(default=None, description="Primary ticker for the analog, or null for macro/sector events")
+    sector: str = Field(default="")
+    mechanism: str = Field(description="Canonical mechanism: e.g. infrastructure_overbuild, multiple_compression")
+    quality_rating: str = Field(default="moderate", description="strong | moderate")
+    drawdown_pct: Optional[float] = Field(default=None, description="Peak-to-trough price decline (signed, e.g. -0.57 = -57%)")
+    time_to_trough_days: Optional[int] = Field(default=None)
+    time_to_recover_days: Optional[int] = Field(default=None, description="Days from trough to prior-peak recovery; null if never recovered in window")
+    outcome_summary: str = Field(default="", description="What happened and why")
+    why_relevant: str = Field(default="", description="Why this analog applies to the current setup")
+    disanalogy: str = Field(description="Why this analog might NOT repeat — mandatory honesty anchor")
+    base_rate_note: str = Field(default="", description="Base rate / historical frequency context")
+    data_confidence: str = Field(default="moderate", description="strong | moderate | loose")
+    relevance_score: float = Field(description="Composite relevance score 0–1 (mechanism + concern-tag + setup match)")
+
+
+class HistoricalEvidence(BaseModel):
+    """Historical Evidence payload attached to InvestmentThesis post-dispatch."""
+
+    analogs: List[HistoricalAnalogItem] = Field(
+        default_factory=list,
+        description="Top-3 most relevant historical analogs (one per mechanism), ordered by relevance score.",
+    )
+    retrieval_note: Optional[str] = Field(
+        default=None,
+        description="Human-readable note — e.g. 'No strong historical analog found' when floor not met.",
+    )
