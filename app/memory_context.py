@@ -124,26 +124,13 @@ def format_memory_for_prompt(ctx: Dict[str, Any]) -> str:
     for event in notable_events[:2]:
         lines.append(f"Notable: {event}")
 
-    # ── LLM instructions ─────────────────────────────────────────────────────
-    lines.append("")
-    lines.append("Your synthesis MUST acknowledge this history explicitly:")
-    lines.append(
-        "  1. State whether today's view ALIGNS WITH or DIVERGES FROM prior analyses."
-    )
-    lines.append(
-        "  2. If conviction is trending in a direction, acknowledge it and explain whether"
-        " today's analysis continues or reverses that trend."
-    )
-    if dominant_concern:
-        concern_label = dominant_concern.replace("_", " ")
-        lines.append(
-            f"  3. Address whether {concern_label} (the persistent concern) has intensified,"
-            " stabilized, or resolved."
-        )
-    lines.append(
-        "  IMPORTANT: New evidence overrides memory. Do not anchor to prior views"
-        " if today's analysis points in a different direction."
-    )
+    # ── LLM instruction — single line, no output-inflation mandates ──────────
+    # Five-line MUST-acknowledge block removed: it forced ~150 extra output
+    # tokens (3 explicit acknowledgment paragraphs at ~50 tok each = +5s at
+    # 30 tok/s), pushing synthesis past the 56s wall cap consistently.
+    # One line is sufficient: history data is useful context; the LLM will
+    # incorporate it naturally without being instructed to enumerate it.
+    lines.append("(Use this history as context; new evidence takes precedence.)")
     lines.append("=== END MEMORY ===")
 
     return "\n".join(lines)

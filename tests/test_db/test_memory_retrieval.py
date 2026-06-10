@@ -227,7 +227,9 @@ def test_format_memory_for_prompt_includes_llm_instructions():
     from app.memory_context import format_memory_for_prompt
 
     block = format_memory_for_prompt(_sample_ctx())
-    assert "Your synthesis MUST acknowledge" in block
+    # Single-line context note (verbose MUST-acknowledge block removed to
+    # prevent output inflation that breached the synthesis wall cap).
+    assert "new evidence takes precedence" in block
 
 
 # ---------------------------------------------------------------------------
