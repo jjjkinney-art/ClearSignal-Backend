@@ -509,7 +509,41 @@ async def ask_question(request: QuestionRequest, http_request: Request):
 
     async def _generate():
         loop = _asyncio.get_running_loop()          # always the active loop
-        fut = loop.run_in_executor(None, route_question, request)
+
+        # ── Phase 9C: Investment Memory ────────────────────────────────────────
+        # Read prior-analysis history BEFORE dispatching to the thread executor.
+        # Must happen here (async context) — the thread cannot await DB calls.
+        _request = request  # default: no memory enrichment
+        try:
+            from .db import get_session as _get_session
+            from .db.repositories.memory_retrieval import get_memory_context as _get_mem
+            from .db.ticker_normalizer import normalize_ticker as _norm_ticker
+            from .memory_context import (
+                format_memory_for_prompt as _fmt_mem,
+                memory_context_for_response as _mem_for_resp,
+            )
+
+            _ticker_key = _norm_ticker(request.company_name)
+            async with _get_session() as _mem_session:
+                _mem_ctx = await _get_mem(_mem_session, _ticker_key)
+
+            if _mem_ctx:
+                _mem_block = _fmt_mem(_mem_ctx)
+                _mem_data = _mem_for_resp(_mem_ctx)
+                _request = request.model_copy(update={
+                    "memory_context_block": _mem_block,
+                    "memory_context_data": _mem_data,
+                })
+                logger.debug(
+                    "[ask] 9C memory loaded for %s (%d prior queries)",
+                    _ticker_key,
+                    _mem_ctx.get("total_queries", 0),
+                )
+        except Exception as _mem_exc:
+            logger.debug("[ask] 9C memory read failed (non-fatal): %r", _mem_exc)
+            # _request remains as original request — no memory, no problem
+
+        fut = loop.run_in_executor(None, route_question, _request)
 
         # Emit keepalive bytes every 25 s while pipeline runs.
         # asyncio.wait_for + asyncio.shield: times out without cancelling fut.

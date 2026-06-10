@@ -1526,6 +1526,7 @@ def _build_synthesis_prompt(
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoid circular import
     question_intent: Optional[str] = None,
     pre_synthesized_answer: Optional[str] = None,
+    memory_context_block: Optional[str] = None,
 ) -> str:
     # Plain-text agent summaries with question-aware sub-field injection (Phase 2 Lever 2).
     # For each question_intent, the most analytically relevant sub-field from the
@@ -2045,6 +2046,15 @@ def _build_synthesis_prompt(
     # contiguous in the "instruction" region of the prompt.
     secondary_mandates_block = _build_secondary_section_mandates(ticker, question_intent)
 
+    # Phase 9C: prepend investment memory block when available.
+    # Placed immediately after the output-format rules so the LLM reads the
+    # historical context before it encounters any current-analysis data.
+    _memory_section = (
+        f"\n{memory_context_block}\n"
+        if memory_context_block
+        else ""
+    )
+
     return f"""You are a senior investment analyst producing an institutional-quality investment thesis.
 
 CRITICAL OUTPUT RULES — READ FIRST:
@@ -2054,7 +2064,7 @@ CRITICAL OUTPUT RULES — READ FIRST:
 - Do NOT write "Investment Thesis for...", "Bull Case:", "Bear Case:" or any other headings.
 - Your ENTIRE response must start with {{ and end with }}.
 - Any non-JSON output will cause a parse failure.
-
+{_memory_section}
 COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
@@ -3173,6 +3183,7 @@ def synthesize_thesis(
     prior_snapshot=None,  # Optional[ThesisSnapshot] — avoids circular import at module level
     question_intent: Optional[str] = None,
     pre_synthesized_answer: Optional[str] = None,
+    memory_context_block: Optional[str] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -3277,6 +3288,7 @@ def synthesize_thesis(
         prior_snapshot=prior_snapshot,
         question_intent=question_intent,
         pre_synthesized_answer=pre_synthesized_answer,
+        memory_context_block=memory_context_block,
     )
 
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────

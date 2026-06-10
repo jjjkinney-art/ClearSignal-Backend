@@ -410,6 +410,19 @@ class QuestionRequest(BaseModel):
     context: Optional[GroundingContext] = Field(
         None, description="Optional context to ground the question and classification")
 
+    # ── Phase 9C — internal memory injection ─────────────────────────────────────
+    # Set by api.py BEFORE dispatching to route_question; never sent by clients.
+    # memory_context_block: formatted prompt text injected into synthesis.
+    # memory_context_data: structured dict stamped onto the InvestmentThesis response.
+    memory_context_block: Optional[str] = Field(
+        default=None, exclude=True,
+        description="[internal] Formatted memory block for synthesis prompt injection.",
+    )
+    memory_context_data: Optional[Dict[str, Any]] = Field(
+        default=None, exclude=True,
+        description="[internal] Structured memory dict for API response stamping.",
+    )
+
 
 class AgentAnswerResponse(BaseModel):
     """Response schema for question routing endpoint."""
@@ -1452,6 +1465,18 @@ class InvestmentThesis(BaseModel):
         ),
     )
 
+    # ── Phase 9C — Investment Memory ──────────────────────────────────────────
+    # Structured history from prior analyses for this ticker.
+    # None when this is the first analysis, or when the persistence layer is disabled.
+    # Rendered as InvestmentMemoryBanner above DirectAnswer in the frontend.
+    memory_context: Optional["MemoryContextSummary"] = Field(
+        default=None,
+        description=(
+            "Investment memory: structured history from prior analyses for this ticker. "
+            "None for first-time analyses or when persistence is disabled."
+        ),
+    )
+
     # ── Catalyst Calendar (Part 5 — Catalyst Calendar Awareness) ────────────
     # Optional structured catalyst context — populated when stance is Tactical
     # or when evidence contains near-term catalyst proximity signals.
@@ -2343,6 +2368,29 @@ class MorningBriefV2(BaseModel):
         description="Concatenated brief text for backward compatibility",
     )
     market_regime_note: str = Field(default="")
+
+
+# ── Phase 9C: Investment Memory schemas ──────────────────────────────────────
+
+class MemoryContextSummary(BaseModel):
+    """Structured investment memory for a ticker — returned in InvestmentThesis.memory_context.
+
+    Represents the distilled history of prior analyses: stance consistency,
+    conviction trend, dominant concerns, and notable events.  Rendered by
+    the InvestmentMemoryBanner frontend component above DirectAnswer.
+    """
+    ticker: str
+    total_queries: int = 0
+    days_in_coverage: int = 0
+    stance_history: List[str] = Field(default_factory=list)   # newest first
+    conviction_trend: List[float] = Field(default_factory=list)  # newest first, 0–1
+    conviction_direction: str = "stable"  # "rising" | "falling" | "stable" | "volatile"
+    dominant_concern: str = ""
+    concern_distribution: Dict[str, int] = Field(default_factory=dict)  # tag → count
+    last_delta_magnitude: Optional[str] = None   # "material" | "moderate" | "minor" | None
+    last_delta_days_ago: Optional[int] = None
+    stance_changes_total: int = 0
+    notable_events: List[str] = Field(default_factory=list)
 
 
 # ── Phase 9B: Thesis Evolution API schemas ────────────────────────────────────
