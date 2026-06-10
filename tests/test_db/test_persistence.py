@@ -326,3 +326,49 @@ async def test_persist_analysis_result_bad_result_is_noop():
         session_id="s1",
         result=bad_result,
     )
+
+
+@pytest.mark.asyncio
+async def test_persist_skips_wall_cap_fallback_thesis(db_session):
+    """Wall-cap fallback theses (confidence_score=0.0, sentinel conclusion) must NOT be persisted.
+
+    A fallback thesis saved to DB would corrupt conviction_trend on the next
+    query, causing the banner to display "42% → 0%".
+    """
+    import app.db.connection as _conn_module
+    from app.db.persistence import persist_analysis_result
+    from app.db.repositories.thesis_repo import get_latest_version
+    from contextlib import asynccontextmanager
+
+    @asynccontextmanager
+    async def _patched_get_session():
+        yield db_session
+
+    original = _conn_module.get_session
+    _conn_module.get_session = _patched_get_session
+
+    fallback_thesis = {
+        "ticker": "NVDA",
+        "company_name": "NVIDIA Corporation",
+        "directional_stance": "bullish",
+        "confidence_score": 0.0,
+        "bull_thesis": "Synthesis unavailable (wall cap exceeded).",
+        "bear_thesis": "Synthesis unavailable (wall cap exceeded).",
+        "conclusion": "Could not synthesize — wall cap exceeded.",
+    }
+    mock_result = _make_mock_result(fallback_thesis)
+
+    try:
+        await persist_analysis_result(
+            question="test wall cap",
+            company_name="NVIDIA Corporation",
+            session_id="test-wallcap-001",
+            result=mock_result,
+        )
+        await db_session.commit()
+    finally:
+        _conn_module.get_session = original
+
+    # No ThesisVersion should have been written
+    version = await get_latest_version(db_session, "NVDA")
+    assert version is None, "Wall-cap fallback thesis must not create a ThesisVersion row"

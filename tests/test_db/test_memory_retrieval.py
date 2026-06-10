@@ -172,6 +172,29 @@ async def test_get_memory_context_no_versions(db_session):
     assert result is None
 
 
+@pytest.mark.asyncio
+async def test_get_memory_context_filters_zero_conviction(db_session):
+    """Versions with confidence_score=0.0 (wall-cap fallbacks) are excluded from trend."""
+    from app.db.repositories.memory_retrieval import get_memory_context
+
+    # Seed: 2 real versions + 1 fallback (confidence_score=0.0, newest)
+    mem = _make_memory("TSLA", total_queries=3)
+    v_real1 = _make_version("TSLA", "bullish", 0.72, created_offset_days=4)
+    v_real2 = _make_version("TSLA", "neutral",  0.55, created_offset_days=8)
+    v_fallback = _make_version("TSLA", "bullish", 0.0,  created_offset_days=0)  # wall-cap result
+    db_session.add_all([mem, v_real1, v_real2, v_fallback])
+    await db_session.commit()
+
+    result = await get_memory_context(db_session, "TSLA")
+
+    assert result is not None, "Should find real versions even when newest is a zero-conviction fallback"
+    # Zero-conviction fallback must NOT appear in trend
+    assert 0.0 not in result["conviction_trend"], "0.0 fallback must be filtered from conviction_trend"
+    assert len(result["conviction_trend"]) == 2
+    assert result["conviction_trend"][0] == 0.72  # newest valid (5d ago)
+    assert result["conviction_trend"][1] == 0.55  # oldest valid
+
+
 # ---------------------------------------------------------------------------
 # format_memory_for_prompt tests
 # ---------------------------------------------------------------------------

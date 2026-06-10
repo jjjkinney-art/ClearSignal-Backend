@@ -155,6 +155,16 @@ async def _persist_inner(
 
     ticker = _extract_ticker(result, company_name)
 
+    # Guard: never persist wall-cap fallback theses.  The fallback object
+    # has confidence_score=0.0 and a sentinel conclusion set by router_service.
+    # Saving it would inject a synthetic 0.0 into the conviction_trend which
+    # shows up in the banner as "42% → 0%" on the next analysis.
+    _conclusion = thesis.get("conclusion", "") or ""
+    _bull = thesis.get("bull_thesis", "") or ""
+    if "wall cap exceeded" in _conclusion or "Synthesis unavailable" in _bull:
+        logger.debug("[persistence] skipping wall-cap fallback thesis for %s (not a real analysis)", ticker)
+        return
+
     async with get_session() as session:
         if session is None:
             return  # persistence disabled

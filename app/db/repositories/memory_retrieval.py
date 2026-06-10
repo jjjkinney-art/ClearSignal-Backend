@@ -202,12 +202,18 @@ async def get_memory_context(
         concern_dist = await _get_concern_tags(session, ticker)
 
         # ── Derived fields ──────────────────────────────────────────────────
-        stance_history = [v.directional_stance for v in versions]
-        conviction_trend = [round(float(v.confidence_score), 4) for v in versions]
+        # Filter out versions with confidence_score=0.0 — these are wall-cap
+        # fallback records that slipped through before the persistence guard was
+        # added. Including them would corrupt conviction_trend with synthetic zeros.
+        valid_versions = [v for v in versions if (v.confidence_score or 0.0) > 0.0]
+        if not valid_versions:
+            return None
+        stance_history = [v.directional_stance for v in valid_versions]
+        conviction_trend = [round(float(v.confidence_score), 4) for v in valid_versions]
         conviction_direction = _conviction_direction(conviction_trend)
 
-        # Coverage window: now → oldest loaded version
-        oldest_version = versions[-1]
+        # Coverage window: now → oldest valid version
+        oldest_version = valid_versions[-1]
         first_seen_at = getattr(oldest_version, "created_at", None)
         days_in_coverage = _days_ago(first_seen_at) or 0
 
@@ -226,10 +232,10 @@ async def get_memory_context(
             last_delta_magnitude = getattr(last_delta, "magnitude", None)
             last_delta_days_ago = _days_ago(getattr(last_delta, "created_at", None))
 
-        notable = _notable_events(deltas, list(versions))
+        notable = _notable_events(deltas, list(valid_versions))
 
         # Version IDs for potential future deep-link
-        version_ids = [v.id for v in versions]
+        version_ids = [v.id for v in valid_versions]
 
         return {
             "ticker": ticker,
