@@ -37,6 +37,17 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     except Exception as _exc:
         logger.warning("[startup] persistence layer init failed (non-fatal): %r", _exc)
 
+    # Phase 9F — seed historical analogs (idempotent; skips rows that already exist)
+    try:
+        from .db import get_session as _get_session
+        from .db.repositories.evidence_repo import seed_analogs as _seed_analogs
+        async with _get_session() as _seed_session:
+            if _seed_session is not None:
+                _inserted = await _seed_analogs(_seed_session)
+                logger.info("[startup] 9F analog seed: %d rows inserted", _inserted)
+    except Exception as _seed_exc:
+        logger.warning("[startup] 9F analog seed failed (non-fatal): %r", _seed_exc)
+
     yield
 
     # Phase 9A — dispose DB engine on shutdown

@@ -441,6 +441,88 @@ async def debug_matrix_test() -> dict:
     }
 
 
+@router.get(
+    "/admin/evidence-status",
+    summary="Phase 9F — Historical Evidence Engine production status",
+    tags=["admin"],
+)
+async def admin_evidence_status() -> dict:
+    """Return seeding status, row counts, and acceptance-test retrieval result.
+
+    Used for production validation after Phase 9F deploy.
+    Idempotent read — safe to call at any time.
+    """
+    from .db import get_session as _gs_ev
+    from .db.repositories.evidence_repo import get_all_analogs as _ga_ev, seed_analogs as _seed_ev
+    from .evidence_engine import build_fingerprint as _bfp, retrieve_historical_analogs as _ret
+
+    analog_count = 0
+    table_exists = False
+    seed_result = None
+    acceptance_top = None
+    acceptance_pass = False
+    all_labels: list = []
+    error = None
+
+    try:
+        async with _gs_ev() as _sess:
+            if _sess is None:
+                return {"status": "disabled", "reason": "DATABASE_URL not set"}
+
+            # Attempt seed (idempotent — inserts only missing rows)
+            inserted = await _seed_ev(_sess)
+            seed_result = {"inserted_this_call": inserted}
+
+            rows = await _ga_ev(_sess)
+            analog_count = len(rows)
+            table_exists = True
+            all_labels = [r.label for r in rows]
+
+            # Acceptance test: Cisco 2000 must rank before NVDA 2018
+            _thesis = {
+                "concern_tags": ["capex_cycle", "valuation_risk"],
+                "bull_thesis": "AI infrastructure spending drives GPU demand at peak multiples.",
+                "bear_thesis": "Hyperscaler capex cycle risk is the primary bear case.",
+                "conclusion": "Bullish. Priced at peak multiple.",
+                "confidence_score": 0.78,
+                "company_name": "NVIDIA",
+            }
+            _fp = _bfp("What would break the Nvidia bull case?", _thesis, ticker="NVDA")
+            _results = _ret(rows, _fp)
+
+            if _results:
+                acceptance_top = {
+                    "label":            _results[0]["label"],
+                    "mechanism":        _results[0]["mechanism"],
+                    "relevance_score":  _results[0]["relevance_score"],
+                    "drawdown_pct":     _results[0]["drawdown_pct"],
+                }
+                acceptance_pass = "Cisco" in _results[0]["label"]
+            else:
+                acceptance_top = None
+                acceptance_pass = False
+
+    except Exception as exc:
+        import traceback as _tb
+        error = f"{type(exc).__name__}: {exc}"
+
+    return {
+        "status":           "ok" if not error else "error",
+        "error":            error,
+        "table_exists":     table_exists,
+        "analog_count":     analog_count,
+        "expected_count":   22,
+        "seed_result":      seed_result,
+        "acceptance_test":  {
+            "query":        "What would break the Nvidia bull case?",
+            "pass":         acceptance_pass,
+            "top_analog":   acceptance_top,
+            "requirement":  "Cisco 2000 (infrastructure_overbuild) must rank first",
+        },
+        "all_labels":       all_labels,
+    }
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
