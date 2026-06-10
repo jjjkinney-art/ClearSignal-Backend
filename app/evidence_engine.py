@@ -271,21 +271,46 @@ def _mechanism_score(query_mech: str, analog_mech: str) -> float:
 # ---------------------------------------------------------------------------
 
 def _extract_concern_tags(thesis: dict) -> List[str]:
-    """Extract concern tags from the thesis concern_tags / key_risks / macro_sensitivity."""
+    """Extract concern tags from the thesis using multiple extraction strategies.
+
+    Strategy 1: Structured concern_tags field (Phase 9C DB concern records — dicts
+                or strings).  InvestmentThesis does NOT have this field, so this
+                is a forward-compat path only.
+    Strategy 2: key_risks strings — keyword-scanned for canonical tag patterns.
+    Strategy 3: Narrative text (bear_thesis, macro_sensitivity, conclusion) —
+                keyword-scanned.  The primary extraction path for InvestmentThesis.
+    """
     tags: List[str] = []
 
-    # Phase 9C concern_tags stored on the thesis (list of strings or dicts)
+    # Strategy 1: explicit concern_tags field (present on legacy/DB models)
     raw_tags = thesis.get("concern_tags") or []
     if isinstance(raw_tags, list):
         for t in raw_tags:
-            if isinstance(t, str):
+            if isinstance(t, str) and t in _CANONICAL_TAGS:
                 tags.append(t)
             elif isinstance(t, dict):
                 name = t.get("tag") or t.get("name") or t.get("tag_name") or ""
-                if name:
+                if name and name in _CANONICAL_TAGS:
                     tags.append(name)
 
-    # Also check macro_sensitivity keys — they often overlap with canonical tags
+    # Strategy 2: keyword-scan key_risks list (InvestmentThesis has List[str])
+    key_risks = thesis.get("key_risks") or []
+    if isinstance(key_risks, list):
+        for risk_text in key_risks:
+            if isinstance(risk_text, str):
+                _scan_text_for_tags(risk_text, tags)
+
+    # Strategy 3: scan narrative fields
+    for field in ("bear_thesis", "macro_sensitivity", "conclusion", "what_changes_the_thesis"):
+        val = thesis.get(field) or ""
+        if isinstance(val, str):
+            _scan_text_for_tags(val, tags)
+        elif isinstance(val, list):
+            for item in val:
+                if isinstance(item, str):
+                    _scan_text_for_tags(item, tags)
+
+    # Strategy 4: macro_sensitivity dict keys (legacy models)
     macro = thesis.get("macro_sensitivity") or {}
     if isinstance(macro, dict):
         for k in macro:
@@ -294,6 +319,33 @@ def _extract_concern_tags(thesis: dict) -> List[str]:
                 tags.append(canonical)
 
     return list(dict.fromkeys(tags))  # deduplicate, preserve order
+
+
+# Keyword patterns for each canonical tag — scanned against narrative text
+_TAG_KEYWORDS: Dict[str, List[str]] = {
+    "capex_cycle":          ["capex", "capital expenditure", "infrastructure spend", "data center build", "hyperscaler spend"],
+    "supply_chain_risk":    ["supply chain", "inventory", "channel inventory", "supply constraint", "chip shortage"],
+    "macro_slowdown_risk":  ["recession", "economic slowdown", "gdp", "demand slowdown", "consumer spending"],
+    "interest_rate_risk":   ["interest rate", "rate hike", "fed", "federal reserve", "rate rise", "duration", "bond yield"],
+    "cre_credit_risk":      ["commercial real estate", "cre", "loan default", "credit loss", "mortgage"],
+    "valuation_risk":       ["valuation", "multiple", "overvalued", "p/e", "price-to-earnings", "expensive"],
+    "competitive_risk":     ["competition", "competitor", "market share", "displacement", "amazon", "google", "microsoft", "amd"],
+    "regulatory_risk":      ["regulation", "antitrust", "regulatory", "ftc", "doj", "gdpr", "privacy law"],
+    "geopolitical_risk":    ["geopolit", "taiwan", "china", "tariff", "trade war", "sanctions", "export control"],
+    "att_privacy_risk":     ["apple", "att", "privacy", "tracking", "idfa", "app tracking"],
+    "ai_adoption_risk":     ["ai adoption", "ai transition", "model commodit", "open source model", "llm competition"],
+    "currency_risk":        ["currency", "foreign exchange", "fx risk", "dollar strength", "yen", "euro"],
+    "concentration_risk":   ["concentration", "customer concentration", "single customer", "hyperscaler depend"],
+    "margin_pressure":      ["margin compress", "margin pressure", "gross margin", "pricing pressure", "cost inflation"],
+}
+
+
+def _scan_text_for_tags(text: str, tags: List[str]) -> None:
+    """Scan text for canonical tag keywords; append matched tags to the list."""
+    t = text.lower()
+    for tag, keywords in _TAG_KEYWORDS.items():
+        if tag not in tags and any(kw in t for kw in keywords):
+            tags.append(tag)
 
 
 _CANONICAL_TAGS = set(_TAG_TO_PRIMARY_MECHANISM.keys()) | {"concentration_risk", "margin_pressure"}

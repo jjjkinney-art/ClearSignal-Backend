@@ -738,7 +738,7 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     from .db import get_session as _gs9f
                     from .db.repositories.evidence_repo import get_all_analogs as _get_analogs
                     _9f_fp = _build_fp(
-                        question=body.question,
+                        question=request.question,
                         thesis_dict=_9f_thesis,
                         ticker=_9f_ticker,
                     )
