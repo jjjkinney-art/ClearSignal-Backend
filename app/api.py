@@ -510,10 +510,18 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     async def _generate():
         loop = _asyncio.get_running_loop()          # always the active loop
 
-        # ── Phase 9C: Investment Memory ────────────────────────────────────────
-        # Read prior-analysis history BEFORE dispatching to the thread executor.
+        # ── Phase 9C: Investment Memory (pre-dispatch read) ───────────────────
+        # Read prior-analysis history BEFORE dispatching to the thread executor
+        # so the memory block can be injected into the synthesis LLM prompt.
         # Must happen here (async context) — the thread cannot await DB calls.
+        #
+        # Root-cause fix: the frontend sends company_name="" for natural-language
+        # queries like "Has the Nvidia thesis improved...". normalize_ticker("")
+        # returns "UNKNOWN", which has no DB row.  We therefore try two sources:
+        #   1. company_name field (fast path for explicit ticker/company entry)
+        #   2. detect_company(question) — same entity detection the router uses
         _request = request  # default: no memory enrichment
+        _pre_dispatch_ticker: str | None = None
         try:
             from .db import get_session as _get_session
             from .db.repositories.memory_retrieval import get_memory_context as _get_mem
@@ -523,24 +531,38 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 memory_context_for_response as _mem_for_resp,
             )
 
-            _ticker_key = _norm_ticker(request.company_name)
-            async with _get_session() as _mem_session:
-                _mem_ctx = await _get_mem(_mem_session, _ticker_key)
+            # Resolve ticker: explicit company_name → question text fallback
+            _raw_company = (request.company_name or "").strip()
+            if _raw_company:
+                _pre_dispatch_ticker = _norm_ticker(_raw_company)
+            else:
+                # company_name is blank — extract from question using entity detection.
+                # detect_company is fast (regex + alias lookup) and safe to call sync.
+                try:
+                    from .services.company_detection import detect_company as _detect_co
+                    _co = _detect_co(request.question)
+                    _pre_dispatch_ticker = _co.ticker if _co else None
+                except Exception:
+                    _pre_dispatch_ticker = None
 
-            if _mem_ctx:
-                _mem_block = _fmt_mem(_mem_ctx)
-                _mem_data = _mem_for_resp(_mem_ctx)
-                _request = request.model_copy(update={
-                    "memory_context_block": _mem_block,
-                    "memory_context_data": _mem_data,
-                })
-                logger.debug(
-                    "[ask] 9C memory loaded for %s (%d prior queries)",
-                    _ticker_key,
-                    _mem_ctx.get("total_queries", 0),
-                )
+            if _pre_dispatch_ticker:
+                async with _get_session() as _mem_session:
+                    _mem_ctx = await _get_mem(_mem_session, _pre_dispatch_ticker)
+
+                if _mem_ctx:
+                    _mem_block = _fmt_mem(_mem_ctx)
+                    _mem_data = _mem_for_resp(_mem_ctx)
+                    _request = request.model_copy(update={
+                        "memory_context_block": _mem_block,
+                        "memory_context_data": _mem_data,
+                    })
+                    logger.debug(
+                        "[ask] 9C pre-dispatch memory loaded for %s (%d prior queries)",
+                        _pre_dispatch_ticker,
+                        _mem_ctx.get("total_queries", 0),
+                    )
         except Exception as _mem_exc:
-            logger.debug("[ask] 9C memory read failed (non-fatal): %r", _mem_exc)
+            logger.debug("[ask] 9C pre-dispatch memory read failed (non-fatal): %r", _mem_exc)
             # _request remains as original request — no memory, no problem
 
         fut = loop.run_in_executor(None, route_question, _request)
@@ -577,7 +599,44 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             except Exception as _p_exc:
                 logger.debug("[ask] persistence task creation failed (non-fatal): %r", _p_exc)
 
-            yield _json.dumps(result.model_dump()).encode()
+            # ── Phase 9C: Post-dispatch memory stamp ──────────────────────────
+            # After the thread returns we know the *confirmed* resolved ticker
+            # from routing metadata.  If the pre-dispatch read didn't produce
+            # memory data (e.g. company_name was blank and entity detection
+            # missed), retry here using the authoritative ticker and stamp the
+            # result dict directly so the banner always has data.
+            try:
+                _result_dict = result.model_dump()
+                _thesis_in_answer = (
+                    _result_dict.get("answer", {}).get("investment_thesis")
+                    if isinstance(_result_dict.get("answer"), dict)
+                    else None
+                )
+                if isinstance(_thesis_in_answer, dict) and _thesis_in_answer.get("memory_context") is None:
+                    # Pre-dispatch didn't produce memory — try with confirmed ticker.
+                    _confirmed_ticker = (
+                        result.routing.get("detected_ticker")
+                        or result.company
+                        or _pre_dispatch_ticker
+                    )
+                    if _confirmed_ticker:
+                        from .db import get_session as _gs2
+                        from .db.repositories.memory_retrieval import get_memory_context as _gm2
+                        from .memory_context import memory_context_for_response as _mfr2
+                        async with _gs2() as _s2:
+                            _post_ctx = await _gm2(_s2, _confirmed_ticker)
+                        if _post_ctx:
+                            _thesis_in_answer["memory_context"] = _mfr2(_post_ctx)
+                            logger.debug(
+                                "[ask] 9C post-dispatch memory stamped for %s (%d queries)",
+                                _confirmed_ticker,
+                                _post_ctx.get("total_queries", 0),
+                            )
+            except Exception as _post_exc:
+                logger.debug("[ask] 9C post-dispatch memory stamp failed (non-fatal): %r", _post_exc)
+                _result_dict = result.model_dump()
+
+            yield _json.dumps(_result_dict).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)
             yield _json.dumps({"error": "Question routing failed"}).encode()
