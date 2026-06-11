@@ -197,6 +197,21 @@ class Settings(BaseSettings):
     # environment or .env to activate.  Injection remains off until Slice 5.
     dossier_extraction_enabled: bool = False
 
+    # ── Slice 5 — Dossier injection (pre-synthesis read path) ────────────────
+    # Slice 5A SHADOW: build + measure the injection block but NEVER attach it
+    # to the synthesis prompt (zero output change).  Validates budget / decay /
+    # relevance against real production dossiers with no synthesis risk.
+    dossier_injection_shadow: bool = False
+    # Slice 5B LIVE: attach the block to the synthesis prompt (default off —
+    # not used in Slice 5A; declared here so 5B needs no further config change).
+    dossier_injection_enabled: bool = False
+    # Sticky per-session canary percentage for the 5B live rollout (0 =
+    # effectively off even when enabled=True).  Unused in 5A.
+    dossier_injection_canary_pct: int = 0
+    # Whether the demoted prior_state line is included (re-review Decision 1 —
+    # staging A/B toggles this).  Default demote/include.
+    dossier_injection_include_prior_state: bool = True
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:

@@ -593,6 +593,33 @@ async def admin_dossier_status() -> dict:
     }
 
 
+@router.get(
+    "/admin/dossier-injection-status",
+    summary="Phase 9G · Slice 5 — Dossier injection (shadow) status",
+    tags=["admin"],
+)
+async def admin_dossier_injection_status() -> dict:
+    """Return injection flag state + shadow telemetry.
+
+    Read-only.  In Slice 5A only the shadow path is active; ``enabled`` and
+    ``canary_pct`` are declared for the 5B rollout and reported here for
+    visibility.  ``token_p100`` is the cap-compliance evidence (must stay ≤ 350).
+    """
+    from .config import settings as _inj_s
+    from .services import dossier_injection_telemetry as _inj_tel
+
+    snap = _inj_tel.snapshot()
+    return {
+        "status":           "ok",
+        "shadow":           bool(_inj_s.dossier_injection_shadow),
+        "enabled":          bool(_inj_s.dossier_injection_enabled),
+        "canary_pct":       int(_inj_s.dossier_injection_canary_pct),
+        "include_prior_state": bool(_inj_s.dossier_injection_include_prior_state),
+        "token_cap":        350,
+        **snap,
+    }
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
@@ -716,6 +743,44 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         except Exception as _mem_exc:
             logger.debug("[ask] 9C pre-dispatch memory read failed (non-fatal): %r", _mem_exc)
             # _request remains as original request — no memory, no problem
+
+        # ── Slice 5A: SHADOW dossier injection (log-only, never attached) ─────
+        # Builds + measures the prior-dossier briefing block against the real
+        # dossier so budget / decay / relevance can be validated in production,
+        # WITHOUT changing the synthesis prompt by a single byte.  Guarded by
+        # dossier_injection_shadow; fully swallowed on any error.
+        try:
+            from .config import settings as _5a_cfg
+            if _5a_cfg.dossier_injection_shadow and _pre_dispatch_ticker:
+                from .db import get_session as _gs_5a
+                from .db.repositories.dossier_repo import get_full_dossier as _get_doss
+                from .services.dossier_injection_service import build_injection_block as _build_inj
+                from .services import dossier_injection_telemetry as _inj_tel
+
+                _5a_intent = getattr(request, "question_intent", None) or "general"
+                async with _gs_5a() as _doss_sess:
+                    _doss = await _get_doss(_doss_sess, _pre_dispatch_ticker) if _doss_sess else None
+                _inj_res = _build_inj(_doss, question_intent=_5a_intent) if _doss else None
+                if _inj_res is None:
+                    _inj_tel.record_null(_pre_dispatch_ticker)
+                else:
+                    _inj_tel.record_build(
+                        ticker=_pre_dispatch_ticker,
+                        token_count=_inj_res.token_count,
+                        staleness_state=_inj_res.staleness_state,
+                        intent=_inj_res.intent,
+                        included_facets=_inj_res.included_facets,
+                        dropped_facets=_inj_res.dropped_facets,
+                        token_cap=350,
+                    )
+                    logger.info(
+                        "[ask] 5A shadow dossier block for %s: %d tok (%s) facets=%s dropped=%s",
+                        _pre_dispatch_ticker, _inj_res.token_count, _inj_res.staleness_state,
+                        _inj_res.included_facets, _inj_res.dropped_facets,
+                    )
+        except Exception as _5a_exc:
+            logger.debug("[ask] 5A shadow dossier injection failed (non-fatal): %r", _5a_exc)
+            # SHADOW only — never affects _request or the response.
 
         fut = loop.run_in_executor(None, route_question, _request)
 
