@@ -188,6 +188,15 @@ class Settings(BaseSettings):
     # a database configured.  Set DATABASE_URL in your .env or Render environment
     # to enable persistence.
     database_url: str = ""
+
+    # ── Phase 9G · Phase 0 — Company Dossier ─────────────────────────────────
+    # Enable post-dispatch dossier extraction.  When True, each successful
+    # /ask synthesis triggers a fire-and-forget task that harvests signals from
+    # the InvestmentThesis and writes them to the dossier facet tables.
+    # Defaults to False — set DOSSIER_EXTRACTION_ENABLED=true in the
+    # environment or .env to activate.  Injection remains off until Slice 5.
+    dossier_extraction_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:

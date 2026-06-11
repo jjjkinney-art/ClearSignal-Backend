@@ -523,6 +523,76 @@ async def admin_evidence_status() -> dict:
     }
 
 
+@router.get(
+    "/admin/dossier-status",
+    summary="Phase 9G — Company Dossier extraction status",
+    tags=["admin"],
+)
+async def admin_dossier_status() -> dict:
+    """Return dossier feature-flag state and row counts.
+
+    Safe to call at any time — read-only queries.
+
+    Key fields:
+      dossier_extraction_enabled — True when the extraction flag is active.
+      head_count                 — rows in company_dossier (one per ticker).
+      debate_count               — rows in dossier_core_debate.
+      dimension_count            — rows in dossier_moat_dimension.
+      catalyst_count             — rows in dossier_catalyst.
+      variant_count              — rows in dossier_variant.
+      durability_count           — rows in dossier_durability.
+      failure_mode_count         — rows in dossier_failure_mode.
+      revision_count             — rows in dossier_revision.
+      evidence_ref_count         — rows in dossier_evidence_ref.
+    """
+    from .config import settings as _9g_s
+    from .db.connection import get_session as _gs_d
+
+    enabled   = bool(_9g_s.dossier_extraction_enabled)
+    counts    = {}
+    error     = None
+    db_active = False
+
+    _TABLE_NAMES = [
+        ("head_count",          "company_dossier"),
+        ("debate_count",        "dossier_core_debate"),
+        ("dimension_count",     "dossier_moat_dimension"),
+        ("catalyst_count",      "dossier_catalyst"),
+        ("variant_count",       "dossier_variant"),
+        ("durability_count",    "dossier_durability"),
+        ("failure_mode_count",  "dossier_failure_mode"),
+        ("revision_count",      "dossier_revision"),
+        ("evidence_ref_count",  "dossier_evidence_ref"),
+    ]
+
+    try:
+        from sqlalchemy import text as _text
+        async with _gs_d() as _sess:
+            if _sess is None:
+                return {
+                    "status":  "disabled",
+                    "reason":  "DATABASE_URL not set",
+                    "dossier_extraction_enabled": enabled,
+                }
+            db_active = True
+            for key, table in _TABLE_NAMES:
+                try:
+                    _r = await _sess.execute(_text(f"SELECT COUNT(*) FROM {table}"))
+                    counts[key] = int((_r.fetchone() or (0,))[0])
+                except Exception:
+                    counts[key] = None   # table may not yet exist (pre-migration env)
+    except Exception as exc:
+        error = f"{type(exc).__name__}: {exc}"
+
+    return {
+        "status":                    "ok" if not error else "error",
+        "error":                     error,
+        "db_active":                 db_active,
+        "dossier_extraction_enabled": enabled,
+        **counts,
+    }
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
@@ -763,6 +833,60 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                         }
             except Exception as _9f_exc:
                 logger.debug("[ask] 9F post-dispatch evidence stamp failed (non-fatal): %r", _9f_exc)
+
+            # ── Phase 9G · Phase 0: Post-dispatch dossier extraction ──────────
+            # Fire-and-forget task: harvest signals from the thesis and write
+            # to dossier facet tables.  Behind dossier_extraction_enabled flag.
+            # Never blocks or fails the response.
+            try:
+                from .config import settings as _9g_cfg
+                if _9g_cfg.dossier_extraction_enabled:
+                    import uuid as _9g_uuid
+                    from .db.dossier_extraction_task import (
+                        run_dossier_extraction_task as _run_dossier,
+                    )
+                    _9g_thesis = (
+                        _result_dict.get("answer", {}).get("investment_thesis")
+                        if isinstance(_result_dict.get("answer"), dict)
+                        else None
+                    )
+                    if isinstance(_9g_thesis, dict):
+                        _9g_ticker = (
+                            _9g_thesis.get("ticker")
+                            or result.routing.get("detected_ticker")
+                            or result.company
+                            or _pre_dispatch_ticker
+                            or ""
+                        )
+                        _9g_company = (
+                            _9g_thesis.get("company_name")
+                            or request.company_name
+                            or ""
+                        )
+                        _9g_user_id = (
+                            http_request.headers.get("X-User-ID") or None
+                        )
+                        _9g_version_id = str(_9g_uuid.uuid4())
+                        _asyncio.create_task(
+                            _run_dossier(
+                                ticker       = _9g_ticker,
+                                company_name = _9g_company,
+                                thesis_dict  = _9g_thesis,
+                                version_id   = _9g_version_id,
+                                session_id   = _session_id,
+                                user_id      = _9g_user_id,
+                            ),
+                            name=f"dossier-{_session_id[:8]}",
+                        )
+                        logger.debug(
+                            "[ask] 9G dossier extraction task queued for %s (version=%s)",
+                            _9g_ticker, _9g_version_id[:8],
+                        )
+            except Exception as _9g_exc:
+                logger.debug(
+                    "[ask] 9G dossier extraction task creation failed (non-fatal): %r",
+                    _9g_exc,
+                )
 
             yield _json.dumps(_result_dict).encode()
         except Exception as exc:

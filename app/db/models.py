@@ -1,21 +1,37 @@
 """
-SQLAlchemy ORM models — 9 tables.
+SQLAlchemy ORM models — 19 tables.
 
-Phase 9A: initial schema
+Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
           debounce_visible added to thesis_deltas for material feed deduplication.
+Phase 9F: historical_analogs (table 10) — Historical Evidence Engine.
+Phase 9G · Phase 0: Company Dossier (tables 11–19) — canonical per-ticker
+          company intelligence object. Read before synthesis (injection),
+          written after synthesis (extraction). No behavior wired in this slice.
 
 Tables
 ------
-1.  thesis_versions       — Snapshot of InvestmentThesis per analysis call
-2.  thesis_deltas         — Computed diff between consecutive thesis versions
-3.  ticker_memory         — Per-ticker aggregate state (one row per ticker)
-4.  memory_entries        — Individual memory items / analysis events
-5.  concern_tags          — Canonical concern-tag mention counts per ticker
-6.  theme_clusters        — Cross-ticker theme groupings
-7.  cross_exposures       — Pairwise ticker relationship strengths
-8.  personalized_insights — Derived insights from pattern analysis
-9.  briefing_sessions     — Daily-briefing session records (Phase 9B infrastructure)
+1.  thesis_versions        — Snapshot of InvestmentThesis per analysis call
+2.  thesis_deltas          — Computed diff between consecutive thesis versions
+3.  ticker_memory          — Per-ticker aggregate state (one row per ticker)
+4.  memory_entries         — Individual memory items / analysis events
+5.  concern_tags           — Canonical concern-tag mention counts per ticker
+6.  theme_clusters         — Cross-ticker theme groupings
+7.  cross_exposures        — Pairwise ticker relationship strengths
+8.  personalized_insights  — Derived insights from pattern analysis
+9.  briefing_sessions      — Daily-briefing session records (Phase 9B infrastructure)
+10. historical_analogs     — Curated historical analog library (Phase 9F)
+
+Company Dossier (Phase 9G · Phase 0)
+11. company_dossier        — Head: single row per ticker; injection entry-point
+12. dossier_core_debate    — The one defining investment question (versioned)
+13. dossier_moat_dimension — Structured competitive-advantage model (per axis)
+14. dossier_catalyst       — Falsifiable bull/bear triggers with lifecycle state
+15. dossier_variant        — Where ClearSignal diverges from consensus (versioned)
+16. dossier_durability     — Raw signals feeding the Durability Score (Phase 9G-5)
+17. dossier_failure_mode   — Active failure-pattern matches (links to analogs)
+18. dossier_revision       — Append-only audit log; NEVER updated or deleted
+19. dossier_evidence_ref   — Per-claim provenance spine (sourced vs inferred)
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -359,3 +375,369 @@ class HistoricalAnalog(Base):
     source_note      = Column(String(400), nullable=False, default="")
 
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ===========================================================================
+# Phase 9G · Phase 0 — Company Dossier (tables 11–19)
+#
+# The dossier is the canonical per-ticker company-intelligence object.
+# It is READ before synthesis (injection) and WRITTEN after synthesis
+# (extraction).  No extraction or injection logic lives here — this module
+# contains only the ORM definitions (Slice 1).
+#
+# Conventions carried from existing tables:
+#   - UUID string PKs (no DB-side generation)
+#   - user_id nullable VARCHAR(64) for multi-tenant forward compat
+#   - session_id non-nullable VARCHAR(200) defaulting to ""
+#   - Soft foreign keys (no FK constraints) to thesis_versions /
+#     historical_analogs so dossier lifecycle is independent
+#   - JSON columns use _json_col() for JSONB/SQLite compat
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# 11. company_dossier  (head — single row per ticker)
+# ---------------------------------------------------------------------------
+
+class CompanyDossier(Base):
+    """Head row for the Company Dossier — one per ticker.
+
+    This is the only table the injection path must read to decide whether a
+    dossier exists for a ticker.  It carries a small cache of the most recent
+    thesis conclusion (prior_thesis_state) so injection never needs a join
+    against thesis_versions on the hot path.
+
+    row_version is incremented on every write for optimistic-concurrency
+    control — writers supply the current value and lose if it has moved.
+    """
+
+    __tablename__ = "company_dossier"
+
+    id           = Column(String(36), primary_key=True, default=_uuid)
+
+    # Identity
+    ticker       = Column(String(20),  nullable=False, unique=True, index=True)
+    company_name = Column(String(200), nullable=False, default="")
+
+    # Prior-thesis-state cache (denormalised — soft FK to thesis_versions.id)
+    latest_version_id = Column(String(36), nullable=True, default=None)
+    stance            = Column(String(50),  nullable=False, default="")
+    conviction        = Column(Float,       nullable=False, default=0.0)
+    primary_concern   = Column(String(200), nullable=False, default="")
+    prior_as_of       = Column(DateTime(timezone=True), nullable=True, default=None)
+
+    # Dossier meta
+    schema_version      = Column(Integer, nullable=False, default=1)
+    global_confidence   = Column(Float,   nullable=False, default=0.0)
+    # staleness_state: fresh | aging | stale
+    staleness_state     = Column(String(20), nullable=False, default="fresh")
+    last_full_update_at = Column(DateTime(timezone=True), nullable=True, default=None)
+    analysis_count      = Column(Integer, nullable=False, default=0)
+    # Optimistic-concurrency lock — bump on every write
+    row_version         = Column(Integer, nullable=False, default=0)
+
+    # Identity / audit
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 12. dossier_core_debate  (the one defining question — single row per ticker)
+# ---------------------------------------------------------------------------
+
+class DossierCoreDebate(Base):
+    """The single central debate that defines the investment thesis.
+
+    `version` increments only on a *material* reframing (semantic shift +
+    corroborating thesis delta + high confidence) — see spec §3.4.
+    `current_lean` is a non-versioning field that absorbs minor sentiment
+    swings without cutting a new version.
+    """
+
+    __tablename__ = "dossier_core_debate"
+
+    id     = Column(String(36), primary_key=True, default=_uuid)
+    ticker = Column(String(20), nullable=False, unique=True, index=True)
+
+    # Debate framing
+    question          = Column(Text,        nullable=False, default="")
+    bull_pole         = Column(Text,        nullable=False, default="")
+    bear_pole         = Column(Text,        nullable=False, default="")
+    # current_lean: bull | bear | balanced
+    current_lean      = Column(String(20),  nullable=False, default="balanced")
+    resolution_signal = Column(Text,        nullable=False, default="")
+
+    # Versioning / confidence
+    version    = Column(Integer, nullable=False, default=1)
+    confidence = Column(Float,   nullable=False, default=0.0)
+
+    user_id      = Column(String(64),  nullable=True,  default=None)
+    session_id   = Column(String(200), nullable=False, default="")
+    first_seen_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at    = Column(DateTime(timezone=True), nullable=False, default=_now,
+                           onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 13. dossier_moat_dimension  (one row per ticker × axis — bounded at ~6 axes)
+# ---------------------------------------------------------------------------
+
+class DossierMoatDimension(Base):
+    """One competitive-advantage axis for a ticker.
+
+    `pending_flip` is the hysteresis state: set to True when a single
+    synthesis disagrees with the current strength/trend; the flip only
+    commits when a *second* agreeing synthesis arrives (or when extraction
+    confidence ≥ τ_high on the first).  This prevents single-synthesis
+    oscillation from corrupting the moat model.
+
+    Valid `axis` values (fixed taxonomy, extensible via migration):
+        ecosystem_lockin | supply_chain_control | switching_costs |
+        network_effects  | regulatory_ip        | management_execution
+    """
+
+    __tablename__ = "dossier_moat_dimension"
+
+    id     = Column(String(36), primary_key=True, default=_uuid)
+    ticker = Column(String(20), nullable=False, index=True)
+    # axis: see taxonomy in docstring
+    axis   = Column(String(60), nullable=False)
+
+    # Dimension state
+    # strength: strong | moderate | weak | absent
+    strength      = Column(String(20), nullable=False, default="moderate")
+    # trend: strengthening | stable | weakening
+    trend         = Column(String(20), nullable=False, default="stable")
+    rationale     = Column(Text,       nullable=False, default="")
+    vulnerability = Column(Text,       nullable=False, default="")
+
+    # Versioning / hysteresis
+    version      = Column(Integer, nullable=False, default=1)
+    confidence   = Column(Float,   nullable=False, default=0.0)
+    pending_flip = Column(Boolean, nullable=False, default=False)
+
+    user_id         = Column(String(64),  nullable=True,  default=None)
+    session_id      = Column(String(200), nullable=False, default="")
+    last_changed_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("ticker", "axis", name="uq_dossier_moat_ticker_axis"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 14. dossier_catalyst  (per-catalyst lifecycle — multiple per ticker)
+# ---------------------------------------------------------------------------
+
+class DossierCatalyst(Base):
+    """A falsifiable catalyst with a lifecycle.
+
+    The `id` is stable across analyses so hit/miss history can be tracked.
+    Catalysts are NEVER deleted — only lifecycle-transitioned:
+        open → triggered | invalidated | expired
+
+    `specificity` is the extraction confidence that the statement is
+    concrete/falsifiable.  Catalysts below 0.50 are discarded by the
+    extraction service (Slice 3) and never written here.
+    """
+
+    __tablename__ = "dossier_catalyst"
+
+    id     = Column(String(36), primary_key=True, default=_uuid)
+    ticker = Column(String(20), nullable=False, index=True)
+
+    statement         = Column(Text,        nullable=False, default="")
+    # direction: bull_trigger | bear_trigger
+    direction         = Column(String(20),  nullable=False, default="bull_trigger")
+    specificity       = Column(Float,       nullable=False, default=0.0)
+    expected_window   = Column(String(100), nullable=False, default="")
+    # status: open | triggered | invalidated | expired
+    status            = Column(String(20),  nullable=False, default="open", index=True)
+    conviction_weight = Column(Float,       nullable=False, default=0.0)
+
+    # Soft FK to thesis_versions.id that introduced this catalyst
+    source_version_id = Column(String(36), nullable=True, default=None)
+
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    created_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+    resolved_at = Column(DateTime(timezone=True), nullable=True,  default=None)
+
+
+# ---------------------------------------------------------------------------
+# 15. dossier_variant  (consensus-divergence map — single row per ticker)
+# ---------------------------------------------------------------------------
+
+class DossierVariant(Base):
+    """Where ClearSignal diverges from implied consensus.
+
+    `divergences` is a JSON list of objects:
+        {dimension, consensus_view, clearsignal_view, direction, conviction}
+    Bounded at 2–3 entries; stored as JSON because the list is render-only
+    and never queried element-by-element.
+    """
+
+    __tablename__ = "dossier_variant"
+
+    id     = Column(String(36), primary_key=True, default=_uuid)
+    ticker = Column(String(20), nullable=False, unique=True, index=True)
+
+    divergences = _json_col(nullable=False, default=list)
+
+    version    = Column(Integer, nullable=False, default=1)
+    confidence = Column(Float,   nullable=False, default=0.0)
+
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 16. dossier_durability  (raw signals — single row per ticker)
+# ---------------------------------------------------------------------------
+
+class DossierDurability(Base):
+    """Raw durability signals — never pre-scored.
+
+    Signals are stored as raw values so the Durability Score formula
+    (Phase 9G Sprint 4) can evolve without a migration.  The score is
+    always computed at read-time as a pure function of these fields.
+
+    `conviction_trend` mirrors investment-memory direction:
+        rising | falling | stable | volatile
+    `cycle_position`: early | mid | late | unknown
+    `horizon_hint`: trade | investment | secular
+    """
+
+    __tablename__ = "dossier_durability"
+
+    id     = Column(String(36), primary_key=True, default=_uuid)
+    ticker = Column(String(20), nullable=False, unique=True, index=True)
+
+    # cycle_position: early | mid | late | unknown
+    cycle_position             = Column(String(20), nullable=False, default="unknown")
+    catalyst_proximity_days    = Column(Integer,    nullable=True,  default=None)
+    analog_time_to_trough_days = Column(Integer,    nullable=True,  default=None)
+    # mirrors investment-memory: rising | falling | stable | volatile
+    conviction_trend           = Column(String(20), nullable=False, default="stable")
+    # horizon_hint: trade | investment | secular
+    horizon_hint               = Column(String(20), nullable=False, default="investment")
+
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 17. dossier_failure_mode  (active failure-pattern analog links)
+# ---------------------------------------------------------------------------
+
+class DossierFailureMode(Base):
+    """Active failure-sequence match for a ticker.
+
+    `analog_id` is a soft FK to historical_analogs.id — no CASCADE constraint
+    so the dossier lifecycle is independent of the evidence library.
+    `sequence_stage` is updated by the extraction service as stage signals
+    progress (e.g. Stage 2 → Stage 3 of the Intel displacement sequence).
+    """
+
+    __tablename__ = "dossier_failure_mode"
+
+    id        = Column(String(36), primary_key=True, default=_uuid)
+    ticker    = Column(String(20), nullable=False, index=True)
+    # Soft FK to historical_analogs.id
+    analog_id = Column(String(36), nullable=False, index=True)
+
+    sequence_stage     = Column(Integer, nullable=False, default=1)
+    stage_evidence     = Column(Text,    nullable=False, default="")
+    # Snapshot of relevance_score at match time — live score can drift
+    relevance_at_match = Column(Float,   nullable=False, default=0.0)
+
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    matched_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("ticker", "analog_id", name="uq_dossier_failure_ticker_analog"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 18. dossier_revision  (append-only causal audit log)
+# ---------------------------------------------------------------------------
+
+class DossierRevision(Base):
+    """Immutable audit record for every material dossier change.
+
+    This table has NO update or delete path in any repository.  It is the
+    complete causal trail: *what* changed, *why* (source_version_id), and
+    *how confident* the extraction was.
+
+    `facet` valid values:
+        core_debate | moat_dimension | catalyst | variant |
+        durability  | failure_mode   | head
+    """
+
+    __tablename__ = "dossier_revision"
+
+    id     = Column(String(36), primary_key=True, default=_uuid)
+    ticker = Column(String(20), nullable=False, index=True)
+    # facet: see docstring for valid values
+    facet  = Column(String(40), nullable=False)
+
+    # Change record
+    prev_version    = Column(Integer, nullable=True,  default=None)  # NULL on first-create
+    new_version     = Column(Integer, nullable=False, default=1)
+    change_summary  = Column(Text,    nullable=False, default="")
+    diff_json       = _json_col(nullable=False, default=dict)
+    confidence      = Column(Float,   nullable=False, default=0.0)
+
+    # Soft FK to thesis_versions.id that caused this revision
+    source_version_id = Column(String(36), nullable=True, default=None)
+
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    # created_at is immutable — this row is never updated
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 19. dossier_evidence_ref  (per-claim provenance spine)
+# ---------------------------------------------------------------------------
+
+class DossierEvidenceRef(Base):
+    """Provenance record linking a dossier claim to its source.
+
+    Every facet value written by the extraction service must produce at least
+    one evidence_ref row in the same transaction.  Claims without a harder
+    source are written with source_type='inferred' — the frontend renders
+    inferred claims distinctly from sourced ones.
+
+    `claim_hash` is a stable identifier for the specific claim (e.g.
+    SHA-256 of ticker + facet + normalised claim text) so refs survive
+    prose rewording while the underlying fact stays the same.
+
+    `source_type` valid values:
+        thesis_version | analog | filing | financial_data | inferred
+    """
+
+    __tablename__ = "dossier_evidence_ref"
+
+    id         = Column(String(36), primary_key=True, default=_uuid)
+    ticker     = Column(String(20), nullable=False, index=True)
+    facet      = Column(String(40), nullable=False)
+    claim_hash = Column(String(64), nullable=False)
+
+    # source_type: thesis_version | analog | filing | financial_data | inferred
+    source_type = Column(String(30), nullable=False, default="inferred")
+    # source_id FK value where applicable; NULL for inferred claims
+    source_id   = Column(String(36), nullable=True, default=None)
+
+    user_id    = Column(String(64),  nullable=True,  default=None)
+    session_id = Column(String(200), nullable=False, default="")
+    as_of      = Column(DateTime(timezone=True), nullable=False, default=_now)

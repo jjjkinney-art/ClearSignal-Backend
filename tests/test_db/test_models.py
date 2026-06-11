@@ -212,12 +212,19 @@ async def test_memory_entry_roundtrip(db_session):
 
 
 @pytest.mark.asyncio
-async def test_all_nine_tables_exist(db_session):
-    """Verify all 9 ORM classes can be imported and flushed without error."""
+async def test_all_tables_exist(db_session):
+    """Verify all 19 ORM classes (original 9 + HistoricalAnalog + 9 Dossier)
+    can be imported and flushed without error."""
     from app.db.models import (
         ThesisVersion, ThesisDelta, TickerMemory, MemoryEntry,
         ConcernTag, ThemeCluster, CrossExposure, PersonalizedInsight,
         BriefingSession,
+        # Phase 9F
+        HistoricalAnalog,
+        # Phase 9G · Phase 0 — Company Dossier
+        CompanyDossier, DossierCoreDebate, DossierMoatDimension,
+        DossierCatalyst, DossierVariant, DossierDurability,
+        DossierFailureMode, DossierRevision, DossierEvidenceRef,
     )
     from datetime import date
 
@@ -258,4 +265,5 @@ async def test_all_nine_tables_exist(db_session):
     for obj in [cluster, exposure, insight, briefing]:
         db_session.add(obj)
     await db_session.flush()
-    # If we get here without exception, all tables exist and accept writes.
+    # If we get here without exception, all original tables exist and accept writes.
+    # Dossier tables are verified in tests/test_db/test_dossier_models.py.
