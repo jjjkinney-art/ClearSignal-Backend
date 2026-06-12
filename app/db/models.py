@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 19 tables.
+SQLAlchemy ORM models — 24 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -8,6 +8,9 @@ Phase 9F: historical_analogs (table 10) — Historical Evidence Engine.
 Phase 9G · Phase 0: Company Dossier (tables 11–19) — canonical per-ticker
           company intelligence object. Read before synthesis (injection),
           written after synthesis (extraction). No behavior wired in this slice.
+Phase 10A · Slice 1: Continuous Intelligence Loop (tables 20–24) — scheduled_jobs,
+          job_locks, job_runs, delivery_ledger, notifications; plus two additive
+          columns on briefing_sessions (content_hash, delivery_channel).
 
 Tables
 ------
@@ -32,6 +35,13 @@ Company Dossier (Phase 9G · Phase 0)
 17. dossier_failure_mode   — Active failure-pattern matches (links to analogs)
 18. dossier_revision       — Append-only audit log; NEVER updated or deleted
 19. dossier_evidence_ref   — Per-claim provenance spine (sourced vs inferred)
+
+Continuous Intelligence Loop (Phase 10A · Slice 1)
+20. scheduled_jobs         — Current-state job head with state machine + lease fields
+21. job_locks              — Single-flight lease table (loop_lock_service exclusive owner)
+22. job_runs               — Append-only execution audit; NEVER updated or deleted
+23. delivery_ledger        — Pending/delivered artifact records; UNIQUE(content_key) dedup
+24. notifications          — In-app channel sink; frontend polls GET /notifications
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -310,7 +320,14 @@ class PersonalizedInsight(Base):
 # ---------------------------------------------------------------------------
 
 class BriefingSession(Base):
-    """Daily-briefing session records — infrastructure only (Phase 9B surfaces)."""
+    """Daily-briefing session records — infrastructure only (Phase 9B surfaces).
+
+    Phase 10A · Slice 1 adds two nullable columns that complete the loop's
+    generation→delivery ladder:
+      content_hash     — stable hash of the generated content (dedup key input)
+      delivery_channel — channel to which this session was delivered ("in_app", etc.)
+    Both columns are nullable so existing rows require no migration rewrite.
+    """
 
     __tablename__ = "briefing_sessions"
 
@@ -322,6 +339,10 @@ class BriefingSession(Base):
     # status: "pending" | "generated" | "delivered"
     status = Column(String(20), nullable=False, default="pending")
     metadata_json = Column(Text, nullable=False, default="{}")  # JSON
+
+    # Phase 10A: loop delivery columns (nullable — no rewrite of existing rows)
+    content_hash     = Column(String(64), nullable=True, default=None)
+    delivery_channel = Column(String(40), nullable=True, default=None)
 
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
 
@@ -741,3 +762,225 @@ class DossierEvidenceRef(Base):
     user_id    = Column(String(64),  nullable=True,  default=None)
     session_id = Column(String(200), nullable=False, default="")
     as_of      = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ===========================================================================
+# Phase 10A · Slice 1 — Continuous Intelligence Loop (tables 20–24)
+#
+# The loop is the scheduler/heartbeat that transforms ClearSignal from a
+# pull-mode tool into a continuous intelligence system.  Slice 1 is schema
+# only: tables are inert without the later driver, lock service, and
+# producer bindings.
+#
+# Design principles from the Phase 10A spec (§1–§6):
+#   - Jobs are rows with state machines, not coroutines (DB = source of truth)
+#   - Lease-based locking with fence tokens (not mutexes) for zombie safety
+#   - Two idempotency layers: work_key (execution) + content_key (delivery)
+#   - job_runs is append-only — same discipline as dossier_revision
+#   - No FK constraints into thesis_versions/dossier_revision/ticker_memory
+#     (loop reads them as dirty signals; lifecycle stays independent)
+#   - JSON columns use _json_col() for JSONB/SQLite compat
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# 20. scheduled_jobs  (current-state job head — one row per job instance)
+# ---------------------------------------------------------------------------
+
+class ScheduledJob(Base):
+    """Current-state head for one scheduled job instance.
+
+    `state` machine:
+        scheduled → claimed → running → succeeded | failed | skipped_stale | dead_letter
+
+    UNIQUE(job_type, target_key, period_bucket) is the enqueue-idempotency and
+    drift-coalescing constraint: two drift signals for the same (target, bucket)
+    collapse to one row (spec §5.3).
+
+    `fence_token` is incremented on each claim so zombie writers from dead
+    holders can be rejected by the lock service (spec §4.4).
+    """
+
+    __tablename__ = "scheduled_jobs"
+
+    id            = Column(String(36),  primary_key=True, default=_uuid)
+
+    # Job identity
+    job_type      = Column(String(60),  nullable=False)
+    target_key    = Column(String(200), nullable=False)  # user_id, ticker, portfolio_id
+    # period_bucket: ISO date or "drift" for one-shot drift jobs
+    period_bucket = Column(String(40),  nullable=False)
+
+    # State machine
+    # state: scheduled | claimed | running | succeeded | failed | skipped_stale | dead_letter
+    state         = Column(String(20),  nullable=False, default="scheduled", index=True)
+
+    # Scheduling
+    next_run_utc      = Column(DateTime(timezone=True), nullable=True, default=None)
+    cadence           = Column(String(40), nullable=True, default=None)  # NULL = drift-only
+    catch_up_window_s = Column(Integer,    nullable=False, default=3600)
+
+    # Execution control
+    attempts     = Column(Integer, nullable=False, default=0)
+    max_attempts = Column(Integer, nullable=False, default=3)
+
+    # Lease — NULL when job is not currently claimed
+    holder_id         = Column(String(200), nullable=True, default=None)
+    lease_expires_utc = Column(DateTime(timezone=True), nullable=True, default=None)
+    # fence_token: monotonic counter, incremented on each claim
+    fence_token       = Column(Integer, nullable=False, default=0)
+
+    payload_json      = _json_col(nullable=False, default=dict)
+    last_generated_at = Column(DateTime(timezone=True), nullable=True, default=None)
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+    __table_args__ = (
+        UniqueConstraint("job_type", "target_key", "period_bucket",
+                         name="uq_scheduled_job"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 21. job_locks  (single-flight lease table)
+# ---------------------------------------------------------------------------
+
+class JobLock(Base):
+    """Single-flight lease record — exclusively managed by loop_lock_service.
+
+    One row per named lock.  Acquire = atomic conditional UPSERT that checks
+    the current holder/expiry before writing (spec §4.2).
+
+    Namespace convention: "loop:tick", "loop:job:{job_id}".
+
+    `fence_token` is monotonically incremented on each successful acquire so
+    the lock service can reject late writes from zombie holders whose leases
+    were reclaimed.
+    """
+
+    __tablename__ = "job_locks"
+
+    lock_name         = Column(String(200), primary_key=True)
+    holder_id         = Column(String(200), nullable=False)
+    acquired_utc      = Column(DateTime(timezone=True), nullable=False, default=_now)
+    lease_expires_utc = Column(DateTime(timezone=True), nullable=False)
+    # monotonic: incremented on each new acquire for zombie-write detection
+    fence_token       = Column(Integer, nullable=False, default=0)
+
+
+# ---------------------------------------------------------------------------
+# 22. job_runs  (append-only execution audit — NO UPDATE OR DELETE)
+# ---------------------------------------------------------------------------
+
+class JobRun(Base):
+    """Immutable audit record for one job execution attempt.
+
+    This table has NO update or delete path in any repository.  It is:
+      1. The forensics layer: full causal trail of what ran, when, and why.
+      2. The idempotency-lookup source: before invoking a producer the scheduler
+         checks for a succeeded row with a matching work_key — if found, the
+         execution short-circuits (spec §3.1).
+
+    Analogous to dossier_revision: append-only, immutable, permanent.
+
+    `outcome` valid values:
+        running | succeeded | failed | skipped_stale | short_circuited | dead_letter
+    """
+
+    __tablename__ = "job_runs"
+
+    id            = Column(String(36),  primary_key=True, default=_uuid)
+
+    # Soft FK to scheduled_jobs.id — no CASCADE (job may be dead-lettered)
+    job_id        = Column(String(36),  nullable=False, index=True)
+    # work_key = hash(job_type, target_key, period_bucket) — idempotency key
+    work_key      = Column(String(64),  nullable=False, index=True)
+
+    # Denormalised from the job row (survives job dead-letter / future cleanup)
+    job_type      = Column(String(60),  nullable=False)
+    target_key    = Column(String(200), nullable=False)
+    period_bucket = Column(String(40),  nullable=False)
+
+    # Timing
+    started_utc  = Column(DateTime(timezone=True), nullable=False, default=_now)
+    finished_utc = Column(DateTime(timezone=True), nullable=True,  default=None)
+
+    # Outcome — running until the execution completes
+    # outcome: running | succeeded | failed | skipped_stale | short_circuited | dead_letter
+    outcome         = Column(String(30),  nullable=False, default="running")
+    spent_llm_calls = Column(Integer,     nullable=False, default=0)
+    drift_hit       = Column(Boolean,     nullable=False, default=False)
+    error           = Column(Text,        nullable=True,  default=None)
+
+    # Lease identity (who ran this; fence proof for zombie detection)
+    holder_id   = Column(String(200), nullable=False)
+    fence_token = Column(Integer,     nullable=False, default=0)
+
+
+# ---------------------------------------------------------------------------
+# 23. delivery_ledger  (pending/delivered artifact records with dedup)
+# ---------------------------------------------------------------------------
+
+class DeliveryLedger(Base):
+    """Current-state delivery record with duplicate-delivery hard stop.
+
+    `content_key` UNIQUE constraint is the DB-layer guarantee that the same
+    generated artifact is never delivered twice, regardless of retry count
+    or concurrent delivery_flush invocations (spec §3.2).
+
+    content_key = hash(target_key, channel, content_hash, period_bucket)
+
+    `status` values: pending | delivered | failed | suppressed | deferred
+    """
+
+    __tablename__ = "delivery_ledger"
+
+    id           = Column(String(36),  primary_key=True, default=_uuid)
+    # content_key = hash(target_key, channel, content_hash, period_bucket)
+    content_key  = Column(String(64),  nullable=False, unique=True)
+
+    target_key   = Column(String(200), nullable=False)
+    # channel: in_app | email | push  (10C adds email/push)
+    channel      = Column(String(40),  nullable=False, default="in_app")
+    content_hash = Column(String(64),  nullable=False)
+    # artifact_ref: pointer to the source artifact (e.g. briefing_sessions.id)
+    artifact_ref = Column(String(200), nullable=True, default=None)
+
+    # status: pending | delivered | failed | suppressed | deferred
+    status       = Column(String(20),  nullable=False, default="pending", index=True)
+    attempts     = Column(Integer,     nullable=False, default=0)
+    # not_before_utc: set by quiet hours, frequency cap, or mute guardrails
+    not_before_utc = Column(DateTime(timezone=True), nullable=True, default=None)
+
+    created_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+    delivered_at = Column(DateTime(timezone=True), nullable=True,  default=None)
+
+
+# ---------------------------------------------------------------------------
+# 24. notifications  (in-app channel sink)
+# ---------------------------------------------------------------------------
+
+class Notification(Base):
+    """In-app notification row — the sink for the in-app delivery channel.
+
+    Frontend polls GET /notifications to build the inbox.  `read_at` is NULL
+    until the user views the notification; the inbox sorts unread rows first.
+
+    `kind` valid values (extensible):
+        daily_brief | watchlist_alert | dossier_update | system
+
+    Phase 10C adds email/push as additional channel types in loop_delivery_service;
+    those channels do not write a notifications row (this table is in-app only).
+    """
+
+    __tablename__ = "notifications"
+
+    id         = Column(String(36),  primary_key=True, default=_uuid)
+    user_id    = Column(String(64),  nullable=False, index=True)
+    # kind: daily_brief | watchlist_alert | dossier_update | system
+    kind       = Column(String(60),  nullable=False, default="")
+    body_json  = _json_col(nullable=False, default=dict)
+    read_at    = Column(DateTime(timezone=True), nullable=True,  default=None)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)

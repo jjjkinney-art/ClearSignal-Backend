@@ -178,6 +178,73 @@ class Settings(BaseSettings):
     # Circuit breaker cooldown in seconds before half-open probe.
     circuit_cooldown_s: float = 60.0
 
+    # ── Phase 10A — Continuous Intelligence Loop ─────────────────────────────
+    # Drift gate: when True (default), tick() consults should_run_job() before
+    # dispatching any producer.  Jobs are skipped (skipped_stale) if no material
+    # substrate change has occurred since the last successful run.
+    # Set LOOP_DRIFT_GATE_ENABLED=false to disable (all jobs run every tick).
+    loop_drift_gate_enabled: bool = True
+
+    # Force-run override: when True, all jobs bypass the drift gate this tick.
+    # Also honoured per-job via payload_json.force_run=true.
+    # Intended for admin reruns and tests; never set True in production.
+    loop_force_run: bool = False
+
+    # Minimum materiality score required to trigger a job run.
+    # Signals below this score are treated as non-material and the job is skipped.
+    # Range: 0.0–1.0.  Default 0.4 keeps TickerMemory-only updates (score=0.3)
+    # below the bar while passing any DossierRevision or moderate+ ThesisDelta.
+    loop_drift_materiality_min: float = 0.4
+    # Master gate: when False, loop_scheduler_service.tick() is a no-op and no
+    # jobs are claimed, dispatched, or delivered.  Set LOOP_ENABLED=true in the
+    # environment to activate (default: off / inert until explicitly enabled).
+    loop_enabled: bool = False
+
+    # Shadow mode: when True (default), producers run but no real delivery
+    # occurs.  All outputs are written to the delivery ledger with
+    # status=delivered_shadow.  Set LOOP_SHADOW=false to activate real delivery
+    # (not available until Slice 10+).
+    loop_shadow: bool = True
+
+    # Canary rollout percentage (0–95).  Fraction of sessions/users that
+    # receive the loop output.  0 = effectively off even when enabled=True.
+    # Capped at 95 to preserve the permanent 5% holdout.
+    loop_canary_pct: int = 0
+
+    # When True, only users listed in LOOP_INTERNAL_USER_IDS receive loop
+    # output regardless of canary_pct.  Allows alpha testing with a named set
+    # of internal users before public canary.
+    loop_internal_only: bool = True
+
+    # Comma-separated list of user_ids treated as "internal".  These always
+    # receive COHORT_INTERNAL regardless of canary_pct.
+    loop_internal_user_ids: str = ""
+
+    # Number of due jobs claimed per tick.
+    loop_tick_batch_size: int = 10
+
+    # Job lease duration in seconds.  A job's lock expires after this many
+    # seconds if the holder crashes mid-execution; the next tick reaps it.
+    loop_lock_lease_s: int = 120
+
+    # Seconds before retrying a failed job (base; Slice 5 may add backoff).
+    loop_retry_backoff_s: int = 300
+
+    # ── Phase 10A · Slice 8 — Delivery guardrails ────────────────────────────
+    # Quiet hours: suppress deliveries between start (inclusive) and end
+    # (exclusive) UTC hour.  Default: 22:00–07:00 (overnight).
+    delivery_quiet_hours_start: int = 22
+    delivery_quiet_hours_end:   int = 7
+
+    # Max deliveries per channel per target_key per UTC calendar day.
+    # Rows beyond this count are suppressed (status=suppressed).
+    delivery_daily_cap: int = 20
+
+    # Minimum severity for delivery.  Payloads with a severity field below
+    # this level are suppressed at enqueue time.
+    # Values (ascending): info | warning | alert | critical
+    delivery_severity_floor: str = "info"
+
     # ── Phase 9A: Persistence layer ───────────────────────────────────────────
     # SQLAlchemy async database URL.  Supports two drivers:
     #   asyncpg  — postgresql+asyncpg://user:pass@host/db    (Render production)

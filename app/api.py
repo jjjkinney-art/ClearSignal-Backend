@@ -670,6 +670,80 @@ async def admin_dossier_injection_enable() -> dict:
     }
 
 
+# ── Phase 10A · Slice 9 — Loop canary + kill-switch admin endpoints ───────────
+
+@router.get(
+    "/admin/loop-status",
+    summary="Phase 10A · Slice 10 — Loop observability snapshot",
+    tags=["admin"],
+)
+async def admin_loop_status() -> dict:
+    """Return a complete, null-safe loop observability snapshot.
+
+    Delegates to loop_observability.build_snapshot(), which covers:
+    config flags, kill-switch state, canary cohort metrics, in-process
+    telemetry counters, job/run/delivery DB counts, lock state, and
+    all guardrail settings.
+
+    Read-only.  Safe to call at any time regardless of loop_enabled.
+    DB-down-safe: DB sections degrade to zeros rather than 500.
+    """
+    from .services.loop_observability import build_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_snapshot(_sess)
+    except Exception:
+        # DB session itself unavailable — return in-process snapshot
+        return await build_snapshot(None)
+
+
+@router.post(
+    "/admin/loop/disable",
+    summary="Phase 10A · Slice 9 — Kill switch: disable loop immediately",
+    tags=["admin"],
+)
+async def admin_loop_disable() -> dict:
+    """Disable the loop in-process without a redeploy.
+
+    Sets a runtime override that takes effect immediately for all subsequent
+    tick() calls.  The override survives until /admin/loop/enable is called
+    or the process restarts (config governance resumes).
+    """
+    from .services import loop_canary_telemetry as _tel
+    _tel.force_disable()
+    return {
+        "status":            "ok",
+        "effective_enabled": False,
+        "override":          "force_disabled",
+    }
+
+
+@router.post(
+    "/admin/loop/enable",
+    summary="Phase 10A · Slice 9 — Clear kill-switch override (restore config governance)",
+    tags=["admin"],
+)
+async def admin_loop_enable() -> dict:
+    """Re-enable the loop by clearing the force-disable override.
+
+    Clears the kill-switch; config (loop_enabled) governs again.
+    Does NOT force-enable when loop_enabled=False in config.
+    """
+    from .config import settings as _s
+    from .services import loop_canary_telemetry as _tel
+    _tel.force_enable()
+    eff = _tel.get_enabled(bool(_s.loop_enabled))
+    return {
+        "status":             "ok",
+        "effective_enabled":  eff,
+        "override":           "cleared",
+        "config_loop_enabled": bool(_s.loop_enabled),
+        "canary_pct":         int(_s.loop_canary_pct),
+    }
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
