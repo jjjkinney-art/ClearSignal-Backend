@@ -423,6 +423,15 @@ class QuestionRequest(BaseModel):
         description="[internal] Structured memory dict for API response stamping.",
     )
 
+    # ── Slice 5C/5D — internal dossier injection ──────────────────────────────
+    # Set by api.py pre-dispatch when this session is in the injected canary
+    # cohort; never sent by clients.  When non-None the synthesiser includes
+    # the block in the prompt.  None (the default) leaves the prompt unchanged.
+    dossier_context_block: Optional[str] = Field(
+        default=None, exclude=True,
+        description="[internal] Formatted prior-dossier block for synthesis injection (Slice 5C).",
+    )
+
 
 class AgentAnswerResponse(BaseModel):
     """Response schema for question routing endpoint."""

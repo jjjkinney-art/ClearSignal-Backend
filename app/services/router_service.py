@@ -914,6 +914,7 @@ def _run_investment_pipeline(
     request_id: str,
     memory_context_block: str | None = None,
     memory_context_data: dict | None = None,
+    dossier_context_block: str | None = None,
 ) -> AgentAnswerResponse:
     """Run the full 5-agent investment pipeline for a detected company.
 
@@ -1252,6 +1253,8 @@ def _run_investment_pipeline(
             pre_synthesized_answer=pre_synthesized_answer,
             # Phase 9C: investment memory block for prompt injection
             memory_context_block=memory_context_block,
+            # Slice 5C/5D: prior-dossier context block (None when not in canary)
+            dossier_context_block=dossier_context_block,
         )
 
     from ..schemas import InvestmentThesis as _InvestmentThesis
@@ -1569,6 +1572,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 request_id=request_id,
                 memory_context_block=getattr(request, "memory_context_block", None),
                 memory_context_data=getattr(request, "memory_context_data", None),
+                dossier_context_block=getattr(request, "dossier_context_block", None),
             )
 
     # Route to full investment pipeline when a company is detected from question
@@ -1600,6 +1604,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             request_id=request_id,
             memory_context_block=getattr(request, "memory_context_block", None),
             memory_context_data=getattr(request, "memory_context_data", None),
+            dossier_context_block=getattr(request, "dossier_context_block", None),
         )
 
     # ── Graceful "Did you mean?" fallback ────────────────────────────────────

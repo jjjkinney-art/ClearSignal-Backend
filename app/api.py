@@ -595,28 +595,78 @@ async def admin_dossier_status() -> dict:
 
 @router.get(
     "/admin/dossier-injection-status",
-    summary="Phase 9G · Slice 5 — Dossier injection (shadow) status",
+    summary="Phase 9G · Slice 5C — Dossier injection status (shadow + canary)",
     tags=["admin"],
 )
 async def admin_dossier_injection_status() -> dict:
-    """Return injection flag state + shadow telemetry.
+    """Return injection flag state, shadow telemetry, and canary cohort metrics.
 
-    Read-only.  In Slice 5A only the shadow path is active; ``enabled`` and
-    ``canary_pct`` are declared for the 5B rollout and reported here for
-    visibility.  ``token_p100`` is the cap-compliance evidence (must stay ≤ 350).
+    Read-only.  Combines:
+      * Slice 5A shadow telemetry (block build stats, token sizes)
+      * Slice 5C canary telemetry (cohort counts, conviction/echo/override metrics)
+      * Kill-switch runtime override state
     """
     from .config import settings as _inj_s
     from .services import dossier_injection_telemetry as _inj_tel
+    from .services import dossier_canary_telemetry as _can_tel
+    from .services import dossier_canary_metrics as _can_met
 
-    snap = _inj_tel.snapshot()
+    shadow_snap  = _inj_tel.snapshot()
+    canary_snap  = _can_tel.snapshot()
+    outcomes     = _can_tel.snapshot_outcomes()
+    metrics      = _can_met.compute_all(outcomes)
+    eff_enabled  = _can_tel.get_enabled(bool(_inj_s.dossier_injection_enabled))
+
     return {
-        "status":           "ok",
-        "shadow":           bool(_inj_s.dossier_injection_shadow),
-        "enabled":          bool(_inj_s.dossier_injection_enabled),
-        "canary_pct":       int(_inj_s.dossier_injection_canary_pct),
-        "include_prior_state": bool(_inj_s.dossier_injection_include_prior_state),
-        "token_cap":        350,
-        **snap,
+        "status":               "ok",
+        "shadow":               bool(_inj_s.dossier_injection_shadow),
+        "config_enabled":       bool(_inj_s.dossier_injection_enabled),
+        "effective_enabled":    eff_enabled,
+        "canary_pct":           int(_inj_s.dossier_injection_canary_pct),
+        "include_prior_state":  bool(_inj_s.dossier_injection_include_prior_state),
+        "token_cap":            350,
+        "shadow_telemetry":     shadow_snap,
+        "canary":               canary_snap,
+        "metrics":              metrics,
+    }
+
+
+@router.post(
+    "/admin/dossier-injection/disable",
+    summary="Phase 9G · Slice 5C — Tier-0 kill switch: disable injection immediately",
+    tags=["admin"],
+)
+async def admin_dossier_injection_disable() -> dict:
+    """Disable dossier injection in-process without a redeploy.
+
+    Sets a runtime override that takes effect immediately for all subsequent
+    requests.  The override survives until /enable is called or the process
+    restarts (at which point the config setting governs again).
+    """
+    from .services import dossier_canary_telemetry as _can_tel
+    _can_tel.force_disable()
+    return {"status": "ok", "effective_enabled": False, "override": "force_disabled"}
+
+
+@router.post(
+    "/admin/dossier-injection/enable",
+    summary="Phase 9G · Slice 5C — Re-enable injection (clears force-disable override)",
+    tags=["admin"],
+)
+async def admin_dossier_injection_enable() -> dict:
+    """Re-enable dossier injection by setting a force-enable runtime override.
+
+    This clears a prior force_disable.  Injection only flows to sessions that
+    fall in the canary bucket (canary_pct > 0) AND pass the cohort gate.
+    """
+    from .config import settings as _inj_s
+    from .services import dossier_canary_telemetry as _can_tel
+    _can_tel.force_enable()
+    return {
+        "status":         "ok",
+        "effective_enabled": True,
+        "override":       "force_enabled",
+        "canary_pct":     int(_inj_s.dossier_injection_canary_pct),
     }
 
 
@@ -744,43 +794,126 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             logger.debug("[ask] 9C pre-dispatch memory read failed (non-fatal): %r", _mem_exc)
             # _request remains as original request — no memory, no problem
 
-        # ── Slice 5A: SHADOW dossier injection (log-only, never attached) ─────
-        # Builds + measures the prior-dossier briefing block against the real
-        # dossier so budget / decay / relevance can be validated in production,
-        # WITHOUT changing the synthesis prompt by a single byte.  Guarded by
-        # dossier_injection_shadow; fully swallowed on any error.
-        try:
-            from .config import settings as _5a_cfg
-            if _5a_cfg.dossier_injection_shadow and _pre_dispatch_ticker:
-                from .db import get_session as _gs_5a
-                from .db.repositories.dossier_repo import get_full_dossier as _get_doss
-                from .services.dossier_injection_service import build_injection_block as _build_inj
-                from .services import dossier_injection_telemetry as _inj_tel
+        # ── Slice 5A + 5C/5D: Dossier injection (shadow + canary) ─────────────
+        # One dossier fetch shared between the 5A shadow telemetry path and the
+        # 5C canary live-injection path.  Three invariants enforced:
+        #   1. _request is modified (dossier_context_block set) ONLY when the
+        #      session is in the injected cohort AND all gates pass.
+        #   2. Any exception leaves _request and _5c_* variables unchanged.
+        #   3. The canary path is permanently inert at the default settings
+        #      (DOSSIER_INJECTION_ENABLED=false, DOSSIER_INJECTION_CANARY_PCT=0).
+        import time as _time_5c
+        _5c_cohort: Optional[str] = None      # INELIGIBLE | CONTROL | INJECTED
+        _5c_injected: bool = False             # True only when block attached
+        _5c_ticker: Optional[str] = _pre_dispatch_ticker
+        _5c_pre_t: float = _time_5c.monotonic()
 
-                _5a_intent = getattr(request, "question_intent", None) or "general"
-                async with _gs_5a() as _doss_sess:
-                    _doss = await _get_doss(_doss_sess, _pre_dispatch_ticker) if _doss_sess else None
-                _inj_res = _build_inj(_doss, question_intent=_5a_intent) if _doss else None
-                if _inj_res is None:
-                    _inj_tel.record_null(_pre_dispatch_ticker)
+        try:
+            from .config import settings as _5c_cfg
+            from .services import dossier_canary_telemetry as _can_tel
+            from .services.dossier_canary_cohort import (
+                decide_cohort as _decide_cohort,
+                COHORT_INELIGIBLE as _INELIGIBLE,
+                COHORT_INJECTED as _COHORT_INJ,
+            )
+
+            _5c_eff_enabled = _can_tel.get_enabled(bool(_5c_cfg.dossier_injection_enabled))
+            _5c_canary_pct  = int(_5c_cfg.dossier_injection_canary_pct)
+            _5c_session     = _session_id or "anon"
+
+            _need_dossier = (
+                _pre_dispatch_ticker
+                and (
+                    _5c_cfg.dossier_injection_shadow
+                    or (_5c_eff_enabled and _5c_canary_pct > 0)
+                )
+            )
+
+            _inj_res_shared = None  # InjectionResult or None
+            if _need_dossier:
+                from .db import get_session as _gs_5c
+                from .db.repositories.dossier_repo import get_full_dossier as _get_doss_5c
+                from .services.dossier_injection_service import build_injection_block as _build_inj_5c
+
+                _5c_intent = getattr(request, "question_intent", None) or "general"
+                async with _gs_5c() as _doss_sess_5c:
+                    _doss_5c = (
+                        await _get_doss_5c(_doss_sess_5c, _pre_dispatch_ticker)
+                        if _doss_sess_5c else None
+                    )
+                _inj_res_shared = (
+                    _build_inj_5c(_doss_5c, question_intent=_5c_intent)
+                    if _doss_5c else None
+                )
+
+            # 5A shadow telemetry (log-only, never attached to prompt).
+            if _5c_cfg.dossier_injection_shadow and _pre_dispatch_ticker:
+                from .services import dossier_injection_telemetry as _inj_tel_5a
+                if _inj_res_shared is None:
+                    _inj_tel_5a.record_null(_pre_dispatch_ticker)
                 else:
-                    _inj_tel.record_build(
+                    _inj_tel_5a.record_build(
                         ticker=_pre_dispatch_ticker,
-                        token_count=_inj_res.token_count,
-                        staleness_state=_inj_res.staleness_state,
-                        intent=_inj_res.intent,
-                        included_facets=_inj_res.included_facets,
-                        dropped_facets=_inj_res.dropped_facets,
+                        token_count=_inj_res_shared.token_count,
+                        staleness_state=_inj_res_shared.staleness_state,
+                        intent=_inj_res_shared.intent,
+                        included_facets=_inj_res_shared.included_facets,
+                        dropped_facets=_inj_res_shared.dropped_facets,
                         token_cap=350,
                     )
                     logger.info(
                         "[ask] 5A shadow dossier block for %s: %d tok (%s) facets=%s dropped=%s",
-                        _pre_dispatch_ticker, _inj_res.token_count, _inj_res.staleness_state,
-                        _inj_res.included_facets, _inj_res.dropped_facets,
+                        _pre_dispatch_ticker, _inj_res_shared.token_count,
+                        _inj_res_shared.staleness_state,
+                        _inj_res_shared.included_facets, _inj_res_shared.dropped_facets,
                     )
-        except Exception as _5a_exc:
-            logger.debug("[ask] 5A shadow dossier injection failed (non-fatal): %r", _5a_exc)
-            # SHADOW only — never affects _request or the response.
+
+            # 5C canary: cohort decision + decision-event recording.
+            if _pre_dispatch_ticker:
+                _5c_cohort = _decide_cohort(_5c_session, _5c_canary_pct, _5c_eff_enabled)
+
+                # Extract prior stance from dossier when available (for metrics).
+                _5c_prior_stance = None
+                if _doss_5c if _need_dossier else False:
+                    try:
+                        _5c_prior_stance = getattr(_doss_5c, "prior_state_label", None)
+                    except Exception:
+                        pass
+
+                _can_tel.record_decision(
+                    session_id=_5c_session,
+                    cohort=_5c_cohort,
+                    ticker=_pre_dispatch_ticker,
+                    canary_pct=_5c_canary_pct,
+                    token_count=(_inj_res_shared.token_count if _inj_res_shared else 0),
+                    facets=(_inj_res_shared.included_facets if _inj_res_shared else []),
+                    staleness=(_inj_res_shared.staleness_state if _inj_res_shared else "unknown"),
+                    dossier_age_days=None,
+                    prior_stance=_5c_prior_stance,
+                )
+            else:
+                _5c_cohort = _INELIGIBLE
+
+            # Attach block to request — ONLY when all gates pass.
+            if (
+                _5c_cohort == _COHORT_INJ
+                and _inj_res_shared is not None
+                and _5c_eff_enabled
+                and _5c_canary_pct > 0
+            ):
+                _request = _request.model_copy(update={
+                    "dossier_context_block": _inj_res_shared.block_str,
+                })
+                _5c_injected = True
+                logger.info(
+                    "[ask] 5C dossier block attached for %s (session=%.8s cohort=%s tok=%d)",
+                    _pre_dispatch_ticker, _5c_session, _5c_cohort,
+                    _inj_res_shared.token_count,
+                )
+
+        except Exception as _5c_exc:
+            logger.debug("[ask] 5C dossier injection block failed (non-fatal): %r", _5c_exc)
+            # _request and _5c_* stay at their defaults — prompt is unchanged.
 
         fut = loop.run_in_executor(None, route_question, _request)
 
@@ -952,6 +1085,56 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     "[ask] 9G dossier extraction task creation failed (non-fatal): %r",
                     _9g_exc,
                 )
+
+            # ── Slice 5C/5D: Post-synthesis outcome recording ─────────────────
+            # Records conviction, stance, change-vector engagement, and drift
+            # metrics for both injected and control cohorts.  Never raises.
+            try:
+                if _5c_cohort is not None:
+                    import re as _re_5c
+                    from .services import dossier_canary_telemetry as _can_tel_out
+
+                    _5c_thesis_out = (
+                        _result_dict.get("answer", {}).get("investment_thesis")
+                        if isinstance(_result_dict.get("answer"), dict)
+                        else None
+                    )
+                    if isinstance(_5c_thesis_out, dict):
+                        _5c_stance       = _5c_thesis_out.get("directional_stance") or _5c_thesis_out.get("stance")
+                        _5c_conviction   = _5c_thesis_out.get("confidence_score")
+                        _5c_conclusion   = str(_5c_thesis_out.get("conclusion") or "")
+                        _5c_cv           = _5c_thesis_out.get("change_vector") or {}
+                        _5c_cv_text      = str(_5c_cv) if _5c_cv else ""
+                        _5c_fallback     = (
+                            isinstance(_5c_thesis_out.get("confidence_score"), float)
+                            and _5c_thesis_out.get("confidence_score") == 0.0
+                            and "unavailable" in _5c_conclusion.lower()
+                        )
+                        # Specificity: count numeric tokens in conclusion + direct_answer.
+                        _5c_text_for_spec = (
+                            _5c_conclusion
+                            + " " + str(_5c_thesis_out.get("direct_answer") or "")
+                        )
+                        _5c_specificity = float(
+                            len(_re_5c.findall(r"\d+\.?\d*", _5c_text_for_spec))
+                        )
+                        _5c_latency = round(_time_5c.monotonic() - _5c_pre_t, 2)
+
+                        _can_tel_out.record_outcome(
+                            session_id=_session_id or "anon",
+                            cohort=_5c_cohort,
+                            ticker=_5c_ticker or "",
+                            stance=str(_5c_stance) if _5c_stance else None,
+                            conviction=float(_5c_conviction) if _5c_conviction is not None else None,
+                            change_vector_len=len(_5c_cv_text),
+                            conclusion_len=len(_5c_conclusion),
+                            specificity=_5c_specificity,
+                            fallback_used=bool(_5c_fallback),
+                            latency_s=_5c_latency,
+                            prior_challenged=_5c_thesis_out.get("prior_challenged"),
+                        )
+            except Exception as _5c_out_exc:
+                logger.debug("[ask] 5C outcome recording failed (non-fatal): %r", _5c_out_exc)
 
             yield _json.dumps(_result_dict).encode()
         except Exception as exc:
