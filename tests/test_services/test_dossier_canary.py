@@ -249,10 +249,13 @@ def test_force_disable_overrides_config():
     assert telem.get_enabled(False) is False
 
 
-def test_force_enable_overrides_config():
+def test_force_enable_clears_override_restores_config():
+    telem.force_disable()
+    assert telem.get_enabled(True) is False  # disabled by override
     telem.force_enable()
-    assert telem.get_enabled(False) is True
-    assert telem.get_enabled(True)  is True
+    assert telem.get_enabled(False) is False  # config governs: False
+    assert telem.get_enabled(True)  is True   # config governs: True
+    assert telem.override_state() is None
 
 
 def test_clear_override_restores_config():
@@ -267,7 +270,7 @@ def test_override_state_reflects_flag():
     telem.force_disable()
     assert telem.override_state() is False
     telem.force_enable()
-    assert telem.override_state() is True
+    assert telem.override_state() is None  # force_enable clears override
     telem.clear_override()
     assert telem.override_state() is None
 

@@ -48,10 +48,10 @@ def force_disable() -> None:
 
 
 def force_enable() -> None:
-    """Re-enable injection (clears a force_disable; config still governs if no override)."""
+    """Re-enable injection by clearing the force-disable override (restores config governance)."""
     global _enabled_override
     with _LOCK:
-        _enabled_override = True
+        _enabled_override = None
 
 
 def clear_override() -> None:

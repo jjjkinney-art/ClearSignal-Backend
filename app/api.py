@@ -665,7 +665,7 @@ async def admin_dossier_injection_enable() -> dict:
     return {
         "status":         "ok",
         "effective_enabled": True,
-        "override":       "force_enabled",
+        "override":       "cleared",
         "canary_pct":     int(_inj_s.dossier_injection_canary_pct),
     }
 
