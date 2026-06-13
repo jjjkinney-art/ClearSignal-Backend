@@ -210,7 +210,7 @@ async def _watchlist_section(session) -> Dict[str, Any]:
         # Active ticker count and list
         tr = await session.execute(
             select(WatchedTicker.ticker)
-            .where(WatchedTicker.is_active == True)  # noqa: E712
+            .where(WatchedTicker.active == True)  # noqa: E712
             .order_by(WatchedTicker.ticker)
         )
         active_tickers = [row[0] for row in tr.all()]

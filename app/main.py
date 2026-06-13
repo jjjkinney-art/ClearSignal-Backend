@@ -48,6 +48,28 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     except Exception as _seed_exc:
         logger.warning("[startup] 9F analog seed failed (non-fatal): %r", _seed_exc)
 
+    # Phase 10B — backfill watched_tickers from flat-file index.json (idempotent)
+    try:
+        from .db import get_session as _get_session
+        from .db.repositories.watchlist_repo import ticker_add as _ticker_add
+        from .services.watchlist_service import watchlist_service as _wl_service
+        async with _get_session() as _wl_session:
+            if _wl_session is not None:
+                _entries = _wl_service.get_watchlist()
+                _bf_added = 0
+                for _e in _entries:
+                    if _e.ticker:
+                        _row = await _ticker_add(
+                            _wl_session,
+                            _e.ticker,
+                            company_name=getattr(_e, "company_name", "") or "",
+                        )
+                        if _row is not None:
+                            _bf_added += 1
+                logger.info("[startup] 10B watched_tickers backfill: %d rows upserted", _bf_added)
+    except Exception as _bf_exc:
+        logger.warning("[startup] 10B watched_tickers backfill failed (non-fatal): %r", _bf_exc)
+
     yield
 
     # Phase 9A — dispose DB engine on shutdown
