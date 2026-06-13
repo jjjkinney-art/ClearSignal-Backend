@@ -66,7 +66,7 @@ async def test_create_all_is_idempotent(fresh_engine):
 
 @pytest.mark.asyncio
 async def test_db_table_count_is_24(fresh_engine):
-    """db_table_count must be 24 after Phase 10A Slice 1 models are applied."""
+    """db_table_count must be 25 after Phase 10B Slice 2 adds watched_tickers."""
     from sqlalchemy import text
 
     async with fresh_engine.connect() as conn:
@@ -75,10 +75,10 @@ async def test_db_table_count_is_24(fresh_engine):
         )
         count = result.scalar()
 
-    # 19 Phase 9 tables + 5 Phase 10A loop tables = 24
-    assert count == 24, (
-        f"Expected 24 tables (19 Phase 9 + 5 Phase 10A), got {count}. "
-        "Check that all 5 loop models are defined in app/db/models.py."
+    # 19 Phase 9 tables + 5 Phase 10A loop tables + 1 Phase 10B table = 25
+    assert count == 25, (
+        f"Expected 25 tables (19 Phase 9 + 5 Phase 10A + 1 Phase 10B), got {count}. "
+        "Check that all models are defined in app/db/models.py."
     )
 
 

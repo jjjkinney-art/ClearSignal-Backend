@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "abb41f63-69a1-4d62-8711-92e15254d649",
+    "ticker": "GS",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:18:41.015296+00:00",
+    "data": {
+      "snapshot_id": "7521fe79-e630-459c-b811-26759b7dd85c",
+      "ticker": "GS",
+      "company_name": "Goldman Sachs Group Inc.",
+      "timestamp": "2026-06-03T01:18:41.015296+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "7521fe79-e630-459c-b811-26759b7dd85c"
+    }
+  }
+]

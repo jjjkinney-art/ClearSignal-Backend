@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "ab952c73-8309-47bf-b07d-f2dba5ba7b22",
+    "ticker": "AMZN",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:41:17.121335+00:00",
+    "data": {
+      "snapshot_id": "93f238ee-e9a1-4263-887c-10986137e802",
+      "ticker": "AMZN",
+      "company_name": "Amazon.com Inc.",
+      "timestamp": "2026-06-03T01:41:17.121335+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "93f238ee-e9a1-4263-887c-10986137e802"
+    }
+  }
+]

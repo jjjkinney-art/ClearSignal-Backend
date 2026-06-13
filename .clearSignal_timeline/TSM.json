@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "59a1ce30-3142-42af-b33e-0668875f9bad",
+    "ticker": "TSM",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:17:28.842952+00:00",
+    "data": {
+      "snapshot_id": "5f91a4a4-7f9a-48f8-af14-2166d2374ff7",
+      "ticker": "TSM",
+      "company_name": "Taiwan Semiconductor Manufacturing Co.",
+      "timestamp": "2026-06-03T01:17:28.842952+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "5f91a4a4-7f9a-48f8-af14-2166d2374ff7"
+    }
+  }
+]

@@ -64,6 +64,7 @@ Spec references
 
 from __future__ import annotations
 
+import json
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -245,6 +246,30 @@ def _is_force_run(job: Any) -> bool:
     return bool(payload.get("force_run", False))
 
 
+# ---------------------------------------------------------------------------
+# Drift error encoding
+# ---------------------------------------------------------------------------
+
+def _encode_drift_error(drift: Any) -> str:
+    """Encode a DriftSignal as a 'drift_gate:…' prefixed JSON string.
+
+    Format: ``"drift_gate:" + json.dumps({reason, score, signals, latest_signal_at})``
+
+    Preserves backward-compat with ``error.startswith("drift_gate:")`` while
+    making the full signal source available for tests and observability queries.
+    """
+    try:
+        payload = {
+            "reason": getattr(drift, "reason", ""),
+            "score": round(float(getattr(drift, "materiality_score", 0.0)), 3),
+            "signals": list(getattr(drift, "signals", []))[:5],
+            "latest_signal_at": getattr(drift, "latest_signal_at", None),
+        }
+        return "drift_gate:" + json.dumps(payload)
+    except Exception:
+        return f"drift_gate:{getattr(drift, 'reason', 'unknown')}"
+
+
 # ===========================================================================
 # Job handling pipeline
 # ===========================================================================
@@ -320,7 +345,7 @@ async def _handle_job(
             await loop_repo.run_finish(
                 session, dg_run.id, "skipped_stale",
                 drift_hit=True,
-                error=f"drift_gate:{drift.reason}",
+                error=_encode_drift_error(drift),
             )
         await loop_repo.job_update_state(
             session, job.id, "skipped_stale", expected_state="claimed"

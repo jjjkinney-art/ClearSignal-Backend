@@ -10,6 +10,7 @@ All logic deterministic — no LLM calls.
 from __future__ import annotations
 
 import logging
+import warnings
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
@@ -302,7 +303,16 @@ def generate_morning_brief(
     MorningBrief
         Structured morning note with brief_text, top_movers,
         attention_required, debate_shifts, and market_regime_note.
+
+    .. deprecated::
+        Use :func:`generate_morning_brief_v2` instead.  This function will be
+        removed in a future release.  The canonical implementation is v2.
     """
+    warnings.warn(
+        "generate_morning_brief is deprecated; use generate_morning_brief_v2 instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     # ── Pre-build event impact sentences for injection ────────────────────────
     _impact_sentences: List[str] = []
     if event_impacts:

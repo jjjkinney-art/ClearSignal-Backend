@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "55f01dcb-a83a-46f3-a6fb-323158936a74",
+    "ticker": "HON",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:42:26.749089+00:00",
+    "data": {
+      "snapshot_id": "c39a6ee0-f27a-47ae-8e20-5678c261d69b",
+      "ticker": "HON",
+      "company_name": "Honeywell International Inc.",
+      "timestamp": "2026-06-03T01:42:26.749089+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "c39a6ee0-f27a-47ae-8e20-5678c261d69b"
+    }
+  }
+]

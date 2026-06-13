@@ -139,6 +139,38 @@ async def append_entry(
         return None
 
 
+async def bump_ticker_memory(
+    session,
+    ticker: str,
+) -> bool:
+    """Touch updated_at on an existing TickerMemory row without changing any counters.
+
+    Used by analysis paths that need to signal "this ticker was re-analyzed"
+    without incrementing total_queries or version_count.  Returns True when
+    the row was found and flushed; False when no row exists or session is None.
+    """
+    if session is None:
+        return False
+
+    try:
+        from sqlalchemy import select
+        from ..models import TickerMemory
+
+        stmt = select(TickerMemory).where(TickerMemory.ticker == ticker)
+        result = await session.execute(stmt)
+        row = result.scalar_one_or_none()
+        if row is None:
+            return False
+
+        row.updated_at = datetime.now(timezone.utc)
+        await session.flush()
+        return True
+
+    except Exception as exc:
+        logger.warning("[memory_repo] bump_ticker_memory failed for %s: %r", ticker, exc)
+        return False
+
+
 async def get_history(
     session,
     ticker: str,

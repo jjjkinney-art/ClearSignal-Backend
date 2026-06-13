@@ -745,6 +745,39 @@ async def admin_loop_enable() -> dict:
 
 
 @router.post(
+    "/admin/loop/seed-jobs",
+    summary="Phase 10B · Slice 10 — Seed watchlist_scan jobs for active tickers",
+    tags=["admin"],
+)
+async def admin_loop_seed_jobs() -> dict:
+    """Seed one watchlist_scan ScheduledJob per active watched ticker.
+
+    Idempotent — safe to call multiple times.  Uses the UNIQUE constraint
+    on (job_type, target_key, period_bucket) to skip tickers that already
+    have a job for today's bucket.
+
+    Returns a SeedResult summary:
+      tickers_seen:  number of active tickers found
+      jobs_created:  new rows inserted
+      jobs_existing: rows already existed (idempotent skip)
+      errors:        per-ticker failure count
+      period_bucket: YYYY-MM-DD bucket used
+      tickers_seeded: list of ticker symbols that got new jobs
+    """
+    from .services.watchlist_job_seeder import seed_watchlist_jobs
+    from .db.connection import get_session
+    from dataclasses import asdict
+
+    try:
+        async with get_session() as sess:
+            result = await seed_watchlist_jobs(sess)
+        return {"status": "ok", **asdict(result)}
+    except Exception as exc:
+        logger.warning("admin_loop_seed_jobs failed: %s", exc)
+        return {"status": "error", "detail": str(exc)}
+
+
+@router.post(
     "/analyze",
     response_model=AnalysisResponse,
     summary="Analyze a company",
@@ -1686,25 +1719,24 @@ def _build_alert_body(ev) -> str:
 @router.get(
     "/morning-brief",
     response_model=dict,
-    summary="Generate a morning brief from current watchlist state",
+    summary="[Deprecated] Morning brief v1 — redirects to /morning-brief/v2",
     tags=["intelligence"],
 )
 async def get_morning_brief() -> dict:
-    """Generate a PM-style morning brief from current watchlist state.
+    """Deprecated v1 morning-brief endpoint.
 
-    Includes a compressed narrative, top movers, attention-required tickers,
-    and a market regime note.  Deterministic — no LLM calls.
+    Returns a machine-readable deprecation notice pointing callers to the
+    canonical v2 endpoint.  The v1 implementation (generate_morning_brief)
+    is no longer called from production code; use GET /morning-brief/v2.
     """
-    from .services.morning_brief_service import generate_morning_brief
-
-    entries  = watchlist_service.get_watchlist()
-    changes  = watchlist_service.get_material_changes(limit=100)
-    brief    = generate_morning_brief(
-        watchlist_entries=entries,
-        recent_material_changes=changes,
-        recent_alerts=[],
-    )
-    return brief.model_dump()
+    return {
+        "deprecated": True,
+        "redirect": "/morning-brief/v2",
+        "message": (
+            "This endpoint is deprecated. "
+            "Use GET /morning-brief/v2 for the current 5-section institutional brief."
+        ),
+    }
 
 
 @router.get(

@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "5658752d-c122-4212-a33b-d209865acf9c",
+    "ticker": "AVGO",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:17:02.356630+00:00",
+    "data": {
+      "snapshot_id": "d0e421fe-00d9-4e24-a3c1-eae9a6fe8b22",
+      "ticker": "AVGO",
+      "company_name": "Broadcom Inc.",
+      "timestamp": "2026-06-03T01:17:02.356630+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "d0e421fe-00d9-4e24-a3c1-eae9a6fe8b22"
+    }
+  }
+]

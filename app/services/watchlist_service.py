@@ -3,8 +3,14 @@ Watchlist service — persistent ticker tracking with thesis snapshot history.
 
 Architecture
 ------------
+* Ticker membership (Phase 10B · Slice 2):
+    DB-backed via ``watched_tickers`` table (async repo functions).
+    Sync methods try DB when not inside an async event loop; file is the
+    fallback.  Async methods (``*_async``) always use DB.
 * Ticker index  : JSON file at ``{data_dir}/index.json``.
-                  Contains a dict of {TICKER: WatchlistEntry} records.
+                  Contains per-ticker metadata (thesis_trend, snapshot_count,
+                  etc.).  Still the authoritative source for metadata until a
+                  future slice moves those fields to DB.
 * Snapshot store: reuses ``JsonFileTimelineStore`` (entry_type="thesis_snapshot").
 * Change log    : reuses ``JsonFileTimelineStore`` (entry_type="material_change").
 
@@ -22,15 +28,25 @@ Primary integration point
     event = watchlist_service.process_new_thesis(thesis)
     # event is a MaterialChangeEvent if something material happened, else None.
 
-Ticker management
------------------
+Ticker management (sync — file-backed, best-effort DB write)
+------------------------------------------------------------
     watchlist_service.add_ticker("AAPL", "Apple Inc.")
     watchlist_service.remove_ticker("AAPL")
     entries = watchlist_service.get_watchlist()
+
+Ticker management (async — DB-backed, file fallback for metadata)
+-----------------------------------------------------------------
+    async with get_session() as session:
+        entry  = await watchlist_service.add_ticker_async(session, "AAPL", "Apple Inc.")
+        ok     = await watchlist_service.remove_ticker_async(session, "AAPL")
+        active = await watchlist_service.is_tracked_async(session, "AAPL")
+        items  = await watchlist_service.get_watchlist_async(session)
+        n      = await watchlist_service.backfill_from_index_async(session)
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import uuid
@@ -147,6 +163,214 @@ class WatchlistService:
             logger.warning("WatchlistService: bad entry record: %s", exc)
             return None
 
+    def _row_to_entry(self, row, fallback: Optional[WatchlistEntry] = None) -> WatchlistEntry:
+        """Convert a WatchedTicker ORM row to a WatchlistEntry.
+
+        Uses the file-index fallback when provided so that metadata fields
+        (thesis trend, snapshot count, etc.) survive the DB transition.
+        """
+        if fallback is not None:
+            return fallback
+        return WatchlistEntry(
+            ticker=row.ticker,
+            company_name=row.company_name,
+            added_at=row.added_at.isoformat() if row.added_at else _now_iso(),
+        )
+
+    # ------------------------------------------------------------------
+    # DB helpers — best-effort sync bridge
+    # ------------------------------------------------------------------
+
+    def _db_run_sync(self, coro) -> Optional[object]:
+        """Run an async coroutine synchronously when no event loop is running.
+
+        Returns the coroutine's result, or None when:
+        - An event loop is already running (can't nest asyncio.run), OR
+        - The coroutine raises any exception (logged at DEBUG level).
+
+        Callers should fall back to file-based storage when None is returned.
+        """
+        try:
+            asyncio.get_running_loop()
+            # Inside an async context — close the coroutine to suppress
+            # "coroutine never awaited" RuntimeWarning, then skip DB.
+            coro.close()
+            return None
+        except RuntimeError:
+            pass
+        try:
+            return asyncio.run(coro)
+        except Exception as exc:
+            logger.debug("WatchlistService: DB operation failed (non-fatal): %s", exc)
+            return None
+
+    async def _db_get_session(self):
+        """Return an async session context manager, or a no-op context."""
+        try:
+            from ..db.connection import get_session
+            return get_session()
+        except Exception:
+            from contextlib import asynccontextmanager
+
+            @asynccontextmanager
+            async def _null_ctx():
+                yield None
+
+            return _null_ctx()
+
+    # ------------------------------------------------------------------
+    # Ticker management — async (DB-backed, file metadata fallback)
+    # ------------------------------------------------------------------
+
+    async def add_ticker_async(
+        self,
+        session,
+        ticker: str,
+        company_name: str = "",
+    ) -> WatchlistEntry:
+        """DB-backed add_ticker for async callers (loop producers, API routes).
+
+        Writes to DB and also updates the file index so that file-based
+        metadata reads see the new entry.
+        """
+        from ..db.repositories.watchlist_repo import ticker_add as _db_add
+        t = _ticker_upper(ticker)
+        row = await _db_add(session, t, company_name)
+        # Also update file index (best-effort; keeps metadata in sync)
+        file_entry = self._add_ticker_file(t, company_name)
+        if row is None:
+            return file_entry
+        file_index = self._load_index()
+        fallback = self._entry_from_dict(file_index.get(t, {})) if t in file_index else None
+        return self._row_to_entry(row, fallback=fallback)
+
+    async def remove_ticker_async(
+        self,
+        session,
+        ticker: str,
+    ) -> bool:
+        """DB-backed remove_ticker for async callers."""
+        from ..db.repositories.watchlist_repo import ticker_deactivate as _db_deactivate
+        t = _ticker_upper(ticker)
+        db_ok = await _db_deactivate(session, t)
+        file_ok = self._remove_ticker_file(t)
+        return db_ok or file_ok
+
+    async def is_tracked_async(
+        self,
+        session,
+        ticker: str,
+    ) -> bool:
+        """DB-backed is_tracked for async callers."""
+        from ..db.repositories.watchlist_repo import ticker_is_active as _db_is_active
+        t = _ticker_upper(ticker)
+        db_result = await _db_is_active(session, t)
+        if session is not None:
+            return db_result
+        return t in self._load_index()
+
+    async def get_watchlist_async(
+        self,
+        session,
+    ) -> List[WatchlistEntry]:
+        """DB-backed get_watchlist for async callers.
+
+        Uses DB as the authoritative membership list and the file index
+        for per-entry metadata (thesis trend, snapshot count, etc.).
+        Returns all entries sorted by added_at descending.
+        """
+        from ..db.repositories.watchlist_repo import ticker_list_active as _db_list
+
+        db_rows = await _db_list(session)
+        if not db_rows:
+            return self.get_watchlist()  # DB empty or disabled — file fallback
+
+        file_index = self._load_index()
+        entries: List[WatchlistEntry] = []
+        for row in db_rows:
+            t = row.ticker
+            file_data = file_index.get(t)
+            if file_data:
+                e = self._entry_from_dict(file_data)
+                if e:
+                    entries.append(e)
+                    continue
+            entries.append(WatchlistEntry(
+                ticker=t,
+                company_name=row.company_name,
+                added_at=row.added_at.isoformat() if row.added_at else _now_iso(),
+            ))
+        entries.sort(key=lambda e: e.added_at or "", reverse=True)
+        return entries
+
+    async def get_entry_async(
+        self,
+        session,
+        ticker: str,
+    ) -> Optional[WatchlistEntry]:
+        """DB-backed get_entry for async callers.
+
+        Falls back to file when session is None or ticker is absent from DB
+        (migration period: ticker may have been written via sync path only).
+        Returns None when ticker is inactive in DB even if present in file.
+        """
+        from ..db.repositories.watchlist_repo import ticker_get as _db_get
+        t = _ticker_upper(ticker)
+
+        if session is None:
+            return self.get_entry(ticker)
+
+        row = await _db_get(session, t)
+
+        if row is None:
+            # Not in DB yet — fall back to file (migration period)
+            return self.get_entry(ticker)
+
+        if not row.active:
+            return None  # DB says removed; file is stale
+
+        file_index = self._load_index()
+        file_data = file_index.get(t)
+        if file_data:
+            return self._entry_from_dict(file_data)
+        return self._row_to_entry(row)
+
+    async def backfill_from_index_async(
+        self,
+        session,
+        index_path: Optional[str] = None,
+    ) -> int:
+        """Backfill watched_tickers from index.json.  Idempotent."""
+        from ..db.repositories.watchlist_repo import backfill_from_index as _db_backfill
+        path = index_path or str(self._index_path)
+        return await _db_backfill(session, path)
+
+    # ------------------------------------------------------------------
+    # File-only helpers (used by sync methods and as fallbacks)
+    # ------------------------------------------------------------------
+
+    def _add_ticker_file(self, t: str, company_name: str) -> WatchlistEntry:
+        index = self._load_index()
+        if t in index:
+            existing = self._entry_from_dict(index[t])
+            return existing or WatchlistEntry(ticker=t, company_name=company_name, added_at=_now_iso())
+        entry = WatchlistEntry(
+            ticker=t,
+            company_name=company_name or t,
+            added_at=_now_iso(),
+        )
+        index[t] = self._entry_to_dict(entry)
+        self._save_index(index)
+        return entry
+
+    def _remove_ticker_file(self, t: str) -> bool:
+        index = self._load_index()
+        if t not in index:
+            return False
+        del index[t]
+        self._save_index(index)
+        return True
+
     # ------------------------------------------------------------------
     # Ticker management (Phase 1)
     # ------------------------------------------------------------------
@@ -159,22 +383,19 @@ class WatchlistService:
         """Add a ticker to the watchlist.
 
         Idempotent: if the ticker is already tracked, returns the existing
-        entry unchanged.
+        entry unchanged.  Best-effort DB write when not inside an event loop.
         """
         t = _ticker_upper(ticker)
-        index = self._load_index()
 
-        if t in index:
-            existing = self._entry_from_dict(index[t])
-            return existing or WatchlistEntry(ticker=t, company_name=company_name, added_at=_now_iso())
+        # Best-effort DB write (no-op when inside an async event loop)
+        async def _db_write():
+            from ..db.repositories.watchlist_repo import ticker_add as _db_add
+            async with (await self._db_get_session()) as session:
+                await _db_add(session, t, company_name)
 
-        entry = WatchlistEntry(
-            ticker       = t,
-            company_name = company_name or t,
-            added_at     = _now_iso(),
-        )
-        index[t] = self._entry_to_dict(entry)
-        self._save_index(index)
+        self._db_run_sync(_db_write())
+
+        entry = self._add_ticker_file(t, company_name)
         logger.info("WatchlistService: added %s", t)
         return entry
 
@@ -183,15 +404,21 @@ class WatchlistService:
 
         Returns True if the ticker was present and removed, False if it
         was not found.  Does NOT delete snapshot history.
+        Best-effort DB deactivate when not inside an event loop.
         """
         t = _ticker_upper(ticker)
-        index = self._load_index()
-        if t not in index:
-            return False
-        del index[t]
-        self._save_index(index)
-        logger.info("WatchlistService: removed %s", t)
-        return True
+
+        async def _db_write():
+            from ..db.repositories.watchlist_repo import ticker_deactivate as _db_deact
+            async with (await self._db_get_session()) as session:
+                await _db_deact(session, t)
+
+        self._db_run_sync(_db_write())
+
+        ok = self._remove_ticker_file(t)
+        if ok:
+            logger.info("WatchlistService: removed %s", t)
+        return ok
 
     def is_tracked(self, ticker: str) -> bool:
         """Return True when the ticker is currently in the watchlist."""
@@ -203,7 +430,12 @@ class WatchlistService:
     # ------------------------------------------------------------------
 
     def get_watchlist(self) -> List[WatchlistEntry]:
-        """Return all watchlist entries sorted by added_at descending."""
+        """Return all watchlist entries sorted by added_at descending.
+
+        drift_state on each entry is populated from the canonical evaluator
+        source (thesis_impact_evaluator) rather than the persisted index value,
+        so GET /watchlist and GET /watchlist/drift are always consistent.
+        """
         index = self._load_index()
         entries = []
         for data in index.values():
@@ -211,16 +443,23 @@ class WatchlistService:
             if e:
                 entries.append(e)
         entries.sort(key=lambda e: e.added_at or "", reverse=True)
+        _enrich_drift_from_evaluator(entries)
         return entries
 
     def get_entry(self, ticker: str) -> Optional[WatchlistEntry]:
-        """Return the watchlist entry for a ticker, or None."""
+        """Return the watchlist entry for a ticker, or None.
+
+        drift_state is populated from the canonical evaluator source.
+        """
         t = _ticker_upper(ticker)
         index = self._load_index()
         data  = index.get(t)
         if data is None:
             return None
-        return self._entry_from_dict(data)
+        entry = self._entry_from_dict(data)
+        if entry:
+            _enrich_drift_from_evaluator([entry])
+        return entry
 
     # ------------------------------------------------------------------
     # Snapshot persistence (Phase 1)
@@ -450,13 +689,13 @@ class WatchlistService:
 
         # Generate PM-quality change narrative
         pm_narrative = build_pm_change_narrative(diff, previous_snap, current_snap)
-        drift_state  = getattr(diff, "drift_state", "unclear") or "unclear"
 
-        # Update watchlist entry with thesis intelligence
+        # Update watchlist entry with thesis intelligence.
+        # drift_state is NOT persisted here — it is derived dynamically from the
+        # canonical evaluator source on every read (see get_watchlist / get_entry).
         index = self._load_index()
         if ticker in index:
             index[ticker]["what_changed_summary"] = pm_narrative
-            index[ticker]["drift_state"]          = drift_state
             self._save_index(index)
 
         return event, diff
@@ -479,6 +718,36 @@ class WatchlistService:
 # ---------------------------------------------------------------------------
 
 watchlist_service: WatchlistService = WatchlistService()
+
+
+# ---------------------------------------------------------------------------
+# Drift reconciliation helper (Slice 9)
+# ---------------------------------------------------------------------------
+
+def _enrich_drift_from_evaluator(entries: List[WatchlistEntry]) -> None:
+    """Populate drift_state on each entry from the canonical evaluator source.
+
+    thesis_impact_evaluator.get_watchlist_drift() is the single display
+    source for drift state.  This replaces whatever was persisted in
+    index.json, ensuring GET /watchlist and GET /watchlist/drift are
+    always consistent.
+
+    Silently no-ops if the evaluator is unavailable (defensive).
+    """
+    if not entries:
+        return
+    try:
+        from .thesis_impact_evaluator import get_default_evaluator
+        evaluator = get_default_evaluator()
+        tickers = [e.ticker for e in entries]
+        drift_map = {
+            d.ticker.upper(): d.direction
+            for d in evaluator.get_watchlist_drift(tickers)
+        }
+        for e in entries:
+            e.drift_state = drift_map.get(e.ticker.upper(), e.drift_state or "")
+    except Exception as exc:
+        logger.warning("_enrich_drift_from_evaluator failed: %s", exc)
 
 
 # ---------------------------------------------------------------------------
@@ -550,10 +819,12 @@ def enrich_watchlist_intelligence(
                 else:
                     materiality_level = "none"
 
-            # thesis_stability: derived from drift_state and recent changes
+            # thesis_stability: derived from drift_state and recent changes.
+            # Handles both legacy vocabulary (breaking/shifting/drifting) and the
+            # canonical evaluator vocabulary (broke/weakened/strengthened/unchanged).
             drift = (entry.drift_state or "").lower()
             thesis_stability = "stable"
-            if drift in ("breaking",) or any(
+            if drift in ("breaking", "broke") or any(
                 ev.change_category == "thesis_broke" for ev in recent
             ):
                 thesis_stability = "breaking"
@@ -561,7 +832,7 @@ def enrich_watchlist_intelligence(
                 ev.change_category == "new_risk_emerged" for ev in recent
             ):
                 thesis_stability = "shifting"
-            elif drift in ("drifting", "weakening", "bifurcating", "repricing") or (
+            elif drift in ("drifting", "weakening", "weakened", "bifurcating", "repricing") or (
                 entry.latest_thesis_trend in ("weakening", "inflecting")
             ):
                 thesis_stability = "drifting"

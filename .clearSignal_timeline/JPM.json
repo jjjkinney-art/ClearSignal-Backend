@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "454e555e-7b1f-4df4-ba90-338bad00fc44",
+    "ticker": "JPM",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:18:20.624702+00:00",
+    "data": {
+      "snapshot_id": "bc26668c-a40f-4e0a-b55b-55e1eca0ef47",
+      "ticker": "JPM",
+      "company_name": "JPMorgan Chase & Co.",
+      "timestamp": "2026-06-03T01:18:20.624702+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "bc26668c-a40f-4e0a-b55b-55e1eca0ef47"
+    }
+  }
+]

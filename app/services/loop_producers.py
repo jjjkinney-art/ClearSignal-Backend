@@ -1,5 +1,6 @@
 """
 Phase 10A · Slice 6 — Shadow producer bindings.
+Phase 10B · Slice 5 — Shadow alert delivery wired into watchlist_scan producer.
 
 Binds existing analytical services to the loop's producer registry in
 shadow (no-delivery) mode.  Producers run real analysis logic but:
@@ -85,6 +86,18 @@ def _get_brief_fn():
     return generate_morning_brief_v2
 
 
+def _get_payload_converter():
+    """Return the from_material_change adapter (lazy, patchable in tests)."""
+    from app.services.watchlist_alert_payload import from_material_change
+    return from_material_change
+
+
+def _get_delivery_service():
+    """Return the loop_delivery_service module (lazy, patchable in tests)."""
+    from app.services import loop_delivery_service
+    return loop_delivery_service
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -101,10 +114,19 @@ async def produce_watchlist_scan(
     fence_token: int,
 ) -> ProducerResult:
     """
-    Shadow watchlist scan.
+    Shadow watchlist scan + shadow alert delivery (Phase 10B · Slice 5).
 
     Reads the file-based watchlist, runs `enrich_watchlist_intelligence`,
-    and returns a summary payload.  No notifications, no delivery rows.
+    converts each MaterialChangeEvent to a WatchlistAlertPayload, and
+    enqueues a shadow in_app delivery for each.
+
+    Delivery guardrails:
+    - channel = "in_app"
+    - user_id = "global"  (no per-user routing yet)
+    - content_key stable per event (payload_hash includes event_id via raw_refs)
+    - duplicate same-event scan → suppressed_duplicate (exactly one ledger row)
+    - no Notification rows created
+    - no external sends
     """
     try:
         wl_svc    = _get_watchlist_service()
@@ -125,25 +147,70 @@ async def produce_watchlist_scan(
         attention = [e.ticker for e in enriched if e.thesis_stability in ("breaking", "shifting")]
         drifting  = [e.ticker for e in enriched if e.thesis_stability == "drifting"]
 
-        payload = {
+        # ── Phase 10B Slice 5: shadow alert delivery ─────────────────────────
+        deliveries_enqueued = 0
+        deliveries_duplicate = 0
+        deliveries_suppressed = 0
+        delivery_errors = 0
+        content_keys: list = []
+
+        if changes:
+            convert_fn  = _get_payload_converter()
+            delivery_svc = _get_delivery_service()
+
+            for change in changes:
+                try:
+                    alert_payload = convert_fn(change)
+                    result = await delivery_svc.enqueue(
+                        session,
+                        user_id="global",
+                        channel="in_app",
+                        target_key=alert_payload.ticker,
+                        payload=alert_payload.to_dict(),
+                        severity=alert_payload.severity,
+                        artifact_ref=alert_payload.delta_id,
+                    )
+                    if result.content_key:
+                        content_keys.append(result.content_key)
+                    if result.status == "pending":
+                        deliveries_enqueued += 1
+                    elif result.status == "suppressed_duplicate":
+                        deliveries_duplicate += 1
+                    elif result.status in ("suppressed", "failed"):
+                        deliveries_suppressed += 1
+                    # STATUS_SKIPPED (null session) → not counted as error
+                except Exception as exc:
+                    logger.warning(
+                        "[producer:watchlist_scan] delivery error for %r: %r",
+                        getattr(change, "ticker", "?"), exc,
+                    )
+                    delivery_errors += 1
+
+        # ── Build scan summary payload ────────────────────────────────────────
+        scan_payload = {
             "ticker_count": len(entries),
             "tickers": [e.ticker for e in entries],
             "material_changes_found": len(changes),
             "attention_required": attention,
             "drifting": drifting,
+            "deliveries_enqueued": deliveries_enqueued,
+            "deliveries_duplicate": deliveries_duplicate,
+            "delivery_errors": delivery_errors,
             "generated_at": _now_iso(),
             "shadow": True,
         }
 
         logger.info(
-            "[producer:watchlist_scan] shadow scan complete — "
-            "tickers=%d changes=%d attention=%d",
-            len(entries), len(changes), len(attention),
+            "[producer:watchlist_scan] scan complete — "
+            "tickers=%d changes=%d enqueued=%d duplicate=%d suppressed=%d errors=%d",
+            len(entries), len(changes),
+            deliveries_enqueued, deliveries_duplicate, deliveries_suppressed, delivery_errors,
         )
         return ProducerResult(
             outcome="succeeded",
             items_emitted=len(entries),
-            payload_json=payload,
+            payload_json=scan_payload,
+            content_key_candidates=content_keys,
         )
 
     except Exception as exc:

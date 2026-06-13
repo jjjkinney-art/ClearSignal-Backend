@@ -262,12 +262,12 @@ class TestWatchlistScanProducer:
         assert count == 0
 
     @pytest.mark.asyncio
-    async def test_no_delivery_rows_created(self, monkeypatch, db_session):
-        """Shadow producer must NOT write any DeliveryLedger rows."""
+    async def test_no_delivery_rows_when_no_changes(self, monkeypatch, db_session):
+        """Shadow producer creates no DeliveryLedger rows when watchlist has no material changes."""
         from sqlalchemy import select, func
         from app.db.models import DeliveryLedger
         entries = [_StubEntry("AAPL")]
-        _patch_wl(monkeypatch, _StubWatchlistService(entries=entries))
+        _patch_wl(monkeypatch, _StubWatchlistService(entries=entries, changes=[]))
         _patch_enrich(monkeypatch)
         await producers.produce_watchlist_scan(db_session, MagicMock(), "run1", "h", 1)
         count = (await db_session.execute(select(func.count()).select_from(DeliveryLedger))).scalar()

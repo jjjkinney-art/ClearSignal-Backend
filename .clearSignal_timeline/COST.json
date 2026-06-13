@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "0734a9d4-0e1e-4285-b8ce-9ca159b38111",
+    "ticker": "COST",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:41:40.438871+00:00",
+    "data": {
+      "snapshot_id": "12963dc7-a162-404d-b65c-6589c9aac4d4",
+      "ticker": "COST",
+      "company_name": "Costco Wholesale Corporation",
+      "timestamp": "2026-06-03T01:41:40.438871+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "12963dc7-a162-404d-b65c-6589c9aac4d4"
+    }
+  }
+]

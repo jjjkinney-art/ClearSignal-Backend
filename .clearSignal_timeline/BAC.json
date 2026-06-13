@@ -1,0 +1,39 @@
+[
+  {
+    "entry_id": "eb76a1dc-cf42-481b-98b7-97b48fd5ff46",
+    "ticker": "BAC",
+    "entry_type": "thesis_snapshot",
+    "timestamp": "2026-06-03T01:18:30.215211+00:00",
+    "data": {
+      "snapshot_id": "44b22dcc-9436-4ff0-a28d-4e7e4c9d11b1",
+      "ticker": "BAC",
+      "company_name": "Bank of America Corp.",
+      "timestamp": "2026-06-03T01:18:30.215211+00:00",
+      "one_sentence_thesis": "",
+      "direct_answer": "",
+      "bull_thesis": "Insufficient evidence to build a bull thesis.",
+      "bear_thesis": "Insufficient evidence to build a bear thesis.",
+      "conclusion": "Analysis incomplete. LLM synthesis error: retries exhausted.",
+      "top_signals": [],
+      "top_risks": [],
+      "key_drivers": [],
+      "key_risks_text": [],
+      "confidence_score": 0.0,
+      "confidence_reasoning": "No sufficient evidence or agent outputs available.",
+      "thesis_trend": "unclear",
+      "change_drivers": [],
+      "what_changed": [],
+      "signal_hash": "e3b0c44298fc1c14",
+      "risk_hash": "e3b0c44298fc1c14",
+      "dominant_dimension": "",
+      "core_debate": "",
+      "core_market_debate": "",
+      "core_takeaway": "",
+      "dominant_driver": "",
+      "drift_state": ""
+    },
+    "metadata": {
+      "snapshot_id": "44b22dcc-9436-4ff0-a28d-4e7e4c9d11b1"
+    }
+  }
+]

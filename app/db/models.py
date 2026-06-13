@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 24 tables.
+SQLAlchemy ORM models — 25 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -11,6 +11,8 @@ Phase 9G · Phase 0: Company Dossier (tables 11–19) — canonical per-ticker
 Phase 10A · Slice 1: Continuous Intelligence Loop (tables 20–24) — scheduled_jobs,
           job_locks, job_runs, delivery_ledger, notifications; plus two additive
           columns on briefing_sessions (content_hash, delivery_channel).
+Phase 10B · Slice 2: DB Watchlist Membership (table 25) — watched_tickers;
+          DB-backed add/remove/list for the global watchlist.
 
 Tables
 ------
@@ -42,6 +44,7 @@ Continuous Intelligence Loop (Phase 10A · Slice 1)
 22. job_runs               — Append-only execution audit; NEVER updated or deleted
 23. delivery_ledger        — Pending/delivered artifact records; UNIQUE(content_key) dedup
 24. notifications          — In-app channel sink; frontend polls GET /notifications
+25. watched_tickers        — DB-backed watchlist membership (Phase 10B · Slice 2)
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -984,3 +987,33 @@ class Notification(Base):
     body_json  = _json_col(nullable=False, default=dict)
     read_at    = Column(DateTime(timezone=True), nullable=True,  default=None)
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 25. watched_tickers  (DB-backed watchlist membership — Phase 10B · Slice 2)
+# ---------------------------------------------------------------------------
+
+class WatchedTicker(Base):
+    """One row per (user_id, ticker) pair that is on the watchlist.
+
+    user_id is NULL for the global (single-user) watchlist that the current
+    product uses.  Multi-user support wires in non-null user_id in a later
+    slice; NULL rows are the only rows written today.
+
+    active=False means soft-deleted (removed from watchlist).  Re-adding the
+    same ticker reactivates the existing row rather than inserting a new one.
+
+    company_name and added_at are the only metadata columns here; all thesis
+    metadata (latest_thesis_trend, snapshot_count, etc.) remains in the flat
+    file index.json until a dedicated migration moves it to DB.
+    """
+
+    __tablename__ = "watched_tickers"
+
+    id           = Column(String(36),   primary_key=True, default=_uuid)
+    user_id      = Column(String(64),   nullable=True,  default=None, index=True)
+    ticker       = Column(String(20),   nullable=False, index=True)
+    company_name = Column(String(200),  nullable=False, default="")
+    active       = Column(Boolean,      nullable=False, default=True, index=True)
+    added_at     = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at   = Column(DateTime(timezone=True), nullable=False, default=_now)

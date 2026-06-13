@@ -17,6 +17,9 @@ Phase 10A · Slice 1: Continuous Intelligence Loop schema registered.
 Migration: app/db/migrations/005_continuous_loop.sql (5 new tables → db_table_count 19→24).
 Tables: scheduled_jobs, job_locks, job_runs, delivery_ledger, notifications.
 All loop flags default to off (loop_enabled=False); loop is inert until Slice 4.
+Phase 10B · Slice 2: DB Watchlist Membership schema registered.
+Migration: app/db/migrations/006_watchlist_membership.sql (1 new table → db_table_count 24→25).
+Table: watched_tickers. Backfilled from .clearSignal_watchlist/index.json at startup.
 """
 
 from __future__ import annotations
@@ -156,7 +159,7 @@ def print_startup_diagnostics() -> None:
 
     print("=" * 60)
     print("[STARTUP] ClearSignal AI Backend — boot sequence")
-    print("[STARTUP] DB schema:              005_continuous_loop (loop_enabled=False — inert)")
+    print("[STARTUP] DB schema:              006_watchlist_membership (db_table_count 24→25)")
     print(f"[STARTUP] Service:                {service_name} ({service_id})")
     print(f"[STARTUP] Environment:            {environment}")
     print(f"[STARTUP] Port:                   {port}")

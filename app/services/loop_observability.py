@@ -201,6 +201,68 @@ async def _runs_section(session) -> Dict[str, Any]:
         return {"total": 0, "by_outcome": {}, "recent": [], "db_error": str(exc)}
 
 
+async def _watchlist_section(session) -> Dict[str, Any]:
+    """Return watched-ticker and seeding state for shadow readiness validation."""
+    try:
+        from sqlalchemy import select, func, text
+        from app.db.models import WatchedTicker, ScheduledJob
+
+        # Active ticker count and list
+        tr = await session.execute(
+            select(WatchedTicker.ticker)
+            .where(WatchedTicker.is_active == True)  # noqa: E712
+            .order_by(WatchedTicker.ticker)
+        )
+        active_tickers = [row[0] for row in tr.all()]
+
+        # Count watchlist_scan jobs seeded (any state)
+        jr = await session.execute(
+            select(func.count()).select_from(ScheduledJob)
+            .where(ScheduledJob.job_type == "watchlist_scan")
+        )
+        scan_jobs_total = jr.scalar() or 0
+
+        # Duplicate detection: duplicate = same (job_type, target_key, period_bucket) twice
+        # A well-seeded set has at most 1 per (job_type, target_key, period_bucket)
+        dup_r = await session.execute(
+            text(
+                "SELECT COUNT(*) FROM ("
+                "  SELECT job_type, target_key, period_bucket, COUNT(*) as c"
+                "  FROM scheduled_jobs"
+                "  GROUP BY job_type, target_key, period_bucket"
+                "  HAVING COUNT(*) > 1"
+                ") t"
+            )
+        )
+        duplicate_job_combos = dup_r.scalar() or 0
+
+        # Drift-skip count: job_runs with outcome=skipped_stale (drift gate fired)
+        from app.db.models import JobRun
+        ds_r = await session.execute(
+            select(func.count()).select_from(JobRun)
+            .where(JobRun.outcome == "skipped_stale")
+        )
+        drift_skip_count = ds_r.scalar() or 0
+
+        return {
+            "active_ticker_count": len(active_tickers),
+            "active_tickers":      active_tickers,
+            "scan_jobs_total":     scan_jobs_total,
+            "duplicate_job_combos": duplicate_job_combos,
+            "drift_skip_count":    drift_skip_count,
+        }
+    except Exception as exc:
+        logger.debug("[observability] watchlist_section failed: %r", exc)
+        return {
+            "active_ticker_count": 0,
+            "active_tickers":      [],
+            "scan_jobs_total":     0,
+            "duplicate_job_combos": 0,
+            "drift_skip_count":    0,
+            "db_error":            str(exc),
+        }
+
+
 async def _delivery_section(session) -> Dict[str, Any]:
     try:
         from sqlalchemy import select, func
@@ -302,19 +364,24 @@ async def build_snapshot(session=None) -> Dict[str, Any]:
 
     # DB sections (gracefully degrade to empty when session=None or DB is down)
     if session is not None:
-        jobs_sec     = await _jobs_section(session)
-        runs_sec     = await _runs_section(session)
-        delivery_sec = await _delivery_section(session)
-        locks_sec    = await _locks_section(session)
+        jobs_sec      = await _jobs_section(session)
+        runs_sec      = await _runs_section(session)
+        delivery_sec  = await _delivery_section(session)
+        locks_sec     = await _locks_section(session)
+        watchlist_sec = await _watchlist_section(session)
 
         # If any section carried a db_error, mark db_available=partial
-        if any("db_error" in s for s in [jobs_sec, runs_sec, delivery_sec, locks_sec]):
+        if any("db_error" in s for s in [jobs_sec, runs_sec, delivery_sec, locks_sec, watchlist_sec]):
             db_available = "partial"
     else:
-        jobs_sec     = {"total": 0, "by_state": {}}
-        runs_sec     = {"total": 0, "by_outcome": {}, "recent": []}
-        delivery_sec = {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0}
-        locks_sec    = {"tick_lock": None, "tick_lock_held": False}
+        jobs_sec      = {"total": 0, "by_state": {}}
+        runs_sec      = {"total": 0, "by_outcome": {}, "recent": []}
+        delivery_sec  = {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0}
+        locks_sec     = {"tick_lock": None, "tick_lock_held": False}
+        watchlist_sec = {
+            "active_ticker_count": 0, "active_tickers": [],
+            "scan_jobs_total": 0, "duplicate_job_combos": 0, "drift_skip_count": 0,
+        }
 
     return {
         "status":           "ok",
@@ -340,6 +407,8 @@ async def build_snapshot(session=None) -> Dict[str, Any]:
         "runs":        runs_sec,
         "delivery":    delivery_sec,
         "locks":       locks_sec,
+        # Phase 10B — Watchlist shadow state
+        "watchlist":   watchlist_sec,
         # Guardrails
         "guardrails":  guardrails_sec,
     }
@@ -383,5 +452,9 @@ def build_snapshot_sync(session=None) -> Dict[str, Any]:
         "runs":        {"total": 0, "by_outcome": {}, "recent": []},
         "delivery":    {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0},
         "locks":       {"tick_lock": None, "tick_lock_held": False},
+        "watchlist":   {
+            "active_ticker_count": 0, "active_tickers": [],
+            "scan_jobs_total": 0, "duplicate_job_combos": 0, "drift_skip_count": 0,
+        },
         "guardrails":  guardrails_sec,
     }
