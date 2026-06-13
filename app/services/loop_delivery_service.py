@@ -85,6 +85,11 @@ REASON_MUTE_UNTIL           = "mute_until"
 REASON_SEVERITY_FLOOR       = "severity_floor"
 REASON_NO_SESSION           = "no_session"
 REASON_SHADOW_DRAIN         = "shadow_drain"
+# Phase 10C · Slice 4: ranking triage reasons
+REASON_RANKING_SUPPRESS     = "ranking_suppressed"
+REASON_DELIVERY_DISABLED    = "delivery_disabled"
+# Phase 10C · Slice 6: relevance recheck reasons (mirror delivery_relevance_service constants)
+REASON_RECHECK              = "relevance_recheck"   # fallback if service returns no specific reason
 
 
 # ---------------------------------------------------------------------------
@@ -282,7 +287,7 @@ async def enqueue(
     payload_hash = build_payload_hash(payload_snapshot)
     content_key  = build_content_key(user_id, channel, target_key, payload_hash)
 
-    # Severity floor — check before creating any row
+    # Severity floor — check before creating any row (backward-compat guardrail)
     if not _severity_passes(payload_snapshot):
         logger.debug(
             "[delivery] severity_floor suppressed %s/%s sev=%r",
@@ -297,6 +302,112 @@ async def enqueue(
             payload_json=payload_snapshot,
         )
 
+    # ── Phase 10C · Slice 4: ranking triage ──────────────────────────────────
+    # Load user prefs, rank the payload, and decide delivery_class.
+    # Non-fatal: any import/runtime error falls through to the old behaviour.
+    _canonical_sev = None   # type: Optional[str]
+    _sev_rank_int  = None   # type: Optional[int]
+    _ranking_meta  = {}     # type: Dict[str, Any]
+    try:
+        from app.db.repositories.delivery_prefs_repo import get_or_create_prefs as _get_prefs
+        from app.services.intelligence_ranking_service import (
+            rank_item as _rank_item,
+            RankingDecision as _RD,
+        )
+        from app.services import severity_model as _sm
+
+        _prefs = await _get_prefs(session, user_id=user_id, channel=channel)
+        _user_min_sev = (_prefs.min_severity if _prefs else None) or _sm.INFO
+        _enabled = _prefs.enabled if _prefs is not None else True
+
+        # enabled=False → hard suppress regardless of severity
+        if not _enabled:
+            logger.debug(
+                "[delivery] delivery_disabled user=%r channel=%r", user_id, channel
+            )
+            return DeliveryResult(
+                status=STATUS_SUPPRESSED_GUARDRAIL,
+                content_key=content_key,
+                channel=channel,
+                target_key=target_key,
+                reason=REASON_DELIVERY_DISABLED,
+                payload_json=payload_snapshot,
+            )
+
+        # Build a ranking-compatible item from the payload snapshot.
+        # content_key is already computed; don't include ranking metadata in it.
+        _rank_input = dict(payload_snapshot)
+        _rank_input.setdefault("ticker", target_key)
+        _rank_input.setdefault("source", "delivery")
+        if "created_at" not in _rank_input:
+            _rank_input["created_at"] = datetime.now(timezone.utc).isoformat()
+
+        _ranked = _rank_item(_rank_input, user_min_severity=_user_min_sev)
+        _canonical_sev = _ranked.canonical_severity
+        _sev_rank_int  = _ranked.severity_rank
+
+        _ranking_meta = {
+            "delivery_class":    _ranked.delivery_class,
+            "priority_score":    _ranked.priority_score,
+            "canonical_severity": _canonical_sev,
+            "severity_rank":     _sev_rank_int,
+            "reason_codes":      list(_ranked.reason_codes),
+        }
+
+        if _ranked.delivery_class == _RD.SUPPRESS:
+            logger.debug(
+                "[delivery] ranking_suppressed %s/%s sev=%r score=%.4f reasons=%r",
+                channel, target_key, _canonical_sev,
+                _ranked.priority_score, _ranked.reason_codes,
+            )
+            return DeliveryResult(
+                status=STATUS_SUPPRESSED_GUARDRAIL,
+                content_key=content_key,
+                channel=channel,
+                target_key=target_key,
+                reason=REASON_RANKING_SUPPRESS,
+                payload_json={**payload_snapshot, "ranking": _ranking_meta},
+            )
+    except (ImportError, AttributeError):
+        pass
+    except Exception as _rank_exc:
+        logger.warning("[delivery] ranking triage error (non-fatal): %r", _rank_exc)
+
+    # ── Phase 10C · Slice 5: digest routing ──────────────────────────────────
+    # When the ranking engine classifies an item as "digest", preserve it in a
+    # digest_batches row (in addition to the ledger row, which stays as the
+    # dedup anchor and audit trail).  Non-fatal.
+    if _ranking_meta.get("delivery_class") == "digest":
+        try:
+            from app.services.digest_batch_service import (
+                add_to_digest as _add_dig,
+                period_bucket_for as _bucket_for,
+            )
+            _bucket = _bucket_for(datetime.now(timezone.utc))
+            _digest_item: Dict[str, Any] = dict(payload_snapshot)
+            _digest_item.setdefault("content_key", content_key)
+            _digest_item.setdefault("target_key",  target_key)
+            _digest_item.setdefault("canonical_severity", _canonical_sev)
+            _digest_item.setdefault("severity_rank", _sev_rank_int)
+            _digest_item["source"] = _digest_item.get("source") or "digest_routing"
+            await _add_dig(
+                session,
+                user_id=user_id,
+                channel=channel,
+                period_bucket=_bucket,
+                item=_digest_item,
+                item_content_key=content_key,
+            )
+        except Exception as _dig_exc:
+            logger.warning("[delivery] digest routing error (non-fatal): %r", _dig_exc)
+
+    # Build the enriched payload that callers receive (ranking metadata embedded).
+    _enriched_payload = (
+        {**payload_snapshot, "ranking": _ranking_meta}
+        if _ranking_meta
+        else payload_snapshot
+    )
+
     # Delegate to guard_delivery for dedup + savepoint
     row = await loop_repo.delivery_create(
         session,
@@ -306,6 +417,8 @@ async def enqueue(
         content_hash=payload_hash,
         artifact_ref=artifact_ref,
         not_before_utc=not_before_utc,
+        canonical_severity=_canonical_sev,
+        severity_rank=_sev_rank_int,
     )
 
     if row is None:
@@ -319,19 +432,20 @@ async def enqueue(
             channel=channel,
             target_key=target_key,
             reason=REASON_DUPLICATE,
-            payload_json=payload_snapshot,
+            payload_json=_enriched_payload,
         )
 
     logger.debug(
-        "[delivery] enqueued id=%s content_key=%s… channel=%s target=%s",
+        "[delivery] enqueued id=%s content_key=%s… channel=%s target=%s sev=%r class=%r",
         row.id, content_key[:12], channel, target_key,
+        _canonical_sev, _ranking_meta.get("delivery_class"),
     )
     return DeliveryResult(
         status="pending",
         content_key=content_key,
         channel=channel,
         target_key=target_key,
-        payload_json=payload_snapshot,
+        payload_json=_enriched_payload,
         delivery_id=row.id,
     )
 
@@ -400,6 +514,31 @@ async def _process_shadow_row(
 
     # ── Guardrail 2: daily cap ────────────────────────────────────────────────
     if await _daily_cap_reached(session, channel, target_key, now):
+        # Phase 10C · Slice 5: redirect overflow to digest instead of discarding.
+        try:
+            from app.services.digest_batch_service import (
+                add_to_digest as _add_dig,
+                period_bucket_for as _bucket_for,
+            )
+            _overflow_item = {
+                "content_key":        row.content_key,
+                "target_key":         row.target_key,
+                "canonical_severity": getattr(row, "canonical_severity", None),
+                "severity_rank":      getattr(row, "severity_rank", None),
+                "source":             "daily_cap_overflow",
+            }
+            await _add_dig(
+                session,
+                user_id=None,           # ledger row has no user_id; use global
+                channel=channel,
+                period_bucket=_bucket_for(now),
+                item=_overflow_item,
+                item_content_key=row.content_key,
+            )
+        except Exception as _ov_exc:
+            logger.warning(
+                "[delivery] daily_cap overflow→digest failed (non-fatal): %r", _ov_exc
+            )
         await loop_repo.delivery_mark_suppressed(session, row.id)
         logger.debug("[delivery] suppressed %s daily_cap", row.id)
         return _fail(REASON_DAILY_CAP)
@@ -415,7 +554,26 @@ async def _process_shadow_row(
             logger.debug("[delivery] suppressed %s mute_until", row.id)
             return _fail(REASON_MUTE_UNTIL)
 
-    # ── All guardrails passed — shadow deliver ────────────────────────────────
+    # ── Phase 10C · Slice 6: relevance recheck ───────────────────────────────
+    # Re-evaluate whether the item is still fresh and relevant at flush time.
+    # Fail-open: if the recheck service raises, log and proceed to deliver.
+    try:
+        from app.services.delivery_relevance_service import relevance_recheck as _recheck
+        _rc = await _recheck(session, row, now)
+        if not _rc.should_deliver:
+            await loop_repo.delivery_mark_suppressed(session, row.id)
+            logger.debug(
+                "[delivery] recheck_suppressed %s reason=%r detail=%r",
+                row.id, _rc.suppress_reason, _rc.reason,
+            )
+            return _fail(_rc.suppress_reason or REASON_RECHECK)
+    except Exception as _rc_exc:
+        logger.warning(
+            "[delivery] relevance_recheck error (fail-open, delivering anyway): %r",
+            _rc_exc,
+        )
+
+    # ── All guardrails + recheck passed — shadow deliver ─────────────────────
     await _mark_shadow_delivered(session, row.id, now)
     logger.debug("[delivery] shadow_delivered %s channel=%s target=%s",
                  row.id, channel, target_key)

@@ -807,12 +807,17 @@ async def delivery_create(
     *,
     artifact_ref: Optional[str] = None,
     not_before_utc: Optional[datetime] = None,
+    canonical_severity: Optional[str] = None,
+    severity_rank: Optional[int] = None,
 ) -> Optional[Any]:
     """
     Insert a new delivery record.
 
     Uses a savepoint so a UNIQUE(content_key) conflict does not corrupt
     the outer transaction.  Returns None on conflict (dedup hard-stop).
+
+    Phase 10C · Slice 4: accepts canonical_severity and severity_rank so
+    the ranking triage decision is persisted on the ledger row at insert time.
     """
     if session is None:
         return None
@@ -829,6 +834,8 @@ async def delivery_create(
                 artifact_ref=artifact_ref,
                 not_before_utc=not_before_utc,
                 status="pending",
+                canonical_severity=canonical_severity,
+                severity_rank=severity_rank,
             ))
             await session.flush()
     except Exception:

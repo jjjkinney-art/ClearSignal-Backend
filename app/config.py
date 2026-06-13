@@ -245,6 +245,31 @@ class Settings(BaseSettings):
     # Values (ascending): info | warning | alert | critical
     delivery_severity_floor: str = "info"
 
+    # ── Phase 10C · Slice 9 — In-app delivery channel activation ─────────────
+    # Master gate for real in-app Notification creation.
+    # False (default) = all delivery remains shadow-only; no Notification rows
+    # are ever written by the in-app flusher.
+    # Set DELIVERY_IN_APP_ENABLED=true to allow Notification creation (still
+    # gated by DELIVERY_SHADOW and DELIVERY_INTERNAL_ONLY below).
+    delivery_in_app_enabled: bool = False
+
+    # Shadow mode for the in-app channel.  When True (default), flush_in_app()
+    # behaves identically to flush_pending_shadow() — ledger rows are marked
+    # delivered_shadow and no Notification rows are written.
+    # Set DELIVERY_SHADOW=false only after delivery_in_app_enabled=true is
+    # confirmed safe in internal validation.
+    delivery_shadow: bool = True
+
+    # Restrict real in-app delivery to users listed in loop_internal_user_ids.
+    # True (default) = only internal user_ids receive real Notification rows.
+    # False = canary rollout via delivery_canary_pct.
+    delivery_internal_only: bool = True
+
+    # Canary rollout percentage for real in-app delivery (0–95).
+    # Only effective when delivery_internal_only=False.
+    # 0 (default) = effectively off even when delivery_in_app_enabled=True.
+    delivery_canary_pct: int = 0
+
     # ── Phase 9A: Persistence layer ───────────────────────────────────────────
     # SQLAlchemy async database URL.  Supports two drivers:
     #   asyncpg  — postgresql+asyncpg://user:pass@host/db    (Render production)

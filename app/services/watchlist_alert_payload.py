@@ -45,6 +45,8 @@ try:
 except ImportError:
     raise ImportError("pydantic is required for WatchlistAlertPayload")
 
+from app.services import severity_model
+
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
@@ -57,32 +59,25 @@ PAYLOAD_VERSION: int = 1
 # Severity constants & normalization
 # ---------------------------------------------------------------------------
 
-SEV_CRITICAL = "critical"
-SEV_HIGH     = "high"
-SEV_MEDIUM   = "medium"
-SEV_LOW      = "low"
-SEV_INFO     = "info"
-
-_SEVERITY_MAP: Dict[str, str] = {
-    "critical": SEV_CRITICAL,
-    "high":     SEV_HIGH,
-    "medium":   SEV_MEDIUM,
-    "low":      SEV_LOW,
-    "info":     SEV_INFO,
-    "ignore":   SEV_INFO,      # AlertPriority "ignore" → info
-    "warning":  SEV_MEDIUM,
-    "alert":    SEV_HIGH,
-    "none":     SEV_INFO,
-    "":         SEV_LOW,
-}
+# Phase 10C · Slice 1 — severity is now owned by the canonical severity_model.
+# These SEV_* names are re-exported from the canonical ladder (unchanged
+# values) and normalize_severity delegates to the single sanctioned translator.
+# Behavior is identical to the pre-10C map: unknown / empty → LOW.
+SEV_CRITICAL = severity_model.CRITICAL
+SEV_HIGH     = severity_model.HIGH
+SEV_MEDIUM   = severity_model.MEDIUM
+SEV_LOW      = severity_model.LOW
+SEV_INFO     = severity_model.INFO
 
 
 def normalize_severity(raw: str) -> str:
     """Map any legacy severity string to the canonical five-level scale.
 
-    Unknown values fall back to ``low``.
+    Delegates to ``severity_model.to_canonical_severity`` (the one sanctioned
+    translator).  Unknown / empty values fall back to ``low`` — exactly the
+    pre-10C behavior of this function.
     """
-    return _SEVERITY_MAP.get((raw or "").strip().lower(), SEV_LOW)
+    return severity_model.from_watchlist_alert(raw)
 
 
 # ---------------------------------------------------------------------------

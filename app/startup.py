@@ -20,6 +20,11 @@ All loop flags default to off (loop_enabled=False); loop is inert until Slice 4.
 Phase 10B · Slice 2: DB Watchlist Membership schema registered.
 Migration: app/db/migrations/006_watchlist_membership.sql (1 new table → db_table_count 24→25).
 Table: watched_tickers. Backfilled from .clearSignal_watchlist/index.json at startup.
+Phase 10C · Slice 2: Delivery Preferences schema registered.
+Migration: app/db/migrations/007_briefing_delivery.sql (3 new tables → db_table_count 25→28).
+Tables: user_delivery_prefs, digest_batches, delivery_ledger_archive; plus two
+additive nullable columns on delivery_ledger (canonical_severity, severity_rank).
+Additive and inert — no delivery behavior changes until later 10C slices.
 """
 
 from __future__ import annotations

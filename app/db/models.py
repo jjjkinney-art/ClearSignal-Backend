@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 25 tables.
+SQLAlchemy ORM models — 28 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -45,6 +45,12 @@ Continuous Intelligence Loop (Phase 10A · Slice 1)
 23. delivery_ledger        — Pending/delivered artifact records; UNIQUE(content_key) dedup
 24. notifications          — In-app channel sink; frontend polls GET /notifications
 25. watched_tickers        — DB-backed watchlist membership (Phase 10B · Slice 2)
+
+Briefing & Delivery (Phase 10C · Slice 2)
+26. user_delivery_prefs    — Per-user/channel delivery preferences (additive, inert)
+27. digest_batches         — Per-user/channel/bucket digest accumulator (additive, inert)
+28. delivery_ledger_archive — Append-only aged-out delivery rows (additive, inert)
+    plus two additive nullable columns on delivery_ledger (canonical_severity, severity_rank)
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -957,6 +963,12 @@ class DeliveryLedger(Base):
     # not_before_utc: set by quiet hours, frequency cap, or mute guardrails
     not_before_utc = Column(DateTime(timezone=True), nullable=True, default=None)
 
+    # Phase 10C · Slice 2: additive canonical-severity columns (nullable — no rewrite).
+    # canonical_severity ∈ {critical|high|medium|low|info} (severity_model);
+    # severity_rank is its numeric rank (0..4). Written by Slice 3+ ranking.
+    canonical_severity = Column(String(20), nullable=True, default=None, index=True)
+    severity_rank      = Column(Integer,    nullable=True, default=None)
+
     created_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
     delivered_at = Column(DateTime(timezone=True), nullable=True,  default=None)
 
@@ -1017,3 +1029,106 @@ class WatchedTicker(Base):
     active       = Column(Boolean,      nullable=False, default=True, index=True)
     added_at     = Column(DateTime(timezone=True), nullable=False, default=_now)
     updated_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 26. user_delivery_prefs  (per-user, per-channel delivery preferences — 10C·S2)
+# ---------------------------------------------------------------------------
+
+class UserDeliveryPref(Base):
+    """Per-user, per-channel delivery preferences.
+
+    user_id is NULL for the global (single-user) preference set, mirroring
+    watched_tickers.  An ABSENT row means "use system defaults" — and the
+    column defaults here mirror the existing settings.delivery_* globals so an
+    absent row and a default row behave identically (safe defaults; spec §5.5).
+
+    Phase 10C · Slice 2 — schema only.  No delivery code reads these yet;
+    Slice 7 wires per-user preference resolution at the delivery boundary.
+
+    min_severity is a CANONICAL severity (severity_model): critical|high|medium|low|info.
+    """
+
+    __tablename__ = "user_delivery_prefs"
+    __table_args__ = (
+        UniqueConstraint("user_id", "channel", name="uq_user_delivery_prefs_user_channel"),
+    )
+
+    id                = Column(String(36),  primary_key=True, default=_uuid)
+    user_id           = Column(String(64),  nullable=True,  default=None, index=True)
+    channel           = Column(String(40),  nullable=False, default="in_app", index=True)
+    enabled           = Column(Boolean,     nullable=False, default=True)
+    # min_severity: canonical severity floor; "info" matches delivery_severity_floor
+    min_severity      = Column(String(20),  nullable=False, default="info")
+    quiet_hours_start = Column(Integer,     nullable=False, default=22)
+    quiet_hours_end   = Column(Integer,     nullable=False, default=7)
+    timezone          = Column(String(64),  nullable=False, default="UTC")
+    daily_cap         = Column(Integer,     nullable=False, default=20)
+    mute_until        = Column(DateTime(timezone=True), nullable=True, default=None)
+    created_at        = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at        = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 27. digest_batches  (per-user/channel/bucket digest accumulator — 10C·S2)
+# ---------------------------------------------------------------------------
+
+class DigestBatch(Base):
+    """One digest batch per (user_id, channel, period_bucket).
+
+    The future §4.5 graceful-overflow sink: when alert volume would breach the
+    daily cap, lower-severity changes accumulate here into one digest item.
+    UNIQUE(user_id, channel, period_bucket) is the append-idempotency constraint
+    (a second change in the bucket updates the row, never inserts a duplicate).
+
+    Phase 10C · Slice 2 — schema only.  No batching logic exists yet (Slice 5).
+
+    status: open | rendered | delivered.
+    """
+
+    __tablename__ = "digest_batches"
+    __table_args__ = (
+        UniqueConstraint(
+            "user_id", "channel", "period_bucket",
+            name="uq_digest_batches_user_channel_bucket",
+        ),
+    )
+
+    id            = Column(String(36),  primary_key=True, default=_uuid)
+    user_id       = Column(String(64),  nullable=True,  default=None, index=True)
+    channel       = Column(String(40),  nullable=False, default="in_app")
+    period_bucket = Column(String(40),  nullable=False, index=True)
+    status        = Column(String(20),  nullable=False, default="open", index=True)
+    item_count    = Column(Integer,     nullable=False, default=0)
+    payload_json  = _json_col(nullable=False, default=dict)
+    content_key   = Column(String(64),  nullable=True,  default=None, index=True)
+    created_at    = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at    = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 28. delivery_ledger_archive  (append-only aged-out delivery rows — 10C·S2)
+# ---------------------------------------------------------------------------
+
+class DeliveryLedgerArchive(Base):
+    """Append-only archive of aged-out delivery_ledger rows.
+
+    Mirrors the job_runs / dossier_revision audit discipline: NEVER updated or
+    deleted in any repository.  Preserves the delivery audit trail when live
+    ledger rows are rolled up (future Slice 10 archival job).
+
+    Phase 10C · Slice 2 — schema only.  No archival logic runs yet beyond the
+    minimal archive_delivery helper (which is unused by any delivery path).
+    """
+
+    __tablename__ = "delivery_ledger_archive"
+
+    id                   = Column(String(36),  primary_key=True, default=_uuid)
+    original_delivery_id = Column(String(36),  nullable=True, default=None, index=True)
+    user_id              = Column(String(64),  nullable=True, default=None, index=True)
+    channel              = Column(String(40),  nullable=False, default="in_app")
+    target_key           = Column(String(200), nullable=True, default=None)
+    status               = Column(String(20),  nullable=True, default=None)
+    payload_json         = _json_col(nullable=False, default=dict)
+    content_key          = Column(String(64),  nullable=True, default=None, index=True)
+    archived_at          = Column(DateTime(timezone=True), nullable=False, default=_now, index=True)

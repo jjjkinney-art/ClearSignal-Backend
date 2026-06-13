@@ -47,6 +47,20 @@ except Exception:
 
 router = APIRouter()
 
+# Phase 10C · Slice 7 — delivery preferences sub-router
+try:
+    from .routers.delivery_preferences import router as _delivery_prefs_router
+    router.include_router(_delivery_prefs_router)
+except Exception as _dp_err:
+    logger.warning("[api] delivery_preferences router unavailable: %r", _dp_err)
+
+# Phase 10C · Slice 8 — delivery inbox / digest read API
+try:
+    from .routers.delivery_inbox import router as _delivery_inbox_router
+    router.include_router(_delivery_inbox_router)
+except Exception as _di_err:
+    logger.warning("[api] delivery_inbox router unavailable: %r", _di_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
@@ -742,6 +756,39 @@ async def admin_loop_enable() -> dict:
         "config_loop_enabled": bool(_s.loop_enabled),
         "canary_pct":         int(_s.loop_canary_pct),
     }
+
+
+@router.get(
+    "/admin/delivery-status",
+    summary="Phase 10C · Slice 10 — Delivery observability snapshot",
+    tags=["admin"],
+)
+async def admin_delivery_status() -> dict:
+    """Return a complete, null-safe Phase 10C delivery observability snapshot.
+
+    Delegates to delivery_observability_service.build_delivery_snapshot(), which covers:
+    delivery feature flags, ledger counts by status and severity, notification counts,
+    digest counts, user preference coverage, recent delivery decisions, guardrail
+    settings, and duplicate count.
+
+    Read-only.  Safe to call at any time regardless of delivery flags.
+    DB-down-safe: DB sections degrade to zeros rather than 500.
+
+    Key validation fields:
+      safe_state             — True when delivery_in_app_enabled=False OR delivery_shadow=True
+      delivery_flags         — all 4 Phase 10C flags
+      ledger.shadow_count    — rows marked delivered_shadow (validates shadow flow)
+      notifications.delivery_notifications — real Notification rows (0 in safe state)
+      duplicate_count        — in-process dedup counter (should be 0 in clean runs)
+    """
+    from .services.delivery_observability_service import build_delivery_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_delivery_snapshot(_sess)
+    except Exception:
+        return await build_delivery_snapshot(None)
 
 
 @router.post(
