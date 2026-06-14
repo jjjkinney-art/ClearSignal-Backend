@@ -29,6 +29,38 @@ Phase 10D · Slice 1: Portfolio Intelligence schema registered.
 Migration: app/db/migrations/008_portfolio_intelligence.sql (3 new tables → db_table_count 28→31).
 Tables: portfolios, portfolio_positions, portfolio_insights.
 Additive and inert — no analytical or delivery behavior changes until later 10D slices.
+Phase 16 · Slice 1: Accounts & Identity schema registered.
+Migration: app/db/migrations/009_accounts_identity.sql (4 new tables → db_table_count 31→35).
+Tables: users, user_profiles, user_settings, audit_log.
+Also: forward-compat org_id column added to portfolios (Phase 16 §8.2 Teams placeholder).
+Additive and inert — no auth behavior changes until later Phase 16 slices.
+AUTH_ENABLED defaults to false throughout all Phase 16 build slices.
+Phase 16 · Slice 2: System user seed + NULL ownership claim registered.
+Service: app/services/system_user_service.py — ensure_system_user + claim_null_ownership.
+At startup: SYSTEM_DEFAULT_USER row inserted (idempotent); all 17 nullable-user_id tables
+scanned; NULL rows claimed to SYSTEM_DEFAULT_USER_ID.  Exact inverse: restore_null_ownership.
+Non-destructive: UPDATE only; no DELETE or INSERT of content rows; real-user rows untouched.
+Phase 16 · Slice 3: JWT middleware registered in bypass mode.
+Middleware: app/middleware/auth_middleware.py — AuthMiddleware(BaseHTTPMiddleware).
+Auth config: AUTH_ENABLED=false, SUPABASE_JWT_SECRET, SUPABASE_PROJECT_URL, SUPABASE_AUDIENCE,
+AUTH_BYPASS_USER_ID.  Every request → request.state.{user_id, auth_subject, is_authenticated}.
+Bypass (AUTH_ENABLED=false): stamps SYSTEM_DEFAULT_USER_ID, never inspects tokens.
+Enforcement (AUTH_ENABLED=true, not yet activated): HS256 with JWT secret, RS256 via JWKS.
+Helper: app/dependencies/auth.py — get_current_user_id(request).  No routes protected yet.
+Phase 16 · Slice 5: Ownership threading through services.
+Service: app/services/ownership_service.py — current_owner_id, resolve_effective_user_id,
+is_owner, assert_can_access.  Bypass (AUTH_ENABLED=false): always SYSTEM_DEFAULT_USER_ID.
+Updated: delivery_preferences router (GET+PATCH), delivery_inbox router (list/get/mark/digests),
+watchlist_service async methods (add/remove/is_tracked/get_watchlist/get_entry).
+Isolation: is_owner() and assert_can_access() enforce per-user row isolation in auth mode.
+No route protection yet (Slice 6).  Bypass mode behaviour completely unchanged.
+Phase 16 · Slice 4: Auth routes + Supabase user wiring.
+Routes: GET /auth/me, GET /auth/session, POST /auth/logout.
+Service: app/services/supabase_auth_service.py — resolve_user_from_jwt, provision_new_user,
+get_identity_context, touch_last_sign_in.
+Resolution order: auth_subject lookup → email-collision bind → first-login provision.
+provision_new_user creates users + user_profiles + user_settings atomically (idempotent).
+All routes work in bypass mode.  No route protection yet (Slice 5).
 """
 
 from __future__ import annotations

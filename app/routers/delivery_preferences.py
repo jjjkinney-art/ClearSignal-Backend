@@ -1,5 +1,5 @@
 """
-Delivery Preferences API — Phase 10C · Slice 7.
+Delivery Preferences API — Phase 10C · Slice 7 / Phase 16 · Slice 5.
 
 Exposes two endpoints for reading and updating per-channel delivery
 preferences stored in user_delivery_prefs.
@@ -7,12 +7,16 @@ preferences stored in user_delivery_prefs.
     GET  /delivery/preferences
     PATCH /delivery/preferences
 
-Authentication
+Authentication / ownership (Phase 16 · Slice 5)
 --------------
-This backend uses an admin/internal pattern (no per-user auth middleware
-yet).  The optional `user_id` query-parameter identifies which preference
-row to read or write; omitting it selects the global (user_id=NULL) row
-that the delivery triage and relevance recheck already consult.
+When AUTH_ENABLED=false (bypass, the default), the effective user_id resolves
+to SYSTEM_DEFAULT_USER_ID so the routes continue returning the system-owned
+preference rows that Slice 2 claimed from NULL.  Behaviour is identical to
+pre-Phase-16 for all existing callers.
+
+When AUTH_ENABLED=true, user_id is resolved from request.state (stamped by
+AuthMiddleware) rather than from a query-parameter.  The optional `user_id`
+query-parameter is honoured as an admin override when explicitly provided.
 
 Design invariants
 -----------------
@@ -29,11 +33,12 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 from app.db.connection import get_session
+from app.services.ownership_service import resolve_effective_user_id
 from app.db.models import UserDeliveryPref
 from app.db.repositories.delivery_prefs_repo import update_prefs
 from app.services.severity_model import (
@@ -188,8 +193,9 @@ def _validate_channel(channel: str) -> str:
     summary="Read delivery preferences",
 )
 async def get_delivery_preferences(
+    request: Request,
     channel: str = Query(default="in_app", description="Delivery channel"),
-    user_id: Optional[str] = Query(default=None, description="User ID (omit for global prefs)"),
+    user_id: Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
 ) -> DeliveryPrefsResponse:
     """Return the current delivery preferences for the given channel / user.
 
@@ -198,8 +204,14 @@ async def get_delivery_preferences(
     custom preferences.
 
     `row_exists: false` in the response indicates that defaults were returned.
+
+    Phase 16 · Slice 5: when `user_id` is not provided the effective owner is
+    resolved from request.state (SYSTEM_DEFAULT_USER_ID in bypass mode, real
+    user_id when AUTH_ENABLED=true).
     """
     channel = _validate_channel(channel)
+    # Resolve ownership: explicit admin override → else JWT/bypass identity
+    effective_uid: Optional[str] = user_id if user_id is not None else resolve_effective_user_id(request)
 
     try:
         async with get_session() as session:
@@ -207,8 +219,8 @@ async def get_delivery_preferences(
                 select(UserDeliveryPref)
                 .where(UserDeliveryPref.channel == channel)
                 .where(
-                    UserDeliveryPref.user_id == user_id
-                    if user_id is not None
+                    UserDeliveryPref.user_id == effective_uid
+                    if effective_uid is not None
                     else UserDeliveryPref.user_id.is_(None)
                 )
                 .execution_options(populate_existing=True)
@@ -216,14 +228,14 @@ async def get_delivery_preferences(
             row = (await session.execute(stmt)).scalar_one_or_none()
 
         if row is None:
-            return _safe_defaults(channel, user_id)
-        return _row_to_response(row, channel, user_id)
+            return _safe_defaults(channel, effective_uid)
+        return _row_to_response(row, channel, effective_uid)
 
     except HTTPException:
         raise
     except Exception as exc:
         logger.warning("[delivery_prefs] GET failed (returning defaults): %r", exc)
-        return _safe_defaults(channel, user_id)
+        return _safe_defaults(channel, effective_uid)
 
 
 @router.patch(
@@ -232,9 +244,10 @@ async def get_delivery_preferences(
     summary="Update delivery preferences",
 )
 async def patch_delivery_preferences(
+    request: Request,
     body: DeliveryPrefsPatch,
     channel: str = Query(default="in_app", description="Delivery channel"),
-    user_id: Optional[str] = Query(default=None, description="User ID (omit for global prefs)"),
+    user_id: Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
 ) -> DeliveryPrefsResponse:
     """Create-or-update delivery preferences for the given channel / user.
 
@@ -249,8 +262,11 @@ async def patch_delivery_preferences(
     * `timezone` is stored as-is; unknown IANA zones default to UTC at
       delivery time (fail-safe).
     * `mute_until` is normalised to UTC if tz-naive.
+
+    Phase 16 · Slice 5: ownership resolved from request.state when user_id not provided.
     """
     channel = _validate_channel(channel)
+    effective_uid: Optional[str] = user_id if user_id is not None else resolve_effective_user_id(request)
 
     update_fields = body.non_null_fields()
 
@@ -258,7 +274,7 @@ async def patch_delivery_preferences(
         async with get_session() as session:
             row = await update_prefs(
                 session,
-                user_id=user_id,
+                user_id=effective_uid,
                 channel=channel,
                 **update_fields,
             )
@@ -266,7 +282,7 @@ async def patch_delivery_preferences(
 
         if row is None:
             raise HTTPException(status_code=503, detail="database unavailable")
-        return _row_to_response(row, channel, user_id)
+        return _row_to_response(row, channel, effective_uid)
 
     except HTTPException:
         raise

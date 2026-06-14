@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 28 tables.
+SQLAlchemy ORM models — 35 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -13,6 +13,9 @@ Phase 10A · Slice 1: Continuous Intelligence Loop (tables 20–24) — schedule
           columns on briefing_sessions (content_hash, delivery_channel).
 Phase 10B · Slice 2: DB Watchlist Membership (table 25) — watched_tickers;
           DB-backed add/remove/list for the global watchlist.
+Phase 16 · Slice 1: Accounts & Identity (tables 32–35) — users, user_profiles,
+          user_settings, audit_log; plus forward-compat org_id column on portfolios.
+          Additive and inert — no auth behavior until later Phase 16 slices.
 
 Tables
 ------
@@ -51,6 +54,17 @@ Briefing & Delivery (Phase 10C · Slice 2)
 27. digest_batches         — Per-user/channel/bucket digest accumulator (additive, inert)
 28. delivery_ledger_archive — Append-only aged-out delivery rows (additive, inert)
     plus two additive nullable columns on delivery_ledger (canonical_severity, severity_rank)
+
+Portfolio Intelligence (Phase 10D · Slice 1)
+29. portfolios             — User-authored portfolio head (one per named collection)
+30. portfolio_positions    — Per-portfolio position rows
+31. portfolio_insights     — System-derived portfolio-level insights
+
+Accounts & Identity (Phase 16 · Slice 1)
+32. users                  — Canonical identity record (one per Supabase account)
+33. user_profiles          — Display + onboarding state (1:1 with users)
+34. user_settings          — Briefing/delivery/UI preferences (1:1 with users)
+35. audit_log              — Append-only mutation trail; NEVER updated or deleted
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -1164,6 +1178,10 @@ class Portfolio(Base):
     updated_at  = Column(DateTime(timezone=True), nullable=False, default=_now,
                          onupdate=_now)
 
+    # Phase 16 · Slice 1: forward-compat Teams anchor (spec §8.2).
+    # Nullable placeholder; no organizations table in Phase 16.
+    org_id = Column(String(36), nullable=True, default=None)
+
     __table_args__ = (
         UniqueConstraint("user_id", "name", name="uq_portfolios_user_name"),
     )
@@ -1269,3 +1287,158 @@ class PortfolioInsight(Base):
     updated_at           = Column(DateTime(timezone=True), nullable=False, default=_now,
                                   onupdate=_now)
     last_delivered_at    = Column(DateTime(timezone=True), nullable=True, default=None)
+
+
+# ===========================================================================
+# Phase 16 · Slice 1 — Accounts & Identity (tables 32–35)
+#
+# Additive and inert: tables exist but no auth behavior is wired until
+# later Phase 16 slices.  No existing table is modified (except a
+# forward-compat org_id column added to portfolios above).
+#
+# Conventions carried from all prior tables:
+#   - UUID string PKs (VARCHAR(36)), no DB-side uuid generation
+#   - created_at / updated_at using _now()
+#   - user_id VARCHAR(36) (matches users.id; soft FK, no DDL constraint)
+#   - null-session safety enforced in the repository layer (account_repo.py)
+#   - No password column anywhere — Supabase is the sole credential custodian
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# 32. users  (canonical identity record — one per Supabase account)
+# ---------------------------------------------------------------------------
+
+class User(Base):
+    """Canonical identity record — one row per Supabase user account.
+
+    `email` is case-folded at write time; the UNIQUE constraint on the DB
+    column provides the hard dedup backstop.
+
+    `account_type` carries the plan/role discriminator:
+        individual | team_member | institutional | system
+
+    `stripe_customer_id` is a nullable forward-compat placeholder (spec §8.1)
+    — never written in Phase 16 build slices.
+
+    `auth_subject` is the Supabase JWT 'sub' claim and the binding between
+    this row and the identity provider.  NULL until Slice 3 wires Supabase.
+
+    The system user (SYSTEM_DEFAULT_USER_ID) has `account_type='system'`
+    and `email='system@clearsignal.internal'`.
+    """
+
+    __tablename__ = "users"
+
+    id                 = Column(String(36),  primary_key=True, default=_uuid)
+    email              = Column(String(320), nullable=False, unique=True)
+    email_verified     = Column(Boolean,     nullable=False, default=False)
+    # account_type: individual | team_member | institutional | system
+    account_type       = Column(String(20),  nullable=False, default="individual")
+    is_active          = Column(Boolean,     nullable=False, default=True)
+    # Forward-compat Stripe placeholder — nullable, never written in Phase 16.
+    stripe_customer_id = Column(String(64),  nullable=True,  default=None, unique=True)
+    # Supabase JWT 'sub' claim — NULL until Slice 3.
+    auth_subject       = Column(String(255), nullable=True,  default=None, unique=True)
+    last_sign_in_at    = Column(DateTime(timezone=True), nullable=True, default=None)
+    created_at         = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at         = Column(DateTime(timezone=True), nullable=False, default=_now,
+                                onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 33. user_profiles  (display + onboarding state — 1:1 with users)
+# ---------------------------------------------------------------------------
+
+class UserProfile(Base):
+    """Display metadata and onboarding state for one user.
+
+    `user_id` is the primary key — strict 1:1 with users.  Created on
+    first sign-in (or on system-user seed); never deleted.
+
+    `onboarding_step` drives the spec §7 sign-up wizard:
+        pending | watchlist | portfolio | briefing | complete
+    """
+
+    __tablename__ = "user_profiles"
+
+    # PK is user_id — 1:1 with users
+    user_id                 = Column(String(36),  primary_key=True)
+    display_name            = Column(String(200), nullable=True,  default=None)
+    timezone                = Column(String(64),  nullable=False, default="UTC")
+    locale                  = Column(String(10),  nullable=False, default="en")
+    # onboarding_step: pending | watchlist | portfolio | briefing | complete
+    onboarding_step         = Column(String(30),  nullable=False, default="pending")
+    onboarding_completed_at = Column(DateTime(timezone=True), nullable=True, default=None)
+    created_at              = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at              = Column(DateTime(timezone=True), nullable=False, default=_now,
+                                     onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 34. user_settings  (briefing + delivery + UI preferences — 1:1 with users)
+# ---------------------------------------------------------------------------
+
+class UserSettings(Base):
+    """Per-user briefing delivery and UI preferences.
+
+    `user_id` is the primary key — strict 1:1 with users.  Created on
+    first sign-in with safe defaults (mirrors system-wide settings defaults).
+
+    `briefing_time_utc` is the UTC hour (0–23) for daily briefing delivery.
+    `theme` ∈ {light, dark, system}.
+    `delivery_channel` ∈ {in_app, email, push}.
+    """
+
+    __tablename__ = "user_settings"
+
+    # PK is user_id — 1:1 with users
+    user_id              = Column(String(36),  primary_key=True)
+    # UTC hour for the daily briefing (0–23)
+    briefing_time_utc    = Column(Integer,     nullable=False, default=7)
+    quiet_hours_start    = Column(Integer,     nullable=False, default=22)
+    quiet_hours_end      = Column(Integer,     nullable=False, default=7)
+    # delivery_channel: in_app | email | push
+    delivery_channel     = Column(String(40),  nullable=False, default="in_app")
+    digest_enabled       = Column(Boolean,     nullable=False, default=True)
+    # theme: light | dark | system
+    theme                = Column(String(20),  nullable=False, default="system")
+    created_at           = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at           = Column(DateTime(timezone=True), nullable=False, default=_now,
+                                  onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 35. audit_log  (append-only mutation trail — NO UPDATE OR DELETE)
+# ---------------------------------------------------------------------------
+
+class AuditLog(Base):
+    """Immutable audit record for every user-scoped mutation.
+
+    This table has NO update or delete path in any repository.  It is the
+    compliance trail: who did what, to what resource, from which IP.
+
+    `user_id` is the actor (may be the system user UUID).
+    `resource` is the entity type (e.g. 'portfolio', 'watchlist', 'user').
+    `resource_id` is the entity PK.
+    `action` ∈ {create, update, delete, import, export, login, logout}.
+
+    Analogous to dossier_revision and job_runs: append-only, immutable,
+    permanent.  A write failure MUST NOT block the underlying user action
+    (non-fatal, non-transactional audit writes per spec §6.6).
+    """
+
+    __tablename__ = "audit_log"
+
+    id          = Column(String(36),  primary_key=True, default=_uuid)
+    # user_id: the actor; may be the system user UUID
+    user_id     = Column(String(36),  nullable=True,  default=None)
+    # resource: entity type (e.g. 'portfolio', 'watchlist', 'user')
+    resource    = Column(String(60),  nullable=False, default="")
+    resource_id = Column(String(200), nullable=True,  default=None)
+    # action: create | update | delete | import | export | login | logout
+    action      = Column(String(40),  nullable=False, default="")
+    ip_address  = Column(String(45),  nullable=True,  default=None)  # IPv4 or IPv6
+    user_agent  = Column(Text,        nullable=True,  default=None)
+    # created_at is immutable — this row is never updated
+    created_at  = Column(DateTime(timezone=True), nullable=False, default=_now)

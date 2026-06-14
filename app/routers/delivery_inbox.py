@@ -34,12 +34,13 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import select, or_
 
 from app.db.connection import get_session
 from app.db.models import DeliveryLedger, DigestBatch, Notification
+from app.services.ownership_service import resolve_effective_user_id
 
 logger = logging.getLogger(__name__)
 
@@ -191,6 +192,7 @@ def _validate_status_filter(statuses_raw: Optional[str]) -> Optional[List[str]]:
     summary="List delivery inbox items",
 )
 async def list_inbox(
+    request:     Request,
     status:      Optional[str] = Query(
         default="pending,delivered_shadow",
         description="Comma-separated status filter",
@@ -201,7 +203,7 @@ async def list_inbox(
         default=None,
         description="Canonical severity floor (info/low/medium/high/critical)",
     ),
-    user_id:     Optional[str] = Query(default=None, description="For read-state lookup only"),
+    user_id:     Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
     limit:       int           = Query(default=_DEFAULT_LIMIT, ge=1, le=_MAX_LIMIT),
 ) -> List[InboxItem]:
     """Return delivery_ledger rows ordered newest-first.
@@ -240,7 +242,8 @@ async def list_inbox(
             stmt = stmt.order_by(DeliveryLedger.created_at.desc()).limit(limit)
             rows = (await session.execute(stmt)).scalars().all()
 
-            uid = user_id or _ADMIN_SENTINEL
+            effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
+            uid = effective_uid or _ADMIN_SENTINEL
             ids = [r.id for r in rows]
             read_set = await _read_ids_for(session, uid, ids)
 
@@ -259,8 +262,9 @@ async def list_inbox(
     summary="Get a single delivery inbox item",
 )
 async def get_inbox_item(
+    request:     Request,
     delivery_id: str,
-    user_id:     Optional[str] = Query(default=None, description="For read-state lookup"),
+    user_id:     Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
 ) -> InboxItem:
     """Return one delivery_ledger row by ID."""
     try:
@@ -274,7 +278,8 @@ async def get_inbox_item(
             if row is None:
                 raise HTTPException(status_code=404, detail=f"delivery {delivery_id!r} not found")
 
-            uid      = user_id or _ADMIN_SENTINEL
+            effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
+            uid      = effective_uid or _ADMIN_SENTINEL
             read_set = await _read_ids_for(session, uid, [delivery_id])
 
         return _row_to_inbox(row, read_set)
@@ -292,8 +297,9 @@ async def get_inbox_item(
     summary="Mark a delivery inbox item as read",
 )
 async def mark_inbox_read(
+    request:     Request,
     delivery_id: str,
-    user_id:     Optional[str] = Query(default=None, description="User marking as read"),
+    user_id:     Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
 ) -> MarkReadResponse:
     """Mark a delivery_ledger item as read.
 
@@ -303,7 +309,8 @@ async def mark_inbox_read(
 
     No real notification is dispatched; no external sends occur.
     """
-    uid = user_id or _ADMIN_SENTINEL
+    effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
+    uid = effective_uid or _ADMIN_SENTINEL
     now = datetime.now(timezone.utc)
 
     try:
@@ -360,19 +367,24 @@ async def mark_inbox_read(
     summary="List digest batches",
 )
 async def list_digests(
-    user_id:       Optional[str] = Query(default=None),
+    request:       Request,
+    user_id:       Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
     channel:       Optional[str] = Query(default=None),
     status:        Optional[str] = Query(default=None, description="open|delivered_shadow|…"),
     period_bucket: Optional[str] = Query(default=None, description="YYYY-MM-DD"),
     limit:         int           = Query(default=_DEFAULT_LIMIT, ge=1, le=_MAX_LIMIT),
 ) -> List[DigestItem]:
-    """Return digest_batches rows ordered by most-recently-updated."""
+    """Return digest_batches rows ordered by most-recently-updated.
+
+    Phase 16 · Slice 5: user_id defaults to the request owner identity when
+    not provided, ensuring users only see their own digest batches.
+    """
+    effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
     try:
         async with get_session() as session:
             stmt = select(DigestBatch)
 
-            if user_id is not None:
-                stmt = stmt.where(DigestBatch.user_id == user_id)
+            stmt = stmt.where(DigestBatch.user_id == effective_uid)
             if channel:
                 stmt = stmt.where(DigestBatch.channel == channel)
             if status:

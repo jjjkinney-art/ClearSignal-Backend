@@ -61,6 +61,20 @@ try:
 except Exception as _di_err:
     logger.warning("[api] delivery_inbox router unavailable: %r", _di_err)
 
+# Phase 16 · Slice 4 — auth routes (/auth/me, /auth/session, /auth/logout)
+try:
+    from .routers.auth import router as _auth_router
+    router.include_router(_auth_router)
+except Exception as _auth_err:
+    logger.warning("[api] auth router unavailable: %r", _auth_err)
+
+# Phase 16 · Slice 8 — admin auth observability (GET /admin/auth-status)
+try:
+    from .routers.admin_auth import router as _admin_auth_router
+    router.include_router(_admin_auth_router)
+except Exception as _aa_err:
+    logger.warning("[api] admin_auth router unavailable: %r", _aa_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.

@@ -94,6 +94,28 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     except Exception as _bf_exc:
         logger.warning("[startup] 10B watched_tickers backfill failed (non-fatal): %r", _bf_exc)
 
+    # Phase 16 · Slice 2 — System user seed + NULL ownership claim (idempotent)
+    # Ensures the well-known SYSTEM_DEFAULT_USER row exists and claims every
+    # NULL user_id row across all user-scoped tables.  Runs at every boot;
+    # second and subsequent runs claim 0 rows (idempotent).
+    try:
+        from .db import get_session as _get_session_16
+        from .services.system_user_service import (
+            ensure_system_user as _ensure_system_user,
+            claim_null_ownership as _claim_null,
+        )
+        async with _get_session_16() as _identity_sess:
+            if _identity_sess is not None:
+                await _ensure_system_user(_identity_sess)
+                _claim_result = await _claim_null(_identity_sess)
+                await _identity_sess.commit()
+                logger.info(
+                    "[startup] 16.2 identity: system user seeded, %d orphan rows claimed",
+                    _claim_result.total,
+                )
+    except Exception as _identity_exc:
+        logger.warning("[startup] 16.2 identity seed failed (non-fatal): %r", _identity_exc)
+
     yield
 
     # Phase 9A — dispose DB engine on shutdown
@@ -112,6 +134,14 @@ def create_app() -> FastAPI:
         description="Backend service for an AI‑powered company analysis platform",
         lifespan=lifespan,
     )
+
+    # Phase 16 · Slice 3 — Identity middleware (runs innermost; added first so
+    # CORSMiddleware wraps it and preflight requests are handled before auth).
+    # In bypass mode (AUTH_ENABLED=false) this is a pure no-op: stamps
+    # request.state.user_id = SYSTEM_DEFAULT_USER_ID on every request and
+    # returns immediately without inspecting headers or verifying JWTs.
+    from .middleware.auth_middleware import AuthMiddleware
+    app.add_middleware(AuthMiddleware)
 
     # CORS (allow all origins for development — tighten in production)
     app.add_middleware(

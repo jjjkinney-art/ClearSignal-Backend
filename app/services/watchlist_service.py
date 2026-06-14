@@ -227,15 +227,18 @@ class WatchlistService:
         session,
         ticker: str,
         company_name: str = "",
+        user_id: Optional[str] = None,
     ) -> WatchlistEntry:
         """DB-backed add_ticker for async callers (loop producers, API routes).
 
+        Phase 16 · Slice 5: accepts user_id so rows are written under the
+        correct owner.  Pass SYSTEM_DEFAULT_USER_ID in bypass/loop context.
         Writes to DB and also updates the file index so that file-based
         metadata reads see the new entry.
         """
         from ..db.repositories.watchlist_repo import ticker_add as _db_add
         t = _ticker_upper(ticker)
-        row = await _db_add(session, t, company_name)
+        row = await _db_add(session, t, company_name, user_id=user_id)
         # Also update file index (best-effort; keeps metadata in sync)
         file_entry = self._add_ticker_file(t, company_name)
         if row is None:
@@ -248,11 +251,15 @@ class WatchlistService:
         self,
         session,
         ticker: str,
+        user_id: Optional[str] = None,
     ) -> bool:
-        """DB-backed remove_ticker for async callers."""
+        """DB-backed remove_ticker for async callers.
+
+        Phase 16 · Slice 5: scoped to user_id so only the owner's row is deactivated.
+        """
         from ..db.repositories.watchlist_repo import ticker_deactivate as _db_deactivate
         t = _ticker_upper(ticker)
-        db_ok = await _db_deactivate(session, t)
+        db_ok = await _db_deactivate(session, t, user_id=user_id)
         file_ok = self._remove_ticker_file(t)
         return db_ok or file_ok
 
@@ -260,11 +267,15 @@ class WatchlistService:
         self,
         session,
         ticker: str,
+        user_id: Optional[str] = None,
     ) -> bool:
-        """DB-backed is_tracked for async callers."""
+        """DB-backed is_tracked for async callers.
+
+        Phase 16 · Slice 5: scoped to user_id.
+        """
         from ..db.repositories.watchlist_repo import ticker_is_active as _db_is_active
         t = _ticker_upper(ticker)
-        db_result = await _db_is_active(session, t)
+        db_result = await _db_is_active(session, t, user_id=user_id)
         if session is not None:
             return db_result
         return t in self._load_index()
@@ -272,8 +283,15 @@ class WatchlistService:
     async def get_watchlist_async(
         self,
         session,
+        user_id: Optional[str] = None,
     ) -> List[WatchlistEntry]:
         """DB-backed get_watchlist for async callers.
+
+        Phase 16 · Slice 5: user_id is now threaded through to the repo so
+        only the owner's tickers are returned.  Default None keeps backward
+        compat for callers that haven't been updated (queries WHERE user_id IS
+        NULL, which returns 0 rows post-Slice-2 — file fallback activates).
+        Pass SYSTEM_DEFAULT_USER_ID from loop context to see system-owned rows.
 
         Uses DB as the authoritative membership list and the file index
         for per-entry metadata (thesis trend, snapshot count, etc.).
@@ -281,7 +299,7 @@ class WatchlistService:
         """
         from ..db.repositories.watchlist_repo import ticker_list_active as _db_list
 
-        db_rows = await _db_list(session)
+        db_rows = await _db_list(session, user_id=user_id)
         if not db_rows:
             return self.get_watchlist()  # DB empty or disabled — file fallback
 
@@ -307,6 +325,7 @@ class WatchlistService:
         self,
         session,
         ticker: str,
+        user_id: Optional[str] = None,
     ) -> Optional[WatchlistEntry]:
         """DB-backed get_entry for async callers.
 
@@ -320,7 +339,7 @@ class WatchlistService:
         if session is None:
             return self.get_entry(ticker)
 
-        row = await _db_get(session, t)
+        row = await _db_get(session, t, user_id=user_id)
 
         if row is None:
             # Not in DB yet — fall back to file (migration period)

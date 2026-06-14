@@ -304,6 +304,34 @@ class Settings(BaseSettings):
     # staging A/B toggles this).  Default demote/include.
     dossier_injection_include_prior_state: bool = True
 
+    # ── Phase 16 · Slice 3 — Accounts & Auth ─────────────────────────────────
+    # Master enforcement toggle.  When False (default throughout all Phase 16
+    # build slices), every request resolves to the system user identity and
+    # no JWT is ever validated — the bypass that keeps all pre-16 flows
+    # working while the identity stack is built.  Flip to True only in the
+    # staged rollout sequence described in docs/PHASE_16_ACCOUNTS_ROLLOUT.md.
+    auth_enabled: bool = False
+
+    # Supabase project URL.  Used to derive the JWKS endpoint when RS256
+    # verification is enabled.  Leave empty to use HS256 with supabase_jwt_secret.
+    # Example: "https://xyzabcde.supabase.co"
+    supabase_project_url: str = ""
+
+    # Supabase JWT secret (HS256 verification).  Found in your Supabase project
+    # dashboard under Project Settings → API → JWT Settings.
+    # Never commit this value; set via Render env or .env (git-ignored).
+    supabase_jwt_secret: str = ""
+
+    # Expected JWT audience claim.  Supabase issues "authenticated" for signed-in
+    # users and "anon" for the anon key.  Only "authenticated" tokens carry a
+    # valid user identity.
+    supabase_audience: str = "authenticated"
+
+    # The system user UUID that the bypass injects as request.state.user_id.
+    # Must match SYSTEM_DEFAULT_USER_ID in system_user_service / account_repo.
+    # Override only in tests.
+    auth_bypass_user_id: str = "00000000-0000-0000-0000-000000000001"
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:

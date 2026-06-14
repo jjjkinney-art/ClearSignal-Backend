@@ -43,7 +43,7 @@ Coverage
 
   ORM / migration correctness
     - Portfolio, PortfolioPosition, PortfolioInsight appear in Base.metadata.tables
-    - db_table_count is 31 (28 existing + 3 new)
+    - db_table_count is 35 (28 existing + 3 portfolio + 4 identity)
     - null session → every function returns safe default (no exception)
 """
 
@@ -109,8 +109,10 @@ class TestSchemaCorrectness:
         assert "portfolio_positions" in tables
         assert "portfolio_insights" in tables
 
-    def test_db_table_count_is_31(self):
-        assert len(Base.metadata.tables) == 31
+    def test_db_table_count_is_35(self):
+        # Phase 16 · Slice 1 added 4 identity tables (32–35): users, user_profiles,
+        # user_settings, audit_log.  Previous count was 31 (10D).
+        assert len(Base.metadata.tables) == 35
 
     def test_portfolios_columns(self):
         col_names = {c.name for c in Base.metadata.tables["portfolios"].columns}
