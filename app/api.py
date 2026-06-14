@@ -791,6 +791,41 @@ async def admin_delivery_status() -> dict:
         return await build_delivery_snapshot(None)
 
 
+@router.get(
+    "/admin/portfolio-status",
+    summary="Phase 10D · Slice 8 — Portfolio intelligence observability snapshot",
+    tags=["admin"],
+)
+async def admin_portfolio_status() -> dict:
+    """Return a complete, null-safe Phase 10D portfolio observability snapshot.
+
+    Delegates to portfolio_observability_service.build_portfolio_snapshot(), which covers:
+    portfolio feature flags, portfolio/position/insight counts, insight breakdown by type,
+    severity, and rank_band, delivery_ledger portfolio_alert counts, notification counts,
+    digest counts, regulatory guard metadata, and safe_state flag.
+
+    Read-only.  Safe to call at any time regardless of portfolio flags.
+    DB-down-safe: DB sections degrade to zeros rather than 500.
+
+    Key validation fields:
+      safe_state                        — True when delivery disabled OR shadow=True
+      portfolio_flags                   — all 4 Phase 10D flags
+      insights.total                    — number of generated insights
+      insights.by_severity              — distribution across severity ladder
+      insights.stale_count              — insights backed by stale cross-exposure
+      notifications.portfolio_alert_count — live Notification rows (0 in safe state)
+      regulatory.disclaimer_present     — True always (regulatory guard active)
+    """
+    from .services.portfolio_observability_service import build_portfolio_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_portfolio_snapshot(_sess)
+    except Exception:
+        return await build_portfolio_snapshot(None)
+
+
 @router.post(
     "/admin/loop/seed-jobs",
     summary="Phase 10B · Slice 10 — Seed watchlist_scan jobs for active tickers",

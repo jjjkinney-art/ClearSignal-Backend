@@ -1132,3 +1132,140 @@ class DeliveryLedgerArchive(Base):
     payload_json         = _json_col(nullable=False, default=dict)
     content_key          = Column(String(64),  nullable=True, default=None, index=True)
     archived_at          = Column(DateTime(timezone=True), nullable=False, default=_now, index=True)
+
+
+# ---------------------------------------------------------------------------
+# 29. portfolios  (user-authored portfolio head — Phase 10D · Slice 1)
+# ---------------------------------------------------------------------------
+
+class Portfolio(Base):
+    """User-authored portfolio — one row per named collection.
+
+    user_id is NULL for the global (single-user) portfolio, mirroring
+    watched_tickers and user_delivery_prefs.  Multi-user wires in non-null
+    user_id in a later slice; NULL rows are the only rows written today.
+
+    is_default=True marks the auto-created watchlist-mirror portfolio
+    (Slice 2).  A user may have at most one default portfolio.
+
+    All intelligence (exposure clusters, insights, health metrics) is derived
+    from this row's associated positions — this head row carries no analytical
+    state itself.
+    """
+
+    __tablename__ = "portfolios"
+
+    id          = Column(String(36),  primary_key=True, default=_uuid)
+    user_id     = Column(String(64),  nullable=True,  default=None, index=True)
+    name        = Column(String(200), nullable=False, default="My Portfolio")
+    description = Column(Text,        nullable=True,  default=None)
+    is_default  = Column(Boolean,     nullable=False, default=False)
+    created_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at  = Column(DateTime(timezone=True), nullable=False, default=_now,
+                         onupdate=_now)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "name", name="uq_portfolios_user_name"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 30. portfolio_positions  (per-portfolio position rows — Phase 10D · Slice 1)
+# ---------------------------------------------------------------------------
+
+class PortfolioPosition(Base):
+    """One position row per (portfolio_id, ticker) pair.
+
+    membership_class indicates how the user relates to this ticker:
+      owned     — held in a brokerage account
+      watchlist — on the WatchedTicker watchlist, not yet owned
+      on_radar  — tracking but not on the watchlist
+
+    Financial fields (weight, cost_basis, shares) are ALL user-supplied.
+    The system NEVER fetches or derives them from external APIs (spec §1.3).
+
+    active=False is a soft-delete.  Re-adding the same ticker reactivates
+    the existing row rather than inserting a duplicate, mirroring the
+    watchlist_repo.ticker_add idempotency discipline.
+
+    UNIQUE(portfolio_id, ticker) is the append-idempotency constraint.
+    """
+
+    __tablename__ = "portfolio_positions"
+
+    id               = Column(String(36),  primary_key=True, default=_uuid)
+    portfolio_id     = Column(String(36),  nullable=False, index=True)
+    ticker           = Column(String(20),  nullable=False, index=True)
+    # membership_class: owned | watchlist | on_radar
+    membership_class = Column(String(20),  nullable=False, default="watchlist")
+    # Financial fields: ALL user-supplied; nullable; never derived externally.
+    weight           = Column(Float,       nullable=True,  default=None)
+    cost_basis       = Column(Float,       nullable=True,  default=None)
+    shares           = Column(Float,       nullable=True,  default=None)
+    notes            = Column(Text,        nullable=True,  default=None)
+    active           = Column(Boolean,     nullable=False, default=True)
+    added_at         = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at       = Column(DateTime(timezone=True), nullable=False, default=_now,
+                              onupdate=_now)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "portfolio_id", "ticker",
+            name="uq_portfolio_positions_portfolio_ticker",
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 31. portfolio_insights  (system-derived insights — Phase 10D · Slice 1)
+# ---------------------------------------------------------------------------
+
+class PortfolioInsight(Base):
+    """System-derived portfolio-level insight — one row per content_key.
+
+    insight_type is a closed enum from spec §3.1:
+      concentration_breach | cluster_concentration | high_correlation_pair |
+      propagated_catalyst | failure_contagion | macro_sensitivity_cluster |
+      thesis_divergence | coverage_gap
+
+    body_json holds the rendered template prose + structured metadata.
+    It is populated by Slice 5 (insight generation); this schema row is
+    inert until that slice lands.
+
+    content_key = sha256(portfolio_id + insight_type + cluster_label +
+                         period_bucket) — the §3.4 generation-side dedup
+    (7-day bucket).  UNIQUE constraint is the hard stop.
+
+    severity/severity_rank use the canonical severity_model.py ladder:
+      critical=4 | high=3 | medium=2 | low=1 | info=0
+
+    rank_score is stamped by Slice 6 (portfolio-relevance ranking) using
+    the §3.3 formula.  Default 0.0 until Slice 6 lands.
+
+    last_delivered_at is stamped by the Slice 7 delivery path; NULL means
+    never delivered (feeds the novelty_factor in §3.3).
+    """
+
+    __tablename__ = "portfolio_insights"
+
+    id                   = Column(String(36),  primary_key=True, default=_uuid)
+    portfolio_id         = Column(String(36),  nullable=False, index=True)
+    # insight_type: closed enum, see docstring above.
+    insight_type         = Column(String(60),  nullable=False, default="")
+    cluster_label        = Column(String(200), nullable=False, default="")
+    member_tickers       = Column(Text,        nullable=False, default="[]")   # JSON array
+    cluster_weight       = Column(Float,       nullable=True,  default=None)
+    # Canonical severity (severity_model.py).
+    severity             = Column(String(20),  nullable=False, default="info")
+    severity_rank        = Column(Integer,     nullable=False, default=0)
+    rank_score           = Column(Float,       nullable=False, default=0.0)
+    body_json            = Column(Text,        nullable=False, default="{}")   # JSON
+    # Freshness bound: min(updated_at) of contributing cross_exposure edges.
+    cross_exposure_as_of = Column(DateTime(timezone=True), nullable=True, default=None)
+    stale_input          = Column(Boolean,     nullable=False, default=False)
+    # §3.4 dedup key — UNIQUE hard stop.
+    content_key          = Column(String(64),  nullable=False, default="", unique=True)
+    created_at           = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at           = Column(DateTime(timezone=True), nullable=False, default=_now,
+                                  onupdate=_now)
+    last_delivered_at    = Column(DateTime(timezone=True), nullable=True, default=None)

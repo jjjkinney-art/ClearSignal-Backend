@@ -25,6 +25,10 @@ Migration: app/db/migrations/007_briefing_delivery.sql (3 new tables → db_tabl
 Tables: user_delivery_prefs, digest_batches, delivery_ledger_archive; plus two
 additive nullable columns on delivery_ledger (canonical_severity, severity_rank).
 Additive and inert — no delivery behavior changes until later 10C slices.
+Phase 10D · Slice 1: Portfolio Intelligence schema registered.
+Migration: app/db/migrations/008_portfolio_intelligence.sql (3 new tables → db_table_count 28→31).
+Tables: portfolios, portfolio_positions, portfolio_insights.
+Additive and inert — no analytical or delivery behavior changes until later 10D slices.
 """
 
 from __future__ import annotations
