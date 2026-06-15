@@ -61,11 +61,32 @@ async def ensure_default_portfolio(session, user_id: Optional[str] = None):
     from app.db.repositories.portfolio_repo import (
         portfolio_get_default,
         portfolio_create,
+        portfolio_list,
     )
 
     existing = await portfolio_get_default(session, user_id=user_id)
     if existing is not None:
         return existing
+
+    # Phase 17 · Slice 6 — portfolio limit check (no-op when ENTITLEMENTS_ENFORCED=false)
+    try:
+        from app.services.entitlement_enforcement import (
+            check_portfolio_limit,
+            EntitlementViolation,
+        )
+        from app.services.entitlement_service import resolve_entitlements
+
+        _ent = await resolve_entitlements(session, user_id or "")
+        _existing_portfolios = await portfolio_list(session, user_id=user_id)
+        check_portfolio_limit(_ent, len(_existing_portfolios))
+    except EntitlementViolation:
+        logger.info(
+            "[portfolio_mirror] portfolio_limit reached for user_id=%s — not creating default",
+            user_id,
+        )
+        return None
+    except Exception:
+        pass  # enforcement is failure-open
 
     portfolio = await portfolio_create(
         session,

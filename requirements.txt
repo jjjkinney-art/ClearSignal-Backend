@@ -25,6 +25,9 @@ httpx>=0.24.0
 # ── JWT verification (Phase 16 · Slice 3) ────────────────────────────────────
 PyJWT[cryptography]>=2.8.0
 
+# ── Stripe billing (Phase 17 · Slice 3) ──────────────────────────────────────
+stripe>=8.0.0
+
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest>=7.0.0
 pytest-asyncio>=0.21.0   # async test support

@@ -210,6 +210,36 @@ async def deliver_portfolio_insights(
 
     delivered_at = _now_utc().isoformat()
 
+    # Phase 17 · Slice 6 — feature gate (no-op when ENTITLEMENTS_ENFORCED=false)
+    try:
+        from app.services.entitlement_enforcement import (
+            require_feature,
+            EntitlementViolation,
+        )
+        from app.services.entitlement_service import resolve_entitlements
+
+        _ent = await resolve_entitlements(session, user_id)
+        require_feature(_ent, "can_use_portfolio_intelligence")
+    except EntitlementViolation:
+        logger.info(
+            "[portfolio_delivery] blocked: can_use_portfolio_intelligence user=%s",
+            user_id[:8] if user_id else "?",
+        )
+        return PortfolioDeliveryResult(
+            portfolio_id=portfolio_id,
+            delivered_at=delivered_at,
+            enqueued=0,
+            suppressed_duplicate=0,
+            suppressed_guardrail=0,
+            suppressed_zero_score=0,
+            skipped=1,
+            shadow=shadow,
+            shadow_drained=0,
+            regulatory_disclaimer=REGULATORY_DISCLAIMER,
+        )
+    except Exception:
+        pass  # enforcement is failure-open
+
     if session is None:
         return PortfolioDeliveryResult(
             portfolio_id=portfolio_id,

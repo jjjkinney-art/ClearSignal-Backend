@@ -75,6 +75,13 @@ try:
 except Exception as _aa_err:
     logger.warning("[api] admin_auth router unavailable: %r", _aa_err)
 
+# Phase 17 · Slice 3 — billing routes (POST /billing/checkout)
+try:
+    from .routers.billing import router as _billing_router
+    router.include_router(_billing_router)
+except Exception as _billing_err:
+    logger.warning("[api] billing router unavailable: %r", _billing_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
@@ -857,6 +864,39 @@ async def admin_portfolio_status() -> dict:
             return await build_portfolio_snapshot(_sess)
     except Exception:
         return await build_portfolio_snapshot(None)
+
+
+@router.get(
+    "/admin/billing-status",
+    summary="Phase 17 · Slice 7 — Billing observability snapshot",
+    tags=["admin"],
+)
+async def admin_billing_status() -> dict:
+    """Return a complete, null-safe Phase 17 billing observability snapshot.
+
+    Delegates to billing_observability_service.build_billing_snapshot(), which covers:
+    billing feature flags, subscription counts by status, stripe event counts,
+    entitlement cache population, registered billing routes, and safe_state.
+
+    Read-only.  Safe to call at any time regardless of Stripe flags.
+    DB-down-safe: DB sections degrade to zeros rather than 500.
+
+    Key validation fields:
+      safe_state             — True when stripe_enabled=False AND entitlements_enforced=False
+      stripe_enabled         — must be False throughout shadow phase
+      entitlements_enforced  — must be False throughout shadow phase
+      billing_routes_present — True when all 5 billing routes are registered
+      subscription_count     — 0 in shadow phase (no real subscriptions yet)
+      stripe_event_count     — 0 in shadow phase (no webhook events yet)
+    """
+    from .services.billing_observability_service import build_billing_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_billing_snapshot(_sess)
+    except Exception:
+        return await build_billing_snapshot(None)
 
 
 @router.post(
@@ -1739,8 +1779,34 @@ async def get_watchlist() -> list:
 async def add_to_watchlist(
     ticker:       str,
     company_name: str = Query(default="", description="Optional canonical company name"),
+    request:      Request = None,
 ) -> dict:
     """Add *ticker* to the watchlist.  Idempotent — safe to call multiple times."""
+    # Phase 17 · Slice 6 — entitlement enforcement (no-op when ENTITLEMENTS_ENFORCED=false)
+    try:
+        from .services.entitlement_enforcement import (
+            check_watchlist_limit,
+            EntitlementViolation,
+        )
+        from .services.entitlement_service import resolve_entitlements
+        from .db import get_session as _get_session
+
+        _user_id = getattr(getattr(request, "state", None), "user_id", "") or ""
+        async with await _get_session() as _db:
+            _ent = await resolve_entitlements(_db, _user_id)
+
+        # Count current watchlist before checking — idempotent adds don't need a block.
+        _already_tracked = watchlist_service.is_tracked(ticker)
+        if not _already_tracked:
+            _current = len(watchlist_service.get_watchlist())
+            check_watchlist_limit(_ent, _current)
+    except EntitlementViolation as _exc:
+        raise HTTPException(status_code=402, detail=_exc.as_dict())
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # enforcement is failure-open
+
     entry = watchlist_service.add_ticker(ticker, company_name)
     return entry.model_dump()
 
@@ -2212,6 +2278,7 @@ async def get_morning_brief_v2(
         default=None,
         description="Comma-separated ticker list from frontend localStorage (fallback when backend list is empty)",
     ),
+    request: Request = None,
 ) -> dict:
     """
     Generate the Phase M 5-section institutional morning brief.
@@ -2229,6 +2296,27 @@ async def get_morning_brief_v2(
                server start). The backend will auto-register them and generate a brief.
       reference_date: ISO date string for the brief header (defaults to today UTC).
     """
+    # Phase 17 · Slice 6 — entitlement enforcement (no-op when ENTITLEMENTS_ENFORCED=false)
+    try:
+        from .services.entitlement_enforcement import (
+            check_briefing_limit,
+            EntitlementViolation,
+        )
+        from .services.entitlement_service import resolve_entitlements
+        from .db import get_session as _get_session
+
+        _user_id = getattr(getattr(request, "state", None), "user_id", "") or ""
+        async with await _get_session() as _db:
+            _ent = await resolve_entitlements(_db, _user_id)
+        # No weekly usage counter yet — pass 0 (fail-open); blocks at limit=0 only.
+        check_briefing_limit(_ent, 0)
+    except EntitlementViolation as _exc:
+        raise HTTPException(status_code=402, detail=_exc.as_dict())
+    except HTTPException:
+        raise
+    except Exception:
+        pass  # enforcement is failure-open
+
     try:
         from .services.watchlist_service import watchlist_service
         from .services.market_regime_tracker import get_current_regime

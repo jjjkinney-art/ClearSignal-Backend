@@ -435,6 +435,90 @@ async def upsert_entitlement_cache(
     return row
 
 
+# ---------------------------------------------------------------------------
+# § USERS — billing fields
+# ---------------------------------------------------------------------------
+
+async def find_user_id_by_stripe_customer_id(
+    session,
+    stripe_customer_id: str,
+) -> Optional[str]:
+    """Return the user_id whose stripe_customer_id matches, or None.
+
+    Used by webhook handlers to resolve customer → user before updating
+    subscription rows and entitlement cache.
+    Returns None when session is None or no match found.
+    """
+    if session is None:
+        return None
+
+    from app.db.models import User
+    from sqlalchemy import select
+
+    result = await session.execute(
+        select(User.id).where(User.stripe_customer_id == stripe_customer_id)
+    )
+    row = result.first()
+    return row[0] if row else None
+
+
+async def set_user_stripe_customer_id(
+    session,
+    user_id: str,
+    stripe_customer_id: str,
+) -> bool:
+    """Write stripe_customer_id to the users row, if not already set.
+
+    Idempotent — if the value is already the same, this is a no-op.
+    Returns True if the row was updated, False otherwise.
+    Returns False when session is None.
+    """
+    if session is None:
+        return False
+
+    from app.db.models import User
+    from sqlalchemy import select
+
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        return False
+    if user.stripe_customer_id == stripe_customer_id:
+        return False
+    user.stripe_customer_id = stripe_customer_id
+    user.updated_at = _now()
+    await session.flush()
+    return True
+
+
+async def update_user_plan(
+    session,
+    user_id: str,
+    plan_name: str,
+) -> bool:
+    """Update users.plan and plan_updated_at for the given user.
+
+    Returns True if updated, False if user not found or session is None.
+    Called by webhook handlers after subscription state changes.
+    """
+    if session is None:
+        return False
+
+    from app.db.models import User
+    from sqlalchemy import select
+
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    if user is None:
+        return False
+
+    user.plan = plan_name
+    user.plan_updated_at = _now()
+    user.updated_at = _now()
+    await session.flush()
+    return True
+
+
 async def invalidate_entitlement_cache(
     session,
     user_id: str,

@@ -304,6 +304,43 @@ class Settings(BaseSettings):
     # staging A/B toggles this).  Default demote/include.
     dossier_injection_include_prior_state: bool = True
 
+    # ── Phase 17 · Slice 3 — Stripe & Checkout ───────────────────────────────
+    # Master Stripe toggle.  When False (default throughout all Phase 17 build
+    # slices), no outbound Stripe API calls are made and the checkout route
+    # returns a safe disabled response.  Flip to True only after all Stripe
+    # config values are set in the Render environment.
+    stripe_enabled: bool = False
+
+    # Stripe secret key — set via Render env or .env (NEVER commit).
+    # Only read when stripe_enabled=True.
+    stripe_secret_key: str = ""
+
+    # Stripe Price IDs — must be configured before stripe_enabled=True.
+    stripe_price_signal_monthly: str = ""    # Signal (pro) monthly price
+    stripe_price_signal_yearly: str = ""     # Signal (pro) annual price
+    stripe_price_syndicate_monthly: str = "" # Syndicate (teams) monthly price
+
+    # Checkout redirect URLs.  Required when stripe_enabled=True.
+    # Example: "https://app.clearsignal.io/billing/success"
+    stripe_success_url: str = ""
+    stripe_cancel_url: str = ""
+
+    # Stripe webhook signing secret — set via Render env (whsec_...).
+    # Required when stripe_enabled=True and the webhook endpoint is live.
+    # NEVER commit this value.
+    stripe_webhook_secret: str = ""
+
+    # Stripe billing portal return URL — where the portal sends users back.
+    # Example: "https://app.clearsignal.io/billing"
+    stripe_portal_return_url: str = ""
+
+    # ── Phase 17 · Slice 6 — Entitlement Enforcement ─────────────────────────
+    # Master enforcement toggle.  When False (default throughout all Phase 17
+    # build slices), every entitlement check is a no-op — zero behavior change.
+    # Flip to True only after billing is live and the subscription table is
+    # populated via Stripe webhooks.
+    entitlements_enforced: bool = False
+
     # ── Phase 16 · Slice 3 — Accounts & Auth ─────────────────────────────────
     # Master enforcement toggle.  When False (default throughout all Phase 16
     # build slices), every request resolves to the system user identity and
