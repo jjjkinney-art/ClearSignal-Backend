@@ -75,9 +75,9 @@ async def test_db_table_count_is_24(fresh_engine):
         )
         count = result.scalar()
 
-    # 19 Phase 9 + 5 Phase 10A loop + 1 Phase 10B + 3 Phase 10C delivery = 28
-    assert count == 28, (
-        f"Expected 28 tables (19 Phase 9 + 5 Phase 10A + 1 Phase 10B + 3 Phase 10C), "
+    # 35 Phase 9–16 tables + 3 Phase 17 billing tables = 38
+    assert count == 38, (
+        f"Expected 38 tables (35 Phase 9–16 + 3 Phase 17 billing), "
         f"got {count}. Check that all models are defined in app/db/models.py."
     )
 

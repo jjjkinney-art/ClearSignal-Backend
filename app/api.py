@@ -633,17 +633,32 @@ async def admin_dossier_injection_status() -> dict:
       * Slice 5A shadow telemetry (block build stats, token sizes)
       * Slice 5C canary telemetry (cohort counts, conviction/echo/override metrics)
       * Kill-switch runtime override state
+      * Persisted audit_log counts (survive process restarts)
     """
     from .config import settings as _inj_s
     from .services import dossier_injection_telemetry as _inj_tel
     from .services import dossier_canary_telemetry as _can_tel
     from .services import dossier_canary_metrics as _can_met
+    from .services.canary_audit import build_persisted_snapshot as _build_pers
+    from .db import get_session as _gs_adm
 
     shadow_snap  = _inj_tel.snapshot()
     canary_snap  = _can_tel.snapshot()
     outcomes     = _can_tel.snapshot_outcomes()
     metrics      = _can_met.compute_all(outcomes)
     eff_enabled  = _can_tel.get_enabled(bool(_inj_s.dossier_injection_enabled))
+
+    persisted: dict = {}
+    try:
+        async with _gs_adm() as _adm_s:
+            persisted = await _build_pers(_adm_s)
+    except Exception as _adm_exc:
+        import logging as _adm_log
+        _adm_log.getLogger(__name__).debug(
+            "[ask] dossier status persisted snapshot failed (non-fatal): %r", _adm_exc
+        )
+        from .services.canary_audit import _empty_snapshot as _es
+        persisted = _es()
 
     return {
         "status":               "ok",
@@ -656,6 +671,10 @@ async def admin_dossier_injection_status() -> dict:
         "shadow_telemetry":     shadow_snap,
         "canary":               canary_snap,
         "metrics":              metrics,
+        "persisted": {
+            **persisted,
+            "telemetry_source": "memory + audit_log",
+        },
     }
 
 
@@ -1094,6 +1113,22 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     dossier_age_days=None,
                     prior_stance=_5c_prior_stance,
                 )
+
+                # Persist decision event to audit_log (fire-and-forget).
+                # Queued before synthesis starts so it survives process teardown.
+                try:
+                    from .services.canary_audit import schedule_decision_persist as _sched_dec
+                    _5c_blk_tok = _inj_res_shared.token_count if _inj_res_shared else 0
+                    _sched_dec(
+                        _asyncio.create_task,
+                        session_id=_5c_session,
+                        cohort=_5c_cohort,
+                        ticker=_pre_dispatch_ticker,
+                        token_count=_5c_blk_tok,
+                        block_tokens=_5c_blk_tok,
+                    )
+                except Exception as _dec_pers_exc:
+                    logger.debug("[ask] canary decision persist schedule failed (non-fatal): %r", _dec_pers_exc)
             else:
                 _5c_cohort = _INELIGIBLE
 
@@ -1292,10 +1327,16 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             # ── Slice 5C/5D: Post-synthesis outcome recording ─────────────────
             # Records conviction, stance, change-vector engagement, and drift
             # metrics for both injected and control cohorts.  Never raises.
+            #
+            # Fallback detection covers two shapes:
+            #   "unavailable"     — generic synthesis failure / httpx timeout
+            #   "wall cap exceeded" — Python-side 56s wall-cap fallback
+            # Both set confidence_score=0.0 and produce recognisable conclusions.
             try:
                 if _5c_cohort is not None:
                     import re as _re_5c
                     from .services import dossier_canary_telemetry as _can_tel_out
+                    from .services.canary_audit import schedule_outcome_persist as _sched_out
 
                     _5c_thesis_out = (
                         _result_dict.get("answer", {}).get("investment_thesis")
@@ -1308,11 +1349,19 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                         _5c_conclusion   = str(_5c_thesis_out.get("conclusion") or "")
                         _5c_cv           = _5c_thesis_out.get("change_vector") or {}
                         _5c_cv_text      = str(_5c_cv) if _5c_cv else ""
-                        _5c_fallback     = (
+
+                        # Fallback: either generic "unavailable" OR wall-cap "wall cap exceeded".
+                        _5c_score_zero   = (
                             isinstance(_5c_thesis_out.get("confidence_score"), float)
                             and _5c_thesis_out.get("confidence_score") == 0.0
-                            and "unavailable" in _5c_conclusion.lower()
                         )
+                        _5c_conc_lower   = _5c_conclusion.lower()
+                        _5c_wall_cap     = _5c_score_zero and "wall cap exceeded" in _5c_conc_lower
+                        _5c_fallback     = _5c_score_zero and (
+                            "unavailable" in _5c_conc_lower
+                            or _5c_wall_cap
+                        )
+
                         # Specificity: count numeric tokens in conclusion + direct_answer.
                         _5c_text_for_spec = (
                             _5c_conclusion
@@ -1322,6 +1371,11 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                             len(_re_5c.findall(r"\d+\.?\d*", _5c_text_for_spec))
                         )
                         _5c_latency = round(_time_5c.monotonic() - _5c_pre_t, 2)
+                        _5c_latency_ms = int(_5c_latency * 1000)
+
+                        # Update in-memory wall-cap counter when applicable.
+                        if _5c_wall_cap:
+                            _can_tel_out.record_wall_cap_fallback()
 
                         _can_tel_out.record_outcome(
                             session_id=_session_id or "anon",
@@ -1335,6 +1389,27 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                             fallback_used=bool(_5c_fallback),
                             latency_s=_5c_latency,
                             prior_challenged=_5c_thesis_out.get("prior_challenged"),
+                        )
+
+                        # Persist outcome to audit_log immediately (fire-and-forget).
+                        # Enqueued here — before the yield — so it survives teardown.
+                        _5c_cve_out = (
+                            len(_5c_cv_text) / len(_5c_conclusion)
+                            if len(_5c_conclusion) > 0 and len(_5c_cv_text) >= 0
+                            else None
+                        )
+                        _sched_out(
+                            _asyncio.create_task,
+                            session_id=_session_id or "anon",
+                            cohort=_5c_cohort,
+                            ticker=_5c_ticker or "",
+                            injected=bool(_5c_injected),
+                            fallback=bool(_5c_fallback),
+                            wall_cap_fallback=bool(_5c_wall_cap),
+                            conviction=float(_5c_conviction) if _5c_conviction is not None else None,
+                            specificity=_5c_specificity,
+                            cve=_5c_cve_out,
+                            latency_ms=_5c_latency_ms,
                         )
             except Exception as _5c_out_exc:
                 logger.debug("[ask] 5C outcome recording failed (non-fatal): %r", _5c_out_exc)

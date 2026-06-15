@@ -115,6 +115,21 @@ _cve_sum:   Dict[str, float] = {"injected": 0.0, "control": 0.0}
 _cve_count: Dict[str, int]   = {"injected": 0,   "control": 0}
 _fallback_count: Dict[str, int] = {"injected": 0, "control": 0}
 _override_count: Dict[str, int] = {"injected": 0, "control": 0}  # prior_challenged=True
+# Explicit wall-cap fallback counter (distinct from dossier over_cap_count).
+# Incremented when synthesis returns the wall-cap fallback thesis.
+_wall_cap_fallback_count: int = 0
+
+
+def record_wall_cap_fallback() -> None:
+    """Increment the synthesis wall-cap fallback counter.
+
+    Called when route_question returns the wall-cap fallback thesis
+    (conclusion contains 'wall cap exceeded').  Distinct from the
+    dossier injection over_cap_count which tracks block-truncation events.
+    """
+    global _wall_cap_fallback_count
+    with _LOCK:
+        _wall_cap_fallback_count += 1
 
 
 def record_outcome(
@@ -216,10 +231,11 @@ def snapshot() -> Dict[str, Any]:
 
         return {
             "canary": {
-                "decision_total":  _decision_total,
-                "outcome_total":   _outcome_total,
-                "cohort_counts":   cohort_counts,
-                "enabled_override": _enabled_override,
+                "decision_total":       _decision_total,
+                "outcome_total":        _outcome_total,
+                "cohort_counts":        cohort_counts,
+                "enabled_override":     _enabled_override,
+                "wall_cap_fallback_count": _wall_cap_fallback_count,
             },
             "conviction": {
                 "injected_mean":  conv_mean_inj,
@@ -249,7 +265,7 @@ def snapshot() -> Dict[str, Any]:
 
 def reset() -> None:
     """Clear all canary telemetry and the kill-switch override (used by tests)."""
-    global _decision_total, _outcome_total, _enabled_override
+    global _decision_total, _outcome_total, _enabled_override, _wall_cap_fallback_count
     with _LOCK:
         _decisions.clear()
         _outcomes.clear()
@@ -269,4 +285,5 @@ def reset() -> None:
             _override_count[k] = 0
         _decision_total = 0
         _outcome_total  = 0
+        _wall_cap_fallback_count = 0
         _enabled_override = None

@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 35 tables.
+SQLAlchemy ORM models — 38 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -16,6 +16,9 @@ Phase 10B · Slice 2: DB Watchlist Membership (table 25) — watched_tickers;
 Phase 16 · Slice 1: Accounts & Identity (tables 32–35) — users, user_profiles,
           user_settings, audit_log; plus forward-compat org_id column on portfolios.
           Additive and inert — no auth behavior until later Phase 16 slices.
+Phase 17 · Slice 1: Billing Schema (tables 36–38) — subscriptions, stripe_events,
+          entitlement_cache; plus plan and plan_updated_at columns on users.
+          Additive and inert — STRIPE_ENABLED=false throughout build slices.
 
 Tables
 ------
@@ -65,6 +68,11 @@ Accounts & Identity (Phase 16 · Slice 1)
 33. user_profiles          — Display + onboarding state (1:1 with users)
 34. user_settings          — Briefing/delivery/UI preferences (1:1 with users)
 35. audit_log              — Append-only mutation trail; NEVER updated or deleted
+
+Billing (Phase 17 · Slice 1)
+36. subscriptions          — One row per Stripe subscription lifecycle event
+37. stripe_events          — Webhook idempotency table; dedup by stripe_event_id
+38. entitlement_cache      — Per-user resolved plan limits (1h TTL)
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -1341,6 +1349,12 @@ class User(Base):
     # Supabase JWT 'sub' claim — NULL until Slice 3.
     auth_subject       = Column(String(255), nullable=True,  default=None, unique=True)
     last_sign_in_at    = Column(DateTime(timezone=True), nullable=True, default=None)
+    # Phase 17 · Slice 1: denormalised billing plan cache.
+    # Authoritative source is subscriptions.plan_name; this column exists for
+    # fast reads and observability only.  Updated on every subscription event.
+    # plan ∈ {free, pro, teams, institutional, system}
+    plan               = Column(String(20),  nullable=False, default="free")
+    plan_updated_at    = Column(DateTime(timezone=True), nullable=True, default=None)
     created_at         = Column(DateTime(timezone=True), nullable=False, default=_now)
     updated_at         = Column(DateTime(timezone=True), nullable=False, default=_now,
                                 onupdate=_now)
@@ -1442,3 +1456,131 @@ class AuditLog(Base):
     user_agent  = Column(Text,        nullable=True,  default=None)
     # created_at is immutable — this row is never updated
     created_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# Phase 17 · Slice 1: Billing Schema
+# ---------------------------------------------------------------------------
+
+# 36. subscriptions  (one row per Stripe subscription lifecycle event)
+# ---------------------------------------------------------------------------
+
+class Subscription(Base):
+    """One row per Stripe subscription lifecycle event.
+
+    Retains historical rows (status='canceled'/'lapsed') for compliance.
+    Application invariant (not enforced by DB): at most one row per user_id
+    where status IN ('active', 'trialing', 'past_due', 'paused').
+
+    status ∈ {active, trialing, past_due, canceled, paused, lapsed}
+    plan_name ∈ {free, pro, teams, institutional}
+    billing_interval ∈ {month, year, custom}
+
+    stripe_subscription_id is UNIQUE — the idempotency key for webhook updates.
+    Webhooks are the only path that writes billing state; no HTTP route
+    mutates plan_name or status directly.
+
+    grace_period_ends_at is set by invoice.payment_failed handler (now + 3d).
+    Entitlements remain at the paid level while past_due and within grace.
+    """
+
+    __tablename__ = "subscriptions"
+
+    id                     = Column(String(36), primary_key=True, default=_uuid)
+    # user_id: the subscriber (soft FK → users.id)
+    user_id                = Column(String(36), nullable=False)
+    # org_id: Teams billing anchor (soft FK → organizations.id, Phase 18+)
+    org_id                 = Column(String(36), nullable=True,  default=None)
+    # Stripe binding
+    stripe_subscription_id = Column(String(64), nullable=False, unique=True)
+    stripe_customer_id     = Column(String(64), nullable=False)
+    stripe_price_id        = Column(String(64), nullable=False)
+    # plan_name: free | pro | teams | institutional
+    plan_name              = Column(String(20), nullable=False)
+    # billing_interval: month | year | custom
+    billing_interval       = Column(String(10), nullable=False, default="month")
+    # status: active | trialing | past_due | canceled | paused | lapsed
+    status                 = Column(String(20), nullable=False)
+    trial_ends_at          = Column(DateTime(timezone=True), nullable=True,  default=None)
+    current_period_start   = Column(DateTime(timezone=True), nullable=False)
+    current_period_end     = Column(DateTime(timezone=True), nullable=False)
+    cancel_at_period_end   = Column(Boolean,    nullable=False, default=False)
+    canceled_at            = Column(DateTime(timezone=True), nullable=True,  default=None)
+    grace_period_ends_at   = Column(DateTime(timezone=True), nullable=True,  default=None)
+    # seat_count: relevant for Syndicate (Teams) seat billing
+    seat_count             = Column(Integer,    nullable=False, default=1)
+    created_at             = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at             = Column(DateTime(timezone=True), nullable=False, default=_now,
+                                    onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
+# 37. stripe_events  (webhook idempotency table)
+# ---------------------------------------------------------------------------
+
+class StripeEvent(Base):
+    """Idempotency record for every received Stripe webhook event.
+
+    stripe_event_id (evt_*) is UNIQUE and serves as the global dedup key.
+    The webhook handler checks this column before processing any event;
+    a second delivery of the same event returns 200 without re-applying.
+
+    NO raw payload is stored — Stripe event payloads may contain PII
+    (email, billing address, card last-4).  Retrieve the full event from
+    Stripe's dashboard or API by stripe_event_id for debugging.
+
+    processing_status ∈ {pending, ok, error, skipped}
+    error_detail is populated only when processing_status='error'.
+    Handler errors update this row but never return 5xx — Stripe must not
+    re-deliver an event whose side effects may have partially applied.
+    """
+
+    __tablename__ = "stripe_events"
+
+    id                = Column(String(36), primary_key=True, default=_uuid)
+    # stripe_event_id: evt_* — the global dedup key
+    stripe_event_id   = Column(String(64), nullable=False, unique=True)
+    event_type        = Column(String(80), nullable=False)
+    # processing_status: pending | ok | error | skipped
+    processing_status = Column(String(20), nullable=False, default="pending")
+    error_detail      = Column(Text,       nullable=True,  default=None)
+    processed_at      = Column(DateTime(timezone=True), nullable=False, default=_now)
+    created_at        = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 38. entitlement_cache  (per-user resolved plan limits, 1h TTL)
+# ---------------------------------------------------------------------------
+
+class EntitlementCache(Base):
+    """Cached resolved entitlements for one user.
+
+    PK is user_id — one row per user.  Invalidated (deleted) on every
+    subscription lifecycle event.  Cache miss triggers a live recompute
+    from the subscriptions table; DB failure falls open to the free tier.
+
+    dossier_monthly_limit = -1 means unlimited.
+    features_json: JSON text object of boolean feature flags per spec §3.3.
+
+    expires_at: the cache row is stale after this timestamp (TTL = 1h).
+    Callers must check expires_at > now() before trusting the cached values.
+    """
+
+    __tablename__ = "entitlement_cache"
+
+    # PK is user_id — one row per user
+    user_id               = Column(String(36), primary_key=True)
+    plan_name             = Column(String(20), nullable=False)
+    plan_status           = Column(String(20), nullable=False)
+    # resource limits: -1 = unlimited
+    watchlist_limit       = Column(Integer,    nullable=False)
+    portfolio_limit       = Column(Integer,    nullable=False)
+    position_limit        = Column(Integer,    nullable=False)
+    dossier_monthly_limit = Column(Integer,    nullable=False)
+    # features_json: serialised boolean feature flags (JSON text)
+    features_json         = Column(Text,       nullable=False, default="{}")
+    # trial_days_remaining: NULL when not in trial
+    trial_days_remaining  = Column(Integer,    nullable=True,  default=None)
+    computed_at           = Column(DateTime(timezone=True), nullable=False)
+    # expires_at: row is stale after this timestamp (TTL = 1h)
+    expires_at            = Column(DateTime(timezone=True), nullable=False)
