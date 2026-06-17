@@ -1029,34 +1029,39 @@ async def admin_forecast_for_ticker(ticker: str) -> dict:
 
 @router.get(
     "/admin/decision-status",
-    summary="Phase 13 · Slice 6 — Decision Intelligence observability snapshot",
+    summary="Phase 13 · Slice 10 — Decision Intelligence full observability snapshot",
     tags=["admin"],
 )
 async def admin_decision_status() -> dict:
     """Return a read-only Phase 13 Decision Intelligence observability snapshot.
 
-    Delegates to decision_read_service.build_decision_status_snapshot().
+    Delegates to decision_observability_service.build_decision_observability_snapshot().
 
     Reports:
       - All 6 decision_* config flags
-      - Row counts (total, valid, expired, by candidate_type, by priority bucket)
-      - Latest built_at timestamp
-      - safe_state: True when decision_shadow=True AND decision_delivery_enabled=False
+      - Row counts: priority, evidence, ranking_log, calibration_outcome, expired
+      - Priority counts by bucket (critical/high/medium/low/informational)
+      - Priority counts by candidate_type
+      - Shadow delivery count and escalation count (must be 0)
+      - Live notification count (must be 0)
+      - Latest priority_at and calibration_at timestamps
+      - safe_state: True when decision_shadow=True, delivery_enabled=False,
+        shadow_escalated_count=0, live_notification_count=0
 
-    Read-only. Never builds, scores, ranks, or writes anything.
+    Read-only.  Never builds, scores, ranks, or writes anything.
     DB-down-safe: degrades gracefully to zeros rather than 500.
 
     No buy/sell/hold, target price, or investment recommendation language
     is present anywhere in the response.
     """
-    from .services.decision_read_service import build_decision_status_snapshot
+    from .services.decision_observability_service import build_decision_observability_snapshot
     from .db.connection import get_session
 
     try:
         async with get_session() as sess:
-            return await build_decision_status_snapshot(sess)
+            return await build_decision_observability_snapshot(sess)
     except Exception:
-        return await build_decision_status_snapshot(None)
+        return await build_decision_observability_snapshot(None)
 
 
 @router.get(
