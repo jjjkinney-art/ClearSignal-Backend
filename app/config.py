@@ -369,6 +369,65 @@ class Settings(BaseSettings):
     # Override only in tests.
     auth_bypass_user_id: str = "00000000-0000-0000-0000-000000000001"
 
+    # ── Phase 11 — Similarity Engine ─────────────────────────────────────────
+    # Master gate for similarity feature-vector / edge construction. When
+    # False (default through Slice 5), invalidation/rebuild functions are
+    # still callable directly (for tests and manual ops) but no automatic
+    # loop producer or scheduled job builds similarity artifacts.
+    similarity_build_enabled: bool = False
+
+    # Master gate for similarity scoring (edge generation). When False
+    # (default), no automatic scoring pass runs. Independent of
+    # similarity_build_enabled so feature vectors can be built without
+    # edges being generated.
+    similarity_scoring_enabled: bool = False
+
+    # Comma-separated list of active similarity target_types (e.g.
+    # "failure_mode,company,thesis"). Empty (default) = no target is
+    # considered enabled for automatic rebuild, even if the other flags
+    # above are True.
+    similarity_targets_enabled: str = ""
+
+    # Shadow mode: when True (default), similarity artifacts may be built/
+    # rebuilt but are never surfaced to any user-visible path. Mirrors the
+    # loop_shadow / delivery_shadow convention — flip only after Slice 9+
+    # delivery work (out of scope through Slice 5).
+    similarity_shadow: bool = True
+
+    # ── Phase 12 — Forecasting Engine ────────────────────────────────────────
+    # Master gate for automatic feature-vector builds. When False (default),
+    # no automatic loop producer or scheduled job builds forecast artifacts.
+    # The builders are still directly callable for tests and manual ops.
+    forecast_build_enabled: bool = False
+
+    # Master gate for automatic probability scoring. When False (default),
+    # no automatic scoring pass runs. Independent of forecast_build_enabled
+    # so feature vectors can be built without edges being generated.
+    forecast_scoring_enabled: bool = False
+
+    # Master gate for live delivery of forecast transitions. When False
+    # (default throughout all Phase 12 build slices), no live Notification
+    # rows are ever written for forecast events. Never set True in Phase 12.
+    forecast_delivery_enabled: bool = False
+
+    # Shadow mode for forecast delivery. When True (default), transition
+    # events are journaled into delivery_ledger(channel="forecast_shadow")
+    # only — no flush pipeline drains that channel, no Notification is
+    # ever created.  All three of forecast_build_enabled,
+    # forecast_scoring_enabled, and forecast_shadow must be True for
+    # shadow journaling to activate.
+    forecast_shadow: bool = True
+
+    # Comma-separated allowlist of entity_types considered "active" for
+    # future automatic rebuild scheduling. Empty (default) means no target
+    # is automatically active even if other flags are True.
+    forecast_targets_enabled: str = ""
+
+    # Master gate for calibration outcome logging and Brier-score computation.
+    # When False (default), detect_outcomes() is a no-op and no
+    # forecast_calibration_log rows are written.
+    forecast_calibration_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:

@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 38 tables.
+SQLAlchemy ORM models — 43 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -19,6 +19,9 @@ Phase 16 · Slice 1: Accounts & Identity (tables 32–35) — users, user_profil
 Phase 17 · Slice 1: Billing Schema (tables 36–38) — subscriptions, stripe_events,
           entitlement_cache; plus plan and plan_updated_at columns on users.
           Additive and inert — STRIPE_ENABLED=false throughout build slices.
+Phase 12 · Slice 1: Forecasting Engine (tables 41–43) — forecast_vector,
+          forecast_evidence, forecast_calibration_log.
+          Additive and inert — all forecast_* flags default false/inert.
 
 Tables
 ------
@@ -73,6 +76,11 @@ Billing (Phase 17 · Slice 1)
 36. subscriptions          — One row per Stripe subscription lifecycle event
 37. stripe_events          — Webhook idempotency table; dedup by stripe_event_id
 38. entitlement_cache      — Per-user resolved plan limits (1h TTL)
+
+Forecasting Engine (Phase 12 · Slice 1)
+41. forecast_vector        — Probability distribution per entity/horizon/forecast_type
+42. forecast_evidence      — Normalised evidence rows backing each forecast_vector
+43. forecast_calibration_log — Immutable outcome records for Brier-score calibration
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -1298,6 +1306,167 @@ class PortfolioInsight(Base):
 
 
 # ===========================================================================
+# Phase 11 · Slice 1 — Similarity Engine (tables 39–40)
+#
+# Two DERIVED/CACHE tables only.  No source table is modified.
+# Both tables are disposable — they can be dropped and rebuilt from substrate
+# at any time without losing primary facts.
+#
+# Design principles from PHASE_11_SIMILARITY_ENGINE_SPEC.md:
+#   - SP-1: no write-back to any source table (enforced by application test)
+#   - SP-2: scoring kernel reused from evidence_engine.py (not stored here)
+#   - SP-3: similarity_build_enabled=false → tables are inert until flag flips
+#   - SP-4: edges are descriptive only; never read by forecasting paths
+#   - Soft references via entity_key / source_versions; no DDL FK constraints
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# 39. similarity_feature_vector  (per-entity typed feature cache)
+# ---------------------------------------------------------------------------
+
+class SimilarityFeatureVector(Base):
+    """Typed feature cache for one (target_type, entity_key, user_id) triple.
+
+    This is a DERIVED table — built by the feature builder (Phase 11 Slice 2)
+    by projecting the dossier facets, historical-analog fingerprint, cross-
+    exposure edges, and portfolio substrate into typed feature representations.
+
+    It is NEVER a source of primary facts and must not be read by any
+    forecasting, conviction-scoring, or entitlement path.
+
+    target_type valid values:
+        company | thesis | catalyst | failure_mode | regime | portfolio
+
+    entity_key: one of ticker / portfolio_id / catalyst_id / thesis_version_id
+
+    categorical: JSON map of discrete features
+        {sector, business_model, valuation_regime, growth_phase, macro_regime,
+         moat_composite, debate_lean, catalyst_direction, ...}
+
+    tag_set: JSON list for Jaccard similarity
+        concern_tags, mechanisms, shared_concerns, moat axes present
+
+    numeric: JSON map of bounded scalars [0, 1]
+        conviction, durability_score, specificity, sequence_stage_norm, ...
+
+    text_anchor: one human-readable sentence naming this entity's setup.
+        Used only for explanation rendering; never scored.
+
+    source_versions: JSON map {table: row_version/version} for staleness.
+        Mismatch with live substrate values triggers a rebuild.
+
+    vector_schema: bumped when feature taxonomy changes → global recompute.
+    """
+
+    __tablename__ = "similarity_feature_vector"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # target_type: company | thesis | catalyst | failure_mode | regime | portfolio
+    target_type = Column(String(20),  nullable=False)
+    # entity_key: ticker | portfolio_id | catalyst_id | thesis_version_id
+    entity_key  = Column(String(200), nullable=False)
+
+    # Typed feature representations
+    categorical = _json_col(nullable=False, default=dict)
+    tag_set     = _json_col(nullable=False, default=list)
+    numeric     = _json_col(nullable=False, default=dict)
+
+    # Human-readable anchor for explanation rendering (never scored)
+    text_anchor = Column(Text, nullable=False, default="")
+
+    # Provenance: {table: row_version} for staleness detection
+    source_versions = _json_col(nullable=False, default=dict)
+
+    # Invalidation key — bumped when feature taxonomy changes
+    vector_schema = Column(Integer, nullable=False, default=1)
+
+    # user_id: identity scoping (Phase 16).
+    # NULL = shared global library (historical_analogs, etc.)
+    user_id = Column(String(36), nullable=True, default=None, index=True)
+
+    built_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "target_type", "entity_key", "user_id",
+            name="uq_sfv_target_type_entity_key_user",
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 40. similarity_edge  (scored, explained resemblance relation — TTL cache)
+# ---------------------------------------------------------------------------
+
+class SimilarityEdge(Base):
+    """Scored, explained resemblance relation between two entities (TTL cache).
+
+    This is a DERIVED table — written by the ranker (Phase 11 Slice 3) after
+    scoring two SimilarityFeatureVectors.  It expires by TTL and is rebuilt
+    by the loop.
+
+    It is NEVER authoritative and must not be read by forecasting paths.
+    Dropping the table degrades latency, never correctness.
+
+    contributions: JSON list of {feature, shared_value, weight, partial_score}.
+        MUST be non-empty for every above-floor edge (the orphan-score invariant).
+        Orphan scores (empty contributions, floor_passed=True) must never persist.
+
+    disanalogy: the strongest dissimilarity — the honesty tax.
+        Every above-floor edge must name how the two entities differ.
+
+    floor_passed: False = weak/none result.  Stored for diagnostic coverage;
+        never delivered to a user surface as a resemblance.
+
+    score_schema: bumped when scoring formula or weight profile changes;
+        edges with a stale schema must be recomputed before serving.
+    """
+
+    __tablename__ = "similarity_edge"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # target_type: company | thesis | catalyst | failure_mode | regime | portfolio
+    target_type   = Column(String(20),  nullable=False)
+    query_key     = Column(String(200), nullable=False)
+    candidate_key = Column(String(200), nullable=False)
+
+    # Composite score [0, 1]
+    score = Column(Float,   nullable=False, default=0.0)
+    # Rank within the query's result set at materialisation time
+    rank  = Column(Integer, nullable=False, default=0)
+
+    # Explanation — MUST be non-empty for floor_passed=True edges
+    contributions = _json_col(nullable=False, default=list)
+    # Rendered one-sentence "why similar"
+    headline      = Column(Text, nullable=False, default="")
+    # Strongest dissimilarity — the honesty tax
+    disanalogy    = Column(Text, nullable=False, default="")
+
+    # Whether this edge cleared the relevance floor
+    floor_passed = Column(Boolean, nullable=False, default=False)
+
+    # Invalidation key — bumped when scoring formula or weight profile changes
+    score_schema = Column(Integer, nullable=False, default=1)
+
+    # user_id: identity scoping (Phase 16)
+    user_id = Column(String(36), nullable=True, default=None)
+
+    # TTL materialisation
+    built_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+    expires_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "target_type", "query_key", "candidate_key", "user_id",
+            name="uq_similarity_edge_type_query_candidate_user",
+        ),
+    )
+
+
+# ===========================================================================
 # Phase 16 · Slice 1 — Accounts & Identity (tables 32–35)
 #
 # Additive and inert: tables exist but no auth behavior is wired until
@@ -1584,3 +1753,235 @@ class EntitlementCache(Base):
     computed_at           = Column(DateTime(timezone=True), nullable=False)
     # expires_at: row is stale after this timestamp (TTL = 1h)
     expires_at            = Column(DateTime(timezone=True), nullable=False)
+
+
+# ===========================================================================
+# Phase 12 · Slice 1 — Forecasting Engine (tables 41–43)
+#
+# Additive and inert: tables exist but no forecasting behavior is wired until
+# later Phase 12 slices.  No existing table is modified.
+#
+# Design principles from the Phase 12 spec (§3):
+#   - Three derived/analytics tables; disposable caches with no FK constraints
+#     into source tables.
+#   - No target-price, buy/sell, or recommendation field exists anywhere.
+#   - forecast_calibration_log is append-only (no UPDATE ever issued).
+#   - JSON columns via _json_col() for JSONB/SQLite compatibility.
+#   - All six forecast_* flags default inert in config.py.
+#   - SP-4 extension: forecasting never writes to source tables; similarity
+#     never imports from forecasting.
+# ===========================================================================
+
+
+# ---------------------------------------------------------------------------
+# 41. forecast_vector  (probability distribution — TTL cache)
+# ---------------------------------------------------------------------------
+
+class ForecastVector(Base):
+    """Probability distribution over thesis-relevant outcomes for one entity.
+
+    One row per (entity_type, entity_key, horizon, forecast_type, user_id).
+
+    entity_type ∈ {company, thesis, failure_mode, portfolio}
+    horizon     ∈ {near_term, medium_term, long_term}
+    forecast_type ∈ {thesis_strengthening, thesis_weakening, risk_emergence,
+                     catalyst_realization, similarity_outcome, regime_transition}
+
+    Probability invariant (enforced by the probability engine before upsert):
+        p_positive + p_negative + p_neutral ≈ 1.0  (within 0.001)
+
+    Explainability invariant (enforced by the builder before upsert):
+        why must be non-empty.
+        invalidators must be a non-empty JSON list.
+        At least one of analog_basis or similarity_basis must be non-empty.
+
+    No target-price, buy/sell, or recommendation field exists here.
+    This is a DERIVED cache — dropping forecast_vector degrades latency,
+    never correctness.
+    """
+
+    __tablename__ = "forecast_vector"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # entity_type: company | thesis | failure_mode | portfolio
+    entity_type = Column(String(20),  nullable=False)
+    # entity_key: ticker | thesis_id | failure_mode_id | portfolio_id
+    entity_key  = Column(String(200), nullable=False)
+
+    # Horizon
+    # horizon: near_term | medium_term | long_term
+    horizon      = Column(String(20), nullable=False)
+    # horizon_days: 30 | 90 | 180
+    horizon_days = Column(Integer,    nullable=False, default=30)
+
+    # forecast_type: thesis_strengthening | thesis_weakening | risk_emergence |
+    #   catalyst_realization | similarity_outcome | regime_transition
+    forecast_type = Column(String(50), nullable=False)
+
+    # Probability distribution — enforced to sum ≈ 1.0 by the probability engine
+    p_positive = Column(Float, nullable=False, default=0.33)
+    p_negative = Column(Float, nullable=False, default=0.33)
+    p_neutral  = Column(Float, nullable=False, default=0.34)
+
+    # 80% confidence interval on p_positive
+    confidence_band_low  = Column(Float, nullable=False, default=0.0)
+    confidence_band_high = Column(Float, nullable=False, default=1.0)
+
+    # Explainability — MUST be non-empty before storage
+    # why: dominant probability driver, human-readable prose
+    why          = Column(Text, nullable=False, default="")
+    # invalidators: JSON list of named invalidation conditions
+    invalidators = _json_col(nullable=False, default=list)
+
+    # Evidence provenance — at least one must be non-empty
+    # analog_basis: JSON list of historical_analog IDs
+    analog_basis     = _json_col(nullable=False, default=list)
+    # similarity_basis: JSON list of similarity_edge IDs
+    similarity_basis = _json_col(nullable=False, default=list)
+
+    # evidence_summary: JSON list of top-N condensed evidence items
+    evidence_summary = _json_col(nullable=False, default=list)
+
+    # source_versions: {table: row_version} provenance for staleness detection
+    source_versions = _json_col(nullable=False, default=dict)
+
+    # Invalidation key — bumped when probability formula or weight config changes
+    forecast_schema = Column(Integer, nullable=False, default=1)
+
+    # user_id: identity scoping (Phase 16). NULL = global.
+    user_id = Column(String(36), nullable=True, default=None, index=True)
+
+    # TTL materialisation
+    built_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+    expires_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "entity_type", "entity_key", "horizon", "forecast_type", "user_id",
+            name="uq_forecast_vector_entity_horizon_type_user",
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 42. forecast_evidence  (normalised evidence rows per forecast_vector)
+# ---------------------------------------------------------------------------
+
+class ForecastEvidence(Base):
+    """One piece of evidence backing a ForecastVector.
+
+    Normalised out of forecast_vector so evidence items are queryable
+    independently for explainability, audit, and calibration diagnostics.
+
+    source_type ∈ {historical_analog, similarity_edge, thesis_version,
+                   watchlist_signal, portfolio_exposure, failure_mode_stage}
+
+    direction ∈ {bullish, bearish, neutral}  (relative to the thesis)
+
+    contribution: signed probability shift. Negative = bearish on p_positive.
+    weight:       this item's weight in the ensemble [0, 1].
+    description:  human-readable statement — MUST be non-empty.
+
+    No unique constraint — one forecast_vector can have many evidence rows.
+    """
+
+    __tablename__ = "forecast_evidence"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to forecast_vector.id — no CASCADE
+    forecast_id = Column(String(36), nullable=False, index=True)
+
+    # source_type: historical_analog | similarity_edge | thesis_version |
+    #   watchlist_signal | portfolio_exposure | failure_mode_stage
+    source_type = Column(String(50),  nullable=False)
+    # source_id: primary key of the source row
+    source_id   = Column(String(200), nullable=False)
+
+    # direction: bullish | bearish | neutral
+    direction = Column(String(20), nullable=False, default="neutral")
+
+    # Signed probability shift caused by this evidence item
+    contribution = Column(Float, nullable=False, default=0.0)
+
+    # Weight in the ensemble [0, 1]
+    weight = Column(Float, nullable=False, default=0.0)
+
+    # Human-readable statement — MUST be non-empty
+    description = Column(Text, nullable=False, default="")
+
+    # Denormalised for query convenience
+    entity_type = Column(String(20),  nullable=False, default="")
+    entity_key  = Column(String(200), nullable=False, default="")
+
+    # user_id: identity scoping (Phase 16). NULL = global.
+    user_id = Column(String(36), nullable=True, default=None)
+
+    built_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 43. forecast_calibration_log  (immutable Brier-score records)
+# ---------------------------------------------------------------------------
+
+class ForecastCalibrationLog(Base):
+    """Immutable outcome record used to compute Brier scores and calibration curves.
+
+    This table has NO update or delete path in any service or repository.
+    Each evaluation creates a new row. Calibration trends are computed over
+    the set of rows with evaluated_at within a rolling window.
+
+    Analogous to dossier_revision, job_runs, and audit_log: append-only,
+    immutable, permanent.
+
+    actual_outcome ∈ {positive, negative, neutral, unknown, inconclusive}
+
+    brier_score = (p_positive_at_forecast - outcome_indicator)²
+      where outcome_indicator = 1.0 if positive, 0.0 if negative.
+      NULL when actual_outcome is neutral / unknown / inconclusive.
+
+    evaluation_source ∈ {thesis_state_change, risk_event_observed,
+                         watchlist_resolved, manual_review}
+    """
+
+    __tablename__ = "forecast_calibration_log"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to forecast_vector.id — denormalised to survive vector expiry
+    forecast_id = Column(String(36), nullable=False, index=True)
+
+    # Denormalised from the forecast_vector row at evaluation time
+    entity_type   = Column(String(20),  nullable=False, default="")
+    entity_key    = Column(String(200), nullable=False, default="")
+    horizon       = Column(String(20),  nullable=False, default="")
+    forecast_type = Column(String(50),  nullable=False, default="")
+
+    # Snapshot of probabilities at the time of the original forecast
+    p_positive_at_forecast = Column(Float, nullable=False, default=0.0)
+    p_negative_at_forecast = Column(Float, nullable=False, default=0.0)
+    p_neutral_at_forecast  = Column(Float, nullable=False, default=0.0)
+
+    # Observed outcome
+    # actual_outcome: positive | negative | neutral | unknown | inconclusive
+    actual_outcome = Column(String(50), nullable=False, default="unknown")
+
+    # Brier score: NULL when actual_outcome not binary (neutral/unknown/inconclusive)
+    brier_score = Column(Float, nullable=True, default=None)
+
+    # evaluation_source: thesis_state_change | risk_event_observed |
+    #   watchlist_resolved | manual_review
+    evaluation_source = Column(String(50), nullable=False, default="manual_review")
+
+    # When the outcome was observed — immutable after write
+    evaluated_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    # Optional operator notes
+    evaluator_notes = Column(Text, nullable=True, default=None)
+
+    # user_id: identity scoping (Phase 16). NULL = global.
+    user_id = Column(String(36), nullable=True, default=None)
+
+    # created_at is immutable — this row is NEVER updated
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)

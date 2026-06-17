@@ -899,6 +899,134 @@ async def admin_billing_status() -> dict:
         return await build_billing_snapshot(None)
 
 
+@router.get(
+    "/admin/similarity-status",
+    summary="Phase 11 · Slice 8 — Similarity engine observability snapshot",
+    tags=["admin"],
+)
+async def admin_similarity_status() -> dict:
+    """Return a read-only Phase 11 similarity observability snapshot.
+
+    Delegates to similarity_observability_service.build_similarity_observability_snapshot(),
+    which covers: similarity feature flags, db_available, per-target feature-vector
+    counts, edge counts (total/floor_passed/expired) and by target_type, the
+    shadow delivery ledger count (channel="similarity_shadow") and how many of
+    those rows ever escalated to "delivered", any live Notification rows
+    mistakenly tagged kind="similarity", the latest vector/edge build
+    timestamps, and safe_state.
+
+    Read-only. Safe to call at any time regardless of similarity flags.
+    Never builds, scores, or rebuilds anything. DB-down-safe: degrades to
+    zeros rather than 500.
+
+    Key validation fields:
+      safe_state              — True when similarity_shadow=True AND shadow_escalated_count=0
+                                 AND live_notification_count=0
+      flags                   — all 4 Phase 11 similarity flags
+      vector_counts           — failure_mode/company/thesis feature-vector row counts
+      edge_counts.floor_passed — edges that cleared the relevance floor
+      shadow_delivery_count   — similarity transition events journaled in shadow
+      shadow_escalated_count  — must stay 0; any nonzero value means a similarity
+                                 event reached "delivered" status, which should
+                                 never happen until a future live-delivery slice
+    """
+    from .services.similarity_observability_service import build_similarity_observability_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_similarity_observability_snapshot(_sess)
+    except Exception:
+        return await build_similarity_observability_snapshot(None)
+
+
+@router.get(
+    "/admin/similarity/{ticker}",
+    summary="Phase 11 · Slice 6 — Resembles facet for a ticker (internal)",
+    tags=["admin"],
+)
+async def admin_similarity_for_ticker(ticker: str) -> dict:
+    """Return the read-only "Resembles" facet payload for *ticker*.
+
+    Internal/admin inspection only — not wired into any public route, the
+    dossier UI, or delivery. Never builds or rebuilds anything; if no
+    similarity data has been built/scored for this ticker yet, returns the
+    safe empty state (has_similarity=False, matches=[]).
+    """
+    from .services.similarity_read_service import get_resembles_facet_for_ticker
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await get_resembles_facet_for_ticker(_sess, ticker.upper())
+    except Exception:
+        return await get_resembles_facet_for_ticker(None, ticker.upper())
+
+
+@router.get(
+    "/admin/forecast-status",
+    summary="Phase 12 · Slice 9 — Forecast engine observability snapshot",
+    tags=["admin"],
+)
+async def admin_forecast_status() -> dict:
+    """Return a read-only Phase 12 forecast engine observability snapshot.
+
+    Delegates to forecast_observability_service.build_forecast_observability_snapshot.
+
+    Reports:
+      - All 6 forecast_* config flags
+      - Vector counts (total, by type, by horizon, expired)
+      - Evidence count
+      - Calibration log count
+      - Shadow delivery count (channel="forecast_shadow")
+      - Live notification count (kind="forecast", always 0 in Phase 12)
+      - Latest forecast and calibration timestamps
+      - safe_state: True when shadow-only, no escalated rows, no live notifications
+
+    Read-only. Never builds, scores, or rebuilds anything.
+    DB-down-safe: degrades gracefully to zeros rather than 500.
+    """
+    from .services.forecast_observability_service import build_forecast_observability_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as sess:
+            return await build_forecast_observability_snapshot(sess)
+    except Exception:
+        return await build_forecast_observability_snapshot(None)
+
+
+@router.get(
+    "/admin/forecast/{ticker}",
+    summary="Phase 12 · Slice 6 — Forecast facet for a ticker (internal)",
+    tags=["admin"],
+)
+async def admin_forecast_for_ticker(ticker: str) -> dict:
+    """Return the read-only forecast facet payload for *ticker*.
+
+    Internal/admin inspection only — not wired into any public route, the
+    dossier UI, or delivery.  Never builds or rebuilds anything; if no
+    forecast data has been built for this ticker yet, returns the safe empty
+    state (has_forecasts=False, forecasts=[]).
+
+    All forecasts returned are:
+      - non-expired
+      - have non-empty why and invalidators
+      - include the mandatory disclaimer verbatim
+
+    Descriptive only.  No conviction, stance, buy/sell/hold, or price target
+    fields are present anywhere in the response.
+    """
+    from .services.forecast_read_service import get_forecast_facet_for_ticker
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await get_forecast_facet_for_ticker(_sess, ticker.upper())
+    except Exception:
+        return await get_forecast_facet_for_ticker(None, ticker.upper())
+
+
 @router.post(
     "/admin/loop/seed-jobs",
     summary="Phase 10B · Slice 10 — Seed watchlist_scan jobs for active tickers",
