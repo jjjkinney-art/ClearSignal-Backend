@@ -1027,6 +1027,67 @@ async def admin_forecast_for_ticker(ticker: str) -> dict:
         return await get_forecast_facet_for_ticker(None, ticker.upper())
 
 
+@router.get(
+    "/admin/decision-status",
+    summary="Phase 13 · Slice 6 — Decision Intelligence observability snapshot",
+    tags=["admin"],
+)
+async def admin_decision_status() -> dict:
+    """Return a read-only Phase 13 Decision Intelligence observability snapshot.
+
+    Delegates to decision_read_service.build_decision_status_snapshot().
+
+    Reports:
+      - All 6 decision_* config flags
+      - Row counts (total, valid, expired, by candidate_type, by priority bucket)
+      - Latest built_at timestamp
+      - safe_state: True when decision_shadow=True AND decision_delivery_enabled=False
+
+    Read-only. Never builds, scores, ranks, or writes anything.
+    DB-down-safe: degrades gracefully to zeros rather than 500.
+
+    No buy/sell/hold, target price, or investment recommendation language
+    is present anywhere in the response.
+    """
+    from .services.decision_read_service import build_decision_status_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as sess:
+            return await build_decision_status_snapshot(sess)
+    except Exception:
+        return await build_decision_status_snapshot(None)
+
+
+@router.get(
+    "/admin/decision/{ticker}",
+    summary="Phase 13 · Slice 6 — Decision facet for a ticker (internal)",
+    tags=["admin"],
+)
+async def admin_decision_for_ticker(ticker: str) -> dict:
+    """Return the read-only decision facet payload for *ticker*.
+
+    Internal/admin inspection only — not wired into any public route or
+    delivery path. Never builds or rebuilds anything; if no decision data
+    has been stored for this ticker yet, returns the safe empty state.
+
+    Returns the top-3 valid (non-expired, explanation-present, scored)
+    decision priorities for the ticker, plus a facet-level summary
+    (top_bucket, top_score, type_counts).
+
+    Descriptive only. No conviction, stance, buy/sell/hold, or price
+    target fields are present anywhere in the response.
+    """
+    from .services.decision_read_service import get_decision_facet_for_ticker
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as sess:
+            return await get_decision_facet_for_ticker(sess, ticker.upper())
+    except Exception:
+        return await get_decision_facet_for_ticker(None, ticker.upper())
+
+
 @router.post(
     "/admin/loop/seed-jobs",
     summary="Phase 10B · Slice 10 — Seed watchlist_scan jobs for active tickers",
