@@ -1985,3 +1985,211 @@ class ForecastCalibrationLog(Base):
 
     # created_at is immutable — this row is NEVER updated
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 44. decision_priority  (Phase 13 · Slice 1 — Decision Intelligence)
+# ---------------------------------------------------------------------------
+
+class DecisionPriority(Base):
+    """Priority ranking for one attention candidate, per user scope.
+
+    One row per (candidate_type, entity_type, entity_key, source_ref, user_id).
+
+    Phase 13 Decision Intelligence PRIORITIZES information; it does not make
+    investment decisions. There is no buy/sell/hold, position-size, target-price,
+    trade, or execution column anywhere on this table — the no-advice boundary is
+    structural (spec §0). This is a DERIVED cache: dropping decision_priority
+    degrades latency, never correctness.
+
+    candidate_type ∈ {forecast, risk, catalyst, watchlist_item,
+                      portfolio_exposure, thesis_transition, similarity_match}
+    entity_type    ∈ {company, thesis, failure_mode, portfolio}
+    decision_priority (bucket) ∈ {critical, high, medium, low, informational}
+
+    Score invariant (enforced by the scoring engine before upsert — Phase 13
+    Slice 3): all five component scores and decision_rank_score ∈ [0, 1]; the
+    bucket is consistent with decision_rank_score thresholds.
+
+    Explainability invariant (enforced by the builder before upsert — Phase 13
+    Slice 5): decision_reason and why_now non-empty; deprioritizers a non-empty
+    JSON list; at least one evidence_summary item. A priority that cannot
+    explain itself is never stored.
+
+    user_id NULL = global / intrinsic tier (holder-independent). A non-NULL
+    user_id is the portfolio-adjusted tier for one user (Phase 13 Slice 7).
+    """
+
+    __tablename__ = "decision_priority"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # candidate_type: forecast | risk | catalyst | watchlist_item |
+    #   portfolio_exposure | thesis_transition | similarity_match
+    candidate_type = Column(String(30), nullable=False)
+
+    # entity_type: company | thesis | failure_mode | portfolio
+    entity_type = Column(String(20),  nullable=False)
+    # entity_key: ticker | thesis_id | failure_mode_id | portfolio_id
+    entity_key  = Column(String(200), nullable=False)
+
+    # source_ref: id of the originating artifact (forecast_vector.id,
+    #   similarity_edge.id, watchlist row key, etc.)
+    source_ref  = Column(String(200), nullable=False, default="")
+
+    # decision_priority: bucket label — critical | high | medium | low | informational
+    decision_priority = Column(String(20), nullable=False, default="informational")
+    # Continuous [0,1] score used for ordering within and across buckets
+    decision_rank_score = Column(Float, nullable=False, default=0.0)
+
+    # Five component scores, each [0,1]
+    attention_score   = Column(Float, nullable=False, default=0.0)
+    urgency_score     = Column(Float, nullable=False, default=0.0)
+    impact_score      = Column(Float, nullable=False, default=0.0)  # portfolio-aware (Slice 7)
+    confidence_score  = Column(Float, nullable=False, default=0.0)
+    uncertainty_score = Column(Float, nullable=False, default=0.0)
+
+    # Explainability — MUST be non-empty before storage
+    # decision_reason: dominant-factor prose ("why important")
+    decision_reason = Column(Text, nullable=False, default="")
+    # why_now: urgency-driver prose ("why now")
+    why_now         = Column(Text, nullable=False, default="")
+    # deprioritizers: JSON list of named conditions that would lower this priority
+    deprioritizers  = _json_col(nullable=False, default=list)
+
+    # evidence_summary: JSON list of top-N condensed evidence items
+    evidence_summary = _json_col(nullable=False, default=list)
+
+    # source_versions: {table: row_version} provenance for staleness detection
+    source_versions  = _json_col(nullable=False, default=dict)
+
+    # Invalidation key — bumped when scoring formula / weights / thresholds change
+    decision_schema = Column(Integer, nullable=False, default=1)
+
+    # user_id: identity scope (Phase 16). NULL = global / intrinsic tier.
+    user_id = Column(String(36), nullable=True, default=None, index=True)
+
+    # TTL materialisation
+    built_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+    expires_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint(
+            "candidate_type", "entity_type", "entity_key", "source_ref", "user_id",
+            name="uq_decision_priority_candidate_entity_source_user",
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# 45. decision_evidence  (normalised evidence rows per decision_priority)
+# ---------------------------------------------------------------------------
+
+class DecisionEvidence(Base):
+    """One contributing upstream signal backing a DecisionPriority.
+
+    Normalised out of decision_priority so evidence items are queryable
+    independently for explainability and audit. Mirrors forecast_evidence.
+
+    source_type ∈ {forecast_vector, similarity_edge, historical_analog,
+                   thesis_version, watchlist_signal, portfolio_exposure,
+                   delivery_transition, calibration_log}
+
+    dimension ∈ {attention, urgency, impact, confidence, uncertainty}
+      — which component score this evidence fed.
+
+    contribution: signed contribution to that dimension.
+    weight:       weight in the dimension aggregate [0, 1].
+    description:  human-readable statement — MUST be non-empty.
+
+    No unique constraint — one priority has many evidence rows.
+    """
+
+    __tablename__ = "decision_evidence"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to decision_priority.id — no CASCADE
+    priority_id = Column(String(36), nullable=False, index=True)
+
+    # source_type: forecast_vector | similarity_edge | historical_analog |
+    #   thesis_version | watchlist_signal | portfolio_exposure |
+    #   delivery_transition | calibration_log
+    source_type = Column(String(40),  nullable=False)
+    # source_id: primary key of the source row
+    source_id   = Column(String(200), nullable=False)
+
+    # dimension: attention | urgency | impact | confidence | uncertainty
+    dimension = Column(String(20), nullable=False, default="attention")
+
+    # Signed contribution to the dimension aggregate
+    contribution = Column(Float, nullable=False, default=0.0)
+
+    # Weight in the dimension aggregate [0, 1]
+    weight = Column(Float, nullable=False, default=0.0)
+
+    # Human-readable statement — MUST be non-empty
+    description = Column(Text, nullable=False, default="")
+
+    # Denormalised for query convenience
+    entity_type = Column(String(20),  nullable=False, default="")
+    entity_key  = Column(String(200), nullable=False, default="")
+
+    # user_id: identity scoping (Phase 16). NULL = global.
+    user_id = Column(String(36), nullable=True, default=None)
+
+    built_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# ---------------------------------------------------------------------------
+# 46. decision_ranking_log  (immutable append-only ranking snapshots)
+# ---------------------------------------------------------------------------
+
+class DecisionRankingLog(Base):
+    """Immutable ranking snapshot used for drift and stability validation.
+
+    This table has NO update or delete path in any service or repository.
+    Each snapshot (and each later outcome attribution) creates a NEW row.
+    Modelled on forecast_calibration_log: append-only, immutable, permanent.
+
+    snapshot_reason ∈ {scheduled, rebuild, transition, manual_review}
+
+    realized_significance ∈ {material, immaterial, unknown} — filled later by
+    appending a NEW row keyed to the same priority_id (never by updating an
+    existing row). Used by Phase 13 Slice 9 calibration to measure whether
+    high-priority items turned out to matter (rank-order agreement), NOT a
+    Brier score.
+    """
+
+    __tablename__ = "decision_ranking_log"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to decision_priority.id — denormalised to survive priority expiry
+    priority_id = Column(String(36), nullable=False, index=True)
+
+    # Denormalised from the priority row at snapshot time
+    candidate_type = Column(String(30),  nullable=False, default="")
+    entity_type    = Column(String(20),  nullable=False, default="")
+    entity_key     = Column(String(200), nullable=False, default="")
+
+    # user_id: identity scope (Phase 16). NULL = global.
+    user_id = Column(String(36), nullable=True, default=None, index=True)
+
+    # Bucket + score at snapshot time
+    decision_priority   = Column(String(20), nullable=False, default="informational")
+    decision_rank_score = Column(Float,      nullable=False, default=0.0)
+    # Ordinal position within the user's ranked set at snapshot time
+    rank_position = Column(Integer, nullable=False, default=0)
+
+    # snapshot_reason: scheduled | rebuild | transition | manual_review
+    snapshot_reason = Column(String(40), nullable=False, default="scheduled")
+
+    # realized_significance: material | immaterial | unknown (filled later, append-only)
+    realized_significance = Column(String(20), nullable=True, default=None)
+
+    # When this snapshot / outcome was recorded — immutable
+    evaluated_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    # created_at is immutable — this row is NEVER updated
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)

@@ -428,6 +428,43 @@ class Settings(BaseSettings):
     # forecast_calibration_log rows are written.
     forecast_calibration_enabled: bool = False
 
+    # ── Phase 13 — Decision Intelligence ─────────────────────────────────────
+    # Decision Intelligence PRIORITIZES information; it never recommends a buy,
+    # sell, position size, trade, or target price (spec §0). All six flags
+    # default inert: with build/scoring off and delivery off (shadow true),
+    # no priority is ever built and no surface is ever reordered.
+
+    # Master gate for assembling attention candidates and building priorities.
+    # When False (default), no automatic producer builds decision_priority rows.
+    decision_build_enabled: bool = False
+
+    # Master gate for computing component & composite ranking scores. When False
+    # (default), no automatic scoring pass runs.
+    decision_scoring_enabled: bool = False
+
+    # Master gate for allowing rankings to reorder/promote real delivery
+    # surfaces (inbox, alerts, briefings, watchlists, portfolio). When False
+    # (default throughout the Phase 13 build phase), no user-visible surface is
+    # ever reordered. Never set True before the post-build Stage 4 sign-off.
+    decision_delivery_enabled: bool = False
+
+    # Shadow mode for decision ranking. When True (default), rankings are
+    # journaled to decision_ranking_log only — no surface reads them, no
+    # Notification is created. decision_scoring_enabled and decision_shadow must
+    # both be True for shadow journaling to activate (Phase 13 Slice 8).
+    decision_shadow: bool = True
+
+    # Comma-separated allowlist of entity_types eligible for automatic priority
+    # builds. Empty (default) means no candidate is eligible even if other flags
+    # are True.
+    decision_targets_enabled: str = ""
+
+    # Master gate for ranking-outcome logging and drift metrics (rank-order
+    # agreement, churn, false prominence, missed importance). When False
+    # (default), no decision_ranking_log outcome rows are written (Phase 13
+    # Slice 9).
+    decision_calibration_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:
