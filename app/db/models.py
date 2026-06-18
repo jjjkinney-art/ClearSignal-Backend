@@ -89,7 +89,7 @@ so the same schema works for both PostgreSQL and SQLite).
 from __future__ import annotations
 
 import uuid
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import (
     Boolean,
@@ -97,6 +97,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     Float,
+    Index,
     Integer,
     String,
     Text,
@@ -2193,3 +2194,224 @@ class DecisionRankingLog(Base):
 
     # created_at is immutable — this row is NEVER updated
     created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+
+# =============================================================================
+# Phase 14 — Scenario Engine  (Tables 47–49)
+# =============================================================================
+#
+# The Scenario Engine answers "What happens if X changes?" — it produces
+# conditional analyses, NOT predictions and NOT recommendations (SP-6 /
+# spec §0). There are no buy/sell/hold, position_size, target_price, trade,
+# or execution fields anywhere in these three tables.
+#
+# All three tables are DERIVED/ANALYTICS and additive:
+#   - scenario_snapshot (47): one row per evaluated conditional scenario.
+#   - scenario_evidence (48): normalised evidence rows per snapshot.
+#   - scenario_run_log  (49): immutable run / shadow / outcome log.
+#
+# - JSON columns via _json_col() for JSONB/SQLite compatibility.
+# - Null-session contract: every repository function returns an inert value
+#   (None / [] / 0) when session is None.
+
+
+# 47. scenario_snapshot  (Phase 14 · Slice 1 — Scenario Engine)
+# -----------------------------------------------------------------------------
+
+class ScenarioSnapshot(Base):
+    """One evaluated conditional scenario per (type, entity, key, user) tuple.
+
+    Stores the transmission mechanism, impact/plausibility bands, the five
+    mandatory explanation fields (what_changed / why_it_matters /
+    transmission_path / evidence / invalidators), and the affected upstream
+    artefact sets.
+
+    SAFETY: No column holds a buy/sell/hold verdict, recommended size, target
+    price, execution instruction, or predicted-return value (spec §0 / SP-6).
+    This is a DERIVED cache: dropping scenario_snapshot and rebuilding from
+    the intelligence substrate yields the same rows.
+
+    scenario_type ∈ {macro, company, sector, catalyst, failure_mode, portfolio}
+    entity_type   ∈ {company, sector, macro, portfolio}
+    scenario_impact ∈ {significant_positive, moderate_positive, neutral,
+                        moderate_negative, significant_negative, ambiguous}
+    plausibility_band ∈ {remote, plausible, likely_conditional}
+
+    Explainability gate (enforced in Slice 14.4 before upsert):
+      what_changed, why_it_matters, transmission_path non-empty;
+      invalidators non-empty (≥1 falsifiable condition);
+      ≥1 scenario_evidence row.
+    """
+
+    __tablename__ = "scenario_snapshot"
+
+    id              = Column(String(36), primary_key=True, default=_uuid)
+
+    # scenario_type: macro | company | sector | catalyst | failure_mode | portfolio
+    scenario_type   = Column(String(30), nullable=False)
+    # entity_type: company | sector | macro | portfolio
+    entity_type     = Column(String(20), nullable=False)
+    # entity_key: ticker | sector_id | macro_key | portfolio_id
+    entity_key      = Column(String(200), nullable=False)
+    # scenario_key: stable identity of the condition ("the if")
+    scenario_key    = Column(String(200), nullable=False, default="")
+
+    # condition: human-readable description of the triggering change
+    condition       = Column(Text, nullable=False, default="")
+
+    # transmission_path: ordered list of cause→effect steps — MUST be non-empty
+    transmission_path = _json_col(nullable=False, default=list)
+
+    # scenario_impact: qualitative directional band — NOT a price/return target
+    scenario_impact = Column(String(30), nullable=False, default="ambiguous")
+
+    # plausibility_band: conditional framing — NOT a probability of occurrence
+    plausibility_band = Column(String(30), nullable=False, default="plausible")
+
+    # Confidence/uncertainty carried from upstream signals [0,1]
+    confidence_score  = Column(Float, nullable=False, default=0.0)
+    uncertainty_score = Column(Float, nullable=False, default=0.0)
+
+    # Affected upstream artefact sets (soft references)
+    affected_entities  = _json_col(nullable=False, default=list)
+    affected_forecasts = _json_col(nullable=False, default=list)
+    affected_decisions = _json_col(nullable=False, default=list)
+
+    # The five mandatory explanation fields
+    what_changed     = Column(Text, nullable=False, default="")
+    why_it_matters   = Column(Text, nullable=False, default="")
+    # transmission_path (above) is explanation field 3
+    evidence_summary = _json_col(nullable=False, default=list)
+    invalidators     = _json_col(nullable=False, default=list)
+
+    # Provenance: {table: row_version} for staleness detection
+    source_versions  = _json_col(nullable=False, default=dict)
+
+    # Invalidation key — bumped when evaluation model / weights change
+    scenario_schema  = Column(Integer, nullable=False, default=1)
+
+    # user_id: identity scoping (Phase 16). NULL = global / intrinsic tier.
+    user_id          = Column(String(36), nullable=True, default=None)
+
+    # TTL materialisation
+    built_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+    expires_at = Column(DateTime(timezone=True), nullable=False,
+                        default=lambda: _now() + timedelta(hours=72))
+
+    __table_args__ = (
+        UniqueConstraint(
+            "scenario_type", "entity_type", "entity_key", "scenario_key", "user_id",
+            name="uq_scenario_snapshot_type_entity_key_user",
+        ),
+        Index("ix_ss_entity",          "entity_type",     "entity_key"),
+        Index("ix_ss_scenario_type",   "scenario_type"),
+        Index("ix_ss_plausibility",    "plausibility_band"),
+        Index("ix_ss_user_id",         "user_id"),
+        Index("ix_ss_expires_at",      "expires_at"),
+        Index("ix_ss_scenario_schema", "scenario_schema"),
+        Index("ix_ss_scenario_key",    "scenario_key"),
+    )
+
+
+# 48. scenario_evidence  (normalised evidence rows per scenario_snapshot)
+# -----------------------------------------------------------------------------
+
+class ScenarioEvidence(Base):
+    """One contributing upstream signal backing a ScenarioSnapshot.
+
+    Normalised out of scenario_snapshot so evidence items are queryable
+    independently for explainability and audit.
+
+    source_phase ∈ {memory, similarity, forecast, decision, portfolio,
+                     cross_exposure, dossier, watchlist}
+    """
+
+    __tablename__ = "scenario_evidence"
+
+    id          = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to scenario_snapshot.id — no CASCADE
+    scenario_id = Column(String(36), nullable=False)
+
+    # source_phase: which upstream phase/substrate this evidence comes from
+    source_phase = Column(String(30), nullable=False, default="")
+
+    # source_ref: primary key or stable identifier of the upstream artefact
+    source_ref   = Column(String(200), nullable=False, default="")
+
+    # captured_value: the cited upstream value at build time (read-only copy)
+    captured_value = _json_col(nullable=False, default=dict)
+
+    # Denormalised for query convenience
+    entity_type  = Column(String(20), nullable=False, default="")
+    entity_key   = Column(String(200), nullable=False, default="")
+
+    # user_id: identity scoping. NULL = global.
+    user_id      = Column(String(36), nullable=True, default=None)
+
+    captured_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_se_scenario_id", "scenario_id"),
+        Index("ix_se_source",      "source_phase", "source_ref"),
+        Index("ix_se_entity",      "entity_type",  "entity_key"),
+        Index("ix_se_user_id",     "user_id"),
+    )
+
+
+# 49. scenario_run_log  (immutable append-only run / shadow / outcome log)
+# -----------------------------------------------------------------------------
+
+class ScenarioRunLog(Base):
+    """Immutable run / shadow / calibration-outcome log for the Scenario Engine.
+
+    This table has NO UPDATE or DELETE path in any service or repository.
+    Each run, shadow-journal entry, or calibration outcome creates a NEW row.
+    Modelled on DecisionRankingLog and ForecastCalibrationLog: append-only.
+
+    run_reason    ∈ {assembly, shadow, calibration_outcome}
+    realized_state ∈ {materialized, invalidated, unresolved} — nullable;
+      only set on calibration_outcome rows; never mutated after insert.
+    """
+
+    __tablename__ = "scenario_run_log"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to scenario_snapshot.id — nullable for run-level rows
+    scenario_id   = Column(String(36), nullable=True, default=None)
+
+    # Denormalised from the snapshot row at log time (survives snapshot expiry)
+    scenario_type = Column(String(30), nullable=False, default="")
+    entity_type   = Column(String(20), nullable=False, default="")
+    entity_key    = Column(String(200), nullable=False, default="")
+
+    # user_id: identity scoping. NULL = global.
+    user_id       = Column(String(36), nullable=True, default=None)
+
+    # run_reason: assembly | shadow | calibration_outcome
+    run_reason    = Column(String(30), nullable=False, default="assembly")
+
+    # snapshot_reason: transition/journal classification
+    snapshot_reason = Column(String(60), nullable=False, default="")
+
+    # realized_state: materialized | invalidated | unresolved (calibration only)
+    realized_state = Column(String(20), nullable=True, default=None)
+
+    # Ordinal surface position at shadow-journal time
+    rank_position  = Column(Integer, nullable=True, default=None)
+
+    # When this run / outcome was recorded — immutable
+    evaluated_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    # created_at is immutable — this row is NEVER updated
+    created_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_srl_scenario_id",  "scenario_id"),
+        Index("ix_srl_entity",       "entity_type",   "entity_key"),
+        Index("ix_srl_user_id",      "user_id"),
+        Index("ix_srl_evaluated_at", "evaluated_at"),
+        Index("ix_srl_scenario_type","scenario_type",  "evaluated_at"),
+        Index("ix_srl_run_reason",   "run_reason"),
+    )

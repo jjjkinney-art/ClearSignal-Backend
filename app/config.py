@@ -465,6 +465,44 @@ class Settings(BaseSettings):
     # Slice 9).
     decision_calibration_enabled: bool = False
 
+    # ── Phase 14 — Scenario Engine ────────────────────────────────────────────
+    # The Scenario Engine answers "What happens if X changes?" — it produces
+    # conditional analyses, NOT predictions and NOT recommendations (spec §0 /
+    # SP-6). All six flags default inert: with build/scoring off and delivery off
+    # (shadow true), no scenario is ever built and no surface is ever changed.
+
+    # Master gate for assembling scenario seeds and building snapshots.
+    # When False (default), no automatic producer builds scenario_snapshot rows.
+    scenario_build_enabled: bool = False
+
+    # Master gate for running transmission/impact evaluation. When False
+    # (default), no automatic evaluation pass runs. Independent of
+    # scenario_build_enabled so seeds can be built without triggering evaluation.
+    scenario_scoring_enabled: bool = False
+
+    # Master gate for allowing scenarios to surface on real delivery surfaces.
+    # When False (default throughout the Phase 14 build phase), no user-visible
+    # surface is ever changed. Never set True before the post-build Stage 4
+    # sign-off.
+    scenario_delivery_enabled: bool = False
+
+    # Shadow mode for scenario surfacing. When True (default), surfaced sets are
+    # journaled to scenario_run_log only — no surface reads them, no Notification
+    # is created. scenario_scoring_enabled and scenario_shadow must both be True
+    # for shadow journaling to activate (Phase 14 Slice 8).
+    scenario_shadow: bool = True
+
+    # Comma-separated allowlist of entity_types eligible for automatic scenario
+    # builds. Empty (default) means no seed is eligible even if other flags are
+    # True.
+    scenario_targets_enabled: str = ""
+
+    # Master gate for scenario-realization outcome logging and drift metrics
+    # (realization agreement, transmission accuracy, invalidator hit-rate, churn).
+    # When False (default), no scenario_run_log calibration rows are written
+    # (Phase 14 Slice 9).
+    scenario_calibration_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:
