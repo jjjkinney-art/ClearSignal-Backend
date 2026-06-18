@@ -558,10 +558,11 @@ class TestAdminRoutes:
         assert "/admin/scenario-status" in src, \
             "GET /admin/scenario-status not found in app/api.py"
 
-    def test_admin_scenario_status_calls_build_status(self):
+    def test_admin_scenario_status_calls_observability(self):
         src = self._api_src()
-        assert "build_scenario_status_snapshot" in src, \
-            "build_scenario_status_snapshot not referenced in app/api.py"
+        # Slice 14.10 updated the route to use the richer observability service
+        assert "build_scenario_observability_snapshot" in src, \
+            "build_scenario_observability_snapshot not referenced in app/api.py"
 
     def test_admin_scenario_ticker_route_defined(self):
         src = self._api_src()

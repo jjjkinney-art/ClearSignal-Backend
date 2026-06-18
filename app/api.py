@@ -1095,20 +1095,23 @@ async def admin_decision_for_ticker(ticker: str) -> dict:
 
 @router.get(
     "/admin/scenario-status",
-    summary="Phase 14 · Slice 6 — Scenario engine observability snapshot",
+    summary="Phase 14 · Slice 10 — Scenario engine observability snapshot",
     tags=["admin"],
 )
 async def admin_scenario_status() -> dict:
     """Return a read-only Phase 14 scenario engine observability snapshot.
 
-    Delegates to scenario_read_service.build_scenario_status_snapshot().
+    Delegates to scenario_observability_service.build_scenario_observability_snapshot().
 
     Reports:
       - All 6 scenario_* config flags
-      - Row counts: total, valid, expired, by_type, by_plausibility
-      - Latest built_at timestamp
-      - safe_state: True when scenario_shadow=True and delivery_enabled=False
-      - db_available
+      - Row counts: scenario_snapshot, scenario_evidence, scenario_run_log
+      - Breakdown by scenario type and impact band
+      - Shadow delivery ledger count (channel=scenario_shadow)
+      - Live notification count (must be 0 in shadow mode)
+      - Latest scenario and calibration timestamps
+      - Structured safe_state with six sub-checks
+      - db_available, schema_version, disclaimer
 
     Read-only.  Never builds, propagates, explains, or writes anything.
     DB-down-safe: degrades gracefully to zeros rather than 500.
@@ -1116,14 +1119,14 @@ async def admin_scenario_status() -> dict:
     No buy/sell/hold, target price, or investment recommendation language
     is present anywhere in the response.
     """
-    from .services.scenario_read_service import build_scenario_status_snapshot
+    from .services.scenario_observability_service import build_scenario_observability_snapshot
     from .db.connection import get_session
 
     try:
         async with get_session() as sess:
-            return await build_scenario_status_snapshot(sess)
+            return await build_scenario_observability_snapshot(sess)
     except Exception:
-        return await build_scenario_status_snapshot(None)
+        return await build_scenario_observability_snapshot(None)
 
 
 @router.get(
