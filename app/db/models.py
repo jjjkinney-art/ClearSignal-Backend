@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 43 tables.
+SQLAlchemy ORM models — 53 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -2414,4 +2414,230 @@ class ScenarioRunLog(Base):
         Index("ix_srl_evaluated_at", "evaluated_at"),
         Index("ix_srl_scenario_type","scenario_type",  "evaluated_at"),
         Index("ix_srl_run_reason",   "run_reason"),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Phase 15 — User Learning & Personalization  (tables 50–53)
+# ---------------------------------------------------------------------------
+
+
+class UserSignalEvent(Base):
+    """Append-only raw behavioral event stream — Phase 15 · table 50.
+
+    Each row records one user interaction. Insert-only; never updated or deleted
+    except by the retention sweep. user_id is mandatory (anonymous events are not
+    learned — principle #2).
+
+    surface_was_personalized + pre_personalization_rank are the anti-feedback-loop
+    fields (risk R2): the learning pass uses the unbiased pre-personalization rank
+    rather than the served rank to avoid reinforcing whatever was already on top.
+
+    SP-7 invariants: no advice, no truth-write path, no conviction/order/execution.
+    """
+
+    __tablename__ = "user_signal_event"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+
+    # user_id: NULL not permitted — anonymous behavior is not learned
+    user_id = Column(String(36), nullable=False)
+
+    # signal_type: watchlist_add | watchlist_remove | search_query | search_click |
+    #   analysis_open | section_expand | alert_open | alert_act | alert_dismiss |
+    #   alert_mute | forecast_view | horizon_toggle | scenario_expand |
+    #   scenario_dismiss | portfolio_view | explicit_pref_set | explicit_pref_unset
+    signal_type = Column(String(40), nullable=False, default="")
+
+    # polarity: positive | negative | neutral
+    polarity = Column(String(10), nullable=False, default="neutral")
+
+    # entity_type: company | sector | theme | signal_type | horizon
+    entity_type = Column(String(20), nullable=False, default="")
+
+    # entity_key: ticker / sector_id / theme_key / signal_type_name / horizon_band
+    entity_key = Column(String(200), nullable=False, default="")
+
+    # source_surface: which UI surface emitted the event
+    source_surface = Column(String(60), nullable=False, default="")
+
+    # surface_was_personalized: whether this surface was already personalized
+    surface_was_personalized = Column(Boolean, nullable=False, default=False)
+
+    # pre_personalization_rank: the item's rank before any personalization
+    pre_personalization_rank = Column(Integer, nullable=True, default=None)
+
+    # interaction_weight: normalized magnitude [0, 1]
+    interaction_weight = Column(Float, nullable=False, default=1.0)
+
+    occurred_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    created_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_use_user_occurred",    "user_id", "occurred_at"),
+        Index("ix_use_user_entity",      "user_id", "entity_type", "entity_key"),
+        Index("ix_use_user_signal_type", "user_id", "signal_type"),
+        Index("ix_use_polarity",         "polarity"),
+    )
+
+
+class LearnedPreference(Base):
+    """Current-state evidence-backed belief per (user_id, dimension, entity_key) — table 51.
+
+    One row per user/dimension/entity triple. Status-mutable (decay, falsification).
+    The inference pass upserts this row; no other write path exists.
+
+    The four mandatory explainability fields (SP-7g):
+      1. belief_basis           — why we believe this
+      2. preference_evidence rows (#52) — the contributing events (external)
+      3. signal_strength_label + confidence — signal strength
+      4. falsifier              — what would overturn this belief
+
+    A preference missing any of these is rejected at the gate and never set active.
+    """
+
+    __tablename__ = "learned_preference"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    # dimension: sector_interest | company_interest | theme_interest |
+    #   preferred_horizon | preferred_signal_type | ignored_signal_type |
+    #   portfolio_sensitivity
+    dimension  = Column(String(30), nullable=False, default="")
+
+    # entity_key: the specific sector / company / theme / horizon / signal-type
+    entity_key = Column(String(200), nullable=False, default="")
+
+    # affinity: signed strength [-1, 1]
+    affinity = Column(Float, nullable=False, default=0.0)
+
+    # confidence: evidence quality [0, 1]
+    confidence = Column(Float, nullable=False, default=0.0)
+
+    # evidence_count: number of contributing events
+    evidence_count = Column(Integer, nullable=False, default=0)
+
+    # status: active | unresolved | decayed | falsified | explicit
+    status = Column(String(15), nullable=False, default="unresolved")
+
+    # Explainability field 1: why we believe this
+    belief_basis = Column(Text, nullable=False, default="")
+
+    # Explainability field 3: signal strength label
+    #   strong | moderate | tentative
+    signal_strength_label = Column(String(10), nullable=False, default="tentative")
+
+    # Explainability field 4: what would overturn this belief
+    falsifier = Column(Text, nullable=False, default="")
+
+    first_observed_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+    last_reinforced_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    # preference_schema: bumped when inference model changes (invalidation key)
+    preference_schema = Column(Integer, nullable=False, default=1)
+
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_lp_user_id",         "user_id"),
+        Index("ix_lp_user_dimension",  "user_id", "dimension"),
+        Index("ix_lp_user_entity",     "user_id", "entity_key"),
+        Index("ix_lp_status",          "status"),
+        Index("ix_lp_dimension_entity","dimension", "entity_key"),
+        Index("ix_lp_last_reinforced", "last_reinforced_at"),
+        UniqueConstraint("user_id", "dimension", "entity_key",
+                         name="uq_learned_preference_user_dim_entity"),
+    )
+
+
+class PreferenceEvidence(Base):
+    """Normalized evidence rows backing each learned preference — table 52.
+
+    Explainability field 2. Insert-only. Soft FKs to learned_preference and
+    user_signal_event (no CASCADE — evidence outlives decay or retention sweeps).
+
+    Every active/explicit preference must have >= MIN_EVENTS[dimension] resolvable
+    rows here — checked by the explainability gate (SP-7g, §10.4).
+    """
+
+    __tablename__ = "preference_evidence"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+
+    # Soft FK to learned_preference.id — no CASCADE
+    preference_id   = Column(String(36), nullable=False)
+
+    # Soft FK to user_signal_event.id — no CASCADE
+    signal_event_id = Column(String(36), nullable=False)
+
+    # contribution: decay-scaled impact on affinity
+    contribution = Column(Float, nullable=False, default=0.0)
+
+    # source: mirrors the learning source category (§3 of spec)
+    source = Column(String(30), nullable=False, default="")
+
+    observed_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_pe_preference_id",   "preference_id"),
+        Index("ix_pe_signal_event_id", "signal_event_id"),
+        Index("ix_pe_observed_at",     "observed_at"),
+    )
+
+
+class RelevanceAdjustmentLog(Base):
+    """Append-only shadow journal of relevance adjustments — table 53.
+
+    The Phase 15 analogue of scenario_run_log. Insert-only; run_reason=shadow
+    until Stage 5 sign-off.
+
+    intrinsic_rank: truth-order position (read-only input from truth layer)
+    adjusted_rank:  the rank personalization would assign
+    prominence_tier: pinned | normal | muted  (NEVER hidden — SP-7d)
+    floor_applied:   True when the relevance floor clamped this item
+
+    Both ranks are persisted so shadow validation can confirm no safety-critical
+    item was pushed below its floor. The item's underlying score is NOT stored
+    here — Phase 15 never has it to write.
+    """
+
+    __tablename__ = "relevance_adjustment_log"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    # surface: feed | alert_digest | watchlist
+    surface = Column(String(40), nullable=False, default="")
+
+    # run_reason: shadow | delivery  (shadow until Stage 5 sign-off)
+    run_reason = Column(String(15), nullable=False, default="shadow")
+
+    # item_ref: the truth item being repositioned
+    item_ref = Column(String(200), nullable=False, default="")
+
+    # intrinsic_rank: truth-order position — read-only input, never modified
+    intrinsic_rank = Column(Integer, nullable=False, default=0)
+
+    # adjusted_rank: the rank personalization would assign
+    adjusted_rank = Column(Integer, nullable=False, default=0)
+
+    # relevance_weight: bounded ± W_MAX applied weight
+    relevance_weight = Column(Float, nullable=False, default=0.0)
+
+    # prominence_tier: pinned | normal | muted  (NEVER hidden — SP-7d)
+    prominence_tier = Column(String(10), nullable=False, default="normal")
+
+    # floor_applied: True when the relevance floor clamped this item (SP-7d)
+    floor_applied = Column(Boolean, nullable=False, default=False)
+
+    evaluated_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    created_at   = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_ral_user_id",    "user_id"),
+        Index("ix_ral_user_surface","user_id", "surface"),
+        Index("ix_ral_run_reason", "run_reason"),
+        Index("ix_ral_evaluated_at","evaluated_at"),
+        Index("ix_ral_item_ref",   "item_ref"),
     )

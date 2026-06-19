@@ -503,6 +503,39 @@ class Settings(BaseSettings):
     # (Phase 14 Slice 9).
     scenario_calibration_enabled: bool = False
 
+    # -------------------------------------------------------------------------
+    # Phase 15 — User Learning & Personalization flags
+    # All six default inert: with capture/inference/relevance off and shadow on,
+    # no event is stored, no preference is learned, and no surface is changed.
+    # User Learning learns relevance only — it never rewrites truth (SP-7).
+    # -------------------------------------------------------------------------
+
+    # Master gate for appending user_signal_event rows.
+    # When False (default), no behavioral event is persisted.
+    learning_capture_enabled: bool = False
+
+    # Master gate for running the periodic learning pass that produces
+    # learned_preference and preference_evidence rows.
+    # When False (default), no inference pass runs.
+    learning_inference_enabled: bool = False
+
+    # Master gate for computing relevance adjustments over a truth-fixed result set.
+    # When False (default), relevance layer is idle.
+    learning_relevance_enabled: bool = False
+
+    # Shadow mode for relevance surfacing. When True (default), adjustments are
+    # journaled to relevance_adjustment_log only — no surface ordering changes.
+    # Never set False before Stage 5 sign-off.
+    learning_shadow: bool = True
+
+    # Comma-separated allowlist of entity_types eligible for learning targets.
+    # Empty (default) means no entity_type is targeted even if other flags are True.
+    learning_targets_enabled: str = ""
+
+    # Master gate for preference calibration metrics (accuracy, drift,
+    # false-preference detection). When False (default), no calibration pass runs.
+    learning_calibration_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:
