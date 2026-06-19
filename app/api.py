@@ -1191,6 +1191,41 @@ async def admin_loop_seed_jobs() -> dict:
         return {"status": "error", "detail": str(exc)}
 
 
+@router.get(
+    "/admin/user-learning-status",
+    summary="Phase 15 · Slice 11 — User Learning observability snapshot",
+    tags=["admin"],
+)
+async def admin_user_learning_status() -> dict:
+    """Return a read-only Phase 15 user learning observability snapshot.
+
+    Delegates to user_learning_observability_service.build_user_learning_snapshot().
+
+    Reports:
+      - All 6 learning_* config flags
+      - Row counts: user_signal_event, learned_preference, preference_evidence,
+        relevance_adjustment_log (total / shadow / calibration sub-counts)
+      - Preference breakdowns by dimension and strength label
+      - Latest signal, preference, and adjustment timestamps
+      - Structured safe_state with five sub-checks
+      - db_available, schema_version, disclaimer
+
+    Read-only.  Never captures signals, infers preferences, or writes anything.
+    DB-down-safe: degrades gracefully to zeros rather than 500.
+
+    No buy/sell/hold, target price, or investment guidance language is present
+    anywhere in the response.
+    """
+    from .services.user_learning_observability_service import build_user_learning_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_user_learning_snapshot(_sess)
+    except Exception:
+        return await build_user_learning_snapshot(None)
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
