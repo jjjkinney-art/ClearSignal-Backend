@@ -1226,6 +1226,36 @@ async def admin_user_learning_status() -> dict:
         return await build_user_learning_snapshot(None)
 
 
+@router.get(
+    "/admin/personal-experience-status",
+    summary="Phase 18 · Slice 10 — Personal Experience observability snapshot",
+    tags=["admin"],
+)
+async def admin_personal_experience_status() -> dict:
+    """Return a read-only Phase 18 Personal Experience observability snapshot.
+
+    Reports:
+      - All 6 experience_* config flags
+      - Row counts: personal_experience_cursor, personal_experience_event,
+        personal_brief_snapshot (total / shadow / calibration sub-counts)
+      - Structured safe_state with six sub-checks
+      - db_available, schema_version, disclaimer
+
+    Read-only.  Never composes, scores, or writes anything.
+    DB-down-safe: degrades gracefully to zeros rather than 500.
+    """
+    from .services.personal_experience_observability_service import (
+        build_personal_experience_snapshot,
+    )
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_personal_experience_snapshot(_sess)
+    except Exception:
+        return await build_personal_experience_snapshot(None)
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
