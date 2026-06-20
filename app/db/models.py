@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 53 tables.
+SQLAlchemy ORM models — 56 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -81,6 +81,11 @@ Forecasting Engine (Phase 12 · Slice 1)
 41. forecast_vector        — Probability distribution per entity/horizon/forecast_type
 42. forecast_evidence      — Normalised evidence rows backing each forecast_vector
 43. forecast_calibration_log — Immutable outcome records for Brier-score calibration
+
+Personal Experience (Phase 18 · Slice 1)
+54. personal_experience_cursor  — User view state per entity (upsert on unique key)
+55. personal_experience_event   — Append-only surfacing log (what was shown and why)
+56. personal_brief_snapshot     — One brief per user per day (upsert on unique key)
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -2640,4 +2645,125 @@ class RelevanceAdjustmentLog(Base):
         Index("ix_ral_run_reason", "run_reason"),
         Index("ix_ral_evaluated_at","evaluated_at"),
         Index("ix_ral_item_ref",   "item_ref"),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Phase 18 — Personal Experience Layer  (tables 54–56)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class PersonalExperienceCursor(Base):
+    """User view state per entity — Phase 18 · table 54.
+
+    Upsert keyed on (user_id, entity_type, entity_key). Tracks when the user
+    last saw an entity and what the entity state looked like at that time.
+    Enables novelty scoring and revisit detection.
+
+    Phase 18 never writes to any truth table. This cursor is the only
+    mutable Phase 18 table (view_count increments, last_seen_at updates).
+    """
+
+    __tablename__ = "personal_experience_cursor"
+
+    id         = Column(String(36), primary_key=True, default=_uuid)
+    user_id    = Column(String(36), nullable=False)
+
+    entity_type     = Column(String(30), nullable=False, default="")
+    entity_key      = Column(String(64), nullable=False, default="")
+
+    last_seen_at    = Column(DateTime(timezone=True), nullable=False, default=_now)
+    last_state_hash = Column(String(64), nullable=False, default="")
+    view_count      = Column(Integer, nullable=False, default=0)
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "entity_type", "entity_key",
+                         name="uq_pec_user_entity"),
+        Index("ix_pec_user_id",          "user_id"),
+        Index("ix_pec_user_entity_type", "user_id", "entity_type"),
+        Index("ix_pec_last_seen_at",     "last_seen_at"),
+    )
+
+
+class PersonalExperienceEvent(Base):
+    """Append-only surfacing log — Phase 18 · table 55.
+
+    INSERT-ONLY. Records what was surfaced (or blocked) and all 7 scoring
+    dimensions at the time of surfacing. run_reason=shadow until Stage 5
+    sign-off.
+
+    explanation_valid=False marks items that failed the explainability gate
+    (blocked from surfacing but still logged for calibration).
+
+    Phase 18 never writes to any truth table. This event log is one of only
+    two Phase 18 write targets (the other is personal_experience_cursor).
+    """
+
+    __tablename__ = "personal_experience_event"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    surface     = Column(String(30), nullable=False, default="")
+    item_ref    = Column(String(128), nullable=False, default="")
+    entity_type = Column(String(30), nullable=False, default="")
+    entity_key  = Column(String(64), nullable=False, default="")
+
+    experience_score    = Column(Float, nullable=False, default=0.0)
+    attention_priority  = Column(Float, nullable=False, default=0.0)
+    personal_relevance  = Column(Float, nullable=False, default=0.0)
+    recency_score       = Column(Float, nullable=False, default=0.0)
+    novelty_score       = Column(Float, nullable=False, default=0.0)
+    revisit_score       = Column(Float, nullable=False, default=0.0)
+    memory_relevance    = Column(Float, nullable=False, default=0.0)
+    portfolio_relevance = Column(Float, nullable=False, default=0.0)
+
+    explanation_text  = Column(Text, nullable=False, default="")
+    explanation_valid = Column(Boolean, nullable=False, default=False)
+
+    run_reason  = Column(String(15), nullable=False, default="shadow")
+    surfaced_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    created_at  = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_pee_user_id",      "user_id"),
+        Index("ix_pee_user_surface", "user_id", "surface"),
+        Index("ix_pee_run_reason",   "run_reason"),
+        Index("ix_pee_surfaced_at",  "surfaced_at"),
+        Index("ix_pee_item_ref",     "item_ref"),
+    )
+
+
+class PersonalBriefSnapshot(Base):
+    """Daily brief metadata — Phase 18 · table 56.
+
+    One brief per user per day. Upsert keyed on (user_id, brief_date).
+    run_reason=shadow until Stage 5 sign-off.
+
+    Phase 18 never writes to any truth table.
+    """
+
+    __tablename__ = "personal_brief_snapshot"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    brief_date         = Column(Date, nullable=False)
+    brief_schema       = Column(Integer, nullable=False, default=1)
+    items_surfaced     = Column(Integer, nullable=False, default=0)
+    items_blocked      = Column(Integer, nullable=False, default=0)
+    top_attention_item = Column(String(128), nullable=False, default="")
+    run_reason         = Column(String(15), nullable=False, default="shadow")
+    generated_at       = Column(DateTime(timezone=True), nullable=False, default=_now)
+    created_at         = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "brief_date",
+                         name="uq_pbs_user_brief_date"),
+        Index("ix_pbs_user_id",         "user_id"),
+        Index("ix_pbs_user_brief_date", "user_id", "brief_date"),
+        Index("ix_pbs_run_reason",      "run_reason"),
     )

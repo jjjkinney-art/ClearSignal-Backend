@@ -536,6 +536,43 @@ class Settings(BaseSettings):
     # false-preference detection). When False (default), no calibration pass runs.
     learning_calibration_enabled: bool = False
 
+    # -------------------------------------------------------------------------
+    # Phase 18 — Personal Experience Layer
+    #
+    # Phase 18 orchestrates intelligence — it never creates it.
+    # It reads from every upstream phase but writes only to its own three tables:
+    # personal_experience_cursor, personal_experience_event, personal_brief_snapshot.
+    # No truth table is ever written, updated, or deleted by any Phase 18 service.
+    # -------------------------------------------------------------------------
+
+    # Master gate for the change detection engine that detects what changed
+    # for a user since their last visit and writes view cursors.
+    # When False (default), no changes are detected, no cursors are written.
+    experience_change_detection_enabled: bool = False
+
+    # Master gate for the attention scoring pipeline that computes 7-dimension
+    # scores for candidate items. When False (default), all scores return 0.0.
+    experience_attention_enabled: bool = False
+
+    # Master gate for the experience composer that orchestrates all sub-services
+    # into a ranked, explained experience payload.
+    # When False (default), compose returns empty.
+    experience_composer_enabled: bool = False
+
+    # Master gate for the personal memory context service that provides
+    # session continuity (research resumption, thesis continuation).
+    # When False (default), memory context returns empty.
+    experience_memory_enabled: bool = False
+
+    # Shadow mode for experience surfacing. When True (default), all output goes
+    # to the event log only — no user-visible personalization.
+    # Never set False before Stage 5 sign-off.
+    experience_shadow: bool = True
+
+    # Master gate for the personal brief builder that generates daily briefs.
+    # When False (default), no briefs are generated.
+    experience_brief_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:
