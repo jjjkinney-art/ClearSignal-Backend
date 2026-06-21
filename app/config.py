@@ -573,6 +573,33 @@ class Settings(BaseSettings):
     # When False (default), no briefs are generated.
     experience_brief_enabled: bool = False
 
+    # ── Phase 19 — Visual Intelligence flags ────────────────────────────────
+
+    # Gate for Tier 1 structured JSON visual spec generation.
+    # When False (default), no JSON visual specs are produced.
+    visual_json_enabled: bool = False
+
+    # Gate for Tier 2 server-side SVG visual rendering.
+    # When False (default), no SVG visuals are rendered.
+    visual_svg_enabled: bool = False
+
+    # Gate for Tier 3 AI-generated visual explanations.
+    # When False (default), all AI generation returns fallback specs.
+    visual_ai_enabled: bool = False
+
+    # Gate for visual specification caching.
+    # When False (default), no cache reads or writes occur.
+    visual_cache_enabled: bool = False
+
+    # Shadow mode for visual generation. When True (default), all output goes
+    # to the event log only — no user-visible visuals served.
+    # Never set False before Stage 5 sign-off.
+    visual_shadow: bool = True
+
+    # Gate for visual calibration metrics computation.
+    # When False (default), calibration returns empty metrics.
+    visual_calibration_enabled: bool = False
+
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]
     else:

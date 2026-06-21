@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 56 tables.
+SQLAlchemy ORM models — 59 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -86,6 +86,11 @@ Personal Experience (Phase 18 · Slice 1)
 54. personal_experience_cursor  — User view state per entity (upsert on unique key)
 55. personal_experience_event   — Append-only surfacing log (what was shown and why)
 56. personal_brief_snapshot     — One brief per user per day (upsert on unique key)
+
+Visual Intelligence (Phase 19 · Slice 1)
+57. visual_spec_cache           — Cached visual specifications (upsert on unique key)
+58. visual_experience_event     — Append-only visual generation log
+59. ai_visual_generation_log    — Append-only AI generation audit log (no prompt text)
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -2766,4 +2771,113 @@ class PersonalBriefSnapshot(Base):
         Index("ix_pbs_user_id",         "user_id"),
         Index("ix_pbs_user_brief_date", "user_id", "brief_date"),
         Index("ix_pbs_run_reason",      "run_reason"),
+    )
+
+
+# ── Phase 19 — Visual Intelligence ──────────────────────────────────────────
+
+
+class VisualSpecCache(Base):
+    """Cached visual specifications — Phase 19 · table 57.
+
+    Upsert keyed on (user_id, visual_type, entity_key, data_hash).
+    Stores rendered visual specs (JSON or SVG) to avoid redundant computation.
+    run_reason=shadow until Stage 5 sign-off.
+
+    Phase 19 never writes to any truth table. This cache stores visual
+    output only — no upstream data is modified.
+    """
+
+    __tablename__ = "visual_spec_cache"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    visual_type      = Column(String(50), nullable=False, default="")
+    entity_key       = Column(String(64), nullable=False, default="")
+    data_hash        = Column(String(64), nullable=False, default="")
+    spec_json        = Column(Text, nullable=False, default="")
+    rendering_tier   = Column(String(10), nullable=False, default="json")
+    explanation_valid = Column(Boolean, nullable=False, default=False)
+    run_reason       = Column(String(15), nullable=False, default="shadow")
+    generated_at     = Column(DateTime(timezone=True), nullable=False, default=_now)
+    expires_at       = Column(DateTime(timezone=True), nullable=True)
+    created_at       = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "visual_type", "entity_key", "data_hash",
+                         name="uq_vsc_user_type_key_hash"),
+        Index("ix_vsc_user_id",    "user_id"),
+        Index("ix_vsc_user_type",  "user_id", "visual_type"),
+        Index("ix_vsc_entity_key", "entity_key"),
+        Index("ix_vsc_run_reason", "run_reason"),
+    )
+
+
+class VisualExperienceEvent(Base):
+    """Append-only visual generation log — Phase 19 · table 58.
+
+    INSERT-ONLY. Records what visuals were generated (or blocked) and
+    their rendering tier, generation time, and cache status.
+    run_reason=shadow until Stage 5 sign-off.
+
+    Phase 19 never writes to any truth table. This event log is one of
+    only two Phase 19 append-only write targets (the other is
+    ai_visual_generation_log).
+    """
+
+    __tablename__ = "visual_experience_event"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    visual_type      = Column(String(50), nullable=False, default="")
+    entity_key       = Column(String(64), nullable=False, default="")
+    rendering_tier   = Column(String(10), nullable=False, default="json")
+    explanation_valid = Column(Boolean, nullable=False, default=False)
+    generation_ms    = Column(Integer, nullable=False, default=0)
+    cache_hit        = Column(Boolean, nullable=False, default=False)
+    blocked_reason   = Column(String(100), nullable=False, default="")
+    run_reason       = Column(String(15), nullable=False, default="shadow")
+    surfaced_at      = Column(DateTime(timezone=True), nullable=False, default=_now)
+    created_at       = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_vee_user_id",      "user_id"),
+        Index("ix_vee_visual_type",  "visual_type"),
+        Index("ix_vee_run_reason",   "run_reason"),
+        Index("ix_vee_surfaced_at",  "surfaced_at"),
+    )
+
+
+class AIVisualGenerationLog(Base):
+    """Append-only AI generation audit log — Phase 19 · table 59.
+
+    INSERT-ONLY. Tracks AI-generated visual attempts and validation outcomes.
+    Stores prompt_hash (SHA-256) only — NO raw prompt text or model output.
+    run_reason=shadow until Stage 5 sign-off.
+
+    Phase 19 never writes to any truth table.
+    """
+
+    __tablename__ = "ai_visual_generation_log"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(36), nullable=False)
+
+    visual_type          = Column(String(50), nullable=False, default="")
+    entity_key           = Column(String(64), nullable=False, default="")
+    prompt_hash          = Column(String(64), nullable=False, default="")
+    generation_model     = Column(String(50), nullable=False, default="")
+    generation_ms        = Column(Integer, nullable=False, default=0)
+    validation_passed    = Column(Boolean, nullable=False, default=False)
+    validation_reason    = Column(String(100), nullable=False, default="")
+    banned_phrases_found = Column(Text, nullable=False, default="")
+    run_reason           = Column(String(15), nullable=False, default="shadow")
+    created_at           = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        Index("ix_avgl_user_id",     "user_id"),
+        Index("ix_avgl_visual_type", "visual_type"),
+        Index("ix_avgl_run_reason",  "run_reason"),
     )
