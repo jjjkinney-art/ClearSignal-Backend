@@ -1256,6 +1256,34 @@ async def admin_personal_experience_status() -> dict:
         return await build_personal_experience_snapshot(None)
 
 
+@router.get(
+    "/admin/visual-intelligence-status",
+    summary="Phase 19 · Slice 12 — Visual Intelligence observability snapshot",
+    tags=["admin"],
+)
+async def admin_visual_intelligence_status() -> dict:
+    """Return a read-only Phase 19 Visual Intelligence observability snapshot.
+
+    Reports:
+      - All 6 visual_* config flags
+      - Row counts: visual_spec_cache, visual_experience_event,
+        ai_visual_generation_log (total / shadow / calibration sub-counts)
+      - Structured safe_state with six sub-checks
+      - db_available, schema_version, disclaimer
+
+    Read-only.  Never renders, generates, or writes anything.
+    DB-down-safe: degrades gracefully to zeros rather than 500.
+    """
+    from .services.visual_observability_service import build_visual_snapshot
+    from .db.connection import get_session
+
+    try:
+        async with get_session() as _sess:
+            return await build_visual_snapshot(_sess)
+    except Exception:
+        return await build_visual_snapshot(None)
+
+
 @router.post(
     "/analyze",
     response_model=AnalysisResponse,
