@@ -1435,6 +1435,13 @@ def _run_investment_pipeline(
     except Exception:
         _backend_version = "matrix-conviction-v1/IMPORT_ERROR"
 
+    # Phase 20A: record active ticker for session context (follow-up routing).
+    try:
+        from .session_context_service import record_active_ticker as _record_at
+        _record_at(request_id, ticker, company.company_name)
+    except Exception:
+        pass
+
     return AgentAnswerResponse(
         company=ticker,
         request_id=request_id,
@@ -1489,6 +1496,25 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     except Exception as _norm_exc:
         logger.debug("[router] ticker normalization failed: %r", _norm_exc)
 
+    # ── Phase 20A P3+P4: Resolve active ticker from request or session ────────
+    # The frontend can send active_ticker explicitly.  When absent, look up the
+    # last-analyzed company for this session (maintained by session_context_service).
+    _active_ticker: Optional[str] = getattr(request, "active_ticker", None) or None
+    _session_id_for_ctx: str = ""
+    if not _active_ticker:
+        try:
+            _session_id_for_ctx = getattr(request, "_session_id", "") or ""
+            if _session_id_for_ctx:
+                from .session_context_service import get_active_ticker
+                _active_ticker = get_active_ticker(_session_id_for_ctx)
+                if _active_ticker:
+                    logger.info(
+                        "[router] session context resolved active_ticker=%s for session=%s",
+                        _active_ticker, _session_id_for_ctx[:12],
+                    )
+        except Exception:
+            pass
+
     # ── Phase 20A P1: Scenario intent detection ────────────────────────────────
     # Check for scenario questions BEFORE company detection so that questions
     # like "What happens if AI CapEx falls 20%?" are not lost to the general-
@@ -1504,7 +1530,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             if detect_scenario_intent(request.question):
                 _scenario_ctx = extract_scenario_context(
                     request.question,
-                    active_ticker=None,
+                    active_ticker=_active_ticker,
                 )
                 logger.info(
                     json.dumps({

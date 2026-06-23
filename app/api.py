@@ -1545,6 +1545,9 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             logger.debug("[ask] 5C dossier injection block failed (non-fatal): %r", _5c_exc)
             # _request and _5c_* stay at their defaults — prompt is unchanged.
 
+        # Phase 20A: attach session_id to request for session-context tracking.
+        _request._session_id = _session_id  # type: ignore[attr-defined]
+
         fut = loop.run_in_executor(None, route_question, _request)
 
         # Emit keepalive bytes every 25 s while pipeline runs.

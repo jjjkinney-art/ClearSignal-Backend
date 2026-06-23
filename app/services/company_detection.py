@@ -119,6 +119,7 @@ _COMPANY_DB: dict[str, dict] = {
     "BRK.B": {"company_name": "Berkshire Hathaway Inc.",                 "sector": "Financials",                "industry": "Diversified Financials"},
     "BRK.A": {"company_name": "Berkshire Hathaway Inc.",                 "sector": "Financials",                "industry": "Diversified Financials"},
     "BF.B":  {"company_name": "Brown-Forman Corp.",                      "sector": "Consumer Staples",           "industry": "Beverages"},
+    "SHEL":  {"company_name": "Shell plc",                               "sector": "Energy",                    "industry": "Integrated Oil & Gas"},
     "JPM":   {"company_name": "JPMorgan Chase & Co.",                    "sector": "Financials",                "industry": "Banking"},
     "GS":    {"company_name": "Goldman Sachs Group Inc.",                "sector": "Financials",                "industry": "Investment Banking"},
     "BAC":   {"company_name": "Bank of America Corp.",                   "sector": "Financials",                "industry": "Banking"},
@@ -457,6 +458,12 @@ _ALIAS_MAP: dict[str, str] = {
     # ── Brown-Forman ─────────────────────────────────────────────────────────
     "brown-forman":            "BF.B",
     "brown forman":            "BF.B",
+
+    # ── Shell (RDS.A/RDS.B delisted 2022; canonical ticker is SHEL) ──────────
+    "shell":                   "SHEL",
+    "shell plc":               "SHEL",
+    "royal dutch shell":       "SHEL",
+    "royal dutch":             "SHEL",
 
     # ── JPMorgan ──────────────────────────────────────────────────────────────
     "jpmorgan":                "JPM",

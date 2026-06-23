@@ -36,13 +36,14 @@ _TICKER_VARIANTS = {
     "BFA":   "BF.A",
     "BF-A":  "BF.A",
     "BF.A":  "BF.A",
-    # Legacy Shell (delisted but commonly searched)
-    "RDSA":  "RDS.A",
-    "RDS-A": "RDS.A",
-    "RDS.A": "RDS.A",
-    "RDSB":  "RDS.B",
-    "RDS-B": "RDS.B",
-    "RDS.B": "RDS.B",
+    # Shell — RDS.A/RDS.B delisted Jan 2022; canonical US ticker is now SHEL.
+    # All legacy variants normalize to SHEL.
+    "RDSA":  "SHEL",
+    "RDS-A": "SHEL",
+    "RDS.A": "SHEL",
+    "RDSB":  "SHEL",
+    "RDS-B": "SHEL",
+    "RDS.B": "SHEL",
     # Linde (delisted LIN.DE, often typed as LINDE)
     # Kept as-is since LIN is the canonical US ticker
     # Liberty Media

@@ -410,6 +410,17 @@ class QuestionRequest(BaseModel):
     context: Optional[GroundingContext] = Field(
         None, description="Optional context to ground the question and classification")
 
+    # ── Phase 20A — active ticker context ────────────────────────────────────────
+    # Sent by the frontend when the user is viewing a specific company.
+    # Enables scenario questions like "What breaks the thesis?" to
+    # auto-resolve to the company the user is currently looking at.
+    active_ticker: Optional[str] = Field(
+        default=None,
+        description="Ticker the user is currently viewing (e.g. 'NVDA'). "
+                    "Used for scenario/follow-up routing when no company "
+                    "is explicitly mentioned in the question.",
+    )
+
     # ── Phase 9C — internal memory injection ─────────────────────────────────────
     # Set by api.py BEFORE dispatching to route_question; never sent by clients.
     # memory_context_block: formatted prompt text injected into synthesis.

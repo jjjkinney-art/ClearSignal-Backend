@@ -1,11 +1,12 @@
 """
 Routing Regression Tests — Phase 20A.
 
-Validates the four routing improvements:
-  P1 — Scenario query routing
-  P2 — Theme-to-company routing
+Validates the five routing improvements:
+  P1 — Scenario query routing (expanded patterns)
+  P2 — Theme-to-company routing (expanded mappings)
   P3 — Ticker normalization
   P4 — Graceful failure handling
+  P5 — Active ticker / session context
 
 These are fast, offline tests — no API calls, no DB, no LLM.
 """
@@ -145,9 +146,9 @@ class TestTickerNormalization:
         ("BF.B", "BF.B"),
         ("BF-B", "BF.B"),
         ("BFB", "BF.B"),
-        ("RDS.A", "RDS.A"),
-        ("RDS-A", "RDS.A"),
-        ("RDSA", "RDS.A"),
+        ("RDS.A", "SHEL"),
+        ("RDS-A", "SHEL"),
+        ("RDSA", "SHEL"),
     ])
     def test_normalize_ticker(self, variant, canonical):
         from app.services.ticker_normalization_service import normalize_ticker
@@ -242,3 +243,297 @@ class TestRouterHasRetryLogic:
         assert "for _syn_attempt in range(2)" in content, (
             "Router must have retry loop for synthesis"
         )
+
+
+# ===================================================================
+# § P1 expanded — Scenario pattern coverage
+# ===================================================================
+
+class TestExpandedScenarioPatterns:
+    """New patterns: suppose, assume, imagine, under a scenario where, thesis variants."""
+
+    @pytest.mark.parametrize("question", [
+        # suppose / assume / imagine family
+        "Suppose revenue falls 30%, what happens?",
+        "Assume margins decline by 500bps",
+        "Imagine GPU demand collapses overnight",
+        # under a scenario where
+        "Under a scenario where rates hit 7%, what changes?",
+        "In a scenario where AI spending stalls",
+        # thesis break variants
+        "What would increase conviction?",
+        "What would decrease conviction?",
+        "What would weaken the thesis?",
+        "What would strengthen the thesis?",
+        "What threatens the thesis?",
+        "What confirms the thesis?",
+        "What disproves the thesis?",
+        "What would improve the thesis?",
+        # cause / need patterns
+        "What would cause margins to decline?",
+        "What would need to happen for the stock to rally?",
+        "What needs to go wrong for this to fail?",
+        "What needs to go right?",
+        # what if expanded
+        "What if the product is delayed?",
+        "What if the acquisition is cancelled?",
+        "What if demand deteriorates?",
+        "What if margins improve significantly?",
+        "What if the trend reverses?",
+        "What if demand increases sharply?",
+        # sensitivity / exposure
+        "How exposed is the company to China?",
+        "How sensitive is revenue to rate changes?",
+        "How vulnerable is the model to competition?",
+        "How dependent is ASML on TSMC?",
+        # stress / base / upside
+        "Stress test the thesis",
+        "Upside scenario for the stock?",
+        "Base case for earnings?",
+    ])
+    def test_expanded_scenario_detected(self, question):
+        from app.services.scenario_routing_service import detect_scenario_intent
+        assert detect_scenario_intent(question), (
+            f"Scenario intent NOT detected: {question!r}"
+        )
+
+
+# ===================================================================
+# § P2 expanded — Theme mapping coverage
+# ===================================================================
+
+class TestExpandedThemeMappings:
+    """New themes: cybersecurity, insurance, travel, defense, etc."""
+
+    @pytest.mark.parametrize("question,expected_ticker", [
+        # Cybersecurity
+        ("What if cybersecurity spending doubles?", "CRWD"),
+        ("Ransomware attacks increase", "PANW"),
+        # Insurance
+        ("What if catastrophe losses spike?", "PGR"),
+        ("Insurance premium growth", "ALL"),
+        # Asset management
+        ("Asset management AUM declines", "BLK"),
+        ("Private equity fundraising slows", "BX"),
+        ("Fund flows reverse", "TROW"),
+        # Travel
+        ("Travel demand collapses", "BKNG"),
+        ("Hotel occupancy drops", "MAR"),
+        # Consumer staples
+        ("Consumer staples demand weakens", "PG"),
+        ("Commodity cost inflation", "KO"),
+        # Defense
+        ("Defense spending increases", "LMT"),
+        ("Military spending cuts", "RTX"),
+        # Industrial automation
+        ("Factory automation adoption accelerates", "ROK"),
+        # Payments expanded
+        ("Digital payments volume declines", "V"),
+        ("Buy now pay later defaults rise", "AFRM"),
+        # Obesity drugs expanded
+        ("GLP-1 competition intensifies", "LLY"),
+        ("Ozempic supply shortage", "NVO"),
+        ("Mounjaro demand exceeds expectations", "LLY"),
+        # Energy
+        ("Oil price collapses", "XOM"),
+        ("Natural gas demand spikes", "LNG"),
+        ("Renewable energy adoption", "NEE"),
+        # EV / battery
+        ("EV demand stalls", "TSLA"),
+        ("Lithium price crashes", "ALB"),
+        # Advertising
+        ("Ad spending declines", "GOOGL"),
+        ("Streaming subscriber growth slows", "NFLX"),
+        # Data analytics
+        ("Data analytics demand grows", "SPGI"),
+    ])
+    def test_expanded_theme_detected(self, question, expected_ticker):
+        from app.services.scenario_routing_service import extract_scenario_context
+        ctx = extract_scenario_context(question)
+        assert expected_ticker in ctx["affected_tickers"], (
+            f"Expected {expected_ticker} for: {question!r}, "
+            f"got theme={ctx['theme']!r}, tickers={ctx['affected_tickers']}"
+        )
+
+
+# ===================================================================
+# § P3 expanded — Shell ticker aliases
+# ===================================================================
+
+class TestShellTickerAliases:
+    """RDS.A/RDS.B/RDSA/RDSB normalize to SHEL (current canonical ticker)."""
+
+    @pytest.mark.parametrize("variant", [
+        "RDS.A", "RDS-A", "RDSA",
+        "RDS.B", "RDS-B", "RDSB",
+    ])
+    def test_rds_normalizes_to_shel(self, variant):
+        from app.services.ticker_normalization_service import normalize_ticker
+        assert normalize_ticker(variant) == "SHEL"
+
+    def test_shel_resolves_to_company(self):
+        from app.services.company_detection import detect_company
+        result = detect_company("SHEL")
+        assert result is not None
+        assert result.ticker == "SHEL"
+        assert "Shell" in result.company_name
+
+    def test_shell_alias_resolves(self):
+        from app.services.company_detection import detect_company
+        result = detect_company("royal dutch shell")
+        assert result is not None
+        assert result.ticker == "SHEL"
+
+    def test_rds_in_text_normalizes(self):
+        from app.services.ticker_normalization_service import normalize_ticker_in_text
+        result = normalize_ticker_in_text("What about RDS-A and RDS.B?")
+        assert "SHEL" in result
+        assert "RDS" not in result
+
+
+# ===================================================================
+# § P5 — Active ticker context + session awareness
+# ===================================================================
+
+class TestActiveTickerContext:
+    """active_ticker field on QuestionRequest + session context service."""
+
+    def test_question_request_has_active_ticker(self):
+        from app.schemas import QuestionRequest
+        req = QuestionRequest(
+            company_name="", question="What breaks the thesis?",
+            active_ticker="NVDA",
+        )
+        assert req.active_ticker == "NVDA"
+
+    def test_question_request_active_ticker_defaults_none(self):
+        from app.schemas import QuestionRequest
+        req = QuestionRequest(company_name="", question="hello")
+        assert req.active_ticker is None
+
+    def test_scenario_uses_active_ticker(self):
+        from app.services.scenario_routing_service import extract_scenario_context
+        ctx = extract_scenario_context(
+            "What breaks the thesis?",
+            active_ticker="NVDA",
+        )
+        assert ctx["is_scenario"] is True
+        assert ctx["active_ticker"] == "NVDA"
+        assert ctx["needs_disambiguation"] is False
+
+    def test_scenario_active_ticker_overrides_theme(self):
+        from app.services.scenario_routing_service import extract_scenario_context
+        ctx = extract_scenario_context(
+            "What if AI CapEx falls 20%?",
+            active_ticker="ASML",
+        )
+        assert ctx["active_ticker"] == "ASML"
+        assert ctx["needs_disambiguation"] is False
+        assert "NVDA" in ctx["affected_tickers"]
+
+
+class TestSessionContextService:
+    """In-memory session context store for follow-up routing."""
+
+    def test_record_and_get(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_active_ticker, clear_session,
+        )
+        record_active_ticker("sess-1", "NVDA", "NVIDIA Corporation")
+        assert get_active_ticker("sess-1") == "NVDA"
+        clear_session("sess-1")
+
+    def test_get_nonexistent(self):
+        from app.services.session_context_service import get_active_ticker
+        assert get_active_ticker("nonexistent") is None
+
+    def test_overwrite(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_active_ticker, clear_session,
+        )
+        record_active_ticker("sess-2", "NVDA", "NVIDIA")
+        record_active_ticker("sess-2", "MSFT", "Microsoft")
+        assert get_active_ticker("sess-2") == "MSFT"
+        clear_session("sess-2")
+
+    def test_clear(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_active_ticker, clear_session,
+        )
+        record_active_ticker("sess-3", "AAPL", "Apple")
+        clear_session("sess-3")
+        assert get_active_ticker("sess-3") is None
+
+    def test_empty_session_id_safe(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_active_ticker,
+        )
+        record_active_ticker("", "NVDA", "NVIDIA")
+        assert get_active_ticker("") is None
+
+    def test_context_dict(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_session_context, clear_session,
+        )
+        record_active_ticker("sess-4", "LLY", "Eli Lilly")
+        ctx = get_session_context("sess-4")
+        assert ctx is not None
+        assert ctx["ticker"] == "LLY"
+        assert ctx["company_name"] == "Eli Lilly"
+        assert "updated_at" in ctx
+        clear_session("sess-4")
+
+
+class TestSessionContextFollowUp:
+    """Follow-up scenario questions should resolve via session context."""
+
+    def test_followup_uses_session_ticker(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_active_ticker, clear_session,
+        )
+        from app.services.scenario_routing_service import (
+            detect_scenario_intent, extract_scenario_context,
+        )
+        record_active_ticker("sess-followup", "NVDA", "NVIDIA")
+        question = "What breaks the thesis?"
+        assert detect_scenario_intent(question)
+        ticker = get_active_ticker("sess-followup")
+        ctx = extract_scenario_context(question, active_ticker=ticker)
+        assert ctx["active_ticker"] == "NVDA"
+        assert ctx["needs_disambiguation"] is False
+        clear_session("sess-followup")
+
+    def test_followup_with_theme_uses_session_ticker(self):
+        from app.services.session_context_service import (
+            record_active_ticker, get_active_ticker, clear_session,
+        )
+        from app.services.scenario_routing_service import extract_scenario_context
+        record_active_ticker("sess-theme", "MSFT", "Microsoft")
+        ticker = get_active_ticker("sess-theme")
+        ctx = extract_scenario_context(
+            "What if cloud spending declines?",
+            active_ticker=ticker,
+        )
+        assert ctx["active_ticker"] == "MSFT"
+        assert ctx["needs_disambiguation"] is False
+        clear_session("sess-theme")
+
+
+class TestRouterHasSessionWiring:
+    """Router source must wire session context + active_ticker."""
+
+    def test_session_context_wired_in_router(self):
+        import pathlib
+        src = pathlib.Path(__file__).parent.parent / "app" / "services" / "router_service.py"
+        content = src.read_text()
+        assert "get_active_ticker" in content
+        assert "record_active_ticker" in content
+        assert "_active_ticker" in content
+        assert "_session_id_for_ctx" in content
+
+    def test_session_id_stamped_in_api(self):
+        import pathlib
+        src = pathlib.Path(__file__).parent.parent / "app" / "api.py"
+        content = src.read_text()
+        assert "_session_id" in content
+        assert "session_id" in content.lower()
