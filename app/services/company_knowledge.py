@@ -233,6 +233,14 @@ _register(CompanyKnowledgeProfile(
         "Blackwell", "HBM", "GB200", "B200", "NVL72", "inference", "training",
         "Blackwell cycle", "NIM microservices", "custom ASIC", "CUDA ecosystem",
     ],
+    moat_type=["data_advantage", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="moderate",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -325,6 +333,14 @@ _register(CompanyKnowledgeProfile(
         "Productivity & Business Processes", "More Personal Computing",
         "Copilot monetization", "Azure OpenAI", "AI Copilot",
     ],
+    moat_type=["switching_cost", "data_advantage", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -413,6 +429,14 @@ _register(CompanyKnowledgeProfile(
         "Gigafactory", "BYD", "Robotaxi", "Elon Musk", "NACS", "energy storage",
         "China", "automotive gross margin",
     ],
+    moat_type=["brand"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="dominant",
+    binary_risk_level="moderate",
 ))
 
 
@@ -772,6 +796,14 @@ _register(CompanyKnowledgeProfile(
         "provision", "Basel III", "Jamie Dimon", "CRE", "trading revenue", "wealth management",
         "Fed Funds", "charge-off",
     ],
+    moat_type=["scale_economy", "regulatory", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -953,6 +985,14 @@ _register(CompanyKnowledgeProfile(
         "acquirer", "Visa Direct", "FedNow", "merchant", "Ryan McInerney",
         "cash displacement", "contactless", "network effect",
     ],
+    moat_type=["network_effect", "brand", "scale_economy"],
+    revenue_model="transaction_toll",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1215,6 +1255,14 @@ _register(CompanyKnowledgeProfile(
         "executive membership", "treasure hunt", "bulk buying", "private label",
         "membership income", "ancillary", "gasoline", "e-commerce penetration",
     ],
+    moat_type=["brand", "switching_cost", "scale_economy"],
+    revenue_model="membership",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1306,6 +1354,14 @@ _register(CompanyKnowledgeProfile(
         "Intel", "IBM revenue", "service", "backlog", "Moore's Law", "China export",
         "semiconductor CapEx", "Nikon", "photomask",
     ],
+    moat_type=["natural_monopoly", "patent"],
+    revenue_model="licensing",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -1397,6 +1453,14 @@ _register(CompanyKnowledgeProfile(
         "intelligence", "defense", "ontology", "forward-deployed", "Peter Thiel",
         "Alex Karp", "GAAP profitability", "net dollar retention", "TRV", "bootcamp conversion",
     ],
+    moat_type=["data_advantage"],
+    revenue_model="project_contract",
+    switching_cost_level="moderate",
+    customer_concentration="concentrated",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="high",
+    binary_risk_level="low",
 ))
 
 
@@ -2128,6 +2192,14 @@ _register(CompanyKnowledgeProfile(
         "Alzheimer's", "Trulicity", "dulaglutide", "semaglutide", "retatrutide",
         "manufacturing capacity", "IRA", "Dave Ricks", "diabetes",
     ],
+    moat_type=["patent"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="moderate",
 ))
 
 
@@ -5013,6 +5085,14 @@ _register(CompanyKnowledgeProfile(
         "rebates", "incentives", "account-to-account", "interchange",
         "payment network", "FedNow", "real-time payments",
     ],
+    moat_type=["network_effect", "brand", "scale_economy"],
+    revenue_model="transaction_toll",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10248,6 +10328,93 @@ _register(CompanyKnowledgeProfile(
         "build-to-rent", "Sun Belt", "Atlanta", "Phoenix", "Dallas",
         "BTR", "AFFO", "FFO", "P/AFFO", "cap rate", "occupancy",
     ],
+))
+
+
+# ── S&P Global (SPGI) ────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="SPGI",
+    company_name="S&P Global Inc.",
+    business_model=(
+        "S&P Global operates across four segments: S&P Global Ratings (credit ratings "
+        "oligopoly with Moody's — issuers must obtain ratings to access public debt "
+        "markets), S&P Dow Jones Indices (the S&P 500 franchise — licenses index data "
+        "to ETFs, futures exchanges, and asset managers), Market Intelligence (financial "
+        "data terminals and analytics competing with Bloomberg/FactSet), and Commodity "
+        "Insights (Platts benchmark pricing for energy, metals, agriculture)."
+    ),
+    primary_revenue_drivers=[
+        "Market Intelligence (~35% — subscriptions for financial data and analytics)",
+        "Ratings (~30% — transaction fees on new debt issuance + annual surveillance fees)",
+        "Commodity Insights (~15% — Platts benchmark pricing subscriptions)",
+        "S&P Dow Jones Indices (~15% — asset-linked fees on $5T+ benchmarked AUM)",
+        "Mobility (~5% — automotive data and analytics, legacy IHS Markit)",
+    ],
+    recurring_revenue_sources=[
+        "Annual surveillance fees on rated debt (recurring as long as debt is outstanding)",
+        "Market Intelligence subscriptions (multi-year enterprise contracts)",
+        "Index licensing fees linked to AUM (grows with market appreciation)",
+        "Platts benchmark pricing subscriptions (essential for commodity trading)",
+    ],
+    rate_sensitivity_note=(
+        "SPGI is rate-sensitive primarily through its Ratings segment: higher rates "
+        "suppress new debt issuance (fewer transactions → lower transaction fees), "
+        "but refinancing waves during rate cuts boost issuance volumes.  The index "
+        "business benefits from rate cuts (equity market appreciation → higher AUM → "
+        "higher asset-linked fees).  Market Intelligence subscriptions are rate-insensitive."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power across all segments.  Ratings fees are set by SPGI with "
+        "limited issuer pushback (issuers need the rating).  Index licensing fees grow "
+        "automatically with AUM (inflation → higher nominal asset values → higher fees).  "
+        "Data subscriptions have annual escalators."
+    ),
+    recession_behavior=(
+        "Mixed: Ratings transaction revenue declines in recessions (fewer new issuances) "
+        "but surveillance fees are stable (existing debt still needs ratings).  Index fees "
+        "decline with AUM (market drawdowns reduce benchmarked assets).  Market Intelligence "
+        "subscriptions are sticky — enterprises don't cancel data terminals in recessions.  "
+        "Net: revenue dips 5-10% in severe recessions, margins compress modestly."
+    ),
+    major_risks=[
+        "Regulatory disruption of the ratings oligopoly (SEC/EU proposals to reduce "
+        "issuer-pays conflicts of interest or mandate rotation)",
+        "Debt issuance volume collapse in sustained high-rate environment",
+        "Bloomberg/FactSet competition eroding Market Intelligence market share",
+        "Passive investing backlash reducing index licensing demand",
+    ],
+    valuation_style=(
+        "SPGI trades at ~30-34x forward P/E, reflecting the oligopoly franchise in "
+        "ratings (regulatory moat), the irreplaceable S&P 500 index brand, and "
+        "high-margin recurring subscription revenue across all segments."
+    ),
+    key_metrics=[
+        "Ratings transaction revenue (proxy for debt issuance cycle)",
+        "Ratings surveillance revenue (recurring base)",
+        "Index AUM-linked fees (proxy for passive investing growth)",
+        "Market Intelligence organic revenue growth",
+        "Operating margin (~50%+)",
+        "Free cash flow conversion",
+    ],
+    competitive_advantages=[
+        "Credit ratings oligopoly with Moody's — regulatory requirement for public debt",
+        "S&P 500 index franchise — the benchmark for US equity markets, irreplaceable",
+        "Platts commodity benchmark pricing — industry-standard reference prices",
+        "Data network effects — more data → better analytics → more subscribers",
+    ],
+    business_model_keywords=[
+        "ratings", "S&P 500", "index", "Platts", "Market Intelligence",
+        "issuance", "surveillance", "AUM", "benchmark", "Moody's",
+        "IHS Markit", "Commodity Insights", "DJIA", "credit rating",
+    ],
+    moat_type=["regulatory", "data_advantage", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 

@@ -1721,6 +1721,51 @@ class CompanyKnowledgeProfile(BaseModel):
         description="Specific moat sources — not generic phrases",
     )
 
+    # ── Structured durability attributes (Phase 7-linear-sd) ────────────────
+    # Categorical fields scored deterministically by the conviction modeler.
+    # When populated, these REPLACE the text-based durability computation.
+    # When empty (default), the text-based fallback runs unchanged.
+    moat_type: List[str] = Field(
+        default_factory=list,
+        description=(
+            "Competitive moat sources: network_effect | regulatory | "
+            "switching_cost | scale_economy | brand | data_advantage | "
+            "patent | natural_monopoly | none"
+        ),
+    )
+    revenue_model: str = Field(
+        default="",
+        description=(
+            "Revenue recurring quality: transaction_toll | subscription | "
+            "membership | licensing | project_contract | product_sale | "
+            "advertising | mixed"
+        ),
+    )
+    switching_cost_level: str = Field(
+        default="",
+        description="Customer switching friction: very_high | high | moderate | low | none",
+    )
+    customer_concentration: str = Field(
+        default="",
+        description="Revenue diversification: diversified | moderate | concentrated | single_customer",
+    )
+    capital_intensity: str = Field(
+        default="",
+        description="Asset intensity: asset_light | moderate | capital_intensive",
+    )
+    earnings_cyclicality: str = Field(
+        default="",
+        description="Recession sensitivity: non_cyclical | mild | moderate | highly_cyclical",
+    )
+    narrative_dependence: str = Field(
+        default="",
+        description="Thesis narrative weight: none | low | moderate | high | dominant",
+    )
+    binary_risk_level: str = Field(
+        default="",
+        description="Pipeline/regulatory binary risk: none | low | moderate | high",
+    )
+
     # ── Depth guard ──────────────────────────────────────────────────────────
     business_model_keywords: List[str] = Field(
         default_factory=list,

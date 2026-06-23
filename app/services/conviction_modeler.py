@@ -762,48 +762,144 @@ _SPECULATIVE_TERMS = (
 )
 
 
+def _has_structured_durability(profile: "Optional[CompanyKnowledgeProfile]") -> bool:
+    """Return True if the profile has structured durability attributes populated."""
+    if profile is None:
+        return False
+    return bool(getattr(profile, "revenue_model", ""))
+
+
+# ── Structured durability scoring tables ─────────────────────────────────────
+
+_MOAT_SCORES: Dict[str, float] = {
+    "network_effect":   0.14,
+    "natural_monopoly": 0.14,
+    "regulatory":       0.11,
+    "switching_cost":   0.09,
+    "data_advantage":   0.07,
+    "scale_economy":    0.06,
+    "patent":           0.06,
+    "brand":            0.04,
+}
+
+_REVENUE_SCORES: Dict[str, float] = {
+    "transaction_toll":  0.12,
+    "subscription":      0.10,
+    "membership":        0.10,
+    "licensing":         0.09,
+    "mixed":             0.06,
+    "project_contract":  0.04,
+    "advertising":       0.03,
+    "product_sale":      0.02,
+}
+
+_SWITCH_SCORES: Dict[str, float] = {
+    "very_high": 0.09,
+    "high":      0.07,
+    "moderate":  0.04,
+    "low":       0.01,
+    "none":      0.00,
+}
+
+_CONCENTRATION_SCORES: Dict[str, float] = {
+    "diversified":      0.05,
+    "moderate":         0.02,
+    "concentrated":     0.00,
+    "single_customer": -0.04,
+}
+
+_CAPITAL_SCORES: Dict[str, float] = {
+    "asset_light":       0.04,
+    "moderate":          0.02,
+    "capital_intensive": 0.00,
+}
+
+_CYCLE_SCORES: Dict[str, float] = {
+    "non_cyclical":     0.05,
+    "mild":             0.03,
+    "moderate":         0.00,
+    "highly_cyclical": -0.04,
+}
+
+_NARRATIVE_PENALTY: Dict[str, float] = {
+    "none":      0.00,
+    "low":      -0.03,
+    "moderate": -0.06,
+    "high":     -0.10,
+    "dominant": -0.15,
+}
+
+_BINARY_PENALTY: Dict[str, float] = {
+    "none":      0.00,
+    "low":      -0.02,
+    "moderate": -0.05,
+    "high":     -0.10,
+}
+
+_STRUCTURED_MOAT_CAP = 0.25
+_STRUCTURED_BASELINE = 0.26
+
+
+def _compute_structured_durability(
+    profile: "CompanyKnowledgeProfile",
+) -> float:
+    """Deterministic durability from structured business attributes only.
+
+    No LLM text.  No keyword matching against prose.  No agent dependency.
+    Same profile → same score, every run.
+
+    Scoring architecture (baseline 0.28):
+      + moat_type list:           0.00–0.26 (capped; stacking diminishes)
+      + revenue_model:            0.02–0.14
+      + switching_cost_level:     0.00–0.09
+      + customer_concentration:  -0.04–0.05
+      + capital_intensity:        0.00–0.04
+      + earnings_cyclicality:    -0.04–0.05
+      - narrative_dependence:    -0.15–0.00
+      - binary_risk_level:       -0.10–0.00
+
+    clamp(0.05, 0.95) → durability_score
+    """
+    score = _STRUCTURED_BASELINE
+
+    moat_types = getattr(profile, "moat_type", []) or []
+    moat_total = sum(_MOAT_SCORES.get(m, 0.0) for m in moat_types)
+    score += min(_STRUCTURED_MOAT_CAP, moat_total)
+
+    score += _REVENUE_SCORES.get(getattr(profile, "revenue_model", ""), 0.0)
+    score += _SWITCH_SCORES.get(getattr(profile, "switching_cost_level", ""), 0.0)
+    score += _CONCENTRATION_SCORES.get(getattr(profile, "customer_concentration", ""), 0.0)
+    score += _CAPITAL_SCORES.get(getattr(profile, "capital_intensity", ""), 0.0)
+    score += _CYCLE_SCORES.get(getattr(profile, "earnings_cyclicality", ""), 0.0)
+    score += _NARRATIVE_PENALTY.get(getattr(profile, "narrative_dependence", ""), 0.0)
+    score += _BINARY_PENALTY.get(getattr(profile, "binary_risk_level", ""), 0.0)
+
+    return round(min(0.95, max(0.05, score)), 4)
+
+
 def _compute_business_durability(
     quality:  "QualityAssessment",
     risk:     "RiskProfile",
     evidence: "List[RetrievedEvidence]",
     profile:  "Optional[CompanyKnowledgeProfile]" = None,
 ) -> float:
-    """Compute a continuous business-durability score [0, 1] from four layered sources.
+    """Compute a continuous business-durability score [0, 1].
 
-    This replaces both _QUALITY_DURABLE_TICKERS and _HIGH_EXPECTATION_TICKERS frozensets.
-    The score generalizes to any company in the universe without ticker-specific overrides.
+    Dual-path architecture (Phase 7-linear-sd):
+      • When the profile has structured durability attributes populated
+        (revenue_model is non-empty), use the DETERMINISTIC structured path.
+        Same profile → same score, every run.  No LLM text dependency.
+      • When structured fields are empty, fall back to the LEGACY text-based
+        computation (keyword matching against agent prose and evidence text).
 
-    Score architecture
-    ------------------
-    Baseline:  0.40 (neutral — unknown company with no profile)
-
-    Layer 1:   CompanyKnowledgeProfile (highest signal quality, structured facts)
-               +0.04–0.15  recurring_revenue_sources (count × quality)
-               ±0.04–0.10  recession_behavior (positive vs negative keywords)
-               –0.04–0.12  valuation_style narrative/optionality signals (reduces durability)
-               –0.04–0.12  major_risks binary-outcome signals (reduces durability)
-               +0.04–0.08  competitive_advantages depth
-
-    Layer 2:   QualityAssessment agent text (moat, revenue_durability, operating_quality)
-               +0.03 per durability keyword hit (capped at 0.12)
-               –0.03 per fragility keyword hit (capped at 0.12)
-               ±0.06 confidence band adjustment
-
-    Layer 3:   RiskProfile agent text (binary risk signals)
-               –0.05 per binary-risk keyword hit (capped at 0.15)
-
-    Layer 4:   Evidence corpus (first 12 items)
-               +0.03 per durability term hit (capped at 0.10)
-               –0.03 per narrative/speculative term hit (capped at 0.10)
-
-    Expected ranges
-    ---------------
-    COST / MSFT / JPM / ASML (with profile): 0.68–0.78 → HIGH → floor fires (≥0.65) ✓
-    NVDA (with profile):                     0.52–0.58 → MODERATE → no floor ✓
-    TSLA (with profile):                     0.30–0.40 → LOW → no floor ✓
-    PLTR (with profile):                     0.42–0.52 → LOW-MODERATE → no floor ✓
-    Unknown company (no profile, 0 evidence): 0.40      → NEUTRAL → no floor ✓
+    The structured path is preferred for all companies with populated profiles.
+    The text fallback ensures uncategorized companies still get a reasonable score.
     """
+    # ── Structured path (deterministic) ──────────────────────────────────────
+    if _has_structured_durability(profile):
+        return _compute_structured_durability(profile)
+
+    # ── Legacy text-based path (volatile, preserved as fallback) ─────────────
     score = 0.40  # neutral baseline for unknown companies
 
     # ── Layer 1: CompanyKnowledgeProfile ─────────────────────────────────────
