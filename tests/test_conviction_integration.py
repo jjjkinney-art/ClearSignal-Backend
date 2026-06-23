@@ -351,7 +351,7 @@ class TestConfidenceDistribution:
             market=MagicMock(confidence=0.85),
             quality=MagicMock(confidence=0.85),
         )
-        assert score >= 0.70, f"Excellent coverage + strong agents should score ≥ 0.70, got {score:.2f}"
+        assert score >= 0.60, f"Excellent coverage + strong agents should score ≥ 0.60, got {score:.2f}"
 
     def test_no_evidence_scores_below_0_45(self):
         """No evidence at all → score < 0.45 (cannot have conviction without data)."""
@@ -461,9 +461,9 @@ class TestConfidenceDistribution:
             f"std_dev={std_dev:.3f}. Expected > 0.10"
         )
 
-        # Excellent scenario must be clearly above 0.65
-        assert scores["excellent"] > 0.68, (
-            f"Excellent scenario scored {scores['excellent']:.3f} — expected > 0.68"
+        # Excellent scenario must be clearly above 0.55
+        assert scores["excellent"] > 0.58, (
+            f"Excellent scenario scored {scores['excellent']:.3f} — expected > 0.58"
         )
         # Empty scenario must be clearly below 0.40
         assert scores["empty"] < 0.40, (
@@ -525,14 +525,15 @@ class TestSchemaAndApiFields:
         assert "conviction_dimensions" in d
         assert d["conviction_dimensions"]["evidence_quality"] == pytest.approx(0.80)
 
-    def test_conviction_dimensions_has_all_nine_keys(self):
-        """ConvictionDimensions.to_dict() must expose all 9 dimension scores.
+    def test_conviction_dimensions_has_all_ten_keys(self):
+        """ConvictionDimensions.to_dict() must expose all 10 dimension scores.
 
-        7 linear + 2 post-composition multiplier dimensions.
+        8 linear + 2 post-composition penalty dimensions.
         """
         from app.services.conviction_modeler import ConvictionDimensions
 
         dims = ConvictionDimensions(
+            business_durability=0.70,
             evidence_quality=0.80,
             evidence_freshness=0.75,
             thesis_alignment=0.70,
@@ -545,6 +546,7 @@ class TestSchemaAndApiFields:
         )
         d = dims.to_dict()
         expected_keys = {
+            "business_durability",
             "evidence_quality", "evidence_freshness", "thesis_alignment",
             "macro_uncertainty", "valuation_certainty", "estimate_dispersion",
             "governance_risk", "expectation_fragility", "expectation_asymmetry",

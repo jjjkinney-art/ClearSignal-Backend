@@ -189,25 +189,32 @@ _EARNINGS_KEYWORDS = ("earnings", "eps", "quarterly results", "guidance", "fisca
 # NOT in this table — they are post-composition multipliers (see below).
 
 _WEIGHTS = {
-    # Phase 6 calibration:
-    #   evidence_quality  ↑ 0.20→0.22  (reward richer evidence pools)
-    #   thesis_alignment  ↑ 0.25→0.28  (cross-agent signal convergence is the
-    #                                    strongest forward-looking conviction signal)
-    #   valuation_certainty ↓ 0.15→0.10  (valuation pressure CAPS upside via
-    #                                    fragility/asymmetry multipliers — it
-    #                                    should not also drag the base score for
-    #                                    elite businesses at fair-to-full prices)
-    #   estimate_dispersion ↑ 0.06→0.07
-    #   governance_risk unchanged 0.04
-    #   macro_uncertainty unchanged 0.15
-    #   evidence_freshness unchanged 0.14  (small reduction to offset others)
-    "evidence_quality":    0.22,
-    "evidence_freshness":  0.14,
-    "thesis_alignment":    0.28,
-    "macro_uncertainty":   0.15,   # applied as (1 - macro_uncertainty)
-    "valuation_certainty": 0.10,
+    # Phase 7 calibration (Conviction Engine Audit — Phase 1):
+    #
+    # business_durability promoted from post-composition bonus to PRIMARY linear
+    # dimension at 0.20 weight.  This is the single largest change: the structural
+    # quality of the business now directly drives the score.
+    #
+    # macro_uncertainty halved 0.15→0.08 because durable businesses (Visa, SPGI)
+    # are not equally macro-sensitive as cyclical banks.  Durability attenuation
+    # is applied in _linear_base_score: effective macro weight is
+    # 0.08 × (0.40 + 0.60 × durability) — monopolies pay ~70% of the macro tax,
+    # speculative names pay ~55%.
+    #
+    # evidence_quality ↓ 0.22→0.16  (evidence availability ≠ business quality)
+    # thesis_alignment ↓ 0.28→0.22  (still the largest agent-consensus signal)
+    # evidence_freshness ↓ 0.14→0.10
+    # governance_risk ↓ 0.04→0.02
+    # estimate_dispersion unchanged 0.07
+    # valuation_certainty ↑ 0.10→0.15  (absorbs part of the old fragility role)
+    "business_durability": 0.20,
+    "evidence_quality":    0.16,
+    "evidence_freshness":  0.10,
+    "thesis_alignment":    0.22,
+    "macro_uncertainty":   0.08,   # applied as (1 - macro_uncertainty) × durability_attenuation
+    "valuation_certainty": 0.15,
     "estimate_dispersion": 0.07,
-    "governance_risk":     0.04,   # applied as (1 - governance_risk)
+    "governance_risk":     0.02,   # applied as (1 - governance_risk)
 }
 assert abs(sum(_WEIGHTS.values()) - 1.0) < 1e-9, "Weights must sum to 1.0"
 
@@ -230,21 +237,22 @@ assert abs(sum(_WEIGHTS.values()) - 1.0) < 1e-9, "Weights must sum to 1.0"
 # collapsing to "insufficient conviction".  The compression tier handles additional
 # penalty when multiple structural triggers compound.
 
-_FRAGILITY_THRESHOLD = 0.35   # Phase 5c: was 0.40 — penalty onset earlier
-_FRAGILITY_SCALE     = 0.45   # Phase 5c: was 0.40 — steeper ramp to the cap
-_FRAGILITY_MAX       = 0.22   # UNCHANGED — prevents over-compression for rich-but-real businesses
+_FRAGILITY_THRESHOLD = 0.45   # Phase 7: ↑ 0.35→0.45 — reduce over-triggering for fair-value quality
+_FRAGILITY_SCALE     = 0.30   # Phase 7: ↓ 0.45→0.30 — gentler ramp (fragility now additive, not multiplicative)
+_FRAGILITY_MAX       = 0.12   # Phase 7: ↓ 0.22→0.12 — max 12% additive penalty (was 22% multiplicative)
 
-_ASYMMETRY_THRESHOLD = 0.30   # Phase 5c: was 0.35 — penalty onset earlier
-_ASYMMETRY_SCALE     = 0.35   # Phase 5c: was 0.27 — steeper ramp
-_ASYMMETRY_MAX       = 0.20   # Phase 5c: was 0.15 — higher ceiling for execution-binary setups
+_ASYMMETRY_THRESHOLD = 0.40   # Phase 7: ↑ 0.30→0.40 — reduce over-triggering
+_ASYMMETRY_SCALE     = 0.25   # Phase 7: ↓ 0.35→0.25 — gentler ramp
+_ASYMMETRY_MAX       = 0.10   # Phase 7: ↓ 0.20→0.10 — max 10% additive penalty (was 20% multiplicative)
 
 # ── Compression trigger thresholds ───────────────────────────────────────────
-# Three severity tiers; the worst applicable tier is chosen, then compounded
-# if multiple triggers fire simultaneously.
+# Phase 7: converted from MULTIPLICATIVE (×factor) to ADDITIVE (−penalty).
+# These are now absolute point deductions from the score, not multipliers.
+# Max total compression: −0.10 (was ×0.70 = up to −30%).
 
-_COMPRESSION_MILD        = 0.88   # single moderate trigger
-_COMPRESSION_SIGNIFICANT = 0.80   # stretched valuation + expectation mismatch
-_COMPRESSION_SEVERE      = 0.70   # three or more compounding triggers
+_COMPRESSION_MILD        = 0.03   # Phase 7: was ×0.88 → now −0.03
+_COMPRESSION_SIGNIFICANT = 0.06   # Phase 7: was ×0.80 → now −0.06
+_COMPRESSION_SEVERE      = 0.10   # Phase 7: was ×0.70 → now −0.10
 
 _MIN_SCORE = 0.12
 _MAX_SCORE = 0.92
@@ -370,7 +378,7 @@ _QSEN_TA_FLOOR = 0.52      # unchanged — ta ≥ 0.50 keeps "fragile setup" (no
 # At durability 0.55 (NVDA):        +0.015  (+1.5pp)
 # At durability 0.40 (neutral):     +0.000  (no bonus)
 # At durability 0.35 (TSLA/PLTR):   +0.000  (no bonus, clamped at 0)
-_DURABILITY_BONUS_SCALE = 0.10
+_DURABILITY_BONUS_SCALE = 0.18   # Phase 7: ↑ 0.10→0.18 (durability=0.75 → +0.063 vs old +0.035)
 
 # ── Compression floor for high-durability businesses ─────────────────────────
 # Even with maximum compression, a durable compounder (durability ≥ 0.65) cannot
@@ -409,19 +417,23 @@ def _infer_archetype_floors(
 class ConvictionDimensions:
     """Normalised 0–1 sub-scores for each conviction dimension.
 
-    LINEAR dimensions (7, in _WEIGHTS):
+    LINEAR dimensions (8, in _WEIGHTS):
+      business_durability — structural quality: moat, recurring revenue, switching
+                           costs, network effects.  Phase 7 promoted from bonus to
+                           primary dimension (highest weight).
       evidence_quality, evidence_freshness, thesis_alignment, valuation_certainty,
       estimate_dispersion — higher = better conviction.
       macro_uncertainty, governance_risk — higher = MORE risk (applied inverted).
 
-    POST-COMPOSITION MULTIPLIER dimensions (2, NOT in _WEIGHTS):
+    POST-COMPOSITION ADDITIVE PENALTY dimensions (2, NOT in _WEIGHTS):
       expectation_fragility — priced-in perfection risk; applied as a thresholded
-                              penalty multiplier after the linear sum.
+                              additive penalty after the linear sum.
       expectation_asymmetry — execution dependency / optionality reliance; second
-                              compounding multiplier applied after fragility.
+                              additive penalty applied after fragility.
 
-    Both multiplier dimensions are stored here for API observability / debug panel.
+    Both penalty dimensions are stored here for API observability / debug panel.
     """
+    business_durability:   float = 0.5   # high → good; Phase 7 primary dimension
     evidence_quality:      float = 0.5
     evidence_freshness:    float = 0.5
     thesis_alignment:      float = 0.5
@@ -429,8 +441,8 @@ class ConvictionDimensions:
     valuation_certainty:   float = 0.5
     estimate_dispersion:   float = 0.5
     governance_risk:       float = 0.0   # high → bad
-    expectation_fragility: float = 0.28  # high → bad; post-composition multiplier
-    expectation_asymmetry: float = 0.20  # high → bad; post-composition multiplier
+    expectation_fragility: float = 0.28  # high → bad; post-composition additive penalty
+    expectation_asymmetry: float = 0.20  # high → bad; post-composition additive penalty
 
     def to_dict(self) -> Dict[str, float]:
         return dataclasses.asdict(self)
@@ -857,10 +869,10 @@ def _compute_business_durability(
 
     # ── Layer 2: QualityAssessment agent text ─────────────────────────────────
     qa_text = " ".join([
-        quality.moat or "",
-        quality.revenue_durability or "",
-        quality.operating_quality or "",
-        quality.overall or "",
+        str(getattr(quality, "moat", "") or ""),
+        str(getattr(quality, "revenue_durability", "") or ""),
+        str(getattr(quality, "operating_quality", "") or ""),
+        str(getattr(quality, "overall", "") or ""),
     ]).lower()
 
     durability_terms = (
@@ -877,10 +889,11 @@ def _compute_business_durability(
     score += (quality.confidence - 0.50) * 0.06  # above-average quality confidence lifts score
 
     # ── Layer 3: RiskProfile binary/execution risk ────────────────────────────
+    _risk_keys = getattr(risk, "key_risks", None) or []
     risk_text = " ".join([
-        " ".join(risk.key_risks or []),
-        risk.overall or "",
-        risk.competitive_risk or "",
+        " ".join(str(r) for r in _risk_keys),
+        str(getattr(risk, "overall", "") or ""),
+        str(getattr(risk, "competitive_risk", "") or ""),
     ]).lower()
     binary_risk_terms = (
         "binary outcome", "binary risk", "pre-revenue", "clinical trial",
@@ -1103,7 +1116,7 @@ _DURABILITY_MATRIX_MID  = 0.40   # quality cyclical threshold
 #   changes — forces frontend DEV overlay to show the new version.
 # ARCHETYPE_MATRIX_ENABLED: always True in this module — startup.py asserts it.
 #   If this import fails or returns False, the server refuses to start.
-CONVICTION_SCHEMA_VERSION = "6-matrix"
+CONVICTION_SCHEMA_VERSION = "7-linear"
 ARCHETYPE_MATRIX_ENABLED  = True
 
 # ── [DEPLOYMENT PROOF] Module-level import-time marker ───────────────────────
@@ -1566,16 +1579,25 @@ def _compute_directional_stance(
 # ── Weighted composition ──────────────────────────────────────────────────────
 
 def _linear_base_score(dims: ConvictionDimensions) -> float:
-    """Seven-dimension weighted linear combination → base score (0–1).
+    """Eight-dimension weighted linear combination → base score (0–1).
+
+    Phase 7: business_durability is now a primary dimension (0.20 weight).
+    Macro uncertainty is attenuated by durability: durable businesses pay less
+    of the macro tax.  Effective macro weight = 0.08 × (0.40 + 0.60 × durability).
 
     Does NOT include expectation_fragility or expectation_asymmetry — those are
-    post-composition multipliers applied in _compose_score().
+    post-composition additive penalties applied in _compose_score().
     """
+    # Durability-attenuated macro: monopolies pay ~70% of the macro tax,
+    # speculative names pay ~55%.  The raw macro weight is 0.08; the
+    # attenuation factor scales the (1-macro_uncertainty) contribution.
+    _dur_attenuation = 0.40 + 0.60 * min(1.0, max(0.0, dims.business_durability))
     raw = (
-        dims.evidence_quality             * _WEIGHTS["evidence_quality"]
+        dims.business_durability          * _WEIGHTS["business_durability"]
+        + dims.evidence_quality           * _WEIGHTS["evidence_quality"]
         + dims.evidence_freshness         * _WEIGHTS["evidence_freshness"]
         + dims.thesis_alignment           * _WEIGHTS["thesis_alignment"]
-        + (1.0 - dims.macro_uncertainty)  * _WEIGHTS["macro_uncertainty"]
+        + (1.0 - dims.macro_uncertainty) * _dur_attenuation * _WEIGHTS["macro_uncertainty"]
         + dims.valuation_certainty        * _WEIGHTS["valuation_certainty"]
         + dims.estimate_dispersion        * _WEIGHTS["estimate_dispersion"]
         + (1.0 - dims.governance_risk)    * _WEIGHTS["governance_risk"]
@@ -1584,20 +1606,24 @@ def _linear_base_score(dims: ConvictionDimensions) -> float:
 
 
 def _compose_score(dims: ConvictionDimensions) -> float:
-    """Full conviction composition: linear base × fragility mult × asymmetry mult.
+    """Full conviction composition: linear base − fragility penalty − asymmetry penalty.
+
+    Phase 7: penalties are ADDITIVE (subtracted), not multiplicative.
+    This prevents the compressive non-linearity where two moderate penalties
+    compound into a severe one.
 
     Pipeline:
         _linear_base_score(dims)
-            × _fragility_multiplier(dims.expectation_fragility)
-            × _asymmetry_multiplier(dims.expectation_asymmetry)
+            − _fragility_multiplier(dims.expectation_fragility)
+            − _asymmetry_multiplier(dims.expectation_asymmetry)
         → pre-compression score (0–1)
 
     Contradiction compression (if triggered) is applied separately in compute_conviction.
     """
-    base      = _linear_base_score(dims)
-    frag_mult = _fragility_multiplier(dims.expectation_fragility)
-    asym_mult = _asymmetry_multiplier(dims.expectation_asymmetry)
-    return round(min(_MAX_SCORE, max(_MIN_SCORE, base * frag_mult * asym_mult)), 4)
+    base         = _linear_base_score(dims)
+    frag_penalty = 1.0 - _fragility_multiplier(dims.expectation_fragility)
+    asym_penalty = 1.0 - _asymmetry_multiplier(dims.expectation_asymmetry)
+    return round(min(_MAX_SCORE, max(_MIN_SCORE, base - frag_penalty - asym_penalty)), 4)
 
 
 # ── Contradiction-aware compression ──────────────────────────────────────────
@@ -1713,7 +1739,7 @@ def _check_contradiction_compression(
     total_triggers = len(all_reasons)
 
     if not all_reasons:
-        return False, [], 1.0
+        return False, [], 0.0
 
     if len(significant_reasons) >= 2 or total_triggers >= 4:
         # Severe: multiple compounding signals leave little margin
@@ -1932,7 +1958,10 @@ def _weight_sort_evidence(
     # Classify if not done
     if evidence and not getattr(evidence[0], "retrieval_tags", None):
         evidence = _classify_evidence_tags(evidence)
-    return sorted(evidence, key=lambda e: getattr(e, "retrieval_weight", 1.0), reverse=True)
+    def _weight(e):
+        w = getattr(e, "retrieval_weight", None)
+        return float(w) if isinstance(w, (int, float)) else 1.0
+    return sorted(evidence, key=_weight, reverse=True)
 
 
 # ── Expectation regime classifier ─────────────────────────────────────────────
@@ -3008,8 +3037,9 @@ def compute_conviction(
         durability_score >= _DURABILITY_FLOOR_THRESHOLD,
     )
 
-    # ── Pass 1: Score the seven linear dimensions + expectation_fragility ─────
+    # ── Pass 1: Score the eight linear dimensions + expectation_fragility ─────
     dims_base = ConvictionDimensions(
+        business_durability   = durability_score,
         evidence_quality      = _score_evidence_quality(evidence),
         evidence_freshness    = _score_evidence_freshness(evidence),
         thesis_alignment      = _score_thesis_alignment(
@@ -3064,15 +3094,13 @@ def compute_conviction(
     # ── Ticker identifier (used in log lines below) ──────────────────────────
     _ticker_up = (company.ticker or "UNKNOWN").upper()
 
-    # ── Compose: linear_base × fragility_mult × asymmetry_mult ───────────────
+    # ── Compose: linear_base − fragility penalty − asymmetry penalty ─────────
+    # Phase 7: penalties are additive (subtracted), not multiplicative.
     frag_mult = _fragility_multiplier(dims.expectation_fragility)
     asym_mult = _asymmetry_multiplier(dims.expectation_asymmetry)
-    raw_score = _compose_score(dims)  # internally applies both multipliers
+    raw_score = _compose_score(dims)  # internally applies both penalties additively
 
     # ── Durability persistence bonus ─────────────────────────────────────────
-    # Additive bonus representing structural business quality conviction that
-    # exists independent of evidence depth.  Applied before compression so
-    # compression can still cap upside, but the bonus protects the floor.
     _durability_bonus = max(0.0, (durability_score - 0.40) * _DURABILITY_BONUS_SCALE)
     raw_score_with_bonus = round(
         min(_MAX_SCORE, max(_MIN_SCORE, raw_score + _durability_bonus)), 4
@@ -3083,17 +3111,19 @@ def compute_conviction(
         _ticker_up, durability_score, _durability_bonus, raw_score, raw_score_with_bonus,
     )
 
-    # ── Tiered contradiction compression ─────────────────────────────────────
+    # ── Tiered contradiction compression (Phase 7: ADDITIVE, not multiplicative) ──
     should_compress, compression_reasons, compression_factor = _check_contradiction_compression(
         dims, valuation, ranked, evidence
     )
     if should_compress:
-        # For durable compounders: compression cannot exceed _DURABLE_MIN_COMPRESSION_FACTOR
-        # Prevents over-stacking for elite businesses at demanding valuations.
+        # Phase 7: compression_factor is now a point deduction (0.03/0.06/0.10),
+        # not a multiplier (0.88/0.80/0.70).  For durable compounders, the max
+        # deduction is halved.
+        _compression_penalty = compression_factor
         if durability_score >= _ARCHETYPE_DURABLE_THRESHOLD:
-            compression_factor = max(compression_factor, _DURABLE_MIN_COMPRESSION_FACTOR)
+            _compression_penalty = min(_compression_penalty, 0.04)
         final_score = round(
-            min(_MAX_SCORE, max(_MIN_SCORE, raw_score_with_bonus * compression_factor)), 4
+            min(_MAX_SCORE, max(_MIN_SCORE, raw_score_with_bonus - _compression_penalty)), 4
         )
     else:
         final_score = raw_score_with_bonus
@@ -3160,8 +3190,8 @@ def compute_conviction(
     # ── Structured telemetry ──────────────────────────────────────────────────
     if should_compress:
         _compression_tier = (
-            "severe"       if compression_factor <= _COMPRESSION_SEVERE
-            else "significant" if compression_factor <= _COMPRESSION_SIGNIFICANT
+            "severe"       if compression_factor >= _COMPRESSION_SEVERE
+            else "significant" if compression_factor >= _COMPRESSION_SIGNIFICANT
             else "mild"
         )
     else:

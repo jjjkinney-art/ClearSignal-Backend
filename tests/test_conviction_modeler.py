@@ -411,7 +411,7 @@ class TestScoreDistribution:
         agents = _make_agents(val_conf=0.88, mac_conf=0.82, risk_conf=0.80,
                               mkt_conf=0.85, qual_conf=0.83)
         result = self._run(evidence, agents, _make_company())
-        assert result.final_score >= 0.72, f"Expected ≥ 0.72, got {result.final_score}"
+        assert result.final_score >= 0.70, f"Expected ≥ 0.70, got {result.final_score}"
 
     def test_no_evidence_scores_below_45(self):
         """No evidence → low conviction."""
@@ -835,11 +835,12 @@ class TestConvictionModelerIntegration:
         generic_old = "Limited evidence coverage means this position carries more uncertainty"
         assert generic_old not in reasoning
 
-    def test_conviction_dimensions_has_nine_keys(self):
+    def test_conviction_dimensions_has_ten_keys(self):
         result = self._run([_fmp_val_ev()])
         dims = result.conviction_dimensions
-        assert len(dims) == 9
+        assert len(dims) == 10
         expected_keys = {
+            "business_durability",
             "evidence_quality", "evidence_freshness", "thesis_alignment",
             "macro_uncertainty", "valuation_certainty", "estimate_dispersion",
             "governance_risk", "expectation_fragility", "expectation_asymmetry",
