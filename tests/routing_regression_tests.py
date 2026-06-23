@@ -537,3 +537,41 @@ class TestRouterHasSessionWiring:
         content = src.read_text()
         assert "_session_id" in content
         assert "session_id" in content.lower()
+
+
+# ===================================================================
+# § Frontend integration — structural verification
+# ===================================================================
+
+class TestFrontendActiveTicker:
+    """Frontend must wire active_ticker through to the backend."""
+
+    def _frontend_root(self):
+        import pathlib
+        return pathlib.Path(__file__).parent.parent / "Ai-Intelligence-interface" / "frontend_cinematic"
+
+    def test_ask_request_has_active_ticker(self):
+        api_ts = self._frontend_root() / "lib" / "api.ts"
+        content = api_ts.read_text()
+        assert "active_ticker" in content, "AskRequest must include active_ticker field"
+
+    def test_ask_question_accepts_active_ticker_param(self):
+        api_ts = self._frontend_root() / "lib" / "api.ts"
+        content = api_ts.read_text()
+        assert "activeTicker" in content, "askQuestion must accept activeTicker parameter"
+
+    def test_page_passes_last_analyzed_ticker(self):
+        page_tsx = self._frontend_root() / "app" / "(product)" / "analyze" / "page.tsx"
+        content = page_tsx.read_text()
+        assert "lastAnalyzed?.ticker" in content, (
+            "page.tsx must pass lastAnalyzed.ticker to askQuestion"
+        )
+        assert "lastAnalyzed" in content, (
+            "page.tsx must destructure lastAnalyzed from the store"
+        )
+
+    def test_intelligence_store_has_last_analyzed(self):
+        store_ts = self._frontend_root() / "store" / "intelligence.ts"
+        content = store_ts.read_text()
+        assert "lastAnalyzed" in content
+        assert "ticker" in content
