@@ -18,7 +18,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -26,9 +26,9 @@ logger = logging.getLogger(__name__)
 # Constants
 # ---------------------------------------------------------------------------
 
-RELEVANCE_FLOOR = 0.40   # scores below this → return []
+RELEVANCE_FLOOR = 0.45   # Phase 7: ↑ 0.40→0.45 (better library → filter more aggressively)
 TOP_K = 3                # maximum analogs returned (one per mechanism)
-DISANALOGY_PENALTY = 0.05  # flat penalty applied to every analog (forces honesty check)
+DISANALOGY_PENALTY = 0.03  # Phase 7: ↓ 0.05→0.03 (less punitive with better matching)
 
 # ---------------------------------------------------------------------------
 # Concern-tag → primary mechanism mapping
@@ -75,6 +75,15 @@ _MECHANISM_SIBLINGS: Dict[str, str] = {
     "hypergrowth_deceleration":     "multiple_compression",
     "rate_shock":                   "credit_event",
     "credit_event":                 "rate_shock",
+    # Phase 7: new mechanism siblings
+    "network_fee_compression":      "regulatory_break",
+    "franchise_credibility_crisis": "regulatory_break",
+    "export_control_restriction":   "regulatory_break",
+    "patent_cliff":                 "competitive_displacement",
+    "membership_elasticity_test":   "demand_air_pocket",
+    "credit_cycle_loss":            "credit_event",
+    "government_budget_cut":        "demand_air_pocket",
+    "platform_transition":          "competitive_displacement",
 }
 
 # ---------------------------------------------------------------------------
@@ -104,14 +113,27 @@ def build_fingerprint(
     question: str,
     thesis_dict: dict,
     ticker: Optional[str] = None,
+    profile: Optional[Any] = None,
 ) -> SetupFingerprint:
-    """Build a SetupFingerprint from an InvestmentThesis dict and the question."""
+    """Build a SetupFingerprint from an InvestmentThesis dict and the question.
+
+    Phase 7: When a CompanyKnowledgeProfile is provided and has structured
+    durability fields populated (revenue_model non-empty), the business_model
+    is taken from the profile instead of being inferred from thesis text.
+    This makes the fingerprint deterministic for profiled companies.
+    """
     concern_tags = _extract_concern_tags(thesis_dict)
     mechanisms = _infer_mechanisms(concern_tags, question, thesis_dict)
     sector, biz_model = _infer_sector_biz(thesis_dict, ticker)
     val_regime = _infer_valuation_regime(question, thesis_dict)
     growth_phase = _infer_growth_phase(question, thesis_dict)
     macro_regime = _infer_macro_regime(question, thesis_dict)
+
+    # Phase 7: override business_model from profile when structured fields exist
+    if profile is not None:
+        _profile_biz = getattr(profile, "revenue_model", "")
+        if _profile_biz:
+            biz_model = _profile_biz
 
     return SetupFingerprint(
         concern_tags=concern_tags,
@@ -177,10 +199,64 @@ def retrieve_historical_analogs(
 # Scoring
 # ---------------------------------------------------------------------------
 
-def _score_analog(analog, fp: SetupFingerprint) -> float:
-    """Compute composite relevance score (0–1) for one analog."""
+# ── Business model partial-credit table ──────────────────────────────────────
+# Related business models get partial credit (0.3–0.7) instead of binary 0/1.
+_RELATED_BUSINESS_MODELS: Dict[tuple, float] = {
+    ("diversified_bank", "financial_intermediary"):   0.7,
+    ("cloud_platform", "saas"):                       0.6,
+    ("payment_network", "fintech_platform"):           0.5,
+    ("semiconductor_equipment", "semiconductor_manufacturer"): 0.4,
+    ("semiconductor_equipment", "semiconductor_fabless"): 0.3,
+    ("membership_retail", "e_commerce"):               0.3,
+    ("government_enterprise", "saas"):                 0.3,
+    ("ratings_data_oligopoly", "financial_intermediary"): 0.3,
+}
 
-    # 1. Concern-tag Jaccard (weight 0.40)
+
+def _business_model_score(query_biz: Optional[str], analog_biz: Optional[str]) -> float:
+    """Score business model similarity with partial credit for related models."""
+    if not query_biz or not analog_biz:
+        return 0.3  # unknown → neutral (don't penalize or reward)
+    if query_biz == analog_biz:
+        return 1.0  # exact match
+    pair = tuple(sorted([query_biz, analog_biz]))
+    return _RELATED_BUSINESS_MODELS.get(pair, 0.0)
+
+
+def _score_analog(analog, fp: SetupFingerprint) -> float:
+    """Compute composite relevance score (0–1) for one analog.
+
+    Phase 7 reweight: business_model is now the dominant signal (0.30),
+    concern-tag Jaccard reduced from 0.40 to 0.15 to prevent generic-tag
+    matches across unrelated business models.
+
+    Weights:
+      0.30 × business_model_score  (exact, partial-credit, or zero)
+      0.25 × mechanism_match       (exact or sibling)
+      0.15 × concern_tag_jaccard   (set overlap)
+      0.10 × sector_match          (binary)
+      0.10 × setup_match           (valuation + growth phase)
+      0.05 × macro_regime_match    (binary)
+      + 0.02 quality boost (strong only)
+      − 0.03 disanalogy penalty
+    """
+    # 1. Business model similarity (weight 0.30)
+    biz_score = _business_model_score(fp.business_model, getattr(analog, "business_model", ""))
+
+    # 2. Mechanism match (weight 0.25)
+    mech_score = 0.0
+    for inferred_mech in (fp.inferred_mechanisms or []):
+        ms = _mechanism_score(inferred_mech, analog.mechanism)
+        if ms > mech_score:
+            mech_score = ms
+    for tag in fp.concern_tags:
+        primary = _TAG_TO_PRIMARY_MECHANISM.get(tag)
+        if primary:
+            ms = _mechanism_score(primary, analog.mechanism)
+            if ms > mech_score:
+                mech_score = ms
+
+    # 3. Concern-tag Jaccard (weight 0.15)
     analog_tags = set(analog.concern_tags or [])
     fp_tags = set(fp.concern_tags or [])
     if analog_tags or fp_tags:
@@ -190,66 +266,42 @@ def _score_analog(analog, fp: SetupFingerprint) -> float:
     else:
         tag_score = 0.0
 
-    # 2. Mechanism match (weight 0.30)
-    # Best mechanism match across all inferred mechanisms
-    mech_score = 0.0
-    for inferred_mech in (fp.inferred_mechanisms or []):
-        ms = _mechanism_score(inferred_mech, analog.mechanism)
-        if ms > mech_score:
-            mech_score = ms
-    # Also check if any concern tags directly map to analog mechanism
-    for tag in fp.concern_tags:
-        primary = _TAG_TO_PRIMARY_MECHANISM.get(tag)
-        if primary:
-            ms = _mechanism_score(primary, analog.mechanism)
-            if ms > mech_score:
-                mech_score = ms
+    # 4. Sector match (weight 0.10)
+    sector_score = 0.0
+    if fp.sector and getattr(analog, "sector", "") and fp.sector == analog.sector:
+        sector_score = 1.0
 
-    # 3. Setup match: valuation_regime + growth_phase (weight 0.15)
+    # 5. Setup match: valuation_regime + growth_phase (weight 0.10)
     setup_score = 0.0
-    if fp.valuation_regime and analog.valuation_regime:
+    if fp.valuation_regime and getattr(analog, "valuation_regime", None):
         if fp.valuation_regime == analog.valuation_regime:
-            setup_score += 0.075
-    if fp.growth_phase and analog.growth_phase:
+            setup_score += 0.5
+    if fp.growth_phase and getattr(analog, "growth_phase", None):
         if fp.growth_phase == analog.growth_phase:
-            setup_score += 0.075
+            setup_score += 0.5
 
-    # 4. Sector / business_model proximity (weight 0.10)
-    context_score = 0.0
-    if fp.sector and analog.sector and fp.sector == analog.sector:
-        context_score += 0.05
-    if fp.business_model and analog.business_model and fp.business_model == analog.business_model:
-        context_score += 0.05
-
-    # 5. Macro regime agreement (weight 0.05)
+    # 6. Macro regime agreement (weight 0.05)
     macro_score = 0.0
-    if fp.macro_regime and analog.macro_regime:
+    if fp.macro_regime and getattr(analog, "macro_regime", None):
         if fp.macro_regime == analog.macro_regime:
-            macro_score = 0.05
+            macro_score = 1.0
 
     # Weighted composite
     raw = (
-        0.40 * tag_score +
-        0.30 * mech_score +
-        0.15 * setup_score / 0.15 * 0.15 +   # normalised within weight
-        0.10 * context_score / 0.10 * 0.10 + # normalised within weight
-        0.05 * macro_score / 0.05 * 0.05     # normalised within weight
-    )
-    # Simplify: weights already encoded in constants above
-    raw = (
-        0.40 * tag_score
-        + 0.30 * mech_score
-        + setup_score          # already at 0–0.15
-        + context_score        # already at 0–0.10
-        + macro_score          # already at 0–0.05
+        0.30 * biz_score
+        + 0.25 * mech_score
+        + 0.15 * tag_score
+        + 0.10 * sector_score
+        + 0.10 * setup_score
+        + 0.05 * macro_score
     )
 
-    # Quality boost: strong analogs get small uplift; does not cross floor alone
+    # Quality boost
     if getattr(analog, "quality_rating", "") == "strong":
         raw += 0.02
 
-    # Flat disanalogy penalty (structural honesty tax)
-    raw -= DISANALOGY_PENALTY
+    # Disanalogy penalty (reduced from 0.05 to 0.03)
+    raw -= 0.03
 
     return max(0.0, min(1.0, raw))
 

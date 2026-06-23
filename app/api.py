@@ -1638,10 +1638,18 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     from .evidence_engine import build_fingerprint as _build_fp, retrieve_historical_analogs as _retrieve_analogs
                     from .db import get_session as _gs9f
                     from .db.repositories.evidence_repo import get_all_analogs as _get_analogs
+                    # Phase 7: pass company profile for deterministic business_model in fingerprint
+                    _9f_profile = None
+                    try:
+                        from .services.company_knowledge import get_knowledge_profile as _gkp9f
+                        _9f_profile = _gkp9f(_9f_ticker) if _9f_ticker else None
+                    except Exception:
+                        pass
                     _9f_fp = _build_fp(
                         question=request.question,
                         thesis_dict=_9f_thesis,
                         ticker=_9f_ticker,
+                        profile=_9f_profile,
                     )
                     async with _gs9f() as _s9f:
                         _9f_all = await _get_analogs(_s9f)
