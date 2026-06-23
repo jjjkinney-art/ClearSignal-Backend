@@ -1,0 +1,9 @@
+NVIDIA (NVDA) — Hyperscaler Capex Sensitivity
+
+NVIDIA's bull case depends on sustained hyperscaler capital expenditure. Answer the following:
+
+1. If the top four hyperscalers reduce aggregate capex growth by 20 percentage points year-over-year, what is the estimated dollar-range impact on NVIDIA's Data Center segment revenue?
+
+2. What is the single most important operating metric to monitor that would give advance warning of this deceleration?
+
+3. At what level of that metric does the bull thesis on NVDA break?

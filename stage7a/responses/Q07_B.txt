@@ -1,0 +1,19 @@
+AWS operating-margin expansion: structural vs cyclical drivers and signal for peak
+
+Structural vs cyclical components of margin expansion
+
+Amazon Web Services reported US$37.6 billion in revenue in Q1 FY2026, up 28 % year-over-year[24]. AWS operating income was US$14.2 billion, producing a margin of about 37.8 %. Recent margin expansion reflects both structural and cyclical forces:
+
+Structural: Amazon has developed custom silicon (Trainium and Inferentia) that delivers 30–40 % price-performance improvements[25]. Management stated that these chips could save tens of billions in capex and add several hundred basis points to operating margins[25]. Higher-margin AI services such as Bedrock and proprietary foundation models also command premium pricing. These factors imply durable margin uplift.
+
+Cyclical: AWS over-invested in infrastructure in 2022–2023 and is now benefiting from operating-leverage as utilisation rises. Margins are currently elevated partly because depreciation from prior build-outs has peaked and new capacity is being monetized.
+
+Thus, margin expansion is mostly structural but has a cyclical tailwind that may moderate as AWS catches up to utilisation.
+
+Current margin and level requiring new pricing power
+
+The Q1 FY2026 operating margin of 37.8 %[24] already exceeds the 35 % level in Q4 FY2025[26]. Sustaining margins above ~40 % would likely require either additional pricing power (e.g., new proprietary AI services) or significant efficiency gains in AI infrastructure beyond those provided by current custom chips. Otherwise, rising depreciation from Amazon’s US$200 billion capex plan and competitive price pressure could cap margins.
+
+Metric signalling the peak
+
+The clearest quarterly signal that AWS margin expansion has peaked is operating margin percentage. While operating income dollars and revenue growth rates provide context, margin percentage directly reflects the balance between pricing power, service mix and infrastructure costs. If AWS’s operating margin stabilises or declines for consecutive quarters despite growing revenue, it would indicate that structural efficiencies and pricing have run their course. Investors should also monitor commentary on custom silicon cost savings; stagnation in these savings would hint at a cyclical peak.

@@ -1,0 +1,141 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STAGE 7A  ·  HOW TO SCORE  ·  (Share this with both evaluators)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You are evaluating responses to 10 investment questions from
+three anonymous systems (A, B, C).  Your job: score each
+response 1–5 on five criteria.  Total time: ~2.5–3 hours.
+
+────────────────────────────────────────────────────────────
+SETUP  (do this before opening any response file)
+────────────────────────────────────────────────────────────
+1. Open STAGE_7A_SCORE_SHEET.txt — this is your score sheet.
+2. Read the five criterion definitions below.  All five.  Now.
+3. Keep two windows open: one for reading files, one for your
+   score sheet.  Do not mix them up.
+
+────────────────────────────────────────────────────────────
+THE FIVE CRITERIA  (each scored 1–5)
+────────────────────────────────────────────────────────────
+
+(1) DIRECT ANSWER  ·  DA
+    Does the first sentence directly address what the question
+    asks?  Not "does the response eventually answer it" —
+    does the OPENING LINE answer it.
+
+    5 → First sentence IS the answer: a number, a mechanism,
+        a ranking, or a verdict.  Nothing before the payoff.
+    4 → Answer arrives in sentence 1–2 with minimal framing
+    3 → Answer is present but buried after an intro paragraph
+    2 → Question is mentioned; answer is vague or indirect
+    1 → Opens with a company overview; question avoided entirely
+
+    ⚠ Common mistake: rewarding a long response with a high DA
+    score because it "eventually" answers the question well.
+    If sentence 1 is "Company X is a leading semiconductor
+    manufacturer…" that is a 1 on DA, regardless of what follows.
+
+(2) SPECIFICITY  ·  SP
+    Are the claims company-specific or could they appear in any
+    analyst report about any company in this sector?
+
+    5 → Every claim names a specific metric, customer, multiple,
+        or comparable.  Zero generic analyst-speak.
+    4 → Mostly specific; one or two hedged generalities
+    3 → Mix of specific facts and generic statements
+    2 → Mostly generic; occasional company name dropped in
+    1 → Pure generic: "significant risk," "strong position,"
+        "well-positioned for growth" — no distinguishing facts
+
+    ⚠ Test: cover the company name.  Could this sentence be
+    about any large-cap tech stock?  If yes: score lower.
+
+(3) QUANTIFICATION  ·  QT
+    Are the key claims backed by numbers an investor could use?
+
+    5 → Numbers throughout: multiples, growth rates, EPS
+        impacts, time lags, loss rates, thresholds — the ones
+        you'd need to actually model this position
+    4 → Most claims quantified; one or two still qualitative
+    3 → Several numbers present but central claims qualitative
+    2 → One or two numbers; mostly qualitative
+    1 → No numbers at all
+
+    ⚠ Note: a short response can score 5 on QT if it packs
+    the essential numbers.  A long response can score 2 if the
+    numbers are decorative footnotes, not load-bearing claims.
+
+(4) INVESTMENT USEFULNESS  ·  IU
+    Does this response help an investor make a better decision?
+    After reading it, do you know what to WATCH and what would
+    CHANGE YOUR VIEW?
+
+    5 → Gives you a specific threshold, trigger, or signal to
+        monitor.  Actionable in the next portfolio review.
+    4 → Mostly actionable; clear investment framework
+    3 → Some useful content; partially actionable
+    2 → Mild incremental value over what you already knew
+    1 → Restates consensus; nothing new; no decision input
+
+    ⚠ The key test: "If I read this before my investment
+    committee meeting, does it change what I say?"
+
+(5) COMPLETENESS  ·  CO
+    Does the response address ALL parts of the question?
+    Each question has 3 explicit sub-questions.  Count them.
+
+    5 → Every sub-question answered with substance
+    4 → All covered; one is thinner than the others
+    3 → All mentioned; one is genuinely superficial
+    2 → One sub-question clearly not addressed
+    1 → Multiple sub-questions missing, or wrong company/topic
+
+    ⚠ CO rewards coverage, not depth.  A 150-word response
+    that answers all three parts of the question beats a
+    300-word response that answers two of them beautifully.
+
+────────────────────────────────────────────────────────────
+SCORING EACH QUESTION  ·  The exact sequence
+────────────────────────────────────────────────────────────
+
+For EACH of the 10 questions, do this in order:
+
+  1. Open questions/{QID}.txt
+     Count the sub-questions.  Note what the perfect FIRST
+     SENTENCE of an answer would look like.
+
+  2. Read {QID}_A.txt  →  no scoring yet
+     Read {QID}_B.txt  →  no scoring yet
+     Read {QID}_C.txt  →  no scoring yet
+     First impression only.  Who opened with the answer?
+     Who gave you a number you could use?  Who felt vague?
+
+  3. Score A on all five criteria.  Enter on score sheet.
+     Score B on all five criteria.  Enter on score sheet.
+     Score C on all five criteria.  Enter on score sheet.
+     Score each response fully before moving to the next one.
+     Do NOT score all three on DA, then all three on SP, etc.
+
+  4. Sanity check (takes 60 seconds):
+     · Re-read the first sentence of your highest-DA response.
+       Does it actually open with the answer?
+     · Re-count sub-questions for your highest-CO response.
+       Does it actually address all of them?
+     · Any score of 1 or 5?  Write a one-line note explaining it.
+
+  5. Move to the next question.  Do not revise previous scores.
+
+────────────────────────────────────────────────────────────
+PACE AND BREAKS
+────────────────────────────────────────────────────────────
+Each question takes 15–20 minutes.  Do 5 questions, take a
+30-minute break, then do the final 5.  Do not score all 10
+in one sitting.
+
+────────────────────────────────────────────────────────────
+WHEN YOU'RE DONE
+────────────────────────────────────────────────────────────
+Complete the TOTALS and FINAL SUMMARY sections of the score
+sheet.  Submit to the coordinator.  Do not discuss your scores
+with the other evaluator before the coordinator collects
+both sheets.

@@ -1,0 +1,13 @@
+Visa cross-border volume deceleration and leading signals
+
+Impact on net revenue growth and EPS
+
+In Q2 FY2026 Visa reported net revenue of US$11.2 billion (up 17 % YoY)[33]. Cross-border volume excluding intra-Europe grew 11 %, and total cross-border volume grew 12 %[34]. International transaction revenue (primarily driven by cross-border volume) accounted for US$3.6 billion, about 32 % of net revenue[35]. A 100 basis-point deceleration in cross-border volume growth (e.g., from 11 % to 10 %) would reduce cross-border growth by roughly 9 % of the growth rate. Given that cross-border revenue contributes ~32 % of total revenue, net revenue growth would slow by approximately 0.3 percentage points (0.09 × 0.32 ≈ 0.03). Visa’s earnings are highly correlated with revenue growth, so EPS growth would also decline by roughly 0.3–0.4 percentage points.
+
+Leading macro signals
+
+Cross-border volumes depend on international travel and commerce. The most useful leading indicator is international air-travel demand, tracked by organisations like the International Air Transport Association (IATA). Historically, cross-border spending growth lags changes in travel bookings by one to two quarters. Foreign-exchange (FX) movements also matter: a strong U.S. dollar can dampen cross-border volume growth as transactions are translated into fewer dollars. Consumer spending indicators (e.g., PMI or retail sales) are less predictive because cross-border payments are heavily travel-oriented.
+
+Threshold requiring model revision and current assumptions
+
+Analysts currently assume 11 % cross-border volume growth[34]. A sustained slowdown below 8 – 9 % would materially affect revenue because it would imply that travel recovery is stalling or reverse currency effects are worsening. At that point consensus EPS forecasts would need revision. As long as cross-border growth stays in the double digits, the existing guidance – mid-teen net revenue growth and modest margin expansion – remains plausible.

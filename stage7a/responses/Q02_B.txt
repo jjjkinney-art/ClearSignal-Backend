@@ -1,0 +1,19 @@
+Costco gross-margin expansion: drivers, durability metrics and warning thresholds
+
+Why Costco’s margin expansion is not a typical merchandise-mix story
+
+Costco’s retail strategy is to sell merchandise at minimal mark-up and rely on membership fees for profits. In FY2025 Costco earned US$5.323 billion in membership fees (up from US$4.828 billion in FY2024) and only US$30.026 billion in gross-margin dollars[6]. Membership-fee growth outpaced net-sales growth in FY2026 (13.8 % vs 8.7 %)[7]. Executive members account for 73.6 % of net sales and renewal rates are extremely high (92.3 % in the U.S./Canada and 89.8 % worldwide)[8]. Because membership fees are recognised essentially as pure profit, growth in fee income structurally expands gross margin without raising merchandise mark-ups. This is why Costco’s margin expansion is driven by membership economics rather than a typical retail merchandise-mix story: higher membership penetration and renewal rates increase gross margin even as product mark-ups remain low.
+
+Metric to track durability
+
+The durability of margin expansion hinges on membership renewal rates and executive membership penetration. Deferred membership fees – cash collected but recognised over time – rose to US$3.126 billion at 15 Feb 2026[9], demonstrating strong cash generation, but investors need to ensure that members remain loyal. The AlphaStreet analysis warns that a slip in renewal rates, especially after fee increases, would be a significant warning sign[10]. Therefore, the key quarterly metrics are:
+
+Renewal rate (U.S./Canada and worldwide) – should remain above ~90 %.
+
+Executive-member penetration – growth of this higher-fee tier (38.7 million members vs 35.4 million a year earlier[8]) should continue.
+
+Membership-fee growth vs net-sales growth – membership-fee growth should outpace sales growth to sustain margin expansion.
+
+Thresholds that could reverse the expansion
+
+Gross-margin expansion could reverse if renewal rates fall materially. For example, if the U.S./Canada renewal rate drops below roughly 88–90 % for several quarters, or if executive-member penetration stagnates despite new store openings, membership-fee growth would slow and margin expansion would stall. Additionally, regulatory or competitive pressure forcing Costco to lower membership fees could compress margins. In such scenarios, investors should reassess Costco’s premium valuation, which is predicated on resilient membership economics.

@@ -1,0 +1,15 @@
+JPMorgan’s CRE exposure and thresholds for material losses
+
+Dollar threshold of losses that become material
+
+JPMorgan Chase reported US$16.5 billion of net income in Q1 2026[11]. Investor-day slides show that the office portion is <10 % of JPM’s commercial real-estate (CRE) exposure, with roughly US$4 billion of office loans maturing through 2025[12]. The bank maintains a high allowance-to-loan ratio of about 8 % on office loans[12], compared with peak CRE loss rates of 7.3 % during the 2007–2009 financial crisis[13]. Thus, JPM would need to absorb several billion dollars of losses before reserves are exhausted.
+
+Assuming a 4 % loss rate on JPM’s ~US$147 billion commercial-real-estate banking book[14] yields ~US$5.9 billion of losses; a 7 % loss rate (near GFC levels) implies ~US$10 billion. Losses of US$4–6 billion would likely require significant additional reserve builds and could impact capital returns (share buybacks and dividends), because they represent 25–35 % of quarterly net income. Losses below ~US$2 billion would be less likely to constrain dividends.
+
+JPM’s current office-loan coverage ratio vs pre-GFC norms
+
+The investor-day presentation indicates an allowance-to-loans ratio of about 8 % for office loans, with only ~US$100 million in non-performing loans (≈0.1 % of the portfolio)[12]. During the financial crisis, bank net CRE losses reached 7.3 %[13]. JPM’s coverage ratio is thus roughly in line with or slightly higher than pre-GFC peak loss rates, suggesting prudent provisioning.
+
+Delinquency rate that would trigger consensus EPS revisions
+
+Federal data show that CRE delinquency rates for large banks peaked at about 1.2 % in December 2023, far below the 2.5–9 % range during the GFC[15]. Office delinquencies reached 6.6 % in February 2024[16]. Analysts would likely revise full-year EPS estimates if nationwide CRE delinquency rates climbed into the 7–10 % range, approaching the GFC peak. At that level, a significant share of JPM’s office portfolio could default, eroding reserves and requiring earnings-dilutive reserve builds.

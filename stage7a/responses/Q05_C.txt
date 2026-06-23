@@ -1,0 +1,27 @@
+Meta has not fully recovered its advertising revenue run rate to pre-ATT levels on a CPM-adjusted basis, with a remaining gap of approximately $10 billion annually due to the structural headwind from Apple's ATT changes. The current monetization rate of Reels is lower than Feed, as Reels is still in the growth phase and not yet fully monetized compared to the more mature Feed product. The primary competitive risk comes from TikTok, which competes for user time and advertiser budgets, particularly among the 18-34 demographic. The single metric that would confirm the ATT headwind has permanently normalized is the average price per impression returning to pre-ATT levels.
+
+Key drivers:
+• META-specific: Improved ad targeting through Advantage+ suite
+• META-specific: Growth in Reels monetization
+• META-specific: Strong user engagement across Family of Apps
+
+Bull thesis:
+The Family of Apps' advertising revenue growth, driven by improved ad targeting through the Advantage+ suite, is expected to accelerate as Meta closes the monetization gap between Reels and Feed. This growth is amplified by Meta's vast user base, which enhances ad impressions and pricing discipline. At 25-30x forward P/E, the stock is fairly valued if advertising revenue growth can sustain double-digit rates. Confirmation of this thesis would come from a significant increase in Reels monetization rates in upcoming quarters.
+
+Bear thesis:
+A sustained decline in advertising revenue due to competition from TikTok and regulatory pressures could compress Meta's P/E to 20-22x, reflecting a significant valuation headwind. As Reality Labs continues to incur substantial losses, the pressure on overall profitability could deter investor confidence, compounding the risk of multiple compression. If advertising revenue does not recover to pre-ATT levels, blended EPS could decline by 10-15%, leading to a further de-rating of the stock. A catalyst for this bear case could be a disappointing earnings report highlighting continued revenue weakness.
+
+Valuation:
+At ~22-25x forward P/E, the market is pricing in a recovery in advertising revenue growth, which is achievable if Meta can effectively monetize Reels and improve ad performance. The multiple could expand if advertising revenue growth accelerates beyond current expectations, while continued losses in Reality Labs could compress the multiple further.
+
+Macro sensitivity:
+Rates → discount rate → DCF impact on long-duration cash flows; a 100bps increase could compress the P/E by 2-3 turns. A slowdown in consumer spending could negatively impact advertising revenue, further pressuring earnings.
+
+Key risks:
+• META-specific: Competition from TikTok impacting ad revenue
+• META-specific: Regulatory challenges from FTC and GDPR
+• META-specific: Continued losses in Reality Labs affecting profitability
+• META-specific: Structural headwinds from Apple's ATT changes
+
+Conclusion:
+Current pricing already assumes a recovery in advertising revenue; the setup only works if Reels monetization accelerates. The risk is whether competitive pressures from TikTok continue to erode Meta's market share.

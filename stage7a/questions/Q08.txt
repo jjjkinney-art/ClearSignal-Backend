@@ -1,0 +1,9 @@
+Alphabet / Google (GOOGL) — AI Search Cannibalization Risk
+
+AI-native search tools represent a potential threat to Google's search revenue. Answer the following:
+
+1. What percentage of Google's search revenue — expressed as a dollar range — is at realistic risk of substitution by AI-native query tools (Perplexity, ChatGPT, etc.) over the next 24 months?
+
+2. What is the primary mechanism of loss: fewer queries, lower CPCs, or advertiser budget reallocation?
+
+3. What internal metric would indicate that Google has successfully defended search monetization against AI substitution, and at what level would that metric reassure the market?

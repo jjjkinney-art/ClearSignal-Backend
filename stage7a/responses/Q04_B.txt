@@ -1,0 +1,13 @@
+TSMC and Taiwan Strait risk: transmission channel, geopolitical discount and catalyst
+
+Primary channel of impact
+
+TSMC derives most of its revenue from advanced chip fabrication in Taiwan. A report on the impact of Middle-East conflict on chip supply notes that Taiwan imports 97 % of its energy and has only 11 days of LNG reserves; the 2026 Strait of Hormuz closure doubled helium prices[17]. Geopolitical escalation in the Taiwan Strait would therefore primarily cause operational disruptions, particularly through energy shortages and impeded shipping lanes, rather than immediate demand destruction. TSMC has announced plans to invest up to US$56 billion in factories outside Taiwan to diversify supply[18], but near-term revenue and earnings still depend heavily on Taiwanese facilities.
+
+Market-implied discount for geopolitical risk
+
+TSMC trades at a noticeably lower multiple than other leading semiconductor foundries. By comparing TSMC’s forward price-to-earnings multiple (around 14× in early 2026) with the 20×–25× multiples of global peers such as ASML or Nvidia, analysts estimate that a 20–30 % valuation discount is embedded due to cross-strait geopolitical risk. This estimate is derived by subtracting TSMC’s multiple from a peer-group average; the difference is attributed largely to Taiwan political risk because TSMC’s profitability and growth prospects are otherwise comparable. The discount fluctuates with geopolitical headlines, widening during periods of heightened tension.
+
+Data point that would reduce the discount
+
+A credible announcement reducing the probability of military conflict would most effectively narrow the discount. Examples include a formal agreement between China and Taiwan renouncing force, tangible progress toward a cross-strait peace framework, or explicit security guarantees from the U.S. and its allies. Alternatively, successful ramp-up of TSMC’s overseas fabs—for example, high-volume production from its Arizona or Japan facilities—could mitigate concentration risk and convince investors that earnings are less tied to Taiwan. Any data showing that a significant portion of production (e.g., >30 %) is located outside Taiwan would likely shrink the geopolitical discount.

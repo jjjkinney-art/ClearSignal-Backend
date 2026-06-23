@@ -1,0 +1,27 @@
+TSMC is fairly valued based on its forward P/E ratio of 18-25x, which reflects its advanced node monopoly and AI demand tailwind. The premium is structurally justified by TSMC's unique position as the only foundry with commercially available N3 and N2 process nodes at scale, creating significant switching costs for customers. The current multiple requires sustained advanced node revenue growth of around 10-15% annually and gross margin stability above 55% over the next 3-5 years. The most likely compression trigger is geopolitical risk in the Taiwan Strait escalating, causing TSMC's forward P/E to fall below 18x due to potential operational disruptions.
+
+Key drivers:
+• TSMC-specific: Advanced node monopoly in N3 and N2
+• TSMC-specific: High gross margins from advanced nodes
+• TSMC-specific: Strong demand from AI and HPC sectors
+
+Bull thesis:
+TSMC's advanced node monopoly in N3 and N2 positions it to capture significant market share in AI and HPC sectors, driving revenue growth that is structurally decoupled from smartphone cyclicality. The high gross margins from advanced nodes amplify EPS growth, providing a strong buffer against market volatility. At 25-28x forward P/E, the stock is fairly valued if advanced node revenue sustains double-digit growth. Confirmation of robust demand from key customers like NVIDIA would further validate this thesis.
+
+Bear thesis:
+Escalating geopolitical tensions in the Taiwan Strait could disrupt TSMC's manufacturing operations, leading to significant revenue loss and operational instability. As tensions rise, the risk of reduced orders from major clients like Apple compounds the potential for earnings misses. If geopolitical risks lead to a 10-15% decline in EPS, the stock could see a P/E compression to 18-20x, reflecting heightened risk. A significant escalation in tensions would trigger this bear case.
+
+Valuation:
+At ~20-25x forward P/E, the stock already prices in sustained advanced node revenue growth of 10-15% annually. The multiple could expand if geopolitical tensions ease and demand from AI sectors accelerates, but could compress if tensions escalate or if Apple reduces orders.
+
+Macro sensitivity:
+Geopolitical tensions → operational disruptions → revenue impact on TSMC's advanced node segments. A significant escalation could lead to a 15-20% decline in P/E as the market reassesses risk.
+
+Key risks:
+• Geopolitical risk: Escalation in the Taiwan Strait impacting manufacturing capacity
+• Customer concentration: Dependence on Apple for ~25% of revenue
+• Regulatory scrutiny: Potential export controls affecting operations
+• Execution risk: Delays in ramping Arizona fab impacting capacity
+
+Conclusion:
+At ~20-25x, the setup assumes continued execution of advanced node growth; the risk is whether geopolitical tensions escalate significantly.

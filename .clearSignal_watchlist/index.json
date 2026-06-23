@@ -526,5 +526,29 @@
     "latest_change_narrative": "",
     "debate_focus": "",
     "alert_priority": ""
+  },
+  "SPY": {
+    "ticker": "SPY",
+    "company_name": "SPY",
+    "added_at": "2026-06-14T08:17:50.596628+00:00",
+    "last_updated": null,
+    "snapshot_count": 0,
+    "has_material_change": false,
+    "latest_thesis_trend": "unclear",
+    "latest_confidence": 0.0,
+    "latest_one_sentence": "",
+    "dominant_signal": "",
+    "dominant_risk": "",
+    "notes": "",
+    "what_changed_summary": "",
+    "drift_state": "",
+    "dominant_dimension": "",
+    "core_debate": "",
+    "recent_alert_count": 0,
+    "materiality_level": "",
+    "thesis_stability": "stable",
+    "latest_change_narrative": "",
+    "debate_focus": "",
+    "alert_priority": ""
   }
 }

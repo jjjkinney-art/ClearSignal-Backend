@@ -1,0 +1,13 @@
+Azure Copilot: revenue thresholds, seat attachment and downside risk
+
+Revenue run-rate needed to be material to Microsoft EPS
+
+Microsoft generated US$67.2 billion in net income in FY2025[21], equivalent to about US$33.4 per share. A 1 % EPS contribution therefore requires approximately US$0.67 billion of additional net income. Assuming a 30–40 % net margin on software subscriptions, this net income corresponds to US$1.7–2.2 billion of annual revenue. Thus, Azure Copilot (or Microsoft 365 Copilot) needs an annual revenue run-rate of roughly US$2 billion to deliver a 1 percentage-point uplift to EPS.
+
+Implied and observed seat attachment rates
+
+Microsoft’s commercial Microsoft 365 user base is roughly 450 million seats. With Copilot priced at US$30 per user per month (US$360 annual), a US$2 billion run-rate requires about 5.6 million Copilot seats (≈1.2 % attachment). In early 2026, Microsoft reported that about 15 million paying seats were using Copilot, representing 3.3 % of M365 seats[22]. A subsequent quarter saw seats increase to 20 million[23]. At US$360 per seat, 20 million seats equate to a US$7.2 billion annual run-rate, which already exceeds the US$2 billion materiality threshold. The current attachment rate (~4 %) is therefore adequate to deliver a meaningful contribution; further adoption would provide upside.
+
+Downside to FY2026 Azure growth if adoption stalls
+
+If Copilot adoption stalls at around 20 million seats (≈4 % of the base) while expectations embed further acceleration, incremental AI revenue may fall short. Analyst models currently assume Azure revenue growth of about 39–40 %[23]. Without continued seat expansion, Copilot-driven growth could contribute 1–2 percentage points less to Azure growth, implying consensus FY2026 growth would be trimmed to around 37–38 %. The downside risk intensifies if enterprise customers resist AI seat premiums because only a small share of employees need generative-AI tools. Therefore, investors should watch the Copilot seat count and run-rate each quarter; a plateau would warrant revising Azure growth forecasts.

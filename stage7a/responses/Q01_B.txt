@@ -1,0 +1,23 @@
+NVidia Data Center revenue sensitivity to hyperscaler capex and leading indicators
+
+How capex deceleration would affect NVDA’s data-center revenue
+
+Major cloud providers (“hyperscalers”) are driving the AI build-out. A research note on the AI capex cycle shows that the big five hyperscalers (Amazon, Microsoft, Alphabet, Meta and Oracle) expect to spend about US$725 billion on AI-focused capex in 2026, representing ~64 % year-over-year growth[1]. NVidia captured roughly 57 cents of every dollar of hyperscaler capex in early fiscal 2027 (data-center revenue of US$75.2 billion vs combined hyperscaler capex of ~US$131 billion)[2]. The capex cycle note indicates that about 75 % of hyperscaler capex is specifically for AI GPUs[1].
+
+If the top hyperscalers reduce capex growth by 20 percentage points, the assumed growth rate falls from ~64 % to ~44 %. Using the 2025 capex base (~US$726 billion[3]):
+
+Baseline 2026 capex: 726 × (1 + 0.64) ≈ US$1.19 trillion.
+
+Reduced-growth scenario: 726 × (1 + 0.44) ≈ US$1.05 trillion.
+
+Capex difference: ~US$140 billion less spending. Assuming 75 % of capex is AI-related, the cut in AI capex is ≈US$105 billion.
+
+With NVidia capturing ≈57 % of hyperscaler capex, the direct revenue impact would be 105 × 0.57 ≈ US$60 billion. Because this spending reduction would occur gradually, a conservative range of ~US$35 billion to US$60 billion decline in NVidia’s data-center revenue is reasonable. This would significantly dent FY2027–FY2028 growth because NVidia’s FY2027 data-center revenue was US$75.2 billion[2].
+
+Most important metric to monitor
+
+Analysts focus on hyperscaler capex backlogs and NVidia’s data-center revenue. The Network World report notes that hyperscalers have enormous order backlogs (Amazon backlog US$244 billion, up 40 %, and Google backlog US$240 billion)[4], reflecting committed GPU purchases. A trading note on NVidia emphasises that data-center revenue is the single most-watched line in NVidia’s earnings because it directly reflects hyperscaler demand[5]. Backlog growth is a leading indicator: if backlogs or future purchase commitments begin to decelerate meaningfully, actual revenue will follow.
+
+Break-point for the bull thesis
+
+The AI capex cycle suggests that NVidia’s capture rate rose from about 39 % to 57 % over the last year[2]. A slowdown in backlog growth below roughly 10 % year-over-year or a decline in the backlog itself would signal that hyperscalers are digesting prior purchases. Similarly, if NVidia’s data-center revenue growth decelerates to low double-digit rates (e.g., <25 % YoY) for several quarters, it would imply that the AI infrastructure boom is stalling. Either of these situations would challenge the bullish thesis that NVidia remains the primary beneficiary of hyperscaler investment.

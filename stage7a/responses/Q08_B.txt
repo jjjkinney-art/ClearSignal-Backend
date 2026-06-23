@@ -1,0 +1,11 @@
+Risk to Google’s search revenue from AI-native query tools and metrics signalling defence
+
+Share of revenue at risk and mechanism of loss
+
+AI-native search tools (ChatGPT, Perplexity, etc.) have gained traction, but their impact on Google’s revenue remains modest. Digital-Applied analysis indicates that AI-powered search cannibalised about 17 % of organic clicks as of Q2 2026 and could reach 40 % cannibalisation by Q3 2027[27]. AI Overviews appear in about 25 % of Google searches[28], but being cited in the overview increases organic clicks by 35 % and paid clicks by 91 %[29]. Moreover, ChatGPT-search click-through rates are 96 % lower than Google’s (~0.84 % vs ~29 %)[30]. SparkToro data from 2024 showed that 83 % of users used only traditional search engines, while only 17 % tried AI-search engines and 99 % of those still used Google[31]. These statistics suggest that most users still rely on Google and that AI search often supplements rather than replaces it.
+
+Assuming organic-click cannibalisation reaches 20–30 % over the next two years, and applying this to Google’s 2025 search revenue (≈US$175 billion), the revenue at realistic risk could be US$20–50 billion (≈10–20 %). The primary mechanism of loss would be reduced query volume and lower click-through rates due to AI Overviews providing direct answers, leading to fewer paid clicks. Lower cost-per-click (CPC) may also occur if advertisers reallocate budgets to AI search platforms, but this is currently small; AI search ad spending represents only 1.3 % of total search ad spending in 2026[32].
+
+Internal metric indicating successful defence
+
+Google’s ability to defend search monetization can be monitored through the “Search and Other” revenue growth rate and paid-click growth vs cost-per-click metrics. If search revenue continues to grow at high single-digit rates despite AI Overviews, it suggests effective monetization of new formats. Another internal metric is the proportion of queries with AI Overviews. If Google keeps AI Overviews coverage below ~30 % and maintains strong ad insertion (ads appear in 25.5 % of AI Overviews[32]), revenue should remain resilient. A reassuring threshold would be Search revenue growth >7 % YoY with stable or rising CPC; any sustained fall below this could indicate AI substitution is hurting monetization.

@@ -1,0 +1,170 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COLLECTING SYSTEM A (Claude Sonnet) AND SYSTEM B (GPT-4o)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+RULES
+─────
+• Use a NEW, FRESH conversation for each system.  No prior
+  context.  No system prompt.  No instructions.
+• Paste the question VERBATIM from the questions/ directory.
+• Copy the FULL response.  Do not truncate, summarize, or edit.
+• Paste into the corresponding {QID}_A.txt or {QID}_B.txt file,
+  replacing the "RESPONSE PENDING" placeholder.
+• Do NOT run all 10 questions in the same conversation — start
+  a new thread for each question to prevent cross-contamination.
+
+SYSTEM A — Claude Sonnet
+────────────────────────
+URL: https://claude.ai
+Model: Select "Claude Sonnet" (not Opus, not Haiku)
+Mode:  Standard chat — no Projects, no Documents, no tools
+
+For each of Q01–Q10:
+  1. Open a new conversation at claude.ai
+  2. Paste the question text from questions/Q{NN}.txt exactly
+  3. Copy the full response
+  4. Paste into responses/Q{NN}_A.txt
+
+SYSTEM B — GPT-4o
+─────────────────
+URL: https://chat.openai.com
+Model: Select "GPT-4o" (not GPT-4o mini, not o1)
+Mode:  Standard chat — no custom GPTs, no plugins, no tools
+
+For each of Q01–Q10:
+  1. Open a new conversation at chat.openai.com
+  2. Paste the question text from questions/Q{NN}.txt exactly
+  3. Copy the full response
+  4. Paste into responses/Q{NN}_B.txt
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUESTIONS FOR COPY-PASTE (verbatim — do not modify)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Q01 (NVIDIA):
+If the top four hyperscalers reduce aggregate capex growth by
+20 percentage points year-over-year, what is the estimated
+dollar-range impact on NVIDIA's Data Center segment revenue?
+What is the single most important operating metric to monitor
+that would give advance warning of this deceleration? At what
+level of that metric does the bull thesis on NVDA break?
+
+──────────────────────────────────────────────────────────────
+
+Q02 (Costco):
+What is the primary structural driver of Costco's gross margin
+expansion, and why is it not a typical retail merchandise-mix
+story? What metric best tracks the durability of this expansion
+on a quarterly basis? What would cause the expansion to reverse,
+and what is the threshold at which investors should reconsider
+the premium valuation?
+
+──────────────────────────────────────────────────────────────
+
+Q03 (JPMorgan Chase):
+What is the dollar threshold of CRE loan losses that would
+become material to JPM's earnings — either requiring additional
+reserve builds or affecting the dividend/buyback program? What
+is JPM's current CRE office provision coverage ratio, and how
+does it compare to pre-GFC norms? What CRE delinquency rate —
+expressed as a percentage — would trigger a consensus estimate
+revision for JPM's full-year EPS?
+
+──────────────────────────────────────────────────────────────
+
+Q04 (TSMC):
+What is the primary channel by which a Taiwan Strait military
+escalation would transmit to TSMC's revenue and earnings —
+operational disruption, customer demand destruction, or capital
+market re-rating? What discount to intrinsic value is the
+market currently applying to TSMC's multiple specifically due
+to geopolitical risk, and how was that estimate derived? What
+specific announcement or data point would most credibly reduce
+that discount?
+
+──────────────────────────────────────────────────────────────
+
+Q05 (Meta Platforms):
+Has Meta fully recovered its advertising revenue run rate to
+pre-ATT levels on a CPM-adjusted basis, and if not, what is
+the remaining gap in percentage terms? What is the current
+monetization rate of Reels relative to Feed (expressed as
+revenue per minute of watch time or equivalent metric), and
+what is the timeline for parity? What single metric in Meta's
+quarterly earnings would most clearly confirm that the ATT
+headwind has permanently normalized?
+
+──────────────────────────────────────────────────────────────
+
+Q06 (Microsoft):
+What annual revenue run rate does Azure Copilot need to reach
+to be material to Microsoft's fiscal year EPS — define
+"material" as contributing at least 1 percentage point to EPS
+growth? What enterprise seat attachment rate is implied by that
+revenue target, and what is the current observed attachment
+rate? If enterprise AI adoption stalls at current attachment
+rates, what is the downside to consensus FY2026 Azure growth
+estimates, expressed in percentage points?
+
+──────────────────────────────────────────────────────────────
+
+Q07 (Amazon):
+Is Amazon AWS operating margin expansion structural (driven by
+pricing power and mix shift to higher-margin services) or
+cyclical (driven by infrastructure cost optimization post-
+overinvestment)? What is the current AWS operating margin, and
+at what level does continued expansion require either new
+pricing power or a step-change in AI infrastructure efficiency?
+What quarterly metric — operating income dollars, margin
+percentage, or revenue growth rate — would most clearly signal
+that the expansion has peaked?
+
+──────────────────────────────────────────────────────────────
+
+Q08 (Alphabet):
+What percentage of Google's search revenue — expressed as a
+dollar range — is at realistic risk of substitution by
+AI-native query tools (Perplexity, ChatGPT, etc.) over the
+next 24 months? What is the primary mechanism of loss: fewer
+queries, lower CPCs, or advertiser budget reallocation? What
+internal metric would indicate that Google has successfully
+defended search monetization against AI substitution, and at
+what level would that metric reassure the market?
+
+──────────────────────────────────────────────────────────────
+
+Q09 (Visa):
+If Visa's cross-border volume growth decelerates by 100 basis
+points year-over-year, what is the estimated impact on Visa's
+net revenue growth rate and EPS, expressed in percentage
+points? What macro signal — travel data, FX movements, or
+consumer spending indicator — leads cross-border volume by the
+greatest number of quarters? At what cross-border volume
+growth rate does the consensus earnings model require revision,
+and what is the current street assumption embedded in guidance?
+
+──────────────────────────────────────────────────────────────
+
+Q10 (Apple):
+What is the primary structural risk to Apple's services gross
+margin — regulatory pressure on App Store fees, advertising
+revenue deceleration, or iCloud/subscription pricing limits?
+At what iPhone installed base growth rate does services attach
+rate saturation become a material headwind to the services
+revenue bull thesis? What metric in Apple's quarterly earnings
+would be the earliest indicator that attach rate saturation is
+occurring, and what level of that metric would force a re-
+rating of the services multiple?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+AFTER COLLECTION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+When all 20 files (Q01_A through Q10_A and Q01_B through Q10_B)
+have been populated, notify the coordinator.  The coordinator
+will verify no "RESPONSE PENDING" strings remain, then confirm
+the packet is frozen.
+
+Do NOT share the response files with evaluators until the
+coordinator has confirmed all 30 files (A, B, C × 10) are
+complete and the packet is locked.

@@ -1,0 +1,197 @@
+================================================================================
+CLEARSIGNAL INVESTMENT INTELLIGENCE PLATFORM
+RELIABILITY TEST REPORT
+Test Date: 2026-05-29
+Tester: Automated UI test via Claude in Chrome
+URL: https://ai-intelligence-interface.vercel.app/analyze
+================================================================================
+
+RESULTS TABLE
+Company | Success | Retry Required | Correct Company | Quality Score | Notes
+--------|---------|----------------|-----------------|---------------|-------
+Microsoft (MSFT)   | No  | Yes | Yes  | 0 | LLM synthesis error: retries exhausted. Ticker/decision shell rendered but all thesis text empty. Retry also failed.
+Alphabet (GOOGL)   | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. GOOGL correctly detected. All sections empty.
+Meta (META)        | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. META / Meta Platforms Inc. correctly detected. Trend: WEAKENING shown.
+Amazon (AMZN)      | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. AMZN / Amazon.com Inc. correctly detected. Trend: WEAKENING shown.
+Apple (AAPL)       | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. AAPL / Apple Inc. correctly detected. Trend: STABLE shown.
+Nvidia (NVDA)      | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. NVDA / Nvidia Corporation correctly detected. Trend: WEAKENING shown.
+AMD                | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. AMD / Advanced Micro Devices Inc. correctly detected.
+Broadcom (AVGO)    | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. AVGO / Broadcom Inc. correctly detected.
+TSMC (TSM)         | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. TSM / Taiwan Semiconductor Manufacturing Co. correctly detected.
+ASML               | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. ASML / ASML Holding N.V. correctly detected.
+JPMorgan (JPM)     | No  | No  | No   | 0 | ROUTING FAILURE: Classified as MARKET QUESTION instead of INVESTMENT THESIS. Company not detected. General market answer returned (not JPM-specific).
+Visa (V)           | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. V / Visa Inc. correctly detected.
+Mastercard (MA)    | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. MA / Mastercard Inc. correctly detected.
+Eli Lilly (LLY)    | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. LLY / Eli Lilly and Company correctly detected.
+UnitedHealth (UNH) | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. UNH / UnitedHealth Group Inc. correctly detected.
+Novo Nordisk (NVO) | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. NVO / Novo Nordisk A/S correctly detected.
+Walmart (WMT)      | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. WMT / Walmart Inc. correctly detected.
+Costco (COST)      | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. COST / Costco Wholesale Corporation correctly detected. Trend: WEAKENING shown.
+Starbucks (SBUX)   | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. SBUX / Starbucks Corporation correctly detected.
+Nike (NKE)         | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. NKE / Nike Inc. correctly detected.
+Caterpillar (CAT)  | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. CAT / Caterpillar Inc. correctly detected.
+Deere (DE)         | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. DE / Deere & Company correctly detected.
+Exxon (XOM)        | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. XOM / ExxonMobil Corporation correctly detected.
+Chevron (CVX)      | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. CVX / Chevron Corporation correctly detected.
+Palantir (PLTR)    | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. PLTR / Palantir Technologies Inc. correctly detected. Trend: WEAKENING shown.
+Snowflake (SNOW)   | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. SNOW / Snowflake Inc. correctly detected. Trend: WEAKENING shown.
+CrowdStrike (CRWD) | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. CRWD / CrowdStrike Holdings Inc. correctly detected.
+Cloudflare (NET)   | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. NET / Cloudflare Inc. correctly detected.
+Rocket Lab (RKLB)  | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. RKLB / Rocket Lab USA Inc. correctly detected.
+SoFi (SOFI)        | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. SOFI / SoFi Technologies Inc. correctly detected.
+Duolingo (DUOL)    | No  | No  | No   | 0 | WRONG COMPANY: Resolved to APD (Air Products and Chemicals Inc.) instead of DUOL. Entity resolution failure.
+Coinbase (COIN)    | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. COIN / Coinbase Global Inc. correctly detected.
+Robinhood (HOOD)   | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. HOOD / Robinhood Markets Inc. correctly detected.
+AppLovin (APP)     | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. APP / AppLovin Corporation correctly detected. Trend: WEAKENING shown.
+C3.ai (AI)         | No  | No  | Yes  | 0 | LLM synthesis error: retries exhausted. AI / C3.AI Inc. correctly detected. Trend: WEAKENING shown.
+
+================================================================================
+FINAL SUMMARY
+================================================================================
+
+1. TOTAL COMPANIES TESTED: 35
+
+2. TOTAL SUCCESSES: 0
+   (No query produced a complete analysis with Bull Thesis, Bear Thesis,
+    Valuation, Macro Sensitivity, and Conclusion populated)
+
+3. TOTAL FAILURES: 35
+
+4. SUCCESS RATE: 0%
+
+5. COMPANIES REQUIRING RETRY: 1
+   - Microsoft (MSFT): retry attempted, also failed
+
+6. COMPANIES WITH INCORRECT ROUTING / WRONG COMPANY: 2
+   - JPMorgan (Q11): Routed to MARKET QUESTION pipeline instead of
+     INVESTMENT THESIS. Company name "JPMorgan" not extracted from query text.
+     General market education answer returned — no JPM-specific analysis.
+   - Duolingo (Q31): Entity resolved to APD (Air Products and Chemicals Inc.)
+     instead of DUOL. "Duolingo" not in company dictionary; likely matched
+     on partial/erroneous lookup.
+
+7. COMPANIES WITH POOR-QUALITY OUTPUT: 35
+   All 35 queries returned identical failure state:
+   - Direct Answer: "Analysis incomplete. LLM synthesis error: retries exhausted."
+   - Bull Case: empty (collapsed, no content)
+   - Bear Case: empty (collapsed, no content)
+   - Full Conclusion: empty (collapsed, no content)
+   - Valuation View: empty
+   - Macro Sensitivity: empty
+
+8. RECURRING BUGS AND FAILURE PATTERNS:
+
+   BUG #1 — CRITICAL: LLM Synthesis Failure (affects 35/35 queries)
+   ---------------------------------------------------------------
+   Error: "Analysis incomplete. LLM synthesis error: retries exhausted."
+   Pattern: Appears on every single query without exception.
+   Root Cause: The backend investment thesis pipeline successfully:
+     (a) detects the company and resolves the ticker
+     (b) classifies the setup quality as "Balanced"
+     (c) assigns a decision label (HOLD)
+     (d) assigns a thesis trend (WEAKENING/STABLE/etc.)
+   ...but the LLM synthesis step (thesis_synthesizer.py) fails every time
+   with "retries exhausted." This strongly indicates the LLM API key
+   (OpenAI or Anthropic) is NOT configured in the Render production environment,
+   or the model name has changed/been deprecated.
+   Impact: 100% of analyses are non-functional. Users see a shell with
+   metadata but zero analytical content.
+   Fix Required: Verify OPENAI_API_KEY or ANTHROPIC_API_KEY is set in Render
+   environment variables. Check Render service logs for the specific API error.
+
+   BUG #2 — HIGH: React Hydration Errors on Every Page Load
+   ---------------------------------------------------------
+   Errors: React #418, #423, #425 firing on every page load (observed in
+   browser console, 6+ instances per session).
+   Pattern: Server-rendered HTML does not match client-rendered output.
+   Impact: Silent — does not visibly break the UI for most users but indicates
+   SSR/CSR mismatch that could cause rendering artifacts on some interactions.
+   Fix Required: Identify server-only state (dates, randomness, env vars) leaking
+   into the initial render. Wrap time-dependent or client-only content in
+   useEffect or dynamic() with ssr:false.
+
+   BUG #3 — MEDIUM: Company Detection Miss — JPMorgan
+   ---------------------------------------------------
+   Query: "Can JPMorgan continue compounding despite a higher-for-longer rate environment?"
+   Result: Routed to MARKET QUESTION pipeline; no company detected.
+   Expected: JPM / JPMorgan Chase & Co. → INVESTMENT THESIS pipeline.
+   Root Cause: "JPMorgan" (without "Chase") may not be in the company name
+   dictionary used by the backend's detect_company() function. The word
+   "compounding" (an investment keyword) should have triggered investment intent,
+   but without a company match it fell through to general finance.
+   Fix: Add "JPMorgan" as an alias for JPMorgan Chase (JPM) in company aliases.
+
+   BUG #4 — MEDIUM: Wrong Entity Resolution — Duolingo → Air Products
+   -------------------------------------------------------------------
+   Query: "Can Duolingo justify its valuation through AI-driven product expansion?"
+   Result: Resolved to APD (Air Products and Chemicals Inc.) instead of DUOL.
+   Root Cause: "Duolingo" not found in company dictionary; system likely
+   fell back to a fuzzy match or default resolution that incorrectly returned APD.
+   The word "expansion" or another term may have triggered the wrong match.
+   Fix: Add "Duolingo" → DUOL to the company name/alias dictionary.
+   Also: Add guardrail — if resolved company name does not match any word in the
+   original query, reject the resolution and re-route.
+
+9. TOP 5 STRONGEST ANALYSES:
+   None — zero analyses produced complete output. Cannot rank.
+   Notable partial positives:
+   - Company detection was accurate for 33/35 queries (94.3%) — the entity
+     resolution layer is broadly functional.
+   - Ticker resolution quality was excellent: AVGO (not BRCM), TSM, ASML (N.V.),
+     NVO (A/S), RKLB — all non-obvious tickers resolved correctly.
+   - Setup quality classification ("Balanced"), thesis trend (WEAKENING/STABLE),
+     and decision label (HOLD) rendered correctly — partial pipeline works.
+   - The "What Changed vs Prior View" section appeared for repeat tickers
+     (MSFT on retry, COST, PLTR, APP, AI) — thesis memory system is wiring in.
+
+10. TOP 5 WEAKEST ANALYSES:
+    Worst failures (by additional failure dimension beyond synthesis error):
+    1. JPMorgan — wrong pipeline (MARKET QUESTION), company never detected
+    2. Duolingo — wrong company (APD instead of DUOL), analysis for wrong ticker
+    3. Microsoft — only query requiring retry; retry also failed
+    4. All 35 — uniform synthesis failure means no analytical value is delivered
+       to any user on any query at time of test
+    5. Duolingo/JPMorgan — double failure: wrong company + synthesis error =
+       completely irrelevant and empty output
+
+================================================================================
+TECHNICAL DIAGNOSIS
+================================================================================
+
+WHAT WORKS (partially):
+  ✓ Frontend routing and navigation
+  ✓ Company/ticker detection: 33/35 correct (94.3%)
+  ✓ Investment thesis pipeline invocation (correct pipeline triggered 34/35)
+  ✓ Setup quality classification ("Balanced" shown for all)
+  ✓ Thesis trend classification (WEAKENING, STABLE shown for some)
+  ✓ Decision label (HOLD shown for all)
+  ✓ Thesis memory / "What Changed" section wiring (visible on repeat queries)
+  ✓ Backend health endpoint (/api/backend-health → 200 on warm instance)
+  ✓ Render backend responding (HTTP 200 returned for all /api/ask calls)
+  ✓ Vercel proxy routing (/api/ask, /api/analyze all deployed and reachable)
+
+WHAT IS BROKEN:
+  ✗ LLM synthesis: ALL text fields empty on every query (100% failure rate)
+    - direct_answer: empty
+    - bull_thesis: empty
+    - bear_thesis: empty
+    - conclusion: empty
+    - valuation_view: empty
+    - macro_sensitivity: empty
+    - confidence_reasoning: empty
+  ✗ React SSR hydration: 6+ errors per page load (#418, #423, #425)
+  ✗ JPMorgan entity detection: not in company dictionary
+  ✗ Duolingo entity detection: resolves to wrong company (APD)
+
+PRIORITY FIX ORDER:
+  P0: Verify LLM API key in Render environment variables — this is a
+      complete production outage. Zero value delivered to any user.
+  P1: Check Render logs for the specific LLM error (auth failure, quota,
+      model not found, etc.)
+  P2: Fix JPMorgan alias in company dictionary
+  P3: Fix Duolingo alias in company dictionary + add resolution sanity check
+  P4: Investigate and fix React hydration errors #418/#423/#425
+
+================================================================================
+END OF REPORT
+================================================================================

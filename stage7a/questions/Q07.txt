@@ -1,0 +1,9 @@
+Amazon (AMZN) — AWS Margin Expansion
+
+Amazon Web Services has seen operating margin expand significantly. Answer the following:
+
+1. Is the AWS operating margin expansion structural (driven by pricing power and mix shift to higher-margin services) or cyclical (driven by infrastructure cost optimization post-overinvestment)? What is the evidence?
+
+2. What is the current AWS operating margin, and at what level does continued expansion require either new pricing power or a step-change in AI infrastructure efficiency?
+
+3. What quarterly metric — operating income dollars, margin percentage, or revenue growth rate — would most clearly signal that the expansion has peaked?

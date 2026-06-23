@@ -1,0 +1,27 @@
+Amazon AWS's operating margin expansion is primarily structural, driven by the moderation of CapEx and the scaling of revenue, which is expected to push margins toward 35-38%. This structural expansion is sustainable as AWS continues to benefit from its proprietary chip stack and the increasing demand for generative AI workloads. The most important operating metric to watch for confirmation is the AWS operating margin, which should remain above 30% to indicate ongoing expansion. A significant decline in AWS revenue growth rate or a drop in operating margin below 30% would suggest that the expansion has peaked and may require new pricing power to continue.
+
+Key drivers:
+• AMZN-specific: AWS margin expansion driven by CapEx moderation
+• AMZN-specific: Advertising revenue growth enhancing overall profitability
+• AMZN-specific: Prime membership growth supporting recurring revenue
+
+Bull thesis:
+The proprietary chip stack reduces costs, amplifying operating leverage and supporting higher margins. At ~25-30x FCF, the stock is fairly valued if AWS maintains its growth trajectory and margin expansion. Confirmation will come from sustained AWS revenue growth above 30% and operating margins holding above 30%.
+
+Bear thesis:
+Increased competition from Microsoft Azure and Google Cloud could compress AWS margins, leading to a decline in operating income. If AWS revenue growth slows below 30%, it could trigger a significant drop in operating margins, impacting overall EPS. A sustained decline in AWS growth could compress the multiple to ~20-22x, reflecting heightened risk. The catalyst for this scenario would be a disappointing AWS growth report or margin guidance.
+
+Valuation:
+At ~25-30x FCF, the stock already prices in sustained AWS margin expansion and double-digit growth. Expansion could occur if AWS revenue growth accelerates beyond current expectations, while compression is likely if growth slows significantly.
+
+Macro sensitivity:
+Rates → discount rate → DCF impact on long-duration FCF; a 100bps increase could compress the P/E by ~3-5 turns. A slowdown in consumer demand could pressure ASPs and unit volumes in the retail segment.
+
+Key risks:
+• AWS market share competition from Microsoft Azure and Google Cloud threatens $100B+ annualized operating income target.
+• FTC antitrust pressure on Prime bundling could lead to operational changes affecting customer acquisition and retention.
+• Regulatory barriers in India could limit e-commerce growth in a key international market.
+• Rising last-mile delivery costs could further compress already thin retail margins.
+
+Conclusion:
+Current pricing assumes continued AWS margin expansion, but the market is sensitive to competitive pressures. The risk is whether AWS can sustain its growth trajectory amid increasing competition.

@@ -1,0 +1,9 @@
+Visa (V) — Cross-Border Volume Sensitivity
+
+Visa's premium valuation is partially supported by cross-border transaction growth. Answer the following:
+
+1. If Visa's cross-border volume growth decelerates by 100 basis points year-over-year, what is the estimated impact on Visa's net revenue growth rate and EPS, expressed in percentage points?
+
+2. What macro signal — travel data, FX movements, or consumer spending indicator — leads cross-border volume by the greatest number of quarters?
+
+3. At what cross-border volume growth rate does the consensus earnings model require revision, and what is the current street assumption embedded in guidance?

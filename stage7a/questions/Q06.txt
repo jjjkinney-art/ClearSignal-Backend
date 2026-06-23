@@ -1,0 +1,9 @@
+Microsoft (MSFT) — Azure Copilot Revenue Materiality
+
+Microsoft has launched AI Copilot across its product suite. Answer the following:
+
+1. What annual revenue run rate does Azure Copilot need to reach to be material to Microsoft's fiscal year EPS — define "material" as contributing at least 1 percentage point to EPS growth?
+
+2. What enterprise seat attachment rate is implied by that revenue target, and what is the current observed attachment rate?
+
+3. If enterprise AI adoption stalls at current attachment rates, what is the downside to consensus FY2026 Azure growth estimates, expressed in percentage points?

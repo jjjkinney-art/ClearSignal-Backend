@@ -1,0 +1,38 @@
+{
+  "dwell_start_utc": "2026-06-12T06:19:44Z",
+  "dwell_end_utc":   "2026-06-13T06:19:44Z",
+  "dwell_hours":     24,
+  "check_interval_s": 3600,
+  "commit": "4611401d5391",
+  "status": "in_progress",
+  "checks_completed": 4,
+  "last_check_utc": "2026-06-12T12:09:49Z",
+  "baseline": {
+    "decision_total": 14,
+    "outcome_total": 1,
+    "cohort_injected": 1,
+    "cohort_control": 13,
+    "blocks_built": 11,
+    "null_results": 3,
+    "over_cap_count": 0,
+    "token_p100": 348,
+    "fallback_rate_control": 0.0,
+    "fallback_rate_injected": null,
+    "control_conviction_mean": 0.652,
+    "control_conviction_n": 1,
+    "injected_conviction_n": 0
+  },
+  "gates": {
+    "kill_switch_cleared": true,
+    "enabled_override_null": true,
+    "over_cap_count_zero": true,
+    "token_p100_lte_350": true,
+    "fallback_rate_control_ok": true,
+    "fallback_rate_injected_ok": null,
+    "no_error_5xx": true
+  },
+  "injected_outcomes": [],
+  "control_outcomes": [
+    {"ts":"2026-06-12T06:42:00Z","session":"d190c809","ticker":"JPM","stance":"Accumulate","conviction":0.652,"specificity":1.0,"fallback":false,"latency_s":48.16,"cve":0.0}
+  ]
+}

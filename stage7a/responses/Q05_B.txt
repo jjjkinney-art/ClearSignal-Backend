@@ -1,0 +1,13 @@
+Meta advertising recovery, Reels monetization and ATT normalization
+
+Advertising revenue recovery relative to pre-ATT levels
+
+Before Apple’s App-Tracking-Transparency (ATT) changes in 2021, Meta enjoyed high CPMs for personalised ads. After the changes, CPMs dropped sharply. Meta’s FY2025 ad revenue was US$200.97 billion, up 22 % year-over-year[19], and Q1 2026 ad revenue growth remained strong at 33 %[19]. However, the company acknowledges that monetization efficiency of Reels is still lower than the traditional Feed, resulting in lower revenue per impression[20]. Because Reels now account for more than half of ad placements[20], average CPMs are still likely below pre-ATT levels. Estimates from marketing platforms suggest a single-digit percentage gap (5–10 %) remains between current CPM-adjusted revenue and pre-ATT run-rate, but Meta is closing this gap through AI-driven targeting.
+
+Monetization rate of Reels relative to Feed and timeline for parity
+
+Reels generate a US$50 billion annual ad run-rate[20]. With Reels accounting for about half of Instagram time yet generating roughly one-quarter of Meta’s ad revenue, revenue per minute is around half of the Feed. Meta’s management indicated that monetization efficiency has been improving but remains lower than Feed[20]. Given the rapid expansion of AI-driven ad tools (Advantage+ run-rate ~US$60 billion[19]) and improved ad relevance, analysts expect Reels monetization to reach parity with Feed by 2027. Key drivers include higher ad-load, better click-through rates and improved conversion measurement.
+
+Metric confirming normalization of the ATT headwind
+
+The clearest metric is average price per ad (CPM), reported in Meta’s quarterly disclosures. In Q1 2026, Meta reported 12 % year-over-year growth in price per ad and 19 % growth in ad impressions[19]. Sustained double-digit growth in price per ad, coupled with stabilisation of ad impressions, would indicate that the ATT headwind has normalized. Investors should also monitor the advertising revenue run-rate relative to user-time spent: if Reels monetization efficiency converges toward Feed and price per ad continues to rise, it would confirm that Meta has fully adapted to the post-ATT environment.
