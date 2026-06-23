@@ -117,6 +117,8 @@ _COMPANY_DB: dict[str, dict] = {
     "NVDA":  {"company_name": "NVIDIA Corporation",                      "sector": "Technology",                "industry": "Semiconductors"},
     "TSLA":  {"company_name": "Tesla Inc.",                              "sector": "Consumer Discretionary",    "industry": "Electric Vehicles"},
     "BRK.B": {"company_name": "Berkshire Hathaway Inc.",                 "sector": "Financials",                "industry": "Diversified Financials"},
+    "BRK.A": {"company_name": "Berkshire Hathaway Inc.",                 "sector": "Financials",                "industry": "Diversified Financials"},
+    "BF.B":  {"company_name": "Brown-Forman Corp.",                      "sector": "Consumer Staples",           "industry": "Beverages"},
     "JPM":   {"company_name": "JPMorgan Chase & Co.",                    "sector": "Financials",                "industry": "Banking"},
     "GS":    {"company_name": "Goldman Sachs Group Inc.",                "sector": "Financials",                "industry": "Investment Banking"},
     "BAC":   {"company_name": "Bank of America Corp.",                   "sector": "Financials",                "industry": "Banking"},
@@ -450,6 +452,11 @@ _ALIAS_MAP: dict[str, str] = {
     # ── Berkshire ─────────────────────────────────────────────────────────────
     "berkshire":               "BRK.B",
     "berkshire hathaway":      "BRK.B",
+    "brk":                     "BRK.B",
+
+    # ── Brown-Forman ─────────────────────────────────────────────────────────
+    "brown-forman":            "BF.B",
+    "brown forman":            "BF.B",
 
     # ── JPMorgan ──────────────────────────────────────────────────────────────
     "jpmorgan":                "JPM",
@@ -1302,7 +1309,7 @@ class EntityResolution:
 # Internal helpers
 # ---------------------------------------------------------------------------
 
-_TICKER_RE = re.compile(r"\b([A-Z]{1,5})\b")
+_TICKER_RE = re.compile(r"\b([A-Z]{1,5}(?:[.\-][A-Z]{1,2})?)\b")
 
 
 def _make_context(ticker: str, matched_alias: str) -> CompanyContext:

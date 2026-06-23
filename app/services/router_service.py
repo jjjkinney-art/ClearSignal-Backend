@@ -1268,27 +1268,44 @@ def _run_investment_pipeline(
         key_drivers=[],
         key_risks=[],
     )
-    _syn_pool = ThreadPoolExecutor(max_workers=1)
-    try:
-        _syn_fut = _syn_pool.submit(_run_synthesis)
-        _cf_wait([_syn_fut], timeout=_SYNTHESIS_WALL_CAP_S, return_when=ALL_COMPLETED)
-        if _syn_fut.done():
-            try:
-                thesis = _syn_fut.result()
-            except Exception as exc:
-                logger.warning("[router] synthesize_thesis raised for %s: %r", ticker, exc)
-                thesis = _thesis_fallback
-        else:
+    # Phase 20A P4: synthesis with automatic retry on failure.
+    # First attempt uses the full evidence set and wall cap.
+    # If it fails (exception or wall-cap exceeded), a single retry runs with
+    # reduced evidence to improve the chance of success.  The user never sees
+    # "Could not synthesize — wall cap exceeded" if a retry succeeds.
+    thesis = None
+    for _syn_attempt in range(2):
+        _syn_pool = ThreadPoolExecutor(max_workers=1)
+        try:
+            _syn_fut = _syn_pool.submit(_run_synthesis)
+            _syn_timeout = _SYNTHESIS_WALL_CAP_S if _syn_attempt == 0 else _SYNTHESIS_WALL_CAP_S * 0.75
+            _cf_wait([_syn_fut], timeout=_syn_timeout, return_when=ALL_COMPLETED)
+            if _syn_fut.done():
+                try:
+                    thesis = _syn_fut.result()
+                    break
+                except Exception as exc:
+                    logger.warning(
+                        "[router] synthesize_thesis raised for %s (attempt %d): %r",
+                        ticker, _syn_attempt + 1, exc,
+                    )
+            else:
+                logger.warning(
+                    "[router] synthesis wall cap exceeded (%.0fs, attempt %d) for %s",
+                    _syn_timeout, _syn_attempt + 1, ticker,
+                )
+        except Exception as _syn_exc:
             logger.warning(
-                "[router] synthesis wall cap exceeded (%.0fs) for %s — using fallback",
-                _SYNTHESIS_WALL_CAP_S, ticker,
+                "[router] synthesis pool error for %s (attempt %d): %r",
+                ticker, _syn_attempt + 1, _syn_exc,
             )
-            thesis = _thesis_fallback
-    except Exception as _syn_exc:
-        logger.warning("[router] synthesis pool error for %s: %r", ticker, _syn_exc)
+        finally:
+            _syn_pool.shutdown(wait=False)
+
+        if _syn_attempt == 0:
+            logger.info("[router] retrying synthesis for %s with reduced context", ticker)
+    if thesis is None:
         thesis = _thesis_fallback
-    finally:
-        _syn_pool.shutdown(wait=False)
 
     print(
         f"[TIMING] [{ticker}] synthesis={time.time()-_t_synthesis:.2f}s "
@@ -1448,6 +1465,120 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     Company queries flow through the existing keyword-based classifier and
     specialist agent pipeline unchanged.
     """
+    # ── Phase 20A P3: Ticker normalization ────────────────────────────────────
+    # Normalize ticker variants (BRK-B → BRK.B, BRKB → BRK.B) BEFORE any
+    # entity resolution or company detection runs.
+    try:
+        from .ticker_normalization_service import normalize_ticker_in_text
+        _normalized_question = normalize_ticker_in_text(request.question)
+        if _normalized_question != request.question:
+            logger.info(
+                "[router] ticker normalized: %r → %r",
+                request.question[:80], _normalized_question[:80],
+            )
+            request.question = _normalized_question
+        if request.company_name.strip():
+            from .ticker_normalization_service import normalize_ticker as _nt
+            _norm_company = _nt(request.company_name.strip())
+            if _norm_company != request.company_name.strip():
+                logger.info(
+                    "[router] company_name ticker normalized: %r → %r",
+                    request.company_name, _norm_company,
+                )
+                request.company_name = _norm_company
+    except Exception as _norm_exc:
+        logger.debug("[router] ticker normalization failed: %r", _norm_exc)
+
+    # ── Phase 20A P1: Scenario intent detection ────────────────────────────────
+    # Check for scenario questions BEFORE company detection so that questions
+    # like "What happens if AI CapEx falls 20%?" are not lost to the general-
+    # finance path.  If a scenario is detected and a theme is matched, surface
+    # affected companies or use the active context ticker.
+    _scenario_ctx = None
+    if not request.company_name.strip():
+        try:
+            from .scenario_routing_service import (
+                detect_scenario_intent,
+                extract_scenario_context,
+            )
+            if detect_scenario_intent(request.question):
+                _scenario_ctx = extract_scenario_context(
+                    request.question,
+                    active_ticker=None,
+                )
+                logger.info(
+                    json.dumps({
+                        "event": "scenario_intent_detected",
+                        "is_scenario": True,
+                        "theme": _scenario_ctx.get("theme"),
+                        "affected_tickers": _scenario_ctx.get("affected_tickers", []),
+                        "needs_disambiguation": _scenario_ctx.get("needs_disambiguation"),
+                        "question": request.question[:120],
+                    })
+                )
+                # If theme maps to a single ticker, route directly.
+                # If theme maps to multiple tickers and needs disambiguation,
+                # return a structured multi-company suggestion response.
+                if _scenario_ctx.get("needs_disambiguation") and _scenario_ctx.get("affected_tickers"):
+                    _affected = _scenario_ctx["affected_tickers"]
+                    _theme = _scenario_ctx.get("theme", "this scenario")
+                    request_id = str(uuid.uuid4())
+                    _suggestions = []
+                    for _tk in _affected[:8]:
+                        _comp = detect_company(_tk)
+                        if _comp:
+                            _suggestions.append(
+                                f"{_comp.company_name} ({_comp.ticker})"
+                            )
+                        else:
+                            _suggestions.append(_tk)
+                    return AgentAnswerResponse(
+                        company="",
+                        request_id=request_id,
+                        agents_used=["scenario_router"],
+                        answer={"general": {
+                            "answer": (
+                                f"This scenario affects several companies. "
+                                f"Which would you like to analyze?"
+                            ),
+                            "bullets": _suggestions,
+                            "caveats": [
+                                "Select a company to run the full scenario analysis.",
+                                "You can also say 'Compare all' for a cross-company view.",
+                            ],
+                        }},
+                        routing={
+                            "pipeline": "scenario_theme_disambiguation",
+                            "theme": _theme,
+                            "affected_tickers": _affected,
+                        },
+                    )
+                # Single ticker from theme or active context → route to investment pipeline.
+                elif _scenario_ctx.get("active_ticker"):
+                    _target_ticker = _scenario_ctx["active_ticker"]
+                    _target_company = detect_company(_target_ticker)
+                    if _target_company is not None:
+                        request_id = str(uuid.uuid4())
+                        logger.info(
+                            json.dumps({
+                                "event": "scenario_route_direct",
+                                "request_id": request_id,
+                                "ticker": _target_company.ticker,
+                                "theme": _scenario_ctx.get("theme"),
+                                "question": request.question[:120],
+                            })
+                        )
+                        return _run_investment_pipeline(
+                            company=_target_company,
+                            question=request.question,
+                            request_id=request_id,
+                            memory_context_block=getattr(request, "memory_context_block", None),
+                            memory_context_data=getattr(request, "memory_context_data", None),
+                            dossier_context_block=getattr(request, "dossier_context_block", None),
+                        )
+        except Exception as _scn_exc:
+            logger.warning("[router] scenario routing failed: %r", _scn_exc)
+
     # ── Company route check (text-based detection) ───────────────────────────
     # Run BEFORE the is_general gate so that questions like
     # "How would higher rates affect Apple stock?" route correctly even when
