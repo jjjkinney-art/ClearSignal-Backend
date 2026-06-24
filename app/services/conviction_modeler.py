@@ -551,7 +551,17 @@ def _score_evidence_quality(evidence: List[RetrievedEvidence]) -> float:
 
 
 def _score_evidence_freshness(evidence: List[RetrievedEvidence]) -> float:
-    """Score evidence freshness based on weighted age of items (0–1)."""
+    """Score evidence freshness using smooth exponential decay (0–1).
+
+    Variance stabilization R2: replaces the 7-step function with a smooth
+    exponential curve.  Eliminates cliff effects where a 2-day evidence age
+    difference could produce a 13-point dimension swing at step boundaries.
+
+    Decay: 0.95 × exp(-avg_age / 120), clamped to [0.15, 0.95].
+    Half-life ≈ 83 days (score reaches 0.475 at 83 days).
+    """
+    import math
+
     if not evidence:
         return 0.15
 
@@ -559,21 +569,25 @@ def _score_evidence_freshness(evidence: List[RetrievedEvidence]) -> float:
     known_ages = [a for a in ages if a is not None]
 
     if not known_ages:
-        return 0.38   # no timestamps → penalised; conclusions may be stale
+        return 0.38
 
-    # Weight towards the most recent items (top-5)
     recent_ages = sorted(known_ages)[:5]
     avg_age = sum(recent_ages) / len(recent_ages)
 
-    # Freshness scale
-    if avg_age <= 14:   return 0.95
-    if avg_age <= 30:   return 0.88
-    if avg_age <= 60:   return 0.75
-    if avg_age <= 90:   return 0.62
-    if avg_age <= 120:  return 0.50
-    if avg_age <= 180:  return 0.38
-    if avg_age <= 365:  return 0.25
-    return 0.15
+    score = 0.95 * math.exp(-avg_age / 120.0)
+    return round(min(0.95, max(0.15, score)), 4)
+
+
+def _clamp_confidence(c: float) -> float:
+    """Clamp LLM agent confidence to [0.35, 0.85].
+
+    Variance stabilization R1: LLM-generated confidences below 0.35 are
+    noise (no agent should be < 35% confident if it produced analysis).
+    Confidences above 0.85 are overconfident (the LLM doesn't have enough
+    information to justify > 85%).  Clamping eliminates extreme outliers
+    without affecting the central tendency.
+    """
+    return max(0.35, min(0.85, float(c)))
 
 
 def _score_thesis_alignment(
@@ -586,8 +600,11 @@ def _score_thesis_alignment(
 ) -> float:
     """Score cross-agent agreement and signal direction consensus (0–1)."""
     confs = [
-        valuation.confidence, macro.confidence, risk.confidence,
-        market.confidence, quality.confidence,
+        _clamp_confidence(valuation.confidence),
+        _clamp_confidence(macro.confidence),
+        _clamp_confidence(risk.confidence),
+        _clamp_confidence(market.confidence),
+        _clamp_confidence(quality.confidence),
     ]
     mean_conf  = sum(confs) / len(confs)
     conf_range = max(confs) - min(confs)
@@ -618,7 +635,7 @@ def _score_macro_uncertainty(macro: MacroSensitivity, evidence: List[RetrievedEv
     # When confidence == 0.0 (default/absent), use a neutral 0.50 rather than 1.0.
     # Without this fix every company gets base=0.95 macro drag, uniformly
     # suppressing all scores by ~0.45 even when macro data is simply absent.
-    raw_confidence = macro.confidence
+    raw_confidence = _clamp_confidence(macro.confidence)
     if raw_confidence < 0.01:
         base = 0.50  # neutral: no macro data → neither bullish nor bearish signal
     else:
@@ -667,8 +684,8 @@ def _score_valuation_certainty(
     elif stance == "cannot_determine":
         base -= 0.10
 
-    # Valuation confidence
-    base = base * (0.5 + 0.5 * valuation.confidence)
+    # Valuation confidence (R3: narrowed from 0.5+0.5×conf to 0.70+0.30×conf)
+    base = base * (0.70 + 0.30 * _clamp_confidence(valuation.confidence))
 
     return round(min(0.95, max(0.10, base)), 4)
 
