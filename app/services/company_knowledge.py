@@ -136,6 +136,14 @@ _register(CompanyKnowledgeProfile(
         "TAC", "sideloading", "Apple Intelligence", "DMA", "Vision Pro", "AI supercycle",
         "on-device AI", "wearables", "EU Digital Markets Act",
     ],
+    moat_type=["brand", "switching_cost", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -526,6 +534,14 @@ _register(CompanyKnowledgeProfile(
         "Android", "DOJ antitrust", "Workspace", "Vertex AI", "advertising CPC",
         "Sundar Pichai", "Other Bets",
     ],
+    moat_type=["network_effect", "data_advantage", "scale_economy"],
+    revenue_model="advertising",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -624,6 +640,14 @@ _register(CompanyKnowledgeProfile(
         "Bedrock", "same-day delivery", "AWS margin", "FCF yield", "Trainium3",
         "Inferentia3", "Amazon Bedrock", "advertising margin", "EV/FCF",
     ],
+    moat_type=["network_effect", "scale_economy", "data_advantage"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -707,6 +731,14 @@ _register(CompanyKnowledgeProfile(
         "Advantage+", "Llama", "Mark Zuckerberg", "DAP", "ARPU", "metaverse",
         "TikTok", "FTC",
     ],
+    moat_type=["network_effect", "data_advantage", "scale_economy"],
+    revenue_model="advertising",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -1076,6 +1108,14 @@ _register(CompanyKnowledgeProfile(
         "Kenvue", "talc litigation", "Ottava", "Biosense Webster", "Janssen",
         "Erleada", "Tremfya", "oncology", "Dividend King", "Abiomed",
     ],
+    moat_type=["patent", "brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -1581,6 +1621,14 @@ _register(CompanyKnowledgeProfile(
         "hyperscaler", "PCIe", "Fibre Channel", "wireless combo chip",
         "CA Technologies", "Symantec", "deleveraging", "FCF", "subscription conversion",
     ],
+    moat_type=["switching_cost", "scale_economy", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1671,6 +1719,14 @@ _register(CompanyKnowledgeProfile(
         "Zen 5", "Xilinx", "Versal", "HBM", "inference", "data center GPU",
         "server CPU", "semi-custom", "Lisa Su", "fabless",
     ],
+    moat_type=["data_advantage", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="moderate",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 # ── UnitedHealth Group (UNH) ─────────────────────────────────────────────────
@@ -1875,6 +1931,14 @@ _register(CompanyKnowledgeProfile(
         "fabless", "HBM", "CHIPS Act", "Arizona", "CC Wei",
         "advanced node", "EUV", "ASML",
     ],
+    moat_type=["natural_monopoly", "scale_economy", "patent"],
+    revenue_model="licensing",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -2309,6 +2373,14 @@ _register(CompanyKnowledgeProfile(
         "manufacturing capacity", "Lars Fruergaard Jørgensen", "weight loss",
         "oral semaglutide", "SURMOUNT", "REDEFINE",
     ],
+    moat_type=["patent"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="moderate",
 ))
 
 
@@ -2945,6 +3017,14 @@ _register(CompanyKnowledgeProfile(
         "pricing", "volume", "private label", "Jon Moeller", "Dividend King",
         "gross margin", "commodity", "consumer staples", "brand equity",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -3298,6 +3378,14 @@ _register(CompanyKnowledgeProfile(
         "Trailhead", "AppExchange", "non-GAAP operating margin",
         "Marketing Cloud", "Commerce Cloud",
     ],
+    moat_type=["switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3536,6 +3624,14 @@ _register(CompanyKnowledgeProfile(
         "gross margin", "inventory", "China Direct", "performance running",
         "Vomero", "Pegasus", "Win Now", "organic growth",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3780,6 +3876,14 @@ _register(CompanyKnowledgeProfile(
         "marketplace", "pickup and delivery", "private label",
         "scan and go",
     ],
+    moat_type=["scale_economy", "brand", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3909,6 +4013,14 @@ _register(CompanyKnowledgeProfile(
         "Dividend King", "sparkling", "trademark Coke",
         "hydration", "sports", "still beverages",
     ],
+    moat_type=["brand", "scale_economy", "switching_cost"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4908,6 +5020,14 @@ _register(CompanyKnowledgeProfile(
         "Waymo", "driver incentives", "Dara Khosrowshahi", "ride-sharing",
         "gig economy", "food delivery", "freight", "surge pricing", "AB5",
     ],
+    moat_type=["network_effect", "data_advantage"],
+    revenue_model="transaction_toll",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -5188,6 +5308,14 @@ _register(CompanyKnowledgeProfile(
         "basis point", "fee rate", "BlackRock Solutions", "ESG",
         "money market fund", "Preqin", "eFront", "asset management",
     ],
+    moat_type=["scale_economy", "brand", "data_advantage"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6224,6 +6352,14 @@ _register(CompanyKnowledgeProfile(
         "autoimmune", "IBD", "psoriasis", "atopic dermatitis", "IRA negotiation",
         "Allē", "patient adherence", "specialty pharmacy", "LOE",
     ],
+    moat_type=["patent", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
 ))
 
 
@@ -7239,6 +7375,14 @@ _register(CompanyKnowledgeProfile(
         "handset SoC", "automotive semiconductor", "P/E", "EV/EBITDA",
         "fabless", "RF front-end",
     ],
+    moat_type=["patent", "data_advantage"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="low",
 ))
 
 
@@ -7498,6 +7642,14 @@ _register(CompanyKnowledgeProfile(
         "deposition", "CVD", "ALD", "etch", "CMP", "metrology",
         "TSMC", "advanced packaging", "EV/EBITDA", "P/E", "wafer fab",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7587,6 +7739,14 @@ _register(CompanyKnowledgeProfile(
         "CSBG", "chamber parts", "NAND WFE", "Samsung", "SK Hynix",
         "EV/EBITDA", "P/E", "etch market share", "layer count",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Healthcare ───────────────────────────────────────────────────────────────
@@ -7993,6 +8153,14 @@ _register(CompanyKnowledgeProfile(
         "Eliquis", "Seagen", "ADC", "oncology", "COVID antiviral",
         "P/E", "EV/EBITDA", "LOE", "dividend yield",
     ],
+    moat_type=["patent", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="moderate",
 ))
 
 
@@ -8195,6 +8363,14 @@ _register(CompanyKnowledgeProfile(
         "housing market", "Lowe's", "P/E", "EV/EBITDA", "existing home sales",
         "FCF yield", "tool rental",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8288,6 +8464,14 @@ _register(CompanyKnowledgeProfile(
         "MyMcDonald's Rewards", "system sales", "IOM", "IDL", "Big Mac",
         "franchisee", "P/E", "EV/EBITDA", "same-store sales", "traffic",
     ],
+    moat_type=["brand", "scale_economy", "switching_cost"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8380,6 +8564,14 @@ _register(CompanyKnowledgeProfile(
         "China", "licensed store", "Nestlé", "Brian Niccol", "comparable sales",
         "barista", "P/E", "EV/EBITDA", "mobile order", "Dutch Bros",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10406,6 +10598,86 @@ _register(CompanyKnowledgeProfile(
         "ratings", "S&P 500", "index", "Platts", "Market Intelligence",
         "issuance", "surveillance", "AUM", "benchmark", "Moody's",
         "IHS Markit", "Commodity Insights", "DJIA", "credit rating",
+    ],
+    moat_type=["regulatory", "data_advantage", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+
+# ── Moody's Corporation (MCO) ────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="MCO",
+    company_name="Moody's Corporation",
+    business_model=(
+        "Moody's operates two segments: Moody's Investors Service (MIS — credit "
+        "ratings for debt issuers, duopoly with S&P Global) and Moody's Analytics "
+        "(MA — risk assessment software, data, and research subscriptions). MIS "
+        "generates ~60% of revenue through transaction fees on new debt issuance "
+        "and annual surveillance fees on outstanding rated debt. MA generates ~40% "
+        "through recurring subscriptions for risk management tools."
+    ),
+    primary_revenue_drivers=[
+        "MIS Transaction Revenue (~35% — fees on new debt issuance, tied to capital markets cycle)",
+        "MIS Recurring Revenue (~25% — annual surveillance fees on outstanding rated debt)",
+        "MA Subscription Revenue (~35% — risk analytics, data, research tools)",
+        "MA Transaction Revenue (~5% — one-time project-based advisory)",
+    ],
+    recurring_revenue_sources=[
+        "Annual surveillance fees on outstanding rated debt (recurring as long as debt exists)",
+        "Moody's Analytics subscriptions (multi-year enterprise contracts, 90%+ retention)",
+        "Data licensing fees (KYC, ESG, credit research databases)",
+    ],
+    rate_sensitivity_note=(
+        "Moody's is rate-sensitive primarily through MIS transaction revenue: higher rates "
+        "suppress new debt issuance (fewer transactions → lower fees). Refinancing waves "
+        "during rate cuts boost issuance volumes. MA subscription revenue is rate-insensitive."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power in both segments. Rating fees are set by Moody's with limited "
+        "issuer pushback — issuers need the rating to access debt markets. MA subscriptions "
+        "have annual price escalators built into multi-year contracts."
+    ),
+    recession_behavior=(
+        "Mixed: MIS transaction revenue declines sharply in recessions (fewer new issuances) "
+        "but surveillance fees are stable (existing debt still needs ratings). MA subscriptions "
+        "are sticky — enterprises don't cancel risk management tools during stress. Net: "
+        "revenue dips 10-15% in severe recessions, recovers quickly on issuance rebound."
+    ),
+    major_risks=[
+        "Regulatory reform of issuer-pays model (SEC/EU proposals to reduce conflicts)",
+        "Sustained high-rate environment suppressing debt issuance volumes",
+        "Ratings credibility risk from structured finance mispricing (2008 precedent)",
+        "Competition from Fitch and emerging rating agencies in niche markets",
+    ],
+    valuation_style=(
+        "MCO trades at ~30-35x forward P/E reflecting the ratings duopoly franchise, "
+        "high-margin recurring surveillance/subscription revenue, and secular growth "
+        "in private credit and ESG ratings."
+    ),
+    key_metrics=[
+        "MIS rated issuance volume (proxy for transaction revenue)",
+        "MIS surveillance revenue growth (recurring base)",
+        "MA Annual Recurring Revenue (ARR) growth",
+        "MA retention rate (target 90%+)",
+        "Operating margin (~45-50%)",
+        "Free cash flow conversion",
+    ],
+    competitive_advantages=[
+        "Credit ratings duopoly with S&P Global — regulatory requirement for public debt",
+        "90-year reputation and track record in credit assessment",
+        "Moody's Analytics recurring subscription base with 90%+ retention",
+        "ESG ratings franchise — fastest-growing segment leveraging core credit expertise",
+    ],
+    business_model_keywords=[
+        "MIS", "Moody's Analytics", "credit rating", "surveillance",
+        "issuance", "rated debt", "KYC", "ESG", "risk analytics",
+        "Rob Fauber", "issuer-pays", "structured finance",
     ],
     moat_type=["regulatory", "data_advantage", "scale_economy"],
     revenue_model="licensing",
