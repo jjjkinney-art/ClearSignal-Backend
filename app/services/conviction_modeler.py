@@ -144,6 +144,14 @@ _TICKER_UNCERTAINTY_DRIVERS: Dict[str, List[str]] = {
     "MRNA":  ["mRNA platform commercial viability", "flu vaccine uptake data",            "oncology pipeline readout"],
     "ISRG":  ["robotic surgery system utilisation", "da Vinci 5 adoption curve",         "procedure volume recovery"],
     "CRSP":  ["FDA approval cadence for exa-cel",   "insurance reimbursement clarity",    "manufacturing scale economics"],
+    # Payment Networks
+    "V":     ["cross-border volume growth trajectory", "interchange fee regulation risk",     "digital payments penetration rate"],
+    "MA":    ["cross-border transaction growth rate",  "interchange fee regulatory exposure",  "digital payments secular shift"],
+    # Ratings / Data
+    "SPGI":  ["debt issuance cycle trajectory",        "ratings franchise regulatory risk",    "index AUM-linked fee growth"],
+    "MCO":   ["debt issuance volume trajectory",       "ratings credibility regulatory risk",  "structured finance recovery"],
+    # Semiconductor Equipment
+    "ASML":  ["EUV order backlog trajectory",          "China export control scope",           "leading-edge node transition pace"],
     # Financials
     "JPM":   ["NIM compression from rate normalisation", "credit cycle delinquency curve","IB revenue recovery pace"],
     "BAC":   ["NIM sensitivity to Fed rate path",   "credit-card charge-off trajectory",  "capital return clarity"],

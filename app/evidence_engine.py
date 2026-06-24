@@ -129,11 +129,50 @@ def build_fingerprint(
     growth_phase = _infer_growth_phase(question, thesis_dict)
     macro_regime = _infer_macro_regime(question, thesis_dict)
 
-    # Phase 7: override business_model from profile when structured fields exist
+    # Phase 7: override business_model from profile when structured fields exist.
+    # Maps revenue_model (how company earns) → analog business_model (what company is).
+    _REVENUE_TO_BIZ_MODEL: Dict[str, str] = {
+        "transaction_toll":  "payment_network",
+        "subscription":      "saas",
+        "membership":        "membership_retail",
+        "licensing":         "cloud_platform",
+        "project_contract":  "government_enterprise",
+        "product_sale":      "consumer_hardware",
+        "advertising":       "internet_platform",
+        "mixed":             "financial_intermediary",
+    }
     if profile is not None:
         _profile_biz = getattr(profile, "revenue_model", "")
         if _profile_biz:
-            biz_model = _profile_biz
+            biz_model = _REVENUE_TO_BIZ_MODEL.get(_profile_biz, _profile_biz)
+        # Ticker-specific overrides for companies whose revenue_model doesn't
+        # map cleanly to their analog business_model category.
+        _ticker_biz_overrides: Dict[str, str] = {
+            "SPGI": "ratings_data_oligopoly",
+            "MCO":  "ratings_data_oligopoly",
+            "MSCI": "ratings_data_oligopoly",
+            "ASML": "semiconductor_equipment",
+            "AMAT": "semiconductor_equipment",
+            "LRCX": "semiconductor_equipment",
+            "KLAC": "semiconductor_equipment",
+            "JPM":  "diversified_bank",
+            "BAC":  "diversified_bank",
+            "C":    "diversified_bank",
+            "WFC":  "diversified_bank",
+            "GS":   "diversified_bank",
+            "LLY":  "pharma_pipeline",
+            "NVO":  "pharma_pipeline",
+            "PFE":  "pharma_pipeline",
+            "MRK":  "pharma_pipeline",
+            "ABBV": "pharma_pipeline",
+            "NVDA": "semiconductor_fabless",
+            "AMD":  "semiconductor_fabless",
+            "AVGO": "semiconductor_fabless",
+            "TSLA": "consumer_hardware",
+            "PLTR": "government_enterprise",
+        }
+        if ticker and ticker.upper() in _ticker_biz_overrides:
+            biz_model = _ticker_biz_overrides[ticker.upper()]
 
     return SetupFingerprint(
         concern_tags=concern_tags,

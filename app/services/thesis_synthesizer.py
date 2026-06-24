@@ -3374,22 +3374,38 @@ def synthesize_thesis(
     # Construct a minimal positioning-first fallback from existing thesis content
     # without making an additional LLM call.
     if not getattr(thesis, "conclusion", ""):
-        _bull = (getattr(thesis, "bull_thesis", "") or "")[:120].rstrip(".").strip()
-        _bear = (getattr(thesis, "bear_thesis", "") or "")[:80].rstrip(".").strip()
         _conf = getattr(thesis, "confidence_score", 0.5) or 0.5
-        if _conf >= 0.65:
-            _setup = "a constructive"
-        elif _conf >= 0.45:
-            _setup = "a mixed"
+        _kd = getattr(thesis, "key_drivers", []) or []
+        _kr = getattr(thesis, "key_risks", []) or []
+        _top_driver = _kd[0][:80].rstrip(".").strip() if _kd else ""
+        _top_risk = _kr[0][:80].rstrip(".").strip() if _kr else ""
+        _ticker = company.ticker or "This company"
+
+        if _conf >= 0.65 and _top_driver:
+            thesis.conclusion = (
+                f"{_ticker}'s thesis is anchored by {_top_driver}. "
+                f"{'The primary risk to monitor is ' + _top_risk + '.' if _top_risk else ''} "
+                f"The setup rewards continued conviction if the driver sustains."
+            ).strip()
+        elif _conf >= 0.45 and _top_driver and _top_risk:
+            thesis.conclusion = (
+                f"{_ticker} balances {_top_driver} against {_top_risk}. "
+                f"The thesis depends on which force dominates over the next 2-4 quarters."
+            )
+        elif _top_risk:
+            thesis.conclusion = (
+                f"{_ticker} faces material headwinds from {_top_risk}. "
+                f"{'The bull case requires ' + _top_driver + ' to offset.' if _top_driver else ''} "
+                f"Wait for evidence of stabilisation before building exposure."
+            ).strip()
         else:
-            _setup = "a cautious"
-        thesis.conclusion = (
-            f"{company.ticker} presents {_setup} setup at current levels. "
-            f"Monitor execution against embedded expectations before adjusting exposure."
-        )
+            thesis.conclusion = (
+                f"{_ticker} requires additional evidence to form a high-conviction view. "
+                f"Key data points to watch: upcoming earnings and management guidance."
+            )
         logger.warning(
             "[thesis_synthesizer] conclusion was empty after synthesis for %s — "
-            "deterministic fallback applied.",
+            "company-specific fallback applied.",
             company.ticker,
         )
 
