@@ -931,6 +931,14 @@ _register(CompanyKnowledgeProfile(
         "insurance underwriting", "See's Candies", "combined ratio", "book value",
         "Apple position", "operating earnings", "Precision Castparts", "T-bills",
     ],
+    moat_type=["brand", "scale_economy", "regulatory"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1202,6 +1210,14 @@ _register(CompanyKnowledgeProfile(
         "WTI", "crack spread", "LNG", "Darren Woods", "Low Carbon Solutions",
         "breakeven", "refinery", "Chemical", "dividend growth",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1823,6 +1839,14 @@ _register(CompanyKnowledgeProfile(
         "STAR rating", "PBM", "pharmacy benefit", "UnitedHealthcare",
         "Andrew Witty", "Change Healthcare", "GLP-1",
     ],
+    moat_type=["scale_economy", "data_advantage", "regulatory"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 # ── Taiwan Semiconductor Manufacturing (TSM) ─────────────────────────────────
@@ -2041,6 +2065,14 @@ _register(CompanyKnowledgeProfile(
         "trading revenue", "net interest income", "prime brokerage",
         "David Solomon", "IB wallet", "capital markets", "carried interest",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2143,6 +2175,14 @@ _register(CompanyKnowledgeProfile(
         "operating margin", "free cash flow", "international expansion",
         "Ted Sarandos", "Greg Peters", "ad tier", "live content",
     ],
+    moat_type=["network_effect", "brand", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -2483,6 +2523,14 @@ _register(CompanyKnowledgeProfile(
         "Larry Ellison", "Safra Catz", "RPO", "remaining performance obligations",
         "autonomous database", "MySQL",
     ],
+    moat_type=["switching_cost", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -2586,6 +2634,14 @@ _register(CompanyKnowledgeProfile(
         "Global Banking", "Brian Moynihan", "responsible growth",
         "Zelle", "wealth management", "private bank", "trading revenue",
     ],
+    moat_type=["scale_economy", "regulatory", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -3265,6 +3321,14 @@ _register(CompanyKnowledgeProfile(
         "Advanced Materials", "sustainable aviation fuel", "SAF",
         "Garrett", "defense electronics", "IIoT",
     ],
+    moat_type=["scale_economy", "brand", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3508,6 +3572,14 @@ _register(CompanyKnowledgeProfile(
         "card member spending", "cards in force", "Amex", "American Express",
         "net interest income", "premium cardholder",
     ],
+    moat_type=["network_effect", "brand", "data_advantage"],
+    revenue_model="transaction_toll",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4140,6 +4212,14 @@ _register(CompanyKnowledgeProfile(
         "refining", "downstream", "net debt ratio", "ROCE",
         "DJ Basin", "Gulf of Mexico", "Anchor", "Whale",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4266,6 +4346,14 @@ _register(CompanyKnowledgeProfile(
         "Schwab Intelligent Portfolios", "HTM portfolio",
         "FHLB", "sweep deposits", "client assets",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4507,6 +4595,14 @@ _register(CompanyKnowledgeProfile(
         "ordinary dividend", "BOE", "free cash flow", "Tier 1",
         "capital discipline", "TAPS", "Johan Sverdrup",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4636,6 +4732,14 @@ _register(CompanyKnowledgeProfile(
         "program of record", "defense backlog", "FMS",
         "missiles", "electronic warfare",
     ],
+    moat_type=["regulatory", "scale_economy", "patent"],
+    revenue_model="project_contract",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4854,6 +4958,14 @@ _register(CompanyKnowledgeProfile(
         "CNAPP", "CSPM", "zero trust", "Nikesh Arora", "billings",
         "cloud-native security", "SOC", "network security",
     ],
+    moat_type=["switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -4937,6 +5049,14 @@ _register(CompanyKnowledgeProfile(
         "DTC", "direct-to-consumer", "cord-cutting", "ARPU", "Genie+",
         "Lightning Lane", "ABC", "content spending", "IP", "franchise",
     ],
+    moat_type=["brand", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -5116,6 +5236,14 @@ _register(CompanyKnowledgeProfile(
         "Mobileye", "EyeQ", "CHIPS Act", "Pat Gelsinger", "process node",
         "AI PC", "AMD EPYC", "server CPU", "wafer", "ARM competition",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="moderate",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -5411,6 +5539,14 @@ _register(CompanyKnowledgeProfile(
         "Alain Nassar", "FX", "dividend", "smoke-free transformation",
         "nicotine", "blade consumable",
     ],
+    moat_type=["brand", "regulatory"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -5602,6 +5738,14 @@ _register(CompanyKnowledgeProfile(
         "farm income", "corn", "soybean", "John May", "dealer inventory",
         "SaaS", "ag cycle", "construction machinery",
     ],
+    moat_type=["brand", "scale_economy", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5806,6 +5950,14 @@ _register(CompanyKnowledgeProfile(
         "free cash flow", "asset-light", "OTA", "vacation rental",
         "Airbnb-friendly apartments", "unique stays",
     ],
+    moat_type=["network_effect", "brand"],
+    revenue_model="transaction_toll",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -7290,6 +7442,14 @@ _register(CompanyKnowledgeProfile(
         "commercial banking", "wealth management", "loan loss provision",
         "Federal Reserve", "tangible book",
     ],
+    moat_type=["scale_economy", "regulatory"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Semiconductors ───────────────────────────────────────────────────────────
@@ -7471,6 +7631,14 @@ _register(CompanyKnowledgeProfile(
         "300mm", "industrial", "automotive", "power management", "signal chain",
         "design win", "FCF yield", "P/E", "capital return", "ADI", "Microchip",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7556,6 +7724,14 @@ _register(CompanyKnowledgeProfile(
         "high-bandwidth memory", "NVIDIA", "server DRAM", "enterprise SSD",
         "Samsung", "SK Hynix", "P/book", "normalized earnings", "EV/EBITDA",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -7851,6 +8027,14 @@ _register(CompanyKnowledgeProfile(
         "Lagevrio", "oncology", "immunotherapy", "PD-1", "NSCLC", "melanoma",
         "animal health", "Bravecto", "LOE", "FCF yield", "P/E", "biosimilar",
     ],
+    moat_type=["patent"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
 ))
 
 
@@ -8063,6 +8247,14 @@ _register(CompanyKnowledgeProfile(
         "Fisher Scientific", "PCR", "cell culture", "P/E", "EV/EBITDA",
         "biomanufacturing", "Patheon",
     ],
+    moat_type=["switching_cost", "scale_economy", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8861,6 +9053,14 @@ _register(CompanyKnowledgeProfile(
         "dealer network", "construction equipment", "aftermarket", "Komatsu",
         "mid-cycle", "P/E", "EV/EBITDA", "CapEx cycle", "Resource Industries",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8951,6 +9151,14 @@ _register(CompanyKnowledgeProfile(
         "shop visit", "aftermarket", "Boeing", "737 MAX", "A320neo",
         "T700", "defense engines", "P/E", "EV/EBITDA", "flight hours",
     ],
+    moat_type=["regulatory", "patent", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="very_high",
+    customer_concentration="moderate",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -9049,6 +9257,14 @@ _register(CompanyKnowledgeProfile(
         "Javelin", "Black Hawk", "Sikorsky", "defense contractor",
         "FMS", "sustainment", "P/E", "EV/EBITDA", "defense budget",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="project_contract",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 # ── Energy ────────────────────────────────────────────────────────────────────
@@ -10052,6 +10268,14 @@ _register(CompanyKnowledgeProfile(
         "Sprint merger", "mid-band spectrum", "FWA home internet", "Metro",
         "AT&T", "Verizon", "P/E", "EV/EBITDA", "FCF yield",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Real Estate ───────────────────────────────────────────────────────────────
