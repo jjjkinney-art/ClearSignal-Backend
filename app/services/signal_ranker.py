@@ -487,29 +487,93 @@ def _merge(primary: Signal, secondary: Signal, recurrence_bonus: float) -> Signa
 
 # ── Score computation ─────────────────────────────────────────────────────────
 
+# ── Generic risk penalty (Signal Quality Phase 1A) ──────────────────────────
+# Signals containing sector-level macro phrases without company-specific
+# entities or metrics receive a 0.50x penalty.  Prevents "economic slowdown
+# affecting consumer spending" from ranking above "interchange fee regulation."
+
+_GENERIC_RISK_PHRASES: Tuple[str, ...] = (
+    "economic slowdown",
+    "economic downturn",
+    "consumer spending pressure",
+    "consumer spending declin",
+    "macro uncertainty",
+    "interest rate risk",
+    "rising interest rates",
+    "increased competition in the",
+    "intensified competition",
+    "regulatory changes affecting",
+    "supply chain disruptions",
+    "geopolitical uncertainty",
+    "market volatility",
+    "inflationary pressure",
+)
+
+_QUANTITATIVE_PATTERN = re.compile(
+    r"\d+\.?\d*\s*%"           # 29%, 3.5%
+    r"|\$\d+"                  # $100B
+    r"|\d+\s*bps"              # 200bps
+    r"|\d+\.?\d*x"             # 15.2x
+    r"|\d+\s*(billion|million|trillion)"  # 43 billion
+    r"|\d+\s*pts?"             # 3 pts
+)
+
+
+def _generic_risk_penalty(signal_text: str) -> float:
+    """Return 0.50 if the signal is a generic risk without specifics, else 1.0.
+
+    A signal is NOT penalized if it contains quantitative anchoring (numbers,
+    percentages, thresholds) even when it uses a generic phrase — the number
+    makes it specific.
+    """
+    if not signal_text:
+        return 1.0
+    lower = signal_text.lower()
+
+    has_generic = any(phrase in lower for phrase in _GENERIC_RISK_PHRASES)
+    if not has_generic:
+        return 1.0
+
+    has_quantitative = bool(_QUANTITATIVE_PATTERN.search(signal_text))
+    if has_quantitative:
+        return 1.0
+
+    return 0.50
+
+
+# ── Quantitative preference boost (Signal Quality Phase 1C) ─────────────────
+
+def _quantitative_boost(signal_text: str) -> float:
+    """Return 1.15 if the signal contains specific metrics, else 1.0."""
+    if not signal_text:
+        return 1.0
+    if _QUANTITATIVE_PATTERN.search(signal_text):
+        return 1.15
+    return 1.0
+
+
 def _score(signal: Signal, agent_confidence: float) -> float:
     """Compute a composite ranking score for a single signal.
 
-    Formula
-    -------
+    Formula (Phase 1 signal quality update)
+    ----------------------------------------
         score = impact_score
                 × agent_confidence
                 × type_priority
                 × direction_weight
                 × thesis_sensitivity_weight
-
-    thesis_sensitivity_weight is 0.70–1.25 based on whether the signal text
-    contains stock-moving mechanisms (earnings, multiple compression, macro
-    transmission) vs. static descriptive facts (revenue breakdowns, generic
-    market-position claims).  This ensures that "higher rates compress AAPL's
-    P/E multiple" ranks above "iPhone is 52% of revenue" even when both carry
-    the same LLM-assigned impact_score.
+                × causal_modifier
+                × generic_risk_penalty     (0.50 for generic macro risks)
+                × quantitative_boost       (1.15 for signals with metrics)
     """
     type_w    = _TYPE_PRIORITY.get(signal.signal_type, 0.5)
     dir_w     = _DIRECTION_WEIGHT.get(signal.direction, 0.85)
     thesis_w  = _thesis_sensitivity_score(signal.signal)
     causal_w  = _causal_score_modifier(signal)
-    return signal.impact_score * agent_confidence * type_w * dir_w * thesis_w * causal_w
+    generic_w = _generic_risk_penalty(signal.signal)
+    quant_w   = _quantitative_boost(signal.signal)
+    return (signal.impact_score * agent_confidence * type_w * dir_w
+            * thesis_w * causal_w * generic_w * quant_w)
 
 
 # ── Thesis-sensitivity scoring ────────────────────────────────────────────────

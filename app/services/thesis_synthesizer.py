@@ -3454,6 +3454,37 @@ def synthesize_thesis(
         thesis.top_risks = ranked.top_risks
         thesis.secondary_signals = ranked.secondary_signals
 
+    # ── Signal Quality Phase 1B: Ranked signal injection ────────────────────
+    # Ensure the #1 ranked signal appears in key_drivers and the #1 ranked
+    # risk appears in key_risks.  The LLM may rephrase but must not drop
+    # the highest-ranked signal entirely.
+    try:
+        if ranked is not None:
+            _kd = getattr(thesis, "key_drivers", []) or []
+            _kr = getattr(thesis, "key_risks", []) or []
+            # Inject top signal into key_drivers if not already represented
+            if ranked.top_signals and _kd:
+                _top_sig_text = getattr(ranked.top_signals[0], "signal", "")
+                _top_sig_lower = _top_sig_text.lower()[:40]
+                _kd_lower = " ".join(d.lower() for d in _kd)
+                if _top_sig_lower and _top_sig_lower[:30] not in _kd_lower:
+                    _kd.insert(0, _top_sig_text)
+                    if len(_kd) > 4:
+                        _kd = _kd[:4]
+                    thesis.key_drivers = _kd
+            # Inject top risk into key_risks if not already represented
+            if ranked.top_risks and _kr:
+                _top_risk_text = getattr(ranked.top_risks[0], "signal", "")
+                _top_risk_lower = _top_risk_text.lower()[:40]
+                _kr_lower = " ".join(r.lower() for r in _kr)
+                if _top_risk_lower and _top_risk_lower[:30] not in _kr_lower:
+                    _kr.insert(0, _top_risk_text)
+                    if len(_kr) > 4:
+                        _kr = _kr[:4]
+                    thesis.key_risks = _kr
+    except Exception as _sqp_exc:
+        logger.debug("[thesis_synthesizer] signal injection failed: %r", _sqp_exc)
+
     # ── Refinement 3: Evidence reference propagation ──────────────────────────
     try:
         thesis.top_signals = propagate_evidence_refs(thesis.top_signals, evidence)
