@@ -259,11 +259,11 @@ def test_conviction_result_confidence_reasoning_not_in_api_response_dict():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_matrix_schema_version_is_phase6():
-    """CONVICTION_SCHEMA_VERSION must be '6-matrix'."""
+    """CONVICTION_SCHEMA_VERSION must be '7-linear'."""
     from app.services.conviction_modeler import CONVICTION_SCHEMA_VERSION
-    assert CONVICTION_SCHEMA_VERSION == "6-matrix", (
-        f"CONVICTION_SCHEMA_VERSION={CONVICTION_SCHEMA_VERSION!r} — expected '6-matrix'. "
-        "If this fails, the live process has not loaded the Phase 6 matrix conviction_modeler."
+    assert CONVICTION_SCHEMA_VERSION == "7-linear", (
+        f"CONVICTION_SCHEMA_VERSION={CONVICTION_SCHEMA_VERSION!r} — expected '7-linear'. "
+        "If this fails, the live process has not loaded the 7-linear conviction_modeler."
     )
 
 
