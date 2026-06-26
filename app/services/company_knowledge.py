@@ -2746,6 +2746,14 @@ _register(CompanyKnowledgeProfile(
         "Hans Vestberg", "enterprise 5G", "network quality", "broadband",
         "dividend", "free cash flow", "T-Mobile competition",
     ],
+    moat_type=["scale_economy", "regulatory", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2848,6 +2856,14 @@ _register(CompanyKnowledgeProfile(
         "John Stankey", "deleveraging", "debt reduction", "5G", "postpaid net adds",
         "C-band", "fiber passings", "dividend", "net leverage",
     ],
+    moat_type=["scale_economy", "regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2960,6 +2976,14 @@ _register(CompanyKnowledgeProfile(
         "Brian Roberts", "theme parks", "cable network", "HFC",
         "affiliate fees", "fiber overbuild", "linear TV", "streaming",
     ],
+    moat_type=["scale_economy", "regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -3191,6 +3215,14 @@ _register(CompanyKnowledgeProfile(
         "NOC", "Olivier Le Peuch", "artificial lift", "subsea",
         "international", "E&P", "Brent", "completions",
     ],
+    moat_type=["scale_economy", "data_advantage"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -3824,6 +3856,14 @@ _register(CompanyKnowledgeProfile(
         "narrow-body", "wide-body", "quality crisis", "door plug",
         "Airbus competition", "F-15", "P-8",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="project_contract",
+    switching_cost_level="very_high",
+    customer_concentration="moderate",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="high",
+    binary_risk_level="moderate",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4475,6 +4515,14 @@ _register(CompanyKnowledgeProfile(
         "India chocolate", "private label", "gross margin",
         "GLP-1 headwind", "pack size",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4880,6 +4928,14 @@ _register(CompanyKnowledgeProfile(
         "allowed ROE", "rate case", "yieldco", "GW backlog",
         "hurricane", "interconnection", "AI data center demand",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -5639,6 +5695,14 @@ _register(CompanyKnowledgeProfile(
         "better not bigger", "air freight", "international package",
         "supply chain", "e-commerce", "Amazon",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5851,6 +5915,14 @@ _register(CompanyKnowledgeProfile(
         "Lynn Good", "allowed ROE", "rate case", "regulated utility",
         "IRP", "CPCN", "fuel adjustment", "data center load",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -6056,6 +6128,14 @@ _register(CompanyKnowledgeProfile(
         "Lal Karsanbhai", "LNG automation", "industrial automation",
         "Plantweb", "backlog", "MRO", "energy transition",
     ],
+    moat_type=["scale_economy", "brand", "switching_cost"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6151,6 +6231,14 @@ _register(CompanyKnowledgeProfile(
         "allowed ROE", "rate case", "data center load", "grid hardening",
         "regulated utility", "ERCOT",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6252,6 +6340,14 @@ _register(CompanyKnowledgeProfile(
         "EV charging", "grid modernization", "data center load",
         "performance-based rate", "regulated utility",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -6360,6 +6456,14 @@ _register(CompanyKnowledgeProfile(
         "Georgia PSC", "CPCN", "allowed ROE", "rate case",
         "data center", "Atlanta", "load growth", "battery storage",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6657,6 +6761,14 @@ _register(CompanyKnowledgeProfile(
         "absorption", "mark-to-market rent", "NOI growth", "entitlement",
         "co-investment", "build-to-suit", "cap rate", "land bank",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6803,6 +6915,14 @@ _register(CompanyKnowledgeProfile(
         "Northern Virginia", "Singapore", "Amsterdam", "cloud on-ramp",
         "network density", "hyperscaler", "power density", "monthly recurring",
     ],
+    moat_type=["switching_cost", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6940,6 +7060,14 @@ _register(CompanyKnowledgeProfile(
         "Stratos", "Western Midstream", "WES", "deleveraging", "chlorovinyls",
         "PVC", "caustic soda", "45Q", "production volumes",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -7074,6 +7202,14 @@ _register(CompanyKnowledgeProfile(
         "international towers", "Africa", "India", "Latin America",
         "Crown Castle", "small cell", "non-cancellable", "ground rent",
     ],
+    moat_type=["regulatory", "switching_cost"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7210,6 +7346,14 @@ _register(CompanyKnowledgeProfile(
         "Spirit Realty", "Encore UK", "cap rate", "acquisition spread",
         "pharmacy", "convenience", "payout ratio", "bond proxy",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7348,6 +7492,14 @@ _register(CompanyKnowledgeProfile(
         "P/FFO", "Dividend Aristocrat", "e-commerce", "outlet channel",
         "redevelopment", "mixed-use", "luxury retail",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8140,6 +8292,14 @@ _register(CompanyKnowledgeProfile(
         "Similac", "Ensure", "cardiac rhythm", "electrophysiology",
         "diabetes monitoring", "diagnostics", "P/E", "EV/EBITDA", "pulse field ablation",
     ],
+    moat_type=["patent", "brand", "regulatory"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -8448,6 +8608,14 @@ _register(CompanyKnowledgeProfile(
         "Hugo robotic surgery", "spinal cord stimulation", "MiniMed", "TAVR",
         "Evolut", "deep brain stimulation", "P/E", "EV/EBITDA", "da Vinci",
     ],
+    moat_type=["patent", "scale_economy", "regulatory"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 # ── Consumer ──────────────────────────────────────────────────────────────────
@@ -8857,6 +9025,14 @@ _register(CompanyKnowledgeProfile(
         "private label", "Good & Gather", "general merchandise", "same-day",
         "Walmart", "Amazon", "P/E", "EV/EBITDA", "operating margin",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Industrials ───────────────────────────────────────────────────────────────
@@ -8962,6 +9138,14 @@ _register(CompanyKnowledgeProfile(
         "electrical infrastructure", "grid hardening", "EV charging", "aerospace",
         "Schneider Electric", "ABB", "P/E", "EV/EBITDA", "electrification",
     ],
+    moat_type=["scale_economy", "patent", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9355,6 +9539,14 @@ _register(CompanyKnowledgeProfile(
         "midstream", "ethylene", "DCP Midstream", "Rodeo Renewables",
         "P/E", "EV/EBITDA", "downstream energy", "petrochemical",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9445,6 +9637,14 @@ _register(CompanyKnowledgeProfile(
         "unconventional E&P", "double-premium", "WTI", "shale", "Delaware Basin",
         "special dividend", "FCF yield", "EV/EBITDA", "natural gas",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9532,6 +9732,14 @@ _register(CompanyKnowledgeProfile(
         "fixed-plus-variable dividend", "WTI", "shale E&P", "Permian",
         "variable dividend", "FCF yield", "EV/EBITDA", "Waha",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9617,6 +9825,14 @@ _register(CompanyKnowledgeProfile(
         "NGL", "throughput", "Midwest refining", "distillate", "gasoline",
         "P/E", "EV/EBITDA", "midstream", "Canadian crude",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9707,6 +9923,14 @@ _register(CompanyKnowledgeProfile(
         "renewable diesel", "LCFS", "RIN", "Gulf Coast", "throughput",
         "P/E", "EV/EBITDA", "ethanol", "mid-cycle",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
@@ -9800,6 +10024,14 @@ _register(CompanyKnowledgeProfile(
         "Oncor", "CPUC", "utility", "LNG export", "regulated rate base",
         "P/E", "EV/EBITDA", "dividend yield", "California",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -9895,6 +10127,14 @@ _register(CompanyKnowledgeProfile(
         "Northern California", "Bay Area", "California Wildfire Fund",
         "regulated utility", "P/E", "EV/EBITDA", "rate base", "electrification",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
 ))
 
 
@@ -9987,6 +10227,14 @@ _register(CompanyKnowledgeProfile(
         "natural gas distribution", "clean energy", "P/E", "EV/EBITDA",
         "dividend growth", "regulated utility", "Midwest", "rate base",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10081,6 +10329,14 @@ _register(CompanyKnowledgeProfile(
         "NYPSC", "steam", "Manhattan", "Dividend Aristocrat", "CLCPA",
         "regulated utility", "P/E", "EV/EBITDA", "all-electric buildings",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10176,6 +10432,14 @@ _register(CompanyKnowledgeProfile(
         "water privatization", "P/E", "EV/EBITDA", "lead service line",
         "dividend yield", "acquisition growth",
     ],
+    moat_type=["regulatory", "natural_monopoly"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Communications & Services ─────────────────────────────────────────────────
@@ -10369,6 +10633,14 @@ _register(CompanyKnowledgeProfile(
         "month-to-month", "AFFO", "FFO", "occupancy", "same-store revenue",
         "storage rental", "dynamic pricing", "P/AFFO", "cap rate",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10461,6 +10733,14 @@ _register(CompanyKnowledgeProfile(
         "coastal market", "AFFO", "FFO", "occupancy", "same-store NOI",
         "Boston", "New York", "Seattle", "San Francisco", "P/AFFO",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10553,6 +10833,14 @@ _register(CompanyKnowledgeProfile(
         "casino property", "CPI escalator", "P/AFFO", "cap rate",
         "experiential REIT", "Caesars Palace",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10647,6 +10935,14 @@ _register(CompanyKnowledgeProfile(
         "FFO", "aging demographics", "Sunrise", "P/AFFO", "cap rate",
         "healthcare REIT",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10744,6 +11040,14 @@ _register(CompanyKnowledgeProfile(
         "build-to-rent", "Sun Belt", "Atlanta", "Phoenix", "Dallas",
         "BTR", "AFFO", "FFO", "P/AFFO", "cap rate", "occupancy",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
