@@ -363,15 +363,19 @@ class TestClearSignalStrengths:
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TestCompetitiveGaps:
-    def test_known_gaps_are_differentiation_and_risk(self, cs_scores):
-        """The two institutional-parity gaps must be thesis_differentiation and
-        risk_quality (shared WIC templates; unquantified risk factors)."""
+    def test_remaining_gap_is_differentiation(self, cs_scores):
+        """thesis_differentiation is the primary remaining institutional-parity gap
+        (shared WIC template scaffolding).
+
+        risk_quality was CLOSED by the risk-quantification data enrichment (44 -> 100,
+        the same falsifiable-threshold pattern that fixed the X5 catalyst gap), so it
+        must no longer trail any competitor."""
         edges = _edges(cs_scores)
         gaps = sorted([e for e in edges if e.gap < 0], key=lambda e: e.gap)
         gap_dims = {e.dimension for e in gaps}
         print("\nGaps: " + ", ".join(f"{e.dimension}({e.gap})" for e in gaps))
         assert "thesis_differentiation" in gap_dims
-        assert "risk_quality" in gap_dims
+        assert "risk_quality" not in gap_dims, "risk_quality should be closed post-enrichment"
 
     def test_gaps_are_bounded(self, cs_scores):
         """No single dimension may trail the best competitor by more than 45pts —
