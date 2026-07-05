@@ -69,10 +69,11 @@ class MarkReadRequest(BaseModel):
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _user_id(request: Optional[Request]) -> Optional[str]:
-    from app.config import settings
-    uid = getattr(getattr(request, "state", None), "user_id", "") or ""
-    return uid or settings.auth_bypass_user_id
+def _user_id(request: Optional[Request]) -> str:
+    """Resolve the acting user (401 for unauthenticated enforcement-mode requests;
+    bypass user only when auth is disabled or middleware is absent)."""
+    from app.dependencies.auth import require_user_id
+    return require_user_id(request)
 
 
 async def _persistence_on() -> bool:

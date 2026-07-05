@@ -2158,11 +2158,11 @@ async def get_watchlist(request: Request = None) -> list:
     so behaviour is preserved. Default path is unchanged (JSON file).
     """
     from .config import settings as _wl_s
+    from .dependencies.auth import require_user_id as _require_uid
+    _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
     if getattr(_wl_s, "watchlist_db_backed", False):
         try:
             from .db import get_session as _get_session
-            _uid = (getattr(getattr(request, "state", None), "user_id", "")
-                    or _wl_s.auth_bypass_user_id)
             async with _get_session() as _db:
                 entries = await watchlist_service.get_watchlist_async(_db, user_id=_uid)
             return [e.model_dump() for e in entries]
@@ -2183,6 +2183,8 @@ async def add_to_watchlist(
     request:      Request = None,
 ) -> dict:
     """Add *ticker* to the watchlist.  Idempotent — safe to call multiple times."""
+    from .dependencies.auth import require_user_id as _require_uid
+    _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
     # Phase 17 · Slice 6 — entitlement enforcement (no-op when ENTITLEMENTS_ENFORCED=false)
     try:
         from .services.entitlement_enforcement import (
@@ -2213,8 +2215,6 @@ async def add_to_watchlist(
     if getattr(_wl_s, "watchlist_db_backed", False):
         try:
             from .db import get_session as _get_session
-            _uid = (getattr(getattr(request, "state", None), "user_id", "")
-                    or _wl_s.auth_bypass_user_id)
             async with _get_session() as _db:
                 entry = await watchlist_service.add_ticker_async(
                     _db, ticker, company_name, user_id=_uid)
@@ -2239,11 +2239,11 @@ async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
     ``watchlist_db_backed`` is enabled (still removes the file entry too).
     """
     from .config import settings as _wl_s
+    from .dependencies.auth import require_user_id as _require_uid
+    _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
     if getattr(_wl_s, "watchlist_db_backed", False):
         try:
             from .db import get_session as _get_session
-            _uid = (getattr(getattr(request, "state", None), "user_id", "")
-                    or _wl_s.auth_bypass_user_id)
             async with _get_session() as _db:
                 removed = await watchlist_service.remove_ticker_async(
                     _db, ticker, user_id=_uid)

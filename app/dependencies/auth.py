@@ -39,6 +39,37 @@ def get_current_user_id(request: Request) -> Optional[str]:
         return SYSTEM_DEFAULT_USER_ID
 
 
+def require_user_id(request: Request) -> str:
+    """Return the acting user's ID, or raise 401 when the request is
+    unauthenticated under enforcement mode.
+
+    This is the identity resolver product routes (watchlist, portfolio,
+    scenario, notifications) must use so user-scoped data is never served to
+    an unauthenticated caller.
+
+    Resolution:
+      * AUTH_ENABLED=false (bypass)  — AuthMiddleware stamps
+        SYSTEM_DEFAULT_USER_ID, which is returned unchanged (single-tenant
+        behaviour preserved).
+      * AUTH_ENABLED=true + valid JWT — the JWT `sub` is returned (per-user
+        scoping).
+      * AUTH_ENABLED=true + no/invalid token — request.state.user_id is None;
+        this raises HTTP 401 rather than falling back to the bypass user.
+      * No middleware in the stack (request is None or has no state, e.g. a
+        direct-call unit test) — SYSTEM_DEFAULT_USER_ID, so local/dev
+        testability is preserved.
+
+    The bypass user is therefore used ONLY when auth is disabled or the
+    middleware is absent — never as a silent fallback for a failed auth.
+    """
+    uid = get_current_user_id(request)
+    if uid is None:
+        # Reached only under AUTH_ENABLED=true with no/invalid JWT.
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    return uid
+
+
 def get_auth_subject(request: Request) -> Optional[str]:
     """Return the JWT sub claim (Supabase auth subject), or None."""
     try:
