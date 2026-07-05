@@ -35,11 +35,11 @@ analog library.  Each code carries a severity from the blueprint matrix.
      reports, A1 critical if >10% of analogs.)
 
 The battery asserts CRITICAL and HIGH classes are empty (a clean bill of health
-for the frozen engine) and MEDIUM classes are within target.  The one target
-currently unmet — X5 (quantitative anchors) — is encoded as a documented xfail
-with an explicit fix, because closing it requires a PRODUCTION change (adding
-quantified thresholds to driver phrases / WIC templates), which is out of scope
-for a validation-only battery.
+for the frozen engine) and MEDIUM classes are within target.  X5 (quantitative
+anchors) was the one previously-unmet target; it was closed by a DATA-only
+enrichment of _TICKER_UNCERTAINTY_DRIVERS (driver_1 phrases rewritten as
+falsifiable measurable thresholds), taking X5 from 95% to 0% with no change to
+conviction mathematics, weights, routing, durability, or analog scoring.
 
 Run:  python3 -m pytest tests/benchmark/v6_failure_taxonomy.py -v -s
 """
@@ -440,17 +440,16 @@ class TestMedium:
         print(f"\nX6 sector-level reasoning: {rate:.0%}  (target <= 10%)")
         assert rate <= 0.10, f"X6 sector-level rate {rate:.0%} exceeds 10%"
 
-    @pytest.mark.xfail(
-        reason="X5 (unsupported claim / no quantitative anchor) fires on ~95% of "
-               "conviction-increase fields: driver phrases in _TICKER_UNCERTAINTY_DRIVERS "
-               "are qualitative catalysts ('HBM3E share', 'billed-business growth') with "
-               "no numeric threshold. Closing this requires a PRODUCTION change — adding "
-               "quantified thresholds to driver phrases / WIC templates (roadmap "
-               "improvement #1, ~2 hrs) — which is out of scope for this validation-only "
-               "battery. Documented, MEDIUM severity, tracked as the #1 V6-driven fix.",
-        strict=False,
-    )
     def test_quantitative_anchor_present(self, findings, outputs):
+        """X5 <= 10% — every conviction driver should carry a measurable threshold.
+
+        RESOLVED (data-quality enrichment): _TICKER_UNCERTAINTY_DRIVERS driver_1
+        phrases were rewritten from qualitative catalysts to analyst-grade
+        falsifiable thresholds (revenue-growth %, margin %, subscriber/volume
+        counts, backlog, regulatory milestones). X5 dropped 95% -> 0%. This was a
+        DATA-only change to the driver lookup; conviction mathematics, weights,
+        routing, durability, analog scoring and stance calibration are unchanged.
+        """
         rate = _rate(findings, "X5", len(outputs))
         print(f"\nX5 missing quantitative anchor: {rate:.0%}  (target <= 10%)")
         assert rate <= 0.10, f"X5 missing-anchor rate {rate:.0%} exceeds 10% target"
@@ -465,9 +464,9 @@ _SEV_PENALTY = {"CRITICAL": 25.0, "HIGH": 10.0, "MEDIUM": 3.0, "LOW": 1.0}
 
 def _health(findings: List[Finding], n: int) -> float:
     """100 = no failures. Each finding deducts by severity, normalised per company.
-    X5 (documented xfail) is excluded — it is a known, tracked production gap, not
-    an engine defect the taxonomy should penalise the health score for."""
-    penalty = sum(_SEV_PENALTY[f.severity] for f in findings if f.code != "X5")
+    (X5 was previously excluded as a tracked production gap; it is now resolved to
+    0 findings via the driver-threshold enrichment, so no special-casing remains.)"""
+    penalty = sum(_SEV_PENALTY[f.severity] for f in findings)
     return max(0.0, 100.0 - penalty)
 
 
