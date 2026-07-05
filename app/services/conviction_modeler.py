@@ -161,6 +161,47 @@ _TICKER_UNCERTAINTY_DRIVERS: Dict[str, List[str]] = {
     "AMZN":  ["AWS growth deceleration",            "retail margin recovery",             "AI competitive moat"],
     "WMT":   ["grocery pricing power durability",   "eCommerce margin trajectory",        "advertising revenue attach"],
     "TSLA":  ["EV margin floor",                    "FSD regulatory approval pace",       "Optimus commercialisation timeline"],
+    # Non-bank financials — NIM language is factually wrong here (V5 Category-D fix)
+    "AXP":   ["billed-business growth trajectory",      "millennial/Gen-Z cardholder acquisition pace", "card-member lending loss-rate normalisation"],
+    "BLK":   ["net inflows into iShares ETF franchise", "fee-rate compression from passive mix shift",  "private-markets AUM scaling post-GIP/Preqin"],
+    "BRK.B": ["GEICO underwriting combined-ratio trend","cash-pile deployment and buyback pace",        "operating-subsidiary earnings cyclicality"],
+    "COIN":  ["trading-volume sensitivity to crypto cycle","US crypto regulatory-framework clarity",     "subscription & services revenue diversification"],
+    # Health Care (V5 Category-A expansion)
+    "ABBV":  ["Humira biosimilar erosion trajectory",  "Skyrizi/Rinvoq ramp offsetting the cliff",     "aesthetics/neuroscience pipeline contribution"],
+    "MRK":   ["Keytruda 2028 patent-cliff mitigation", "subcutaneous Keytruda conversion rate",        "Gardasil demand recovery in China"],
+    "PFE":   ["post-COVID revenue base stabilisation", "Seagen oncology-pipeline contribution",        "cost-realignment margin recovery pace"],
+    "TMO":   ["bioprocessing/pharma-services demand recovery","China market demand stabilisation",      "post-COVID base normalisation cadence"],
+    "UNH":   ["medical-loss-ratio trajectory",         "Medicare Advantage rate-notice outcomes",      "Optum Health value-based-care growth"],
+    # Technology (V5 Category-A expansion)
+    "INTC":  ["foundry (IFS) external-customer wins",  "18A process yield and ramp timeline",          "data-center share stabilisation vs AMD"],
+    "INTU":  ["TurboTax paid-unit growth",             "Credit Karma revenue recovery",                "Intuit Assist AI monetisation attach"],
+    "MU":    ["DRAM/NAND pricing-cycle inflection",    "HBM3E share and AI-memory allocation",         "capex discipline and supply normalisation"],
+    "ORCL":  ["OCI cloud-infrastructure revenue growth","RPO backlog conversion from AI-training demand","database migration to cloud@customer"],
+    "PANW":  ["platformisation deal momentum",         "next-gen security ARR growth",                 "billings/RPO trajectory amid deferred-payment mix"],
+    "SHOP":  ["GMV growth trajectory",                 "merchant-solutions attach (Payments/Capital)", "operating-margin expansion post-logistics divestiture"],
+    # Industrials (V5 Category-A expansion)
+    "ADP":   ["pays-per-control employment trend",     "client-funds float income vs rate path",       "PEO worksite-employee growth"],
+    "BA":    ["737 MAX production-rate ramp to 38+/mo","787 delivery cadence and inventory burn",      "FAA certification of MAX 7/10"],
+    "RTX":   ["Pratt GTF fleet-inspection cost trajectory","commercial-aftermarket spare-parts demand", "defense backlog conversion pace"],
+    "UBER":  ["Mobility gross-bookings growth",        "Delivery take-rate and profitability",         "advertising revenue scaling and AV exposure"],
+    # Consumer (V5 Category-A expansion)
+    "HD":    ["big-ticket discretionary demand recovery","Pro segment growth (SRS integration)",       "comparable-sales inflection vs housing turnover"],
+    "MCD":   ["US same-store traffic vs pricing",      "value-menu strategy impact on margins",        "international franchised comp recovery"],
+    "ABNB":  ["nights-booked growth deceleration",     "take-rate expansion from new services",        "regulatory constraints in key urban markets"],
+    "CAVA":  ["same-restaurant sales growth trajectory","new-unit opening pace and AUV ramp",          "restaurant-level margin durability"],
+    "KO":    ["organic volume vs pricing mix",         "emerging-market case-volume growth",           "FX translation headwind trajectory"],
+    "PG":    ["organic volume growth vs pricing",      "developing-market demand resilience",          "gross-margin recovery from commodity/FX"],
+    # Utilities (V5 Category-A expansion)
+    "AWK":   ["regulatory rate-case approval outcomes","municipal water-system acquisition pace",      "allowed-ROE trajectory vs rising rates"],
+    "NEE":   ["renewables backlog origination pace",   "regulated FPL rate-base growth",               "financing-cost sensitivity to rate path"],
+    # Real Estate (V5 Category-A expansion)
+    "AMT":   ["carrier tower leasing/colocation activity","Sprint decommissioning churn trajectory",   "CoreSite data-center segment growth"],
+    "EQIX":  ["interconnection revenue growth",        "cabinet billing / utilisation rate",           "AI-driven colocation demand and power constraints"],
+    # Communication Services (V5 Category-A expansion)
+    "DIS":   ["DTC streaming operating-profit trajectory","Parks demand and per-cap spend",            "linear-TV/ESPN transition to streaming"],
+    "RBLX":  ["daily-active-user growth trajectory",   "bookings-per-DAU / older-demographic mix",     "advertising revenue ramp and opex discipline"],
+    "T":     ["postpaid phone net-add momentum",       "fiber subscriber penetration",                 "net-debt reduction and free-cash-flow trajectory"],
+    "VZ":    ["postpaid phone net-add trajectory",     "fixed-wireless-access subscriber growth",      "free-cash-flow and dividend-coverage durability"],
 }
 
 _SECTOR_UNCERTAINTY_DRIVERS: Dict[str, List[str]] = {

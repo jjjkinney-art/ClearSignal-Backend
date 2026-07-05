@@ -252,26 +252,11 @@ class TestCategoryDistribution:
         print(f"\nRight-direction (A+B): {rate:.0%}  (floor 85%)")
         assert rate >= 0.85, f"Right-direction rate {rate:.0%} below 85%"
 
-    @pytest.mark.xfail(
-        reason="A-rate is bounded by _TICKER_UNCERTAINTY_DRIVERS coverage "
-               "(25/58 benchmark tickers = 43%). Reaching the >=50% blueprint "
-               "target requires expanding the driver dict (DATA expansion, not "
-               "scoring logic). Production code is frozen; tracked as the #1 fix.",
-        strict=False,
-    )
     def test_category_A_meets_blueprint_target(self, scores):
         a = _rate(scores, "A")
         print(f"\nCategory A (thesis-specific): {a:.0%}  (target >= 50%)")
         assert a >= 0.50, f"Category-A rate {a:.0%} below 50% blueprint target"
 
-    @pytest.mark.xfail(
-        reason="D-rate is 7%: the Financials sector fallback driver "
-               "'NIM trajectory vs rate path' leaks NIM onto non-bank financials "
-               "(AXP, BLK, BRK.B, COIN) that lack ticker-specific entries. Fix = "
-               "add those tickers to _TICKER_UNCERTAINTY_DRIVERS or split the "
-               "Financials sector driver (DATA change, not scoring). Frozen.",
-        strict=False,
-    )
     def test_category_D_is_zero(self, scores):
         d_offenders = [s.ticker for s in scores if s.category == "D"]
         d = _rate(scores, "D")
