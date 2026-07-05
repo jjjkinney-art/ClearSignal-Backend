@@ -2128,8 +2128,25 @@ async def market_resolve(
     summary="List all watchlisted tickers",
     tags=["watchlist"],
 )
-async def get_watchlist() -> list:
-    """Return all watchlist entries sorted by most-recently-added."""
+async def get_watchlist(request: Request = None) -> list:
+    """Return all watchlist entries sorted by most-recently-added.
+
+    Phase 10B · Slice 2: when ``watchlist_db_backed`` is enabled, membership is
+    read from the DB-backed async path (persistent, multi-instance safe); the
+    async path falls back to the JSON-file index when the DB is empty/unavailable
+    so behaviour is preserved. Default path is unchanged (JSON file).
+    """
+    from .config import settings as _wl_s
+    if getattr(_wl_s, "watchlist_db_backed", False):
+        try:
+            from .db import get_session as _get_session
+            _uid = (getattr(getattr(request, "state", None), "user_id", "")
+                    or _wl_s.auth_bypass_user_id)
+            async with await _get_session() as _db:
+                entries = await watchlist_service.get_watchlist_async(_db, user_id=_uid)
+            return [e.model_dump() for e in entries]
+        except Exception as _exc:
+            logger.warning("[watchlist] DB-backed read failed, file fallback: %r", _exc)
     return [e.model_dump() for e in watchlist_service.get_watchlist()]
 
 
@@ -2170,6 +2187,20 @@ async def add_to_watchlist(
     except Exception:
         pass  # enforcement is failure-open
 
+    # Phase 10B · Slice 2 — DB-backed membership when enabled (dual-writes file).
+    from .config import settings as _wl_s
+    if getattr(_wl_s, "watchlist_db_backed", False):
+        try:
+            from .db import get_session as _get_session
+            _uid = (getattr(getattr(request, "state", None), "user_id", "")
+                    or _wl_s.auth_bypass_user_id)
+            async with await _get_session() as _db:
+                entry = await watchlist_service.add_ticker_async(
+                    _db, ticker, company_name, user_id=_uid)
+            return entry.model_dump()
+        except Exception as _exc:
+            logger.warning("[watchlist] DB-backed add failed, file fallback: %r", _exc)
+
     entry = watchlist_service.add_ticker(ticker, company_name)
     return entry.model_dump()
 
@@ -2180,8 +2211,25 @@ async def add_to_watchlist(
     summary="Remove a ticker from the watchlist",
     tags=["watchlist"],
 )
-async def remove_from_watchlist(ticker: str) -> dict:
-    """Remove *ticker* from the watchlist.  Returns {removed: bool}."""
+async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
+    """Remove *ticker* from the watchlist.  Returns {removed: bool}.
+
+    Phase 10B · Slice 2: routes through the DB-backed async path when
+    ``watchlist_db_backed`` is enabled (still removes the file entry too).
+    """
+    from .config import settings as _wl_s
+    if getattr(_wl_s, "watchlist_db_backed", False):
+        try:
+            from .db import get_session as _get_session
+            _uid = (getattr(getattr(request, "state", None), "user_id", "")
+                    or _wl_s.auth_bypass_user_id)
+            async with await _get_session() as _db:
+                removed = await watchlist_service.remove_ticker_async(
+                    _db, ticker, user_id=_uid)
+            return {"ticker": ticker.upper(), "removed": removed}
+        except Exception as _exc:
+            logger.warning("[watchlist] DB-backed remove failed, file fallback: %r", _exc)
+
     removed = watchlist_service.remove_ticker(ticker)
     return {"ticker": ticker.upper(), "removed": removed}
 

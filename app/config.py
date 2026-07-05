@@ -270,6 +270,16 @@ class Settings(BaseSettings):
     # 0 (default) = effectively off even when delivery_in_app_enabled=True.
     delivery_canary_pct: int = 0
 
+    # ── Phase 10B · Slice 2 — Watchlist DB-backed membership ─────────────────
+    # When True, the /watchlist read/add/remove endpoints route through the
+    # DB-backed async membership path (WatchedTicker + watchlist_repo) instead
+    # of the JSON-file index, giving persistence across restarts and horizontal
+    # scale.  When False (default), the endpoints use the existing JSON-file
+    # path, preserving current single-instance behaviour exactly.  The async
+    # path dual-writes the file index and falls back to it when the DB is empty
+    # or unavailable, so enabling this is backward-compatible and failure-open.
+    watchlist_db_backed: bool = False
+
     # ── Phase 9A: Persistence layer ───────────────────────────────────────────
     # SQLAlchemy async database URL.  Supports two drivers:
     #   asyncpg  — postgresql+asyncpg://user:pass@host/db    (Render production)
