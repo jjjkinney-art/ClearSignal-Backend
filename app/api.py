@@ -96,6 +96,13 @@ try:
 except Exception as _sc_err:
     logger.warning("[api] scenario router unavailable: %r", _sc_err)
 
+# Beta milestone 4 — notification routes (inbox, unread, mark-read, preferences)
+try:
+    from .routers.notifications import router as _notifications_router
+    router.include_router(_notifications_router)
+except Exception as _nt_err:
+    logger.warning("[api] notifications router unavailable: %r", _nt_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
