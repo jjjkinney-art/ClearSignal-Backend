@@ -82,6 +82,13 @@ try:
 except Exception as _billing_err:
     logger.warning("[api] billing router unavailable: %r", _billing_err)
 
+# Beta milestone 2 — portfolio routes (positions CRUD, health, exposure, insights)
+try:
+    from .routers.portfolio import router as _portfolio_router
+    router.include_router(_portfolio_router)
+except Exception as _pf_err:
+    logger.warning("[api] portfolio router unavailable: %r", _pf_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
