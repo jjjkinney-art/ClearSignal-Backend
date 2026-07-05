@@ -89,6 +89,13 @@ try:
 except Exception as _pf_err:
     logger.warning("[api] portfolio router unavailable: %r", _pf_err)
 
+# Beta milestone 3 — scenario read routes (scenarios, ticker facet, portfolio impact)
+try:
+    from .routers.scenario import router as _scenario_router
+    router.include_router(_scenario_router)
+except Exception as _sc_err:
+    logger.warning("[api] scenario router unavailable: %r", _sc_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
