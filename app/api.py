@@ -2142,7 +2142,7 @@ async def get_watchlist(request: Request = None) -> list:
             from .db import get_session as _get_session
             _uid = (getattr(getattr(request, "state", None), "user_id", "")
                     or _wl_s.auth_bypass_user_id)
-            async with await _get_session() as _db:
+            async with _get_session() as _db:
                 entries = await watchlist_service.get_watchlist_async(_db, user_id=_uid)
             return [e.model_dump() for e in entries]
         except Exception as _exc:
@@ -2194,7 +2194,7 @@ async def add_to_watchlist(
             from .db import get_session as _get_session
             _uid = (getattr(getattr(request, "state", None), "user_id", "")
                     or _wl_s.auth_bypass_user_id)
-            async with await _get_session() as _db:
+            async with _get_session() as _db:
                 entry = await watchlist_service.add_ticker_async(
                     _db, ticker, company_name, user_id=_uid)
             return entry.model_dump()
@@ -2223,7 +2223,7 @@ async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
             from .db import get_session as _get_session
             _uid = (getattr(getattr(request, "state", None), "user_id", "")
                     or _wl_s.auth_bypass_user_id)
-            async with await _get_session() as _db:
+            async with _get_session() as _db:
                 removed = await watchlist_service.remove_ticker_async(
                     _db, ticker, user_id=_uid)
             return {"ticker": ticker.upper(), "removed": removed}
