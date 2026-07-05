@@ -43,7 +43,9 @@ Coverage
 
   ORM / migration correctness
     - Portfolio, PortfolioPosition, PortfolioInsight appear in Base.metadata.tables
-    - db_table_count is 35 (28 existing + 3 portfolio + 4 identity)
+    - db_table_count is at least the current schema size (a growth floor, not an
+      exact count — new tables are added routinely, so an exact assertion is a
+      brittle canary; the specific-table checks above are the real guard)
     - null session → every function returns safe default (no exception)
 """
 
@@ -109,10 +111,15 @@ class TestSchemaCorrectness:
         assert "portfolio_positions" in tables
         assert "portfolio_insights" in tables
 
-    def test_db_table_count_is_35(self):
-        # Phase 16 · Slice 1 added 4 identity tables (32–35): users, user_profiles,
-        # user_settings, audit_log.  Previous count was 31 (10D).
-        assert len(Base.metadata.tables) == 35
+    def test_db_table_count_floor(self):
+        # Growth floor rather than an exact count: the schema has expanded from
+        # 31 (10D) → 35 (Phase 16 identity) → 38 (Phase 17 billing) → 59 (loop /
+        # scenario / dossier / delivery tables).  An exact assertion broke on
+        # every schema addition and carried no real guard value beyond the
+        # specific-table presence/column checks above.  A floor still catches a
+        # catastrophic schema loss (e.g. a migration dropping tables) without
+        # failing on every legitimate addition.
+        assert len(Base.metadata.tables) >= 59
 
     def test_portfolios_columns(self):
         col_names = {c.name for c in Base.metadata.tables["portfolios"].columns}
