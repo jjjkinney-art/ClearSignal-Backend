@@ -231,6 +231,47 @@ for _health_path in ("/", "/health", "/healthz"):
 del _health_path  # avoid leaking the loop variable into module scope
 
 
+async def readiness():
+    """Readiness probe — distinct from /health (liveness).
+
+    Returns 503 (not 200) when a *required* dependency is unavailable, so an
+    orchestrator (Render / k8s) can gate traffic to this instance:
+
+      * DB configured + reachable   -> 200 {"ready": true,  "db": "connected"}
+      * DB configured + unreachable -> 503 {"ready": false, "db": "unreachable"}
+      * DB not configured (dev)     -> 200 {"ready": true,  "db": "disabled"}
+        (persistence is optional by design — the API serves without it)
+
+    Read-only.  Never mutates state.  Never touches the conviction engine.
+    """
+    from fastapi.responses import JSONResponse
+    try:
+        from .db.connection import _db_enabled as _dbe, _engine as _eng
+    except Exception:
+        return JSONResponse(status_code=200, content={"ready": True, "db": "disabled"})
+
+    if not _dbe or _eng is None:
+        return JSONResponse(status_code=200, content={"ready": True, "db": "disabled"})
+    try:
+        from sqlalchemy import text as _text
+        async with _eng.connect() as _conn:
+            await _conn.execute(_text("SELECT 1"))
+        return JSONResponse(status_code=200, content={"ready": True, "db": "connected"})
+    except Exception as _exc:
+        logger.warning("[readyz] db not reachable: %r", _exc)
+        return JSONResponse(status_code=503, content={"ready": False, "db": "unreachable"})
+
+
+router.add_api_route(
+    "/readyz",
+    readiness,
+    methods=["GET", "HEAD"],
+    summary="Readiness probe (503 when a required dependency is down)",
+    tags=["health"],
+    include_in_schema=True,
+)
+
+
 @router.get(
     "/version",
     summary="Runtime version — conviction schema + deployment identity",

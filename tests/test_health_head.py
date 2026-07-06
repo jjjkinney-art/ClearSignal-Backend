@@ -18,14 +18,20 @@ Run:
 from __future__ import annotations
 
 import pytest
-from fastapi.testclient import TestClient
-
-from app.main import app
 
 # ── Shared client ─────────────────────────────────────────────────────────────
 
 @pytest.fixture(scope="module")
-def client() -> TestClient:
+def client():
+    # Import FastAPI + the app lazily (inside the fixture) rather than at module
+    # import.  Doing so at collection time is fragile: other test files stub
+    # pydantic in sys.modules and can leave it corrupted during the collection
+    # phase, which makes even `from fastapi.testclient import TestClient` (and
+    # FastAPI model-building) fail as a collection ERROR.  Deferring to run-time
+    # — after those files' teardown restores sys.modules — makes collection
+    # deterministic.
+    from fastapi.testclient import TestClient
+    from app.main import app
     return TestClient(app, raise_server_exceptions=False)
 
 
@@ -155,3 +161,39 @@ class TestUnsupportedMethods:
         assert res.status_code == 405, (
             f"DELETE {path} returned {res.status_code}, expected 405"
         )
+
+
+# ── Readiness probe ───────────────────────────────────────────────────────────
+
+class TestReadiness:
+    """`/readyz` returns 503 when a required dependency is down, 200 otherwise."""
+
+    def test_readyz_ok_when_db_disabled(self, client: TestClient):
+        # In the test app no DATABASE_URL is configured → persistence disabled →
+        # ready (persistence is optional by design).
+        res = client.get("/readyz")
+        assert res.status_code == 200
+        body = res.json()
+        assert body["ready"] is True
+        assert body["db"] in {"disabled", "connected"}
+
+    def test_readyz_reports_503_when_db_unreachable(self, client: TestClient):
+        # Force the readiness check to see an enabled-but-broken engine and assert
+        # it fails closed with 503 (so an orchestrator gates traffic).
+        import app.db.connection as conn
+
+        class _BrokenEngine:
+            def connect(self):
+                raise RuntimeError("db down")
+
+        saved_enabled, saved_engine = conn._db_enabled, conn._engine
+        conn._db_enabled, conn._engine = True, _BrokenEngine()
+        try:
+            res = client.get("/readyz")
+            assert res.status_code == 503
+            assert res.json()["ready"] is False
+        finally:
+            conn._db_enabled, conn._engine = saved_enabled, saved_engine
+
+    def test_readyz_head_returns_200(self, client: TestClient):
+        assert client.head("/readyz").status_code == 200
