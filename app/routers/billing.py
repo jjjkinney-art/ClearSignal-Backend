@@ -75,7 +75,7 @@ class CheckoutRequest(BaseModel):
 
 @router.post(
     "/checkout",
-    summary="Phase 17 · Slice 3 — Create a Stripe Checkout Session",
+    summary="Create a Stripe Checkout Session",
 )
 async def billing_checkout(body: CheckoutRequest, request: Request):
     """Create a Stripe Checkout Session and return the redirect URL.
@@ -160,7 +160,7 @@ async def billing_checkout(body: CheckoutRequest, request: Request):
 
 @router.post(
     "/webhook",
-    summary="Phase 17 · Slice 4 — Stripe webhook receiver",
+    summary="Stripe webhook receiver",
 )
 async def billing_webhook(request: Request):
     """Receive and process Stripe webhook events.
@@ -322,7 +322,7 @@ def _entitlements_dict(ent) -> dict:
 
 @router.get(
     "/status",
-    summary="Phase 17 · Slice 5 — Current billing state",
+    summary="Current billing state",
 )
 async def billing_status(request: Request):
     """Return the current user's billing state and entitlement summary.
@@ -408,7 +408,7 @@ async def billing_status(request: Request):
 
 @router.post(
     "/portal",
-    summary="Phase 17 · Slice 5 — Create Stripe billing portal session",
+    summary="Create Stripe billing portal session",
 )
 async def billing_portal(request: Request):
     """Create a Stripe billing portal session and return the redirect URL.
@@ -486,7 +486,7 @@ async def billing_portal(request: Request):
 
 @router.post(
     "/cancel",
-    summary="Phase 17 · Slice 5 — Cancel subscription at period end",
+    summary="Cancel subscription at period end",
 )
 async def billing_cancel(request: Request):
     """Mark the user's active subscription to cancel at the end of the current period.

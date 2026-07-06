@@ -126,13 +126,80 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
         logger.warning("[shutdown] persistence layer close failed (non-fatal): %r", _exc)
 
 
+_API_DESCRIPTION = """\
+Backend for **ClearSignal** — an AI-powered equity analysis platform.
+
+The conviction engine (frozen, institutionally validated) produces structured
+theses, dossiers, and scenarios. This API exposes the user-facing beta surfaces
+built on top of it.
+
+### Identity & rollout
+
+Most product surfaces are scoped to the acting user:
+
+* **`AUTH_ENABLED=false` (default):** every request resolves to a single system
+  *bypass* user — the API behaves single-tenant. No JWT is inspected.
+* **`AUTH_ENABLED=true`:** identity is the verified Supabase JWT `sub`; requests
+  without a valid token receive **401** on user-scoped routes.
+
+Several capabilities are dark-launched behind flags and are inert until enabled
+by an operator (never in code): `STRIPE_ENABLED` (billing), `DELIVERY_SHADOW` /
+`DELIVERY_IN_APP_ENABLED` (real notification delivery), `WATCHLIST_DB_BACKED`
+(persistent multi-instance watchlists), and the scenario build/scoring flags.
+
+### Conventions
+
+* `request.state.user_id` is stamped by the auth middleware before every handler.
+* Read endpoints degrade gracefully when persistence is disabled (empty payloads,
+  never 5xx). `/readyz` is the dependency-aware readiness probe.
+* No endpoint returns buy/sell/hold or price-target language — the engine is a
+  describer, not a recommender.
+"""
+
+_OPENAPI_TAGS = [
+    {"name": "health",
+     "description": "Liveness (`/`, `/health`, `/healthz`) and readiness (`/readyz`) "
+                    "probes. `/readyz` returns **503** when a required dependency (DB) "
+                    "is configured but unreachable, so orchestrators can gate traffic."},
+    {"name": "watchlist",
+     "description": "Track tickers and their thesis-snapshot history. Membership is "
+                    "DB-backed when `WATCHLIST_DB_BACKED=true` (persistent, multi-instance) "
+                    "and scoped to the authenticated user; otherwise a local JSON index."},
+    {"name": "portfolio",
+     "description": "Position CRUD plus portfolio-level intelligence — concentration / "
+                    "diversification **health**, shared-risk **exposure** clusters, and "
+                    "**insights**. All reads are scoped to the caller's default portfolio."},
+    {"name": "scenarios",
+     "description": "Read-only Scenario Engine — *“what changes if X happens?”*. Returns "
+                    "descriptive scenario facets per ticker (transmission path, plausibility, "
+                    "confidence). Purely descriptive; no conviction, stance, or price fields."},
+    {"name": "notifications",
+     "description": "In-app notification inbox, unread counts, idempotent read receipts, and "
+                    "delivery preferences. Surfaces the delivery ledger read-only while "
+                    "delivery stays in shadow mode (no real sends)."},
+    {"name": "auth",
+     "description": "Supabase JWT session endpoints (`/auth/me`, `/auth/session`, "
+                    "`/auth/logout`). Enforced only when `AUTH_ENABLED=true`; a system bypass "
+                    "user is used otherwise."},
+    {"name": "billing",
+     "description": "Stripe checkout, webhook receiver, subscription **status**, billing "
+                    "portal, and cancel. Mutating routes return **503** and the webhook is a "
+                    "no-op until `STRIPE_ENABLED=true`. The system user cannot check out."},
+    {"name": "admin",
+     "description": "Internal observability / status snapshots for each subsystem. Not part "
+                    "of the public product surface."},
+]
+
+
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
-        title="AI Analyst Backend",
+        title="ClearSignal API",
         version="0.1.0",
-        description="Backend service for an AI‑powered company analysis platform",
+        description=_API_DESCRIPTION,
+        openapi_tags=_OPENAPI_TAGS,
         lifespan=lifespan,
+        contact={"name": "ClearSignal"},
     )
 
     # Phase 16 · Slice 3 — Identity middleware (runs innermost; added first so

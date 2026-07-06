@@ -220,15 +220,30 @@ async def health() -> dict:
 # FastAPI/Starlette 0.49+ does NOT auto-add HEAD for GET routes — must be explicit.
 # UptimeRobot free plan uses HEAD; Render uses GET; frontend warmup uses GET.
 for _health_path in ("/", "/health", "/healthz"):
+    # Register GET and HEAD as SEPARATE routes with unique names so each gets a
+    # unique OpenAPI operationId (a single GET+HEAD route shares one operationId
+    # across both methods, which FastAPI flags as a duplicate and which breaks
+    # client generators). HEAD is for uptime monitors, not API consumers, so it
+    # is kept out of the schema.
+    _health_name = "root" if _health_path == "/" else _health_path.strip("/")
     router.add_api_route(
         _health_path,
         health,
-        methods=["GET", "HEAD"],
+        methods=["GET"],
         summary="Health check" if _health_path != "/" else "Root — service identity",
         tags=["health"],
+        name=f"health_get_{_health_name}",
         include_in_schema=True,
     )
-del _health_path  # avoid leaking the loop variable into module scope
+    router.add_api_route(
+        _health_path,
+        health,
+        methods=["HEAD"],
+        tags=["health"],
+        name=f"health_head_{_health_name}",
+        include_in_schema=False,
+    )
+del _health_path, _health_name  # avoid leaking loop variables into module scope
 
 
 async def readiness():
@@ -265,10 +280,19 @@ async def readiness():
 router.add_api_route(
     "/readyz",
     readiness,
-    methods=["GET", "HEAD"],
+    methods=["GET"],
     summary="Readiness probe (503 when a required dependency is down)",
     tags=["health"],
+    name="readiness_get",
     include_in_schema=True,
+)
+router.add_api_route(
+    "/readyz",
+    readiness,
+    methods=["HEAD"],
+    tags=["health"],
+    name="readiness_head",
+    include_in_schema=False,
 )
 
 
