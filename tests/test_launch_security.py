@@ -95,3 +95,81 @@ class TestSecurityConfigDefaults:
         from app.config import settings
         monkeypatch.setattr(settings, "cors_allow_origins", " a , ,b ,", raising=False)
         assert settings.cors_allow_origins_list == ["a", "b"]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Rate limiter primitive
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestRateLimiter:
+    def test_allows_up_to_limit_then_blocks(self):
+        from app.security.rate_limit import RateLimiter
+        rl = RateLimiter()
+        base = 1000.0
+        for i in range(3):
+            allowed, retry = rl.check("k", limit=3, window_s=60, now=base + i)
+            assert allowed is True
+        allowed, retry = rl.check("k", limit=3, window_s=60, now=base + 3)
+        assert allowed is False
+        assert retry > 0
+
+    def test_window_resets(self):
+        from app.security.rate_limit import RateLimiter
+        rl = RateLimiter()
+        assert rl.check("k", 1, 60, now=0)[0] is True
+        assert rl.check("k", 1, 60, now=1)[0] is False
+        # after the window elapses the counter resets
+        assert rl.check("k", 1, 60, now=61)[0] is True
+
+    def test_zero_limit_disables(self):
+        from app.security.rate_limit import RateLimiter
+        rl = RateLimiter()
+        for _ in range(100):
+            assert rl.check("k", 0, 60)[0] is True
+
+    def test_keys_are_isolated(self):
+        from app.security.rate_limit import RateLimiter
+        rl = RateLimiter()
+        assert rl.check("a", 1, 60, now=0)[0] is True
+        assert rl.check("b", 1, 60, now=0)[0] is True   # different key, own budget
+        assert rl.check("a", 1, 60, now=0)[0] is False
+
+    def test_client_ip_prefers_forwarded_for(self):
+        from types import SimpleNamespace
+        from app.security.rate_limit import client_ip
+        req = SimpleNamespace(
+            headers={"x-forwarded-for": "203.0.113.7, 10.0.0.1"},
+            client=SimpleNamespace(host="10.0.0.1"),
+        )
+        assert client_ip(req) == "203.0.113.7"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Per-user daily quota primitive
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestDailyQuota:
+    def test_counts_and_enforces_per_user(self):
+        from app.services.usage_tracking import UsageTracker
+        ut = UsageTracker()
+        assert ut.within_daily_quota("userA", limit=2) is True
+        ut.incr_daily("userA")
+        ut.incr_daily("userA")
+        assert ut.daily_count("userA") == 2
+        assert ut.within_daily_quota("userA", limit=2) is False
+
+    def test_quota_isolated_per_user(self):
+        from app.services.usage_tracking import UsageTracker
+        ut = UsageTracker()
+        ut.incr_daily("userA")
+        ut.incr_daily("userA")
+        assert ut.within_daily_quota("userA", limit=2) is False
+        # userB has its own budget
+        assert ut.within_daily_quota("userB", limit=2) is True
+
+    def test_negative_limit_is_unlimited(self):
+        from app.services.usage_tracking import UsageTracker
+        ut = UsageTracker()
+        for _ in range(100):
+            ut.incr_daily("sys")
+        assert ut.within_daily_quota("sys", limit=-1) is True

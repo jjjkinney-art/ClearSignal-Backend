@@ -413,6 +413,20 @@ try:
         _reset_audit_store()
         _reset_learning_memory()
 
+        # Sprint 0: reset the in-process rate limiter + daily quota counters so
+        # request counts never accumulate across tests (order-independence).
+        try:
+            from app.security.rate_limit import rate_limiter as _rl
+            _rl.reset()
+        except Exception:
+            pass
+        try:
+            from app.services.usage_tracking import usage_tracker as _ut
+            _ut._daily.clear()
+            _ut._events.clear()
+        except Exception:
+            pass
+
         # Restore real ingestion functions if test collection stubs replaced them.
         if _real_ingestion_funcs:
             try:

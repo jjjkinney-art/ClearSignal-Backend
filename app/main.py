@@ -262,6 +262,52 @@ def create_app() -> FastAPI:
         )
         return response
 
+    # Edge security guard (Sprint 0): body-size cap + global per-IP rate limit.
+    # Runs outermost (registered last) so abusive requests are rejected before
+    # any handler work.  Health/readiness and CORS preflight are exempt so
+    # uptime probes and browsers are never throttled.
+    from starlette.responses import JSONResponse as _JSONResponse
+
+    _RL_EXEMPT_PATHS = frozenset({"/", "/health", "/healthz", "/readyz", "/version"})
+
+    @app.middleware("http")
+    async def _edge_security_guard(request: Request, call_next):
+        from .config import settings as _s
+
+        # 1. Body-size cap — cheap Content-Length check (JSON API; no uploads).
+        _cl = request.headers.get("content-length")
+        if _cl:
+            try:
+                if int(_cl) > _s.max_request_body_bytes:
+                    return _JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request body too large."},
+                    )
+            except ValueError:
+                pass
+
+        # 2. Global per-IP rate limit (all routes except health / preflight).
+        if (
+            _s.rate_limit_enabled
+            and request.method != "OPTIONS"
+            and request.url.path not in _RL_EXEMPT_PATHS
+        ):
+            from .security.rate_limit import rate_limiter, client_ip
+            _ip = client_ip(request)
+            _allowed, _retry = rate_limiter.check(
+                f"ip:{_ip}",
+                _s.rate_limit_per_ip_per_min,
+                _s.rate_limit_window_s,
+            )
+            if not _allowed:
+                return _JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded. Please slow down."},
+                    headers={"Retry-After": str(_retry)},
+                )
+
+        return await call_next(request)
+
     app.include_router(api_router)
     return app
 

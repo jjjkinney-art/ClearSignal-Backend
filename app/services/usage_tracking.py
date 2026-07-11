@@ -47,6 +47,9 @@ class UsageTracker:
         self._events: Dict[str, deque] = defaultdict(deque)  # user_id → deque of timestamps
         self._hooks: List[Callable[[UsageEvent], None]] = []
         self._totals: Dict[str, int] = defaultdict(int)  # event_type → total count
+        # Per-user, per-UTC-day counters for daily quotas.
+        # key = f"{event_type}:{user_id}:{YYYY-MM-DD}" → count
+        self._daily: Dict[str, int] = defaultdict(int)
 
     def track(self, event: UsageEvent) -> None:
         """Record a usage event and fire registered hooks."""
@@ -94,6 +97,42 @@ class UsageTracker:
     def get_totals(self) -> Dict[str, int]:
         """Return aggregate event totals since startup."""
         return dict(self._totals)
+
+    # ── Per-user daily quota (Sprint 0) ──────────────────────────────────────
+    @staticmethod
+    def _utc_day(ts: Optional[float] = None) -> str:
+        from datetime import datetime, timezone
+        dt = (
+            datetime.fromtimestamp(ts, timezone.utc)
+            if ts is not None
+            else datetime.now(timezone.utc)
+        )
+        return dt.strftime("%Y-%m-%d")
+
+    def _daily_key(self, user_id: str, event_type: str, day: Optional[str]) -> str:
+        return f"{event_type}:{user_id}:{day or self._utc_day()}"
+
+    def daily_count(
+        self, user_id: str, event_type: str = "ask", day: Optional[str] = None
+    ) -> int:
+        """Return today's (UTC) count for a user/event_type."""
+        return self._daily.get(self._daily_key(user_id, event_type, day), 0)
+
+    def incr_daily(
+        self, user_id: str, event_type: str = "ask", day: Optional[str] = None
+    ) -> int:
+        """Increment and return today's (UTC) count for a user/event_type."""
+        key = self._daily_key(user_id, event_type, day)
+        self._daily[key] += 1
+        return self._daily[key]
+
+    def within_daily_quota(
+        self, user_id: str, limit: int, event_type: str = "ask"
+    ) -> bool:
+        """True if the user is still under *limit* today.  ``limit < 0`` = unlimited."""
+        if limit < 0:
+            return True
+        return self.daily_count(user_id, event_type) < limit
 
 
 # Module-level singleton
