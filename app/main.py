@@ -210,11 +210,34 @@ def create_app() -> FastAPI:
     from .middleware.auth_middleware import AuthMiddleware
     app.add_middleware(AuthMiddleware)
 
-    # CORS (allow all origins for development — tighten in production)
+    # CORS — environment-driven explicit allowlist (Sprint 0).
+    # Never serve a wildcard origin together with credentials, and never allow
+    # a wildcard origin at all in production.  Localhost dev origins are the
+    # default so local development keeps working out of the box.
+    from .config import settings as _cors_settings
+    _cors_origins = _cors_settings.cors_allow_origins_list
+    _cors_credentials = _cors_settings.cors_allow_credentials
+    if _cors_settings.is_production and "*" in _cors_origins:
+        logger.error(
+            "[cors] wildcard '*' origin is not permitted in production; ignoring it. "
+            "Set CORS_ALLOW_ORIGINS to an explicit frontend allowlist."
+        )
+        _cors_origins = [o for o in _cors_origins if o != "*"]
+    if "*" in _cors_origins and _cors_credentials:
+        # '*' with credentials is invalid per the Fetch spec and browsers reject
+        # it; disable credentials so a real (non-credentialed) wildcard still works.
+        logger.warning(
+            "[cors] '*' origin with credentials is invalid; disabling allow_credentials."
+        )
+        _cors_credentials = False
+    logger.info(
+        "[cors] origins=%s credentials=%s production=%s",
+        _cors_origins or "(none)", _cors_credentials, _cors_settings.is_production,
+    )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=_cors_origins,
+        allow_credentials=_cors_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
