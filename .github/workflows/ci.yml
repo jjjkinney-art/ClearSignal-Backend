@@ -1,0 +1,86 @@
+name: CI
+
+# Runs on every PR into main and every push to main.
+# Make this workflow a REQUIRED status check in branch protection so a red run
+# blocks merge (the YAML gates the run; branch protection gates the merge).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (py3.11, pinned)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PYTHONDONTWRITEBYTECODE: "1"
+      # No secrets are needed: all rollout flags (auth/stripe/delivery) default
+      # OFF, the suite stubs the LLM client, and router tests use throwaway
+      # SQLite temp files. Do NOT add API keys or databases to this job.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11 (matches runtime.txt)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11.9"
+          # Safe pip cache keyed on the pinned lockfile — wheels only, no secrets,
+          # no test databases are ever cached.
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install pinned dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Import smoke test (fresh environment)
+        run: python -c "from app.main import app; print('routes:', len(app.routes))"
+
+      # Single-process collection must be clean (conftest collection guard).
+      - name: Collection determinism (0 collection errors)
+        run: python -m pytest tests/ --collect-only -q -o addopts=""
+
+      # Each suite below runs in its own process (deterministic per-area), matching
+      # the documented test constraints (see docs/API.md). Any failure fails the job.
+      - name: Launch-security & reproducibility
+        run: >
+          python -m pytest -q -o addopts=""
+          tests/test_launch_security.py
+          tests/test_dependency_pinning.py
+
+      - name: Production router regression
+        run: >
+          python -m pytest -q -o addopts=""
+          tests/test_health_head.py
+          tests/test_portfolio_router.py
+          tests/test_scenario_router.py
+          tests/test_notifications_router.py
+          tests/test_watchlist_db_backed.py
+          tests/test_auth_scoping.py
+
+      - name: Auth & billing
+        run: >
+          python -m pytest -q -o addopts=""
+          tests/test_services/test_auth_routes.py
+          tests/test_services/test_auth_middleware.py
+          tests/test_services/test_billing_routes.py
+          tests/test_billing_checkout_webhook.py
+          tests/test_services/test_stripe_service.py
+          tests/test_services/test_webhook_service.py
+
+      - name: Validation V1/V6 (conviction engine)
+        run: >
+          python -m pytest -q -o addopts=""
+          tests/test_conviction_integration.py
+          tests/test_conviction_modeler.py
+          tests/test_directional_stance.py
