@@ -2566,8 +2566,17 @@ async def get_watchlist_themes() -> list:
         return []
 
 @router.get("/usage/stats", tags=["usage"])
-async def get_usage_stats() -> dict:
-    """Return aggregate usage statistics."""
+async def get_usage_stats(http_request: Request) -> dict:
+    """Return aggregate usage statistics.
+
+    Internal aggregate — admin-only by default (USAGE_STATS_ADMIN_ONLY).  The
+    system/bypass user is admin in single-tenant mode; when AUTH_ENABLED, only
+    ADMIN_USER_IDS may read it.  Never exposes per-user or cross-user rows.
+    """
+    from .config import settings as _s
+    if _s.usage_stats_admin_only:
+        from .security.authz import require_admin
+        require_admin(http_request)   # 401 unauth / 403 non-admin
     from .services.usage_tracking import usage_tracker
     return usage_tracker.get_totals()
 
@@ -2575,11 +2584,31 @@ async def get_usage_stats() -> dict:
 # ── Live Market Intelligence (Phase L) ───────────────────────────────────────
 
 @router.post("/events/ingest", tags=["events"])
-async def ingest_event(event_data: dict) -> dict:
+async def ingest_event(event_data: dict, http_request: Request) -> dict:
     """
     Ingest a normalized event and return impact assessments for all relevant tickers.
     Accepts NormalizedEvent-compatible dict.
+
+    Internal ingestion hook — OFF by default (EVENTS_INGEST_ENABLED).  When
+    enabled it requires admin authorization and enforces a payload-size cap
+    (MAX_EVENT_PAYLOAD_BYTES); unknown fields are dropped (schema restriction).
     """
+    from .config import settings as _s
+    # Disabled by default → do not expose an arbitrary-payload sink.
+    if not _s.events_ingest_enabled:
+        raise HTTPException(status_code=403, detail="Event ingestion is disabled.")
+    # Admin-only (system/bypass user in single-tenant; ADMIN_USER_IDS otherwise).
+    from .security.authz import require_admin
+    require_admin(http_request)
+    # Payload-size cap (schema restriction to known fields happens below).
+    import json as _json_ev
+    try:
+        _payload_bytes = len(_json_ev.dumps(event_data).encode("utf-8"))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="Malformed event payload.")
+    if _payload_bytes > _s.max_event_payload_bytes:
+        raise HTTPException(status_code=413, detail="Event payload too large.")
+
     from .services.ingestion.normalized_event import NormalizedEvent, EventCategory, SourceReliability
     from .services.event_processor import process_event_for_watchlist, save_impact_assessment
     from .services.market_regime_tracker import update_regime

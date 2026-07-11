@@ -340,3 +340,79 @@ class TestAskEndpointWiring:
         c = self._client()
         r = c.post("/ask", json={"company_name": "NVDA", "question": "is the thesis ok?"})
         assert r.status_code == 200
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Admin authorization helper
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestAuthz:
+    def test_system_user_is_admin(self):
+        from app.security.authz import is_admin
+        assert is_admin(_SYS) is True
+
+    def test_real_user_not_admin_by_default(self, monkeypatch):
+        from app.config import settings
+        from app.security.authz import is_admin
+        monkeypatch.setattr(settings, "admin_user_ids", "", raising=False)
+        assert is_admin(_REAL_A) is False
+
+    def test_real_user_admin_when_listed(self, monkeypatch):
+        from app.config import settings
+        from app.security.authz import is_admin
+        monkeypatch.setattr(settings, "admin_user_ids", _REAL_A, raising=False)
+        assert is_admin(_REAL_A) is True
+
+    def test_require_admin_401_then_403(self, monkeypatch):
+        from app.config import settings
+        from app.security.authz import require_admin
+        monkeypatch.setattr(settings, "admin_user_ids", "", raising=False)
+        # unauthenticated → 401
+        with pytest.raises(HTTPException) as ei:
+            require_admin(_req(None))
+        assert ei.value.status_code == 401
+        # authenticated non-admin → 403
+        with pytest.raises(HTTPException) as ei:
+            require_admin(_req(_REAL_A))
+        assert ei.value.status_code == 403
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Sensitive endpoint lockdown (integration)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestSensitiveEndpoints:
+    def _client(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        return TestClient(app)
+
+    def test_usage_stats_ok_for_operator_in_bypass(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "auth_enabled", False, raising=False)
+        r = self._client().get("/usage/stats")
+        assert r.status_code == 200
+        assert isinstance(r.json(), dict)
+
+    def test_usage_stats_401_when_auth_enabled_no_token(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "auth_enabled", True, raising=False)
+        monkeypatch.setattr(settings, "usage_stats_admin_only", True, raising=False)
+        r = self._client().get("/usage/stats")
+        assert r.status_code == 401
+
+    def test_events_ingest_disabled_by_default_403(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "events_ingest_enabled", False, raising=False)
+        r = self._client().post("/events/ingest", json={"ticker": "NVDA"})
+        assert r.status_code == 403
+
+    def test_events_ingest_oversized_payload_413(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "auth_enabled", False, raising=False)
+        monkeypatch.setattr(settings, "events_ingest_enabled", True, raising=False)
+        monkeypatch.setattr(settings, "max_event_payload_bytes", 2048, raising=False)
+        # ~5 KB payload: under the 64 KB global body cap, over the 2 KB event cap.
+        big = {"ticker": "NVDA", "blob": "x" * 5000}
+        r = self._client().post("/events/ingest", json=big)
+        assert r.status_code == 413
