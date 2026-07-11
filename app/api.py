@@ -1425,6 +1425,14 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     import json as _json
     from fastapi.responses import StreamingResponse
 
+    # ── Sprint 0 pre-flight gate ──────────────────────────────────────────────
+    # Runs BEFORE any LLM work / streaming so it can return a clean status code
+    # (401/403/413/429).  Enforces auth (when AUTH_ENABLED), question-length cap,
+    # entitlements (when enforced), per-IP + per-user rate limits, and the per-
+    # user daily quota.  Fails closed on misconfiguration.  Never logs the prompt.
+    from .security.ask_guard import enforce_ask_preflight as _enforce_ask_preflight
+    await _enforce_ask_preflight(http_request, getattr(request, "question", "") or "")
+
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
 
     # Extract session ID for persistence correlation — prefer X-Session-ID,

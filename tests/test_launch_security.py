@@ -18,6 +18,7 @@ from __future__ import annotations
 import importlib
 
 import pytest
+from fastapi import HTTPException
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -173,3 +174,169 @@ class TestDailyQuota:
         for _ in range(100):
             ut.incr_daily("sys")
         assert ut.within_daily_quota("sys", limit=-1) is True
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# /ask pre-flight guard (unit)
+# ─────────────────────────────────────────────────────────────────────────────
+
+from types import SimpleNamespace  # noqa: E402
+
+_SYS = "00000000-0000-0000-0000-000000000001"
+_REAL_A = "11111111-1111-1111-1111-111111111111"
+_REAL_B = "22222222-2222-2222-2222-222222222222"
+
+
+def _req(user_id, ip="203.0.113.9"):
+    return SimpleNamespace(
+        state=SimpleNamespace(user_id=user_id),
+        headers={"x-forwarded-for": ip},
+        client=SimpleNamespace(host=ip),
+    )
+
+
+def _reset():
+    from app.security.rate_limit import rate_limiter
+    from app.services.usage_tracking import usage_tracker
+    rate_limiter.reset()
+    usage_tracker._daily.clear()
+
+
+@pytest.fixture
+def relax(monkeypatch):
+    """Relax all limits/enforcement so a single check is about the tested axis."""
+    from app.config import settings
+    monkeypatch.setattr(settings, "rate_limit_enabled", True, raising=False)
+    monkeypatch.setattr(settings, "rate_limit_ask_per_ip_per_min", 1000, raising=False)
+    monkeypatch.setattr(settings, "rate_limit_ask_per_user_per_min", 1000, raising=False)
+    monkeypatch.setattr(settings, "ask_daily_quota", 1000, raising=False)
+    monkeypatch.setattr(settings, "ask_question_max_length", 4000, raising=False)
+    monkeypatch.setattr(settings, "entitlements_enforced", False, raising=False)
+    _reset()
+    yield settings
+    _reset()
+
+
+class TestAskGuardUnit:
+    async def test_bypass_user_allowed_when_auth_disabled(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        uid = await enforce_ask_preflight(_req(_SYS), "hello")
+        assert uid == _SYS
+
+    async def test_unauthenticated_raises_401(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        with pytest.raises(HTTPException) as ei:
+            await enforce_ask_preflight(_req(None), "hello")
+        assert ei.value.status_code == 401
+
+    async def test_oversized_question_413(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.ask_question_max_length = 10
+        with pytest.raises(HTTPException) as ei:
+            await enforce_ask_preflight(_req(_REAL_A), "x" * 50)
+        assert ei.value.status_code == 413
+
+    async def test_per_user_rate_limit_429(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.rate_limit_ask_per_user_per_min = 2
+        await enforce_ask_preflight(_req(_REAL_A), "q")
+        await enforce_ask_preflight(_req(_REAL_A), "q")
+        with pytest.raises(HTTPException) as ei:
+            await enforce_ask_preflight(_req(_REAL_A), "q")
+        assert ei.value.status_code == 429
+
+    async def test_per_ip_rate_limit_429_across_users(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.rate_limit_ask_per_ip_per_min = 1
+        relax.rate_limit_ask_per_user_per_min = 1000
+        await enforce_ask_preflight(_req(_REAL_A, ip="9.9.9.9"), "q")
+        # different user, SAME ip → per-IP budget already spent
+        with pytest.raises(HTTPException) as ei:
+            await enforce_ask_preflight(_req(_REAL_B, ip="9.9.9.9"), "q")
+        assert ei.value.status_code == 429
+
+    async def test_daily_quota_429_and_user_isolation(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.ask_daily_quota = 2
+        await enforce_ask_preflight(_req(_REAL_A), "q")
+        await enforce_ask_preflight(_req(_REAL_A), "q")
+        with pytest.raises(HTTPException) as ei:
+            await enforce_ask_preflight(_req(_REAL_A), "q")
+        assert ei.value.status_code == 429
+        # userB has an independent quota
+        assert await enforce_ask_preflight(_req(_REAL_B), "q") == _REAL_B
+
+    async def test_entitlement_fail_closed_when_enforced_and_unverifiable(self, relax, monkeypatch):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.entitlements_enforced = True
+        # get_session yields None (persistence disabled) → cannot verify → 403.
+        import contextlib
+        @contextlib.asynccontextmanager
+        async def _null_session():
+            yield None
+        monkeypatch.setattr("app.db.get_session", _null_session, raising=False)
+        with pytest.raises(HTTPException) as ei:
+            await enforce_ask_preflight(_req(_REAL_A), "q")
+        assert ei.value.status_code == 403
+
+    async def test_entitlement_system_user_ok_when_enforced(self, relax):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.entitlements_enforced = True
+        assert await enforce_ask_preflight(_req(_SYS), "q") == _SYS
+
+    async def test_entitlement_allow_when_serviceable(self, relax, monkeypatch):
+        from app.security.ask_guard import enforce_ask_preflight
+        relax.entitlements_enforced = True
+        import contextlib
+        @contextlib.asynccontextmanager
+        async def _sess():
+            yield object()
+        async def _resolve(db, uid):
+            return SimpleNamespace(plan_status="active")
+        monkeypatch.setattr("app.db.get_session", _sess, raising=False)
+        monkeypatch.setattr(
+            "app.services.entitlement_service.resolve_entitlements", _resolve, raising=False
+        )
+        assert await enforce_ask_preflight(_req(_REAL_A), "q") == _REAL_A
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# /ask endpoint wiring (integration via TestClient)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestAskEndpointWiring:
+    def _client(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        return TestClient(app)
+
+    def test_anonymous_ask_rejected_when_auth_enabled(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "auth_enabled", True, raising=False)
+        c = self._client()
+        r = c.post("/ask", json={"company_name": "NVDA", "question": "hi"})
+        assert r.status_code == 401
+
+    def test_oversized_question_returns_413(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "auth_enabled", False, raising=False)
+        monkeypatch.setattr(settings, "ask_question_max_length", 50, raising=False)
+        c = self._client()
+        r = c.post("/ask", json={"company_name": "NVDA", "question": "x" * 200})
+        assert r.status_code == 413
+
+    def test_valid_ask_passes_gate_in_bypass_mode(self, monkeypatch):
+        # Prove the guard lets a valid, in-quota request through to the pipeline
+        # (stubbed) — the streaming response is 200 once the gate is cleared.
+        from app.config import settings
+        monkeypatch.setattr(settings, "auth_enabled", False, raising=False)
+
+        def _stub_route_question(req):
+            r = SimpleNamespace(company="NVDA", routing={"detected_ticker": "NVDA"})
+            r.model_dump = lambda: {"answer": {"text": "stub"}}
+            return r
+
+        monkeypatch.setattr("app.api.route_question", _stub_route_question, raising=False)
+        c = self._client()
+        r = c.post("/ask", json={"company_name": "NVDA", "question": "is the thesis ok?"})
+        assert r.status_code == 200
