@@ -171,38 +171,58 @@ signature (errors are recorded, never retried into duplicate state).
 
 ## Running the test suite deterministically
 
-Several **legacy hermetic tests** (e.g. `test_runtime_behavior`,
-`test_completion_pass`, `test_enterprise`, `test_general_fallback`, and others)
-replace real modules — `pydantic`, `app.config`, `app.providers.*`,
-`app.data_pipeline.*` — in `sys.modules` at *import* time and rely on those stubs
-through their own execution. When they are collected in the **same process**
-before a file that imports the real app (any router / FastAPI-building test),
-that file's collection fails. Every file passes **individually**; this is purely
-a shared-process collection-order artifact, not a runtime defect.
+A number of **legacy hermetic tests** (e.g. `test_runtime_behavior`,
+`test_completion_pass`, `test_enterprise*`, `test_final_*`,
+`test_operationalization`, `test_history_inversion`, `test_meaning_native`)
+replace real modules — `pydantic`, the `app.*` package tree, `app.providers.*`,
+`app.data_pipeline.*` — in `sys.modules` at **import** time and depend on those
+stubs through their own execution. Every one of these files passes **on its own**;
+the historical problem was purely a shared-process artifact.
 
-**Recommended — process isolation (fully deterministic):**
+### Collection is now order-independent (single process)
 
-```bash
-pip install pytest-forked          # already in requirements.txt
-python3 -m pytest tests/ --forked  # each test file runs in its own process
-```
-
-`--forked` gives each file a fresh interpreter, so the `sys.modules` stubs never
-leak across files.
-
-**No-dependency partial fallback:** run the self-contained service suites on
-their own (this group collects cleanly), then the remainder:
+`conftest.py` installs a collection-boundary guard (`pytest_collectstart` +
+`_restore_real_modules`) that snapshots the real cross-cutting modules and
+restores them before **each test module is imported**. It also reverts the
+specific in-place attribute mutations some stubs perform (e.g.
+`pydantic.BaseModel`). As a result the whole suite now **collects cleanly in a
+single process** — which previously failed outright:
 
 ```bash
-python3 -m pytest tests/test_services -q          # clean on its own
-python3 -m pytest tests -q --ignore=tests/test_services
+python3 -m pytest tests/ --collect-only     # 12,264 items, 0 collection errors
 ```
 
-The second command still mixes the hermetic files with app-building files in one
-process, so prefer `--forked` when full determinism is required. Individual
-suites — `tests/benchmark`, each router test, each service test — are always
-deterministic on their own and are what CI should gate on per-area.
+### Run determinism → one process per file
 
-> The proper long-term fix is to convert the hermetic files' module-level
-> `sys.modules` stubbing into per-test fixtures (setup/teardown). That is a
-> larger test refactor tracked separately; `--forked` closes the gap today.
+A handful of the hermetic files above share **import-time module state across
+the tests within the file**, and that state is what a *neighbouring* file's stubs
+disturb at run time. The only fully robust isolation is **a separate interpreter
+per test file** — each file re-imports from a pristine `sys.modules`:
+
+```bash
+# Deterministic: every file runs in its own process.
+find tests -name 'test_*.py' -print0 | xargs -0 -n1 python3 -m pytest -q
+```
+
+> **Do not rely on `pytest --forked` for this suite.** `pytest-forked` forks
+> *per test* from a single shared parent collection, so import-time module
+> replacements accumulated across files during collection still leak into the
+> forked children. It does not make these legacy files order-independent — one
+> process per **file** does.
+
+**Per-area CI (recommended):** gate each area in its own invocation — they are
+each deterministic on their own:
+
+```bash
+python3 -m pytest tests/test_services -q      # user-facing router + service suites
+python3 -m pytest tests/benchmark -q          # engine benchmarks
+# ...one invocation per top-level area / file group
+```
+
+> The remaining root-cause cleanup is to convert these files' module-level
+> `sys.modules` stubbing into per-test fixtures. Doing so naively (installing a
+> bare fake module) drops the *real* attributes downstream imports still need, so
+> it must copy real attributes into the fake — a larger, carefully-verified
+> refactor tracked separately. The collection guard above closes the
+> single-process **collection** gap today; per-file invocation closes the **run**
+> gap.

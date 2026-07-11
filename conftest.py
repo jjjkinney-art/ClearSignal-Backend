@@ -181,6 +181,136 @@ for _svc_name in (
         pass
 
 
+# ── Capture real cross-cutting module OBJECTS for collection-time restoration ──
+# A number of legacy "hermetic" test files (test_enterprise*, test_runtime_behavior,
+# test_completion_pass, test_final_*, test_operationalization, test_history_inversion,
+# test_meaning_native, ...) replace entries in sys.modules — pydantic, the app.* package
+# tree, providers, data_pipeline — while they are being IMPORTED.  Because pytest imports
+# every test module during collection before running any test, a fake left behind by one
+# file poisons the collection of every file imported after it in the same process
+# (e.g. a fake `pydantic` -> FastAPI "Invalid args for response field"; a fake
+# `app.data_pipeline.ingestion` -> "cannot import name 'ingest_events'").  Each file
+# passes individually; only shared-process collection order breaks.
+#
+# conftest.py is imported before any test module, so the objects captured here are the
+# REAL ones.  pytest_collectstart() (below) restores them before each collection step,
+# so whatever a hermetic file stubs during its own import is reverted before the next
+# module is collected.  The hermetic files simply re-install their own stubs when they
+# are (re)imported, so their behaviour is unchanged — the leakage is what goes away.
+_MISSING = object()
+_REAL_MODULE_SNAPSHOT: dict = {}
+for _cc_name in (
+    "pydantic", "pydantic_settings",
+    "app", "app.config", "app.schemas",
+    "app.data_pipeline", "app.data_pipeline.ingestion",
+    "app.data_pipeline.storage", "app.data_pipeline.schemas",
+    "app.providers", "app.providers.fmp_client", "app.providers.sec_client",
+    "app.providers.retrieval_provider",
+    "app.agents",
+    "app.services", "app.services.router_service", "app.services.context_service",
+    "app.services.analysis_service",
+):
+    # Only snapshot modules that are ALREADY imported (real) at conftest load time.
+    # Do NOT force-import anything that isn't loaded yet — that would change the
+    # import baseline the tests run against (and, under pytest-forked, propagate a
+    # different pre-state into every forked child).
+    _cc_mod = sys.modules.get(_cc_name)
+    if _cc_mod is not None and getattr(_cc_mod, "__file__", None):
+        _REAL_MODULE_SNAPSHOT[_cc_name] = _cc_mod
+
+# Some legacy stub helpers do not replace the sys.modules entry — they MUTATE the
+# real module object in place (e.g. `pydantic.BaseModel = <fake>`).  Restoring the
+# object pointer above cannot undo that, and a corrupted `pydantic.BaseModel` then
+# breaks anything that builds real models later (e.g. `fastapi.openapi.models`).
+# Snapshot only the SPECIFIC attributes those stubs overwrite so we can revert the
+# mutation cheaply.  (Do NOT snapshot/compare the whole module __dict__ — comparing
+# pydantic's dict invokes expensive/recursive __eq__ on model objects.)
+_PYDANTIC_STUB_ATTRS = (
+    "BaseModel", "Field", "field_validator", "validator",
+    "model_validator", "root_validator", "ConfigDict", "BaseSettings",
+)
+def _safe_getattr(mod, attr):
+    # pydantic v2 defines a module-level __getattr__ that raises a *non*-AttributeError
+    # (PydanticImportError) for moved names like `BaseSettings`, so `hasattr` cannot be
+    # trusted here — it only swallows AttributeError.
+    try:
+        return getattr(mod, attr)
+    except Exception:
+        return _MISSING
+
+
+_REAL_MODULE_ATTRS: dict = {}
+for _attr_name in ("pydantic", "pydantic_settings"):
+    _am = _REAL_MODULE_SNAPSHOT.get(_attr_name)
+    if _am is not None:
+        _snap = {}
+        for _a in _PYDANTIC_STUB_ATTRS:
+            _val = _safe_getattr(_am, _a)
+            if _val is not _MISSING:
+                _snap[_a] = _val
+        _REAL_MODULE_ATTRS[_attr_name] = _snap
+
+
+def _restore_real_modules() -> None:
+    """Restore the real cross-cutting modules if an import-time stub replaced them.
+
+    Handles two distinct forms of import-time pollution:
+
+    1. **Object replacement** — a stub swaps ``sys.modules[name]`` for a fresh fake
+       module.  We put the real object back (and repair the parent package's
+       attribute so ``import a.b.c`` resolves the real submodule — Python's import
+       machinery reads the parent attribute, not just sys.modules).
+    2. **In-place attribute mutation** — a stub keeps the real module object but
+       overwrites attributes on it (``pydantic.BaseModel = <fake>``).  We reassign
+       the specific snapshotted attributes back to their real values.
+    """
+    for _name, _real in _REAL_MODULE_SNAPSHOT.items():
+        if sys.modules.get(_name) is not _real:
+            sys.modules[_name] = _real
+            if "." in _name:
+                _parent, _attr = _name.rsplit(".", 1)
+                _pm = sys.modules.get(_parent)
+                if _pm is not None and getattr(_pm, _attr, None) is not _real:
+                    try:
+                        setattr(_pm, _attr, _real)
+                    except Exception:
+                        pass
+
+    for _name, _orig_attrs in _REAL_MODULE_ATTRS.items():
+        _real = _REAL_MODULE_SNAPSHOT.get(_name)
+        if _real is None:
+            continue
+        for _k, _v in _orig_attrs.items():
+            # Cheap identity check; only reassign when a stub actually overwrote it.
+            if getattr(_real, _k, None) is not _v:
+                try:
+                    setattr(_real, _k, _v)
+                except Exception:
+                    pass
+
+
+def pytest_collectstart(collector) -> None:  # noqa: D401  (pytest hook)
+    """Revert import-time sys.modules stubbing before each *module* is collected.
+
+    Runs before a test module is imported, giving each module a clean, real
+    cross-cutting environment at collection time regardless of what a previously
+    collected file stubbed — this is what makes full-suite collection
+    order-independent in a single process (no --forked needed for collection).
+
+    IMPORTANT: only act on *module-level* collectors.  pytest fires collectstart
+    for the nested Class/Function collectors *inside* a module too — and by then a
+    hermetic module has already installed the stubs its own tests need at run time.
+    Restoring there would wipe those stubs mid-collection and break the file's own
+    tests (notably under pytest-forked).  Gating on the module boundary restores
+    only *between* files, which is exactly where leakage happens.
+    """
+    # Match File/Module collectors without importing pytest internals by name:
+    # module collectors expose a module object via `.obj`/`_getobj`, but the cheap,
+    # version-stable signal is the collector class name.
+    if type(collector).__name__ in ("Module", "Package", "DoctestTextfile"):
+        _restore_real_modules()
+
+
 # ── State-reset helpers ───────────────────────────────────────────────────
 
 def _reset_enterprise_caches() -> None:

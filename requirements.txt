@@ -31,6 +31,10 @@ stripe>=8.0.0
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest>=7.0.0
 pytest-asyncio>=0.21.0   # async test support
-pytest-forked>=1.6.0     # per-file process isolation for deterministic full-suite runs
-                         # (several legacy tests stub sys.modules at import time; run
-                         #  `pytest tests/ --forked` to collect them in isolation)
+pytest-forked>=1.6.0     # optional per-test forking. NOTE: not sufficient on its own
+                         # for the legacy hermetic tests — they stub sys.modules at
+                         # IMPORT time and pytest-forked forks per test from one shared
+                         # collection, so that pollution still reaches the children.
+                         # conftest.py makes single-process COLLECTION order-independent;
+                         # run one process PER FILE for fully deterministic RUN results
+                         # (see docs/API.md "Running the test suite deterministically").
