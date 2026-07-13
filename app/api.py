@@ -82,6 +82,27 @@ try:
 except Exception as _billing_err:
     logger.warning("[api] billing router unavailable: %r", _billing_err)
 
+# Beta milestone 2 — portfolio routes (positions CRUD, health, exposure, insights)
+try:
+    from .routers.portfolio import router as _portfolio_router
+    router.include_router(_portfolio_router)
+except Exception as _pf_err:
+    logger.warning("[api] portfolio router unavailable: %r", _pf_err)
+
+# Beta milestone 3 — scenario read routes (scenarios, ticker facet, portfolio impact)
+try:
+    from .routers.scenario import router as _scenario_router
+    router.include_router(_scenario_router)
+except Exception as _sc_err:
+    logger.warning("[api] scenario router unavailable: %r", _sc_err)
+
+# Beta milestone 4 — notification routes (inbox, unread, mark-read, preferences)
+try:
+    from .routers.notifications import router as _notifications_router
+    router.include_router(_notifications_router)
+except Exception as _nt_err:
+    logger.warning("[api] notifications router unavailable: %r", _nt_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
@@ -199,15 +220,80 @@ async def health() -> dict:
 # FastAPI/Starlette 0.49+ does NOT auto-add HEAD for GET routes — must be explicit.
 # UptimeRobot free plan uses HEAD; Render uses GET; frontend warmup uses GET.
 for _health_path in ("/", "/health", "/healthz"):
+    # Register GET and HEAD as SEPARATE routes with unique names so each gets a
+    # unique OpenAPI operationId (a single GET+HEAD route shares one operationId
+    # across both methods, which FastAPI flags as a duplicate and which breaks
+    # client generators). HEAD is for uptime monitors, not API consumers, so it
+    # is kept out of the schema.
+    _health_name = "root" if _health_path == "/" else _health_path.strip("/")
     router.add_api_route(
         _health_path,
         health,
-        methods=["GET", "HEAD"],
+        methods=["GET"],
         summary="Health check" if _health_path != "/" else "Root — service identity",
         tags=["health"],
+        name=f"health_get_{_health_name}",
         include_in_schema=True,
     )
-del _health_path  # avoid leaking the loop variable into module scope
+    router.add_api_route(
+        _health_path,
+        health,
+        methods=["HEAD"],
+        tags=["health"],
+        name=f"health_head_{_health_name}",
+        include_in_schema=False,
+    )
+del _health_path, _health_name  # avoid leaking loop variables into module scope
+
+
+async def readiness():
+    """Readiness probe — distinct from /health (liveness).
+
+    Returns 503 (not 200) when a *required* dependency is unavailable, so an
+    orchestrator (Render / k8s) can gate traffic to this instance:
+
+      * DB configured + reachable   -> 200 {"ready": true,  "db": "connected"}
+      * DB configured + unreachable -> 503 {"ready": false, "db": "unreachable"}
+      * DB not configured (dev)     -> 200 {"ready": true,  "db": "disabled"}
+        (persistence is optional by design — the API serves without it)
+
+    Read-only.  Never mutates state.  Never touches the conviction engine.
+    """
+    from fastapi.responses import JSONResponse
+    try:
+        from .db.connection import _db_enabled as _dbe, _engine as _eng
+    except Exception:
+        return JSONResponse(status_code=200, content={"ready": True, "db": "disabled"})
+
+    if not _dbe or _eng is None:
+        return JSONResponse(status_code=200, content={"ready": True, "db": "disabled"})
+    try:
+        from sqlalchemy import text as _text
+        async with _eng.connect() as _conn:
+            await _conn.execute(_text("SELECT 1"))
+        return JSONResponse(status_code=200, content={"ready": True, "db": "connected"})
+    except Exception as _exc:
+        logger.warning("[readyz] db not reachable: %r", _exc)
+        return JSONResponse(status_code=503, content={"ready": False, "db": "unreachable"})
+
+
+router.add_api_route(
+    "/readyz",
+    readiness,
+    methods=["GET"],
+    summary="Readiness probe (503 when a required dependency is down)",
+    tags=["health"],
+    name="readiness_get",
+    include_in_schema=True,
+)
+router.add_api_route(
+    "/readyz",
+    readiness,
+    methods=["HEAD"],
+    tags=["health"],
+    name="readiness_head",
+    include_in_schema=False,
+)
 
 
 @router.get(
@@ -1339,6 +1425,14 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     import json as _json
     from fastapi.responses import StreamingResponse
 
+    # ── Sprint 0 pre-flight gate ──────────────────────────────────────────────
+    # Runs BEFORE any LLM work / streaming so it can return a clean status code
+    # (401/403/413/429).  Enforces auth (when AUTH_ENABLED), question-length cap,
+    # entitlements (when enforced), per-IP + per-user rate limits, and the per-
+    # user daily quota.  Fails closed on misconfiguration.  Never logs the prompt.
+    from .security.ask_guard import enforce_ask_preflight as _enforce_ask_preflight
+    await _enforce_ask_preflight(http_request, getattr(request, "question", "") or "")
+
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
 
     # Extract session ID for persistence correlation — prefer X-Session-ID,
@@ -2128,8 +2222,25 @@ async def market_resolve(
     summary="List all watchlisted tickers",
     tags=["watchlist"],
 )
-async def get_watchlist() -> list:
-    """Return all watchlist entries sorted by most-recently-added."""
+async def get_watchlist(request: Request = None) -> list:
+    """Return all watchlist entries sorted by most-recently-added.
+
+    Phase 10B · Slice 2: when ``watchlist_db_backed`` is enabled, membership is
+    read from the DB-backed async path (persistent, multi-instance safe); the
+    async path falls back to the JSON-file index when the DB is empty/unavailable
+    so behaviour is preserved. Default path is unchanged (JSON file).
+    """
+    from .config import settings as _wl_s
+    from .dependencies.auth import require_user_id as _require_uid
+    _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
+    if getattr(_wl_s, "watchlist_db_backed", False):
+        try:
+            from .db import get_session as _get_session
+            async with _get_session() as _db:
+                entries = await watchlist_service.get_watchlist_async(_db, user_id=_uid)
+            return [e.model_dump() for e in entries]
+        except Exception as _exc:
+            logger.warning("[watchlist] DB-backed read failed, file fallback: %r", _exc)
     return [e.model_dump() for e in watchlist_service.get_watchlist()]
 
 
@@ -2145,6 +2256,8 @@ async def add_to_watchlist(
     request:      Request = None,
 ) -> dict:
     """Add *ticker* to the watchlist.  Idempotent — safe to call multiple times."""
+    from .dependencies.auth import require_user_id as _require_uid
+    _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
     # Phase 17 · Slice 6 — entitlement enforcement (no-op when ENTITLEMENTS_ENFORCED=false)
     try:
         from .services.entitlement_enforcement import (
@@ -2170,6 +2283,18 @@ async def add_to_watchlist(
     except Exception:
         pass  # enforcement is failure-open
 
+    # Phase 10B · Slice 2 — DB-backed membership when enabled (dual-writes file).
+    from .config import settings as _wl_s
+    if getattr(_wl_s, "watchlist_db_backed", False):
+        try:
+            from .db import get_session as _get_session
+            async with _get_session() as _db:
+                entry = await watchlist_service.add_ticker_async(
+                    _db, ticker, company_name, user_id=_uid)
+            return entry.model_dump()
+        except Exception as _exc:
+            logger.warning("[watchlist] DB-backed add failed, file fallback: %r", _exc)
+
     entry = watchlist_service.add_ticker(ticker, company_name)
     return entry.model_dump()
 
@@ -2180,8 +2305,25 @@ async def add_to_watchlist(
     summary="Remove a ticker from the watchlist",
     tags=["watchlist"],
 )
-async def remove_from_watchlist(ticker: str) -> dict:
-    """Remove *ticker* from the watchlist.  Returns {removed: bool}."""
+async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
+    """Remove *ticker* from the watchlist.  Returns {removed: bool}.
+
+    Phase 10B · Slice 2: routes through the DB-backed async path when
+    ``watchlist_db_backed`` is enabled (still removes the file entry too).
+    """
+    from .config import settings as _wl_s
+    from .dependencies.auth import require_user_id as _require_uid
+    _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
+    if getattr(_wl_s, "watchlist_db_backed", False):
+        try:
+            from .db import get_session as _get_session
+            async with _get_session() as _db:
+                removed = await watchlist_service.remove_ticker_async(
+                    _db, ticker, user_id=_uid)
+            return {"ticker": ticker.upper(), "removed": removed}
+        except Exception as _exc:
+            logger.warning("[watchlist] DB-backed remove failed, file fallback: %r", _exc)
+
     removed = watchlist_service.remove_ticker(ticker)
     return {"ticker": ticker.upper(), "removed": removed}
 
@@ -2424,8 +2566,17 @@ async def get_watchlist_themes() -> list:
         return []
 
 @router.get("/usage/stats", tags=["usage"])
-async def get_usage_stats() -> dict:
-    """Return aggregate usage statistics."""
+async def get_usage_stats(http_request: Request) -> dict:
+    """Return aggregate usage statistics.
+
+    Internal aggregate — admin-only by default (USAGE_STATS_ADMIN_ONLY).  The
+    system/bypass user is admin in single-tenant mode; when AUTH_ENABLED, only
+    ADMIN_USER_IDS may read it.  Never exposes per-user or cross-user rows.
+    """
+    from .config import settings as _s
+    if _s.usage_stats_admin_only:
+        from .security.authz import require_admin
+        require_admin(http_request)   # 401 unauth / 403 non-admin
     from .services.usage_tracking import usage_tracker
     return usage_tracker.get_totals()
 
@@ -2433,11 +2584,31 @@ async def get_usage_stats() -> dict:
 # ── Live Market Intelligence (Phase L) ───────────────────────────────────────
 
 @router.post("/events/ingest", tags=["events"])
-async def ingest_event(event_data: dict) -> dict:
+async def ingest_event(event_data: dict, http_request: Request) -> dict:
     """
     Ingest a normalized event and return impact assessments for all relevant tickers.
     Accepts NormalizedEvent-compatible dict.
+
+    Internal ingestion hook — OFF by default (EVENTS_INGEST_ENABLED).  When
+    enabled it requires admin authorization and enforces a payload-size cap
+    (MAX_EVENT_PAYLOAD_BYTES); unknown fields are dropped (schema restriction).
     """
+    from .config import settings as _s
+    # Disabled by default → do not expose an arbitrary-payload sink.
+    if not _s.events_ingest_enabled:
+        raise HTTPException(status_code=403, detail="Event ingestion is disabled.")
+    # Admin-only (system/bypass user in single-tenant; ADMIN_USER_IDS otherwise).
+    from .security.authz import require_admin
+    require_admin(http_request)
+    # Payload-size cap (schema restriction to known fields happens below).
+    import json as _json_ev
+    try:
+        _payload_bytes = len(_json_ev.dumps(event_data).encode("utf-8"))
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="Malformed event payload.")
+    if _payload_bytes > _s.max_event_payload_bytes:
+        raise HTTPException(status_code=413, detail="Event payload too large.")
+
     from .services.ingestion.normalized_event import NormalizedEvent, EventCategory, SourceReliability
     from .services.event_processor import process_event_for_watchlist, save_impact_assessment
     from .services.market_regime_tracker import update_regime

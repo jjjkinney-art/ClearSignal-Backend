@@ -14,7 +14,8 @@ Exit codes:
     1  — one or more checks failed
 
 Checks:
-    1.  db_table_count = 38  (includes billing tables from Phase 17 Slice 1)
+    1.  db_table_count >= 59  (growth floor; billing tables from Phase 17 Slice 1
+        are asserted individually in check 2)
     2.  billing tables exist: subscriptions, stripe_events, entitlement_cache
     3.  checkout route registered  (POST /billing/checkout)
     4.  webhook route registered   (POST /billing/webhook)
@@ -83,11 +84,14 @@ async def _check_db_tables():
         await engine.dispose()
 
         count = len(tables)
-        EXPECTED = 38
-        if count == EXPECTED:
-            _pass("db_table_count", f"found {count} tables")
+        # Growth floor rather than an exact count — the schema is added to
+        # routinely (was 38 at Phase 17 Slice 1, now 59). The billing tables
+        # themselves are asserted individually below, which is the real guard.
+        EXPECTED_MIN = 59
+        if count >= EXPECTED_MIN:
+            _pass("db_table_count", f"found {count} tables (>= {EXPECTED_MIN})")
         else:
-            _fail("db_table_count", f"found {count} tables, expected {EXPECTED}")
+            _fail("db_table_count", f"found {count} tables, expected >= {EXPECTED_MIN}")
 
         billing_tables = {"subscriptions", "stripe_events", "entitlement_cache"}
         missing = billing_tables - set(tables)

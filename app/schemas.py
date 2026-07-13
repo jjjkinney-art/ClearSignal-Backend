@@ -507,11 +507,11 @@ class Alert(BaseModel):
     # offer a concise interpretive summary explaining why the user should
     # care.  All fields are optional and may be omitted when no historical
     # data is available.
-    pattern_type: Optional[str] | None = None  # cluster / isolated / trend shift
-    historical_behavior: Optional[str] | None = None  # summary of outcome counts
-    typical_outcome: Optional[str] | None = None  # alert / reanalysis / thesis_change / none
-    interpretive_summary: Optional[str] | None = None  # one or two sentence narrative
-    why_this_matters: Optional[str] | None = None  # explanation for significance
+    pattern_type: Optional[str] = None  # cluster / isolated / trend shift
+    historical_behavior: Optional[str] = None  # summary of outcome counts
+    typical_outcome: Optional[str] = None  # alert / reanalysis / thesis_change / none
+    interpretive_summary: Optional[str] = None  # one or two sentence narrative
+    why_this_matters: Optional[str] = None  # explanation for significance
 
     # Internal meaning-first fields.  These fields support deeper
     # interpretation of alerts.  ``historical_case_type`` classifies
@@ -523,18 +523,18 @@ class Alert(BaseModel):
     # whether the present change appears to be a continuation,
     # escalation or isolated anomaly.  ``why_this_is_notable``
     # provides a concise reason why the alert is significant.
-    historical_case_type: Optional[str] | None = None
-    usual_historical_meaning: Optional[str] | None = None
-    current_case_interpretation: Optional[str] | None = None
-    why_this_is_notable: Optional[str] | None = None
+    historical_case_type: Optional[str] = None
+    usual_historical_meaning: Optional[str] = None
+    current_case_interpretation: Optional[str] = None
+    why_this_is_notable: Optional[str] = None
 
     # Deprecated interpretive fields retained for backward compatibility.  These
     # may be left unset in the final completion pass but remain in the
     # schema to avoid breaking older clients.
-    historical_pattern_description: Optional[str] | None = None
-    pattern_frequency: Optional[str] | None = None
-    historical_outcome_summary: Optional[str] | None = None
-    interpretive_significance: Optional[str] | None = None
+    historical_pattern_description: Optional[str] = None
+    pattern_frequency: Optional[str] = None
+    historical_outcome_summary: Optional[str] = None
+    interpretive_significance: Optional[str] = None
 
 # -----------------------------------------------------------------------------
 # New interpretation-first models introduced in the final completion pass.

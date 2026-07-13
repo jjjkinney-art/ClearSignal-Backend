@@ -58,8 +58,16 @@ def _make_request(
 
 
 def _run(coro):
-    """Run a coroutine synchronously in tests."""
-    return asyncio.get_event_loop().run_until_complete(coro)
+    """Run a coroutine synchronously in tests.
+
+    Uses asyncio.run (a fresh loop per call) rather than
+    asyncio.get_event_loop().run_until_complete: the latter raises
+    "There is no current event loop" once any earlier test in the process has
+    called asyncio.run() (which closes the loop it created).  That made this
+    whole file fail 17/43 whenever an asyncio.run()-based test ran first —
+    a run-order-dependent flake now removed.
+    """
+    return asyncio.run(coro)
 
 
 # ---------------------------------------------------------------------------

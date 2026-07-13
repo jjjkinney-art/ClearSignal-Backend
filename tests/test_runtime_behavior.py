@@ -27,15 +27,36 @@ sys.path.insert(0, str(_PROJECT_ROOT))
 
 
 # ── Bootstrap: stub ONLY external libs (pydantic, providers) ─────────────
+#
+# Each stub installs a FRESH fake module and records the original sys.modules
+# entry so teardown_module() can restore it.  The previous implementation reused
+# and mutated the real, pre-imported module in place (e.g. pydantic.BaseModel /
+# ValidationError), which leaked process-wide and broke FastAPI model-building in
+# later test files (order-dependent collection errors).  Installing a fresh
+# module and restoring on teardown keeps this hermetic suite isolated.
+
+_MISSING = object()
+_ORIG_SYS_MODULES: dict = {}
+
 
 def _stub(name, **attrs):
-    if name in sys.modules:
-        m = sys.modules[name]
-    else:
-        m = types.ModuleType(name); m.__path__ = []
-        sys.modules[name] = m
+    if name not in _ORIG_SYS_MODULES:
+        _ORIG_SYS_MODULES[name] = sys.modules.get(name, _MISSING)
+    m = types.ModuleType(name); m.__path__ = []
     for k, v in attrs.items(): setattr(m, k, v)
+    sys.modules[name] = m
     return m
+
+
+def teardown_module(module=None):
+    """Restore every module this file shadowed so the stubs never leak into
+    other test files (deterministic collection / CI reliability)."""
+    for name, orig in _ORIG_SYS_MODULES.items():
+        if orig is _MISSING:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = orig
+    _ORIG_SYS_MODULES.clear()
 
 
 pd = _stub("pydantic")

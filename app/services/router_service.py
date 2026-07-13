@@ -912,9 +912,9 @@ def _run_investment_pipeline(
     company: CompanyContext,
     question: str,
     request_id: str,
-    memory_context_block: str | None = None,
-    memory_context_data: dict | None = None,
-    dossier_context_block: str | None = None,
+    memory_context_block: Optional[str] = None,
+    memory_context_data: Optional[dict] = None,
+    dossier_context_block: Optional[str] = None,
 ) -> AgentAnswerResponse:
     """Run the full 5-agent investment pipeline for a detected company.
 

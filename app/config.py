@@ -270,6 +270,16 @@ class Settings(BaseSettings):
     # 0 (default) = effectively off even when delivery_in_app_enabled=True.
     delivery_canary_pct: int = 0
 
+    # ── Phase 10B · Slice 2 — Watchlist DB-backed membership ─────────────────
+    # When True, the /watchlist read/add/remove endpoints route through the
+    # DB-backed async membership path (WatchedTicker + watchlist_repo) instead
+    # of the JSON-file index, giving persistence across restarts and horizontal
+    # scale.  When False (default), the endpoints use the existing JSON-file
+    # path, preserving current single-instance behaviour exactly.  The async
+    # path dual-writes the file index and falls back to it when the DB is empty
+    # or unavailable, so enabling this is backward-compatible and failure-open.
+    watchlist_db_backed: bool = False
+
     # ── Phase 9A: Persistence layer ───────────────────────────────────────────
     # SQLAlchemy async database URL.  Supports two drivers:
     #   asyncpg  — postgresql+asyncpg://user:pass@host/db    (Render production)
@@ -599,6 +609,73 @@ class Settings(BaseSettings):
     # Gate for visual calibration metrics computation.
     # When False (default), calibration returns empty metrics.
     visual_calibration_enabled: bool = False
+
+    # ══════════════════════════════════════════════════════════════════════
+    # Sprint 0 — Public-launch security, cost-control & CORS.
+    # Safe-by-default: a fresh deploy fails CLOSED on the expensive path while
+    # local development keeps working (auth bypass + localhost CORS).  Every
+    # value is overridable via environment / .env.
+    # ══════════════════════════════════════════════════════════════════════
+
+    # Deployment environment.  Set APP_ENV=production on the live service so
+    # CORS refuses an unsafe wildcard+credentials configuration.  When empty,
+    # is_production falls back to Render detection (RENDER_SERVICE_ID).
+    app_env: str = ""
+
+    # ── CORS ──────────────────────────────────────────────────────────────
+    # Comma-separated explicit allowlist.  Defaults to common localhost dev
+    # origins.  Set CORS_ALLOW_ORIGINS to your real frontend origin(s) in prod.
+    cors_allow_origins: str = (
+        "http://localhost:3000,http://localhost:5173,"
+        "http://127.0.0.1:3000,http://127.0.0.1:5173"
+    )
+    cors_allow_credentials: bool = True
+
+    # ── Request size caps ─────────────────────────────────────────────────
+    # Hard caps on the /ask question length (characters) and on any request
+    # body (bytes).  Oversized -> 422 (field) / 413 (body).
+    ask_question_max_length: int = 4000
+    max_request_body_bytes: int = 65536          # 64 KiB
+    max_event_payload_bytes: int = 16384         # 16 KiB (/events/ingest)
+
+    # ── Rate limiting (in-process; per-IP + per-user) ─────────────────────
+    # NOTE: in-memory and per-process.  For multi-worker / multi-replica
+    # deploys, move the limiter backend to Redis (see app/security/rate_limit.py).
+    rate_limit_enabled: bool = True
+    rate_limit_window_s: int = 60
+    rate_limit_per_ip_per_min: int = 120         # global default, any route
+    rate_limit_ask_per_ip_per_min: int = 10      # strictest: /ask per IP
+    rate_limit_ask_per_user_per_min: int = 20    # /ask per authenticated user
+
+    # ── Per-user daily quota on the expensive /ask path ───────────────────
+    # -1 = unlimited.  System/bypass user is always unlimited.  Exceed -> 429.
+    ask_daily_quota: int = 50
+
+    # ── Sensitive endpoint lockdown ───────────────────────────────────────
+    # /events/ingest is an internal ingestion hook; OFF by default.  When
+    # enabled it still requires auth (when AUTH_ENABLED) + payload-size limits.
+    events_ingest_enabled: bool = False
+    # /usage/stats exposes internal aggregates; admin-only by default.  When
+    # AUTH_ENABLED, only admin_user_ids may read it.
+    usage_stats_admin_only: bool = True
+    admin_user_ids: str = ""                     # comma-separated user UUIDs
+
+    # ── Derived helpers (properties, not settings fields) ─────────────────
+    @property
+    def is_production(self) -> bool:
+        """True when running the live service (drives CORS hardening)."""
+        import os as _os
+        if self.app_env:
+            return self.app_env.strip().lower() in ("production", "prod")
+        return bool(_os.environ.get("RENDER_SERVICE_ID"))
+
+    @property
+    def cors_allow_origins_list(self) -> list:
+        return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+
+    @property
+    def admin_user_ids_list(self) -> list:
+        return [u.strip() for u in self.admin_user_ids.split(",") if u.strip()]
 
     if _CONFIG_DICT is not None:  # type: ignore[name-defined]
         model_config = _CONFIG_DICT  # type: ignore[assignment]

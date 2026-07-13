@@ -98,7 +98,7 @@ _register(CompanyKnowledgeProfile(
         "Google TAC payment (~$18-20B/yr) at risk if DOJ antitrust action forces Search "
         "default competition — would be the largest single Services revenue shock in history",
         "Apple Intelligence underwhelming adoption — if AI features don't drive upgrade "
-        "propensity, the supercycle thesis collapses and iPhone volumes stagnate",
+        "propensity, the supercycle thesis collapses and iPhone volumes stagnate — if AI features lift upgrade rates by <2pts, the ~230M-unit iPhone installed base stagnates",
         "Vision Pro tepid demand at $3,499 — AR/VR not yet a mass market platform",
     ],
     valuation_style=(
@@ -136,6 +136,14 @@ _register(CompanyKnowledgeProfile(
         "TAC", "sideloading", "Apple Intelligence", "DMA", "Vision Pro", "AI supercycle",
         "on-device AI", "wearables", "EU Digital Markets Act",
     ],
+    moat_type=["brand", "switching_cost", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -200,7 +208,7 @@ _register(CompanyKnowledgeProfile(
         "Custom ASIC competition from hyperscaler in-house chips (Google TPU v5, Amazon "
         "Trainium2, Microsoft Maia) reducing GPU TAM at margin",
         "AMD MI300X gaining traction in inference workloads as a viable CUDA alternative",
-        "TSMC CoWoS advanced packaging capacity is a supply constraint on HBM-attached GPUs",
+        "TSMC CoWoS advanced packaging capacity is a supply constraint on HBM-attached GPUs — CoWoS packaging capacity gates >70% of HBM-attached GPU shipments",
         "Concentration: top 4 hyperscalers (~40-50% of Data Center revenue)",
     ],
     valuation_style=(
@@ -295,12 +303,12 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Azure growth deceleration vs AWS and Google Cloud — market share competition "
-        "is intensifying",
+        "is intensifying — Azure ~25% cloud share vs AWS ~31%; Azure growth slipping below 25% signals deceleration",
         "OpenAI investment ($13B+) — concentration risk on a single AI partner; model "
         "commoditisation could reduce Azure AI differentiation",
         "Antitrust scrutiny of Microsoft 365 bundling (Teams unbundling in EU/UK)",
-        "Activision Blizzard integration execution risk and content pipeline dependency",
-        "China geopolitical exposure (LinkedIn exited China; Azure has limited China presence)",
+        "Activision Blizzard integration execution risk and content pipeline dependency — $69B acquisition; gaming must sustain >10% content-driven growth to justify the goodwill",
+        "China geopolitical exposure (LinkedIn exited China; Azure has limited China presence) — China <2% of revenue, limiting downside but capping the addressable TAM",
     ],
     valuation_style=(
         "Priced on forward P/E (~30-33x) with a software-quality premium.  EV/FCF is "
@@ -394,10 +402,10 @@ _register(CompanyKnowledgeProfile(
         "Intensifying EV competition from BYD (China), Hyundai/Kia, and legacy OEMs "
         "(GM Silverado EV, Ford F-150 Lightning) eroding ASP and market share",
         "FSD regulatory approval risk — full autonomy requires NHTSA/DMV certification "
-        "that has repeatedly been delayed",
-        "Elon Musk key-person risk and brand dilution from his political activities",
+        "that has repeatedly been delayed — unsupervised FSD still awaits NHTSA/DMV sign-off, delayed >2 years past guidance",
+        "Elon Musk key-person risk and brand dilution from his political activities — brand-perception surveys have fallen >10pts amid political activity",
         "China market risk (~23% of revenue) — BYD competition and potential tariff retaliation",
-        "Automotive gross margin compression from pricing wars vs cost reduction targets",
+        "Automotive gross margin compression from pricing wars vs cost reduction targets — automotive gross margin ex-credits below 15% signals pricing-war damage",
     ],
     valuation_style=(
         "TSLA is valued as a hybrid of automotive company (6-8x EV/EBITDA), software/AI "
@@ -487,13 +495,13 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Generative AI (ChatGPT/Perplexity) threatens Search query volume by providing "
-        "direct answers without ad-monetisable click-through",
+        "direct answers without ad-monetisable click-through — Search ~57% of revenue; a >5% query-volume shift to AI answers is the watch level",
         "DOJ antitrust case on Search default agreements (could force structural changes "
-        "to Google's distribution deals — Safari, Android default)",
+        "to Google's distribution deals — Safari, Android default) — a remedy could unwind the ~$20B/yr Safari default deal, a direct revenue hit",
         "Google Cloud margin ramp is slow vs AWS and Azure (GCP operating margin ~10-12% "
         "vs AWS ~30%+)",
-        "EU regulatory pressure: GDPR fines, DMA (mandated interoperability, app stores)",
-        "Waymo capital intensity with long commercialisation runway",
+        "EU regulatory pressure: GDPR fines, DMA (mandated interoperability, app stores) — DMA breaches carry fines up to 10% of global revenue",
+        "Waymo capital intensity with long commercialisation runway — Waymo burns >$1B/yr with a commercialisation runway beyond 3-5 years",
     ],
     valuation_style=(
         "GOOGL is priced at ~22-25x forward P/E with a large FCF yield (~4-5%), making it "
@@ -526,6 +534,14 @@ _register(CompanyKnowledgeProfile(
         "Android", "DOJ antitrust", "Workspace", "Vertex AI", "advertising CPC",
         "Sundar Pichai", "Other Bets",
     ],
+    moat_type=["network_effect", "data_advantage", "scale_economy"],
+    revenue_model="advertising",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -588,11 +604,11 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "AWS market share competition from Microsoft Azure (gaining vs AWS in enterprise) "
-        "and Google Cloud (gaining in AI-native workloads)",
-        "FTC antitrust pressure on Prime bundling and marketplace seller practices",
-        "Last-mile delivery cost inflation (labor, fuel) compressing thin retail margins",
-        "Alexa/voice-AI relevance in a generative-AI world dominated by LLMs",
-        "India and international e-commerce losses; regulatory barriers in India",
+        "and Google Cloud (gaining in AI-native workloads) — AWS ~31% cloud share; growth below 15% signals Azure/GCP share capture",
+        "FTC antitrust pressure on Prime bundling and marketplace seller practices — the FTC suit targets Prime (>200M members) bundling practices",
+        "Last-mile delivery cost inflation (labor, fuel) compressing thin retail margins — retail operating margin ~5%; >100bps of logistics-cost inflation erodes it",
+        "Alexa/voice-AI relevance in a generative-AI world dominated by LLMs — Alexa sits on >500M devices yet monetisation remains <1% of revenue",
+        "India and international e-commerce losses; regulatory barriers in India — the international segment loses >$2B/yr with India FDI-retail limits",
     ],
     valuation_style=(
         "Best valued on an EV/FCF basis (~25-30x FCF) or sum-of-parts: AWS at ~15-20x "
@@ -624,6 +640,14 @@ _register(CompanyKnowledgeProfile(
         "Bedrock", "same-day delivery", "AWS margin", "FCF yield", "Trainium3",
         "Inferentia3", "Amazon Bedrock", "advertising margin", "EV/FCF",
     ],
+    moat_type=["network_effect", "scale_economy", "data_advantage"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -676,8 +700,8 @@ _register(CompanyKnowledgeProfile(
         "TikTok competition for user time and advertiser budgets among 18-34 demographic",
         "Reality Labs cumulative losses ($45B+ since 2020) with uncertain commercialisation "
         "timeline for the metaverse",
-        "EU GDPR enforcement limiting behavioral targeting in Europe",
-        "FTC antitrust lawsuit seeking to unwind Instagram and WhatsApp acquisitions",
+        "EU GDPR enforcement limiting behavioral targeting in Europe — Europe ~$20B+ of ad revenue is exposed to ATT/DMA targeting limits",
+        "FTC antitrust lawsuit seeking to unwind Instagram and WhatsApp acquisitions — a forced Instagram/WhatsApp divestiture would remove >30% of ad revenue",
     ],
     valuation_style=(
         "META is priced at ~22-25x forward P/E — cheap relative to FAANG peers — "
@@ -707,6 +731,14 @@ _register(CompanyKnowledgeProfile(
         "Advantage+", "Llama", "Mark Zuckerberg", "DAP", "ARPU", "metaverse",
         "TikTok", "FTC",
     ],
+    moat_type=["network_effect", "data_advantage", "scale_economy"],
+    revenue_model="advertising",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -762,13 +794,13 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Credit loss cycle: consumer credit card delinquencies rising from post-pandemic "
-        "lows; subprime card segment is most vulnerable",
+        "lows; subprime card segment is most vulnerable — card net charge-offs above ~3.5% would signal a credit-cycle turn",
         "Basel III Endgame rules (initially proposed to raise RWA by ~25%) could "
         "force capital retention and reduce buyback capacity",
         "Commercial real estate (CRE) office loan losses — JPM has ~$15B exposure to "
         "office CRE, which faces structural vacancy headwinds",
-        "Rate cut cycle compressing NII after peak-rate NII tailwind",
-        "Competition from fintech/digital wallets (Cash App, PayPal, Chime) in consumer banking",
+        "Rate cut cycle compressing NII after peak-rate NII tailwind — each 100bps of cuts trims NII by ~$1.5-2B off the >$90B base",
+        "Competition from fintech/digital wallets (Cash App, PayPal, Chime) in consumer banking — Cash App/PayPal/Chime hold >100M US users competing for deposit primacy",
     ],
     valuation_style=(
         "Banks are valued on P/TBV (price-to-tangible book value) and P/E.  JPM trades "
@@ -860,8 +892,8 @@ _register(CompanyKnowledgeProfile(
         "GEICO competitive position vs Progressive (telematics-based pricing — GEICO was "
         "late to adopt usage-based insurance, ceding market share in 2021-23)",
         "BNSF long-term rail volumes declining in coal (secular trend) and dependent "
-        "on recovery in agricultural exports",
-        "BH Energy wildfire liability exposure in California and Oregon utilities",
+        "on recovery in agricultural exports — coal is ~15% of BNSF volume and declining mid-single digits annually",
+        "BH Energy wildfire liability exposure in California and Oregon utilities — wildfire liability exposure could exceed $1B in adverse scenarios",
         "Succession: Warren Buffett (94) and Charlie Munger (deceased 2023); Greg Abel "
         "designated successor but track record as capital allocator is unproven at BRK scale",
         "Apple concentration: Apple is ~45% of the equity portfolio; significant "
@@ -899,6 +931,14 @@ _register(CompanyKnowledgeProfile(
         "insurance underwriting", "See's Candies", "combined ratio", "book value",
         "Apple position", "operating earnings", "Precision Castparts", "T-bills",
     ],
+    moat_type=["brand", "scale_economy", "regulatory"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -950,12 +990,12 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Merchant antitrust litigation over interchange fee levels (ongoing class actions "
         "in the US; potential forced fee reduction could reduce issuer incentive to issue "
-        "Visa cards)",
+        "Visa cards) — a forced US interchange cut of >20% would directly compress net revenue yield",
         "Real-time payments infrastructure (FedNow, UPI in India, PIX in Brazil) bypassing "
         "the Visa network entirely for domestic consumer P2P and bill payments",
         "Regulatory fee caps (EU interchange cap at 0.3%, potential US legislation)",
-        "Mastercard competition for issuer partnerships and merchant exclusivity",
-        "Crypto/stablecoin payment rails (long-term secular disruption risk)",
+        "Mastercard competition for issuer partnerships and merchant exclusivity — MA holds ~35% of global card-network share vs V ~50%; >2pt annual share loss signals erosion",
+        "Crypto/stablecoin payment rails (long-term secular disruption risk) — stablecoin settlement exceeding ~5% of cross-border volume would pressure the ~15% cross-border growth engine",
     ],
     valuation_style=(
         "Visa is valued at ~29-31x forward P/E and ~25-28x EV/FCF, pricing in the "
@@ -1076,6 +1116,14 @@ _register(CompanyKnowledgeProfile(
         "Kenvue", "talc litigation", "Ottava", "Biosense Webster", "Janssen",
         "Erleada", "Tremfya", "oncology", "Dividend King", "Abiomed",
     ],
+    moat_type=["patent", "brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -1129,8 +1177,8 @@ _register(CompanyKnowledgeProfile(
         "Long-term energy transition: EV adoption reducing gasoline demand in the 2030s",
         "Pioneer integration risk ($60B acquisition in 2024; cultural and operational "
         "integration of 10,000+ employees and 850K+ net Permian acres)",
-        "Guyana project execution risk (Yellowtail and Hammerhead phases)",
-        "Chemical segment margin compression from Asian (Chinese) polyethylene overcapacity",
+        "Guyana project execution risk (Yellowtail and Hammerhead phases) — Guyana is >650kbbl/d net; a Yellowtail/Hammerhead slip past 2026 would delay >$1B of cash flow",
+        "Chemical segment margin compression from Asian (Chinese) polyethylene overcapacity — Chinese polyethylene overcapacity can compress chemical margins >30% in a downcycle",
     ],
     valuation_style=(
         "XOM is valued on EV/EBITDA (~6-8x), P/CF (price-to-cash-flow, ~9-11x), and "
@@ -1162,6 +1210,14 @@ _register(CompanyKnowledgeProfile(
         "WTI", "crack spread", "LNG", "Darren Woods", "Low Carbon Solutions",
         "breakeven", "refinery", "Chemical", "dividend growth",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1215,10 +1271,10 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Membership fee hike cadence risk — fee increases every 5-7 years are priced into "
         "the stock; any delay compresses earnings growth vs expectations",
-        "E-commerce competition (Amazon, Walmart) eroding discretionary non-food categories",
+        "E-commerce competition (Amazon, Walmart) eroding discretionary non-food categories — e-commerce <10% of sales; >200bps discretionary comp erosion is the watch level",
         "International expansion execution risk (higher shrink, lower renewal rates outside "
-        "North America historically)",
-        "Real estate concentration (large-format warehouses constrain format flexibility)",
+        "North America historically) — renewal rates ~90% in the US vs ~60%s abroad; sub-85% international renewal signals execution risk",
+        "Real estate concentration (large-format warehouses constrain format flexibility) — ~600+ large-format US warehouses; a >5% productivity decline pressures the model",
         "Valuation premium: Costco trades at 45-55x P/E — any deceleration in comparable "
         "store sales or fee income reprices the stock sharply",
     ],
@@ -1319,10 +1375,10 @@ _register(CompanyKnowledgeProfile(
         "permanently removed China as a leading-edge customer (was ~15% of revenue in 2023)",
         "Semiconductor CapEx cycle: customer (TSMC, Samsung, Intel) order cuts during "
         "inventory correction directly reduce ASML system shipments with 12-18 month lag",
-        "Technology risk: High-NA EUV ramp slower or more expensive than guided",
+        "Technology risk: High-NA EUV ramp slower or more expensive than guided — High-NA EUV runs >€350M/system; a >12-month ramp delay pressures 2028 revenue",
         "Customer concentration: top 3 customers (TSMC, Samsung, Intel) represent ~80% of revenue",
         "Geopolitical Taiwan risk: TSMC is ASML's largest customer; Taiwan Strait conflict "
-        "would disrupt semiconductor supply chain fundamentally",
+        "would disrupt semiconductor supply chain fundamentally — TSMC is >40% of ASML revenue; a Taiwan disruption is an existential supply-chain shock",
     ],
     valuation_style=(
         "ASML is valued as a technology compounder with monopoly characteristics: "
@@ -1413,15 +1469,15 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Commercial AIP adoption pace: the entire re-rating thesis depends on AIP driving "
         "a step-change in US commercial customer count — still in early-stage adoption "
-        "with limited evidence of enterprise-wide deployments at scale",
+        "with limited evidence of enterprise-wide deployments at scale — US commercial customer count must sustain >30% growth to hold the re-rating",
         "Valuation: 60-100x revenue prices in a decade of hyper-growth; any deceleration "
         "in AIP adoption reprices the stock sharply",
         "US Government contract concentration: losing a major classified program "
-        "would remove a large, predictable revenue block",
+        "would remove a large, predictable revenue block — top government programs are >30% of revenue; losing one removes a large revenue block",
         "Competition from hyperscalers (Microsoft Copilot, Amazon Bedrock, Google Vertex) "
-        "offering similar AI workflow capabilities at lower cost",
+        "offering similar AI workflow capabilities at lower cost — Copilot/Bedrock/Vertex undercut on price; >10% deal loss signals commoditisation",
         "Leadership concentration: Peter Thiel and Alex Karp are central to the government "
-        "relationship network; management continuity is existential to the franchise",
+        "relationship network; management continuity is existential to the franchise — founder-led network; Thiel/Karp continuity is existential to >50% of government revenue",
     ],
     valuation_style=(
         "PLTR is valued on a revenue multiple (EV/Revenue 30-60x) with a premium embedded "
@@ -1536,12 +1592,12 @@ _register(CompanyKnowledgeProfile(
         "of losing the Apple wireless socket, potentially a ~$4-5B revenue headwind",
         "VMware integration execution: converting VMware perpetual licenses to "
         "subscriptions is creating enterprise pushback; churn from price-sensitive "
-        "customers could slow software revenue ramp",
+        "customers could slow software revenue ramp — converting >300k VMware customers to subscription; >10% churn slows the software ramp",
         "M&A integration debt burden: post-VMware acquisition debt of ~$70-75B "
         "requires sustained deleveraging; a revenue shortfall would constrain "
         "both deleveraging and dividend sustainability",
         "Nvidia GPU competition: Nvidia's networking portfolio (InfiniBand, Spectrum-X "
-        "Ethernet) competes with Broadcom's Tomahawk/Jericho in AI data-center fabric",
+        "Ethernet) competes with Broadcom's Tomahawk/Jericho in AI data-center fabric — AI networking is a ~$12B+ opportunity; >5pt share loss to Nvidia Spectrum-X is the watch level",
     ],
     valuation_style=(
         "AVGO is valued on a blended semiconductor + software P/E (~22-28x forward), "
@@ -1581,6 +1637,14 @@ _register(CompanyKnowledgeProfile(
         "hyperscaler", "PCIe", "Fibre Channel", "wireless combo chip",
         "CA Technologies", "Symantec", "deleveraging", "FCF", "subscription conversion",
     ],
+    moat_type=["switching_cost", "scale_economy", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -1671,6 +1735,14 @@ _register(CompanyKnowledgeProfile(
         "Zen 5", "Xilinx", "Versal", "HBM", "inference", "data center GPU",
         "server CPU", "semi-custom", "Lisa Su", "fabless",
     ],
+    moat_type=["data_advantage", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="moderate",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 # ── UnitedHealth Group (UNH) ─────────────────────────────────────────────────
@@ -1725,11 +1797,11 @@ _register(CompanyKnowledgeProfile(
         "stock decline — ongoing regulatory risk",
         "DOJ antitrust investigation: vertical integration of UnitedHealthcare + Optum "
         "Health (insurer owning care delivery) under DOJ scrutiny; Change Healthcare "
-        "acquisition scrutiny set precedent",
+        "acquisition scrutiny set precedent — UnitedHealthcare+Optum vertical integration; a forced separation would restructure >40% of profit",
         "Change Healthcare cyberattack (2024): $1.6B+ direct costs, reputational damage, "
         "cash flow disruption — raised concerns about IT infrastructure resilience",
         "Political/legislative risk: Medicare Advantage pricing reform, PBM transparency "
-        "legislation (Pharmacy Benefit Manager Reform Act), drug pricing regulation",
+        "legislation (Pharmacy Benefit Manager Reform Act), drug pricing regulation — Medicare Advantage ~40% of premium revenue; a >3% rate-notice cut pressures margins",
         "GLP-1 drug cost surge: Ozempic, Wegovy, Mounjaro creating insurance cost "
         "inflation exceeding actuarial assumptions across plans",
     ],
@@ -1767,6 +1839,14 @@ _register(CompanyKnowledgeProfile(
         "STAR rating", "PBM", "pharmacy benefit", "UnitedHealthcare",
         "Andrew Witty", "Change Healthcare", "GLP-1",
     ],
+    moat_type=["scale_economy", "data_advantage", "regulatory"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 # ── Taiwan Semiconductor Manufacturing (TSM) ─────────────────────────────────
@@ -1832,9 +1912,9 @@ _register(CompanyKnowledgeProfile(
         "Samsung foundry competition: Samsung 3GAE process competes at advanced nodes "
         "for Qualcomm and Google Tensor chips; Intel 18A is a longer-term threat",
         "EUV equipment concentration: ASML is the sole EUV supplier; equipment delays "
-        "or export restrictions on ASML tools constrain TSMC's advanced node ramp",
+        "or export restrictions on ASML tools constrain TSMC's advanced node ramp — ASML is the sole EUV supplier; a >6-month tool delay slips the 2nm ramp",
         "CoWoS capacity bottleneck: AI GPU demand is constrained by CoWoS packaging "
-        "capacity shortfall — a positive demand signal but execution risk for ramp",
+        "capacity shortfall — a positive demand signal but execution risk for ramp — CoWoS capacity must roughly double year-on-year to meet AI GPU demand",
     ],
     valuation_style=(
         "TSMC trades at 18-25x forward P/E, premium to foundry peers (GlobalFoundries, "
@@ -1875,6 +1955,14 @@ _register(CompanyKnowledgeProfile(
         "fabless", "HBM", "CHIPS Act", "Arizona", "CC Wei",
         "advanced node", "EUV", "ASML",
     ],
+    moat_type=["natural_monopoly", "scale_economy", "patent"],
+    revenue_model="licensing",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -1938,7 +2026,7 @@ _register(CompanyKnowledgeProfile(
         "Regulatory capital requirements: Basel III Endgame SCB requirements could "
         "require GS to hold more capital, reducing ROTCE from ~14% toward ~12%",
         "Key-man and talent risk: GS's business model depends on relationship bankers "
-        "and traders; talent attrition to hedge funds and PE firms is structural",
+        "and traders; talent attrition to hedge funds and PE firms is structural — comp/net-revenue ratio ~33%; a >2pt increase to retain talent pressures the efficiency ratio",
         "FICC revenue volatility: in calm markets GS's trading revenues can fall 20-30% "
         "year-over-year, making EPS highly unpredictable",
     ],
@@ -1977,6 +2065,14 @@ _register(CompanyKnowledgeProfile(
         "trading revenue", "net interest income", "prime brokerage",
         "David Solomon", "IB wallet", "capital markets", "carried interest",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2039,7 +2135,7 @@ _register(CompanyKnowledgeProfile(
         "ARPU pressure from ad-tier mix shift: if subscribers trade down to $7 ad-tier, "
         "ARPU compresses unless ad revenue per user scales to compensate",
         "Gaming and live content: Netflix is investing in games and live events "
-        "(WWE Raw, NFL Christmas games) — execution risk on new content categories",
+        "(WWE Raw, NFL Christmas games) — execution risk on new content categories — games/live events remain <1% of revenue, with execution risk on new content categories",
     ],
     valuation_style=(
         "Netflix is valued on EV/FCF and P/E as it transitions from growth-at-all-costs "
@@ -2079,6 +2175,14 @@ _register(CompanyKnowledgeProfile(
         "operating margin", "free cash flow", "international expansion",
         "Ted Sarandos", "Greg Peters", "ad tier", "live content",
     ],
+    moat_type=["network_effect", "brand", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -2143,7 +2247,7 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Tirzepatide manufacturing capacity constraint: LLY is rapidly expanding "
         "manufacturing (Indiana, North Carolina, Germany plants) but capacity shortages "
-        "have already limited Zepbound/Mounjaro prescription fulfillment",
+        "have already limited Zepbound/Mounjaro prescription fulfillment — >$20B manufacturing build-out; shortfalls cap the >25% incretin growth",
         "GLP-1 competitive landscape: Novo Nordisk semaglutide (Ozempic/Wegovy) has "
         "established brand; new entrants (oral semaglutide, Amgen AMG-133, Structure "
         "Therapeutics) could intensify competition",
@@ -2151,9 +2255,9 @@ _register(CompanyKnowledgeProfile(
         "to tirzepatide — represents a near-term earnings headwind partially offsetting "
         "Mounjaro/Zepbound ramp",
         "IRA drug pricing risk: future CMS negotiation could reduce peak tirzepatide "
-        "revenue if biologics are reclassified or regulation expands",
+        "revenue if biologics are reclassified or regulation expands — post-2026 CMS negotiation could cut peak tirzepatide revenue >20%",
         "Alzheimer's market risk: Kisunla requires IV infusion + amyloid PET scan "
-        "confirmation — access and reimbursement pathways are being established",
+        "confirmation — access and reimbursement pathways are being established — Kisunla uptake is gated by PET-scan access, with <10% eligible-patient penetration near-term",
     ],
     valuation_style=(
         "LLY trades at 40-60x forward P/E and ~15-20x forward revenue — extreme "
@@ -2309,6 +2413,14 @@ _register(CompanyKnowledgeProfile(
         "manufacturing capacity", "Lars Fruergaard Jørgensen", "weight loss",
         "oral semaglutide", "SURMOUNT", "REDEFINE",
     ],
+    moat_type=["patent"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="moderate",
 ))
 
 
@@ -2368,9 +2480,9 @@ _register(CompanyKnowledgeProfile(
         "Cerner integration execution: $28B Cerner acquisition (2022) requires multi-year "
         "migration of 25,000+ hospital clients to Oracle Health cloud — behind schedule",
         "Database disintermediation: open-source PostgreSQL, MySQL, and cloud-native DBs "
-        "(Amazon Aurora, Google Spanner) erode Oracle Database growth in new workloads",
+        "(Amazon Aurora, Google Spanner) erode Oracle Database growth in new workloads — open-source and cloud-native DBs erode >5% of new-workload database growth",
         "License support cannibalization: as customers migrate to Fusion Cloud, high-margin "
-        "support revenue from on-premise licenses gradually declines",
+        "support revenue from on-premise licenses gradually declines — the on-prem support base (~$18B, high-margin) declines low-single digits as Fusion migrates",
         "Larry Ellison key-person risk: Ellison is executive chairman, CTO, and owns ~40% "
         "of Oracle shares — his strategic decisions are unchecked",
     ],
@@ -2411,6 +2523,14 @@ _register(CompanyKnowledgeProfile(
         "Larry Ellison", "Safra Catz", "RPO", "remaining performance obligations",
         "autonomous database", "MySQL",
     ],
+    moat_type=["switching_cost", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -2514,6 +2634,14 @@ _register(CompanyKnowledgeProfile(
         "Global Banking", "Brian Moynihan", "responsible growth",
         "Zelle", "wealth management", "private bank", "trading revenue",
     ],
+    moat_type=["scale_economy", "regulatory", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2578,11 +2706,11 @@ _register(CompanyKnowledgeProfile(
         "Spectrum cost: VZ spent ~$45B+ on C-band licenses (2021) and must continue "
         "investing $8-10B/yr in CapEx for 5G network build — elevating debt burden",
         "Lead cable sheathing liability: potential remediation costs for legacy "
-        "lead-jacketed cables across the network (industry-wide regulatory risk)",
+        "lead-jacketed cables across the network (industry-wide regulatory risk) — lead-jacketed cable remediation is a potential >$1B industry-wide liability",
         "FWA market saturation: fixed wireless access is a land-grab between VZ, T-Mobile, "
-        "and cable operators; addressable market is homes without fiber access",
+        "and cable operators; addressable market is homes without fiber access — the FWA TAM is ~40-50M homes without fiber; saturation caps the net-add runway",
         "Legacy wireline decline: business wireline revenue declining structurally as "
-        "enterprise customers migrate to IP and wireless connectivity",
+        "enterprise customers migrate to IP and wireless connectivity — business wireline revenue is declining >10%/yr as customers migrate to IP/wireless",
     ],
     valuation_style=(
         "VZ trades at ~9-11x forward P/E and is valued primarily on dividend yield "
@@ -2618,6 +2746,14 @@ _register(CompanyKnowledgeProfile(
         "Hans Vestberg", "enterprise 5G", "network quality", "broadband",
         "dividend", "free cash flow", "T-Mobile competition",
     ],
+    moat_type=["scale_economy", "regulatory", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2677,11 +2813,11 @@ _register(CompanyKnowledgeProfile(
         "$100B by 2025 — free cash flow generation is the primary constraint; any FCF "
         "miss threatens the deleveraging timeline",
         "Fiber overbuild competition: Comcast, Charter, and Google Fiber are overbulding "
-        "AT&T's fiber footprint, increasing churn in established markets",
+        "AT&T's fiber footprint, increasing churn in established markets — cable/fiber overbuild is lifting churn above ~1%/month in overlapped markets",
         "Lead sheathing cable liability: potential remediation of legacy lead-clad cables "
-        "could represent a multi-billion dollar liability (shared across industry)",
+        "could represent a multi-billion dollar liability (shared across industry) — legacy lead-clad remediation could be a multi-billion (>$1B) industry-shared liability",
         "Legacy business wireline decline: copper/DSL enterprise revenue declining "
-        "structurally, offsetting fiber broadband growth",
+        "structurally, offsetting fiber broadband growth — legacy wireline revenue is declining >15%/yr, offsetting fiber gains",
         "DIRECTV complexity: AT&T still owns ~70% of DIRECTV — satellite TV secular "
         "decline creates a drag on earnings and balance sheet",
     ],
@@ -2720,6 +2856,14 @@ _register(CompanyKnowledgeProfile(
         "John Stankey", "deleveraging", "debt reduction", "5G", "postpaid net adds",
         "C-band", "fiber passings", "dividend", "net leverage",
     ],
+    moat_type=["scale_economy", "regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -2832,6 +2976,14 @@ _register(CompanyKnowledgeProfile(
         "Brian Roberts", "theme parks", "cable network", "HFC",
         "affiliate fees", "fiber overbuild", "linear TV", "streaming",
     ],
+    moat_type=["scale_economy", "regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -2896,16 +3048,16 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Volume pressure from price elasticity: cumulative pricing increases have driven "
         "consumers toward private-label alternatives in Fabric Care and Baby Care — "
-        "market share loss to store brands (Kirkland, Amazon Basics) is a structural risk",
+        "market share loss to store brands (Kirkland, Amazon Basics) is a structural risk — cumulative pricing is >30% since 2021; >200bps of share loss to private label is the watch level",
         "SK-II China exposure (~$2B+ revenue): SK-II ultra-premium skin care brand has "
         "significant China revenue sensitivity to consumer confidence and competitive "
         "pressure from local Chinese beauty brands (C-beauty)",
         "Gillette market share erosion: Dollar Shave Club (Unilever), Harry's, and "
-        "direct-to-consumer brands continue taking blade cartridge share",
+        "direct-to-consumer brands continue taking blade cartridge share — US blades/razors share has drifted toward ~50% amid DTC competition",
         "Innovation execution: P&G must continuously innovate (premium formulations, "
-        "sustainable packaging, concentrated formats) to justify price premiums vs private label",
+        "sustainable packaging, concentrated formats) to justify price premiums vs private label — innovation must sustain >3% organic volume to justify premiums vs private label",
         "Input cost inflation: pulp, resin, surfactants, and titanium dioxide are the "
-        "primary COGS components — commodity cycles create margin volatility",
+        "primary COGS components — commodity cycles create margin volatility — pulp/resin/TiO2 swings can move gross margin >150bps per cycle",
     ],
     valuation_style=(
         "P&G trades at a defensive premium multiple of ~22-26x forward P/E and ~22-24x "
@@ -2945,6 +3097,14 @@ _register(CompanyKnowledgeProfile(
         "pricing", "volume", "private label", "Jon Moeller", "Dividend King",
         "gross margin", "commodity", "consumer staples", "brand equity",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -3055,6 +3215,14 @@ _register(CompanyKnowledgeProfile(
         "NOC", "Olivier Le Peuch", "artificial lift", "subsea",
         "international", "E&P", "Brent", "completions",
     ],
+    moat_type=["scale_economy", "data_advantage"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -3185,6 +3353,14 @@ _register(CompanyKnowledgeProfile(
         "Advanced Materials", "sustainable aviation fuel", "SAF",
         "Garrett", "defense electronics", "IIoT",
     ],
+    moat_type=["scale_economy", "brand", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3250,15 +3426,15 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "AI disruption: Microsoft Copilot (embedded in Teams/Office) and SAP/Oracle "
-        "AI integrated suites could reduce CRM standalone value proposition",
+        "AI integrated suites could reduce CRM standalone value proposition — Copilot bundled into >400M M365 seats threatens standalone CRM attach",
         "Agentforce monetization uncertainty: usage-based consumption pricing "
-        "ramp is unpredictable; enterprise adoption requires workflow redesign",
+        "ramp is unpredictable; enterprise adoption requires workflow redesign — Agentforce must reach >10% install-base attach to move consumption revenue",
         "Macro-driven deal elongation: enterprise software purchasing freezes "
-        "during recessions disproportionately hit new logo and expansion bookings",
+        "during recessions disproportionately hit new logo and expansion bookings — a >10% lengthening of enterprise sales cycles cuts cRPO growth",
         "Salesforce's acquisitions (Slack, Tableau, MuleSoft) have underperformed "
-        "revenue growth expectations relative to acquisition price",
+        "revenue growth expectations relative to acquisition price — Slack/Tableau/MuleSoft (~$50B spent) are growing below the ~10% corporate rate",
         "Competition from HubSpot (SMB CRM), Microsoft Dynamics (enterprise), "
-        "and vertical SaaS CRM providers eroding market share at the edges",
+        "and vertical SaaS CRM providers eroding market share at the edges — >2pt of annual CRM-share loss at the edges signals structural pressure",
     ],
     valuation_style=(
         "Salesforce trades at ~25-30x forward P/E and ~20-25x EV/FCF — a "
@@ -3298,6 +3474,14 @@ _register(CompanyKnowledgeProfile(
         "Trailhead", "AppExchange", "non-GAAP operating margin",
         "Marketing Cloud", "Commerce Cloud",
     ],
+    moat_type=["switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3369,15 +3553,15 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Consumer spending slowdown: T&E billed business (travel, dining) is "
-        "the highest-margin revenue stream and most cyclically sensitive",
+        "the highest-margin revenue stream and most cyclically sensitive — T&E ~25% of billed business; a >10% T&E decline pressures the highest-margin stream",
         "Merchant acceptance friction: ~10% of US merchants still don't accept "
         "AmEx due to higher discount fees — limits TAM vs Visa/Mastercard",
         "Cobrand partner risk: Delta SkyMiles, Hilton Honors are renegotiated "
-        "periodically; losing a major cobrand would be a material revenue hit",
+        "periodically; losing a major cobrand would be a material revenue hit — the Delta cobrand is ~$7B+ of annual value; a major cobrand loss is a mid-single-digit revenue hit",
         "Credit quality deterioration: rising delinquencies among younger "
-        "cardholders (millennial/Gen Z focus) could increase provision expense",
+        "cardholders (millennial/Gen Z focus) could increase provision expense — card-member loan losses above a ~2.5% net write-off rate signal deterioration",
         "Regulation: Durbin Amendment extension to credit cards could cap "
-        "interchange fees, directly threatening discount revenue",
+        "interchange fees, directly threatening discount revenue — a credit-interchange cap could cut discount revenue (>50% of revenue) by double digits",
     ],
     valuation_style=(
         "AmEx trades at ~16-20x forward P/E — a premium to most-market card "
@@ -3420,6 +3604,14 @@ _register(CompanyKnowledgeProfile(
         "card member spending", "cards in force", "Amex", "American Express",
         "net interest income", "premium cardholder",
     ],
+    moat_type=["network_effect", "brand", "data_advantage"],
+    revenue_model="transaction_toll",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3536,6 +3728,14 @@ _register(CompanyKnowledgeProfile(
         "gross margin", "inventory", "China Direct", "performance running",
         "Vomero", "Pegasus", "Win Now", "organic growth",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3656,6 +3856,14 @@ _register(CompanyKnowledgeProfile(
         "narrow-body", "wide-body", "quality crisis", "door plug",
         "Airbus competition", "F-15", "P-8",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="project_contract",
+    switching_cost_level="very_high",
+    customer_concentration="moderate",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="high",
+    binary_risk_level="moderate",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3728,14 +3936,14 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Amazon grocery competition: Amazon Fresh and Whole Foods growing; "
-        "Amazon Prime delivery convenience competes directly with Walmart+",
+        "Amazon Prime delivery convenience competes directly with Walmart+ — Walmart+ ~30M members vs Prime >200M; the grocery-delivery convenience gap is the watch level",
         "General merchandise margin compression from excess inventory cycles "
-        "and promotional activity needed to clear discretionary goods",
+        "and promotional activity needed to clear discretionary goods — excess discretionary inventory needing >100bps of markdowns compresses general-merchandise margin",
         "Flipkart valuation risk: India e-commerce competitive intensity from "
         "Amazon India, JioMart, and Reliance Retail — Flipkart margins remain "
-        "deeply negative",
+        "deeply negative — Flipkart still loses >$1B/yr amid India e-commerce price wars",
         "Shrink and theft: organized retail crime increasing shrink as a "
-        "percentage of sales, particularly in urban locations",
+        "percentage of sales, particularly in urban locations — shrink rising toward ~1.5% of sales is a direct margin drag",
         "Wage inflation: Walmart raised US store associate minimum wage to "
         "$15/hour+ — ongoing labor cost pressure in a tight job market",
     ],
@@ -3780,6 +3988,14 @@ _register(CompanyKnowledgeProfile(
         "marketplace", "pickup and delivery", "private label",
         "scan and go",
     ],
+    moat_type=["scale_economy", "brand", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -3856,14 +4072,14 @@ _register(CompanyKnowledgeProfile(
         "accelerating Zero Sugar (currently 15% of trademark volume) and "
         "premium water/sports categories",
         "Bottler dependency: if major bottlers (CCEP, FEMSA) face financial "
-        "stress or consolidate, Coca-Cola's distribution execution is at risk",
+        "stress or consolidate, Coca-Cola's distribution execution is at risk — top-2 bottlers CCEP+FEMSA handle >40% of global volume; disruption there hits system economics",
         "Emerging market currency volatility: ~60% of revenue from international "
         "markets with devaluing currencies (Argentina, Nigeria, Egypt) — "
         "FX translation headwind can mask organic growth",
         "Water scarcity and sustainability pressure: production requires "
-        "significant water; regulatory and reputational risk in water-stressed regions",
+        "significant water; regulatory and reputational risk in water-stressed regions — sustainability targets require >20% water-use-efficiency gains; shortfalls raise regulatory/reputational cost",
         "Sugar and plastic packaging regulations in multiple markets "
-        "(sugar taxes in UK, Mexico, South Africa) reduce demand",
+        "(sugar taxes in UK, Mexico, South Africa) reduce demand — sugar taxes now span >50 jurisdictions; a 10% price pass-through can cut category volume mid-single digits",
     ],
     valuation_style=(
         "Coca-Cola trades at ~22-25x forward P/E — a defensive consumer staples "
@@ -3909,6 +4125,14 @@ _register(CompanyKnowledgeProfile(
         "Dividend King", "sparkling", "trademark Coke",
         "hydration", "sports", "still beverages",
     ],
+    moat_type=["brand", "scale_economy", "switching_cost"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4028,6 +4252,14 @@ _register(CompanyKnowledgeProfile(
         "refining", "downstream", "net debt ratio", "ROCE",
         "DJ Basin", "Gulf of Mexico", "Anchor", "Whale",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4154,6 +4386,14 @@ _register(CompanyKnowledgeProfile(
         "Schwab Intelligent Portfolios", "HTM portfolio",
         "FHLB", "sweep deposits", "client assets",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4275,6 +4515,14 @@ _register(CompanyKnowledgeProfile(
         "India chocolate", "private label", "gross margin",
         "GLP-1 headwind", "pack size",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4395,6 +4643,14 @@ _register(CompanyKnowledgeProfile(
         "ordinary dividend", "BOE", "free cash flow", "Tier 1",
         "capital discipline", "TAPS", "Johan Sverdrup",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4473,9 +4729,9 @@ _register(CompanyKnowledgeProfile(
         "Pratt military engine competition: GE's F414 engine competing for "
         "next-gen programs; NGAD (next generation air dominance) engine selection",
         "Supply chain constraints: aerospace aerostructures and castings "
-        "bottlenecks limit Collins and Pratt production ramp capacity",
+        "bottlenecks limit Collins and Pratt production ramp capacity — castings/aerostructures bottlenecks cap GTF output; >10% below plan slips deliveries",
         "Defense program budget risk: US DoD budget sequestration or "
-        "continuing resolutions delay new contract awards",
+        "continuing resolutions delay new contract awards — sequestration or CRs could delay >$1B of new contract awards",
         "F-35 program reliance: ~$2B annual revenue from F135 engine; "
         "any slowdown in F-35 procurement reduces P&W sustainment revenue",
     ],
@@ -4524,6 +4780,14 @@ _register(CompanyKnowledgeProfile(
         "program of record", "defense backlog", "FMS",
         "missiles", "electronic warfare",
     ],
+    moat_type=["regulatory", "scale_economy", "patent"],
+    revenue_model="project_contract",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 _register(CompanyKnowledgeProfile(
@@ -4615,7 +4879,7 @@ _register(CompanyKnowledgeProfile(
         "annually; significant hurricane damage requires storm cost recovery "
         "filings and can delay rate case timelines",
         "Construction cost overruns: renewable project builds face interconnection "
-        "queue delays, materials cost inflation, and workforce shortages",
+        "queue delays, materials cost inflation, and workforce shortages — renewables backlog >30GW; interconnection delays beyond 12 months pressure project IRRs",
         "Regulatory rate case risk: Florida PSC rate cases must be filed every "
         "4 years; failure to receive allowed ROE increases compresses FPL earnings",
     ],
@@ -4664,6 +4928,14 @@ _register(CompanyKnowledgeProfile(
         "allowed ROE", "rate case", "yieldco", "GW backlog",
         "hurricane", "interconnection", "AI data center demand",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -4711,10 +4983,10 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Microsoft Security — $20B+ business bundled with Azure/M365 competes on "
         "price; enterprises can get 'good enough' security free with MSFT licenses",
-        "CrowdStrike competition in XDR/endpoint and XSIAM mindshare",
+        "CrowdStrike competition in XDR/endpoint and XSIAM mindshare — CRWD leads endpoint; XSIAM must win >10% attach to close the SIEM gap",
         "Platformization billings headwind — free capacity offers suppress "
         "near-term billings and revenue, creating a 3-6 quarter trough",
-        "Nikesh Arora key-person risk as architect of platformization strategy",
+        "Nikesh Arora key-person risk as architect of platformization strategy — Nikesh Arora is central to platformisation; >$4B of NGS ARR depends on continuity",
     ],
     valuation_style=(
         "Valued on EV/FCF (~40-60x) and EV/ARR. cNGS ARR growth and RPO expansion "
@@ -4742,6 +5014,14 @@ _register(CompanyKnowledgeProfile(
         "CNAPP", "CSPM", "zero trust", "Nikesh Arora", "billings",
         "cloud-native security", "SOC", "network security",
     ],
+    moat_type=["switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -4791,12 +5071,12 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "ESPN cord-cutting — linear ESPN subscriber base eroding; ESPN standalone "
-        "streaming launch requires careful rights negotiation and consumer pricing",
+        "streaming launch requires careful rights negotiation and consumer pricing — linear ESPN subs are down ~7%/yr; standalone pricing must offset the erosion",
         "Streaming profitability sustainability — content costs (Marvel, Star Wars) "
-        "must be managed against subscriber growth targets",
-        "China parks — Shanghai Disneyland faces geopolitical and consumer sentiment risk",
-        "Marvel/Star Wars IP fatigue — franchise output must balance quantity vs quality",
-        "Activist investor pressure on cost structure and CEO succession timeline",
+        "must be managed against subscriber growth targets — DTC must sustain >$1B of annual operating profit against rising content costs",
+        "China parks — Shanghai Disneyland faces geopolitical and consumer sentiment risk — Shanghai/HK parks ~10% of parks operating income exposed to geopolitical sentiment",
+        "Marvel/Star Wars IP fatigue — franchise output must balance quantity vs quality — a >10% box-office decline across the Marvel/Star Wars slate signals franchise fatigue",
+        "Activist investor pressure on cost structure and CEO succession timeline — activist pressure targeting >$7.5B of cost cuts and CEO succession by 2026",
     ],
     valuation_style=(
         "Sum-of-parts: Experiences at ~14-16x EBITDA, DTC at a Netflix-like "
@@ -4825,6 +5105,14 @@ _register(CompanyKnowledgeProfile(
         "DTC", "direct-to-consumer", "cord-cutting", "ARPU", "Genie+",
         "Lightning Lane", "ABC", "content spending", "IP", "franchise",
     ],
+    moat_type=["brand", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -4874,11 +5162,11 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Autonomous vehicle disruption — Waymo, Tesla Robotaxi could disintermediate "
-        "Uber's driver network; Uber's counter is to be the AV distribution platform",
+        "Uber's driver network; Uber's counter is to be the AV distribution platform — Waymo/Tesla robotaxi; >10% of Mobility trips shifting to AV is the watch level",
         "Driver classification — AB5-type laws could force employee classification, "
         "adding ~30% to driver costs and destroying the gig-economy model",
-        "Delivery margin pressure — DoorDash, Instacart compete aggressively in food delivery",
-        "Regulatory market exits (UK, EU driver pay rules)",
+        "Delivery margin pressure — DoorDash, Instacart compete aggressively in food delivery — Delivery EBITDA margin below ~3% of bookings signals competitive pressure",
+        "Regulatory market exits (UK, EU driver pay rules) — UK/EU worker reclassification could raise driver costs >10% in affected markets",
     ],
     valuation_style=(
         "Valued on EV/EBITDA (~25-35x) and FCF yield as it reaches sustained "
@@ -4908,6 +5196,14 @@ _register(CompanyKnowledgeProfile(
         "Waymo", "driver incentives", "Dara Khosrowshahi", "ride-sharing",
         "gig economy", "food delivery", "freight", "surge pricing", "AB5",
     ],
+    moat_type=["network_effect", "data_advantage"],
+    revenue_model="transaction_toll",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -4966,7 +5262,7 @@ _register(CompanyKnowledgeProfile(
         "ARM outperforms x86 on perf/watt in AI PCs, threatening CCG's core franchise",
         "Gaudi AI commercial traction — NVIDIA H100/B100 dominance leaves Intel "
         "fighting for scraps; without hyperscaler adoption Intel misses the AI buildout",
-        "FCF negative during investment cycle — cash burn and balance sheet stress",
+        "FCF negative during investment cycle — cash burn and balance sheet stress — free cash flow is negative >$10B through the foundry build-out",
     ],
     valuation_style=(
         "Deep value / turnaround — valued on normalized EPS 2-3 years out. Bull case: "
@@ -4996,6 +5292,14 @@ _register(CompanyKnowledgeProfile(
         "Mobileye", "EyeQ", "CHIPS Act", "Pat Gelsinger", "process node",
         "AI PC", "AMD EPYC", "server CPU", "wafer", "ARM competition",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="moderate",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -5048,9 +5352,9 @@ _register(CompanyKnowledgeProfile(
         "bypass the four-party card network; if A2A reaches consumer scale at "
         "merchant checkout, GDV could shift without MA earning a fee",
         "Regulatory interchange caps — EU, Australia, Durbin Amendment reduce issuer "
-        "economics, potentially reducing premium card issuance that drives high GDV",
+        "economics, potentially reducing premium card issuance that drives high GDV — US Durbin extension to credit could cut issuer economics >20% (EU already caps interchange at 0.3%)",
         "Big Tech closed-loop networks — Apple Pay/Google Pay use MA rails today "
-        "but could develop independent networks over time",
+        "but could develop independent networks over time — wallets route >50% of US in-store volume but <5% bypass MA rails today; >10% bypass is the watch level",
         "Sovereign payment nationalism — Russia exclusion (2022) showed geopolitical "
         "risk of network access being severed in large markets",
     ],
@@ -5149,11 +5453,11 @@ _register(CompanyKnowledgeProfile(
         "Market beta risk — S&P 500 correction of 30% would reduce equity AUM "
         "by ~$1T+ and compress fee revenue meaningfully",
         "Fee compression in passive — Vanguard, Fidelity zero-fee funds pressure "
-        "iShares to cut fees; structural long-term margin headwind",
+        "iShares to cut fees; structural long-term margin headwind — iShares blended fee ~15-19bps; >2bps of annual compression is a structural headwind",
         "Alternatives performance risk — private credit and infrastructure fund "
         "returns must justify the 75-100bps fees vs liquid alternatives",
         "ESG backlash — state pension fund withdrawals ($billions) from BlackRock "
-        "over ESG investing stance (Texas, Florida, other red states)",
+        "over ESG investing stance (Texas, Florida, other red states) — >$13B of state pension outflows over the ESG stance to date",
         "GIP acquisition integration — $3B acquisition of Global Infrastructure "
         "Partners must deliver AUM growth to justify the price",
     ],
@@ -5188,6 +5492,14 @@ _register(CompanyKnowledgeProfile(
         "basis point", "fee rate", "BlackRock Solutions", "ESG",
         "money market fund", "Preqin", "eFront", "asset management",
     ],
+    moat_type=["scale_economy", "brand", "data_advantage"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5283,6 +5595,14 @@ _register(CompanyKnowledgeProfile(
         "Alain Nassar", "FX", "dividend", "smoke-free transformation",
         "nicotine", "blade consumable",
     ],
+    moat_type=["brand", "regulatory"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -5375,6 +5695,14 @@ _register(CompanyKnowledgeProfile(
         "better not bigger", "air freight", "international package",
         "supply chain", "e-commerce", "Amazon",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5474,6 +5802,14 @@ _register(CompanyKnowledgeProfile(
         "farm income", "corn", "soybean", "John May", "dealer inventory",
         "SaaS", "ag cycle", "construction machinery",
     ],
+    moat_type=["brand", "scale_economy", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5579,6 +5915,14 @@ _register(CompanyKnowledgeProfile(
         "Lynn Good", "allowed ROE", "rate case", "regulated utility",
         "IRP", "CPCN", "fuel adjustment", "data center load",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -5636,12 +5980,12 @@ _register(CompanyKnowledgeProfile(
         "cities have imposed or are considering STR restrictions that reduce "
         "host supply; regulatory attrition is the single largest supply-side risk",
         "Booking.com and Expedia competition — alternative accommodation segments "
-        "on OTA platforms are growing, reducing Airbnb's differentiation",
+        "on OTA platforms are growing, reducing Airbnb's differentiation — Booking/Expedia alt-accommodation is growing >20%, compressing Airbnb differentiation",
         "Host supply growth slowdown — adding quality supply in dense urban markets "
-        "is increasingly difficult as regulatory barriers and host economics tighten",
+        "is increasingly difficult as regulatory barriers and host economics tighten — supply growth below ~10% in dense urban markets signals regulatory/economic friction",
         "Guest safety/liability incidents — high-profile incidents create reputational "
-        "damage and could trigger regulatory response",
-        "Travel demand cyclicality in APAC where growth is most important",
+        "damage and could trigger regulatory response — a major safety incident could cut nights-booked growth >5%",
+        "Travel demand cyclicality in APAC where growth is most important — APAC (the fastest-growing region) demand contracting >10% in a downturn caps expansion",
     ],
     valuation_style=(
         "ABNB valued on EV/EBITDA (~25-35x) and FCF yield. "
@@ -5678,6 +6022,14 @@ _register(CompanyKnowledgeProfile(
         "free cash flow", "asset-light", "OTA", "vacation rental",
         "Airbnb-friendly apartments", "unique stays",
     ],
+    moat_type=["network_effect", "brand"],
+    revenue_model="transaction_toll",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -5776,6 +6128,14 @@ _register(CompanyKnowledgeProfile(
         "Lal Karsanbhai", "LNG automation", "industrial automation",
         "Plantweb", "backlog", "MRO", "energy transition",
     ],
+    moat_type=["scale_economy", "brand", "switching_cost"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5871,6 +6231,14 @@ _register(CompanyKnowledgeProfile(
         "allowed ROE", "rate case", "data center load", "grid hardening",
         "regulated utility", "ERCOT",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -5972,6 +6340,14 @@ _register(CompanyKnowledgeProfile(
         "EV charging", "grid modernization", "data center load",
         "performance-based rate", "regulated utility",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -6080,6 +6456,14 @@ _register(CompanyKnowledgeProfile(
         "Georgia PSC", "CPCN", "allowed ROE", "rate case",
         "data center", "Atlanta", "load growth", "battery storage",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6172,7 +6556,7 @@ _register(CompanyKnowledgeProfile(
         "Neuroscience CNS pipeline setbacks: AbbVie has multiple late-stage psychiatric "
         "and neurological programs (emraclidine for schizophrenia, others); a Phase III "
         "readout below efficacy thresholds would require pipeline capital reallocation "
-        "but would not impair the core immunology or aesthetics business",
+        "but would not impair the core immunology or aesthetics business — an emraclidine Phase III miss would reallocate >$1B of pipeline capital without impairing the core",
     ],
     valuation_style=(
         "AbbVie trades at 11-13x forward P/E and approximately 9-11x forward EBITDA, "
@@ -6224,6 +6608,14 @@ _register(CompanyKnowledgeProfile(
         "autoimmune", "IBD", "psoriasis", "atopic dermatitis", "IRA negotiation",
         "Allē", "patient adherence", "specialty pharmacy", "LOE",
     ],
+    moat_type=["patent", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
 ))
 
 
@@ -6369,6 +6761,14 @@ _register(CompanyKnowledgeProfile(
         "absorption", "mark-to-market rent", "NOI growth", "entitlement",
         "co-investment", "build-to-suit", "cap rate", "land bank",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6448,14 +6848,14 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Hyperscaler competition: Amazon (AWS), Microsoft Azure, and Google are building "
         "their own large-scale data center campuses in major metros, potentially reducing "
-        "their incremental colocation demand from Equinix as they internalize more workloads",
+        "their incremental colocation demand from Equinix as they internalize more workloads — hyperscalers internalising workloads could cut colocation demand >5% in key metros",
         "Power constraints in key markets: Northern Virginia (the world's largest data "
         "center market) and Singapore face utility grid constraints that limit new "
         "data center development — Equinix's expansion pipeline may be gated by power "
-        "availability even where demand is robust",
+        "availability even where demand is robust — Northern Virginia (>2,500MW) is grid-constrained; power gates >20% of the expansion pipeline",
         "Europe geopolitical and regulatory risk: GDPR data residency requirements, "
         "EU energy regulations, and the European Cloud Infrastructure Regulation create "
-        "compliance complexity for Equinix's pan-European platform",
+        "compliance complexity for Equinix's pan-European platform — EU data-residency compliance raises cost across >100 European IBX sites",
         "Premium AFFO multiple compression risk: at 25-30x AFFO, Equinix is priced for "
         "sustained 8-10%/yr MRR growth; a deceleration to 5-6% from supply additions "
         "or demand normalization would compress the multiple significantly",
@@ -6515,6 +6915,14 @@ _register(CompanyKnowledgeProfile(
         "Northern Virginia", "Singapore", "Amsterdam", "cloud on-ramp",
         "network density", "hyperscaler", "power density", "monthly recurring",
     ],
+    moat_type=["switching_cost", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6652,6 +7060,14 @@ _register(CompanyKnowledgeProfile(
         "Stratos", "Western Midstream", "WES", "deleveraging", "chlorovinyls",
         "PVC", "caustic soda", "45Q", "production volumes",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -6724,7 +7140,7 @@ _register(CompanyKnowledgeProfile(
         "Carrier consolidation risk — T-Mobile's Sprint acquisition led to incremental "
         "tower lease churn as Sprint/T-Mobile rationalized overlapping sites; further "
         "carrier M&A (DISH dissolution, US Cellular acquisitions) could trigger "
-        "another round of lease terminations and renegotiations",
+        "another round of lease terminations and renegotiations — Sprint/T-Mobile churn ran ~$200M; further carrier M&A could trigger another >2% revenue-churn wave",
         "CoreSite legacy leverage — the $10B CoreSite data center acquisition added "
         "debt at near-peak valuations in 2022; with data center dispositions, the "
         "debt burden relative to tower AFFO is still elevated at 7-8x Net Debt/EBITDA, "
@@ -6740,7 +7156,7 @@ _register(CompanyKnowledgeProfile(
         "International regulatory risk — tower operations in Nigeria, South Africa, "
         "India, and Brazil are subject to local spectrum allocation, tower sharing "
         "mandates, and currency repatriation restrictions that can impair the "
-        "economics of AMT's international tower portfolios",
+        "economics of AMT's international tower portfolios — international is ~45% of towers; a >10% currency devaluation impairs FX-translated AFFO",
     ],
     valuation_style=(
         "American Tower is priced on a P/AFFO multiple (~20-22x) and forward AFFO "
@@ -6786,6 +7202,14 @@ _register(CompanyKnowledgeProfile(
         "international towers", "Africa", "India", "Latin America",
         "Crown Castle", "small cell", "non-cancellable", "ground rent",
     ],
+    moat_type=["regulatory", "switching_cost"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -6922,6 +7346,14 @@ _register(CompanyKnowledgeProfile(
         "Spirit Realty", "Encore UK", "cap rate", "acquisition spread",
         "pharmacy", "convenience", "payout ratio", "bond proxy",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7060,6 +7492,14 @@ _register(CompanyKnowledgeProfile(
         "P/FFO", "Dividend Aristocrat", "e-commerce", "outlet channel",
         "redevelopment", "mixed-use", "luxury retail",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7154,6 +7594,14 @@ _register(CompanyKnowledgeProfile(
         "commercial banking", "wealth management", "loan loss provision",
         "Federal Reserve", "tangible book",
     ],
+    moat_type=["scale_economy", "regulatory"],
+    revenue_model="mixed",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Semiconductors ───────────────────────────────────────────────────────────
@@ -7239,6 +7687,14 @@ _register(CompanyKnowledgeProfile(
         "handset SoC", "automotive semiconductor", "P/E", "EV/EBITDA",
         "fabless", "RF front-end",
     ],
+    moat_type=["patent", "data_advantage"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="low",
 ))
 
 
@@ -7327,6 +7783,14 @@ _register(CompanyKnowledgeProfile(
         "300mm", "industrial", "automotive", "power management", "signal chain",
         "design win", "FCF yield", "P/E", "capital return", "ADI", "Microchip",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7377,7 +7841,7 @@ _register(CompanyKnowledgeProfile(
         "earnings swing dramatically with the industry supply/demand balance",
         "Samsung and SK Hynix competitive intensity — Korean memory manufacturers "
         "have historically cross-subsidized memory operations through downturns, "
-        "prolonging pricing pressure beyond what supply reduction discipline would imply",
+        "prolonging pricing pressure beyond what supply reduction discipline would imply — Samsung+SK Hynix hold >70% DRAM share and can prolong price wars beyond supply-discipline math",
         "China geopolitical risk — Micron's China revenue (~10-15%) was "
         "restricted by Chinese regulators in 2023; further restrictions or "
         "fab access limitations pose material revenue risk",
@@ -7412,6 +7876,14 @@ _register(CompanyKnowledgeProfile(
         "high-bandwidth memory", "NVIDIA", "server DRAM", "enterprise SSD",
         "Samsung", "SK Hynix", "P/book", "normalized earnings", "EV/EBITDA",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
 ))
 
 
@@ -7498,6 +7970,14 @@ _register(CompanyKnowledgeProfile(
         "deposition", "CVD", "ALD", "etch", "CMP", "metrology",
         "TSMC", "advanced packaging", "EV/EBITDA", "P/E", "wafer fab",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7587,6 +8067,14 @@ _register(CompanyKnowledgeProfile(
         "CSBG", "chamber parts", "NAND WFE", "Samsung", "SK Hynix",
         "EV/EBITDA", "P/E", "etch market share", "layer count",
     ],
+    moat_type=["scale_economy", "patent"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Healthcare ───────────────────────────────────────────────────────────────
@@ -7654,7 +8142,7 @@ _register(CompanyKnowledgeProfile(
         "islatravir HIV, sotatercept) need to demonstrate Phase 3 efficacy to "
         "bridge the post-Keytruda revenue gap; development setbacks are costly",
         "Animal health competitive pressure — Zoetis and Elanco compete aggressively "
-        "in companion animal parasiticides; Bravecto chewable faces growing competition",
+        "in companion animal parasiticides; Bravecto chewable faces growing competition — animal-health growth below 5% would signal share pressure from Zoetis/Elanco",
     ],
     valuation_style=(
         "MRK trades at 11-15x forward earnings and a FCF yield of 5-7%, embedding "
@@ -7691,6 +8179,14 @@ _register(CompanyKnowledgeProfile(
         "Lagevrio", "oncology", "immunotherapy", "PD-1", "NSCLC", "melanoma",
         "animal health", "Bravecto", "LOE", "FCF yield", "P/E", "biosimilar",
     ],
+    moat_type=["patent"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
 ))
 
 
@@ -7796,6 +8292,14 @@ _register(CompanyKnowledgeProfile(
         "Similac", "Ensure", "cardiac rhythm", "electrophysiology",
         "diabetes monitoring", "diagnostics", "P/E", "EV/EBITDA", "pulse field ablation",
     ],
+    moat_type=["patent", "brand", "regulatory"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -7857,13 +8361,13 @@ _register(CompanyKnowledgeProfile(
         "and consumable headwinds above base business",
         "Academic and government funding variability — NIH funding levels and "
         "grant cycle timing affect instrument and reagent purchasing; budget "
-        "continuing resolutions create order timing uncertainty",
+        "continuing resolutions create order timing uncertainty — academic/government ~15-20% of revenue; a >5% NIH budget cut pressures instrument orders",
         "China market slowdown — TMO's China revenue (~10%) decelerated sharply "
         "in 2022-23 as local competitors gained share and COVID testing demand "
         "normalized; China instruments market remains soft",
         "PPD CRO business integration — acquisition of PPD added contract research "
         "capabilities but also integration execution requirements and exposure "
-        "to biotech funding cycles for drug development program initiation",
+        "to biotech funding cycles for drug development program initiation — $17B+ PPD acquisition; biotech funding down >20% slows CRO bookings",
     ],
     valuation_style=(
         "TMO trades at 22-28x forward earnings and 15-18x EV/EBITDA, at a premium "
@@ -7903,6 +8407,14 @@ _register(CompanyKnowledgeProfile(
         "Fisher Scientific", "PCR", "cell culture", "P/E", "EV/EBITDA",
         "biomanufacturing", "Patheon",
     ],
+    moat_type=["switching_cost", "scale_economy", "patent"],
+    revenue_model="mixed",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -7961,7 +8473,7 @@ _register(CompanyKnowledgeProfile(
         "create revenue headwinds concurrent with Seagen integration costs",
         "IRA drug price negotiation — Eliquis (co-owned with BMS) is subject "
         "to Medicare price negotiation, reducing one of Pfizer's most important "
-        "revenue contributors",
+        "revenue contributors — Eliquis (>$6B of sales) is subject to Medicare price negotiation from 2026",
     ],
     valuation_style=(
         "PFE trades at 9-12x forward P/E and 8-10x EV/EBITDA on normalized "
@@ -7993,6 +8505,14 @@ _register(CompanyKnowledgeProfile(
         "Eliquis", "Seagen", "ADC", "oncology", "COVID antiviral",
         "P/E", "EV/EBITDA", "LOE", "dividend yield",
     ],
+    moat_type=["patent", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="moderate",
 ))
 
 
@@ -8088,6 +8608,14 @@ _register(CompanyKnowledgeProfile(
         "Hugo robotic surgery", "spinal cord stimulation", "MiniMed", "TAVR",
         "Evolut", "deep brain stimulation", "P/E", "EV/EBITDA", "da Vinci",
     ],
+    moat_type=["patent", "scale_economy", "regulatory"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 # ── Consumer ──────────────────────────────────────────────────────────────────
@@ -8150,12 +8678,12 @@ _register(CompanyKnowledgeProfile(
         "created the longest US housing market freeze in modern history",
         "Consumer spending contraction — DIY discretionary renovation "
         "spending (kitchen/bath remodels, large projects) declines "
-        "materially in consumer uncertainty environments",
+        "materially in consumer uncertainty environments — big-ticket (>$1,000) transactions ~20% of sales, most exposed to a spending contraction",
         "Lowe's competitive pressure — LOW is a direct format competitor "
         "with a comparable Pro push; geographic and format competition "
-        "limits HD's pricing power in overlapping markets",
+        "limits HD's pricing power in overlapping markets — HD+LOW hold ~30% combined share; overlapping-market pricing power is limited",
         "Commodity input cost volatility — lumber and building materials "
-        "deflation reduces transaction values and comps even on flat unit volumes",
+        "deflation reduces transaction values and comps even on flat unit volumes — lumber deflation can cut comps >100bps even on flat unit volume",
     ],
     valuation_style=(
         "HD trades at 22-28x forward P/E and 16-20x EV/EBITDA, at a premium "
@@ -8195,6 +8723,14 @@ _register(CompanyKnowledgeProfile(
         "housing market", "Lowe's", "P/E", "EV/EBITDA", "existing home sales",
         "FCF yield", "tool rental",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8251,13 +8787,13 @@ _register(CompanyKnowledgeProfile(
         "affordability to restore traffic growth",
         "Franchisee profitability pressure — rising labor costs, food "
         "inflation, and equipment investments squeeze franchisee cash-on-cash "
-        "returns, potentially reducing network expansion ambitions",
+        "returns, potentially reducing network expansion ambitions — franchisee cash-on-cash returns below ~15% would slow the ~2% annual unit-growth target",
         "Brand reputation and food safety incidents — any system-wide food "
         "safety issue creates immediate traffic deterioration and lasting "
         "brand damage, as demonstrated by the 2024 E. coli outbreak",
         "Digital and delivery competitive intensity — Chipotle, Chick-fil-A, "
         "and delivery aggregators compete for the same consumer occasions; "
-        "loyalty program ROI requires ongoing investment to maintain frequency",
+        "loyalty program ROI requires ongoing investment to maintain frequency — loyalty base >175M members; comp traffic turning negative signals occasion-share loss",
     ],
     valuation_style=(
         "MCD trades at 22-28x forward P/E and 20-24x EV/EBITDA, commanding "
@@ -8288,6 +8824,14 @@ _register(CompanyKnowledgeProfile(
         "MyMcDonald's Rewards", "system sales", "IOM", "IDL", "Big Mac",
         "franchisee", "P/E", "EV/EBITDA", "same-store sales", "traffic",
     ],
+    moat_type=["brand", "scale_economy", "switching_cost"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8380,6 +8924,14 @@ _register(CompanyKnowledgeProfile(
         "China", "licensed store", "Nestlé", "Brian Niccol", "comparable sales",
         "barista", "P/E", "EV/EBITDA", "mobile order", "Dutch Bros",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8473,6 +9025,14 @@ _register(CompanyKnowledgeProfile(
         "private label", "Good & Gather", "general merchandise", "same-day",
         "Walmart", "Amazon", "P/E", "EV/EBITDA", "operating margin",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Industrials ───────────────────────────────────────────────────────────────
@@ -8578,6 +9138,14 @@ _register(CompanyKnowledgeProfile(
         "electrical infrastructure", "grid hardening", "EV charging", "aerospace",
         "Schneider Electric", "ABB", "P/E", "EV/EBITDA", "electrification",
     ],
+    moat_type=["scale_economy", "patent", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8628,16 +9196,16 @@ _register(CompanyKnowledgeProfile(
         "Construction and mining CapEx cycle — equipment orders are highly "
         "procyclical; infrastructure spending slowdowns and commodity price "
         "declines can cause multi-quarter order cancellations and dealer "
-        "inventory destocking",
+        "inventory destocking — a >15% drop in equipment orders triggers multi-quarter dealer destocking",
         "China construction slowdown — real estate sector weakness in China "
         "has reduced excavator demand significantly; China recovery "
-        "timeline remains uncertain given property market deleveraging",
+        "timeline remains uncertain given property market deleveraging — China <10% of sales but excavator demand is down >20% in the property downturn",
         "Commodity price sensitivity — mining equipment demand is directly "
         "correlated with commodity prices (copper, gold, coal, iron ore); "
-        "prolonged commodity bear markets reduce miner CapEx conviction",
+        "prolonged commodity bear markets reduce miner CapEx conviction — mining capex tracks copper/coal; a >20% commodity decline cuts miner capex conviction",
         "Electrification transition — battery-electric construction and "
         "mining equipment will eventually replace diesel; Caterpillar "
-        "must invest in zero-emission products while defending diesel margins",
+        "must invest in zero-emission products while defending diesel margins — the battery-electric transition requires >$1B/yr of R&D while defending diesel margins",
     ],
     valuation_style=(
         "CAT trades at 16-22x forward P/E and 12-15x EV/EBITDA on mid-cycle "
@@ -8669,6 +9237,14 @@ _register(CompanyKnowledgeProfile(
         "dealer network", "construction equipment", "aftermarket", "Komatsu",
         "mid-cycle", "P/E", "EV/EBITDA", "CapEx cycle", "Resource Industries",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -8759,6 +9335,14 @@ _register(CompanyKnowledgeProfile(
         "shop visit", "aftermarket", "Boeing", "737 MAX", "A320neo",
         "T700", "defense engines", "P/E", "EV/EBITDA", "flight hours",
     ],
+    moat_type=["regulatory", "patent", "brand"],
+    revenue_model="mixed",
+    switching_cost_level="very_high",
+    customer_concentration="moderate",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
 ))
 
 
@@ -8819,7 +9403,7 @@ _register(CompanyKnowledgeProfile(
         "both near-term revenue and long-run sustainment economics",
         "US defense budget pressure — debt ceiling negotiations and "
         "discretionary spending caps constrain defense topline growth; "
-        "continuing resolutions prevent multi-year procurement commitments",
+        "continuing resolutions prevent multi-year procurement commitments — defense topline growth below ~2% under spending caps; CRs delay multi-year awards",
         "Fixed-price development contract losses — LMT's CH-53K and "
         "classified program fixed-price development contracts have generated "
         "significant charges when technical complexity exceeds initial estimates",
@@ -8857,6 +9441,14 @@ _register(CompanyKnowledgeProfile(
         "Javelin", "Black Hawk", "Sikorsky", "defense contractor",
         "FMS", "sustainment", "P/E", "EV/EBITDA", "defense budget",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="project_contract",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 # ── Energy ────────────────────────────────────────────────────────────────────
@@ -8947,6 +9539,14 @@ _register(CompanyKnowledgeProfile(
         "midstream", "ethylene", "DCP Midstream", "Rodeo Renewables",
         "P/E", "EV/EBITDA", "downstream energy", "petrochemical",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9037,6 +9637,14 @@ _register(CompanyKnowledgeProfile(
         "unconventional E&P", "double-premium", "WTI", "shale", "Delaware Basin",
         "special dividend", "FCF yield", "EV/EBITDA", "natural gas",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9124,6 +9732,14 @@ _register(CompanyKnowledgeProfile(
         "fixed-plus-variable dividend", "WTI", "shale E&P", "Permian",
         "variable dividend", "FCF yield", "EV/EBITDA", "Waha",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9209,6 +9825,14 @@ _register(CompanyKnowledgeProfile(
         "NGL", "throughput", "Midwest refining", "distillate", "gasoline",
         "P/E", "EV/EBITDA", "midstream", "Canadian crude",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9299,6 +9923,14 @@ _register(CompanyKnowledgeProfile(
         "renewable diesel", "LCFS", "RIN", "Gulf Coast", "throughput",
         "P/E", "EV/EBITDA", "ethanol", "mid-cycle",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
@@ -9392,6 +10024,14 @@ _register(CompanyKnowledgeProfile(
         "Oncor", "CPUC", "utility", "LNG export", "regulated rate base",
         "P/E", "EV/EBITDA", "dividend yield", "California",
     ],
+    moat_type=["regulatory", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="low",
 ))
 
 
@@ -9487,6 +10127,14 @@ _register(CompanyKnowledgeProfile(
         "Northern California", "Bay Area", "California Wildfire Fund",
         "regulated utility", "P/E", "EV/EBITDA", "rate base", "electrification",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
 ))
 
 
@@ -9579,6 +10227,14 @@ _register(CompanyKnowledgeProfile(
         "natural gas distribution", "clean energy", "P/E", "EV/EBITDA",
         "dividend growth", "regulated utility", "Midwest", "rate base",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9673,6 +10329,14 @@ _register(CompanyKnowledgeProfile(
         "NYPSC", "steam", "Manhattan", "Dividend Aristocrat", "CLCPA",
         "regulated utility", "P/E", "EV/EBITDA", "all-electric buildings",
     ],
+    moat_type=["regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -9725,17 +10389,17 @@ _register(CompanyKnowledgeProfile(
     major_risks=[
         "Per-capita water use decline — conservation mandates and efficient "
         "appliances reduce residential water consumption per customer, "
-        "requiring rate case increases to maintain allowed revenue levels",
+        "requiring rate case increases to maintain allowed revenue levels — residential use is declining ~1%/yr, requiring rate cases to hold ~7-9% rate-base growth",
         "Infrastructure investment capital requirements — aging US water "
         "infrastructure (lead service line replacement, pipe renewal) "
         "requires multi-decade capital investment financed through rate "
-        "increases and equity issuance",
+        "increases and equity issuance — >$3B of annual capex funded by rate increases and equity; underinvestment risks reliability penalties",
         "State regulatory risk — 24-state diversification reduces single-state "
         "risk, but adverse rate case outcomes in large states (NJ, PA, MO) "
         "create meaningful earnings headwinds",
         "Acquisition integration risk — AWK's fragmented water system "
         "acquisition strategy is central to growth; overpaying or "
-        "operational underperformance on acquired systems reduces returns",
+        "operational underperformance on acquired systems reduces returns — acquisitions add ~2-3% to rate base annually; paying above ~1.5x rate base dilutes returns",
     ],
     valuation_style=(
         "AWK trades at 22-27x forward P/E and 18-22x EV/EBITDA, at a "
@@ -9768,6 +10432,14 @@ _register(CompanyKnowledgeProfile(
         "water privatization", "P/E", "EV/EBITDA", "lead service line",
         "dividend yield", "acquisition growth",
     ],
+    moat_type=["regulatory", "natural_monopoly"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Communications & Services ─────────────────────────────────────────────────
@@ -9860,6 +10532,14 @@ _register(CompanyKnowledgeProfile(
         "Sprint merger", "mid-band spectrum", "FWA home internet", "Metro",
         "AT&T", "Verizon", "P/E", "EV/EBITDA", "FCF yield",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 # ── Real Estate ───────────────────────────────────────────────────────────────
@@ -9953,6 +10633,14 @@ _register(CompanyKnowledgeProfile(
         "month-to-month", "AFFO", "FFO", "occupancy", "same-store revenue",
         "storage rental", "dynamic pricing", "P/AFFO", "cap rate",
     ],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10045,6 +10733,14 @@ _register(CompanyKnowledgeProfile(
         "coastal market", "AFFO", "FFO", "occupancy", "same-store NOI",
         "Boston", "New York", "Seattle", "San Francisco", "P/AFFO",
     ],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10137,6 +10833,14 @@ _register(CompanyKnowledgeProfile(
         "casino property", "CPI escalator", "P/AFFO", "cap rate",
         "experiential REIT", "Caesars Palace",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10231,6 +10935,14 @@ _register(CompanyKnowledgeProfile(
         "FFO", "aging demographics", "Sunrise", "P/AFFO", "cap rate",
         "healthcare REIT",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10328,6 +11040,14 @@ _register(CompanyKnowledgeProfile(
         "build-to-rent", "Sun Belt", "Atlanta", "Phoenix", "Dallas",
         "BTR", "AFFO", "FFO", "P/AFFO", "cap rate", "occupancy",
     ],
+    moat_type=["scale_economy"],
+    revenue_model="subscription",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="capital_intensive",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
 ))
 
 
@@ -10378,10 +11098,10 @@ _register(CompanyKnowledgeProfile(
     ),
     major_risks=[
         "Regulatory disruption of the ratings oligopoly (SEC/EU proposals to reduce "
-        "issuer-pays conflicts of interest or mandate rotation)",
-        "Debt issuance volume collapse in sustained high-rate environment",
-        "Bloomberg/FactSet competition eroding Market Intelligence market share",
-        "Passive investing backlash reducing index licensing demand",
+        "issuer-pays conflicts of interest or mandate rotation) — mandate rotation could put >30% of Ratings revenue in play at repricing",
+        "Debt issuance volume collapse in sustained high-rate environment — a >20% drop in global debt issuance historically cuts Ratings revenue double digits",
+        "Bloomberg/FactSet competition eroding Market Intelligence market share — Market Intelligence ~30% of revenue; segment growth below 6% signals share loss",
+        "Passive investing backlash reducing index licensing demand — index/ETF-linked fees ~15% of revenue; a >10% AUM outflow pressures the segment",
     ],
     valuation_style=(
         "SPGI trades at ~30-34x forward P/E, reflecting the oligopoly franchise in "
@@ -10415,6 +11135,489 @@ _register(CompanyKnowledgeProfile(
     earnings_cyclicality="mild",
     narrative_dependence="none",
     binary_risk_level="none",
+))
+
+
+# ── Moody's Corporation (MCO) ────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="MCO",
+    company_name="Moody's Corporation",
+    business_model=(
+        "Moody's operates two segments: Moody's Investors Service (MIS — credit "
+        "ratings for debt issuers, duopoly with S&P Global) and Moody's Analytics "
+        "(MA — risk assessment software, data, and research subscriptions). MIS "
+        "generates ~60% of revenue through transaction fees on new debt issuance "
+        "and annual surveillance fees on outstanding rated debt. MA generates ~40% "
+        "through recurring subscriptions for risk management tools."
+    ),
+    primary_revenue_drivers=[
+        "MIS Transaction Revenue (~35% — fees on new debt issuance, tied to capital markets cycle)",
+        "MIS Recurring Revenue (~25% — annual surveillance fees on outstanding rated debt)",
+        "MA Subscription Revenue (~35% — risk analytics, data, research tools)",
+        "MA Transaction Revenue (~5% — one-time project-based advisory)",
+    ],
+    recurring_revenue_sources=[
+        "Annual surveillance fees on outstanding rated debt (recurring as long as debt exists)",
+        "Moody's Analytics subscriptions (multi-year enterprise contracts, 90%+ retention)",
+        "Data licensing fees (KYC, ESG, credit research databases)",
+    ],
+    rate_sensitivity_note=(
+        "Moody's is rate-sensitive primarily through MIS transaction revenue: higher rates "
+        "suppress new debt issuance (fewer transactions → lower fees). Refinancing waves "
+        "during rate cuts boost issuance volumes. MA subscription revenue is rate-insensitive."
+    ),
+    inflation_pass_through=(
+        "Strong pricing power in both segments. Rating fees are set by Moody's with limited "
+        "issuer pushback — issuers need the rating to access debt markets. MA subscriptions "
+        "have annual price escalators built into multi-year contracts."
+    ),
+    recession_behavior=(
+        "Mixed: MIS transaction revenue declines sharply in recessions (fewer new issuances) "
+        "but surveillance fees are stable (existing debt still needs ratings). MA subscriptions "
+        "are sticky — enterprises don't cancel risk management tools during stress. Net: "
+        "revenue dips 10-15% in severe recessions, recovers quickly on issuance rebound."
+    ),
+    major_risks=[
+        "Regulatory reform of issuer-pays model (SEC/EU proposals to reduce conflicts) — structured finance ~15% of ratings revenue is the most exposed to issuer-pays reform",
+        "Sustained high-rate environment suppressing debt issuance volumes — a >15% decline in issuance volume compresses MIS revenue materially",
+        "Ratings credibility risk from structured finance mispricing (2008 precedent)",
+        "Competition from Fitch and emerging rating agencies in niche markets — Moody's+S&P hold ~80% combined share; >2pt share loss to Fitch is the watch level",
+    ],
+    valuation_style=(
+        "MCO trades at ~30-35x forward P/E reflecting the ratings duopoly franchise, "
+        "high-margin recurring surveillance/subscription revenue, and secular growth "
+        "in private credit and ESG ratings."
+    ),
+    key_metrics=[
+        "MIS rated issuance volume (proxy for transaction revenue)",
+        "MIS surveillance revenue growth (recurring base)",
+        "MA Annual Recurring Revenue (ARR) growth",
+        "MA retention rate (target 90%+)",
+        "Operating margin (~45-50%)",
+        "Free cash flow conversion",
+    ],
+    competitive_advantages=[
+        "Credit ratings duopoly with S&P Global — regulatory requirement for public debt",
+        "90-year reputation and track record in credit assessment",
+        "Moody's Analytics recurring subscription base with 90%+ retention",
+        "ESG ratings franchise — fastest-growing segment leveraging core credit expertise",
+    ],
+    business_model_keywords=[
+        "MIS", "Moody's Analytics", "credit rating", "surveillance",
+        "issuance", "rated debt", "KYC", "ESG", "risk analytics",
+        "Rob Fauber", "issuer-pays", "structured finance",
+    ],
+    moat_type=["regulatory", "data_advantage", "scale_economy"],
+    revenue_model="licensing",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+
+# ── Profile Expansion Phase 2 ───────────────────────────────────────────────
+
+# ── KKR & Co. (KKR) ─────────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="KKR",
+    company_name="KKR & Co. Inc.",
+    business_model="KKR is a global alternative asset manager with $553B+ AUM across private equity, credit, real assets, and infrastructure. Revenue comes from management fees (recurring, AUM-based), performance fees (carried interest on fund returns), and balance sheet investment income.",
+    primary_revenue_drivers=["Management fees (~50% — recurring, AUM-linked)", "Carried interest (~25% — performance-based)", "Balance sheet investment income (~25%)"],
+    recurring_revenue_sources=["Management fees on committed/invested capital (locked-up 7-10 year fund structures)", "Credit platform subscription-like fee streams"],
+    rate_sensitivity_note="Higher rates compress deal activity (fewer LBOs) but benefit credit strategies. Net impact depends on mix.",
+    inflation_pass_through="Fee structures are percentage-of-AUM based, so nominal AUM growth from inflation mechanically increases fees.",
+    recession_behavior="AUM-based fees are sticky but carried interest collapses in downturns. Fundraising slows. Deal activity freezes. Revenue can decline 30-40%.",
+    major_risks=["Sustained market downturn reducing AUM and carried interest", "Regulatory changes affecting private equity fund structures", "Interest rate impact on leveraged buyout deal flow"],
+    valuation_style="KKR trades at 20-25x distributable earnings. Alternative asset managers valued on fee-related earnings (recurring) separately from carried interest (volatile).",
+    key_metrics=["AUM growth", "Fee-related earnings (FRE)", "Distributable earnings", "Fundraising pace"],
+    competitive_advantages=["Global scale across PE, credit, real assets, infrastructure", "40-year track record and institutional relationships", "Permanent capital vehicles reducing fundraising risk"],
+    business_model_keywords=["AUM", "private equity", "carried interest", "management fee", "fundraising", "LBO", "credit", "infrastructure"],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
+))
+
+# ── Blackstone Inc. (BX) ────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="BX",
+    company_name="Blackstone Inc.",
+    business_model="Blackstone is the world's largest alternative asset manager with $1T+ AUM across real estate, private equity, credit, and hedge fund solutions. Revenue from management fees (AUM-linked) and performance allocations (carried interest).",
+    primary_revenue_drivers=["Management fees (~55% — recurring, AUM-linked)", "Performance allocations (~30% — carried interest)", "Investment income (~15%)"],
+    recurring_revenue_sources=["Base management fees on committed capital (locked-up fund structures)", "Perpetual capital vehicles (BREIT, BIP) with no end-of-life"],
+    rate_sensitivity_note="Higher rates reduce real estate valuations (largest segment) but benefit credit strategies. Net impact is negative in rate-rising environments.",
+    inflation_pass_through="AUM-based fees grow with nominal asset values. Real estate rents have inflation escalators.",
+    recession_behavior="Real estate and PE valuations decline. Carried interest collapses. Fundraising slows. FRE more stable but total revenue can decline 25-35%.",
+    major_risks=["Real estate downturn reducing largest segment's AUM", "BREIT redemption pressure in rising rate environments", "Regulatory changes to carried interest tax treatment"],
+    valuation_style="BX trades at 25-30x FRE reflecting scale, permanent capital growth, and the secular shift from public to private markets.",
+    key_metrics=["Total AUM", "Fee-related earnings (FRE)", "Distributable earnings", "Perpetual capital as % of AUM"],
+    competitive_advantages=["$1T+ AUM — largest alternative manager globally", "Permanent capital vehicles reduce fundraising cyclicality", "Brand and LP relationships across sovereign wealth funds and pensions"],
+    business_model_keywords=["AUM", "BREIT", "private equity", "real estate", "carried interest", "perpetual capital", "LP", "Steve Schwarzman"],
+    moat_type=["brand", "scale_economy"],
+    revenue_model="mixed",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="moderate",
+    narrative_dependence="low",
+    binary_risk_level="none",
+))
+
+# ── Intuit Inc. (INTU) ──────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="INTU",
+    company_name="Intuit Inc.",
+    business_model="Intuit provides financial management software: TurboTax (consumer tax), QuickBooks (small business accounting), Credit Karma (personal finance), and Mailchimp (marketing automation). Revenue is subscription-based with high retention.",
+    primary_revenue_drivers=["Small Business & Self-Employed (~55% — QuickBooks, Mailchimp)", "Consumer (~25% — TurboTax)", "Credit Karma (~10%)", "ProConnect (~10% — tax professional tools)"],
+    recurring_revenue_sources=["QuickBooks Online subscriptions (monthly/annual)", "TurboTax seasonal but structurally recurring (annual tax filing)", "Mailchimp subscriptions"],
+    rate_sensitivity_note="Low direct rate sensitivity. Small business health is the macro transmission mechanism.",
+    inflation_pass_through="Strong pricing power — annual subscription price increases of 5-10% with minimal churn.",
+    recession_behavior="TurboTax is counter-cyclical (people file taxes regardless). QuickBooks is mildly cyclical (small business failures reduce subscribers). Net: revenue resilient, down 0-5% in recessions.",
+    major_risks=["IRS free-file expansion reducing TurboTax addressable market — IRS Direct File capturing >5% of filers would dent TurboTax's ~30M paid units", "Competition from free accounting software — QuickBooks holds ~80% SMB accounting share; >3pt annual share loss signals erosion", "Small business formation slowdown — a >10% slowdown in new business formation reduces QuickBooks net adds"],
+    valuation_style="INTU trades at 35-40x forward P/E reflecting the subscription model, pricing power, and tax preparation near-monopoly.",
+    key_metrics=["QuickBooks Online subscribers", "ARPC (average revenue per customer)", "TurboTax units filed", "Online revenue growth"],
+    competitive_advantages=["TurboTax brand dominance in consumer tax filing", "QuickBooks ecosystem lock-in for small businesses", "Data advantage from 100M+ consumer financial profiles"],
+    business_model_keywords=["TurboTax", "QuickBooks", "Credit Karma", "Mailchimp", "tax filing", "small business", "ARPC", "subscriber"],
+    moat_type=["brand", "switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+# ── Shopify Inc. (SHOP) ─────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="SHOP",
+    company_name="Shopify Inc.",
+    business_model="Shopify provides e-commerce infrastructure: online store platform (subscriptions) and merchant services (payments, shipping, capital). Revenue split roughly 30% subscriptions / 70% merchant solutions.",
+    primary_revenue_drivers=["Merchant Solutions (~70% — payments processing, Shopify Capital, shipping)", "Subscription Solutions (~30% — monthly platform fees)"],
+    recurring_revenue_sources=["Monthly subscription fees", "GMV-linked payment processing fees (recurring with merchant activity)"],
+    rate_sensitivity_note="Higher rates compress consumer spending and merchant growth. Shopify Capital (merchant lending) has direct rate exposure.",
+    inflation_pass_through="Moderate — subscription price increases possible but merchants are price-sensitive. Payment processing take rates are under competitive pressure.",
+    recession_behavior="E-commerce GMV growth slows. Merchant churn increases. Shopify Capital losses rise. Revenue growth decelerates but absolute revenue has never declined.",
+    major_risks=["Amazon and BigCommerce competition for SMB merchants — GMV growth below 20% would signal SMB share loss to Amazon Buy-with-Prime and BigCommerce", "Payment processing margin compression — Shopify Payments >60% penetration; >20bps take-rate compression pressures gross profit", "Merchant churn in economic downturns — SMB merchant churn above ~10%/yr in downturns erodes the recurring base"],
+    valuation_style="SHOP trades at 50-70x forward P/E reflecting GMV growth, merchant ecosystem expansion, and platform optionality.",
+    key_metrics=["GMV (Gross Merchandise Volume)", "MRR (Monthly Recurring Revenue)", "Merchant count", "Attach rate (merchant solutions/GMV)"],
+    competitive_advantages=["Largest independent e-commerce platform by merchant count", "Ecosystem lock-in (payments + shipping + capital + POS)", "Developer ecosystem and app marketplace"],
+    business_model_keywords=["GMV", "merchant", "Shopify Payments", "Shopify Capital", "POS", "e-commerce", "MRR", "attach rate"],
+    moat_type=["network_effect", "switching_cost"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
+))
+
+# ── Snowflake Inc. (SNOW) ───────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="SNOW",
+    company_name="Snowflake Inc.",
+    business_model="Snowflake provides a cloud-based data platform (Data Cloud) with consumption-based pricing. Revenue is driven by compute and storage consumption on AWS, Azure, and GCP infrastructure.",
+    primary_revenue_drivers=["Product revenue (~95% — consumption-based data platform)", "Professional services (~5%)"],
+    recurring_revenue_sources=["Consumption-based platform usage (structurally recurring as data workloads grow)", "Committed contracts with minimum spend guarantees"],
+    rate_sensitivity_note="High rate sensitivity via valuation multiple compression. Enterprise IT spending can slow in rate-rising environments.",
+    inflation_pass_through="Limited — consumption-based pricing is tied to cloud infrastructure costs, not Snowflake's pricing power.",
+    recession_behavior="Enterprise data spending is discretionary at the margin. Growth decelerates but existing workloads are sticky. Revenue growth slows from 50%+ to 20-30%.",
+    major_risks=["AWS, Azure, GCP native data services competing directly", "Consumption-based model creates revenue volatility", "Databricks competition in data lakehouse"],
+    valuation_style="SNOW trades at 15-25x forward revenue reflecting TAM expansion, net revenue retention >130%, and cloud data platform growth.",
+    key_metrics=["Product revenue growth", "Net revenue retention rate", "Remaining performance obligations (RPO)", "Customer count (>$1M ARR)"],
+    competitive_advantages=["Cross-cloud architecture (works on AWS + Azure + GCP)", "Data sharing/marketplace network effects", "Separation of compute and storage enabling elastic scaling"],
+    business_model_keywords=["Data Cloud", "consumption", "RPO", "net revenue retention", "data sharing", "Databricks", "Frank Slootman", "Sridhar Ramaswamy"],
+    moat_type=["switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="high",
+    customer_concentration="moderate",
+    capital_intensity="asset_light",
+    earnings_cyclicality="mild",
+    narrative_dependence="moderate",
+    binary_risk_level="none",
+))
+
+# ── Automatic Data Processing (ADP) ─────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="ADP",
+    company_name="Automatic Data Processing, Inc.",
+    business_model="ADP provides human capital management (HCM) solutions: payroll processing, HR management, tax filing, benefits administration, and workforce management for businesses of all sizes. Revenue is recurring subscription + float income on client funds.",
+    primary_revenue_drivers=["Employer Services (~65% — payroll, HR, tax for SMB and mid-market)", "PEO Services (~35% — professional employer organization for comprehensive HR outsourcing)"],
+    recurring_revenue_sources=["Monthly payroll processing subscriptions (multi-year contracts)", "Client funds float income (interest earned on payroll funds held before disbursement)", "PEO per-employee-per-month fees"],
+    rate_sensitivity_note="ADP benefits from higher rates: earns interest on $30B+ client funds held between collection and disbursement. Each 100bps adds ~$300M to pre-tax income.",
+    inflation_pass_through="Strong — annual price increases of 4-6% embedded in contracts. Wage inflation increases the dollar value of payroll processed.",
+    recession_behavior="Payroll is non-discretionary — employers must pay employees and file taxes regardless of economic conditions. Pays-per-control (employee count) declines 2-4% in recessions but pricing holds. Revenue declines 0-3% in severe recessions.",
+    major_risks=["Competition from Workday, Paylocity, and Paychex in mid-market — client retention below the ~90% baseline signals competitive loss", "Secular shift to integrated HCM platforms bypassing standalone payroll — >10% of new bookings lost to integrated HCM suites would slow the ~7% revenue growth", "Decline in interest rates reducing client funds float income — client-funds float ~$3B+; each 100bps rate cut trims float income ~$300M"],
+    valuation_style="ADP trades at 28-32x forward P/E reflecting the recurring revenue model, pricing power, and non-discretionary demand.",
+    key_metrics=["Pays per control (same-store employee count)", "Client retention rate (90%+)", "ES new business bookings growth", "Client funds interest yield"],
+    competitive_advantages=["Process 1 in 6 US paychecks — scale creates compliance and regulatory expertise moat", "Client fund float ($30B+) generates risk-free interest income", "40+ year client relationships with 90%+ retention", "Regulatory complexity in payroll/tax creates switching friction"],
+    business_model_keywords=["payroll", "HCM", "pays per control", "client funds", "PEO", "employer services", "retention rate", "workforce management"],
+    moat_type=["switching_cost", "scale_economy", "regulatory"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+# ── Coinbase Global (COIN) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="COIN",
+    company_name="Coinbase Global, Inc.",
+    business_model="Coinbase operates the largest US cryptocurrency exchange. Revenue from trading fees (retail + institutional), staking rewards, custody fees, and the USDC stablecoin partnership with Circle.",
+    primary_revenue_drivers=["Transaction revenue (~60% — retail and institutional trading fees)", "Subscription & services (~35% — staking, custody, USDC interest)", "Other (~5% — blockchain rewards)"],
+    recurring_revenue_sources=["USDC interest income (earns yield on reserves)", "Staking rewards (ongoing crypto protocol participation)", "Custody fees for institutional clients"],
+    rate_sensitivity_note="Higher rates benefit USDC interest income but may suppress speculative crypto trading activity.",
+    inflation_pass_through="Limited — trading fees are percentage-based but trading volume is driven by crypto sentiment, not inflation.",
+    recession_behavior="Crypto trading volumes collapse in risk-off environments. Revenue can decline 50-80% peak-to-trough. USDC/staking provides some floor.",
+    major_risks=["SEC regulatory action against crypto assets as securities — a securities ruling could restrict >30% of listed assets from US trading", "Crypto winter reducing trading volumes 70%+", "Competition from decentralized exchanges (DEXs) — DEXs already handle >10% of spot volume and rising, pressuring take rates"],
+    valuation_style="COIN is valued on revenue multiples (3-8x) given earnings volatility tied to crypto cycles.",
+    key_metrics=["Trading volume", "Monthly transacting users (MTUs)", "USDC market cap", "Revenue per MTU"],
+    competitive_advantages=["#1 US regulated crypto exchange by volume", "Regulatory compliance as competitive moat vs offshore exchanges", "USDC partnership provides rate-insensitive revenue"],
+    business_model_keywords=["crypto", "USDC", "staking", "trading volume", "MTU", "SEC", "Base", "custody", "blockchain"],
+    moat_type=["regulatory", "brand"],
+    revenue_model="transaction_toll",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="asset_light",
+    earnings_cyclicality="highly_cyclical",
+    narrative_dependence="high",
+    binary_risk_level="moderate",
+))
+
+# ── Lowe's Companies (LOW) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="LOW",
+    company_name="Lowe's Companies, Inc.",
+    business_model="Lowe's is the #2 US home improvement retailer (behind Home Depot) with 1,700+ stores. Revenue from DIY consumers and professional contractors across building materials, appliances, and home décor.",
+    primary_revenue_drivers=["DIY consumer sales (~75%)", "Pro contractor sales (~25% — growing focus)"],
+    recurring_revenue_sources=["Loyalty program engagement driving repeat visits", "Pro accounts with recurring project-based purchasing"],
+    rate_sensitivity_note="Highly rate-sensitive: mortgage rates directly impact existing home sales → home improvement spending. Each 100bps rate rise reduces existing home sales ~10-15%.",
+    inflation_pass_through="Moderate — can pass through material cost inflation but discretionary project deferrals offset volume gains.",
+    recession_behavior="Revenue declines 5-15% in housing-led recessions. Maintenance/repair spending is more resilient than remodeling. Gross margins compress as promotions increase.",
+    major_risks=["Housing market slowdown from elevated mortgage rates", "Competition from Home Depot in Pro segment", "E-commerce competition for commoditized products"],
+    valuation_style="LOW trades at 16-20x forward P/E reflecting the housing cycle, margin expansion story, and buyback-driven EPS growth.",
+    key_metrics=["Comparable store sales growth", "Pro sales penetration", "Operating margin expansion", "Transactions per store"],
+    competitive_advantages=["#2 US home improvement with 1,700+ stores — duopoly with HD", "Store proximity and in-stock availability create convenience moat", "Growing Pro loyalty program"],
+    business_model_keywords=["home improvement", "Pro", "DIY", "comparable store sales", "housing", "remodeling", "Marvin Ellison"],
+    moat_type=["scale_economy", "brand"],
+    revenue_model="product_sale",
+    switching_cost_level="low",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+# ── KLA Corporation (KLAC) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="KLAC",
+    company_name="KLA Corporation",
+    business_model="KLA is the dominant semiconductor process control and inspection equipment maker. Revenue from new system sales to chip fabricators and recurring service/spare parts revenue from the installed base.",
+    primary_revenue_drivers=["Semiconductor Process Control (~80% — inspection, metrology, data analytics)", "PCB/Display/Component Inspection (~15%)", "Services (~20% overlap — recurring installed base)"],
+    recurring_revenue_sources=["Service contracts on installed equipment base (multi-year)", "Spare parts and consumables", "Software analytics subscriptions"],
+    rate_sensitivity_note="Low direct rate sensitivity. Semiconductor CapEx cycle is the dominant driver, not interest rates.",
+    inflation_pass_through="Strong — pricing power from monopoly/duopoly positions in key inspection segments.",
+    recession_behavior="Revenue can decline 20-30% in semiconductor CapEx downturns but recovers quickly as node transitions resume. Service revenue provides a floor.",
+    major_risks=["Semiconductor CapEx cycle downturn reducing new tool orders", "China export restrictions limiting addressable market", "Customer concentration in TSMC/Samsung/Intel"],
+    valuation_style="KLAC trades at 22-28x forward P/E reflecting process control market dominance, high margins (60%+ gross), and recurring service revenue.",
+    key_metrics=["Semiconductor Process Control revenue growth", "Service revenue as % of total", "Gross margin", "Backlog"],
+    competitive_advantages=["#1 in semiconductor process control with 50%+ market share", "Process control becomes more critical at smaller nodes — secular tailwind", "80%+ gross margins on inspection tools", "Installed base of 50,000+ tools generates recurring service revenue"],
+    business_model_keywords=["process control", "inspection", "metrology", "defect", "yield", "node", "wafer", "installed base"],
+    moat_type=["scale_economy", "patent", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+# ── Roblox Corporation (RBLX) ───────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="RBLX",
+    company_name="Roblox Corporation",
+    business_model="Roblox is a user-generated gaming platform where developers create experiences and users purchase virtual currency (Robux). Revenue from Robux purchases, advertising, and developer marketplace fees.",
+    primary_revenue_drivers=["Robux virtual currency purchases (~90%)", "Advertising and sponsorships (~10% — emerging)"],
+    recurring_revenue_sources=["Daily active user engagement driving Robux consumption (habitual but not contractual)"],
+    rate_sensitivity_note="Low direct rate sensitivity. Growth stock multiple compression is the primary rate transmission.",
+    inflation_pass_through="Limited — Robux pricing is fixed. Revenue growth depends on user engagement, not pricing.",
+    recession_behavior="Gaming engagement tends to increase in recessions (cheap entertainment). Robux spending may decline modestly as parents cut discretionary allowances.",
+    major_risks=["User aging out of core demographic (8-14 year olds)", "COPPA and child safety regulatory risk — under-13 users are >40% of DAUs; a COPPA action would constrain the core audience", "Platform safety scandals impacting brand trust — a major safety scandal could cut bookings-per-DAU >10%"],
+    valuation_style="RBLX is valued on EV/bookings (5-10x) given deferred revenue accounting and pre-profitability status.",
+    key_metrics=["Daily Active Users (DAUs)", "Hours engaged", "Bookings growth", "Average bookings per DAU (ABPDAU)"],
+    competitive_advantages=["Network effect — user-generated content creates self-reinforcing engagement", "200M+ monthly active users creating massive content library", "Developer ecosystem (4M+ developers) is the moat"],
+    business_model_keywords=["Robux", "DAU", "bookings", "developer", "UGC", "metaverse", "engagement", "ABPDAU"],
+    moat_type=["network_effect"],
+    revenue_model="transaction_toll",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="high",
+    binary_risk_level="moderate",
+))
+
+# ── CAVA Group (CAVA) ───────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="CAVA",
+    company_name="CAVA Group, Inc.",
+    business_model="CAVA is a fast-casual Mediterranean restaurant chain with 300+ locations. Revenue from in-store and digital orders of customizable bowls, pitas, and salads.",
+    primary_revenue_drivers=["Restaurant-level revenue (~95% — same-store sales + new unit openings)", "CPG/wholesale (~5% — CAVA-branded grocery products)"],
+    recurring_revenue_sources=["Habitual dining frequency of loyal customers (not contractual)"],
+    rate_sensitivity_note="Moderate — consumer discretionary spending sensitivity. Higher rates compress consumer budgets for dining out.",
+    inflation_pass_through="Moderate — can pass through menu price increases of 3-5% but food cost inflation (olive oil, protein) compresses margins.",
+    recession_behavior="Fast-casual dining declines 5-15% in recessions as consumers trade down to QSR or home cooking. CAVA's Mediterranean positioning may be more resilient than generic fast-casual.",
+    major_risks=["Rapid unit growth execution risk — targeting >15% annual unit growth; new-unit AUV below ~$2.5M signals execution slip", "Food cost inflation compressing restaurant margins — restaurant-level margin below ~20% signals inflation pressure", "Competition from Sweetgreen and expanding Mediterranean concepts — same-restaurant sales below 5% would signal share loss to Sweetgreen and new entrants"],
+    valuation_style="CAVA trades at 100-200x forward P/E reflecting high unit growth (25%+ annual) and long runway for Mediterranean fast-casual penetration.",
+    key_metrics=["Same-store sales growth", "New unit openings", "Restaurant-level margin", "AUV (Average Unit Volume)"],
+    competitive_advantages=["First-mover in scaled Mediterranean fast-casual", "Strong unit economics (AUV $2.5M+, restaurant margin 24%+)", "Digital ordering platform driving efficiency"],
+    business_model_keywords=["Mediterranean", "fast-casual", "AUV", "same-store sales", "unit growth", "restaurant margin", "digital mix"],
+    moat_type=["brand"],
+    revenue_model="product_sale",
+    switching_cost_level="none",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="moderate",
+    narrative_dependence="high",
+    binary_risk_level="low",
+))
+
+# ── MercadoLibre (MELI) ─────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="MELI",
+    company_name="MercadoLibre, Inc.",
+    business_model="MercadoLibre is the dominant LatAm e-commerce marketplace and fintech platform. Revenue from marketplace commissions, Mercado Pago (payments/fintech), advertising, shipping (Mercado Envios), and credit (Mercado Credito).",
+    primary_revenue_drivers=["Commerce (~50% — marketplace commissions, advertising, shipping)", "Fintech (~50% — Mercado Pago payments, Mercado Credito lending, digital account)"],
+    recurring_revenue_sources=["Payment processing fees (GMV-linked, structurally recurring)", "Advertising on marketplace (growing rapidly)", "Lending interest income"],
+    rate_sensitivity_note="LatAm rates are structural (10%+). MELI benefits from high-rate lending margins on Mercado Credito. US rates have limited direct impact.",
+    inflation_pass_through="Strong — marketplace commissions are percentage-based. Inflation in LatAm mechanically increases GMV and revenue.",
+    recession_behavior="LatAm e-commerce penetration is low (~15%), so secular growth offsets macro weakness. Fintech credit losses rise in recessions.",
+    major_risks=["Credit losses on Mercado Credito lending portfolio", "Competition from Amazon, Shopee in LatAm", "Currency depreciation in Brazil/Argentina/Mexico"],
+    valuation_style="MELI trades at 40-60x forward P/E reflecting LatAm e-commerce and fintech penetration runway.",
+    key_metrics=["GMV growth (FX-neutral)", "TPV (Total Payment Volume)", "Credit portfolio quality (NPL ratio)", "Active users"],
+    competitive_advantages=["Dominant LatAm marketplace (70%+ share in key markets)", "Integrated ecosystem: marketplace + payments + logistics + credit", "Network effect: more sellers → more buyers → more sellers"],
+    business_model_keywords=["GMV", "Mercado Pago", "Mercado Credito", "Mercado Envios", "LatAm", "Brazil", "Argentina", "TPV", "fintech"],
+    moat_type=["network_effect", "scale_economy", "data_advantage"],
+    revenue_model="transaction_toll",
+    switching_cost_level="high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="mild",
+    narrative_dependence="low",
+    binary_risk_level="low",
+))
+
+# ── Veeva Systems (VEEV) ────────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="VEEV",
+    company_name="Veeva Systems Inc.",
+    business_model="Veeva provides cloud software for the life sciences industry: CRM (Veeva CRM), regulatory (Vault RIM), clinical (Vault CDMS), quality (Vault QMS), and commercial data (Veeva Data Cloud). Subscription-based with industry-specific lock-in.",
+    primary_revenue_drivers=["Subscription services (~80% — Vault platform, CRM, Data Cloud)", "Professional services (~20% — implementation, training)"],
+    recurring_revenue_sources=["Annual/multi-year subscription contracts (85%+ gross retention)", "Data Cloud subscriptions (reference data for pharma commercial teams)"],
+    rate_sensitivity_note="Low direct rate sensitivity. Life sciences IT spending is driven by pipeline and regulatory requirements, not interest rates.",
+    inflation_pass_through="Strong — annual subscription price increases of 3-5% embedded in contracts.",
+    recession_behavior="Life sciences R&D spending is non-cyclical. Veeva's products are regulatory-required (GxP compliance). Revenue is highly resilient in recessions.",
+    major_risks=["Salesforce re-entering life sciences CRM after VEEV migration off Salesforce platform", "Customer concentration in top 20 pharma companies", "Vault platform competition from SAP/Oracle in non-CRM modules"],
+    valuation_style="VEEV trades at 35-50x forward P/E reflecting non-cyclical life sciences demand, 85%+ subscription retention, and TAM expansion into clinical and regulatory.",
+    key_metrics=["Subscription revenue growth", "Remaining performance obligations (RPO)", "Net revenue retention", "Number of Vault product adoptions per customer"],
+    competitive_advantages=["Industry-standard CRM for pharma (80%+ market share)", "Vault platform creates multi-product lock-in", "Domain expertise in life sciences regulatory requirements", "Migration off Salesforce to own platform increases independence"],
+    business_model_keywords=["Vault", "CRM", "life sciences", "pharma", "clinical", "regulatory", "GxP", "Data Cloud", "RPO"],
+    moat_type=["switching_cost", "data_advantage"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="concentrated",
+    capital_intensity="asset_light",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="none",
+))
+
+# ── Axon Enterprise (AXON) ──────────────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="AXON",
+    company_name="Axon Enterprise, Inc.",
+    business_model="Axon provides law enforcement technology: TASER devices (conducted energy weapons), body cameras (Axon Body), fleet cameras, cloud evidence management (Axon Evidence/Records), and VR training. Transitioning from hardware to recurring SaaS + cloud.",
+    primary_revenue_drivers=["TASER devices (~40% — hardware sales + cartridge consumables)", "Software & sensors (~35% — Axon Cloud, body cameras, fleet cameras)", "Officer safety plans (~25% — bundled hardware + software subscriptions)"],
+    recurring_revenue_sources=["Axon Cloud subscriptions (evidence management, records management)", "Officer Safety Plan (OSP) bundles (5-year subscription including hardware refresh)", "TASER cartridge consumables"],
+    rate_sensitivity_note="Low — law enforcement budgets are funded by municipal taxes, not sensitive to interest rates.",
+    inflation_pass_through="Strong — government contracts have price escalators. TASER pricing power is monopoly-grade (no competitor).",
+    recession_behavior="Law enforcement spending is non-discretionary. Police budgets are funded by local taxes and federal grants. Revenue is highly resilient in recessions.",
+    major_risks=["Anti-police sentiment reducing law enforcement budgets", "Regulatory restrictions on TASER or surveillance technology", "International expansion execution risk", "Customer concentration in US law enforcement"],
+    valuation_style="AXON trades at 60-80x forward P/E reflecting the transition from hardware to SaaS, TASER monopoly, and TAM expansion into enterprise security.",
+    key_metrics=["Annual recurring revenue (ARR)", "Net revenue retention rate", "TASER unit shipments", "Cloud seats"],
+    competitive_advantages=["TASER monopoly — no competitor has FDA/safety approval for a competing device", "Axon Evidence is the standard in US law enforcement (250,000+ users)", "OSP bundles create 5-year recurring revenue streams", "Body camera + cloud evidence integration creates switching friction"],
+    business_model_keywords=["TASER", "body camera", "Axon Cloud", "Axon Evidence", "OSP", "law enforcement", "ARR", "Rick Smith"],
+    moat_type=["natural_monopoly", "switching_cost", "brand"],
+    revenue_model="subscription",
+    switching_cost_level="very_high",
+    customer_concentration="moderate",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="low",
+))
+
+# ── Regeneron Pharmaceuticals (REGN) ────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="REGN",
+    company_name="Regeneron Pharmaceuticals, Inc.",
+    business_model="Regeneron is a biotech focused on antibody-based therapeutics. Revenue driven by Dupixent ($12B+ franchise for eczema/asthma/COPD), Eylea (retinal disease), and a deep antibody technology pipeline.",
+    primary_revenue_drivers=["Dupixent (~55% — atopic dermatitis, asthma, COPD, growing indications)", "Eylea/Eylea HD (~25% — retinal disease)", "Oncology (Libtayo) + other (~10%)", "Collaboration revenue (~10% — Sanofi/Bayer partnerships)"],
+    recurring_revenue_sources=["Chronic disease treatments requiring ongoing dosing (Dupixent, Eylea)", "Collaboration milestone and royalty payments"],
+    rate_sensitivity_note="Low — pharma demand is non-discretionary. Valuation multiple is rate-sensitive at 25x+ P/E.",
+    inflation_pass_through="Strong — drug pricing power in US market. Annual list price increases of 3-5%.",
+    recession_behavior="Pharma revenue is non-cyclical. Patients continue treatment regardless of economic conditions. Payer coverage may tighten modestly.",
+    major_risks=["Dupixent biosimilar entry (patent cliff ~2031)", "Eylea biosimilar competition already emerging", "IRA drug pricing negotiation exposure", "Pipeline failure risk on next-generation programs"],
+    valuation_style="REGN trades at 15-20x forward P/E, a discount to pharma peers reflecting Eylea biosimilar overhang and pipeline uncertainty.",
+    key_metrics=["Dupixent global sales growth", "Eylea/Eylea HD market share retention", "Pipeline readouts (linvoseltamab, fianlimab)", "R&D productivity"],
+    competitive_advantages=["VelociSuite antibody discovery platform — fastest in industry", "Dupixent franchise expanding into new indications (COPD, food allergy)", "Eylea HD lifecycle management extending franchise", "50%+ gross margins with capital-efficient R&D model"],
+    business_model_keywords=["Dupixent", "Eylea", "antibody", "VelociSuite", "Sanofi", "atopic dermatitis", "COPD", "biosimilar", "Len Schleifer"],
+    moat_type=["patent", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="moderate",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="none",
+    binary_risk_level="moderate",
+))
+
+# ── Vertex Pharmaceuticals (VRTX) ───────────────────────────────────────────
+_register(CompanyKnowledgeProfile(
+    ticker="VRTX",
+    company_name="Vertex Pharmaceuticals Incorporated",
+    business_model="Vertex has a near-monopoly in cystic fibrosis (CF) treatment with Trikafta/Kaftrio (90%+ market share). Revenue from CF franchise plus emerging pipeline in pain (suzetrigine), gene editing (Casgevy), and kidney disease.",
+    primary_revenue_drivers=["Trikafta/Kaftrio (~90% — CF treatment, $9B+ annual revenue)", "Casgevy (~5% — gene therapy for sickle cell/beta-thalassemia)", "Pain (suzetrigine) + kidney disease (~5% — emerging pipeline)"],
+    recurring_revenue_sources=["Chronic CF treatment requiring lifetime dosing (patients take Trikafta daily)", "Gene therapy one-time treatments with periodic follow-up"],
+    rate_sensitivity_note="Low — CF treatment is non-discretionary. Valuation multiple compression is the primary rate transmission.",
+    inflation_pass_through="Strong — drug pricing power. Trikafta price increases of 3-5% annually.",
+    recession_behavior="CF treatment is essential — patients cannot stop. Revenue is completely non-cyclical. Pipeline investment continues regardless of economy.",
+    major_risks=["CF patient population ceiling (~90K addressable, most already on treatment)", "Pipeline diversification risk (pain, kidney, gene editing all early/mid-stage)", "Trikafta patent cliff (~2037)", "Gene therapy commercial execution (Casgevy pricing/access)"],
+    valuation_style="VRTX trades at 25-30x forward P/E reflecting CF monopoly, pipeline optionality in pain/kidney, and non-cyclical revenue.",
+    key_metrics=["Trikafta revenue growth (price + new patient starts)", "CF patient penetration rate globally", "Suzetrigine trial readouts", "Casgevy commercial launch metrics"],
+    competitive_advantages=["90%+ market share in CF treatment — no competitor has comparable efficacy", "Trikafta addresses 90% of CF mutations (triple combination therapy)", "Gene editing partnership with CRISPR Therapeutics (Casgevy)", "Non-opioid pain program (suzetrigine) could be transformational"],
+    business_model_keywords=["Trikafta", "Kaftrio", "CF", "cystic fibrosis", "Casgevy", "suzetrigine", "gene editing", "NaV1.8", "Reshma Kewalramani"],
+    moat_type=["patent", "data_advantage"],
+    revenue_model="product_sale",
+    switching_cost_level="very_high",
+    customer_concentration="diversified",
+    capital_intensity="moderate",
+    earnings_cyclicality="non_cyclical",
+    narrative_dependence="low",
+    binary_risk_level="moderate",
 ))
 
 

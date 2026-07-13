@@ -126,13 +126,80 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
         logger.warning("[shutdown] persistence layer close failed (non-fatal): %r", _exc)
 
 
+_API_DESCRIPTION = """\
+Backend for **ClearSignal** — an AI-powered equity analysis platform.
+
+The conviction engine (frozen, institutionally validated) produces structured
+theses, dossiers, and scenarios. This API exposes the user-facing beta surfaces
+built on top of it.
+
+### Identity & rollout
+
+Most product surfaces are scoped to the acting user:
+
+* **`AUTH_ENABLED=false` (default):** every request resolves to a single system
+  *bypass* user — the API behaves single-tenant. No JWT is inspected.
+* **`AUTH_ENABLED=true`:** identity is the verified Supabase JWT `sub`; requests
+  without a valid token receive **401** on user-scoped routes.
+
+Several capabilities are dark-launched behind flags and are inert until enabled
+by an operator (never in code): `STRIPE_ENABLED` (billing), `DELIVERY_SHADOW` /
+`DELIVERY_IN_APP_ENABLED` (real notification delivery), `WATCHLIST_DB_BACKED`
+(persistent multi-instance watchlists), and the scenario build/scoring flags.
+
+### Conventions
+
+* `request.state.user_id` is stamped by the auth middleware before every handler.
+* Read endpoints degrade gracefully when persistence is disabled (empty payloads,
+  never 5xx). `/readyz` is the dependency-aware readiness probe.
+* No endpoint returns buy/sell/hold or price-target language — the engine is a
+  describer, not a recommender.
+"""
+
+_OPENAPI_TAGS = [
+    {"name": "health",
+     "description": "Liveness (`/`, `/health`, `/healthz`) and readiness (`/readyz`) "
+                    "probes. `/readyz` returns **503** when a required dependency (DB) "
+                    "is configured but unreachable, so orchestrators can gate traffic."},
+    {"name": "watchlist",
+     "description": "Track tickers and their thesis-snapshot history. Membership is "
+                    "DB-backed when `WATCHLIST_DB_BACKED=true` (persistent, multi-instance) "
+                    "and scoped to the authenticated user; otherwise a local JSON index."},
+    {"name": "portfolio",
+     "description": "Position CRUD plus portfolio-level intelligence — concentration / "
+                    "diversification **health**, shared-risk **exposure** clusters, and "
+                    "**insights**. All reads are scoped to the caller's default portfolio."},
+    {"name": "scenarios",
+     "description": "Read-only Scenario Engine — *“what changes if X happens?”*. Returns "
+                    "descriptive scenario facets per ticker (transmission path, plausibility, "
+                    "confidence). Purely descriptive; no conviction, stance, or price fields."},
+    {"name": "notifications",
+     "description": "In-app notification inbox, unread counts, idempotent read receipts, and "
+                    "delivery preferences. Surfaces the delivery ledger read-only while "
+                    "delivery stays in shadow mode (no real sends)."},
+    {"name": "auth",
+     "description": "Supabase JWT session endpoints (`/auth/me`, `/auth/session`, "
+                    "`/auth/logout`). Enforced only when `AUTH_ENABLED=true`; a system bypass "
+                    "user is used otherwise."},
+    {"name": "billing",
+     "description": "Stripe checkout, webhook receiver, subscription **status**, billing "
+                    "portal, and cancel. Mutating routes return **503** and the webhook is a "
+                    "no-op until `STRIPE_ENABLED=true`. The system user cannot check out."},
+    {"name": "admin",
+     "description": "Internal observability / status snapshots for each subsystem. Not part "
+                    "of the public product surface."},
+]
+
+
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
     app = FastAPI(
-        title="AI Analyst Backend",
+        title="ClearSignal API",
         version="0.1.0",
-        description="Backend service for an AI‑powered company analysis platform",
+        description=_API_DESCRIPTION,
+        openapi_tags=_OPENAPI_TAGS,
         lifespan=lifespan,
+        contact={"name": "ClearSignal"},
     )
 
     # Phase 16 · Slice 3 — Identity middleware (runs innermost; added first so
@@ -143,11 +210,34 @@ def create_app() -> FastAPI:
     from .middleware.auth_middleware import AuthMiddleware
     app.add_middleware(AuthMiddleware)
 
-    # CORS (allow all origins for development — tighten in production)
+    # CORS — environment-driven explicit allowlist (Sprint 0).
+    # Never serve a wildcard origin together with credentials, and never allow
+    # a wildcard origin at all in production.  Localhost dev origins are the
+    # default so local development keeps working out of the box.
+    from .config import settings as _cors_settings
+    _cors_origins = _cors_settings.cors_allow_origins_list
+    _cors_credentials = _cors_settings.cors_allow_credentials
+    if _cors_settings.is_production and "*" in _cors_origins:
+        logger.error(
+            "[cors] wildcard '*' origin is not permitted in production; ignoring it. "
+            "Set CORS_ALLOW_ORIGINS to an explicit frontend allowlist."
+        )
+        _cors_origins = [o for o in _cors_origins if o != "*"]
+    if "*" in _cors_origins and _cors_credentials:
+        # '*' with credentials is invalid per the Fetch spec and browsers reject
+        # it; disable credentials so a real (non-credentialed) wildcard still works.
+        logger.warning(
+            "[cors] '*' origin with credentials is invalid; disabling allow_credentials."
+        )
+        _cors_credentials = False
+    logger.info(
+        "[cors] origins=%s credentials=%s production=%s",
+        _cors_origins or "(none)", _cors_credentials, _cors_settings.is_production,
+    )
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
+        allow_origins=_cors_origins,
+        allow_credentials=_cors_credentials,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -171,6 +261,52 @@ def create_app() -> FastAPI:
             request_id,
         )
         return response
+
+    # Edge security guard (Sprint 0): body-size cap + global per-IP rate limit.
+    # Runs outermost (registered last) so abusive requests are rejected before
+    # any handler work.  Health/readiness and CORS preflight are exempt so
+    # uptime probes and browsers are never throttled.
+    from starlette.responses import JSONResponse as _JSONResponse
+
+    _RL_EXEMPT_PATHS = frozenset({"/", "/health", "/healthz", "/readyz", "/version"})
+
+    @app.middleware("http")
+    async def _edge_security_guard(request: Request, call_next):
+        from .config import settings as _s
+
+        # 1. Body-size cap — cheap Content-Length check (JSON API; no uploads).
+        _cl = request.headers.get("content-length")
+        if _cl:
+            try:
+                if int(_cl) > _s.max_request_body_bytes:
+                    return _JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request body too large."},
+                    )
+            except ValueError:
+                pass
+
+        # 2. Global per-IP rate limit (all routes except health / preflight).
+        if (
+            _s.rate_limit_enabled
+            and request.method != "OPTIONS"
+            and request.url.path not in _RL_EXEMPT_PATHS
+        ):
+            from .security.rate_limit import rate_limiter, client_ip
+            _ip = client_ip(request)
+            _allowed, _retry = rate_limiter.check(
+                f"ip:{_ip}",
+                _s.rate_limit_per_ip_per_min,
+                _s.rate_limit_window_s,
+            )
+            if not _allowed:
+                return _JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded. Please slow down."},
+                    headers={"Retry-After": str(_retry)},
+                )
+
+        return await call_next(request)
 
     app.include_router(api_router)
     return app

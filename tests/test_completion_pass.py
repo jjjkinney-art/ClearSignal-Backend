@@ -39,17 +39,35 @@ if str(_ROOT) not in sys.path:
 import types
 
 
+_MISSING = object()
+_ORIG_SYS_MODULES: dict = {}
+
+
 def _stub(name, **attrs):
-    if name in sys.modules:
-        m = sys.modules[name]
-    else:
-        m = types.ModuleType(name)
-        m.__path__ = []
-        m.__package__ = name.rsplit(".", 1)[0] if "." in name else name
-        sys.modules[name] = m
+    # Install a FRESH fake module (never mutate the real, pre-imported one) and
+    # record the original so teardown_module() restores it — otherwise stubbing
+    # pydantic/pydantic_settings in place leaks process-wide and breaks FastAPI
+    # model-building in later-collected test files.
+    if name not in _ORIG_SYS_MODULES:
+        _ORIG_SYS_MODULES[name] = sys.modules.get(name, _MISSING)
+    m = types.ModuleType(name)
+    m.__path__ = []
+    m.__package__ = name.rsplit(".", 1)[0] if "." in name else name
     for k, v in attrs.items():
         setattr(m, k, v)
+    sys.modules[name] = m
     return m
+
+
+def teardown_module(module=None):
+    """Restore every module this file shadowed so the stubs never leak into
+    other test files (deterministic collection / CI reliability)."""
+    for name, orig in _ORIG_SYS_MODULES.items():
+        if orig is _MISSING:
+            sys.modules.pop(name, None)
+        else:
+            sys.modules[name] = orig
+    _ORIG_SYS_MODULES.clear()
 
 
 # Pydantic stub (tests don't need real validation)
