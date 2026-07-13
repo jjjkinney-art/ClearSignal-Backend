@@ -35,6 +35,8 @@ async def _with_db(fn):
     url = f"sqlite+aiosqlite:///{path}"
     try:
         await init_db(url)
+        from conftest import create_test_schema
+        await create_test_schema(url)
         return await fn()
     finally:
         await close_db()

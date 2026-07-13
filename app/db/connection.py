@@ -46,7 +46,6 @@ async def init_db(database_url: str) -> None:
             async_sessionmaker,
             AsyncSession,
         )
-        from .models import Base
 
         connect_args: dict = {}
         if database_url.startswith("sqlite"):
@@ -67,9 +66,16 @@ async def init_db(database_url: str) -> None:
             autoflush=False,
         )
 
-        # Create all tables that don't yet exist (idempotent).
-        async with _engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        # Sprint 1A: startup NO LONGER creates or mutates the schema.  Migrations
+        # run as an explicit deploy step (`alembic upgrade head`).  Here we only
+        # verify — read-only — that the DB is at the Alembic head and warn loudly
+        # if it is behind / unmanaged.  Non-fatal: the app still starts (e.g. so
+        # health checks and /readyz can report status).
+        try:
+            from .migration_check import log_migration_status
+            await log_migration_status(_engine)
+        except Exception as _mc_exc:
+            logger.warning("[db] migration status check failed (non-fatal): %r", _mc_exc)
 
         _db_enabled = True
         logger.info("[db] persistence layer initialised — %s", database_url.split("@")[-1])

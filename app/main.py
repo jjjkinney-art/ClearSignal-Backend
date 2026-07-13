@@ -48,29 +48,10 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     except Exception as _seed_exc:
         logger.warning("[startup] 9F analog seed failed (non-fatal): %r", _seed_exc)
 
-    # Phase 10C — apply delivery_ledger column additions (idempotent ALTER TABLE)
-    # create_all() does not add columns to existing tables.  These two nullable
-    # columns are added by 007_briefing_delivery.sql but must be re-applied here
-    # for deployments where delivery_ledger already existed pre-10C.
-    try:
-        from .db import get_session as _get_session_10c
-        from sqlalchemy import text as _text_10c
-        _ALTERS = [
-            "ALTER TABLE delivery_ledger ADD COLUMN IF NOT EXISTS canonical_severity VARCHAR(20)",
-            "ALTER TABLE delivery_ledger ADD COLUMN IF NOT EXISTS severity_rank INTEGER",
-            "CREATE INDEX IF NOT EXISTS ix_delivery_ledger_canonical_severity ON delivery_ledger (canonical_severity)",
-        ]
-        async with _get_session_10c() as _alt_sess:
-            if _alt_sess is not None:
-                for _stmt in _ALTERS:
-                    try:
-                        await _alt_sess.execute(_text_10c(_stmt))
-                    except Exception:
-                        pass   # column/index already exists — no-op
-                await _alt_sess.commit()
-                logger.info("[startup] 10C delivery_ledger column migration applied (idempotent)")
-    except Exception as _alt_exc:
-        logger.warning("[startup] 10C delivery_ledger migration failed (non-fatal): %r", _alt_exc)
+    # Phase 10C delivery_ledger column additions have moved OUT of startup into a
+    # versioned, reversible Alembic migration (0002_delivery_ledger_severity).
+    # Startup no longer issues DDL; run `alembic upgrade head` as a deploy step.
+    # (init_db logs a loud warning if the DB is behind head — see migration_check.)
 
     # Phase 10B — backfill watched_tickers from flat-file index.json (idempotent)
     try:
