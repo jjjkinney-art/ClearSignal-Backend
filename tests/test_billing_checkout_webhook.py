@@ -66,6 +66,8 @@ async def _with_db(fn):
     os.close(fd)
     try:
         await init_db(f"sqlite+aiosqlite:///{path}")
+        from conftest import create_test_schema
+        await create_test_schema(f"sqlite+aiosqlite:///{path}")
         return await fn()
     finally:
         await close_db()

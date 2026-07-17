@@ -311,6 +311,25 @@ def pytest_collectstart(collector) -> None:  # noqa: D401  (pytest hook)
         _restore_real_modules()
 
 
+async def create_test_schema(url: str) -> None:
+    """Build the full schema on a test database.
+
+    Sprint 1A: startup (init_db) no longer runs create_all — schema is applied by
+    ``alembic upgrade head`` as a deploy step.  Integration tests that spin up a
+    throwaway SQLite DB must therefore create the schema themselves; this helper
+    is the test-side equivalent of ``alembic upgrade head`` for a fresh DB
+    (0001_baseline is itself create_all, and 0002 is a no-op on a fresh schema).
+    """
+    from sqlalchemy.ext.asyncio import create_async_engine
+    from app.db.models import Base
+    eng = create_async_engine(url)
+    try:
+        async with eng.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    finally:
+        await eng.dispose()
+
+
 # ── State-reset helpers ───────────────────────────────────────────────────
 
 def _reset_enterprise_caches() -> None:
