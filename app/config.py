@@ -660,6 +660,13 @@ class Settings(BaseSettings):
     usage_stats_admin_only: bool = True
     admin_user_ids: str = ""                     # comma-separated user UUIDs
 
+    # ── Content integrity (Sprint 1B) ────────────────────────────────────
+    # When True (default), the /ask response boundary reconciles the valuation
+    # fields and fails CLOSED on a cross-field contradiction (qualified price
+    # label instead of a cheap-vs-rich mismatch). Set CONTENT_INTEGRITY_ENABLED
+    # =false to disable the boundary check (validators remain importable/tested).
+    content_integrity_enabled: bool = True
+
     # ── Derived helpers (properties, not settings fields) ─────────────────
     @property
     def is_production(self) -> bool:
