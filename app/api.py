@@ -1911,6 +1911,50 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             except Exception as _5c_out_exc:
                 logger.debug("[ask] 5C outcome recording failed (non-fatal): %r", _5c_out_exc)
 
+            # ── Sprint 1B: content-integrity check (fail-closed, dict-level) ──────
+            # Reconcile the valuation fields and flag cross-field contradictions
+            # BEFORE the response reaches the frontend.  Operates on the emitted
+            # dict (post-model), applies a qualified fallback for the price label on
+            # a hard cheap/rich contradiction, and attaches a compact _integrity
+            # block.  Fails OPEN on any error so it can never break the response.
+            try:
+                from .config import settings as _ci_cfg
+                if getattr(_ci_cfg, "content_integrity_enabled", True):
+                    from .integrity.consistency import validate_thesis_integrity as _vti
+                    _thesis = (
+                        _result_dict.get("answer", {}).get("investment_thesis")
+                        if isinstance(_result_dict.get("answer"), dict) else None
+                    )
+                    if isinstance(_thesis, dict):
+                        _ir = _vti(_thesis, question=getattr(request, "question", None))
+                        if not _ir.ok:
+                            # Fail closed: qualify the price label rather than ship a
+                            # cheap-vs-rich contradiction. "fair" is the frontend-safe
+                            # neutral value for an undetermined reconciled state.
+                            if "expectation_regime" in _ir.qualifications:
+                                _thesis["expectation_regime"] = "fair"
+                            logger.warning(
+                                "[ask] content-integrity: %d violation(s) for %s: %s",
+                                len(_ir.violations),
+                                _thesis.get("ticker") or _thesis.get("company") or "?",
+                                "; ".join(f"{v.code}({v.severity})" for v in _ir.violations),
+                            )
+                        _thesis["_integrity"] = {
+                            "ok": _ir.ok,
+                            "valuation_state": _ir.state,
+                            "price_label": _ir.qualifications.get("price_label"),
+                            "violations": [
+                                {"code": v.code, "severity": v.severity, "field": v.field}
+                                for v in _ir.violations
+                            ],
+                            "caveats": [
+                                c for c in (_ir.qualifications.get("stale_precision_caveat"),)
+                                if c
+                            ],
+                        }
+            except Exception as _ci_exc:
+                logger.debug("[ask] content-integrity check failed (non-fatal): %r", _ci_exc)
+
             yield _json.dumps(_result_dict).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)
