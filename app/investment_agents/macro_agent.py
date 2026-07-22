@@ -264,6 +264,19 @@ def run_investment_macro_agent(
                     f"[DIAG] [{_AGENT_NAME}] bullish_extraction fired (no_bullish_signals) "
                     f"ticker={company.ticker} extracted={len(extracted)}"
                 )
+
+        # Sprint 1C — structured provenance at the SOURCE (see valuation_agent).
+        try:
+            from ..integrity.claim_extraction import attach_agent_claims
+            from ..services.freshness_analyzer import analyze_evidence_freshness
+            attach_agent_claims(
+                result, ticker=company.ticker,
+                freshness=analyze_evidence_freshness(relevant), dimension="macro",
+                metric="macro", text_fields=("overall", "rate_sensitivity", "recession_risk"),
+            )
+        except Exception as _cc_exc:
+            logger.debug("[%s] claim extraction failed (non-fatal): %r", _AGENT_NAME, _cc_exc)
+
         return result
     except Exception as exc:
         logger.warning(
