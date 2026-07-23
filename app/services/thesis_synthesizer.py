@@ -4231,4 +4231,29 @@ def synthesize_thesis(
             "[thesis_synthesizer] persistence metadata stamping failed (non-fatal): %r", _pe
         )
 
+    # ── Sprint 1C — structured provenance & thresholds ────────────────────────
+    # Moves integrity upstream: attach typed quantitative_claims (merged from the
+    # valuation/macro/risk agents' own source-level extraction plus this thesis's
+    # own prose fields) and validated decision_thresholds (parsed from
+    # threshold_zones), using the freshness profile (_fp) already computed above.
+    # Never touches conviction scoring; never raises (degrades to empty lists).
+    try:
+        from ..integrity.thesis_wiring import attach_structured_content
+        _agent_claims = (
+            list(getattr(valuation, "quantitative_claims", None) or [])
+            + list(getattr(macro, "quantitative_claims", None) or [])
+            + list(getattr(risk, "quantitative_claims", None) or [])
+        )
+        # _fp (FreshnessProfile) is set above; read defensively in case that
+        # earlier block raised before assigning it.
+        _freshness_profile = locals().get("_fp")
+        attach_structured_content(
+            thesis, ticker=getattr(company, "ticker", ""),
+            evidence=evidence, freshness=_freshness_profile, agent_claims=_agent_claims,
+        )
+    except Exception as _sp_exc:
+        logger.warning(
+            "[thesis_synthesizer] structured provenance attach failed (non-fatal): %r", _sp_exc
+        )
+
     return thesis

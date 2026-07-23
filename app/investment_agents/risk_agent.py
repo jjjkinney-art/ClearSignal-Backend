@@ -247,6 +247,19 @@ def run_risk_agent(
             backoff_factor=settings.model_backoff_factor,
         )
         result.evidence_used = [ev.title[:70] for ev in relevant]
+
+        # Sprint 1C — structured provenance at the SOURCE (see valuation_agent).
+        try:
+            from ..integrity.claim_extraction import attach_agent_claims
+            from ..services.freshness_analyzer import analyze_evidence_freshness
+            attach_agent_claims(
+                result, ticker=company.ticker,
+                freshness=analyze_evidence_freshness(relevant), dimension="filing",
+                metric="risk", text_fields=("overall", "debt_risk", "concentration_risk"),
+            )
+        except Exception as _cc_exc:
+            logger.debug("[%s] claim extraction failed (non-fatal): %r", _AGENT_NAME, _cc_exc)
+
         return result
     except Exception as exc:
         logger.warning(

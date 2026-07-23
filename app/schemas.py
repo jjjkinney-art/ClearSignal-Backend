@@ -909,6 +909,13 @@ class ValuationView(BaseModel):
         default="",
         description="1-2 sentence reasoning behind the valuation_stance verdict.",
     )
+    # Sprint 1C — structured quantitative claims extracted from this agent's OWN
+    # text (`overall` + `signals[].signal`) at generation time, using this
+    # agent's own evidence context. See app/integrity/claim_extraction.py.
+    quantitative_claims: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Structured provenance-classified claims found in this agent's output.",
+    )
 
 
 class MacroSensitivity(BaseModel):
@@ -934,6 +941,11 @@ class MacroSensitivity(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(default_factory=list)
     signals: List[Signal] = Field(default_factory=list)
+    # Sprint 1C — see ValuationView.quantitative_claims.
+    quantitative_claims: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Structured provenance-classified claims found in this agent's output.",
+    )
 
 
 class RiskProfile(BaseModel):
@@ -962,6 +974,11 @@ class RiskProfile(BaseModel):
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     evidence_used: List[str] = Field(default_factory=list)
     signals: List[Signal] = Field(default_factory=list)
+    # Sprint 1C — see ValuationView.quantitative_claims.
+    quantitative_claims: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Structured provenance-classified claims found in this agent's output.",
+    )
 
 
 class MarketContext(BaseModel):
@@ -1483,6 +1500,37 @@ class InvestmentThesis(BaseModel):
             "None when no evidence of that type was found. "
             "Populated by the freshness analyzer at synthesis time."
         ),
+    )
+
+    # ── Sprint 1C — structured provenance & thresholds ────────────────────────
+    # Companion payloads alongside the existing readable prose fields (bull_thesis,
+    # bear_thesis, valuation_view, threshold_zones, ...). The frontend is NOT
+    # required to change this sprint — these are additive. See
+    # app/integrity/{claim_extraction,threshold_parsing,thesis_wiring}.py.
+    quantitative_claims: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "Every material quantitative claim in this thesis, classified as "
+            "REPORTED/DERIVED/ESTIMATED/SCENARIO/HEURISTIC with as-of date, "
+            "confidence, and assumptions where applicable. Merged from the "
+            "valuation/macro/risk agents' own claims plus claims found in "
+            "direct_answer/bull_thesis/bear_thesis/valuation_view/"
+            "macro_sensitivity/conclusion/what_changed."
+        ),
+    )
+    decision_thresholds: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "Structured, validated version of threshold_zones: each entry is either "
+            "a non-overlapping, direction-coherent band (metric/unit/direction/"
+            "bull_boundary/neutral_interval/bear_boundary/provenance/as_of) or an "
+            "explicit {'unavailable': true, 'reason': ...} when the LLM's free-form "
+            "thresholds could not be safely parsed or were contradictory."
+        ),
+    )
+    claim_provenance_summary: Dict[str, int] = Field(
+        default_factory=dict,
+        description="Count of quantitative_claims by provenance value, for quick display.",
     )
 
     # ── Phase 9C — Investment Memory ──────────────────────────────────────────

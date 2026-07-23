@@ -183,6 +183,60 @@ def _question_alignment(thesis: Dict[str, Any], question: Optional[str],
         ))
 
 
+def _structured_claims_and_thresholds(thesis: Dict[str, Any], res: IntegrityResult) -> None:
+    """Sprint 1C defense-in-depth: re-validate the STRUCTURED companion payloads
+    (quantitative_claims / decision_thresholds) if present.  This is the final
+    safety net — source-level generation (claim_extraction/threshold_parsing)
+    should already have produced clean data, but the boundary re-checks so a
+    generator-level bug can never silently reach the frontend.  No-ops when the
+    thesis predates Sprint 1C (fields absent) — Sprint 1B behavior is unchanged.
+    """
+    ticker = str(_get(thesis, "ticker", "company") or "").strip().upper()
+
+    for claim in thesis.get("quantitative_claims") or []:
+        if not isinstance(claim, dict):
+            continue
+        c_ticker = str(claim.get("ticker") or "").strip().upper()
+        if ticker and c_ticker and c_ticker != ticker:
+            res.violations.append(IntegrityViolation(
+                code="claim_ticker_leak", severity=HIGH, field="quantitative_claims",
+                message=f"claim ticker '{c_ticker}' does not match thesis ticker '{ticker}'",
+            ))
+        prov = claim.get("provenance")
+        if prov in ("estimated", "scenario", "heuristic") and not (
+            claim.get("assumptions") or claim.get("as_of") or claim.get("confidence")
+        ):
+            res.violations.append(IntegrityViolation(
+                code="unqualified_structured_claim", severity=MEDIUM, field="quantitative_claims",
+                message=f"{prov} claim '{claim.get('value_text')}' lacks a qualifier",
+            ))
+        if claim.get("stale") and not claim.get("as_of"):
+            res.violations.append(IntegrityViolation(
+                code="unqualified_stale_claim", severity=MEDIUM, field="quantitative_claims",
+                message=f"stale claim '{claim.get('value_text')}' has no as-of date",
+            ))
+
+    for band in thesis.get("decision_thresholds") or []:
+        if not isinstance(band, dict) or band.get("unavailable"):
+            continue  # explicit unavailable is the safe, expected fail-closed state
+        bull, bear = band.get("bull_boundary"), band.get("bear_boundary")
+        direction = band.get("direction")
+        if bull is None or bear is None or direction not in ("higher_is_better", "lower_is_better"):
+            continue
+        incoherent = (
+            (direction == "lower_is_better" and bull >= bear) or
+            (direction == "higher_is_better" and bull <= bear)
+        )
+        if incoherent:
+            res.violations.append(IntegrityViolation(
+                code="threshold_contradiction", severity=HIGH, field="decision_thresholds",
+                message=(
+                    f"shipped threshold band for '{band.get('metric')}' is incoherent "
+                    f"(direction={direction}, bull={bull}, bear={bear})"
+                ),
+            ))
+
+
 def validate_thesis_integrity(
     thesis: Dict[str, Any], *, question: Optional[str] = None,
 ) -> IntegrityResult:
@@ -192,6 +246,7 @@ def validate_thesis_integrity(
         _materiality(thesis, res)
         _stale_precision(thesis, res)
         _question_alignment(thesis, question, res)
+        _structured_claims_and_thresholds(thesis, res)
 
         mem_violations = validate_memory(
             _get(thesis, "memory_context_data", default=None) or None,
