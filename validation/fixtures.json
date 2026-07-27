@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "description": "Sprint 2A production-validation benchmark. 12 companies x 3 question categories = 36 queries. Designed to expand to 100-150 by adding more companies/categories without changing the schema.",
+  "categories": {
+    "core_thesis": "Core bull/bear thesis at current valuation",
+    "decision_threshold": "What operating metric would break the thesis, and at what level",
+    "structural_risk": "Primary structural risk, what is priced in, and what forces a re-rating"
+  },
+  "fixtures": [
+    {"id": "MSFT-core_thesis", "ticker": "MSFT", "company": "Microsoft", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Microsoft at the current valuation?"},
+    {"id": "MSFT-decision_threshold", "ticker": "MSFT", "company": "Microsoft", "category": "decision_threshold",
+     "question": "What operating metric would break the Microsoft bull thesis, and at what level?"},
+    {"id": "MSFT-structural_risk", "ticker": "MSFT", "company": "Microsoft", "category": "structural_risk",
+     "question": "What is Microsoft's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "NVDA-core_thesis", "ticker": "NVDA", "company": "NVIDIA", "category": "core_thesis",
+     "question": "What is the core bull and bear case for NVIDIA at the current valuation?"},
+    {"id": "NVDA-decision_threshold", "ticker": "NVDA", "company": "NVIDIA", "category": "decision_threshold",
+     "question": "What operating metric would break the NVIDIA bull thesis, and at what level?"},
+    {"id": "NVDA-structural_risk", "ticker": "NVDA", "company": "NVIDIA", "category": "structural_risk",
+     "question": "What is NVIDIA's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "AAPL-core_thesis", "ticker": "AAPL", "company": "Apple", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Apple at the current valuation?"},
+    {"id": "AAPL-decision_threshold", "ticker": "AAPL", "company": "Apple", "category": "decision_threshold",
+     "question": "What operating metric would break the Apple bull thesis, and at what level?"},
+    {"id": "AAPL-structural_risk", "ticker": "AAPL", "company": "Apple", "category": "structural_risk",
+     "question": "What is Apple's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "V-core_thesis", "ticker": "V", "company": "Visa", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Visa at the current valuation?"},
+    {"id": "V-decision_threshold", "ticker": "V", "company": "Visa", "category": "decision_threshold",
+     "question": "What operating metric would break the Visa bull thesis, and at what level?"},
+    {"id": "V-structural_risk", "ticker": "V", "company": "Visa", "category": "structural_risk",
+     "question": "What is Visa's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "JPM-core_thesis", "ticker": "JPM", "company": "JPMorgan", "category": "core_thesis",
+     "question": "What is the core bull and bear case for JPMorgan at the current valuation?"},
+    {"id": "JPM-decision_threshold", "ticker": "JPM", "company": "JPMorgan", "category": "decision_threshold",
+     "question": "What operating metric would break the JPMorgan bull thesis, and at what level?"},
+    {"id": "JPM-structural_risk", "ticker": "JPM", "company": "JPMorgan", "category": "structural_risk",
+     "question": "What is JPMorgan's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "COST-core_thesis", "ticker": "COST", "company": "Costco", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Costco at the current valuation?"},
+    {"id": "COST-decision_threshold", "ticker": "COST", "company": "Costco", "category": "decision_threshold",
+     "question": "What operating metric would break the Costco bull thesis, and at what level?"},
+    {"id": "COST-structural_risk", "ticker": "COST", "company": "Costco", "category": "structural_risk",
+     "question": "What is Costco's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "TSLA-core_thesis", "ticker": "TSLA", "company": "Tesla", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Tesla at the current valuation?"},
+    {"id": "TSLA-decision_threshold", "ticker": "TSLA", "company": "Tesla", "category": "decision_threshold",
+     "question": "What operating metric would break the Tesla bull thesis, and at what level?"},
+    {"id": "TSLA-structural_risk", "ticker": "TSLA", "company": "Tesla", "category": "structural_risk",
+     "question": "What is Tesla's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "PLTR-core_thesis", "ticker": "PLTR", "company": "Palantir", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Palantir at the current valuation?"},
+    {"id": "PLTR-decision_threshold", "ticker": "PLTR", "company": "Palantir", "category": "decision_threshold",
+     "question": "What operating metric would break the Palantir bull thesis, and at what level?"},
+    {"id": "PLTR-structural_risk", "ticker": "PLTR", "company": "Palantir", "category": "structural_risk",
+     "question": "What is Palantir's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "ASML-core_thesis", "ticker": "ASML", "company": "ASML", "category": "core_thesis",
+     "question": "What is the core bull and bear case for ASML at the current valuation?"},
+    {"id": "ASML-decision_threshold", "ticker": "ASML", "company": "ASML", "category": "decision_threshold",
+     "question": "What operating metric would break the ASML bull thesis, and at what level?"},
+    {"id": "ASML-structural_risk", "ticker": "ASML", "company": "ASML", "category": "structural_risk",
+     "question": "What is ASML's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "LLY-core_thesis", "ticker": "LLY", "company": "Eli Lilly", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Eli Lilly at the current valuation?"},
+    {"id": "LLY-decision_threshold", "ticker": "LLY", "company": "Eli Lilly", "category": "decision_threshold",
+     "question": "What operating metric would break the Eli Lilly bull thesis, and at what level?"},
+    {"id": "LLY-structural_risk", "ticker": "LLY", "company": "Eli Lilly", "category": "structural_risk",
+     "question": "What is Eli Lilly's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "BA-core_thesis", "ticker": "BA", "company": "Boeing", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Boeing at the current valuation?"},
+    {"id": "BA-decision_threshold", "ticker": "BA", "company": "Boeing", "category": "decision_threshold",
+     "question": "What operating metric would break the Boeing bull thesis, and at what level?"},
+    {"id": "BA-structural_risk", "ticker": "BA", "company": "Boeing", "category": "structural_risk",
+     "question": "What is Boeing's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "XOM-core_thesis", "ticker": "XOM", "company": "ExxonMobil", "category": "core_thesis",
+     "question": "What is the core bull and bear case for ExxonMobil at the current valuation?"},
+    {"id": "XOM-decision_threshold", "ticker": "XOM", "company": "ExxonMobil", "category": "decision_threshold",
+     "question": "What operating metric would break the ExxonMobil bull thesis, and at what level?"},
+    {"id": "XOM-structural_risk", "ticker": "XOM", "company": "ExxonMobil", "category": "structural_risk",
+     "question": "What is ExxonMobil's primary structural risk, what is currently priced in, and what would force a re-rating?"}
+  ]
+}
