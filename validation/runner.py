@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""Sprint 2A — production-validation CLI runner.
+
+Submits the benchmark fixture suite to a deployed ClearSignal backend's /ask
+endpoint, validates every response with validation/validator.py, and writes
+JSON + Markdown artifacts. See validation/README.md for full usage.
+
+No secrets are hardcoded: the backend URL and optional auth token are read
+from environment variables / CLI flags only.
+
+    python -m validation.runner --dry-run
+    VALIDATION_BACKEND_URL=https://... python -m validation.runner --max-queries 3
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from .models import QueryFixture, QueryOutcome
+from .validator import validate
+from . import report as report_mod
+
+try:
+    import requests
+except ImportError:  # pragma: no cover - requests is a project dependency
+    requests = None
+
+DEFAULT_TIMEOUT_S = 90.0
+DEFAULT_RETRIES = 2
+DEFAULT_CONCURRENCY = 1
+MAX_ALLOWED_CONCURRENCY = 3  # hard safety ceiling — never raised via CLI flag
+
+
+def load_fixtures(path: Path) -> List[QueryFixture]:
+    data = json.loads(path.read_text())
+    return [QueryFixture.from_dict(d) for d in data["fixtures"]]
+
+
+def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
+              auth_token: Optional[str]) -> Dict[str, Any]:
+    """Single HTTP attempt. Raises on any failure — caller handles retries."""
+    url = base_url.rstrip("/") + "/ask"
+    payload = {
+        "company_name": fixture.ticker,
+        "question": fixture.question,
+        "intent": "company_analysis",
+    }
+    headers = {"Content-Type": "application/json"}
+    if auth_token:
+        headers["Authorization"] = f"Bearer {auth_token}"
+    resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def run_one(
+    fixture: QueryFixture, *, base_url: str, timeout: float, retries: int,
+    auth_token: Optional[str],
+) -> QueryOutcome:
+    outcome = QueryOutcome(fixture=fixture, status="skipped")
+    attempts = 0
+    last_exc: Optional[Exception] = None
+    start = time.monotonic()
+
+    for attempt in range(1, retries + 2):  # first attempt + `retries` retries
+        attempts = attempt
+        try:
+            raw = _post_ask(base_url, fixture, timeout=timeout, auth_token=auth_token)
+            outcome.status = "completed"
+            outcome.raw_response = raw
+            outcome.http_status = 200
+            last_exc = None
+            break
+        except requests.exceptions.Timeout as exc:  # type: ignore[union-attr]
+            last_exc = exc
+            outcome.status = "timeout"
+        except requests.exceptions.HTTPError as exc:  # type: ignore[union-attr]
+            last_exc = exc
+            outcome.status = "http_error"
+            outcome.http_status = getattr(exc.response, "status_code", None)
+            # Do not retry a definitive 4xx client error (e.g. 401/413/429 by
+            # design); only retry on 5xx / network-level failures.
+            if outcome.http_status and 400 <= outcome.http_status < 500:
+                break
+        except Exception as exc:  # network error, connection reset, DNS, etc.
+            last_exc = exc
+            outcome.status = "network_error"
+
+        if attempt < retries + 1:
+            time.sleep(min(2 ** attempt, 10))  # capped exponential backoff
+
+    outcome.elapsed_s = time.monotonic() - start
+    outcome.attempts = attempts
+    if last_exc is not None:
+        outcome.error = repr(last_exc)
+
+    if outcome.status == "completed":
+        thesis, findings, presence = validate(outcome.raw_response, fixture)
+        outcome.thesis = thesis
+        outcome.findings = findings
+        outcome.field_presence = presence
+
+    return outcome
+
+
+def _load_resume_ids(output_dir: Path) -> set:
+    results_path = output_dir / "results.jsonl"
+    if not results_path.exists():
+        return set()
+    done = set()
+    for line in results_path.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            row = json.loads(line)
+            if row.get("status") == "completed":
+                done.add(row["id"])
+        except (json.JSONDecodeError, KeyError):
+            continue
+    return done
+
+
+def _append_result(output_dir: Path, outcome: QueryOutcome) -> None:
+    results_path = output_dir / "results.jsonl"
+    with results_path.open("a") as f:
+        f.write(json.dumps(outcome.to_dict(include_raw=False)) + "\n")
+    if outcome.raw_response is not None:
+        raw_dir = output_dir / "raw_responses"
+        raw_dir.mkdir(parents=True, exist_ok=True)
+        (raw_dir / f"{outcome.fixture.id}.json").write_text(
+            json.dumps(outcome.raw_response, indent=2)
+        )
+
+
+def build_arg_parser() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--backend-url", default=os.environ.get("VALIDATION_BACKEND_URL", ""),
+                   help="Backend base URL. Defaults to $VALIDATION_BACKEND_URL. Never hardcode this.")
+    p.add_argument("--auth-token", default=os.environ.get("VALIDATION_AUTH_TOKEN", ""),
+                   help="Optional bearer token. Defaults to $VALIDATION_AUTH_TOKEN. Never pass secrets on the CLI in shared shells.")
+    p.add_argument("--fixtures", default=str(Path(__file__).parent / "fixtures.json"),
+                   help="Path to the fixture JSON file.")
+    p.add_argument("--output-dir", default="", help="Output directory. Defaults to validation/runs/<run-id>.")
+    p.add_argument("--run-id", default=time.strftime("%Y%m%dT%H%M%S"), help="Run identifier (used for the default output dir).")
+    p.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
+                   help=f"Parallel requests, 1-{MAX_ALLOWED_CONCURRENCY} (safety-capped).")
+    p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S, help="Per-request timeout in seconds.")
+    p.add_argument("--retries", type=int, default=DEFAULT_RETRIES, help="Retries on transient failure (5xx/timeout/network).")
+    p.add_argument("--max-queries", type=int, default=0, help="Cap the number of queries run this invocation (0 = no cap).")
+    p.add_argument("--category", default="", help="Only run fixtures in this category.")
+    p.add_argument("--ticker", default="", help="Only run fixtures for this ticker.")
+    p.add_argument("--resume", action="store_true", help="Skip fixtures already completed in --output-dir.")
+    p.add_argument("--dry-run", action="store_true",
+                   help="Print the fixture count / estimated request count and exit — no network calls.")
+    return p
+
+
+def main(argv: Optional[List[str]] = None) -> int:
+    args = build_arg_parser().parse_args(argv)
+
+    fixtures_path = Path(args.fixtures)
+    fixtures = load_fixtures(fixtures_path)
+    total_in_file = len(fixtures)
+
+    if args.category:
+        fixtures = [f for f in fixtures if f.category == args.category]
+    if args.ticker:
+        fixtures = [f for f in fixtures if f.ticker.upper() == args.ticker.upper()]
+
+    matching_filter = len(fixtures)
+    if args.max_queries and args.max_queries > 0:
+        fixtures = fixtures[: args.max_queries]
+
+    concurrency = max(1, min(args.concurrency, MAX_ALLOWED_CONCURRENCY))
+
+    output_dir = Path(args.output_dir) if args.output_dir else Path(__file__).parent / "runs" / args.run_id
+
+    print(f"[validation] fixture file:            {fixtures_path}")
+    print(f"[validation] total fixtures in file:  {total_in_file}")
+    print(f"[validation] matching category/ticker: {matching_filter}")
+    print(f"[validation] fixtures selected (after --max-queries): {len(fixtures)}")
+    print(f"[validation] concurrency:        {concurrency} (max allowed {MAX_ALLOWED_CONCURRENCY})")
+    print(f"[validation] estimated requests: {len(fixtures)} (1 per fixture, plus up to {args.retries} retries each on transient failure)")
+    print(f"[validation] output directory:   {output_dir}")
+
+    if args.dry_run:
+        print("[validation] DRY RUN — no network calls made. Remove --dry-run to execute live.")
+        return 0
+
+    if not args.backend_url:
+        print("[validation] ERROR: --backend-url or $VALIDATION_BACKEND_URL is required for a live run.", file=sys.stderr)
+        return 2
+    if requests is None:
+        print("[validation] ERROR: the 'requests' package is required for a live run.", file=sys.stderr)
+        return 2
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    already_done = _load_resume_ids(output_dir) if args.resume else set()
+    if already_done:
+        print(f"[validation] resuming — {len(already_done)} fixture(s) already completed, will be skipped.")
+    to_run = [f for f in fixtures if f.id not in already_done]
+
+    outcomes: List[QueryOutcome] = []
+    print(f"[validation] running {len(to_run)} quer{'y' if len(to_run) == 1 else 'ies'}...")
+
+    def _task(fx: QueryFixture) -> QueryOutcome:
+        return run_one(fx, base_url=args.backend_url, timeout=args.timeout,
+                       retries=args.retries, auth_token=args.auth_token or None)
+
+    if concurrency == 1:
+        for fx in to_run:
+            outcome = _task(fx)
+            outcomes.append(outcome)
+            _append_result(output_dir, outcome)
+            print(f"[validation]   {fx.id}: {outcome.status} ({outcome.elapsed_s:.1f}s, {len(outcome.findings)} findings)")
+    else:
+        with ThreadPoolExecutor(max_workers=concurrency) as ex:
+            futures = {ex.submit(_task, fx): fx for fx in to_run}
+            for fut in as_completed(futures):
+                outcome = fut.result()
+                outcomes.append(outcome)
+                _append_result(output_dir, outcome)
+                print(f"[validation]   {outcome.fixture.id}: {outcome.status} ({outcome.elapsed_s:.1f}s, {len(outcome.findings)} findings)")
+
+    all_outcomes = outcomes  # this invocation's outcomes; report.py can also re-read results.jsonl for full history
+    report_mod.write_artifacts(output_dir, all_outcomes)
+    print(f"[validation] done. Artifacts written to {output_dir}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

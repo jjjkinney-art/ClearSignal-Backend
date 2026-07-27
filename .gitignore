@@ -23,3 +23,7 @@ build/
 *.swp
 .claude/
 *.local.json
+
+# Sprint 2A production-validation harness — run output may contain large or
+# sensitive live-backend response payloads; never commit it.
+validation/runs/
