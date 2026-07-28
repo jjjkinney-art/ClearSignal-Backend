@@ -188,6 +188,123 @@ class TestClaims:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Sprint 2A calibration — duplicate-numerical-claim rule
+#
+# Real MSFT production responses (validation/runs/20260728T140547) showed the
+# original value-only duplicate rule flagged 4 false positives: the same
+# real-world "Azure growth > 25%" threshold legitimately restated across
+# direct_answer/bull_thesis/bear_thesis/conclusion, and the same "~30-33x"
+# forward-P/E figure restated across bull_thesis/valuation_view. Neither is a
+# defect — it's how an investment thesis is supposed to read. The calibrated
+# rule requires matching (normalized value, metric, provenance) plus a
+# polarity check against the source prose so "above X" and "below X" mentions
+# of the same number are never conflated.
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestDuplicateClaimCalibration:
+    def test_identical_semantic_claims_are_flagged(self):
+        # Real MSFT bull_thesis text: "growth above 25%... sustaining above 25%"
+        # — same field, same polarity, same figure restated -> genuine duplicate.
+        thesis = dict(
+            BASE_THESIS,
+            bull_thesis=(
+                "Azure's growth above 25% drives significant revenue and margin expansion. "
+                "Confirmation would come from Azure revenue growth sustaining above 25% in constant currency."
+            ),
+            quantitative_claims=[
+                {"value_text": "25%", "provenance": "heuristic", "metric": "bull_thesis", "rendered": "25% (rule-of-thumb)"},
+                {"value_text": "25%", "provenance": "heuristic", "metric": "bull_thesis", "rendered": "25% (rule-of-thumb)"},
+            ],
+        )
+        findings = claims_check.check(thesis, _fixture())
+        assert any(f.code == "duplicate_numerical_claim" for f in findings)
+
+    def test_same_value_different_metrics_not_flagged(self):
+        # Same "25%" restated in direct_answer AND bull_thesis — different
+        # metrics -> not automatically a duplicate.
+        thesis = dict(
+            BASE_THESIS,
+            direct_answer="Azure must maintain growth above 25% for the thesis to hold.",
+            bull_thesis="Azure's growth above 25% drives margin expansion.",
+            quantitative_claims=[
+                {"value_text": "25%", "provenance": "heuristic", "metric": "direct_answer"},
+                {"value_text": "25%", "provenance": "heuristic", "metric": "bull_thesis"},
+            ],
+        )
+        findings = claims_check.check(thesis, _fixture())
+        assert not any(f.code == "duplicate_numerical_claim" for f in findings)
+
+    def test_same_value_opposite_polarity_not_flagged(self):
+        # Exact real MSFT direct_answer text: "above 25%" (bull) vs "below 25%"
+        # (bear) — same field, same metric, same provenance, but materially
+        # different (opposite-direction) meaning -> must NOT be flagged.
+        thesis = dict(
+            BASE_THESIS,
+            direct_answer=(
+                "This business model is sustainable as long as Azure maintains a growth rate above 25% "
+                "and continues to expand market share. A significant deceleration in Azure's growth below "
+                "25% would change the outlook."
+            ),
+            quantitative_claims=[
+                {"value_text": "25%", "provenance": "heuristic", "metric": "direct_answer", "rendered": "25% (rule-of-thumb)"},
+                {"value_text": "25%", "provenance": "heuristic", "metric": "direct_answer", "rendered": "25% (rule-of-thumb)"},
+            ],
+        )
+        findings = claims_check.check(thesis, _fixture())
+        assert not any(f.code == "duplicate_numerical_claim" for f in findings)
+
+    def test_visa_threshold_overlap_test_still_green(self):
+        # Sanity check that claims.py calibration did not disturb the
+        # independent thresholds.py overlap detection (Visa fixture).
+        thesis = dict(BASE_THESIS, decision_thresholds=[{
+            "metric": "Forward P/E", "unavailable": False, "unit": "x",
+            "direction": "lower_is_better", "bull_boundary": 31, "bear_boundary": 28,
+        }])
+        findings = thresholds_check.check(thesis, _fixture(ticker="V", company="Visa"))
+        assert any(f.code == "threshold_shown_available_but_contradictory" for f in findings)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Sprint 2A — product-identifier / product-name false-extraction detection
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestProductIdentifierExtraction:
+    def test_microsoft_365_extraction_surfaced(self):
+        # Exact real defect: "Microsoft 365" -> claim value_text "365,"/"365"/"365."
+        thesis = dict(
+            BASE_THESIS,
+            direct_answer="Azure's integration with Microsoft 365, creates strong switching costs.",
+            quantitative_claims=[
+                {"value_text": "365,", "provenance": "heuristic", "metric": "direct_answer", "raw_value": 365.0},
+            ],
+        )
+        findings = claims_check.check(thesis, _fixture())
+        assert any(f.code == "product_identifier_extracted_as_claim" for f in findings)
+
+    def test_fortune_500_and_sp_500_surfaced(self):
+        thesis = dict(
+            BASE_THESIS,
+            bull_thesis="The company ranks in the Fortune 500 and tracks the S&P 500 closely.",
+            quantitative_claims=[
+                {"value_text": "500", "provenance": "heuristic", "metric": "bull_thesis"},
+            ],
+        )
+        findings = claims_check.check(thesis, _fixture())
+        assert any(f.code == "product_identifier_extracted_as_claim" for f in findings)
+
+    def test_genuine_percentage_not_flagged_as_product_identifier(self):
+        thesis = dict(
+            BASE_THESIS,
+            bull_thesis="Azure's growth above 25% drives margin expansion.",
+            quantitative_claims=[
+                {"value_text": "25%", "provenance": "heuristic", "metric": "bull_thesis"},
+            ],
+        )
+        findings = claims_check.check(thesis, _fixture())
+        assert not any(f.code == "product_identifier_extracted_as_claim" for f in findings)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # Structure checks (ticker mismatch, missing optional fields, malformed response)
 # ─────────────────────────────────────────────────────────────────────────────
 
