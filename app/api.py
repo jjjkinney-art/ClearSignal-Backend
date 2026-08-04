@@ -1941,6 +1941,10 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                             )
                         _thesis["_integrity"] = {
                             "ok": _ir.ok,
+                            # Sprint 2B — additive grade alongside `ok`:
+                            # clean | qualified | degraded | blocked.
+                            "status": _ir.status,
+                            "severity_counts": _ir.severity_counts(),
                             "valuation_state": _ir.state,
                             "price_label": _ir.qualifications.get("price_label"),
                             "violations": [
