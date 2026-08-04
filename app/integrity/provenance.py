@@ -61,6 +61,15 @@ class QuantitativeClaim:
     metric: Optional[str] = None
     derivation: Optional[str] = None       # how a DERIVED value was computed
     freshness_status: Optional[str] = None  # 'current'|'dated'|'stale'|'source_date_unavailable'|'scenario_only'
+    # Sprint 2B: directional sense of the surrounding condition ('above'|'below'
+    # |None), captured at extraction time.  Canonicalization uses it to keep
+    # "above 25%" and "below 25%" from collapsing into one another.
+    polarity: Optional[str] = None
+    # Sprint 2B: True when ``assumptions`` was lifted from the surrounding text
+    # window rather than stated by the generator. Such a snippet is a function
+    # of WHERE the figure appeared, so canonicalization must not treat it as
+    # evidence that two claims are semantically different.
+    assumptions_inferred: bool = False
 
     def must_qualify(self) -> bool:
         return self.provenance in _MUST_QUALIFY or self.stale
@@ -115,6 +124,8 @@ class QuantitativeClaim:
             "metric": self.metric,
             "derivation": self.derivation,
             "freshness_status": self.freshness_status,
+            "polarity": self.polarity,
+            "assumptions_inferred": self.assumptions_inferred,
             "rendered": self.render(),
         }
 
