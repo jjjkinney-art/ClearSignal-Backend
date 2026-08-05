@@ -410,3 +410,78 @@ class TestSeverityAndAggregation:
         report_mod.write_artifacts(tmp_path, outcomes)
         summary = (tmp_path / "validation_summary.md").read_text()
         assert "Pass rate (completed, no CRITICAL/HIGH findings): **0.0%**" in summary
+
+
+class TestIntegrityStatusReporting:
+    """Sprint 2C — the summary must show the Sprint 2B status ladder, not just
+    a single 'not clean' rate that reads 100% on every run."""
+
+    @staticmethod
+    def _outcome(status=None, ok=True, violations=None, caveats=None):
+        from validation.models import QueryOutcome
+        integ = {"ok": ok, "violations": violations or [], "caveats": caveats or []}
+        if status is not None:
+            integ["status"] = status
+        return QueryOutcome(
+            fixture=_fixture(), status="completed",
+            thesis={"_integrity": integ},
+        )
+
+    def _summary(self, outcomes):
+        from validation.report import _summary_md
+        return _summary_md(outcomes)
+
+    def test_status_distribution_section_present(self):
+        md = self._summary([
+            self._outcome(status="clean"),
+            self._outcome(status="qualified", violations=[{"code": "x"}]),
+            self._outcome(status="degraded", violations=[{"code": "y"}]),
+            self._outcome(status="blocked", ok=False, violations=[{"code": "z"}]),
+        ])
+        assert "## Integrity status distribution" in md
+        for name in ("clean", "qualified", "degraded", "blocked"):
+            assert f"`{name}`" in md
+
+    def test_each_status_counted_once(self):
+        md = self._summary([
+            self._outcome(status="clean"),
+            self._outcome(status="clean"),
+            self._outcome(status="blocked", ok=False),
+        ])
+        assert "`clean`: 2" in md
+        assert "`blocked`: 1" in md
+        assert "`qualified`: 0" in md
+
+    def test_responses_without_status_are_missing_unknown(self):
+        # Pre-Sprint-2B responses must still aggregate, not crash or be
+        # silently bucketed into a real status.
+        md = self._summary([self._outcome(status=None), self._outcome(status=None)])
+        assert "`missing/unknown`: 2" in md
+        assert "`clean`: 0" in md
+
+    def test_unrecognized_status_falls_into_missing_unknown(self):
+        md = self._summary([self._outcome(status="banana")])
+        assert "`missing/unknown`: 1" in md
+
+    def test_hard_failure_rate_is_separate_from_any_signal(self):
+        # One blocked (ok=false) and one merely qualified: the hard-failure
+        # rate must be 1, while the broad any-signal rate is 2.
+        md = self._summary([
+            self._outcome(status="blocked", ok=False, violations=[{"code": "z"}]),
+            self._outcome(status="qualified", violations=[{"code": "x"}]),
+        ])
+        assert "Hard failures (ok=false): 1" in md
+        assert "Any violation or caveat present" in md
+        assert "2 (100%)" in md
+
+    def test_broad_rate_is_relabelled_not_a_failure_rate(self):
+        md = self._summary([self._outcome(status="qualified", violations=[{"code": "x"}])])
+        assert "advisory, not a failure rate" in md
+        assert "flagged not-clean" not in md
+
+    def test_no_integrity_blocks_degrades_gracefully(self):
+        from validation.models import QueryOutcome
+        md = self._summary([
+            QueryOutcome(fixture=_fixture(), status="completed", thesis={}),
+        ])
+        assert "no _integrity blocks observed" in md
