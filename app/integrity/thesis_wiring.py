@@ -14,6 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional, Sequence
 
+from .canonicalization import canonicalize_claims
 from .claim_extraction import extract_claims
 from .threshold_parsing import build_decision_thresholds
 
@@ -96,6 +97,13 @@ def attach_structured_content(
 
         zones = getattr(thesis, "threshold_zones", None) or []
         thresholds = build_decision_thresholds(zones, ticker=ticker, freshness_as_of=as_of)
+
+        # Sprint 2B — collapse semantically identical claims (the same figure
+        # extracted from an agent's `overall` prose and again from one of its
+        # signals) before they reach the response. Runs after extraction and
+        # provenance classification so the surviving claim is the most complete
+        # member of its group.
+        claims = canonicalize_claims(claims)
 
         summary: Dict[str, int] = {}
         for c in claims:

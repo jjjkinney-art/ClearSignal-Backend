@@ -34,15 +34,41 @@ class IntegrityViolation:
     message: str
 
 
+# ── Sprint 2B — integrity status ladder ──────────────────────────────────────
+# Sprint 2A found `ok` alone too blunt: all 36 benchmark responses carried
+# violations or caveats, yet `ok` was true on every one, so the signal
+# discriminated nothing. `status` grades the response instead of merely
+# asserting it is not fatally broken. `ok` keeps its exact Sprint 1B meaning
+# (false only on a HIGH/hard violation) so existing consumers are unaffected.
+STATUS_CLEAN = "clean"          # no violations at all
+STATUS_QUALIFIED = "qualified"  # minor/advisory caveats; output fully usable
+STATUS_DEGRADED = "degraded"    # structured-claim quality materially impaired
+STATUS_BLOCKED = "blocked"      # hard contradiction / unsafe — ok is false
+
+# A response is DEGRADED once unqualified structured claims dominate it. Both
+# an absolute floor and a ratio are required so a 2-claim response with 1
+# unqualified claim is not branded degraded on a 50% ratio alone.
+_DEGRADED_MIN_CLAIMS = 5
+_DEGRADED_RATIO = 0.5
+
+
 @dataclass
 class IntegrityResult:
     ok: bool
     state: str                                   # reconciled ValuationState value
     violations: List[IntegrityViolation] = field(default_factory=list)
     qualifications: Dict[str, Any] = field(default_factory=dict)
+    status: str = STATUS_CLEAN                   # Sprint 2B — see ladder above
 
     def hard(self) -> List[IntegrityViolation]:
         return [v for v in self.violations if v.severity == HIGH]
+
+    def severity_counts(self) -> Dict[str, int]:
+        counts = {HIGH: 0, MEDIUM: 0, LOW: 0}
+        for v in self.violations:
+            if v.severity in counts:
+                counts[v.severity] += 1
+        return counts
 
 
 def _get(d: Dict[str, Any], *keys: str, default: str = "") -> Any:
@@ -192,10 +218,10 @@ def _structured_claims_and_thresholds(thesis: Dict[str, Any], res: IntegrityResu
     thesis predates Sprint 1C (fields absent) — Sprint 1B behavior is unchanged.
     """
     ticker = str(_get(thesis, "ticker", "company") or "").strip().upper()
+    claims = [c for c in (thesis.get("quantitative_claims") or []) if isinstance(c, dict)]
+    unqualified = 0
 
-    for claim in thesis.get("quantitative_claims") or []:
-        if not isinstance(claim, dict):
-            continue
+    for claim in claims:
         c_ticker = str(claim.get("ticker") or "").strip().upper()
         if ticker and c_ticker and c_ticker != ticker:
             res.violations.append(IntegrityViolation(
@@ -206,6 +232,7 @@ def _structured_claims_and_thresholds(thesis: Dict[str, Any], res: IntegrityResu
         if prov in ("estimated", "scenario", "heuristic") and not (
             claim.get("assumptions") or claim.get("as_of") or claim.get("confidence")
         ):
+            unqualified += 1
             res.violations.append(IntegrityViolation(
                 code="unqualified_structured_claim", severity=MEDIUM, field="quantitative_claims",
                 message=f"{prov} claim '{claim.get('value_text')}' lacks a qualifier",
@@ -215,6 +242,30 @@ def _structured_claims_and_thresholds(thesis: Dict[str, Any], res: IntegrityResu
                 code="unqualified_stale_claim", severity=MEDIUM, field="quantitative_claims",
                 message=f"stale claim '{claim.get('value_text')}' has no as-of date",
             ))
+        # Sprint 2B — a REPORTED claim with no source binding presents an
+        # unverifiable number as published fact. This is the defect class that
+        # produced 9 HIGH findings in the Sprint 2A benchmark, so it is HIGH
+        # here too: source-binding enforcement upstream should mean it never
+        # fires, and if it does the response genuinely is unsafe.
+        if prov == "reported" and not claim.get("source"):
+            res.violations.append(IntegrityViolation(
+                code="unsourced_reported_claim", severity=HIGH, field="quantitative_claims",
+                message=(
+                    f"reported claim '{claim.get('value_text')}' has no source binding; "
+                    "it would render as published fact without evidence"
+                ),
+            ))
+
+    # Sprint 2B — degraded structured-claim quality. Not a hard contradiction
+    # (so `ok` is untouched), but the response should not read as clean either.
+    if len(claims) >= _DEGRADED_MIN_CLAIMS and unqualified >= _DEGRADED_RATIO * len(claims):
+        res.violations.append(IntegrityViolation(
+            code="degraded_claim_quality", severity=MEDIUM, field="quantitative_claims",
+            message=(
+                f"{unqualified}/{len(claims)} structured claims are unqualified "
+                f"({unqualified / len(claims):.0%}); treat the quantitative detail as indicative"
+            ),
+        ))
 
     for band in thesis.get("decision_thresholds") or []:
         if not isinstance(band, dict) or band.get("unavailable"):
@@ -263,6 +314,7 @@ def validate_thesis_integrity(
         # ok is false if any HIGH violation exists.
         if res.hard():
             res.ok = False
+        res.status = _status_for(res)
         return res
     except Exception as exc:  # fail OPEN on internal error — never break the response
         return IntegrityResult(
@@ -271,4 +323,30 @@ def validate_thesis_integrity(
                 code="validator_error", severity=LOW, field="",
                 message=f"integrity validator errored (non-fatal): {exc!r}",
             )],
+            status=STATUS_QUALIFIED,
         )
+
+
+# Violation codes that mark materially degraded structured-claim quality even
+# though they are not hard contradictions.
+_DEGRADING_CODES = {
+    "degraded_claim_quality",
+    "product_identifier_claim",
+    "unqualified_stale_claim",
+    "stale_precision",
+}
+
+
+def _status_for(res: IntegrityResult) -> str:
+    """Grade a validated response on the Sprint 2B status ladder.
+
+    Ordered most-severe first. `ok` is not consulted — it is derived from HIGH
+    violations by the caller and the two must not drift apart.
+    """
+    if any(v.severity == HIGH for v in res.violations):
+        return STATUS_BLOCKED
+    if any(v.code in _DEGRADING_CODES for v in res.violations):
+        return STATUS_DEGRADED
+    if res.violations:
+        return STATUS_QUALIFIED
+    return STATUS_CLEAN

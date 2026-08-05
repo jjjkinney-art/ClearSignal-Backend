@@ -23,6 +23,73 @@ _NUM_RE = re.compile(
     re.IGNORECASE,
 )
 
+# ── Sprint 2B — unit inference from metric semantics ─────────────────────────
+# Sprint 2A shipped 7 thresholds with a null unit ("Vehicle Deliveries",
+# "Brent Crude Price", "737 MAX Monthly Production Rate", ...). The LLM writes
+# thresholds like ">1.8M" or ">$70" where the unit is implied by the METRIC
+# NAME, not the value string. These patterns recover that implied unit.
+#
+# Ordered most-specific first; the first match wins. A metric that matches
+# nothing keeps ``unit=None`` — inventing a unit for a genuinely ambiguous
+# metric would be worse than admitting it is missing.
+_UNIT_INFERENCE = tuple(
+    (re.compile(pattern, re.IGNORECASE), unit)
+    for pattern, unit in (
+        # Commodity prices — priced per barrel by universal convention.
+        (r"\b(?:brent|wti)\b|crude\s*oil|\bcrude\b", "USD/bbl"),
+        (r"\bnatural\s*gas\b|\bhenry\s*hub\b", "USD/mmbtu"),
+        # Average selling price — a currency amount per unit sold.
+        (r"\basp\b|average\s+selling\s+price", "USD"),
+        # Production rate — rate metrics carry a period in the metric name.
+        (r"production\s+rate", "aircraft/month"),
+        # Shipments of capital equipment (ASML EUV/DUV systems).
+        (r"\b(?:euv|duv)\b.*shipment|shipment.*\b(?:euv|duv)\b", "systems"),
+        # Vehicle deliveries.
+        (r"vehicle\s+deliver|deliveries", "vehicles"),
+        # Generic unit shipments/volumes.
+        (r"\bshipments?\b|\bunit\s+volume", "units"),
+        (r"\bsubscribers?\b|\bmau\b|\bdau\b", "users"),
+        (r"\bstore\s+count\b|\bstores\b", "stores"),
+    )
+)
+
+# Period qualifiers in a metric name, appended to a countable inferred unit so
+# "Quarterly EUV Shipments" reads "systems/quarter" rather than bare "systems".
+_PERIOD_PATTERNS = tuple(
+    (re.compile(pattern, re.IGNORECASE), period)
+    for pattern, period in (
+        (r"\bper\s+quarter\b|\bquarterly\b|\bq/q\b", "quarter"),
+        (r"\bper\s+month\b|\bmonthly\b|\bper\s+mo\b", "month"),
+        (r"\bper\s+year\b|\bannual\b|\byearly\b|\bper\s+annum\b", "year"),
+        (r"\bper\s+week\b|\bweekly\b", "week"),
+    )
+)
+
+# Units that are already rates (contain a slash) or are currency amounts must
+# not have a period appended.
+_COUNTABLE_UNITS = {"vehicles", "systems", "units", "users", "stores"}
+
+
+def infer_unit(metric: str) -> Optional[str]:
+    """Infer a threshold's unit from its metric name, or None when the metric
+    is genuinely ambiguous.
+
+    Only semantics that are unambiguous by industry convention are encoded —
+    "Brent Crude Price" is always USD per barrel; "Vehicle Deliveries" is
+    always a vehicle count. Anything else returns None so the caller can mark
+    the unit explicitly missing rather than fabricate one.
+    """
+    if not metric:
+        return None
+    for pattern, unit in _UNIT_INFERENCE:
+        if pattern.search(metric):
+            if unit in _COUNTABLE_UNITS:
+                for period_pattern, period in _PERIOD_PATTERNS:
+                    if period_pattern.search(metric):
+                        return f"{unit}/{period}"
+            return unit
+    return None
+
 
 def _parse_side(text: str) -> Optional[Dict[str, Any]]:
     """Parse one threshold side (e.g. '<31x', '>$40B', '>25%') into
@@ -82,6 +149,14 @@ def parse_threshold_zone(
             f"unit mismatch between bull ({bull['unit']!r}) and bear ({bear['unit']!r})"
         )
     unit = bull["unit"]
+    # Sprint 2B — the LLM often encodes the unit in the metric name rather than
+    # the threshold string (">1.8M" for "Vehicle Deliveries"). Recover it, but
+    # never override a unit the threshold string stated explicitly.
+    unit_inferred = False
+    if not unit:
+        inferred = infer_unit(metric)
+        if inferred:
+            unit, unit_inferred = inferred, True
 
     direction = infer_direction(metric)
     if direction is None:
@@ -105,11 +180,19 @@ def parse_threshold_zone(
         return _unavailable("; ".join(violations))
 
     lo, hi = sorted((bull["value"], bear["value"]))
+    # Symbolic units ("%", "x") abut the number; word units ("vehicles",
+    # "USD/bbl") need a separating space to stay readable.
+    suffix = "" if not unit else (unit if unit in ("%", "x") else f" {unit}")
     return {
         "metric": metric,
         "ticker": ticker,
         "unavailable": False,
         "unit": unit,
+        "unit_inferred": unit_inferred,
+        "unit_missing_reason": (
+            None if unit else
+            f"no unit in the threshold text and none inferable from metric {metric!r}"
+        ),
         "direction": direction.value,
         "bull_boundary": bull["value"],
         "bear_boundary": bear["value"],
@@ -120,9 +203,9 @@ def parse_threshold_zone(
         "assumptions": rationale or None,
         "confidence": "medium" if rationale else "low",
         "as_of": freshness_as_of,
-        "display": f"Bull >{bull['value']}{unit or ''} · Bear <{bear['value']}{unit or ''}"
+        "display": f"Bull >{bull['value']}{suffix} · Bear <{bear['value']}{suffix}"
                    if direction is MetricDirection.HIGHER_IS_BETTER
-                   else f"Bull <{bull['value']}{unit or ''} · Bear >{bear['value']}{unit or ''}",
+                   else f"Bull <{bull['value']}{suffix} · Bear >{bear['value']}{suffix}",
     }
 
 
