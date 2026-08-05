@@ -109,16 +109,33 @@ def _summary_md(outcomes: List[QueryOutcome]) -> str:
             1 for f in o.findings if f.code == "threshold_shown_available_but_contradictory"
         )
 
-    # Integrity-warning rate: fraction of completed responses whose _integrity
-    # block reports ok=false or carries at least one violation/caveat.
-    integrity_warned = 0
+    # Integrity aggregation. Three DIFFERENT questions are tracked separately —
+    # conflating them is what made every Sprint 2A/2B run report "36/36 not
+    # clean" and hid whether the Sprint 2B status ladder discriminates at all:
+    #   * any_signal   — carries any violation or caveat (the broadest measure)
+    #   * not_ok       — ok=false, i.e. a hard/blocking failure
+    #   * status_counts— the ladder itself (clean/qualified/degraded/blocked)
+    integrity_any_signal = 0
+    integrity_not_ok = 0
     integrity_present = 0
+    status_counts: Dict[str, int] = {
+        "clean": 0, "qualified": 0, "degraded": 0, "blocked": 0, "missing/unknown": 0,
+    }
     for o in completed_outcomes:
         integ = (o.thesis or {}).get("_integrity")
         if isinstance(integ, dict):
             integrity_present += 1
+            if integ.get("ok") is False:
+                integrity_not_ok += 1
             if integ.get("ok") is False or integ.get("violations") or integ.get("caveats"):
-                integrity_warned += 1
+                integrity_any_signal += 1
+            # Responses predating the Sprint 2B ladder have no `status`; they
+            # are counted as missing/unknown rather than silently bucketed.
+            status = integ.get("status")
+            if isinstance(status, str) and status in status_counts and status != "missing/unknown":
+                status_counts[status] += 1
+            else:
+                status_counts["missing/unknown"] += 1
 
     lines = [
         "# Validation Summary",
@@ -179,10 +196,26 @@ def _summary_md(outcomes: List[QueryOutcome]) -> str:
     else:
         lines.append("- (no decision_thresholds observed)")
 
-    lines += ["", "## Integrity-warning rate"]
+    lines += ["", "## Integrity status distribution"]
     if integrity_present:
         lines.append(f"- Responses with an _integrity block: {integrity_present}/{completed}")
-        lines.append(f"- Of those, flagged not-clean (ok=false or violations/caveats present): {integrity_warned} ({integrity_warned / integrity_present * 100:.0f}%)")
+        for name in ("clean", "qualified", "degraded", "blocked", "missing/unknown"):
+            count = status_counts[name]
+            lines.append(
+                f"- `{name}`: {count} ({count / integrity_present * 100:.0f}%)"
+            )
+        lines += ["", "## Integrity signal rates"]
+        lines.append(
+            f"- Hard failures (ok=false): {integrity_not_ok} "
+            f"({integrity_not_ok / integrity_present * 100:.0f}%)"
+        )
+        # Kept for continuity with earlier runs, but relabelled: this counts any
+        # violation or caveat at all, so it is expected to stay high even on a
+        # healthy run and must not be read as a failure rate.
+        lines.append(
+            f"- Any violation or caveat present (advisory, not a failure rate): "
+            f"{integrity_any_signal} ({integrity_any_signal / integrity_present * 100:.0f}%)"
+        )
     else:
         lines.append("- (no _integrity blocks observed)")
 
