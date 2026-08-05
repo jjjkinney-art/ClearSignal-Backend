@@ -1927,12 +1927,18 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     )
                     if isinstance(_thesis, dict):
                         _ir = _vti(_thesis, question=getattr(request, "question", None))
+                        # Sprint 2C — the reconciled valuation state is authoritative.
+                        # Apply its regime correction whenever the validator asks for
+                        # one, not only on a hard failure: a soft cheap-vs-fully-priced
+                        # disagreement still has to stop the response calling the stock
+                        # cheap. "fair" remains the frontend-safe value for an
+                        # undetermined state (the frontend has no such enum member).
+                        _regime_fix = _ir.qualifications.get("expectation_regime")
+                        if _regime_fix:
+                            _thesis["expectation_regime"] = (
+                                "fair" if _regime_fix == "undetermined" else _regime_fix
+                            )
                         if not _ir.ok:
-                            # Fail closed: qualify the price label rather than ship a
-                            # cheap-vs-rich contradiction. "fair" is the frontend-safe
-                            # neutral value for an undetermined reconciled state.
-                            if "expectation_regime" in _ir.qualifications:
-                                _thesis["expectation_regime"] = "fair"
                             logger.warning(
                                 "[ask] content-integrity: %d violation(s) for %s: %s",
                                 len(_ir.violations),

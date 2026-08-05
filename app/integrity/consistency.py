@@ -108,8 +108,15 @@ _SWITCHING_PHRASES = ("switching cost", "ecosystem lock", "lock-in", "stickiness
 def _valuation(thesis: Dict[str, Any]) -> IntegrityResult:
     regime = _get(thesis, "expectation_regime", "valuation_regime")
     stance = _get(thesis, "valuation_stance")
+    # Sprint 2C — every field a reader would take as a valuation statement must
+    # be classified, not just the valuation-specific ones.  The Boeing
+    # structural-risk response put its demanding language ("this risk is
+    # currently priced in") in direct_answer, which this check did not read, so
+    # a cheap label shipped against expensive prose.
     prose = _as_text(
         _get(thesis, "valuation_view", "overall"),
+        _get(thesis, "valuation_interpretation"),
+        _get(thesis, "direct_answer"),
         _get(thesis, "core_takeaway", "conclusion"),
         _get(thesis, "verdict_reasoning"),
     )
@@ -133,7 +140,27 @@ def _valuation(thesis: Dict[str, Any]) -> IntegrityResult:
         res.qualifications["expectation_regime"] = ValuationState.UNDETERMINED.value
         res.qualifications["price_label"] = label_for(ValuationState.UNDETERMINED)
     else:
-        res.qualifications["price_label"] = label_for(state)
+        # Sprint 2C — one authoritative final state drives BOTH the regime and
+        # the price label, so they can never disagree with each other.
+        #
+        # The regime is corrected only when it is DIRECTIONALLY wrong: a regime
+        # claiming "cheap" against prose saying the price already embeds the
+        # growth misleads the user. A regime of "stretched" alongside
+        # fully-priced prose is merely more precise than the prose heuristic,
+        # not contradicted by it, so the conviction model stays authoritative
+        # there and valid demanding calls are preserved.
+        directionally_wrong = (
+            (s_regime is ValuationState.CHEAP and state is not ValuationState.CHEAP)
+            or (s_regime is ValuationState.STRETCHED and state is ValuationState.CHEAP)
+        )
+        if directionally_wrong or s_regime is ValuationState.UNDETERMINED:
+            final = state
+        else:
+            final = s_regime
+        res.state = final.value
+        res.qualifications["price_label"] = label_for(final)
+        if final is not s_regime and s_regime is not ValuationState.UNDETERMINED:
+            res.qualifications["expectation_regime"] = final.value
     return res
 
 
