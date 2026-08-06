@@ -33,18 +33,53 @@ _PROVENANCE_RANK = {
 _CONFIDENCE_RANK = {"high": 3, "medium": 2, "low": 1}
 
 
+# Magnitude / unit spellings that denote the same quantity.  "40B", "40 billion"
+# and "40bn" are one figure written three ways; folding them to a single token
+# stops formatting alone from splitting a duplicate group.  Longest spellings
+# are listed first so "bps" is consumed before the bare "b" alternative.
+_UNIT_ALIASES = (
+    (r"(?:basis\s*points?|bps|bp)\b", "bps"),
+    (r"(?:trillions?|tn|t)\b", "t"),
+    (r"(?:billions?|bn|b)\b", "b"),
+    (r"(?:millions?|mm|m)\b", "m"),
+    (r"(?:thousands?|k)\b", "k"),
+)
+_UNIT_ALIAS_RES = tuple((re.compile(p, re.IGNORECASE), rep) for p, rep in _UNIT_ALIASES)
+
+# Currency symbols are presentation, not identity: "$40B" and "40B" are the same
+# figure.  A genuine currency difference shows up in the `unit` field, which is
+# compared separately.
+_CURRENCY_SYMBOLS = "$€£¥₹"
+
+
 def normalize_value(value_text: Optional[str]) -> str:
     """Normalize a rendered figure for identity comparison.
 
     Strips trailing punctuation swept in by the extractor ("$200-220." ->
-    "$200-220"), collapses whitespace, unifies dash variants, and lowercases —
-    so cosmetic differences never split a genuine duplicate group, while the
-    numeric content still distinguishes different figures.
+    "$200-220"), removes whitespace and currency symbols, unifies dash variants,
+    folds equivalent magnitude spellings ("40 billion"/"40bn"/"40B" -> "40b"),
+    and lowercases — so formatting alone never splits a genuine duplicate group,
+    while the numeric content still distinguishes different figures.
     """
     text = (value_text or "").strip().lower()
     text = text.replace("–", "-").replace("—", "-")
     text = re.sub(r"\s+", "", text)
+    text = text.strip(_CURRENCY_SYMBOLS)
     text = re.sub(r"[.,;:]+$", "", text)
+    for pattern, replacement in _UNIT_ALIAS_RES:
+        text = pattern.sub(replacement, text)
+    return text
+
+
+def normalize_unit(unit: Optional[str]) -> str:
+    """Fold a unit string to the same canonical token as ``normalize_value``, so
+    'B' and 'billion' are not read as two different units."""
+    text = (unit or "").strip().lower()
+    if not text:
+        return ""
+    text = text.strip(_CURRENCY_SYMBOLS)
+    for pattern, replacement in _UNIT_ALIAS_RES:
+        text = pattern.sub(replacement, text)
     return text
 
 
@@ -55,11 +90,7 @@ def _identity_key(claim: Dict[str, Any]) -> tuple:
         normalize_value(claim.get("value_text")),
         (claim.get("metric") or "").strip().lower(),
         (claim.get("provenance") or "").strip().lower(),
-        (claim.get("unit") or "").strip().lower(),
         (claim.get("ticker") or "").strip().upper(),
-        # Polarity is what keeps "above 25%" and "below 25%" apart. It is
-        # stamped at extraction time from the surrounding prose.
-        (claim.get("polarity") or "").strip().lower(),
         # Author-stated assumptions distinguish claims; an assumption the
         # extractor lifted from the surrounding text window does not — that
         # snippet varies with WHERE the figure appeared, so including it would
@@ -72,18 +103,29 @@ def _identity_key(claim: Dict[str, Any]) -> tuple:
 def _compatible(a: Dict[str, Any], b: Dict[str, Any]) -> bool:
     """True when two claims sharing an identity key can be merged.
 
-    Source and as-of are handled here rather than in the identity key because
-    they play two different roles.  A claim that omits a source is not a
-    *different* claim from one that names it — it is the same claim carrying
-    less metadata, and merging is what lets the sourced version win.  But two
-    claims citing genuinely CONFLICTING sources (or different as-of dates) are
-    distinct assertions and must both survive.
+    These fields sit here rather than in the identity key because an ABSENT
+    value means "unknown", not "different".  A claim that omits a source is not
+    a *different* claim from one that names it — it is the same claim carrying
+    less metadata, and merging is what lets the richer version win.  Only two
+    genuinely CONFLICTING non-null values make the claims distinct assertions.
+
+    Sprint 2D: polarity and unit joined this rule.  The ASML benchmark shipped
+    two byte-identical "40B" macro claims that differed only in polarity —
+    "above" on the occurrence whose surrounding text happened to contain a
+    directional cue, and null on the one that did not.  Null polarity is an
+    undetected direction, not a third direction, so it must not split the pair;
+    "above" versus "below" still does.
     """
-    for field_name in ("source", "as_of"):
+    for field_name in ("source", "as_of", "polarity"):
         x = (a.get(field_name) or "").strip().lower()
         y = (b.get(field_name) or "").strip().lower()
         if x and y and x != y:
             return False
+    # Units are compared on their canonical form so "B" and "billion" agree,
+    # while two genuinely different explicit units stay apart.
+    unit_a, unit_b = normalize_unit(a.get("unit")), normalize_unit(b.get("unit"))
+    if unit_a and unit_b and unit_a != unit_b:
+        return False
     return True
 
 
@@ -142,8 +184,10 @@ def canonicalize_claims(claims: Optional[List[Any]]) -> List[Dict[str, Any]]:
         # Merging must never lose metadata: a field the winner lacks but the
         # other member supplies is carried across.
         loser = existing if newcomer_wins else claim
+        # `polarity` is included so a merge of a directional occurrence with an
+        # undetected one keeps the direction that was actually observed.
         for field_name in ("source", "as_of", "unit", "confidence", "assumptions",
-                           "derivation"):
+                           "derivation", "polarity"):
             if not winner.get(field_name) and loser.get(field_name):
                 winner[field_name] = loser[field_name]
         winner["occurrences"] = occurrences

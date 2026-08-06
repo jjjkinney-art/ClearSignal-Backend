@@ -70,7 +70,79 @@ _PERIOD_PATTERNS = tuple(
 _COUNTABLE_UNITS = {"vehicles", "systems", "units", "users", "stores"}
 
 
-def infer_unit(metric: str) -> Optional[str]:
+# ── Sprint 2D — financial metrics whose unit shape is unambiguous ────────────
+# These say WHAT KIND of unit the metric takes, not which currency.  The
+# currency itself is never guessed from the company's listing venue — it is
+# resolved only from an explicit symbol in the threshold's own text (see
+# ``resolve_currency``).  A currency-shaped metric with no resolvable currency
+# stays unit-less rather than defaulting to USD.
+_PER_SHARE_METRIC = re.compile(
+    r"\beps\b|earnings\s+per\s+share|\bper[\s-]share\b|\bdps\b|dividend\s+per\s+share",
+    re.IGNORECASE,
+)
+_CURRENCY_AMOUNT_METRIC = re.compile(
+    r"free\s+cash\s+flow|\bfcf\b|\brevenue\b|\bsales\b|\bebitda\b|\bebit\b|"
+    r"operating\s+income|net\s+income|gross\s+profit|market\s+cap|"
+    r"\bbookings\b|\bbacklog\b|\bcapex\b|capital\s+expenditure",
+    re.IGNORECASE,
+)
+_PERCENT_METRIC = re.compile(
+    r"\bmargin\b|growth\s+rate|\byield\b|\broic\b|\broe\b|\brota?ce\b|"
+    r"\bpayout\s+ratio\b|\bshare\b\s+gain|\bpenetration\b|\butilization\b",
+    re.IGNORECASE,
+)
+_MULTIPLE_METRIC = re.compile(
+    r"\bp/?e\b|price[\s-]to[\s-]earnings|\bev/?ebitda\b|\bp/?s\b|\bp/?b\b|"
+    r"forward\s+multiple|\bmultiple\b",
+    re.IGNORECASE,
+)
+
+# Currency evidence accepted from the threshold's OWN text only.
+_CURRENCY_SYMBOLS = (
+    ("$", "USD"), ("€", "EUR"), ("£", "GBP"), ("¥", "JPY"), ("₹", "INR"),
+)
+_CURRENCY_CODES = re.compile(
+    r"\b(USD|EUR|GBP|JPY|INR|CHF|CAD|AUD|SEK|CNY|KRW|TWD)\b"
+)
+
+# A currency-amount threshold whose boundaries are both plain calendar years is
+# not a currency figure at all — the LLM answered "by when", not "how much".
+_YEAR_MIN, _YEAR_MAX = 1990, 2100
+
+
+def resolve_currency(*texts: Optional[str]) -> Optional[str]:
+    """Resolve a currency from the threshold's own text, or None.
+
+    Only an explicit symbol ($, €, ...) or ISO code in the supplied strings
+    counts.  A company being US-listed is NOT evidence of USD — inventing a
+    currency is worse than reporting the unit as missing.
+    """
+    for text in texts:
+        if not text:
+            continue
+        code = _CURRENCY_CODES.search(text)
+        if code:
+            return code.group(1).upper()
+        for symbol, currency in _CURRENCY_SYMBOLS:
+            if symbol in text:
+                return currency
+    return None
+
+
+def _looks_like_calendar_years(*values: Any) -> bool:
+    """True when every boundary is a whole number inside the calendar-year
+    range — the signature of a "by 2026" answer to a "how much" metric."""
+    seen = False
+    for value in values:
+        if not isinstance(value, (int, float)):
+            return False
+        if float(value) != int(value) or not (_YEAR_MIN <= value <= _YEAR_MAX):
+            return False
+        seen = True
+    return seen
+
+
+def infer_unit(metric: str, *, currency: Optional[str] = None) -> Optional[str]:
     """Infer a threshold's unit from its metric name, or None when the metric
     is genuinely ambiguous.
 
@@ -78,6 +150,12 @@ def infer_unit(metric: str) -> Optional[str]:
     "Brent Crude Price" is always USD per barrel; "Vehicle Deliveries" is
     always a vehicle count. Anything else returns None so the caller can mark
     the unit explicitly missing rather than fabricate one.
+
+    ``currency`` (Sprint 2D) supplies the currency for metrics whose SHAPE is
+    known but whose denomination is not — "Blended EPS" is always a
+    per-share currency amount, but only an explicit symbol in the threshold's
+    own text says which currency. Without it, such a metric returns None rather
+    than defaulting to USD.
     """
     if not metric:
         return None
@@ -88,6 +166,22 @@ def infer_unit(metric: str) -> Optional[str]:
                     if period_pattern.search(metric):
                         return f"{unit}/{period}"
             return unit
+
+    # Sprint 2D — financial metrics. Percentages and multiples are
+    # currency-free, so they resolve regardless.
+    if _PERCENT_METRIC.search(metric):
+        return "%"
+    if _MULTIPLE_METRIC.search(metric):
+        return "x"
+    if _PER_SHARE_METRIC.search(metric):
+        return f"{currency}/share" if currency else None
+    if _CURRENCY_AMOUNT_METRIC.search(metric):
+        if not currency:
+            return None
+        for period_pattern, period in _PERIOD_PATTERNS:
+            if period_pattern.search(metric):
+                return f"{currency}/{period}"
+        return currency
     return None
 
 
@@ -154,9 +248,24 @@ def parse_threshold_zone(
     # never override a unit the threshold string stated explicitly.
     unit_inferred = False
     if not unit:
-        inferred = infer_unit(metric)
+        # Sprint 2D — currency comes only from the threshold's own text
+        # (the raw bull/bear strings or the rationale), never from the
+        # company's listing venue.
+        currency = resolve_currency(bull_raw, bear_raw, rationale)
+        inferred = infer_unit(metric, currency=currency)
         if inferred:
             unit, unit_inferred = inferred, True
+        elif _CURRENCY_AMOUNT_METRIC.search(metric) and _looks_like_calendar_years(
+            bull["value"], bear["value"]
+        ):
+            # "Free Cash Flow, bull >2026, bear <2025": the metric asks how
+            # much and the answer is a date. Fail closed rather than dress a
+            # calendar year up as a cash figure.
+            return _unavailable(
+                f"threshold for {metric!r} is denominated in calendar years "
+                f"(bull={bull['value']:.0f}, bear={bear['value']:.0f}), not in a "
+                "currency amount; the band does not describe the stated metric"
+            )
 
     direction = infer_direction(metric)
     if direction is None:
