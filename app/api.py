@@ -1996,7 +1996,20 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             # than response weight on a metered endpoint.
             try:
                 import os as _os_mod
-                _obs_detail = _os_mod.environ.get("RENDER_SERVICE_ID") is None
+                from .observability import (
+                    DETAIL_REQUEST_HEADER as _DETAIL_HDR,
+                    DETAIL_TOKEN_HEADER as _DETAIL_TOK_HDR,
+                    should_include_detail as _should_detail,
+                )
+                # Sprint 3A.1 — in production, stage/model/provider detail is
+                # released only to an explicitly authorized profiling request.
+                # Ordinary users keep the compact block. Outside production the
+                # Sprint 3A behavior (detail always on) is unchanged.
+                _obs_detail = _should_detail(
+                    is_production=_os_mod.environ.get("RENDER_SERVICE_ID") is not None,
+                    detail_requested=http_request.headers.get(_DETAIL_HDR),
+                    supplied_token=http_request.headers.get(_DETAIL_TOK_HDR),
+                )
                 _result_dict["_observability"] = _trace.to_dict(
                     include_stages=_obs_detail,
                 )
