@@ -52,6 +52,19 @@ def write_artifacts(output_dir: Path, outcomes: List[QueryOutcome]) -> None:
     # 5. latency_summary.md
     _write(output_dir / "latency_summary.md", _latency_summary_md(outcomes))
 
+    # 6. observability_summary.md (Sprint 3A) — backend-reported stage timings,
+    #    token usage and provider latency. Written as a NEW artifact so every
+    #    existing file keeps its exact format and any downstream parsing of
+    #    them is unaffected. Degrades to a one-line note for runs whose
+    #    responses predate Sprint 3A.
+    try:
+        from .observability import observability_md
+        _write(output_dir / "observability_summary.md", observability_md(outcomes))
+    except Exception:
+        # An observability-reporting bug must never cost us the correctness
+        # artifacts, which are the reason the run exists.
+        pass
+
 
 def _summary_md(outcomes: List[QueryOutcome]) -> str:
     total = len(outcomes)
