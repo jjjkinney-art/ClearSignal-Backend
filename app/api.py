@@ -1444,6 +1444,25 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         or ""
     )
 
+    # ── Sprint 3A: request-scoped observability ──────────────────────────────
+    # Reuse the request_id the timing middleware already generated (or an
+    # inbound X-Request-ID) so logs, response headers and the _observability
+    # block all correlate to one identifier. Only mint a new one if neither
+    # exists, so a single request never has two ids.
+    from .observability import (
+        start_trace as _start_trace, bind as _obs_bind, stage as _obs_stage,
+    )
+    _obs_request_id: str = (
+        http_request.headers.get("X-Request-ID", "")
+        or getattr(getattr(http_request, "state", None), "request_id", "")
+        or ""
+    )
+    _trace = _start_trace(
+        _obs_request_id or None,
+        ticker=str(getattr(request, "company_name", "") or ""),
+        route="/ask",
+    )
+
     async def _generate():
         loop = _asyncio.get_running_loop()          # always the active loop
 
@@ -1642,7 +1661,10 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         # Phase 20A: attach session_id to request for session-context tracking.
         _request._session_id = _session_id  # type: ignore[attr-defined]
 
-        fut = loop.run_in_executor(None, route_question, _request)
+        # run_in_executor does not carry contextvars into the worker thread, so
+        # the trace is bound explicitly. This only sets a contextvar — the
+        # callable, its argument and its return value are unchanged.
+        fut = loop.run_in_executor(None, _obs_bind(route_question, _trace), _request)
 
         # Emit keepalive bytes every 25 s while pipeline runs.
         # asyncio.wait_for + asyncio.shield: times out without cancelling fut.
@@ -1920,55 +1942,78 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             try:
                 from .config import settings as _ci_cfg
                 if getattr(_ci_cfg, "content_integrity_enabled", True):
-                    from .integrity.consistency import validate_thesis_integrity as _vti
-                    _thesis = (
-                        _result_dict.get("answer", {}).get("investment_thesis")
-                        if isinstance(_result_dict.get("answer"), dict) else None
-                    )
-                    if isinstance(_thesis, dict):
-                        _ir = _vti(_thesis, question=getattr(request, "question", None))
-                        # Sprint 2C — the reconciled valuation state is authoritative.
-                        # Apply its regime correction whenever the validator asks for
-                        # one, not only on a hard failure: a soft cheap-vs-fully-priced
-                        # disagreement still has to stop the response calling the stock
-                        # cheap. "fair" remains the frontend-safe value for an
-                        # undetermined state (the frontend has no such enum member).
-                        _regime_fix = _ir.qualifications.get("expectation_regime")
-                        if _regime_fix:
-                            _thesis["expectation_regime"] = (
-                                "fair" if _regime_fix == "undetermined" else _regime_fix
-                            )
-                        if not _ir.ok:
-                            logger.warning(
-                                "[ask] content-integrity: %d violation(s) for %s: %s",
-                                len(_ir.violations),
-                                _thesis.get("ticker") or _thesis.get("company") or "?",
-                                "; ".join(f"{v.code}({v.severity})" for v in _ir.violations),
-                            )
-                        _thesis["_integrity"] = {
-                            "ok": _ir.ok,
-                            # Sprint 2B — additive grade alongside `ok`:
-                            # clean | qualified | degraded | blocked.
-                            "status": _ir.status,
-                            "severity_counts": _ir.severity_counts(),
-                            "valuation_state": _ir.state,
-                            "price_label": _ir.qualifications.get("price_label"),
-                            "violations": [
-                                {"code": v.code, "severity": v.severity, "field": v.field}
-                                for v in _ir.violations
-                            ],
-                            "caveats": [
-                                c for c in (_ir.qualifications.get("stale_precision_caveat"),)
-                                if c
-                            ],
-                        }
+                    with _obs_stage("integrity_validation"):
+                        from .integrity.consistency import validate_thesis_integrity as _vti
+                        _thesis = (
+                            _result_dict.get("answer", {}).get("investment_thesis")
+                            if isinstance(_result_dict.get("answer"), dict) else None
+                        )
+                        if isinstance(_thesis, dict):
+                            _ir = _vti(_thesis, question=getattr(request, "question", None))
+                            # Sprint 2C — the reconciled valuation state is authoritative.
+                            # Apply its regime correction whenever the validator asks for
+                            # one, not only on a hard failure: a soft cheap-vs-fully-priced
+                            # disagreement still has to stop the response calling the stock
+                            # cheap. "fair" remains the frontend-safe value for an
+                            # undetermined state (the frontend has no such enum member).
+                            _regime_fix = _ir.qualifications.get("expectation_regime")
+                            if _regime_fix:
+                                _thesis["expectation_regime"] = (
+                                    "fair" if _regime_fix == "undetermined" else _regime_fix
+                                )
+                            if not _ir.ok:
+                                logger.warning(
+                                    "[ask] content-integrity: %d violation(s) for %s: %s",
+                                    len(_ir.violations),
+                                    _thesis.get("ticker") or _thesis.get("company") or "?",
+                                    "; ".join(f"{v.code}({v.severity})" for v in _ir.violations),
+                                )
+                            _thesis["_integrity"] = {
+                                "ok": _ir.ok,
+                                # Sprint 2B — additive grade alongside `ok`:
+                                # clean | qualified | degraded | blocked.
+                                "status": _ir.status,
+                                "severity_counts": _ir.severity_counts(),
+                                "valuation_state": _ir.state,
+                                "price_label": _ir.qualifications.get("price_label"),
+                                "violations": [
+                                    {"code": v.code, "severity": v.severity, "field": v.field}
+                                    for v in _ir.violations
+                                ],
+                                "caveats": [
+                                    c for c in (_ir.qualifications.get("stale_precision_caveat"),)
+                                    if c
+                                ],
+                            }
             except Exception as _ci_exc:
                 logger.debug("[ask] content-integrity check failed (non-fatal): %r", _ci_exc)
+
+            # ── Sprint 3A: additive _observability block ─────────────────────
+            # Metadata only — request id, wall time, build identity and stage
+            # timings. Never prompts, completions, evidence bodies or provider
+            # credentials. Full stage detail is included only outside
+            # production, where the extra payload is a debugging aid rather
+            # than response weight on a metered endpoint.
+            try:
+                import os as _os_mod
+                _obs_detail = _os_mod.environ.get("RENDER_SERVICE_ID") is None
+                _result_dict["_observability"] = _trace.to_dict(
+                    include_stages=_obs_detail,
+                )
+            except Exception as _obs_exc:
+                logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)
 
             yield _json.dumps(_result_dict).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)
-            yield _json.dumps({"error": "Question routing failed"}).encode()
+            # Correlation must survive the failure path — without the id the
+            # error log and the client's response cannot be tied together.
+            _err_body = {"error": "Question routing failed"}
+            try:
+                _err_body["_observability"] = _trace.to_dict(include_stages=False)
+            except Exception:
+                pass
+            yield _json.dumps(_err_body).encode()
 
     # X-Accel-Buffering: no — instructs Render/Nginx to disable response
     # buffering and forward each chunk immediately.  Without this, Nginx

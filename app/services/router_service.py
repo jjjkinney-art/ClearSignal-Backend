@@ -941,11 +941,14 @@ def _run_investment_pipeline(
     # valuation_stance questions get extra FMP evidence appended after the
     # standard cap.  This intent flows through the entire pipeline.
     _t_intent = time.time()
+    _t_intent_m = time.monotonic()
     question_intent = _detect_question_intent(question)
     print(
         f"[TIMING] [{ticker}] intent_detection={time.time()-_t_intent:.2f}s "
         f"question_intent={question_intent!r}"
     )
+    from ..observability import record_stage as _obs_stage_record_early
+    _obs_stage_record_early("routing", (time.monotonic() - _t_intent_m) * 1000.0)
 
     # ── Evidence retrieval (7-task parallel pool) ────────────────────────────
     # Previously `retrieve_market_evidence` was called as ONE parallel task but
@@ -955,6 +958,7 @@ def _run_investment_pipeline(
     # 12-16s.  Saves ~6-10s, bringing total pipeline under the 61s ceiling:
     #   evidence(8s) + agents(15s) + synthesis(30s) + post(3s) = 56s.
     _t_evidence = time.time()
+    _t_evidence_m = time.monotonic()
     detected_topics = _detect_topics(question)
 
     def _fetch_fmp():
@@ -1002,6 +1006,12 @@ def _run_investment_pipeline(
             logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _e)
             return []
 
+    # Evidence-task key -> external provider name, for observability records.
+    _EVIDENCE_PROVIDER_NAMES = {
+        "fmp": "fmp", "sec": "sec_edgar", "news_co": "news",
+        "news_macro": "news", "fred": "fred", "valuation": "fmp_valuation",
+        "estimates": "fmp_estimates",
+    }
     _ev_tasks = {
         "fmp":       _fetch_fmp,
         "sec":       _fetch_sec,
@@ -1025,9 +1035,46 @@ def _run_investment_pipeline(
     # On Render Starter (120s proxy_read_timeout), the full healthy cap of 10s
     # is restored.  Pipeline budget: evidence(≤10) + agents(≤16) + synthesis(≤56)
     # + post(≤0.5) = ≤82.5s — well inside the 120s Render Starter limit.
+    # Sprint 3A — wrap each provider task so its wall time, result count and
+    # failure class are recorded. The wrapper re-binds the request trace inside
+    # the worker thread (contextvars do not cross ThreadPoolExecutor.submit)
+    # and returns the task's own value untouched, so provider behavior, the
+    # 10s ceiling and the abandon-on-timeout semantics are unchanged.
+    from ..observability import (
+        bind as _obs_bind,
+        record_provider_call as _obs_provider,
+        record_stage as _obs_stage_record,
+    )
+
+    def _observed(name: str, fn):
+        provider = _EVIDENCE_PROVIDER_NAMES.get(name, name)
+
+        def _run():
+            _t0 = time.monotonic()
+            try:
+                result = fn()
+            except Exception as _exc:
+                _obs_provider(
+                    provider=provider, stage="retrieval",
+                    duration_ms=(time.monotonic() - _t0) * 1000.0,
+                    result_count=None, status="error",
+                    error_class=type(_exc).__name__,
+                )
+                raise
+            _obs_provider(
+                provider=provider, stage="retrieval",
+                duration_ms=(time.monotonic() - _t0) * 1000.0,
+                result_count=len(result) if hasattr(result, "__len__") else None,
+                status="ok",
+            )
+            return result
+
+        return _obs_bind(_run)
+
     _ev_pool = ThreadPoolExecutor(max_workers=7)
     try:
-        _ev_futures_map = {k: _ev_pool.submit(fn) for k, fn in _ev_tasks.items()}
+        _ev_futures_map = {k: _ev_pool.submit(_observed(k, fn))
+                           for k, fn in _ev_tasks.items()}
         # Wait for ALL futures, hard-capped at 10s total wall time
         _cf_wait(list(_ev_futures_map.values()), timeout=10, return_when=ALL_COMPLETED)
         for k, fut in _ev_futures_map.items():
@@ -1067,6 +1114,7 @@ def _run_investment_pipeline(
         f"fred={len(fred_evidence)} val_ratios={len(_val_ratios)} "
         f"estimates={len(_analyst_ests)} total={len(evidence)}"
     )
+    _obs_stage_record("retrieval_total", (time.monotonic()-_t_evidence_m)*1000.0)
 
     # ── Company knowledge profile ─────────────────────────────────────────────
     profile = get_profile_for_company(company)
@@ -1103,6 +1151,7 @@ def _run_investment_pipeline(
     # Fallback: if the thread pool itself raises, we re-run sequentially so no
     # request ever fails purely because of the parallelism mechanism.
     _t_agents = time.time()
+    _t_agents_m = time.monotonic()
     print(f"[TIMING] [{ticker}] starting 6 parallel agents (agent_model used by model_client)")
 
     from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
@@ -1184,8 +1233,31 @@ def _run_investment_pipeline(
     _agent_pool = ThreadPoolExecutor(max_workers=6)
     _agent_results: dict = {}
     try:
+        # Sprint 3A — per-agent wall time. Same wrapper shape as the evidence
+        # pool: re-binds the trace inside the worker thread, records duration
+        # and failure class, returns the agent's own value untouched. The 16s
+        # wall cap and abandon-on-timeout behavior are unchanged; an abandoned
+        # agent is recorded as a timeout below rather than silently omitted.
+        def _observed_agent(name: str, fn):
+            def _run():
+                _t0 = time.monotonic()
+                try:
+                    result = fn()
+                except Exception as _exc:
+                    _obs_stage_record(
+                        f"agent.{name}", (time.monotonic() - _t0) * 1000.0,
+                        status="error", error_class=type(_exc).__name__,
+                    )
+                    raise
+                _obs_stage_record(
+                    f"agent.{name}", (time.monotonic() - _t0) * 1000.0, status="ok",
+                )
+                return result
+
+            return _obs_bind(_run)
+
         _agent_futures: dict[str, Future] = {
-            name: _agent_pool.submit(fn)
+            name: _agent_pool.submit(_observed_agent(name, fn))
             for name, fn in _agent_tasks.items()
         }
         _cf_wait(list(_agent_futures.values()), timeout=_AGENT_WALL_CAP_S, return_when=ALL_COMPLETED)
@@ -1198,6 +1270,11 @@ def _run_investment_pipeline(
                     _agent_results[name] = _agent_defaults[name]
             else:
                 logger.warning("[router] %s_agent abandoned (>%.0fs wall cap) for %s", name, _AGENT_WALL_CAP_S, ticker)
+                # The worker never returned, so it could not record itself.
+                _obs_stage_record(
+                    f"agent.{name}", _AGENT_WALL_CAP_S * 1000.0,
+                    status="timeout", error_class="WallCapExceeded",
+                )
                 _agent_results[name] = _agent_defaults[name]
     except Exception as _pool_exc:
         logger.warning("[router] agent pool error for %s (%r)", ticker, _pool_exc)
@@ -1219,6 +1296,7 @@ def _run_investment_pipeline(
         f"({len(pre_synthesized_answer)} chars) "
         f"elapsed_so_far={time.time()-_pipeline_t0:.2f}s"
     )
+    _obs_stage_record("agent_total", (time.monotonic()-_t_agents_m)*1000.0)
     agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
 
     # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
@@ -1229,6 +1307,7 @@ def _run_investment_pipeline(
     # On Render Starter (120s proxy_read_timeout):
     #   evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = ≤82.5s
     _t_synthesis = time.time()
+    _t_synthesis_m = time.monotonic()
     _SYNTHESIS_WALL_CAP_S = 56.0
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
@@ -1311,6 +1390,7 @@ def _run_investment_pipeline(
         f"[TIMING] [{ticker}] synthesis={time.time()-_t_synthesis:.2f}s "
         f"total_pipeline={time.time()-_pipeline_t0:.2f}s"
     )
+    _obs_stage_record("synthesis", (time.monotonic()-_t_synthesis_m)*1000.0)
 
     # ── Phase 9C: Stamp investment memory context onto thesis ────────────────
     if memory_context_data:

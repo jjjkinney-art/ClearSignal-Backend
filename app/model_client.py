@@ -29,6 +29,20 @@ except ImportError:
     APIError = Exception  # type: ignore
     _OPENAI_AVAILABLE = False
 
+
+def _observe_model_call(**kwargs: Any) -> None:
+    """Forward a model-call observation to the active request trace.
+
+    Imported lazily and failure-tolerant: this module is imported at process
+    start by code paths that have no request context, and instrumentation must
+    never be the reason a model call fails.
+    """
+    try:
+        from .observability import record_model_call
+        record_model_call(**kwargs)
+    except Exception:  # pragma: no cover - defensive
+        pass
+
 from .config import settings
 
 logger = logging.getLogger(__name__)
@@ -76,7 +90,54 @@ class ModelClient:
                     "all LLM calls will raise RuntimeError"
                 )
 
-    def call(self, prompt: str, system_prompt: str = "", request_id: Optional[str] = None) -> str:
+    @staticmethod
+    def _usage(response: Any) -> Dict[str, Optional[int]]:
+        """Token usage from a provider response, or all-None when the provider
+        did not report it (Sprint 3A).  Never fabricates a count — an unknown
+        usage figure is more useful than a wrong one."""
+        usage = getattr(response, "usage", None)
+        if usage is None:
+            return {"input_tokens": None, "output_tokens": None, "total_tokens": None}
+
+        def _int(*names: str) -> Optional[int]:
+            for name in names:
+                value = getattr(usage, name, None)
+                if isinstance(value, int):
+                    return value
+            return None
+
+        return {
+            "input_tokens": _int("prompt_tokens", "input_tokens"),
+            "output_tokens": _int("completion_tokens", "output_tokens"),
+            "total_tokens": _int("total_tokens"),
+        }
+
+    def call(self, prompt: str, system_prompt: str = "", request_id: Optional[str] = None,
+             stage: str = "") -> str:
+        """Call the model, recording a failure observation if it raises.
+
+        Sprint 3A wrapper around :meth:`_call_impl`.  Success is recorded inside
+        the retry loop where token usage is available; this only has to catch
+        the terminal failure, and it re-raises untouched so retry and error
+        semantics are exactly as before.
+        """
+        started = time.monotonic()
+        try:
+            return self._call_impl(prompt, system_prompt, request_id, stage)
+        except BaseException as exc:  # noqa: BLE001 - re-raised immediately
+            name = type(exc).__name__
+            _observe_model_call(
+                stage=stage or "model_call", model=self.model,
+                duration_ms=(time.monotonic() - started) * 1000.0,
+                retry_count=max(self.max_retries - 1, 0),
+                status="timeout" if "timeout" in name.lower() else "error",
+                error_class=name,
+                input_tokens=None, output_tokens=None, total_tokens=None,
+            )
+            raise
+
+    def _call_impl(self, prompt: str, system_prompt: str = "",
+                   request_id: Optional[str] = None, stage: str = "") -> str:
         """Call the OpenAI chat completions API and return the response text.
 
         Parameters
@@ -119,15 +180,18 @@ class ModelClient:
 
         for attempt in range(1, self.max_retries + 1):
             try:
-                start_time = time.time()
+                # Monotonic: wall-clock jumps (NTP, DST) must not corrupt a
+                # latency measurement (Sprint 3A).
+                start_time = time.monotonic()
                 response = self._client.chat.completions.create(
                     model=self.model,
                     messages=messages,
                     temperature=self.temperature,
                     max_tokens=self.max_tokens,
                 )
-                duration = time.time() - start_time
+                duration = time.monotonic() - start_time
                 content = response.choices[0].message.content or ""
+                usage = self._usage(response)
                 logger.info(
                     json.dumps({
                         "event": "model_call_success",
@@ -135,6 +199,11 @@ class ModelClient:
                         "attempt": attempt,
                         "duration_ms": int(duration * 1000),
                     })
+                )
+                _observe_model_call(
+                    stage=stage or "model_call", model=self.model,
+                    duration_ms=duration * 1000.0, retry_count=attempt - 1,
+                    status="ok", **usage,
                 )
                 return content
             except (APITimeoutError, APIConnectionError) as exc:
