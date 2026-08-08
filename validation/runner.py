@@ -31,6 +31,12 @@ try:
 except ImportError:  # pragma: no cover - requests is a project dependency
     requests = None
 
+# Sprint 3A.1 — headers that request authorized detailed observability. Must
+# match app/observability.py; duplicated rather than imported because the
+# harness is deliberately black-box and never imports the backend package.
+OBSERVABILITY_DETAIL_HEADER = "X-ClearSignal-Observability-Detail"
+OBSERVABILITY_TOKEN_HEADER = "X-ClearSignal-Observability-Token"
+
 DEFAULT_TIMEOUT_S = 90.0
 DEFAULT_RETRIES = 2
 DEFAULT_CONCURRENCY = 1
@@ -42,8 +48,28 @@ def load_fixtures(path: Path) -> List[QueryFixture]:
     return [QueryFixture.from_dict(d) for d in data["fixtures"]]
 
 
+def build_ask_headers(
+    auth_token: Optional[str] = None, profile_token: Optional[str] = None,
+) -> Dict[str, str]:
+    """Headers for one /ask call.
+
+    The observability-detail pair is added only when a profiling token is
+    supplied, so an ordinary validation run sends exactly the headers it always
+    did. Kept as its own function so tests can assert on the header set without
+    making a request.
+    """
+    headers = {"Content-Type": "application/json"}
+    if auth_token:
+        headers["Authorization"] = f"Bearer {auth_token}"
+    if profile_token:
+        headers[OBSERVABILITY_DETAIL_HEADER] = "1"
+        headers[OBSERVABILITY_TOKEN_HEADER] = profile_token
+    return headers
+
+
 def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
-              auth_token: Optional[str]) -> Dict[str, Any]:
+              auth_token: Optional[str],
+              profile_token: Optional[str] = None) -> Dict[str, Any]:
     """Single HTTP attempt. Raises on any failure — caller handles retries."""
     url = base_url.rstrip("/") + "/ask"
     payload = {
@@ -51,9 +77,7 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
         "question": fixture.question,
         "intent": "company_analysis",
     }
-    headers = {"Content-Type": "application/json"}
-    if auth_token:
-        headers["Authorization"] = f"Bearer {auth_token}"
+    headers = build_ask_headers(auth_token, profile_token)
     resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
@@ -61,7 +85,7 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
 
 def run_one(
     fixture: QueryFixture, *, base_url: str, timeout: float, retries: int,
-    auth_token: Optional[str],
+    auth_token: Optional[str], profile_token: Optional[str] = None,
 ) -> QueryOutcome:
     outcome = QueryOutcome(fixture=fixture, status="skipped")
     attempts = 0
@@ -71,7 +95,8 @@ def run_one(
     for attempt in range(1, retries + 2):  # first attempt + `retries` retries
         attempts = attempt
         try:
-            raw = _post_ask(base_url, fixture, timeout=timeout, auth_token=auth_token)
+            raw = _post_ask(base_url, fixture, timeout=timeout,
+                            auth_token=auth_token, profile_token=profile_token)
             outcome.status = "completed"
             outcome.raw_response = raw
             outcome.http_status = 200
@@ -159,6 +184,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     p.add_argument("--resume", action="store_true", help="Skip fixtures already completed in --output-dir.")
     p.add_argument("--dry-run", action="store_true",
                    help="Print the fixture count / estimated request count and exit — no network calls.")
+    p.add_argument("--observability-detail", action="store_true",
+                   help="Request DETAILED observability (stage timings, model and provider "
+                        "calls, token totals) for profiling. Requires the shared secret in "
+                        "$VALIDATION_OBSERVABILITY_TOKEN, which must match the backend's "
+                        "OBSERVABILITY_PROFILE_TOKEN. The secret is read from the environment "
+                        "only — never accepted as a CLI value, never printed, never written "
+                        "to run artifacts.")
     return p
 
 
@@ -180,6 +212,20 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     concurrency = max(1, min(args.concurrency, MAX_ALLOWED_CONCURRENCY))
 
+    # Sprint 3A.1 — profiling secret. Environment only: never a CLI value (it
+    # would land in shell history and `ps`), and only consulted when detail was
+    # explicitly asked for. Its presence is reported, its value never is.
+    _profile_token = ""
+    if args.observability_detail:
+        _profile_token = os.environ.get("VALIDATION_OBSERVABILITY_TOKEN", "").strip()
+        if not _profile_token:
+            print(
+                "[validation] ERROR: --observability-detail requires "
+                "$VALIDATION_OBSERVABILITY_TOKEN to be set.",
+                file=sys.stderr,
+            )
+            return 2
+
     output_dir = Path(args.output_dir) if args.output_dir else Path(__file__).parent / "runs" / args.run_id
 
     print(f"[validation] fixture file:            {fixtures_path}")
@@ -189,6 +235,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     print(f"[validation] concurrency:        {concurrency} (max allowed {MAX_ALLOWED_CONCURRENCY})")
     print(f"[validation] estimated requests: {len(fixtures)} (1 per fixture, plus up to {args.retries} retries each on transient failure)")
     print(f"[validation] output directory:   {output_dir}")
+    print(
+        "[validation] observability detail: "
+        + ("requested (token present)" if _profile_token else "off (compact block)")
+    )
 
     if args.dry_run:
         print("[validation] DRY RUN — no network calls made. Remove --dry-run to execute live.")
@@ -213,7 +263,8 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     def _task(fx: QueryFixture) -> QueryOutcome:
         return run_one(fx, base_url=args.backend_url, timeout=args.timeout,
-                       retries=args.retries, auth_token=args.auth_token or None)
+                       retries=args.retries, auth_token=args.auth_token or None,
+                       profile_token=_profile_token or None)
 
     if concurrency == 1:
         for fx in to_run:

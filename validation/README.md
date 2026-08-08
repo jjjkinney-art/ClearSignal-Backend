@@ -19,10 +19,38 @@ No other dependency is required.
 |---|---|
 | `VALIDATION_BACKEND_URL` | Base URL of the deployed backend, e.g. `https://clearsignal-backend-dlsc.onrender.com`. Required for a live run; not needed for `--dry-run`. |
 | `VALIDATION_AUTH_TOKEN` | Optional bearer token, only needed if the target deployment has `AUTH_ENABLED=true`. Never commit this value. |
+| `VALIDATION_OBSERVABILITY_TOKEN` | Shared secret authorizing detailed observability for a profiling run (see below). Must match the backend's `OBSERVABILITY_PROFILE_TOKEN`. Environment only — there is deliberately no CLI flag that accepts the value. Never commit it. |
 
-Both can also be passed as `--backend-url` / `--auth-token` CLI flags, but
-prefer environment variables so a token is never captured in shell history or
-a screen share.
+`--backend-url` / `--auth-token` can also be passed as CLI flags, but prefer
+environment variables so a token is never captured in shell history or a screen
+share. The observability secret has **no** CLI equivalent for that reason.
+
+## Detailed observability (profiling runs)
+
+A normal production response carries only a compact `_observability` block:
+`request_id`, `total_duration_ms`, `backend_version`, `build_commit` and
+`environment`. Stage timings, model calls, provider calls and token totals are
+withheld from ordinary users.
+
+For a profiling run, request them explicitly:
+
+```bash
+export VALIDATION_OBSERVABILITY_TOKEN=…          # matches backend OBSERVABILITY_PROFILE_TOKEN
+VALIDATION_BACKEND_URL=https://your-backend.example.com \
+  python3 -m validation.runner --ticker ASML --run-id sprint3a1-asml \
+    --concurrency 1 --observability-detail
+```
+
+The runner then sends `X-ClearSignal-Observability-Detail: 1` together with
+`X-ClearSignal-Observability-Token: <secret>`. The backend releases detail only
+when both are present and the secret matches (constant-time comparison). A
+deployment with no `OBSERVABILITY_PROFILE_TOKEN` configured refuses regardless
+of what is sent.
+
+The secret is read from the environment, never printed, and never written to
+run artifacts — it travels in a request header, and only response bodies are
+saved. Without `--observability-detail`, a run behaves exactly as before and
+`observability_summary.md` degrades to end-to-end timings only.
 
 ## Dry run (always safe — no network calls)
 
