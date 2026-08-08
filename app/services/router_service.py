@@ -935,7 +935,6 @@ def _run_investment_pipeline(
     """
     ticker = company.ticker
     _pipeline_t0 = time.time()
-    _pipeline_t0_m = time.monotonic()
 
     # ── Question intent detection ─────────────────────────────────────────────
     # Classify the user's question before evidence retrieval so that
@@ -1045,7 +1044,6 @@ def _run_investment_pipeline(
         bind as _obs_bind,
         record_provider_call as _obs_provider,
         record_stage as _obs_stage_record,
-        skip_stage as _obs_skip_stage,
     )
 
     def _observed(name: str, fn):
