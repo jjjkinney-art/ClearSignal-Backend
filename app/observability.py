@@ -27,6 +27,7 @@ function's parameters.
 """
 from __future__ import annotations
 
+import hmac
 import json
 import logging
 import os
@@ -70,6 +71,11 @@ def _is_safe_key(key: str) -> bool:
     lowered = str(key).lower()
     if lowered in _SAFE_KEY_EXCEPTIONS:
         return True
+    # Sprint 3A.1: a singular "token" is a credential, a plural "tokens" is a
+    # usage count. Splitting on that distinction keeps `total_tokens` reportable
+    # while `profile_token` / `auth_token` can never be recorded.
+    if lowered == "token" or lowered.endswith("_token") or "token=" in lowered:
+        return False
     return not any(marker in lowered for marker in _UNSAFE_KEY_MARKERS)
 
 
@@ -128,6 +134,66 @@ def build_identity() -> Dict[str, str]:
         "build_commit": commit,
         "environment": environment,
     }
+
+
+# ── Secure profiling authorization (Sprint 3A.1) ─────────────────────────────
+# Sprint 3A gated stage detail on environment alone, so production responses
+# never carried it — correct for ordinary users, but it also blinded the
+# validation harness the instrumentation was built for (the sprint3a-asml run
+# came back with an empty stage table and `unknown` bottlenecks).
+#
+# Detail is now unlocked by an explicitly authorized request instead: the
+# caller asks for it AND proves it holds the shared secret. Both headers are
+# required, the secret is compared in constant time, and an unconfigured
+# deployment refuses regardless of what is sent.
+DETAIL_REQUEST_HEADER = "X-ClearSignal-Observability-Detail"
+DETAIL_TOKEN_HEADER = "X-ClearSignal-Observability-Token"
+
+_TRUTHY = frozenset({"1", "true", "yes", "on"})
+
+
+def _configured_profile_token() -> str:
+    try:
+        from .config import settings
+        return str(getattr(settings, "observability_profile_token", "") or "")
+    except Exception:  # pragma: no cover - config must never break a request
+        return ""
+
+
+def profiling_authorized(
+    detail_requested: Optional[str], supplied_token: Optional[str],
+) -> bool:
+    """True only for an explicit, correctly authorized request for detail.
+
+    Fails closed on every ambiguity: no configured secret, absent or
+    non-affirmative opt-in header, absent token, or any mismatch. The
+    comparison is constant-time so a wrong token cannot be discovered by
+    timing the response.
+    """
+    expected = _configured_profile_token()
+    if not expected:
+        return False                     # feature disabled unless deployed with a secret
+    if str(detail_requested or "").strip().lower() not in _TRUTHY:
+        return False                     # opt-in must be explicit
+    supplied = str(supplied_token or "").strip()
+    if not supplied:
+        return False
+    return hmac.compare_digest(supplied, expected)
+
+
+def should_include_detail(
+    *, is_production: bool, detail_requested: Optional[str] = None,
+    supplied_token: Optional[str] = None,
+) -> bool:
+    """Decide whether a response carries detailed observability.
+
+    Outside production, detail stays on as it was in Sprint 3A — local and
+    development debugging is unchanged. In production it requires an
+    authorized profiling request.
+    """
+    if not is_production:
+        return True
+    return profiling_authorized(detail_requested, supplied_token)
 
 
 # ── Records ──────────────────────────────────────────────────────────────────

@@ -660,6 +660,19 @@ class Settings(BaseSettings):
     usage_stats_admin_only: bool = True
     admin_user_ids: str = ""                     # comma-separated user UUIDs
 
+    # ── Secure observability profiling (Sprint 3A.1) ──────────────────────
+    # Shared secret that authorizes a caller to request DETAILED observability
+    # (stage timings, model calls, provider calls, token totals) from a
+    # production response.  Set via OBSERVABILITY_PROFILE_TOKEN in the Render
+    # environment; never commit a value.
+    #
+    # Empty by default, which disables detailed profiling entirely — an
+    # unconfigured deployment cannot be talked into emitting detail no matter
+    # what headers a caller sends.  A deliberately dedicated secret rather than
+    # a reused billing/JWT one: profiling and payments should not share a
+    # rotation schedule or a blast radius.
+    observability_profile_token: str = ""
+
     # ── Content integrity (Sprint 1B) ────────────────────────────────────
     # When True (default), the /ask response boundary reconciles the valuation
     # fields and fails CLOSED on a cross-field contradiction (qualified price
