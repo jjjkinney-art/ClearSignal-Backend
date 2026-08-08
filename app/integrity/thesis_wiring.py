@@ -64,28 +64,36 @@ def attach_structured_content(
             from ..services.freshness_analyzer import analyze_evidence_freshness
             freshness = analyze_evidence_freshness(evidence)
 
+        # Sprint 3A — sub-stage timings for the structured-content pipeline.
+        # `stage` is a no-op context manager when no request trace is active.
+        from ..observability import stage as _obs_stage
+
         claims: List[Dict[str, Any]] = list(agent_claims or [])
 
-        for field_name, dimension in _FIELD_DIMENSION.items():
-            text = getattr(thesis, field_name, None)
-            if isinstance(text, list):
-                text = " ".join(str(t) for t in text)
-            if not text:
-                continue
-            extracted = extract_claims(
-                text, ticker=ticker, metric=field_name,
-                freshness=freshness, dimension=dimension,
-            )
-            claims.extend(c.to_dict() for c in extracted)
+        # Claim extraction and provenance classification happen together inside
+        # extract_claims(), so they are timed as one span rather than pretending
+        # to separate two passes that do not exist.
+        with _obs_stage("claim_extraction_and_provenance"):
+            for field_name, dimension in _FIELD_DIMENSION.items():
+                text = getattr(thesis, field_name, None)
+                if isinstance(text, list):
+                    text = " ".join(str(t) for t in text)
+                if not text:
+                    continue
+                extracted = extract_claims(
+                    text, ticker=ticker, metric=field_name,
+                    freshness=freshness, dimension=dimension,
+                )
+                claims.extend(c.to_dict() for c in extracted)
 
-        what_changed = getattr(thesis, "what_changed", None)
-        if what_changed:
-            text = " ".join(str(t) for t in what_changed)
-            extracted = extract_claims(
-                text, ticker=ticker, metric="what_changed",
-                freshness=freshness, dimension="earnings",
-            )
-            claims.extend(c.to_dict() for c in extracted)
+            what_changed = getattr(thesis, "what_changed", None)
+            if what_changed:
+                text = " ".join(str(t) for t in what_changed)
+                extracted = extract_claims(
+                    text, ticker=ticker, metric="what_changed",
+                    freshness=freshness, dimension="earnings",
+                )
+                claims.extend(c.to_dict() for c in extracted)
 
         as_of = None
         if freshness is not None:
@@ -96,14 +104,18 @@ def attach_structured_content(
                 as_of = f"~{age}d old" if age is not None else None
 
         zones = getattr(thesis, "threshold_zones", None) or []
-        thresholds = build_decision_thresholds(zones, ticker=ticker, freshness_as_of=as_of)
+        with _obs_stage("threshold_parsing", zone_count=len(zones)):
+            thresholds = build_decision_thresholds(
+                zones, ticker=ticker, freshness_as_of=as_of,
+            )
 
         # Sprint 2B — collapse semantically identical claims (the same figure
         # extracted from an agent's `overall` prose and again from one of its
         # signals) before they reach the response. Runs after extraction and
         # provenance classification so the surviving claim is the most complete
         # member of its group.
-        claims = canonicalize_claims(claims)
+        with _obs_stage("canonicalization", claims_in=len(claims)):
+            claims = canonicalize_claims(claims)
 
         summary: Dict[str, int] = {}
         for c in claims:
