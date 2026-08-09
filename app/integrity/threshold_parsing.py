@@ -46,6 +46,12 @@ _UNIT_INFERENCE = tuple(
         (r"\b(?:euv|duv)\b.*shipment|shipment.*\b(?:euv|duv)\b", "systems"),
         # Vehicle deliveries.
         (r"vehicle\s+deliver|deliveries", "vehicles"),
+        # Prescription volumes (Sprint 3B — the LLY "Zepbound New Prescription
+        # Volume" threshold shipped unit-less).  "Prescription" fixes the unit
+        # FAMILY unambiguously; the period is never guessed. When the metric
+        # names one ("Weekly ... Prescriptions") the shared _PERIOD_PATTERNS
+        # logic below appends it, exactly as it does for vehicles and systems.
+        (r"\bprescriptions?\b|\bnrx\b|\btrx\b|\bscripts?\b", "prescriptions"),
         # Generic unit shipments/volumes.
         (r"\bshipments?\b|\bunit\s+volume", "units"),
         (r"\bsubscribers?\b|\bmau\b|\bdau\b", "users"),
@@ -67,7 +73,8 @@ _PERIOD_PATTERNS = tuple(
 
 # Units that are already rates (contain a slash) or are currency amounts must
 # not have a period appended.
-_COUNTABLE_UNITS = {"vehicles", "systems", "units", "users", "stores"}
+_COUNTABLE_UNITS = {"vehicles", "systems", "units", "users", "stores",
+                    "prescriptions"}
 
 
 # ── Sprint 2D — financial metrics whose unit shape is unambiguous ────────────
