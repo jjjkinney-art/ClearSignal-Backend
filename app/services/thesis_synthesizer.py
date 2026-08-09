@@ -3342,6 +3342,38 @@ def synthesize_thesis(
         dossier_context_block=dossier_context_block,
     )
 
+    # ── Sprint 3B.1: prompt variant + section instrumentation ────────────────
+    # The control prompt is built exactly as before; a variant is a pure
+    # transform of it, and only an authorized profiling request can select one.
+    # Section sizes are recorded as counts only — no prompt text is ever
+    # exposed. Never raises: an instrumentation fault must not fail synthesis.
+    try:
+        from ..observability import current_prompt_variant, record_stage, log_event
+        from .synthesis_prompt_variants import (
+            apply_variant, measure_sections, VARIANT_CONTROL,
+        )
+        _variant = current_prompt_variant()
+        if _variant != VARIANT_CONTROL:
+            prompt = apply_variant(prompt, _variant)
+        _sections = measure_sections(prompt)
+        log_event(
+            "synthesis_prompt",
+            stage="synthesis", variant=_variant,
+            prompt_chars=_sections["total_chars"],
+            prompt_est_tokens=_sections["total_tokens"],
+            section_count=len(_sections["sections"]),
+        )
+        record_stage(
+            "synthesis_prompt_build", 0.0,
+            variant=_variant,
+            prompt_chars=_sections["total_chars"],
+            prompt_est_tokens=_sections["total_tokens"],
+            **{f"sec_{s['section']}": s["chars"] for s in _sections["sections"]},
+        )
+    except Exception as _pv_exc:  # pragma: no cover - defensive
+        logger.debug("[thesis_synthesizer] prompt variant/instrumentation "
+                     "failed (non-fatal): %r", _pv_exc)
+
     # ── JSON-enforced LLM call with markdown recovery ─────────────────────────
     # Timer starts here so the compound-risk retry can measure how much of the
     # Render 61 s ceiling the synthesis call has already consumed.

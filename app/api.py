@@ -1463,6 +1463,25 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         route="/ask",
     )
 
+    # ── Sprint 3B.1: synthesis-prompt A/B variant ────────────────────────────
+    # Selecting an experimental prompt requires the SAME authorization as
+    # profiling detail, so an ordinary user always gets the production prompt.
+    # Resolved once here and carried on a contextvar into the executor.
+    try:
+        from .observability import (
+            DETAIL_TOKEN_HEADER as _TOK_HDR,
+            PROMPT_VARIANT_HEADER as _VARIANT_HDR,
+            profiling_authorized as _prof_auth,
+            set_prompt_variant as _set_variant,
+        )
+        from .services.synthesis_prompt_variants import resolve_variant as _resolve_variant
+        _set_variant(_resolve_variant(
+            http_request.headers.get(_VARIANT_HDR),
+            authorized=_prof_auth("1", http_request.headers.get(_TOK_HDR)),
+        ))
+    except Exception as _var_exc:
+        logger.debug("[ask] prompt-variant resolution failed (non-fatal): %r", _var_exc)
+
     async def _generate():
         loop = _asyncio.get_running_loop()          # always the active loop
 
@@ -2010,9 +2029,12 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     detail_requested=http_request.headers.get(_DETAIL_HDR),
                     supplied_token=http_request.headers.get(_DETAIL_TOK_HDR),
                 )
-                _result_dict["_observability"] = _trace.to_dict(
-                    include_stages=_obs_detail,
-                )
+                _obs_block = _trace.to_dict(include_stages=_obs_detail)
+                # Sprint 3B.1 — record WHICH synthesis prompt served this
+                # request, so an A/B artifact can never be misattributed.
+                from .observability import current_prompt_variant as _cur_variant
+                _obs_block["synthesis_variant"] = _cur_variant()
+                _result_dict["_observability"] = _obs_block
             except Exception as _obs_exc:
                 logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)
 

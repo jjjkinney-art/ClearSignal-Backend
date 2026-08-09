@@ -148,6 +148,10 @@ def build_identity() -> Dict[str, str]:
 # deployment refuses regardless of what is sent.
 DETAIL_REQUEST_HEADER = "X-ClearSignal-Observability-Detail"
 DETAIL_TOKEN_HEADER = "X-ClearSignal-Observability-Token"
+# Sprint 3B.1 — selects an experimental synthesis prompt for an A/B run. Gated
+# by the SAME authorization as detail: an unauthorized caller always gets the
+# production prompt regardless of what it sends.
+PROMPT_VARIANT_HEADER = "X-ClearSignal-Synthesis-Variant"
 
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
 
@@ -379,6 +383,24 @@ def set_trace(trace: Optional[RequestTrace]) -> None:
     _TRACE.set(trace)
 
 
+# Sprint 3B.1 — active synthesis-prompt variant for this request. Carried
+# alongside the trace so it crosses the executor boundary with it.
+_PROMPT_VARIANT: ContextVar[str] = ContextVar(
+    "clearsignal_prompt_variant", default="control",
+)
+
+
+def set_prompt_variant(variant: str) -> None:
+    _PROMPT_VARIANT.set(variant or "control")
+
+
+def current_prompt_variant() -> str:
+    try:
+        return _PROMPT_VARIANT.get() or "control"
+    except LookupError:  # pragma: no cover - default makes this unreachable
+        return "control"
+
+
 def bind(fn: Callable[..., Any], trace: Optional[RequestTrace] = None) -> Callable[..., Any]:
     """Wrap ``fn`` so it sees ``trace`` as the active trace when it runs.
 
@@ -388,8 +410,11 @@ def bind(fn: Callable[..., Any], trace: Optional[RequestTrace] = None) -> Callab
     """
     bound = trace if trace is not None else current_trace()
 
+    bound_variant = current_prompt_variant()
+
     def _wrapped(*args: Any, **kwargs: Any) -> Any:
         set_trace(bound)
+        set_prompt_variant(bound_variant)
         return fn(*args, **kwargs)
 
     return _wrapped
