@@ -32,7 +32,25 @@ REQUIRED_FIELDS = (
     "decision_thresholds", "quantitative_claims", "_integrity",
 )
 
-_NUM_RE = re.compile(r"~?\$?\d[\d,]*\.?\d*\s?(?:%|x|bps?|B|M|K)?")
+# Sprint 3B.1A — the original pattern split a range into halves: "~25-30x"
+# tokenised as "~25" + "30x", so a candidate rewording one range produced two
+# phantom "lost figures". NVDA's five reported losses were really two ranges
+# and one figure. A range is one quantity and is matched as one.
+_NUM_RE = re.compile(
+    r"~?\$?\d[\d,]*\.?\d*"                       # leading number
+    r"(?:\s?[-–]\s?\$?\d[\d,]*\.?\d*)?"          # optional range partner
+    r"\s?(?:%|x|bps?|B|M|K)?"                    # optional unit
+)
+
+# Sprint 3B.1A — a number inside a product name is not a figure. MSFT's
+# reported loss of "365" came from "Microsoft 365", which Sprint 2B already
+# established is an identifier, not a quantitative claim. The backend's own
+# identifier table is reused so the two never drift apart.
+try:  # pragma: no cover - exercised indirectly
+    from app.integrity.identifiers import identifier_label_at, identifier_spans
+except Exception:  # pragma: no cover - harness must not hard-depend on app/
+    identifier_spans = None  # type: ignore[assignment]
+    identifier_label_at = None  # type: ignore[assignment]
 _PROSE_FIELDS = ("direct_answer", "bull_thesis", "bear_thesis",
                  "valuation_view", "macro_sensitivity", "conclusion")
 
@@ -59,9 +77,23 @@ def _text_of(thesis: Dict[str, Any]) -> str:
 
 def _figures(thesis: Dict[str, Any]) -> Set[str]:
     """Every figure the thesis cites, normalized. Losing one means a concrete
-    number stopped being reported."""
-    return {m.group(0).strip().lower().replace(" ", "")
-            for m in _NUM_RE.finditer(_text_of(thesis)) if m.group(0).strip()}
+    number stopped being reported.
+
+    Numbers belonging to a product/model/index identifier are excluded — they
+    are names, not measurements, so their disappearance says nothing about
+    analytical specificity.
+    """
+    text = _text_of(thesis)
+    spans = identifier_spans(text) if identifier_spans else []
+    out: Set[str] = set()
+    for m in _NUM_RE.finditer(text):
+        token = m.group(0).strip()
+        if not token:
+            continue
+        if spans and identifier_label_at(spans, m.start(), m.end()):
+            continue
+        out.add(token.lower().replace(" ", "").rstrip(".,;:"))
+    return out
 
 
 def _risks(thesis: Dict[str, Any]) -> Set[str]:
@@ -73,10 +105,61 @@ def _risks(thesis: Dict[str, Any]) -> Set[str]:
     return out
 
 
+# Sprint 3B.1A — noise words that do not change which metric is meant.
+# "EUV System Shipments" and "EUV System Shipments per Quarter" are the same
+# metric at a different cadence; "Credit Card Net Charge-Off Rate" and "Net
+# Charge-Off Rate" are the same measure. Stripping these avoids reporting a
+# rename as a loss. Words that would change the METRIC (income vs margin,
+# return vs multiple) are deliberately NOT stripped.
+_METRIC_NOISE = re.compile(
+    r"\b(?:per\s+(?:quarter|month|year|annum)|quarterly|monthly|annual|yearly|"
+    r"total|overall|percentage|pct|ratio|rate\s+of|credit\s+card|blended|"
+    r"consolidated|company|reported)\b",
+    re.IGNORECASE,
+)
+# Abbreviations the model uses interchangeably with their expansion.
+_METRIC_ALIASES = (
+    (re.compile(r"\bnet\s+interest\s+margin\b|\bnim\b", re.I), "nim"),
+    (re.compile(r"\breturn\s+on\s+tangible\s+common\s+equity\b|\brotce\b", re.I), "rotce"),
+    (re.compile(r"\bfree\s+cash\s+flow\b|\bfcf\b", re.I), "fcf"),
+    (re.compile(r"\bearnings\s+per\s+share\b|\beps\b", re.I), "eps"),
+    (re.compile(r"\bforward\s+p/?e\b|\bp/?e\s+ratio\b|\bp/?e\b", re.I), "pe"),
+)
+
+
+def normalize_metric(metric: str) -> str:
+    """Canonical form of a threshold metric name for equivalence comparison.
+
+    Only cosmetic and cadence wording is removed. Two metrics that measure
+    different things — net interest *income* versus net interest *margin* —
+    normalize differently and are still reported as a substitution.
+    """
+    text = (metric or "").lower()
+    text = re.sub(r"\(([^)]*)\)", r" \1 ", text)   # unwrap "(NIM)" style suffixes
+    for pattern, canon in _METRIC_ALIASES:
+        text = pattern.sub(canon, text)
+    text = _METRIC_NOISE.sub(" ", text)
+    text = re.sub(r"[^a-z0-9 ]+", " ", text)
+    return " ".join(sorted(set(text.split())))
+
+
 def _threshold_metrics(thesis: Dict[str, Any]) -> Set[str]:
-    return {str(t.get("metric", "")).strip().lower()
+    return {normalize_metric(str(t.get("metric", "")))
             for t in thesis.get("decision_thresholds") or []
             if isinstance(t, dict) and t.get("metric")}
+
+
+def _unavailable_thresholds(thesis: Dict[str, Any]) -> int:
+    """Count thresholds shipped as unusable.
+
+    Sprint 3B.1A found this to be the sharpest quality signal in the whole
+    comparison: compact_a degraded 14/15 available thresholds to 12/15, and
+    both REJECT verdicts had a metric that survived by NAME but arrived
+    unavailable. A renamed-but-usable threshold is fine; a threshold that
+    stopped being actionable is a regression whatever it is called.
+    """
+    return sum(1 for t in thesis.get("decision_thresholds") or []
+               if isinstance(t, dict) and t.get("unavailable"))
 
 
 def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[str, Any]:
@@ -95,6 +178,8 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
     # summary — the failure mode a token-savings metric would never catch.
     flattening = bool(c_len and (k_len / c_len) < 0.70)
 
+    c_unavail, k_unavail = _unavailable_thresholds(c_t), _unavailable_thresholds(k_t)
+
     c_int = c_t.get("_integrity") or {}
     k_int = k_t.get("_integrity") or {}
 
@@ -105,6 +190,10 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
         "figures_gained": sorted(k_fig - c_fig)[:10],
         "risks_lost": sorted(c_risk - k_risk)[:5],
         "threshold_metrics_lost": sorted(c_thr - k_thr),
+        "threshold_metrics_gained": sorted(k_thr - c_thr),
+        "thresholds_unavailable_control": c_unavail,
+        "thresholds_unavailable_candidate": k_unavail,
+        "thresholds_degraded": max(k_unavail - c_unavail, 0),
         "prose_chars_control": c_len,
         "prose_chars_candidate": k_len,
         "prose_ratio": round(k_len / c_len, 3) if c_len else None,
@@ -128,6 +217,12 @@ def verdict(comparison: Dict[str, Any]) -> Tuple[str, List[str]]:
         reasons.append(f"missing required fields: {comparison['missing_fields']}")
     if comparison["threshold_metrics_lost"]:
         reasons.append(f"threshold metrics lost: {comparison['threshold_metrics_lost']}")
+    if comparison["thresholds_degraded"]:
+        reasons.append(
+            f"{comparison['thresholds_degraded']} threshold(s) became unavailable "
+            f"({comparison['thresholds_unavailable_control']} -> "
+            f"{comparison['thresholds_unavailable_candidate']})"
+        )
     if comparison["flattening_suspected"]:
         reasons.append(f"prose shrank to {comparison['prose_ratio']} of control")
     if comparison["integrity_ok_candidate"] is False and \
