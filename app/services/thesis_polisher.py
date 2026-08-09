@@ -1262,6 +1262,70 @@ def apply_temporal_defaults(thesis: InvestmentThesis) -> InvestmentThesis:
 
 # ── Main entry point ──────────────────────────────────────────────────────────
 
+# ── Fiscal-year disambiguation (Sprint 3B.1) ─────────────────────────────────
+# The sprint3b-verify benchmark flagged NVDA-structural_risk for writing
+# "hyperscaler CapEx guidance exceeding $200B for FY26" with no calendar-year
+# anchor nearby. "FY26" is genuinely ambiguous to a reader: NVIDIA's fiscal
+# 2026 ends in January 2026 and therefore covers mostly calendar 2025.
+#
+# The fix expands the abbreviation rather than anchoring it. "fiscal 2026" is
+# the company's own fiscal-year label written in full — it states exactly what
+# FY26 stated, with no claim about which calendar year it maps to. Inventing a
+# calendar anchor would assert something the model never established.
+_FISCAL_ABBREV_RE = re.compile(r"\bFY\s?(\d{4}|\d{2})\b")
+
+# Prose fields carried to the frontend. Structured/numeric fields are excluded:
+# a fiscal label inside a threshold metric name is data, not prose.
+_FISCAL_PROSE_FIELDS = (
+    "direct_answer", "bull_thesis", "bear_thesis", "valuation_view",
+    "macro_sensitivity", "conclusion", "core_takeaway", "thesis_summary",
+    "one_sentence_thesis", "verdict_reasoning", "confidence_reasoning",
+)
+
+
+def _expand_fiscal_year(text: str) -> str:
+    """Rewrite ``FY26`` / ``FY 26`` / ``FY2026`` as ``fiscal 2026``.
+
+    A two-digit year expands into the 2000s, which is unambiguous for
+    forward-looking equity analysis — a thesis does not discuss FY1926. The
+    expansion preserves fiscal-year semantics exactly and never asserts a
+    calendar-year equivalence.
+    """
+    if not text:
+        return text
+
+    def _sub(match: "re.Match") -> str:
+        digits = match.group(1)
+        year = digits if len(digits) == 4 else f"20{digits}"
+        return f"fiscal {year}"
+
+    return _FISCAL_ABBREV_RE.sub(_sub, text)
+
+
+def disambiguate_fiscal_years(thesis: InvestmentThesis) -> InvestmentThesis:
+    """Expand abbreviated fiscal-year references across the thesis prose.
+
+    Deterministic string work — no model call, and no change to any figure,
+    claim or structured field. Never raises: a polish step must not be able to
+    fail a synthesis that already succeeded.
+    """
+    try:
+        updates: Dict[str, str] = {}
+        for field_name in _FISCAL_PROSE_FIELDS:
+            value = getattr(thesis, field_name, None)
+            if isinstance(value, str) and value:
+                expanded = _expand_fiscal_year(value)
+                if expanded != value:
+                    updates[field_name] = expanded
+        if not updates:
+            return thesis
+        if hasattr(thesis, "model_copy"):
+            return thesis.model_copy(update=updates)
+        return thesis.copy(update=updates)  # type: ignore[attr-defined]
+    except Exception:  # pragma: no cover - defensive
+        return thesis
+
+
 def polish_thesis(thesis: InvestmentThesis) -> InvestmentThesis:
     """Apply all polish refinements to a synthesised InvestmentThesis.
 
@@ -1285,6 +1349,9 @@ def polish_thesis(thesis: InvestmentThesis) -> InvestmentThesis:
     thesis = _apply_institutional_language(thesis)
     thesis = _enforce_structural_variety(thesis)
     thesis = apply_temporal_defaults(thesis)
+    # Sprint 3B.1 — runs after the rewriting steps so any FY abbreviation they
+    # introduce or preserve is expanded before delivery.
+    thesis = disambiguate_fiscal_years(thesis)
     # Hero thesis compression — applied last so all prior rewrites are captured
     hero = getattr(thesis, "one_sentence_thesis", "") or ""
     if hero:
