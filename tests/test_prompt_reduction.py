@@ -388,3 +388,140 @@ class TestABComparison:
     def test_malformed_responses_do_not_crash(self):
         for bad in ({}, None, {"answer": None}, "string"):
             assert isinstance(compare_thesis(_resp(), bad), dict)
+
+
+# ── Sprint 3B.1A — A/B failure forensics ─────────────────────────────────────
+
+from app.services.synthesis_prompt_variants import VARIANT_COMPACT_A2
+from validation.ab_compare import normalize_metric, _figures, _unavailable_thresholds
+
+
+class TestFigureExtractionFixes:
+    """Two objective comparator flaws found by the live A/B, each of which
+    manufactured phantom 'lost figures'."""
+
+    def test_ranges_are_one_figure_not_two(self):
+        # NVDA reported losing '~25', '30x', '~5', '8x' — actually two ranges.
+        t = {"bull_thesis": "compression to ~25-30x P/E and by ~5-8x on rates"}
+        figs = _figures(t)
+        assert "~25-30x" in figs and "~5-8x" in figs
+        assert "~25" not in figs and "30x" not in figs
+
+    def test_product_identifier_is_not_a_figure(self):
+        # MSFT reported losing '365' — from "Microsoft 365".
+        assert not any("365" in f for f in
+                       _figures({"bull_thesis": "integration with Microsoft 365 drives lock-in"}))
+
+    def test_genuine_figures_still_extracted(self):
+        figs = _figures({"bull_thesis": "Azure growth of 25% and a 20% decline risk"})
+        assert "25%" in figs and "20%" in figs
+
+    def test_identifier_exclusion_keeps_neighbouring_figures(self):
+        figs = _figures({"bull_thesis": "Microsoft 365 seats grew 14% last year"})
+        assert "14%" in figs
+        assert not any(f.startswith("365") for f in figs)
+
+
+class TestMetricNormalization:
+    """Renames that mean the same metric must not read as a loss; renames that
+    mean a DIFFERENT metric must still be reported."""
+
+    @pytest.mark.parametrize("a,b", [
+        ("Credit Card Net Charge-Off Rate", "Net Charge-Off Rate"),   # JPM
+        ("EUV System Shipments", "EUV System Shipments per Quarter"),  # ASML
+        ("Net Interest Margin (NIM)", "NIM"),
+        ("Return on Tangible Common Equity (ROTCE)", "ROTCE"),
+        ("Forward P/E Ratio", "P/E"),
+        ("Gross Margin Percentage", "Gross Margin"),
+    ])
+    def test_equivalent_names_normalize_together(self, a, b):
+        assert normalize_metric(a) == normalize_metric(b)
+
+    @pytest.mark.parametrize("a,b", [
+        ("Net Interest Margin (NIM)", "Net Interest Income Growth"),   # JPM real loss
+        ("Return on Tangible Common Equity", "Tangible Book Value Multiple"),
+        ("Service Revenue Growth", "Order Backlog Value"),             # ASML real loss
+        ("Forward P/E Ratio", "Gross Margin Percentage"),
+    ])
+    def test_materially_different_metrics_stay_distinct(self, a, b):
+        assert normalize_metric(a) != normalize_metric(b)
+
+
+class TestThresholdDegradationSignal:
+    def test_unavailable_thresholds_counted(self):
+        t = {"decision_thresholds": [
+            {"metric": "A", "unavailable": True},
+            {"metric": "B", "unavailable": False},
+            {"metric": "C", "unavailable": True},
+        ]}
+        assert _unavailable_thresholds(t) == 2
+
+    def test_degradation_rejects_even_when_names_match(self):
+        """The sharpest signal: a metric that survives by name but arrives
+        unusable is still a regression."""
+        base = {"answer": {"investment_thesis": {
+            "direct_answer": "d", "bull_thesis": "b", "bear_thesis": "r",
+            "valuation_view": "v", "conclusion": "c", "confidence": "medium",
+            "risks": [{"risk": "x"}], "catalysts": ["y"],
+            "quantitative_claims": [], "_integrity": {"ok": True},
+        }}}
+        import copy
+        control = copy.deepcopy(base)
+        control["answer"]["investment_thesis"]["decision_thresholds"] = [
+            {"metric": "EUV System Shipments", "unavailable": False}]
+        cand = copy.deepcopy(base)
+        cand["answer"]["investment_thesis"]["decision_thresholds"] = [
+            {"metric": "EUV System Shipments per Quarter", "unavailable": True}]
+        cmp_ = compare_thesis(control, cand)
+        assert cmp_["threshold_metrics_lost"] == []      # rename recognised
+        assert cmp_["thresholds_degraded"] == 1          # but still degraded
+        v, reasons = verdict(cmp_)
+        assert v == "reject"
+        assert any("became unavailable" in r for r in reasons)
+
+
+class TestCompactA2:
+    """compact_a2 restores the specificity guidance compact_a dropped."""
+
+    def test_restores_magnitude_requirements(self):
+        out = apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)
+        assert "MAGNITUDE" in out
+
+    def test_restores_bear_thesis_specificity(self):
+        out = apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)
+        assert "MOST SPECIFIC" in out
+
+    def test_restores_specific_mechanism_over_category(self):
+        out = apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)
+        assert "specific mechanism" in out.lower()
+
+    def test_forbids_symmetric_hedging(self):
+        out = apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)
+        assert "symmetric balancing" in out.lower()
+
+    def test_compact_a_lacks_what_a2_restores(self):
+        a = apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A)
+        assert "MAGNITUDE" not in a and "MOST SPECIFIC" not in a
+
+    @pytest.mark.parametrize("marker", PROTECTED)
+    def test_analytic_mandates_and_schema_survive_a2(self, marker):
+        assert marker in apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)
+
+    def test_a2_is_deterministic(self):
+        assert apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2) == \
+               apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)
+
+    def test_a2_still_reduces_versus_control(self):
+        assert len(apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)) < len(SAMPLE_PROMPT)
+
+    def test_a2_is_more_conservative_than_a(self):
+        # A safe smaller reduction is the whole point of the revision.
+        assert len(apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A2)) > \
+               len(apply_variant(SAMPLE_PROMPT, VARIANT_COMPACT_A))
+
+    def test_a2_requires_authorization(self):
+        assert resolve_variant("compact_a2", authorized=False) == VARIANT_CONTROL
+        assert resolve_variant("compact_a2", authorized=True) == VARIANT_COMPACT_A2
+
+    def test_control_still_byte_identical_with_a2_registered(self):
+        assert apply_variant(SAMPLE_PROMPT, VARIANT_CONTROL) == SAMPLE_PROMPT

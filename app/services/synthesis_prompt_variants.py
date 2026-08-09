@@ -34,9 +34,11 @@ from typing import Any, Dict, List, Optional
 
 VARIANT_CONTROL = "control"
 VARIANT_COMPACT_A = "compact_a"
+VARIANT_COMPACT_A2 = "compact_a2"
 VARIANT_COMPACT_B = "compact_b"
 
-KNOWN_VARIANTS = (VARIANT_CONTROL, VARIANT_COMPACT_A, VARIANT_COMPACT_B)
+KNOWN_VARIANTS = (VARIANT_CONTROL, VARIANT_COMPACT_A, VARIANT_COMPACT_A2,
+                  VARIANT_COMPACT_B)
 
 # Rough English prose ratio. Used only for reporting an approximate token
 # figure alongside an exact character count — never for a latency claim.
@@ -157,6 +159,45 @@ _COMPACT_A_DENSITY_REPLACEMENT = """ANALYTICAL DENSITY — MANDATORY:
 - Leave the obvious next inference to the reader; do not exhaust every branch."""
 
 
+# ── compact_a2: conservative revision after the live A/B ─────────────────────
+# The Sprint 3B.1A forensics showed compact_a was too aggressive. Reading the
+# removed blocks line by line found they were not purely stylistic — three
+# cross-cutting requirements were embedded in them and were dropped:
+#
+#   * STRUCTURAL VARIETY: "macro_sensitivity -> state the specific sensitivity
+#     channel first, THEN MAGNITUDE"        -> NVDA lost its 10% USD move and
+#                                              its ~5-8x compression figure.
+#   * SECTION ASYMMETRY: "bear_thesis should be your MOST SPECIFIC, DETAILED
+#     section"                              -> MSFT lost 20%, TSLA lost 10%,
+#                                              both bear-case figures.
+#   * SELECTIVE INCOMPLETENESS: "name the dominant factor AND MAGNITUDE, then
+#     stop" / "name the specific tension, not the category"
+#                                           -> generic metric substitution and
+#                                              degraded thresholds on JPM/ASML.
+#
+# compact_a2 keeps the genuinely duplicated style wording consolidated but
+# restores each of those requirements verbatim in intent. The reduction is
+# smaller by design: a safe 7-8% beats an 11.2% that costs quantitative
+# specificity.
+_COMPACT_A2_STYLE_REPLACEMENT = """PROSE STYLE — MANDATORY:
+- Write as a portfolio manager, not a report generator. Institutional register throughout.
+- Vary sentence length and structure; never open two sections with the same template.
+- bull_thesis MUST contain at least one sentence of 12 words or fewer.
+- Sections are deliberately asymmetric: when one risk dominates, bear_thesis is your
+  MOST SPECIFIC and most detailed section. Equal section lengths read as machine output.
+- macro_sensitivity: state the specific sensitivity channel FIRST, then its MAGNITUDE.
+- Name the specific mechanism, never the category ("pricing discipline", not "pricing power").
+- No robotic connectives, no filler qualifiers, no restating the section title."""
+
+_COMPACT_A2_DENSITY_REPLACEMENT = """ANALYTICAL DENSITY — MANDATORY:
+- State the implication, not the reasoning chain that produced it.
+- End sections on the consequence that matters, not a summary restatement.
+- Name the dominant factor AND ITS MAGNITUDE, then stop — never end on a category.
+- Do not hedge with symmetric balancing clauses ("could expand if X, but compress if Y");
+  pick the more probable scenario and anchor it to a number.
+- Leave the obvious next inference to the reader; do not exhaust every branch."""
+
+
 def _replace_block_group(prompt: str, headers: tuple, replacement: str) -> str:
     """Remove every block whose header matches, then insert ``replacement``
     where the first one appeared, preserving prompt ordering."""
@@ -184,6 +225,12 @@ def apply_variant(prompt: str, variant: str) -> str:
     """
     if not prompt or variant == VARIANT_CONTROL or variant not in KNOWN_VARIANTS:
         return prompt
+
+    if variant == VARIANT_COMPACT_A2:
+        out = _replace_block_group(prompt, _COMPACT_A_STYLE_HEADERS,
+                                   _COMPACT_A2_STYLE_REPLACEMENT)
+        return _replace_block_group(out, _COMPACT_A_DENSITY_HEADERS,
+                                    _COMPACT_A2_DENSITY_REPLACEMENT)
 
     out = _replace_block_group(prompt, _COMPACT_A_STYLE_HEADERS,
                                _COMPACT_A_STYLE_REPLACEMENT)
