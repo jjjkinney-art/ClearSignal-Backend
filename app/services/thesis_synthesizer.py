@@ -696,6 +696,37 @@ def _build_live_data_provenance_block(evidence: List[RetrievedEvidence]) -> str:
     return "\n".join(lines) + "\n\n"
 
 
+def _normalize_evidence_text(text: str) -> str:
+    """Canonical form of an evidence summary for duplicate detection.
+
+    Lowercases, strips punctuation and collapses whitespace, so the same
+    sentence arriving from two providers with different capitalisation or
+    trailing punctuation is recognised as one fact.
+    """
+    return re.sub(r"[^a-z0-9 ]+", "", (text or "").lower()).strip()
+
+
+def _dedupe_evidence(evidence: List[RetrievedEvidence]) -> List[RetrievedEvidence]:
+    """Remove evidence items whose summary duplicates an earlier one.
+
+    Order-preserving, so the highest-scoring instance of a fact survives.
+    Comparison is on the summary text only — two items with the same title but
+    different summaries are different facts and both are kept. Items with an
+    empty summary are never treated as duplicates of one another, since an
+    empty string says nothing about whether the underlying facts match.
+    """
+    seen: set = set()
+    out: List[RetrievedEvidence] = []
+    for ev in evidence:
+        key = _normalize_evidence_text(getattr(ev, "summary", "") or "")
+        if key and key in seen:
+            continue
+        if key:
+            seen.add(key)
+        out.append(ev)
+    return out
+
+
 def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> str:
     """Format top-N evidence items with composite recency+relevance scoring.
 
@@ -720,7 +751,14 @@ def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> s
         evidence,
         key=lambda e: _composite_evidence_score(e, reference_ts),
         reverse=True,
-    )[:max_items]
+    )
+    # Sprint 3B — drop evidence whose summary duplicates one already selected.
+    # Providers overlap (an FMP headline and a news item often carry the same
+    # sentence), and a repeated summary costs synthesis input tokens without
+    # adding a decision-relevant fact. Deduplication happens BEFORE the
+    # max_items cut, so a duplicate no longer displaces a unique item —
+    # this preserves strictly more distinct evidence than truncating first.
+    scored = _dedupe_evidence(scored)[:max_items]
 
     lines = []
     for i, ev in enumerate(scored):
