@@ -79,6 +79,19 @@ class Settings(BaseSettings):
     # or .env file when higher capability is required.
     synthesis_model: str = "gpt-4o-mini"
 
+    # ── Sprint 3B.2: synthesis-model A/B candidate ────────────────────────
+    # Model used by the `fast_a` synthesis variant. EMPTY BY DEFAULT, which
+    # disables the variant entirely — an unconfigured deployment always serves
+    # the production model no matter what an authorized caller requests.
+    #
+    # Deliberately not hardcoded. The only models named anywhere in this
+    # configuration are gpt-4o (unused by synthesis) and gpt-4o-mini, and
+    # synthesis ALREADY runs gpt-4o-mini — the small model in that family.
+    # Naming a specific faster model here would be an assumption about what
+    # the deployment's account can actually reach, so the candidate is chosen
+    # by the operator at deploy time via SYNTHESIS_MODEL_FAST_A.
+    synthesis_model_fast_a: str = ""
+
     max_tokens: int = 4096
 
     # Maximum output tokens for the thesis synthesis call.  Set lower than

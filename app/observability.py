@@ -152,6 +152,11 @@ DETAIL_TOKEN_HEADER = "X-ClearSignal-Observability-Token"
 # by the SAME authorization as detail: an unauthorized caller always gets the
 # production prompt regardless of what it sends.
 PROMPT_VARIANT_HEADER = "X-ClearSignal-Synthesis-Variant"
+# Sprint 3B.2 — selects an alternate synthesis MODEL for an A/B run. Gated by
+# the same authorization as detail and prompt variant; kept separate from
+# PROMPT_VARIANT_HEADER so a model experiment never silently changes the
+# prompt, or vice versa.
+MODEL_VARIANT_HEADER = "X-ClearSignal-Synthesis-Model-Variant"
 
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
 
@@ -388,6 +393,22 @@ def set_trace(trace: Optional[RequestTrace]) -> None:
 _PROMPT_VARIANT: ContextVar[str] = ContextVar(
     "clearsignal_prompt_variant", default="control",
 )
+# Sprint 3B.2 — active synthesis-model variant, carried alongside the prompt
+# variant so both cross the executor boundary with the trace.
+_MODEL_VARIANT: ContextVar[str] = ContextVar(
+    "clearsignal_model_variant", default="control",
+)
+
+
+def set_model_variant(variant: str) -> None:
+    _MODEL_VARIANT.set(variant or "control")
+
+
+def current_model_variant() -> str:
+    try:
+        return _MODEL_VARIANT.get() or "control"
+    except LookupError:  # pragma: no cover - default makes this unreachable
+        return "control"
 
 
 def set_prompt_variant(variant: str) -> None:
@@ -411,10 +432,12 @@ def bind(fn: Callable[..., Any], trace: Optional[RequestTrace] = None) -> Callab
     bound = trace if trace is not None else current_trace()
 
     bound_variant = current_prompt_variant()
+    bound_model_variant = current_model_variant()
 
     def _wrapped(*args: Any, **kwargs: Any) -> Any:
         set_trace(bound)
         set_prompt_variant(bound_variant)
+        set_model_variant(bound_model_variant)
         return fn(*args, **kwargs)
 
     return _wrapped
