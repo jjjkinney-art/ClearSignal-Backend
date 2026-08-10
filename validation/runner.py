@@ -38,6 +38,9 @@ OBSERVABILITY_DETAIL_HEADER = "X-ClearSignal-Observability-Detail"
 OBSERVABILITY_TOKEN_HEADER = "X-ClearSignal-Observability-Token"
 # Sprint 3B.1 — selects an experimental synthesis prompt for an A/B run.
 SYNTHESIS_VARIANT_HEADER = "X-ClearSignal-Synthesis-Variant"
+# Sprint 3B.2 — selects an alternate synthesis MODEL. Kept separate from the
+# prompt-variant header so a model experiment never changes the prompt.
+SYNTHESIS_MODEL_VARIANT_HEADER = "X-ClearSignal-Synthesis-Model-Variant"
 
 DEFAULT_TIMEOUT_S = 90.0
 DEFAULT_RETRIES = 2
@@ -53,6 +56,7 @@ def load_fixtures(path: Path) -> List[QueryFixture]:
 def build_ask_headers(
     auth_token: Optional[str] = None, profile_token: Optional[str] = None,
     synthesis_variant: Optional[str] = None,
+    synthesis_model_variant: Optional[str] = None,
 ) -> Dict[str, str]:
     """Headers for one /ask call.
 
@@ -71,13 +75,16 @@ def build_ask_headers(
     # the backend ignores it otherwise — so it is sent only when both exist.
     if profile_token and synthesis_variant:
         headers[SYNTHESIS_VARIANT_HEADER] = synthesis_variant
+    if profile_token and synthesis_model_variant:
+        headers[SYNTHESIS_MODEL_VARIANT_HEADER] = synthesis_model_variant
     return headers
 
 
 def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
               auth_token: Optional[str],
               profile_token: Optional[str] = None,
-              synthesis_variant: Optional[str] = None) -> Dict[str, Any]:
+              synthesis_variant: Optional[str] = None,
+              synthesis_model_variant: Optional[str] = None) -> Dict[str, Any]:
     """Single HTTP attempt. Raises on any failure — caller handles retries."""
     url = base_url.rstrip("/") + "/ask"
     payload = {
@@ -85,7 +92,8 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
         "question": fixture.question,
         "intent": "company_analysis",
     }
-    headers = build_ask_headers(auth_token, profile_token, synthesis_variant)
+    headers = build_ask_headers(auth_token, profile_token, synthesis_variant,
+                                synthesis_model_variant)
     resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
@@ -95,6 +103,7 @@ def run_one(
     fixture: QueryFixture, *, base_url: str, timeout: float, retries: int,
     auth_token: Optional[str], profile_token: Optional[str] = None,
     synthesis_variant: Optional[str] = None,
+    synthesis_model_variant: Optional[str] = None,
 ) -> QueryOutcome:
     outcome = QueryOutcome(fixture=fixture, status="skipped")
     attempts = 0
@@ -106,7 +115,8 @@ def run_one(
         try:
             raw = _post_ask(base_url, fixture, timeout=timeout,
                             auth_token=auth_token, profile_token=profile_token,
-                            synthesis_variant=synthesis_variant)
+                            synthesis_variant=synthesis_variant,
+                            synthesis_model_variant=synthesis_model_variant)
             outcome.status = "completed"
             outcome.raw_response = raw
             outcome.http_status = 200
@@ -206,6 +216,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
                         "(control | compact_a | compact_b). Requires "
                         "--observability-detail and a valid profiling token; "
                         "the backend ignores it for unauthorized callers.")
+    p.add_argument("--synthesis-model-variant", default="",
+                   help="Sprint 3B.2 A/B: synthesis MODEL variant to request "
+                        "(control | fast_a). Separate from --synthesis-variant, "
+                        "which selects the prompt; leave that at control for a "
+                        "model experiment. Requires --observability-detail and a "
+                        "valid profiling token.")
     return p
 
 
@@ -280,7 +296,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         return run_one(fx, base_url=args.backend_url, timeout=args.timeout,
                        retries=args.retries, auth_token=args.auth_token or None,
                        profile_token=_profile_token or None,
-                       synthesis_variant=args.synthesis_variant or None)
+                       synthesis_variant=args.synthesis_variant or None,
+                       synthesis_model_variant=args.synthesis_model_variant or None)
 
     if concurrency == 1:
         for fx in to_run:
