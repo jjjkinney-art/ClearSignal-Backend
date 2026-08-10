@@ -287,3 +287,73 @@ class TestNoOtherBehaviorChange:
 
         monkeypatch.setattr("app.model_client.ModelClient", _boom)
         assert client_for_variant(MODEL_VARIANT_FAST_A) is synthesis_client
+
+
+# ── Sprint 3B.2 (verified candidate) ─────────────────────────────────────────
+
+VERIFIED_FAST_A = "gpt-4.1-nano-2025-04-14"
+
+
+class TestVerifiedCandidate:
+    """The candidate was chosen by enumerating this API project's models and
+    probing parameter compatibility, not by reading the repository."""
+
+    def test_default_fast_a_is_the_verified_candidate(self):
+        from app.config import settings
+        assert settings.synthesis_model_fast_a == VERIFIED_FAST_A
+
+    def test_fast_a_resolves_to_the_verified_model(self):
+        assert configured_model_for_variant(MODEL_VARIANT_FAST_A) == VERIFIED_FAST_A
+
+    def test_fast_a_client_uses_the_verified_model(self):
+        assert client_for_variant(MODEL_VARIANT_FAST_A).model == VERIFIED_FAST_A
+
+    def test_candidate_is_pinned_to_a_dated_snapshot(self):
+        # A floating alias would make an A/B result unreproducible once the
+        # alias moves.
+        import re
+        assert re.search(r"-\d{4}-\d{2}-\d{2}$", VERIFIED_FAST_A)
+
+    def test_candidate_is_not_a_reasoning_model(self):
+        """gpt-5 tiers reject max_tokens and need max_completion_tokens, which
+        would stop the experiment isolating model choice."""
+        assert not VERIFIED_FAST_A.startswith("gpt-5")
+        assert not VERIFIED_FAST_A.startswith(("o1", "o3", "o4"))
+
+    def test_control_is_still_gpt_4o_mini(self):
+        from app.config import settings
+        assert settings.synthesis_model == "gpt-4o-mini"
+        assert synthesis_client.model == "gpt-4o-mini"
+
+    def test_control_and_candidate_are_different_models(self):
+        assert configured_model_for_variant(MODEL_VARIANT_CONTROL) != \
+               configured_model_for_variant(MODEL_VARIANT_FAST_A)
+
+    def test_candidate_shares_every_non_model_setting(self):
+        candidate = client_for_variant(MODEL_VARIANT_FAST_A)
+        for attr in ("temperature", "max_tokens", "timeout", "max_retries",
+                     "backoff_factor"):
+            assert getattr(candidate, attr) == getattr(synthesis_client, attr)
+
+    def test_public_traffic_still_gets_control(self):
+        assert resolve_model_variant("fast_a", authorized=False) == \
+               MODEL_VARIANT_CONTROL
+
+    def test_operator_can_still_disable_the_variant(self, monkeypatch):
+        from app.config import settings
+        monkeypatch.setattr(settings, "synthesis_model_fast_a", "", raising=False)
+        assert resolve_model_variant("fast_a", authorized=True) == \
+               MODEL_VARIANT_CONTROL
+
+    def test_operator_override_is_honoured(self, monkeypatch):
+        from app.config import settings
+        import app.services.synthesis_model_variants as smv
+        monkeypatch.setattr(settings, "synthesis_model_fast_a", "gpt-4.1-mini",
+                            raising=False)
+        monkeypatch.setattr(smv, "_CLIENT_CACHE", {}, raising=False)
+        assert configured_model_for_variant(MODEL_VARIANT_FAST_A) == "gpt-4.1-mini"
+
+    def test_observability_reports_the_verified_model(self):
+        d = describe_variant(MODEL_VARIANT_FAST_A)
+        assert d["synthesis_model"] == VERIFIED_FAST_A
+        assert d["synthesis_model_variant"] == "fast_a"

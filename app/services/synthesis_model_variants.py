@@ -13,17 +13,22 @@ retrieval, agents, integrity, canonicalization and polishing are untouched.
 
 Two facts shaped the design:
 
-**The candidate model is operator-configured, not hardcoded.** The only models
-named anywhere in this configuration are `gpt-4o` (which synthesis does not
-use) and `gpt-4o-mini` — and synthesis already runs `gpt-4o-mini`, the small
-model in that family. Hardcoding a "faster" model here would be an assumption
-about what a given deployment's account can actually reach. `fast_a` therefore
-reads `settings.synthesis_model_fast_a`, and is inert until an operator sets
-it.
+**The candidate was verified, not assumed.** The repository names only
+`gpt-4o` and `gpt-4o-mini`, but that says nothing about what the API project
+can reach. Enumerating the project's models and probing parameter
+compatibility directly showed `gpt-4.1-nano` accepts the exact parameter set
+synthesis already uses (Chat Completions, `temperature=0.0`, `max_tokens`),
+while `gpt-5-nano` rejects `max_tokens` outright and demands
+`max_completion_tokens`. Adopting a GPT-5 tier would therefore mean changing
+token semantics and absorbing reasoning-token overhead — the experiment would
+no longer isolate model choice. `gpt-4.1-nano` is the smallest model that runs
+the current call path unchanged, and it is pinned to a dated snapshot so an
+A/B result stays reproducible after the floating alias moves.
 
 **An unconfigured or unauthorized variant serves control.** There is no error
 path that can leave a request without a synthesis model: every failure to
-resolve a variant resolves to the production client.
+resolve a variant resolves to the production client, and clearing
+`SYNTHESIS_MODEL_FAST_A` disables the variant entirely.
 """
 from __future__ import annotations
 
