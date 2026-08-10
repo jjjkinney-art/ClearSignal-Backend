@@ -36,9 +36,10 @@ VARIANT_CONTROL = "control"
 VARIANT_COMPACT_A = "compact_a"
 VARIANT_COMPACT_A2 = "compact_a2"
 VARIANT_COMPACT_B = "compact_b"
+VARIANT_COMPACT_SCHEMA_A = "compact_schema_a"
 
 KNOWN_VARIANTS = (VARIANT_CONTROL, VARIANT_COMPACT_A, VARIANT_COMPACT_A2,
-                  VARIANT_COMPACT_B)
+                  VARIANT_COMPACT_B, VARIANT_COMPACT_SCHEMA_A)
 
 # Rough English prose ratio. Used only for reporting an approximate token
 # figure alongside an exact character count — never for a latency claim.
@@ -198,6 +199,47 @@ _COMPACT_A2_DENSITY_REPLACEMENT = """ANALYTICAL DENSITY — MANDATORY:
 - Leave the obvious next inference to the reader; do not exhaust every branch."""
 
 
+# ── compact_schema_a: whitespace-only schema compression ─────────────────────
+# Sprint 3B.1B targeted the 12.9k-char JSON field specification after the
+# style/density route failed live twice. Inventorying that block first showed
+# most of it is NOT compressible:
+#
+#   72.5%  field descriptions carrying specificity language ("state the
+#          SPECIFIC current multiple", "MANDATORY, never empty", "EXACTLY 4
+#          sentences") — the exact instruction class whose removal made
+#          compact_a and compact_a2 lose numeric anchoring and thresholds.
+#    5.1%  an embedded CONFIDENCE LANGUAGE ALIGNMENT mandate, which is an
+#          analytic rule that merely lives inside the schema block.
+#   ~21%   worked examples ("Examples:", "GOOD:", "BAD:") — Sprint 3B.1A
+#          traced compact_a's specificity loss partly to removing examples.
+#    1.5%  column-alignment whitespace, which carries no meaning at all.
+#
+# So this variant compresses ONLY the alignment padding. It removes no field,
+# no enum, no requirement, no example and no sentence — the schema's semantic
+# content is byte-for-byte preserved and only runs of alignment spaces are
+# collapsed. The resulting saving is small and honestly reported as such;
+# manufacturing a larger reduction would mean cutting exactly the content two
+# live A/B rounds have already shown to be load-bearing.
+_SCHEMA_BLOCK_PREFIX = "Required JSON fields"
+_ALIGNMENT_RE = re.compile(r'^(\s*"[a-z_]+")(\s{2,}):', re.MULTILINE)
+
+
+def _compress_schema_whitespace(prompt: str) -> str:
+    """Collapse column-alignment padding inside the schema block only.
+
+    Field names, types, descriptions, enums, examples and requirements are
+    untouched; only runs of spaces used to line up the ':' column are reduced
+    to one. Nothing outside the schema block is modified.
+    """
+    blocks = prompt.split("\n\n")
+    out = []
+    for block in blocks:
+        if block.strip().startswith(_SCHEMA_BLOCK_PREFIX):
+            block = _ALIGNMENT_RE.sub(r"\1 :", block)
+        out.append(block)
+    return "\n\n".join(out)
+
+
 def _replace_block_group(prompt: str, headers: tuple, replacement: str) -> str:
     """Remove every block whose header matches, then insert ``replacement``
     where the first one appeared, preserving prompt ordering."""
@@ -225,6 +267,12 @@ def apply_variant(prompt: str, variant: str) -> str:
     """
     if not prompt or variant == VARIANT_CONTROL or variant not in KNOWN_VARIANTS:
         return prompt
+
+    if variant == VARIANT_COMPACT_SCHEMA_A:
+        # Deliberately does NOT reuse compact_a / compact_a2 reductions: every
+        # style and density block, and all restored specificity language,
+        # stays exactly as control has it.
+        return _compress_schema_whitespace(prompt)
 
     if variant == VARIANT_COMPACT_A2:
         out = _replace_block_group(prompt, _COMPACT_A_STYLE_HEADERS,

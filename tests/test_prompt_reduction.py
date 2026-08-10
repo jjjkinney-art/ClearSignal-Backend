@@ -525,3 +525,191 @@ class TestCompactA2:
 
     def test_control_still_byte_identical_with_a2_registered(self):
         assert apply_variant(SAMPLE_PROMPT, VARIANT_CONTROL) == SAMPLE_PROMPT
+
+
+# ── Sprint 3B.1B — output-schema compression ─────────────────────────────────
+
+import re as _re
+from app.services.synthesis_prompt_variants import VARIANT_COMPACT_SCHEMA_A
+
+SCHEMA_PROMPT = "\n\n".join([
+    "You are a senior investment analyst.",
+    'Required JSON fields (all must be present):\n'
+    '"ticker"                  : string — the company ticker symbol\n'
+    '"direct_answer"           : string — EXACTLY 4 sentences answering the question\n'
+    '"bull_thesis"             : string — 3-4 sentence institutional bull case\n'
+    '"bear_thesis"             : string — 3-4 sentence institutional bear case\n'
+    '"valuation_view"          : string — state the SPECIFIC current multiple (e.g. "~28x")\n'
+    '"threshold_zones"         : array of 3 objects — MANDATORY, never empty\n'
+    '"confidence_score"        : number between 0.0 and 1.0\n'
+    '"confidence_reasoning"    : string — 2-3 sentences of honest uncertainty\n'
+    '"key_risks"               : array of 4 strings\n'
+    'CONFIDENCE LANGUAGE ALIGNMENT — MANDATORY:\n'
+    'confidence_score >= 0.82 -> you MAY use: "constructive"\n'
+    'NEVER use regardless of score: "high conviction"',
+    "MECHANISM_PRIORITY — MANDATORY:\n- mechanism over correlation",
+    "WRITING RHYTHM AND CADENCE VARIATION — MANDATORY:\n- vary it",
+    "SPECIALIST AGENT OUTPUTS:\nVALUATION: prose",
+])
+
+
+def _schema_block(prompt):
+    return [b for b in prompt.split("\n\n")
+            if b.strip().startswith("Required JSON fields")][0]
+
+
+class TestCompactSchemaA:
+    def test_control_still_byte_identical(self):
+        assert apply_variant(SCHEMA_PROMPT, VARIANT_CONTROL) == SCHEMA_PROMPT
+
+    def test_deterministic(self):
+        a = apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+        b = apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+        assert a == b
+
+    def test_reduces_size(self):
+        out = apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+        assert len(out) < len(SCHEMA_PROMPT)
+
+    def test_schema_semantics_are_byte_identical_ignoring_whitespace(self):
+        """The strongest guarantee available: nothing but spaces changed."""
+        before = _schema_block(SCHEMA_PROMPT)
+        after = _schema_block(apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A))
+        assert _re.sub(r"\s+", "", before) == _re.sub(r"\s+", "", after)
+
+    def test_every_field_name_survives(self):
+        before = _re.findall(r'"([a-z_]+)"\s*:', _schema_block(SCHEMA_PROMPT))
+        after = _re.findall(r'"([a-z_]+)"\s*:',
+                            _schema_block(apply_variant(SCHEMA_PROMPT,
+                                                        VARIANT_COMPACT_SCHEMA_A)))
+        assert before == after and before
+
+    @pytest.mark.parametrize("field", [
+        "ticker", "direct_answer", "bull_thesis", "bear_thesis",
+        "valuation_view", "threshold_zones", "confidence_score",
+        "confidence_reasoning", "key_risks",
+    ])
+    def test_named_fields_present(self, field):
+        assert f'"{field}"' in apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+
+    @pytest.mark.parametrize("requirement", [
+        "EXACTLY 4 sentences",          # direct_answer contract
+        "SPECIFIC current multiple",    # valuation numeric anchor
+        "MANDATORY, never empty",       # threshold_zones completeness
+        "array of 3 objects",           # threshold count
+        "number between 0.0 and 1.0",   # confidence type/range
+        "3-4 sentence",                 # bull/bear length
+        "array of 4 strings",           # key_risks
+    ])
+    def test_requirements_and_types_survive(self, requirement):
+        assert requirement in apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+
+    @pytest.mark.parametrize("enum_text", [
+        "CONFIDENCE LANGUAGE ALIGNMENT — MANDATORY:",
+        'confidence_score >= 0.82 -> you MAY use: "constructive"',
+        'NEVER use regardless of score: "high conviction"',
+    ])
+    def test_embedded_confidence_mandate_survives(self, enum_text):
+        # This is an analytic rule that merely lives inside the schema block.
+        assert enum_text in apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+
+    def test_style_and_analytic_blocks_untouched(self):
+        out = apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+        # Explicitly does NOT reuse compact_a/compact_a2 reductions.
+        assert "WRITING RHYTHM AND CADENCE VARIATION — MANDATORY:" in out
+        assert "MECHANISM_PRIORITY — MANDATORY:" in out
+        assert "SPECIALIST AGENT OUTPUTS:" in out
+
+    def test_only_the_schema_block_changes(self):
+        before = SCHEMA_PROMPT.split("\n\n")
+        after = apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A).split("\n\n")
+        differing = [i for i, (a, b) in enumerate(zip(before, after)) if a != b]
+        assert len(differing) == 1
+        assert before[differing[0]].strip().startswith("Required JSON fields")
+
+    def test_requires_authorization(self):
+        assert resolve_variant("compact_schema_a", authorized=False) == VARIANT_CONTROL
+        assert resolve_variant("compact_schema_a", authorized=True) == \
+               VARIANT_COMPACT_SCHEMA_A
+
+    def test_does_not_reuse_compact_a_reductions(self):
+        out = apply_variant(SCHEMA_PROMPT, VARIANT_COMPACT_SCHEMA_A)
+        assert "PROSE STYLE — MANDATORY:" not in out
+        assert "ANALYTICAL DENSITY — MANDATORY:" not in out
+
+    def test_no_model_call_in_transform(self):
+        import inspect
+        from app.services import synthesis_prompt_variants as spv
+        src = inspect.getsource(spv._compress_schema_whitespace)
+        for forbidden in ("ModelClient", "chat.completions", "openai", ".call("):
+            assert forbidden not in src
+
+
+class TestThresholdQualityComparator:
+    """Sprint 3B.1B strengthening — every live failure so far was a threshold
+    failure, so each mode is detected explicitly."""
+
+    @staticmethod
+    def _pair(control_th, cand_th):
+        base = {"direct_answer": "d", "bull_thesis": "b", "bear_thesis": "r",
+                "valuation_view": "v", "conclusion": "c", "confidence": "medium",
+                "risks": [{"risk": "x"}], "catalysts": ["y"],
+                "quantitative_claims": [], "_integrity": {"ok": True}}
+        return ({"answer": {"investment_thesis": {**base,
+                                                  "decision_thresholds": control_th}}},
+                {"answer": {"investment_thesis": {**base,
+                                                  "decision_thresholds": cand_th}}})
+
+    def test_available_count_drop_rejects(self):
+        c, k = self._pair(
+            [{"metric": "A", "unavailable": False}, {"metric": "B", "unavailable": False}],
+            [{"metric": "A", "unavailable": False}])
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "reject"
+        assert any("available thresholds fell" in r for r in reasons)
+
+    def test_unavailable_substitution_rejects(self):
+        c, k = self._pair(
+            [{"metric": "EUV System Shipments", "unavailable": False}],
+            [{"metric": "EUV System Shipments per Quarter", "unavailable": True}])
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "reject"
+        assert any("no longer available" in r for r in reasons)
+
+    def test_materially_different_replacement_rejects(self):
+        c, k = self._pair(
+            [{"metric": "Net Interest Margin", "unavailable": False}],
+            [{"metric": "Net Interest Income Growth", "unavailable": False}])
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "reject"
+
+    def test_lost_numeric_anchor_rejects(self):
+        c, k = self._pair(
+            [{"metric": "Azure Growth", "unavailable": False,
+              "bull_boundary": 25.0, "bear_boundary": 15.0}],
+            [{"metric": "Azure Growth", "unavailable": False,
+              "bull_boundary": None, "bear_boundary": None}])
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "reject"
+        assert any("numeric anchors lost" in r for r in reasons)
+
+    def test_equivalent_rename_still_available_is_not_a_reject(self):
+        c, k = self._pair(
+            [{"metric": "Credit Card Net Charge-Off Rate", "unavailable": False,
+              "bull_boundary": 3.0, "bear_boundary": 5.0}],
+            [{"metric": "Net Charge-Off Rate", "unavailable": False,
+              "bull_boundary": 3.0, "bear_boundary": 5.0}])
+        assert verdict(compare_thesis(c, k))[0] == "keep"
+
+    def test_standards_not_lowered_all_known_failures_still_reject(self):
+        """Regression guard: the strengthening must not let a known-bad
+        candidate through."""
+        import json as _json
+        import os as _os
+        for T, expect in (("JPM", "reject"), ("ASML", "reject")):
+            cp = f"validation/runs/ab-control-{T}/raw_responses/{T}-core_thesis.json"
+            kp = f"validation/runs/ab-compacta-{T}/raw_responses/{T}-core_thesis.json"
+            if not (_os.path.exists(cp) and _os.path.exists(kp)):
+                pytest.skip("A/B artifacts not present in this checkout")
+            v, _ = verdict(compare_thesis(_json.load(open(cp)), _json.load(open(kp))))
+            assert v == expect, f"{T} should still {expect}"
