@@ -149,6 +149,36 @@ def _threshold_metrics(thesis: Dict[str, Any]) -> Set[str]:
             if isinstance(t, dict) and t.get("metric")}
 
 
+def _available_threshold_metrics(thesis: Dict[str, Any]) -> Set[str]:
+    """Normalized metric names for thresholds that are actually usable.
+
+    Sprint 3B.1B: every live candidate failure so far has been a threshold
+    failure, so availability is tracked per-metric rather than only in
+    aggregate. A metric that is present but unavailable is not an available
+    metric, however it is spelled.
+    """
+    return {normalize_metric(str(t.get("metric", "")))
+            for t in thesis.get("decision_thresholds") or []
+            if isinstance(t, dict) and t.get("metric") and not t.get("unavailable")}
+
+
+def _threshold_anchors(thesis: Dict[str, Any]) -> Dict[str, Tuple[Any, Any]]:
+    """Bull/bear numeric boundaries per available metric.
+
+    compact_a2 shipped thresholds that kept their metric name and availability
+    but lost their numeric boundaries. Comparing anchors catches that class
+    directly instead of inferring it from prose.
+    """
+    out: Dict[str, Tuple[Any, Any]] = {}
+    for t in thesis.get("decision_thresholds") or []:
+        if not isinstance(t, dict) or t.get("unavailable") or not t.get("metric"):
+            continue
+        out[normalize_metric(str(t["metric"]))] = (
+            t.get("bull_boundary"), t.get("bear_boundary"),
+        )
+    return out
+
+
 def _unavailable_thresholds(thesis: Dict[str, Any]) -> int:
     """Count thresholds shipped as unusable.
 
@@ -180,6 +210,20 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
 
     c_unavail, k_unavail = _unavailable_thresholds(c_t), _unavailable_thresholds(k_t)
 
+    # Sprint 3B.1B — per-metric threshold quality. Availability, metric-set
+    # overlap and numeric anchors are compared separately, because every live
+    # candidate failure so far has been one of these three and an aggregate
+    # count alone hid which.
+    c_avail_m, k_avail_m = _available_threshold_metrics(c_t), _available_threshold_metrics(k_t)
+    c_anchor, k_anchor = _threshold_anchors(c_t), _threshold_anchors(k_t)
+    became_unavailable = sorted(c_avail_m - k_avail_m)
+    substituted = sorted(k_avail_m - c_avail_m)
+    anchors_lost = sorted(
+        m for m in (c_avail_m & k_avail_m)
+        if c_anchor.get(m, (None, None)) != (None, None)
+        and k_anchor.get(m, (None, None)) == (None, None)
+    )
+
     c_int = c_t.get("_integrity") or {}
     k_int = k_t.get("_integrity") or {}
 
@@ -194,6 +238,11 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
         "thresholds_unavailable_control": c_unavail,
         "thresholds_unavailable_candidate": k_unavail,
         "thresholds_degraded": max(k_unavail - c_unavail, 0),
+        "available_metrics_control": len(c_avail_m),
+        "available_metrics_candidate": len(k_avail_m),
+        "metrics_became_unavailable": became_unavailable,
+        "metrics_substituted": substituted,
+        "threshold_anchors_lost": anchors_lost,
         "prose_chars_control": c_len,
         "prose_chars_candidate": k_len,
         "prose_ratio": round(k_len / c_len, 3) if c_len else None,
@@ -217,6 +266,23 @@ def verdict(comparison: Dict[str, Any]) -> Tuple[str, List[str]]:
         reasons.append(f"missing required fields: {comparison['missing_fields']}")
     if comparison["threshold_metrics_lost"]:
         reasons.append(f"threshold metrics lost: {comparison['threshold_metrics_lost']}")
+    # Sprint 3B.1B — the three threshold failure modes seen live, each a reject.
+    if comparison["available_metrics_candidate"] < comparison["available_metrics_control"]:
+        reasons.append(
+            f"available thresholds fell "
+            f"{comparison['available_metrics_control']} -> "
+            f"{comparison['available_metrics_candidate']}"
+        )
+    if comparison["metrics_became_unavailable"]:
+        reasons.append(
+            f"metrics no longer available: {comparison['metrics_became_unavailable']}"
+        )
+    if comparison["metrics_substituted"] and comparison["metrics_became_unavailable"]:
+        reasons.append(f"substituted metrics: {comparison['metrics_substituted']}")
+    if comparison["threshold_anchors_lost"]:
+        reasons.append(
+            f"threshold numeric anchors lost: {comparison['threshold_anchors_lost']}"
+        )
     if comparison["thresholds_degraded"]:
         reasons.append(
             f"{comparison['thresholds_degraded']} threshold(s) became unavailable "
