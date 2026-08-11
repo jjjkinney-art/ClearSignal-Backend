@@ -226,14 +226,32 @@ _MECHANISM_MARKERS = (
 )
 
 
+# The synthesised thesis emits `key_risks` (and `top_risks` for ranked ones).
+# It does NOT emit a field called `risks` — see the note on _risks() below.
+# Every field is read defensively so a schema addition cannot silently blind
+# this layer the way it blinded _risks().
+_RISK_LIST_FIELDS = ("key_risks", "top_risks", "risks")
+
+
+def _risk_entries(thesis: Dict[str, Any]) -> List[str]:
+    """Every risk statement in a thesis, as flat strings."""
+    out: List[str] = []
+    for field_name in _RISK_LIST_FIELDS:
+        for r in thesis.get(field_name) or []:
+            if isinstance(r, dict):
+                text = r.get("risk") or r.get("signal") or r.get("text") or ""
+                if not text:
+                    text = " ".join(str(v) for v in r.values() if isinstance(v, str))
+            else:
+                text = r
+            if isinstance(text, str) and text.strip():
+                out.append(text.strip())
+    return out
+
+
 def _risk_text(thesis: Dict[str, Any]) -> str:
     """All risk-bearing prose in a thesis, lowercased."""
-    parts: List[str] = []
-    for r in thesis.get("risks") or []:
-        if isinstance(r, dict):
-            parts.extend(str(v) for v in r.values() if isinstance(v, str))
-        elif isinstance(r, str):
-            parts.append(r)
+    parts: List[str] = list(_risk_entries(thesis))
     for f in ("bear_thesis", "conclusion"):
         v = thesis.get(f)
         if isinstance(v, str):
@@ -250,15 +268,32 @@ def _company_mentions(text: str, ticker: str) -> int:
 def _mechanism_count(thesis: Dict[str, Any]) -> int:
     """How many individual risk entries state a causal mechanism."""
     n = 0
-    for r in thesis.get("risks") or []:
-        text = (r.get("risk") if isinstance(r, dict) else r) or ""
-        if isinstance(text, str) and any(m in text.lower() for m in _MECHANISM_MARKERS):
+    for text in _risk_entries(thesis):
+        if any(m in text.lower() for m in _MECHANISM_MARKERS):
             n += 1
     return n
 
 
-def _generic_hits(text: str) -> List[str]:
-    return sorted(p for p in _GENERIC_RISK_PHRASES if p in text)
+def _generic_hits(thesis: Dict[str, Any], ticker: str = "") -> List[str]:
+    """Generic boilerplate phrases appearing in an UNQUALIFIED risk entry.
+
+    Sprint 3B.1A's lesson was that a comparator false positive costs a whole
+    cycle, so a phrase only counts when the entry carrying it is bare: no
+    company reference and no figure. "Increased competition in AI inference
+    market" for NVDA is specific and must not be flagged; a naked "Increased
+    competition" is exactly the degradation this gate exists to catch.
+    """
+    tick = (ticker or "").lower()
+    hits: Set[str] = set()
+    for entry in _risk_entries(thesis):
+        low = entry.lower()
+        qualified = bool(re.search(r"\d", low)) or (tick and tick in low)
+        if qualified:
+            continue
+        for p in _GENERIC_RISK_PHRASES:
+            if p in low:
+                hits.add(p)
+    return sorted(hits)
 
 
 def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
@@ -267,7 +302,8 @@ def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
     c_t, k_t = _thesis(control), _thesis(candidate)
     c_txt, k_txt = _risk_text(c_t), _risk_text(k_t)
 
-    c_generic, k_generic = _generic_hits(c_txt), _generic_hits(k_txt)
+    c_generic = _generic_hits(c_t, ticker)
+    k_generic = _generic_hits(k_t, ticker)
     c_mech, k_mech = _mechanism_count(c_t), _mechanism_count(k_t)
     c_named = _company_mentions(c_txt, ticker)
     k_named = _company_mentions(k_txt, ticker)
@@ -277,8 +313,8 @@ def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
             "risk_variant") if isinstance(candidate, dict) else None,
         "risk_variant_control": (control.get("_observability") or {}).get(
             "risk_variant") if isinstance(control, dict) else None,
-        "risk_entries_control": len(c_t.get("risks") or []),
-        "risk_entries_candidate": len(k_t.get("risks") or []),
+        "risk_entries_control": len(_risk_entries(c_t)),
+        "risk_entries_candidate": len(_risk_entries(k_t)),
         "risk_mechanisms_control": c_mech,
         "risk_mechanisms_candidate": k_mech,
         "risk_company_mentions_control": c_named,

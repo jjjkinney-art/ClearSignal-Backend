@@ -420,3 +420,44 @@ class TestRiskComparator:
         from validation.ab_compare import risk_reasons
         assert risk_reasons({}) == []
         assert risk_reasons({"risk_variant_candidate": None}) == []
+
+    def test_reads_the_field_production_actually_emits(self):
+        """The thesis emits `key_risks`, not `risks`.
+
+        The pre-existing `_risks()` helper reads `risks` and therefore returns
+        nothing on every real artifact. The risk layer must not inherit that
+        blind spot or the whole gate is dead code.
+        """
+        from validation.ab_compare import _risk_entries
+        assert len(_risk_entries({"key_risks": ["a", "b"]})) == 2
+        assert len(_risk_entries({"top_risks": [{"risk": "c"}]})) == 1
+        assert len(_risk_entries({"risks": ["d"]})) == 1
+
+    def test_qualified_risk_is_not_flagged_generic(self):
+        """A 3B.1A-style false positive must not reappear.
+
+        "Increased competition in AI inference market" names the market and is
+        specific; flagging it would reject a good candidate.
+        """
+        from validation.ab_compare import _generic_hits
+        qualified = {"key_risks": [
+            "NVDA-specific: Increased competition in AI inference market",
+            "Market volatility of 20% in Q3",
+        ]}
+        assert _generic_hits(qualified, "NVDA") == []
+
+    def test_bare_boilerplate_is_flagged_generic(self):
+        from validation.ab_compare import _generic_hits
+        bare = {"key_risks": ["Market volatility", "Increased competition"]}
+        assert _generic_hits(bare, "NVDA") == [
+            "increased competition", "market volatility",
+        ]
+
+    def test_generic_already_in_control_is_not_a_reject(self):
+        """Only phrasing the candidate *introduces* counts against it."""
+        from validation.ab_compare import compare_thesis, verdict
+        shared = [{"risk": "Increased competition"}, {"risk": "Market volatility"}]
+        c = _thesis_payload(shared)
+        k = _thesis_payload(shared, variant="risk_fast_a")
+        assert not any("generic risk phrasing" in r
+                       for r in verdict(compare_thesis(c, k))[1])
