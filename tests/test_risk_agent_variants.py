@@ -490,3 +490,44 @@ class TestRiskComparator:
         from validation.ab_compare import _MECHANISM_MARKERS
         assert "as " not in _MECHANISM_MARKERS
         assert "if " not in _MECHANISM_MARKERS
+
+
+# ── Regression: existing comparator standards must be untouched ──────────────
+
+class TestExistingVerdictsPreserved:
+    """The 3B.3 risk layer must not shift any Sprint 3B.2 verdict.
+
+    Replays the five reported live model-A/B pairs through the modified
+    comparator. Artifacts live under validation/runs/, which is gitignored, so
+    this skips where they are absent rather than failing a clean checkout.
+    """
+
+    EXPECTED = {"MSFT": "reject", "NVDA": "review", "JPM": "review",
+                "ASML": "review", "TSLA": "keep"}
+
+    @pytest.mark.parametrize("ticker,expected", sorted(EXPECTED.items()))
+    def test_reported_3b2_verdict_is_reproduced(self, ticker, expected):
+        from pathlib import Path
+
+        from validation.ab_compare import compare_runs
+
+        control = Path(f"validation/runs/m2-control-{ticker}")
+        candidate = Path(f"validation/runs/m2-fasta-{ticker}")
+        if not (control.is_dir() and candidate.is_dir()):
+            pytest.skip("live A/B artifacts not present in this checkout")
+        result = compare_runs(control, candidate)
+        assert result["pairs"], "no comparable pair found"
+        assert result["pairs"][0]["verdict"] == expected
+
+    def test_risk_layer_stays_silent_on_pre_3b3_artifacts(self):
+        """Artifacts predating this sprint carry no risk_variant."""
+        from pathlib import Path
+
+        from validation.ab_compare import compare_runs
+
+        control = Path("validation/runs/m2-control-MSFT")
+        candidate = Path("validation/runs/m2-fasta-MSFT")
+        if not (control.is_dir() and candidate.is_dir()):
+            pytest.skip("live A/B artifacts not present in this checkout")
+        pair = compare_runs(control, candidate)["pairs"][0]
+        assert pair["risk"]["risk_variant_candidate"] is None
