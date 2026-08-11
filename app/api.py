@@ -1478,9 +1478,16 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             MODEL_VARIANT_HEADER as _MODEL_HDR,
             set_model_variant as _set_model_variant,
         )
+        from .observability import (
+            RISK_VARIANT_HEADER as _RISK_HDR,
+            set_risk_variant as _set_risk_variant,
+        )
         from .services.synthesis_prompt_variants import resolve_variant as _resolve_variant
         from .services.synthesis_model_variants import (
             resolve_model_variant as _resolve_model_variant,
+        )
+        from .investment_agents.risk_variants import (
+            resolve_risk_variant as _resolve_risk_variant,
         )
         _is_authorized = _prof_auth("1", http_request.headers.get(_TOK_HDR))
         _set_variant(_resolve_variant(
@@ -1490,6 +1497,11 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         # variant, so a model experiment can never change the prompt.
         _set_model_variant(_resolve_model_variant(
             http_request.headers.get(_MODEL_HDR), authorized=_is_authorized,
+        ))
+        # Sprint 3B.3 — risk variant is likewise independent: it changes the
+        # risk agent's output shape only, never the synthesis prompt or model.
+        _set_risk_variant(_resolve_risk_variant(
+            http_request.headers.get(_RISK_HDR), authorized=_is_authorized,
         ))
     except Exception as _var_exc:
         logger.debug("[ask] prompt-variant resolution failed (non-fatal): %r", _var_exc)
@@ -2047,10 +2059,14 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 from .observability import (
                     current_prompt_variant as _cur_variant,
                     current_model_variant as _cur_model_variant,
+                    current_risk_variant as _cur_risk_variant,
                 )
                 from .services.synthesis_model_variants import describe_variant as _desc
                 _obs_block["synthesis_variant"] = _cur_variant()
                 _obs_block.update(_desc(_cur_model_variant()))
+                # Sprint 3B.3 — record WHICH risk-agent shape served this
+                # request, for the same anti-misattribution reason.
+                _obs_block["risk_variant"] = _cur_risk_variant()
                 _result_dict["_observability"] = _obs_block
             except Exception as _obs_exc:
                 logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)

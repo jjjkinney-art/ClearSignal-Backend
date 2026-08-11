@@ -157,6 +157,11 @@ PROMPT_VARIANT_HEADER = "X-ClearSignal-Synthesis-Variant"
 # PROMPT_VARIANT_HEADER so a model experiment never silently changes the
 # prompt, or vice versa.
 MODEL_VARIANT_HEADER = "X-ClearSignal-Synthesis-Model-Variant"
+# Sprint 3B.3 — selects an alternate risk-agent output shape for an A/B run.
+# Gated by the same authorization as the other two variant headers, and kept
+# separate from them so a risk experiment never changes the synthesis prompt
+# or the synthesis model, or vice versa.
+RISK_VARIANT_HEADER = "X-ClearSignal-Risk-Variant"
 
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
 
@@ -247,6 +252,11 @@ class RequestTrace:
         self.stages: List[StageRecord] = []
         self.model_calls: List[Dict[str, Any]] = []
         self.provider_calls: List[Dict[str, Any]] = []
+        # Sprint 3B.3 — agent-side metadata that only the agent can compute
+        # (prompt size, evidence count). The agent runs in a worker thread, so
+        # a contextvar cannot carry this back; the trace object is shared and
+        # locked, so it can.
+        self.agent_meta: Dict[str, Any] = {}
 
     # -- timing ------------------------------------------------------------
     def _offset_ms(self) -> float:
@@ -316,6 +326,18 @@ class RequestTrace:
             self.model_calls.append(entry)
         _emit_log("model_call", self, **entry)
 
+    def note_agent_meta(self, **detail: Any) -> None:
+        """Record agent-side metadata (Sprint 3B.3).
+
+        Scrubbed on the same rules as stage detail, so prompt text can never
+        be stored here — only sizes, counts and variant names.
+        """
+        scrubbed = _scrub(detail)
+        if not scrubbed:
+            return
+        with self._lock:
+            self.agent_meta.update(scrubbed)
+
     def record_provider_call(
         self, *, provider: str, stage: str, duration_ms: float,
         result_count: Optional[int] = None, status: str = STATUS_OK,
@@ -358,6 +380,11 @@ class RequestTrace:
                 payload["stages"] = [s.to_dict() for s in self.stages]
                 payload["model_calls"] = list(self.model_calls)
                 payload["provider_calls"] = list(self.provider_calls)
+                # Sprint 3B.3 — sizes and counts are profiling detail, so they
+                # follow the same authorization as stages rather than being
+                # exposed to every caller.
+                if self.agent_meta:
+                    payload["agent_meta"] = dict(self.agent_meta)
             payload["token_totals"] = self.token_totals()
         return payload
 
@@ -400,6 +427,14 @@ _MODEL_VARIANT: ContextVar[str] = ContextVar(
 )
 
 
+# Sprint 3B.3 — active risk-agent variant. Defaults to "risk_control" rather
+# than "control" so the value is self-describing in an artifact where all three
+# variant fields appear side by side.
+_RISK_VARIANT: ContextVar[str] = ContextVar(
+    "clearsignal_risk_variant", default="risk_control",
+)
+
+
 def set_model_variant(variant: str) -> None:
     _MODEL_VARIANT.set(variant or "control")
 
@@ -409,6 +444,17 @@ def current_model_variant() -> str:
         return _MODEL_VARIANT.get() or "control"
     except LookupError:  # pragma: no cover - default makes this unreachable
         return "control"
+
+
+def set_risk_variant(variant: str) -> None:
+    _RISK_VARIANT.set(variant or "risk_control")
+
+
+def current_risk_variant() -> str:
+    try:
+        return _RISK_VARIANT.get() or "risk_control"
+    except LookupError:  # pragma: no cover - default makes this unreachable
+        return "risk_control"
 
 
 def set_prompt_variant(variant: str) -> None:
@@ -433,11 +479,16 @@ def bind(fn: Callable[..., Any], trace: Optional[RequestTrace] = None) -> Callab
 
     bound_variant = current_prompt_variant()
     bound_model_variant = current_model_variant()
+    # Sprint 3B.3 — the risk agent runs inside the agent ThreadPoolExecutor, so
+    # without this the variant would never reach it and every A/B request would
+    # silently serve control.
+    bound_risk_variant = current_risk_variant()
 
     def _wrapped(*args: Any, **kwargs: Any) -> Any:
         set_trace(bound)
         set_prompt_variant(bound_variant)
         set_model_variant(bound_model_variant)
+        set_risk_variant(bound_risk_variant)
         return fn(*args, **kwargs)
 
     return _wrapped
@@ -498,6 +549,16 @@ def record_model_call(**kwargs: Any) -> None:
     if trace is not None:
         try:
             trace.record_model_call(**kwargs)
+        except Exception:  # pragma: no cover - defensive
+            pass
+
+
+def note_agent_meta(**kwargs: Any) -> None:
+    """Record agent-side metadata on the active trace (Sprint 3B.3)."""
+    trace = current_trace()
+    if trace is not None:
+        try:
+            trace.note_agent_meta(**kwargs)
         except Exception:  # pragma: no cover - defensive
             pass
 

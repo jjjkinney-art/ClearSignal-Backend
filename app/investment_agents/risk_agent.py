@@ -238,6 +238,24 @@ def run_risk_agent(
 
     prompt = _build_prompt(company, relevant, profile,
                            question_intent=question_intent, question=question)
+
+    # Sprint 3B.3 — apply the active risk-agent output-shape variant. For
+    # `risk_control` this returns the control prompt unchanged, so the default
+    # path is byte-identical to production. Never raises: any failure to
+    # resolve or apply a variant leaves the control prompt in place.
+    try:
+        from ..observability import current_risk_variant, note_agent_meta
+        from .risk_variants import apply_risk_variant, describe_risk_variant
+        _risk_variant = current_risk_variant()
+        prompt = apply_risk_variant(prompt, _risk_variant)
+        note_agent_meta(**describe_risk_variant(
+            _risk_variant, prompt=prompt, evidence_count=len(relevant),
+        ))
+    except Exception as _rv_exc:  # pragma: no cover - defensive
+        logger.debug("[%s] risk variant resolution failed (non-fatal): %r",
+                     _AGENT_NAME, _rv_exc)
+        _risk_variant = "risk_control"
+
     try:
         result: RiskProfile = get_structured_response(
             prompt,
