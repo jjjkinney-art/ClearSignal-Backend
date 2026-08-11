@@ -3100,6 +3100,30 @@ def _empty_thesis(
 
 # ── JSON-only LLM call with markdown recovery ─────────────────────────────────
 
+def _synthesis_client_for_request():
+    """The ModelClient serving this request's synthesis call.
+
+    Returns the production ``synthesis_client`` unless an authorized A/B
+    request selected a model variant. Never raises: any failure to resolve a
+    variant falls back to production, so synthesis can never be left without a
+    client.
+    """
+    try:
+        from ..model_client import synthesis_client
+        from ..observability import current_model_variant
+        from .synthesis_model_variants import client_for_variant
+
+        client = client_for_variant(current_model_variant())
+        # Whenever the variant resolves to production — control, an
+        # unconfigured variant, or any fallback — return this module's
+        # `model_client` symbol rather than the imported object. They are the
+        # same client, but tests monkeypatch the module symbol to intercept
+        # synthesis, and re-importing would silently bypass that.
+        return model_client if client is synthesis_client else client
+    except Exception:  # pragma: no cover - defensive
+        return model_client
+
+
 def _call_with_json_enforcement(
     prompt: str,
     ticker: str,
@@ -3121,7 +3145,12 @@ def _call_with_json_enforcement(
             call_kwargs: Dict[str, Any] = {}
             if request_id:
                 call_kwargs["request_id"] = request_id
-            raw = model_client.call(prompt, **call_kwargs)
+            # Sprint 3B.2 — route to the active synthesis-model variant. For
+            # `control` this returns the production synthesis_client object
+            # itself, so the default path is provably unchanged. The prompt and
+            # every call kwarg are identical across variants; only the model
+            # name differs.
+            raw = _synthesis_client_for_request().call(prompt, **call_kwargs)
         except Exception as exc:
             logger.warning("[thesis_synthesizer] model call failed attempt=%d: %r", attempt, exc)
             time.sleep(backoff_factor * (2 ** (attempt - 1)))

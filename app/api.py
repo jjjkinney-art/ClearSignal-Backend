@@ -1474,10 +1474,22 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             profiling_authorized as _prof_auth,
             set_prompt_variant as _set_variant,
         )
+        from .observability import (
+            MODEL_VARIANT_HEADER as _MODEL_HDR,
+            set_model_variant as _set_model_variant,
+        )
         from .services.synthesis_prompt_variants import resolve_variant as _resolve_variant
+        from .services.synthesis_model_variants import (
+            resolve_model_variant as _resolve_model_variant,
+        )
+        _is_authorized = _prof_auth("1", http_request.headers.get(_TOK_HDR))
         _set_variant(_resolve_variant(
-            http_request.headers.get(_VARIANT_HDR),
-            authorized=_prof_auth("1", http_request.headers.get(_TOK_HDR)),
+            http_request.headers.get(_VARIANT_HDR), authorized=_is_authorized,
+        ))
+        # Sprint 3B.2 — model variant is resolved independently of the prompt
+        # variant, so a model experiment can never change the prompt.
+        _set_model_variant(_resolve_model_variant(
+            http_request.headers.get(_MODEL_HDR), authorized=_is_authorized,
         ))
     except Exception as _var_exc:
         logger.debug("[ask] prompt-variant resolution failed (non-fatal): %r", _var_exc)
@@ -2032,8 +2044,13 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 _obs_block = _trace.to_dict(include_stages=_obs_detail)
                 # Sprint 3B.1 — record WHICH synthesis prompt served this
                 # request, so an A/B artifact can never be misattributed.
-                from .observability import current_prompt_variant as _cur_variant
+                from .observability import (
+                    current_prompt_variant as _cur_variant,
+                    current_model_variant as _cur_model_variant,
+                )
+                from .services.synthesis_model_variants import describe_variant as _desc
                 _obs_block["synthesis_variant"] = _cur_variant()
+                _obs_block.update(_desc(_cur_model_variant()))
                 _result_dict["_observability"] = _obs_block
             except Exception as _obs_exc:
                 logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)

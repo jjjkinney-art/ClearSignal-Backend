@@ -79,6 +79,31 @@ class Settings(BaseSettings):
     # or .env file when higher capability is required.
     synthesis_model: str = "gpt-4o-mini"
 
+    # ── Sprint 3B.2: synthesis-model A/B candidate ────────────────────────
+    # Model used by the `fast_a` synthesis variant. Production control remains
+    # synthesis_model (gpt-4o-mini); fast_a is reachable only by an internally
+    # authorized A/B request, never by a public caller.
+    #
+    # gpt-4.1-nano was selected after enumerating the models this API project
+    # can actually reach and probing parameter compatibility directly:
+    #
+    #   gpt-4o-mini    (control)  accepts temperature=0.0 + max_tokens
+    #   gpt-4.1-nano             accepts temperature=0.0 + max_tokens  <-- chosen
+    #   gpt-4.1-mini             accepts, but is the larger 4.1 tier
+    #   gpt-5-nano               REJECTS max_tokens ("use max_completion_tokens")
+    #
+    # gpt-5-nano and the other GPT-5 tiers are reasoning models: adopting one
+    # would mean changing the token parameter and absorbing reasoning-token
+    # overhead, which would stop the experiment isolating model choice. The
+    # nano tier of 4.1 is the smallest model that runs the CURRENT synthesis
+    # call path unchanged, so it is the strongest latency candidate that keeps
+    # the A/B clean.
+    #
+    # A dated snapshot is pinned so an A/B result stays reproducible after the
+    # floating alias moves. Override via SYNTHESIS_MODEL_FAST_A; setting it to
+    # an empty string disables the variant and forces control.
+    synthesis_model_fast_a: str = "gpt-4.1-nano-2025-04-14"
+
     max_tokens: int = 4096
 
     # Maximum output tokens for the thesis synthesis call.  Set lower than
