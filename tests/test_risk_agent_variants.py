@@ -461,3 +461,32 @@ class TestRiskComparator:
         k = _thesis_payload(shared, variant="risk_fast_a")
         assert not any("generic risk phrasing" in r
                        for r in verdict(compare_thesis(c, k))[1])
+
+    def test_mechanism_detector_has_signal_on_production_shape(self):
+        """key_risks are terse labels; the mechanism lives in bear_thesis.
+
+        Counting mechanisms over risk entries alone reads 0 on every real
+        artifact, which would make this gate inert. Verified against saved
+        artifacts: median 5 distinct mechanisms, never 0.
+        """
+        from validation.ab_compare import _mechanism_count
+        production_shape = {
+            "key_risks": ["MSFT-specific: Decline in Azure growth rate"],
+            "bear_thesis": ("A slowdown in Azure's growth below 25% would "
+                            "compress the multiple, reducing forward P/E"),
+            "conclusion": "", "direct_answer": "",
+        }
+        assert _mechanism_count(production_shape) >= 2
+
+    def test_mechanism_detector_reports_zero_when_flattened(self):
+        from validation.ab_compare import _mechanism_count
+        assert _mechanism_count({
+            "key_risks": ["Risk"], "bear_thesis": "The outlook is uncertain.",
+            "conclusion": "", "direct_answer": "",
+        }) == 0
+
+    def test_bare_as_and_if_are_not_mechanisms(self):
+        """Substring 'as'/'if' match ordinary prose and would fake a mechanism."""
+        from validation.ab_compare import _MECHANISM_MARKERS
+        assert "as " not in _MECHANISM_MARKERS
+        assert "if " not in _MECHANISM_MARKERS

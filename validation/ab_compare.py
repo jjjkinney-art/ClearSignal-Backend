@@ -219,11 +219,25 @@ _GENERIC_RISK_PHRASES = (
 
 # Causal connectives. A downside risk that states no mechanism is an assertion,
 # not analysis — this is the "missing downside mechanism" reject condition.
+# Verified against saved artifacts: `key_risks` entries are terse labels
+# ("MSFT-specific: Decline in Azure growth rate") and carry no connective, so
+# counting mechanisms over entries alone is inert — it reads 0 on nearly every
+# real thesis and could never detect a regression. The mechanism actually lives
+# in bear_thesis ("a slowdown in Azure's growth below 25% WOULD COMPRESS the
+# valuation multiple"), so that is what is measured.
+#
+# "as" and "if" are deliberately excluded: as bare substrings they match inside
+# ordinary prose constantly and would report a mechanism that is not there.
 _MECHANISM_MARKERS = (
-    "because", "driven by", "leads to", "results in", "due to", "causes",
-    "would reduce", "would compress", "exposes", "transmits", "if ", "as ",
-    "translating", "flows through", "erodes", "pressures",
+    "because", "driven by", "leads to", "leading to", "results in",
+    "resulting in", "due to", "causes", "causing", "would reduce",
+    "would compress", "compresses", "compressing", "erodes", "eroding",
+    "pressures", "pressuring", "impacting", "reducing", "translating",
+    "flows through", "exposes", "transmits", "triggers",
 )
+
+# The fields mechanism language is measured over.
+_MECHANISM_FIELDS = ("bear_thesis", "conclusion", "direct_answer")
 
 
 # The synthesised thesis emits `key_risks` (and `top_risks` for ranked ones).
@@ -266,12 +280,19 @@ def _company_mentions(text: str, ticker: str) -> int:
 
 
 def _mechanism_count(thesis: Dict[str, Any]) -> int:
-    """How many individual risk entries state a causal mechanism."""
-    n = 0
-    for text in _risk_entries(thesis):
-        if any(m in text.lower() for m in _MECHANISM_MARKERS):
-            n += 1
-    return n
+    """How many DISTINCT causal mechanisms the downside case states.
+
+    Counted over risk entries plus the mechanism-bearing prose fields, since
+    the terse `key_risks` labels carry none. Distinct markers rather than total
+    occurrences, so restating one mechanism does not inflate the score.
+    """
+    parts = [t.lower() for t in _risk_entries(thesis)]
+    for f in _MECHANISM_FIELDS:
+        v = thesis.get(f)
+        if isinstance(v, str):
+            parts.append(v.lower())
+    blob = " ".join(parts)
+    return len({m for m in _MECHANISM_MARKERS if m in blob})
 
 
 def _generic_hits(thesis: Dict[str, Any], ticker: str = "") -> List[str]:
