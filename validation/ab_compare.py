@@ -192,6 +192,270 @@ def _unavailable_thresholds(thesis: Dict[str, Any]) -> int:
                if isinstance(t, dict) and t.get("unavailable"))
 
 
+# ── Sprint 3B.3: risk-specific comparison ────────────────────────────────────
+# The thesis comparator above already catches lost figures, lost thresholds and
+# integrity regressions. A risk-agent experiment adds three failure modes that
+# are specific to risk prose and that a thesis-level diff would score as merely
+# "shorter": the risk stops naming the company, it stops naming a transmission
+# mechanism, or it degenerates into sector boilerplate.
+#
+# These checks are ADDITIVE and only contribute when the candidate actually
+# declares a non-control risk variant, so every existing synthesis A/B verdict
+# is bit-for-bit unchanged.
+
+# Phrases the risk prompt itself forbids as generic. Reused here so the
+# comparator and the production prompt cannot drift apart.
+_GENERIC_RISK_PHRASES = (
+    "higher rates hurt growth stocks",
+    "the company faces headwinds",
+    "like many tech companies",
+    "as a growth stock",
+    "macroeconomic uncertainty",
+    "market volatility",
+    "increased competition",
+    "regulatory scrutiny",
+    "general economic conditions",
+)
+
+# Causal connectives. A downside risk that states no mechanism is an assertion,
+# not analysis — this is the "missing downside mechanism" reject condition.
+# Verified against saved artifacts: `key_risks` entries are terse labels
+# ("MSFT-specific: Decline in Azure growth rate") and carry no connective, so
+# counting mechanisms over entries alone is inert — it reads 0 on nearly every
+# real thesis and could never detect a regression. The mechanism actually lives
+# in bear_thesis ("a slowdown in Azure's growth below 25% WOULD COMPRESS the
+# valuation multiple"), so that is what is measured.
+#
+# "as" and "if" are deliberately excluded: as bare substrings they match inside
+# ordinary prose constantly and would report a mechanism that is not there.
+_MECHANISM_MARKERS = (
+    "because", "driven by", "leads to", "leading to", "results in",
+    "resulting in", "due to", "causes", "causing", "would reduce",
+    "would compress", "compresses", "compressing", "erodes", "eroding",
+    "pressures", "pressuring", "impacting", "reducing", "translating",
+    "flows through", "exposes", "transmits", "triggers",
+)
+
+# The fields mechanism language is measured over.
+_MECHANISM_FIELDS = ("bear_thesis", "conclusion", "direct_answer")
+
+
+# The synthesised thesis emits `key_risks` (and `top_risks` for ranked ones).
+# It does NOT emit a field called `risks` — see the note on _risks() below.
+# Every field is read defensively so a schema addition cannot silently blind
+# this layer the way it blinded _risks().
+_RISK_LIST_FIELDS = ("key_risks", "top_risks", "risks")
+
+
+def _risk_entries(thesis: Dict[str, Any]) -> List[str]:
+    """Every risk statement in a thesis, as flat strings."""
+    out: List[str] = []
+    for field_name in _RISK_LIST_FIELDS:
+        for r in thesis.get(field_name) or []:
+            if isinstance(r, dict):
+                text = r.get("risk") or r.get("signal") or r.get("text") or ""
+                if not text:
+                    text = " ".join(str(v) for v in r.values() if isinstance(v, str))
+            else:
+                text = r
+            if isinstance(text, str) and text.strip():
+                out.append(text.strip())
+    return out
+
+
+def _risk_text(thesis: Dict[str, Any]) -> str:
+    """All risk-bearing prose in a thesis, lowercased."""
+    parts: List[str] = list(_risk_entries(thesis))
+    for f in ("bear_thesis", "conclusion"):
+        v = thesis.get(f)
+        if isinstance(v, str):
+            parts.append(v)
+    return " ".join(parts).lower()
+
+
+def _company_mentions(text: str, ticker: str) -> int:
+    if not ticker:
+        return 0
+    return len(re.findall(rf"\b{re.escape(ticker.lower())}\b", text))
+
+
+def _mechanism_count(thesis: Dict[str, Any]) -> int:
+    """How many DISTINCT causal mechanisms the downside case states.
+
+    Counted over risk entries plus the mechanism-bearing prose fields, since
+    the terse `key_risks` labels carry none. Distinct markers rather than total
+    occurrences, so restating one mechanism does not inflate the score.
+    """
+    parts = [t.lower() for t in _risk_entries(thesis)]
+    for f in _MECHANISM_FIELDS:
+        v = thesis.get(f)
+        if isinstance(v, str):
+            parts.append(v.lower())
+    blob = " ".join(parts)
+    return len({m for m in _MECHANISM_MARKERS if m in blob})
+
+
+def _generic_hits(thesis: Dict[str, Any], ticker: str = "") -> List[str]:
+    """Generic boilerplate phrases appearing in an UNQUALIFIED risk entry.
+
+    Sprint 3B.1A's lesson was that a comparator false positive costs a whole
+    cycle, so a phrase only counts when the entry carrying it is bare: no
+    company reference and no figure. "Increased competition in AI inference
+    market" for NVDA is specific and must not be flagged; a naked "Increased
+    competition" is exactly the degradation this gate exists to catch.
+    """
+    tick = (ticker or "").lower()
+    hits: Set[str] = set()
+    for entry in _risk_entries(thesis):
+        low = entry.lower()
+        qualified = bool(re.search(r"\d", low)) or (tick and tick in low)
+        if qualified:
+            continue
+        for p in _GENERIC_RISK_PHRASES:
+            if p in low:
+                hits.add(p)
+    return sorted(hits)
+
+
+# ── Sprint 3B.3.1: risk-agent timeout/failure guard ──────────────────────────
+# m2-control-NVDA hit the 16s agent wall cap (see `_AGENT_WALL_CAP_S` in
+# app/services/router_service.py). Production recorded a distinct
+# `agent.risk` stage entry with status="timeout" and substituted
+# RiskProfile(overall="Risk analysis unavailable.") for synthesis — the thread
+# is abandoned, not killed, so a second "ok" stage entry can appear later for
+# the same request once the late result arrives, but production already
+# committed to the fallback by then. Comparing that pair as ordinary risk
+# content would score an availability failure as a quality regression (or,
+# just as wrong, let a fallback-flattened candidate pass as "keep").
+#
+# Detection reads the actual recorded status. It deliberately does NOT infer
+# failure from duration — a call that is merely slow but genuinely completed
+# is not a failure, and inferring from timing would eventually flag a normal
+# slow response.
+_RISK_FAILURE_STATUSES = frozenset({"timeout", "error"})
+_RISK_STATUS_VERB = {"timeout": "timed out", "error": "errored"}
+
+
+def risk_execution_status(raw: Any) -> str:
+    """Production execution status of the risk agent for one response.
+
+    Returns "ok" when a successful `agent.risk` stage is recorded, a failure
+    status ("timeout" | "error") when one is recorded, or "unknown" when the
+    response carries no observability stages at all — older artifacts and
+    synthetic test fixtures fall here and are treated as usable, since there
+    is no production signal available to say otherwise.
+    """
+    if not isinstance(raw, dict):
+        return "unknown"
+    obs = raw.get("_observability")
+    if not isinstance(obs, dict):
+        return "unknown"
+    stages = obs.get("stages")
+    if not isinstance(stages, list):
+        return "unknown"
+    risk_stages = [s for s in stages
+                   if isinstance(s, dict) and s.get("stage") == "agent.risk"]
+    if not risk_stages:
+        return "unknown"
+    for s in risk_stages:
+        status = s.get("status")
+        if status in _RISK_FAILURE_STATUSES:
+            return status
+    return "ok"
+
+
+def risk_ab_validity(control: Dict[str, Any], candidate: Dict[str, Any]) -> List[str]:
+    """Reasons this pair cannot be scored as a normal quality comparison.
+
+    Empty when both sides executed successfully (or the artifact predates
+    observability, per `risk_execution_status`).
+    """
+    reasons: List[str] = []
+    status_c = risk_execution_status(control)
+    status_k = risk_execution_status(candidate)
+    if status_c in _RISK_FAILURE_STATUSES:
+        reasons.append(f"risk comparison invalid: control risk agent "
+                       f"{_RISK_STATUS_VERB[status_c]}")
+    if status_k in _RISK_FAILURE_STATUSES:
+        reasons.append(f"risk comparison invalid: candidate risk agent "
+                       f"{_RISK_STATUS_VERB[status_k]}")
+    return reasons
+
+
+def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
+                 ticker: str = "") -> Dict[str, Any]:
+    """Risk-specific metrics for one control/candidate pair."""
+    c_t, k_t = _thesis(control), _thesis(candidate)
+    c_txt, k_txt = _risk_text(c_t), _risk_text(k_t)
+
+    c_generic = _generic_hits(c_t, ticker)
+    k_generic = _generic_hits(k_t, ticker)
+    c_mech, k_mech = _mechanism_count(c_t), _mechanism_count(k_t)
+    c_named = _company_mentions(c_txt, ticker)
+    k_named = _company_mentions(k_txt, ticker)
+
+    return {
+        "risk_variant_candidate": (candidate.get("_observability") or {}).get(
+            "risk_variant") if isinstance(candidate, dict) else None,
+        "risk_variant_control": (control.get("_observability") or {}).get(
+            "risk_variant") if isinstance(control, dict) else None,
+        # Sprint 3B.3.1 — execution status and validity, checked BEFORE any
+        # content metric below is trusted. A timed-out/errored side means
+        # every content metric here reflects the "Risk analysis unavailable."
+        # fallback, not genuine model output.
+        "risk_status_control": risk_execution_status(control),
+        "risk_status_candidate": risk_execution_status(candidate),
+        "risk_invalidity_reasons": risk_ab_validity(control, candidate),
+        "risk_entries_control": len(_risk_entries(c_t)),
+        "risk_entries_candidate": len(_risk_entries(k_t)),
+        "risk_mechanisms_control": c_mech,
+        "risk_mechanisms_candidate": k_mech,
+        "risk_company_mentions_control": c_named,
+        "risk_company_mentions_candidate": k_named,
+        "risk_generic_phrases_control": c_generic,
+        "risk_generic_phrases_candidate": k_generic,
+        "risk_generic_introduced": sorted(set(k_generic) - set(c_generic)),
+        "risk_prose_chars_control": len(c_txt),
+        "risk_prose_chars_candidate": len(k_txt),
+        "risk_prose_ratio": round(len(k_txt) / len(c_txt), 3) if c_txt else None,
+    }
+
+
+def risk_reasons(risk_cmp: Dict[str, Any]) -> List[str]:
+    """Reject reasons from the risk-specific layer.
+
+    Only fires for a genuine risk A/B pair — a run with no risk variant, or a
+    control-vs-control pair, contributes nothing.
+    """
+    variant = risk_cmp.get("risk_variant_candidate")
+    if not variant or variant == "risk_control":
+        return []
+
+    out: List[str] = []
+    if risk_cmp["risk_entries_candidate"] < risk_cmp["risk_entries_control"]:
+        out.append(
+            f"risk entries fell {risk_cmp['risk_entries_control']} -> "
+            f"{risk_cmp['risk_entries_candidate']}"
+        )
+    if risk_cmp["risk_mechanisms_candidate"] < risk_cmp["risk_mechanisms_control"]:
+        out.append(
+            f"risk downside mechanisms fell "
+            f"{risk_cmp['risk_mechanisms_control']} -> "
+            f"{risk_cmp['risk_mechanisms_candidate']}"
+        )
+    if risk_cmp["risk_generic_introduced"]:
+        out.append(f"generic risk phrasing introduced: {risk_cmp['risk_generic_introduced']}")
+    # Company-specificity is the mandate the risk prompt states explicitly.
+    # Losing it entirely is a reject; a partial drop is caught by the ratio.
+    if risk_cmp["risk_company_mentions_control"] > 0 and \
+            risk_cmp["risk_company_mentions_candidate"] == 0:
+        out.append("risk prose no longer names the company")
+    ratio = risk_cmp.get("risk_prose_ratio")
+    if ratio is not None and ratio < 0.50:
+        out.append(f"risk prose shrank to {ratio} of control")
+    return out
+
+
 def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[str, Any]:
     """Compare one control/candidate thesis pair."""
     c_t, k_t = _thesis(control), _thesis(candidate)
@@ -256,11 +520,30 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
         "integrity_ok_candidate": k_int.get("ok"),
         "variant_candidate": (candidate.get("_observability") or {}).get(
             "synthesis_variant") if isinstance(candidate, dict) else None,
+        # Sprint 3B.3 — risk layer. Present always so the artifact is uniform;
+        # it only influences the verdict for a genuine risk A/B pair.
+        "risk": compare_risk(control, candidate,
+                             ticker=str(control.get("company") or "")),
     }
 
 
 def verdict(comparison: Dict[str, Any]) -> Tuple[str, List[str]]:
-    """Keep/reject/review for one pair, with the reasons that drove it."""
+    """Keep/reject/review/invalid for one pair, with the driving reasons.
+
+    Sprint 3B.3.1 — checked BEFORE every other rule, and short-circuits: if
+    the risk agent timed out or errored on either side, the WHOLE pair is not
+    a normal quality comparison. A fallback "Risk analysis unavailable." can
+    itself trigger the ordinary reject checks below (missing risk content,
+    flattened prose) — that would misreport an availability failure as the
+    candidate having degraded content, which is exactly the false signal this
+    guard exists to prevent. This does not loosen any existing reject
+    condition; it only means those conditions do not run for a pair that
+    cannot be judged in the first place.
+    """
+    risk_invalid = (comparison.get("risk") or {}).get("risk_invalidity_reasons") or []
+    if risk_invalid:
+        return "invalid", risk_invalid
+
     reasons: List[str] = []
     if not comparison["structural_ok"]:
         reasons.append(f"missing required fields: {comparison['missing_fields']}")
@@ -294,6 +577,8 @@ def verdict(comparison: Dict[str, Any]) -> Tuple[str, List[str]]:
     if comparison["integrity_ok_candidate"] is False and \
             comparison["integrity_ok_control"] is not False:
         reasons.append("integrity ok regressed to false")
+    # Sprint 3B.3 — risk-specific rejects, additive to every check above.
+    reasons.extend(risk_reasons(comparison.get("risk") or {}))
     if reasons:
         return "reject", reasons
 
@@ -319,7 +604,8 @@ def compare_runs(control_dir: Path, candidate_dir: Path) -> Dict[str, Any]:
     shared = sorted(set(c_files) & set(k_files))
 
     pairs = []
-    tally = {"keep": 0, "review": 0, "reject": 0}
+    # Sprint 3B.3.1 — "invalid" added for a risk-agent timeout/failure pair.
+    tally = {"keep": 0, "review": 0, "reject": 0, "invalid": 0}
     for fid in shared:
         control = json.loads(c_files[fid].read_text())
         candidate = json.loads(k_files[fid].read_text())
@@ -344,21 +630,35 @@ def ab_report_md(result: Dict[str, Any]) -> str:
         f"- Control:   `{result['control_dir']}`",
         f"- Candidate: `{result['candidate_dir']}`",
         f"- Queries compared: **{result['compared']}**", "",
-        f"- keep: **{t['keep']}** · review: **{t['review']}** · reject: **{t['reject']}**",
+        f"- keep: **{t['keep']}** · review: **{t['review']}** · "
+        f"reject: **{t['reject']}** · invalid: **{t.get('invalid', 0)}**",
         "",
     ]
     if t["reject"]:
         lines.append("> **A reject means the candidate prompt must not ship.**")
         lines.append("")
+    if t.get("invalid"):
+        # Sprint 3B.3.1 — surfaces execution failure, never prompt text or
+        # secrets: risk_status is one of "ok" / "timeout" / "error" / "unknown".
+        lines.append(
+            "> **An invalid pair could not be judged** — the risk agent timed "
+            "out or errored on at least one side. Rerun that ticker/category "
+            "before using it in any decision. Never compare a successful "
+            "response against a timed-out one."
+        )
+        lines.append("")
 
     lines += ["## Per-query verdicts", "",
-              "| query | verdict | prose ratio | conf | reasons |",
-              "|---|---|---|---|---|"]
+              "| query | verdict | risk status (ctl/cand) | prose ratio | conf | reasons |",
+              "|---|---|---|---|---|---|"]
     for p in result["pairs"]:
         conf = "same" if not p["confidence_changed"] else \
             f"{p['confidence_control']}→{p['confidence_candidate']}"
+        risk = p.get("risk") or {}
+        risk_status = (f"{risk.get('risk_status_control', 'unknown')}/"
+                      f"{risk.get('risk_status_candidate', 'unknown')}")
         lines.append(
-            f"| `{p['id']}` | {p['verdict']} | {p['prose_ratio']} | {conf} | "
-            f"{'; '.join(p['reasons'])[:120]} |"
+            f"| `{p['id']}` | {p['verdict']} | {risk_status} | {p['prose_ratio']} | "
+            f"{conf} | {'; '.join(p['reasons'])[:120]} |"
         )
     return "\n".join(lines) + "\n"
