@@ -500,9 +500,16 @@ class TestExistingVerdictsPreserved:
     Replays the five reported live model-A/B pairs through the modified
     comparator. Artifacts live under validation/runs/, which is gitignored, so
     this skips where they are absent rather than failing a clean checkout.
+
+    NVDA is deliberately excluded from this pin (see
+    TestRiskTimeoutGuard.test_nvda_control_timeout_flips_review_to_invalid):
+    the m2-control-NVDA artifact hit the 16s risk-agent wall cap, and Sprint
+    3B.3.1 exists precisely because scoring that pair as an ordinary "review"
+    was the misleading verdict this guard is meant to prevent. Pinning NVDA to
+    "review" here would mean asserting the bug back in.
     """
 
-    EXPECTED = {"MSFT": "reject", "NVDA": "review", "JPM": "review",
+    EXPECTED = {"MSFT": "reject", "JPM": "review",
                 "ASML": "review", "TSLA": "keep"}
 
     @pytest.mark.parametrize("ticker,expected", sorted(EXPECTED.items()))
@@ -531,3 +538,188 @@ class TestExistingVerdictsPreserved:
             pytest.skip("live A/B artifacts not present in this checkout")
         pair = compare_runs(control, candidate)["pairs"][0]
         assert pair["risk"]["risk_variant_candidate"] is None
+
+
+# ── Risk-agent timeout/failure guard (Sprint 3B.3.1) ─────────────────────────
+
+def _obs(stages):
+    return {"_observability": {"stages": stages}}
+
+
+def _risk_stage(status, **extra):
+    return {"stage": "agent.risk", "status": status,
+            "duration_ms": 16000.0 if status == "timeout" else 9000.0, **extra}
+
+
+class TestRiskExecutionStatus:
+    def test_ok_status_detected(self):
+        from validation.ab_compare import risk_execution_status
+        assert risk_execution_status(_obs([_risk_stage("ok")])) == "ok"
+
+    def test_timeout_status_detected_from_recorded_status_not_duration(self):
+        """A slow-but-successful call must not be misread as a timeout."""
+        from validation.ab_compare import risk_execution_status
+        slow_but_ok = _obs([_risk_stage("ok", duration_ms=15900.0)])
+        assert risk_execution_status(slow_but_ok) == "ok"
+        genuine_timeout = _obs([_risk_stage("timeout", duration_ms=100.0)])
+        assert risk_execution_status(genuine_timeout) == "timeout"
+
+    def test_error_status_detected(self):
+        from validation.ab_compare import risk_execution_status
+        assert risk_execution_status(_obs([_risk_stage("error")])) == "error"
+
+    def test_late_arriving_ok_does_not_override_a_recorded_timeout(self):
+        """Mirrors the real NVDA shape: an abandoned thread's late 'ok' entry
+        must not erase the fact that production already used the fallback."""
+        from validation.ab_compare import risk_execution_status
+        both = _obs([_risk_stage("timeout"), _risk_stage("ok")])
+        assert risk_execution_status(both) == "timeout"
+
+    def test_no_observability_is_unknown_not_a_failure(self):
+        from validation.ab_compare import risk_execution_status
+        assert risk_execution_status({}) == "unknown"
+        assert risk_execution_status({"_observability": {}}) == "unknown"
+        assert risk_execution_status(None) == "unknown"
+
+    def test_observability_without_risk_stage_is_unknown(self):
+        from validation.ab_compare import risk_execution_status
+        assert risk_execution_status(
+            _obs([{"stage": "agent.macro", "status": "ok"}])
+        ) == "unknown"
+
+
+class TestRiskTimeoutGuard:
+    def _pair(self, control_status, candidate_status):
+        control = {**_thesis_payload(_GOOD_RISKS), **_obs([_risk_stage(control_status)])}
+        candidate = {**_thesis_payload(_GOOD_RISKS, variant="risk_fast_a"),
+                    **_obs([_risk_stage(candidate_status)])}
+        return control, candidate
+
+    def test_control_timeout_is_detected(self):
+        from validation.ab_compare import compare_thesis, verdict
+        c, k = self._pair("timeout", "ok")
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "invalid"
+        assert reasons == ["risk comparison invalid: control risk agent timed out"]
+
+    def test_candidate_timeout_is_detected(self):
+        from validation.ab_compare import compare_thesis, verdict
+        c, k = self._pair("ok", "timeout")
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "invalid"
+        assert reasons == ["risk comparison invalid: candidate risk agent timed out"]
+
+    def test_both_sides_timing_out_reports_both(self):
+        from validation.ab_compare import compare_thesis, verdict
+        c, k = self._pair("timeout", "timeout")
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "invalid"
+        assert len(reasons) == 2
+
+    def test_error_status_also_invalidates(self):
+        from validation.ab_compare import compare_thesis, verdict
+        c, k = self._pair("error", "ok")
+        v, reasons = verdict(compare_thesis(c, k))
+        assert v == "invalid"
+        assert "errored" in reasons[0]
+
+    def test_fallback_text_is_not_read_as_genuine_content_degradation(self):
+        """The literal requirement: a timeout-caused fallback must not be
+        scored via the ordinary content checks (which would report a false
+        "risk entries fell" / "generic phrasing" reject)."""
+        from validation.ab_compare import compare_thesis, verdict
+        control = {**_thesis_payload(_GOOD_RISKS), **_obs([_risk_stage("timeout")])}
+        # Candidate's risk content genuinely IS the production fallback shape:
+        # bare, generic, no company reference — content that would otherwise
+        # trip every reject condition in the risk layer.
+        candidate = {**_thesis_payload(
+            [{"risk": "Risk analysis unavailable."}], variant="risk_fast_a",
+        ), **_obs([_risk_stage("ok")])}
+        v, reasons = verdict(compare_thesis(control, candidate))
+        assert v == "invalid"
+        assert not any("generic risk phrasing" in r or "mechanism" in r
+                       for r in reasons)
+
+    def test_valid_pair_still_compares_normally(self):
+        """The guard must not fire when both sides genuinely succeeded."""
+        from validation.ab_compare import compare_thesis, verdict
+        c, k = self._pair("ok", "ok")
+        v, _ = verdict(compare_thesis(c, k))
+        assert v == "keep"
+
+    def test_unknown_status_does_not_invalidate(self):
+        """Backward compatibility: artifacts with no observability at all
+        (older runs, synthetic fixtures) must keep comparing normally."""
+        from validation.ab_compare import compare_thesis, verdict
+        c = _thesis_payload(_GOOD_RISKS)
+        k = _thesis_payload(_GOOD_RISKS, variant="risk_fast_a")
+        v, _ = verdict(compare_thesis(c, k))
+        assert v == "keep"
+
+    def test_invalid_never_reported_as_keep(self):
+        from validation.ab_compare import risk_ab_validity
+        c, k = self._pair("timeout", "ok")
+        assert risk_ab_validity(c, k) != []
+
+    def test_reason_wording_matches_the_specified_format(self):
+        from validation.ab_compare import risk_ab_validity
+        c, k = self._pair("timeout", "ok")
+        assert risk_ab_validity(c, k) == [
+            "risk comparison invalid: control risk agent timed out"
+        ]
+
+    def test_nvda_control_timeout_flips_review_to_invalid(self):
+        """The exact real-world case this guard was written for."""
+        from pathlib import Path
+
+        from validation.ab_compare import compare_runs
+
+        control = Path("validation/runs/m2-control-NVDA")
+        candidate = Path("validation/runs/m2-fasta-NVDA")
+        if not (control.is_dir() and candidate.is_dir()):
+            pytest.skip("live A/B artifacts not present in this checkout")
+        pair = compare_runs(control, candidate)["pairs"][0]
+        assert pair["verdict"] == "invalid"
+        assert pair["risk"]["risk_status_control"] == "timeout"
+        assert "control risk agent timed out" in pair["reasons"][0]
+
+
+class TestRunnerReportingVisibility:
+    def test_tally_includes_invalid_bucket(self):
+        """compare_runs' tally dict must pre-seed "invalid", or a real
+        invalid pair raises KeyError instead of being counted."""
+        import inspect
+
+        from validation.ab_compare import compare_runs
+        src = inspect.getsource(compare_runs)
+        assert '"invalid": 0' in src or "'invalid': 0" in src
+
+    def test_report_shows_risk_status_without_prompt_text(self):
+        from validation.ab_compare import ab_report_md
+        result = {
+            "control_dir": "c", "candidate_dir": "k", "compared": 1,
+            "only_in_control": [], "only_in_candidate": [],
+            "tally": {"keep": 0, "review": 0, "reject": 0, "invalid": 1},
+            "pairs": [{
+                "id": "NVDA-core_thesis", "verdict": "invalid",
+                "reasons": ["risk comparison invalid: control risk agent timed out"],
+                "prose_ratio": None, "confidence_changed": False,
+                "confidence_control": 0.5, "confidence_candidate": 0.5,
+                "risk": {"risk_status_control": "timeout",
+                        "risk_status_candidate": "ok"},
+            }],
+        }
+        md = ab_report_md(result)
+        assert "timeout/ok" in md
+        assert "invalid: **1**" in md
+        assert "SENTINEL_PROMPT" not in md  # sanity: nothing prompt-shaped leaks
+
+    def test_report_flags_invalid_pairs_with_an_explicit_warning(self):
+        from validation.ab_compare import ab_report_md
+        result = {
+            "control_dir": "c", "candidate_dir": "k", "compared": 1,
+            "only_in_control": [], "only_in_candidate": [],
+            "tally": {"keep": 0, "review": 0, "reject": 0, "invalid": 1},
+            "pairs": [],
+        }
+        assert "could not be judged" in ab_report_md(result)

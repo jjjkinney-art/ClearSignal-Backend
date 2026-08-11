@@ -317,6 +317,71 @@ def _generic_hits(thesis: Dict[str, Any], ticker: str = "") -> List[str]:
     return sorted(hits)
 
 
+# ── Sprint 3B.3.1: risk-agent timeout/failure guard ──────────────────────────
+# m2-control-NVDA hit the 16s agent wall cap (see `_AGENT_WALL_CAP_S` in
+# app/services/router_service.py). Production recorded a distinct
+# `agent.risk` stage entry with status="timeout" and substituted
+# RiskProfile(overall="Risk analysis unavailable.") for synthesis — the thread
+# is abandoned, not killed, so a second "ok" stage entry can appear later for
+# the same request once the late result arrives, but production already
+# committed to the fallback by then. Comparing that pair as ordinary risk
+# content would score an availability failure as a quality regression (or,
+# just as wrong, let a fallback-flattened candidate pass as "keep").
+#
+# Detection reads the actual recorded status. It deliberately does NOT infer
+# failure from duration — a call that is merely slow but genuinely completed
+# is not a failure, and inferring from timing would eventually flag a normal
+# slow response.
+_RISK_FAILURE_STATUSES = frozenset({"timeout", "error"})
+_RISK_STATUS_VERB = {"timeout": "timed out", "error": "errored"}
+
+
+def risk_execution_status(raw: Any) -> str:
+    """Production execution status of the risk agent for one response.
+
+    Returns "ok" when a successful `agent.risk` stage is recorded, a failure
+    status ("timeout" | "error") when one is recorded, or "unknown" when the
+    response carries no observability stages at all — older artifacts and
+    synthetic test fixtures fall here and are treated as usable, since there
+    is no production signal available to say otherwise.
+    """
+    if not isinstance(raw, dict):
+        return "unknown"
+    obs = raw.get("_observability")
+    if not isinstance(obs, dict):
+        return "unknown"
+    stages = obs.get("stages")
+    if not isinstance(stages, list):
+        return "unknown"
+    risk_stages = [s for s in stages
+                   if isinstance(s, dict) and s.get("stage") == "agent.risk"]
+    if not risk_stages:
+        return "unknown"
+    for s in risk_stages:
+        status = s.get("status")
+        if status in _RISK_FAILURE_STATUSES:
+            return status
+    return "ok"
+
+
+def risk_ab_validity(control: Dict[str, Any], candidate: Dict[str, Any]) -> List[str]:
+    """Reasons this pair cannot be scored as a normal quality comparison.
+
+    Empty when both sides executed successfully (or the artifact predates
+    observability, per `risk_execution_status`).
+    """
+    reasons: List[str] = []
+    status_c = risk_execution_status(control)
+    status_k = risk_execution_status(candidate)
+    if status_c in _RISK_FAILURE_STATUSES:
+        reasons.append(f"risk comparison invalid: control risk agent "
+                       f"{_RISK_STATUS_VERB[status_c]}")
+    if status_k in _RISK_FAILURE_STATUSES:
+        reasons.append(f"risk comparison invalid: candidate risk agent "
+                       f"{_RISK_STATUS_VERB[status_k]}")
+    return reasons
+
+
 def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
                  ticker: str = "") -> Dict[str, Any]:
     """Risk-specific metrics for one control/candidate pair."""
@@ -334,6 +399,13 @@ def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
             "risk_variant") if isinstance(candidate, dict) else None,
         "risk_variant_control": (control.get("_observability") or {}).get(
             "risk_variant") if isinstance(control, dict) else None,
+        # Sprint 3B.3.1 — execution status and validity, checked BEFORE any
+        # content metric below is trusted. A timed-out/errored side means
+        # every content metric here reflects the "Risk analysis unavailable."
+        # fallback, not genuine model output.
+        "risk_status_control": risk_execution_status(control),
+        "risk_status_candidate": risk_execution_status(candidate),
+        "risk_invalidity_reasons": risk_ab_validity(control, candidate),
         "risk_entries_control": len(_risk_entries(c_t)),
         "risk_entries_candidate": len(_risk_entries(k_t)),
         "risk_mechanisms_control": c_mech,
@@ -456,7 +528,22 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
 
 
 def verdict(comparison: Dict[str, Any]) -> Tuple[str, List[str]]:
-    """Keep/reject/review for one pair, with the reasons that drove it."""
+    """Keep/reject/review/invalid for one pair, with the driving reasons.
+
+    Sprint 3B.3.1 — checked BEFORE every other rule, and short-circuits: if
+    the risk agent timed out or errored on either side, the WHOLE pair is not
+    a normal quality comparison. A fallback "Risk analysis unavailable." can
+    itself trigger the ordinary reject checks below (missing risk content,
+    flattened prose) — that would misreport an availability failure as the
+    candidate having degraded content, which is exactly the false signal this
+    guard exists to prevent. This does not loosen any existing reject
+    condition; it only means those conditions do not run for a pair that
+    cannot be judged in the first place.
+    """
+    risk_invalid = (comparison.get("risk") or {}).get("risk_invalidity_reasons") or []
+    if risk_invalid:
+        return "invalid", risk_invalid
+
     reasons: List[str] = []
     if not comparison["structural_ok"]:
         reasons.append(f"missing required fields: {comparison['missing_fields']}")
@@ -517,7 +604,8 @@ def compare_runs(control_dir: Path, candidate_dir: Path) -> Dict[str, Any]:
     shared = sorted(set(c_files) & set(k_files))
 
     pairs = []
-    tally = {"keep": 0, "review": 0, "reject": 0}
+    # Sprint 3B.3.1 — "invalid" added for a risk-agent timeout/failure pair.
+    tally = {"keep": 0, "review": 0, "reject": 0, "invalid": 0}
     for fid in shared:
         control = json.loads(c_files[fid].read_text())
         candidate = json.loads(k_files[fid].read_text())
@@ -542,21 +630,35 @@ def ab_report_md(result: Dict[str, Any]) -> str:
         f"- Control:   `{result['control_dir']}`",
         f"- Candidate: `{result['candidate_dir']}`",
         f"- Queries compared: **{result['compared']}**", "",
-        f"- keep: **{t['keep']}** · review: **{t['review']}** · reject: **{t['reject']}**",
+        f"- keep: **{t['keep']}** · review: **{t['review']}** · "
+        f"reject: **{t['reject']}** · invalid: **{t.get('invalid', 0)}**",
         "",
     ]
     if t["reject"]:
         lines.append("> **A reject means the candidate prompt must not ship.**")
         lines.append("")
+    if t.get("invalid"):
+        # Sprint 3B.3.1 — surfaces execution failure, never prompt text or
+        # secrets: risk_status is one of "ok" / "timeout" / "error" / "unknown".
+        lines.append(
+            "> **An invalid pair could not be judged** — the risk agent timed "
+            "out or errored on at least one side. Rerun that ticker/category "
+            "before using it in any decision. Never compare a successful "
+            "response against a timed-out one."
+        )
+        lines.append("")
 
     lines += ["## Per-query verdicts", "",
-              "| query | verdict | prose ratio | conf | reasons |",
-              "|---|---|---|---|---|"]
+              "| query | verdict | risk status (ctl/cand) | prose ratio | conf | reasons |",
+              "|---|---|---|---|---|---|"]
     for p in result["pairs"]:
         conf = "same" if not p["confidence_changed"] else \
             f"{p['confidence_control']}→{p['confidence_candidate']}"
+        risk = p.get("risk") or {}
+        risk_status = (f"{risk.get('risk_status_control', 'unknown')}/"
+                      f"{risk.get('risk_status_candidate', 'unknown')}")
         lines.append(
-            f"| `{p['id']}` | {p['verdict']} | {p['prose_ratio']} | {conf} | "
-            f"{'; '.join(p['reasons'])[:120]} |"
+            f"| `{p['id']}` | {p['verdict']} | {risk_status} | {p['prose_ratio']} | "
+            f"{conf} | {'; '.join(p['reasons'])[:120]} |"
         )
     return "\n".join(lines) + "\n"
