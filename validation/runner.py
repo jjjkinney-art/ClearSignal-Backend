@@ -41,6 +41,9 @@ SYNTHESIS_VARIANT_HEADER = "X-ClearSignal-Synthesis-Variant"
 # Sprint 3B.2 — selects an alternate synthesis MODEL. Kept separate from the
 # prompt-variant header so a model experiment never changes the prompt.
 SYNTHESIS_MODEL_VARIANT_HEADER = "X-ClearSignal-Synthesis-Model-Variant"
+# Sprint 3B.3 — selects an alternate risk-agent output shape. Independent of
+# both synthesis headers so a risk experiment isolates the risk agent alone.
+RISK_VARIANT_HEADER = "X-ClearSignal-Risk-Variant"
 
 DEFAULT_TIMEOUT_S = 90.0
 DEFAULT_RETRIES = 2
@@ -57,6 +60,7 @@ def build_ask_headers(
     auth_token: Optional[str] = None, profile_token: Optional[str] = None,
     synthesis_variant: Optional[str] = None,
     synthesis_model_variant: Optional[str] = None,
+    risk_variant: Optional[str] = None,
 ) -> Dict[str, str]:
     """Headers for one /ask call.
 
@@ -77,6 +81,8 @@ def build_ask_headers(
         headers[SYNTHESIS_VARIANT_HEADER] = synthesis_variant
     if profile_token and synthesis_model_variant:
         headers[SYNTHESIS_MODEL_VARIANT_HEADER] = synthesis_model_variant
+    if profile_token and risk_variant:
+        headers[RISK_VARIANT_HEADER] = risk_variant
     return headers
 
 
@@ -84,7 +90,8 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
               auth_token: Optional[str],
               profile_token: Optional[str] = None,
               synthesis_variant: Optional[str] = None,
-              synthesis_model_variant: Optional[str] = None) -> Dict[str, Any]:
+              synthesis_model_variant: Optional[str] = None,
+              risk_variant: Optional[str] = None) -> Dict[str, Any]:
     """Single HTTP attempt. Raises on any failure — caller handles retries."""
     url = base_url.rstrip("/") + "/ask"
     payload = {
@@ -93,7 +100,7 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
         "intent": "company_analysis",
     }
     headers = build_ask_headers(auth_token, profile_token, synthesis_variant,
-                                synthesis_model_variant)
+                                synthesis_model_variant, risk_variant)
     resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
     resp.raise_for_status()
     return resp.json()
@@ -104,6 +111,7 @@ def run_one(
     auth_token: Optional[str], profile_token: Optional[str] = None,
     synthesis_variant: Optional[str] = None,
     synthesis_model_variant: Optional[str] = None,
+    risk_variant: Optional[str] = None,
 ) -> QueryOutcome:
     outcome = QueryOutcome(fixture=fixture, status="skipped")
     attempts = 0
@@ -116,7 +124,8 @@ def run_one(
             raw = _post_ask(base_url, fixture, timeout=timeout,
                             auth_token=auth_token, profile_token=profile_token,
                             synthesis_variant=synthesis_variant,
-                            synthesis_model_variant=synthesis_model_variant)
+                            synthesis_model_variant=synthesis_model_variant,
+                            risk_variant=risk_variant)
             outcome.status = "completed"
             outcome.raw_response = raw
             outcome.http_status = 200
@@ -222,6 +231,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
                         "which selects the prompt; leave that at control for a "
                         "model experiment. Requires --observability-detail and a "
                         "valid profiling token.")
+    p.add_argument("--risk-variant", default="",
+                   help="Sprint 3B.3 A/B: risk-agent output-shape variant to "
+                        "request (risk_control | risk_fast_a). Independent of "
+                        "--synthesis-variant and --synthesis-model-variant; "
+                        "leave both at control for a risk experiment. Requires "
+                        "--observability-detail and a valid profiling token.")
     return p
 
 
@@ -297,7 +312,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                        retries=args.retries, auth_token=args.auth_token or None,
                        profile_token=_profile_token or None,
                        synthesis_variant=args.synthesis_variant or None,
-                       synthesis_model_variant=args.synthesis_model_variant or None)
+                       synthesis_model_variant=args.synthesis_model_variant or None,
+                       risk_variant=args.risk_variant or None)
 
     if concurrency == 1:
         for fx in to_run:

@@ -192,6 +192,141 @@ def _unavailable_thresholds(thesis: Dict[str, Any]) -> int:
                if isinstance(t, dict) and t.get("unavailable"))
 
 
+# ── Sprint 3B.3: risk-specific comparison ────────────────────────────────────
+# The thesis comparator above already catches lost figures, lost thresholds and
+# integrity regressions. A risk-agent experiment adds three failure modes that
+# are specific to risk prose and that a thesis-level diff would score as merely
+# "shorter": the risk stops naming the company, it stops naming a transmission
+# mechanism, or it degenerates into sector boilerplate.
+#
+# These checks are ADDITIVE and only contribute when the candidate actually
+# declares a non-control risk variant, so every existing synthesis A/B verdict
+# is bit-for-bit unchanged.
+
+# Phrases the risk prompt itself forbids as generic. Reused here so the
+# comparator and the production prompt cannot drift apart.
+_GENERIC_RISK_PHRASES = (
+    "higher rates hurt growth stocks",
+    "the company faces headwinds",
+    "like many tech companies",
+    "as a growth stock",
+    "macroeconomic uncertainty",
+    "market volatility",
+    "increased competition",
+    "regulatory scrutiny",
+    "general economic conditions",
+)
+
+# Causal connectives. A downside risk that states no mechanism is an assertion,
+# not analysis — this is the "missing downside mechanism" reject condition.
+_MECHANISM_MARKERS = (
+    "because", "driven by", "leads to", "results in", "due to", "causes",
+    "would reduce", "would compress", "exposes", "transmits", "if ", "as ",
+    "translating", "flows through", "erodes", "pressures",
+)
+
+
+def _risk_text(thesis: Dict[str, Any]) -> str:
+    """All risk-bearing prose in a thesis, lowercased."""
+    parts: List[str] = []
+    for r in thesis.get("risks") or []:
+        if isinstance(r, dict):
+            parts.extend(str(v) for v in r.values() if isinstance(v, str))
+        elif isinstance(r, str):
+            parts.append(r)
+    for f in ("bear_thesis", "conclusion"):
+        v = thesis.get(f)
+        if isinstance(v, str):
+            parts.append(v)
+    return " ".join(parts).lower()
+
+
+def _company_mentions(text: str, ticker: str) -> int:
+    if not ticker:
+        return 0
+    return len(re.findall(rf"\b{re.escape(ticker.lower())}\b", text))
+
+
+def _mechanism_count(thesis: Dict[str, Any]) -> int:
+    """How many individual risk entries state a causal mechanism."""
+    n = 0
+    for r in thesis.get("risks") or []:
+        text = (r.get("risk") if isinstance(r, dict) else r) or ""
+        if isinstance(text, str) and any(m in text.lower() for m in _MECHANISM_MARKERS):
+            n += 1
+    return n
+
+
+def _generic_hits(text: str) -> List[str]:
+    return sorted(p for p in _GENERIC_RISK_PHRASES if p in text)
+
+
+def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
+                 ticker: str = "") -> Dict[str, Any]:
+    """Risk-specific metrics for one control/candidate pair."""
+    c_t, k_t = _thesis(control), _thesis(candidate)
+    c_txt, k_txt = _risk_text(c_t), _risk_text(k_t)
+
+    c_generic, k_generic = _generic_hits(c_txt), _generic_hits(k_txt)
+    c_mech, k_mech = _mechanism_count(c_t), _mechanism_count(k_t)
+    c_named = _company_mentions(c_txt, ticker)
+    k_named = _company_mentions(k_txt, ticker)
+
+    return {
+        "risk_variant_candidate": (candidate.get("_observability") or {}).get(
+            "risk_variant") if isinstance(candidate, dict) else None,
+        "risk_variant_control": (control.get("_observability") or {}).get(
+            "risk_variant") if isinstance(control, dict) else None,
+        "risk_entries_control": len(c_t.get("risks") or []),
+        "risk_entries_candidate": len(k_t.get("risks") or []),
+        "risk_mechanisms_control": c_mech,
+        "risk_mechanisms_candidate": k_mech,
+        "risk_company_mentions_control": c_named,
+        "risk_company_mentions_candidate": k_named,
+        "risk_generic_phrases_control": c_generic,
+        "risk_generic_phrases_candidate": k_generic,
+        "risk_generic_introduced": sorted(set(k_generic) - set(c_generic)),
+        "risk_prose_chars_control": len(c_txt),
+        "risk_prose_chars_candidate": len(k_txt),
+        "risk_prose_ratio": round(len(k_txt) / len(c_txt), 3) if c_txt else None,
+    }
+
+
+def risk_reasons(risk_cmp: Dict[str, Any]) -> List[str]:
+    """Reject reasons from the risk-specific layer.
+
+    Only fires for a genuine risk A/B pair — a run with no risk variant, or a
+    control-vs-control pair, contributes nothing.
+    """
+    variant = risk_cmp.get("risk_variant_candidate")
+    if not variant or variant == "risk_control":
+        return []
+
+    out: List[str] = []
+    if risk_cmp["risk_entries_candidate"] < risk_cmp["risk_entries_control"]:
+        out.append(
+            f"risk entries fell {risk_cmp['risk_entries_control']} -> "
+            f"{risk_cmp['risk_entries_candidate']}"
+        )
+    if risk_cmp["risk_mechanisms_candidate"] < risk_cmp["risk_mechanisms_control"]:
+        out.append(
+            f"risk downside mechanisms fell "
+            f"{risk_cmp['risk_mechanisms_control']} -> "
+            f"{risk_cmp['risk_mechanisms_candidate']}"
+        )
+    if risk_cmp["risk_generic_introduced"]:
+        out.append(f"generic risk phrasing introduced: {risk_cmp['risk_generic_introduced']}")
+    # Company-specificity is the mandate the risk prompt states explicitly.
+    # Losing it entirely is a reject; a partial drop is caught by the ratio.
+    if risk_cmp["risk_company_mentions_control"] > 0 and \
+            risk_cmp["risk_company_mentions_candidate"] == 0:
+        out.append("risk prose no longer names the company")
+    ratio = risk_cmp.get("risk_prose_ratio")
+    if ratio is not None and ratio < 0.50:
+        out.append(f"risk prose shrank to {ratio} of control")
+    return out
+
+
 def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[str, Any]:
     """Compare one control/candidate thesis pair."""
     c_t, k_t = _thesis(control), _thesis(candidate)
@@ -256,6 +391,10 @@ def compare_thesis(control: Dict[str, Any], candidate: Dict[str, Any]) -> Dict[s
         "integrity_ok_candidate": k_int.get("ok"),
         "variant_candidate": (candidate.get("_observability") or {}).get(
             "synthesis_variant") if isinstance(candidate, dict) else None,
+        # Sprint 3B.3 — risk layer. Present always so the artifact is uniform;
+        # it only influences the verdict for a genuine risk A/B pair.
+        "risk": compare_risk(control, candidate,
+                             ticker=str(control.get("company") or "")),
     }
 
 
@@ -294,6 +433,8 @@ def verdict(comparison: Dict[str, Any]) -> Tuple[str, List[str]]:
     if comparison["integrity_ok_candidate"] is False and \
             comparison["integrity_ok_control"] is not False:
         reasons.append("integrity ok regressed to false")
+    # Sprint 3B.3 — risk-specific rejects, additive to every check above.
+    reasons.extend(risk_reasons(comparison.get("risk") or {}))
     if reasons:
         return "reject", reasons
 
