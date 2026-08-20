@@ -219,12 +219,23 @@ class TestProjection:
     def test_stage_sequence_is_pipeline_ordered(self, client):
         frames = _frames(client.post("/ask", json=BODY, headers=NDJSON))
         order = [(f["stage"], f["status"]) for f in frames if f["type"] == "progress"]
-        assert order[0] == ("request", "complete")
+        assert order[0] == ("request", "running")
         seen = [s for s, st in order if st == "complete"]
         for earlier, later in (("routing", "retrieval"), ("retrieval", "agents"),
                                ("agents", "synthesis")):
             if earlier in seen and later in seen:
                 assert seen.index(earlier) < seen.index(later)
+
+    def test_request_frame_is_running_not_complete(self, client):
+        """The request has only just begun at generator start — marking it
+        complete there would be misleading, not just imprecise."""
+        frames = _frames(client.post("/ask", json=BODY, headers=NDJSON))
+        request_frames = [f for f in frames
+                          if f["type"] == "progress" and f["stage"] == "request"]
+        assert request_frames == [{
+            "type": "progress", "stage": "request", "status": "running",
+            "elapsed_ms": request_frames[0]["elapsed_ms"],
+        }]
 
     def test_no_duplicate_frames(self, client):
         frames = _frames(client.post("/ask", json=BODY, headers=NDJSON))

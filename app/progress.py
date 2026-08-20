@@ -175,13 +175,15 @@ class ProgressProjector:
     def initial(self, elapsed_ms: float) -> List[Dict[str, Any]]:
         """The opening frame, emitted before the pipeline reports anything.
 
-        This is the one event not derived from a trace transition, and it is
-        true by construction: the request has started, and routing is the first
-        thing the pipeline does.
+        This is the one event not derived from a trace transition. It reports
+        `request:running`, not `request:complete` — the request has only just
+        begun at this point, and the vocabulary elsewhere in this module is
+        `running`/`complete`, so `running` is what "not yet finished" means
+        here rather than introducing a third status value.
         """
         out = []
-        if self._mark(STAGE_REQUEST, STATUS_COMPLETE):
-            out.append(progress_frame(STAGE_REQUEST, STATUS_COMPLETE,
+        if self._mark(STAGE_REQUEST, STATUS_RUNNING):
+            out.append(progress_frame(STAGE_REQUEST, STATUS_RUNNING,
                                       elapsed_ms=elapsed_ms))
         if self._mark(STAGE_ROUTING, STATUS_RUNNING):
             out.append(progress_frame(STAGE_ROUTING, STATUS_RUNNING,
