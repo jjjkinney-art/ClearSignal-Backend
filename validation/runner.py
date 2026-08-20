@@ -91,7 +91,8 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
               profile_token: Optional[str] = None,
               synthesis_variant: Optional[str] = None,
               synthesis_model_variant: Optional[str] = None,
-              risk_variant: Optional[str] = None) -> Dict[str, Any]:
+              risk_variant: Optional[str] = None,
+              progressive: bool = False) -> Dict[str, Any]:
     """Single HTTP attempt. Raises on any failure — caller handles retries."""
     url = base_url.rstrip("/") + "/ask"
     payload = {
@@ -101,9 +102,65 @@ def _post_ask(base_url: str, fixture: QueryFixture, *, timeout: float,
     }
     headers = build_ask_headers(auth_token, profile_token, synthesis_variant,
                                 synthesis_model_variant, risk_variant)
+    if progressive:
+        headers["Accept"] = PROGRESSIVE_MEDIA_TYPE
     resp = requests.post(url, json=payload, headers=headers, timeout=timeout)
     resp.raise_for_status()
+    if progressive or PROGRESSIVE_MEDIA_TYPE in (resp.headers.get("content-type") or ""):
+        return extract_final_payload(resp.text)
     return resp.json()
+
+
+# ── Sprint 3C.1A: progressive protocol ───────────────────────────────────────
+# The backend only speaks NDJSON when a caller explicitly asks for it, so the
+# default path below is byte-for-byte what it has always been. Progress frames
+# are disposable UI state and are discarded here: correctness is evaluated
+# solely against the authoritative terminal frame.
+PROGRESSIVE_MEDIA_TYPE = "application/x-ndjson"
+
+
+class IncompleteStreamError(RuntimeError):
+    """The stream ended without a terminal frame.
+
+    Treated as a failed attempt rather than a partial success — a truncated
+    response must never be scored as a completed query.
+    """
+
+
+def extract_final_payload(body: str) -> Dict[str, Any]:
+    """Return the payload from an NDJSON progressive response.
+
+    Raises IncompleteStreamError when no terminal frame arrived, and re-raises
+    a backend error frame as a failure so the runner's existing retry path
+    handles it exactly like any other failed attempt.
+    """
+    terminal: Optional[Dict[str, Any]] = None
+    for line in (body or "").splitlines():
+        line = line.strip()
+        if not line:
+            continue                      # heartbeat no-op
+        try:
+            frame = json.loads(line)
+        except json.JSONDecodeError:
+            continue                      # tolerate a partial trailing frame
+        if not isinstance(frame, dict):
+            continue
+        if frame.get("type") in ("final", "error"):
+            terminal = frame
+    if terminal is None:
+        raise IncompleteStreamError(
+            "progressive stream ended without a final or error frame"
+        )
+    if terminal.get("type") == "error":
+        err = terminal.get("error") or {}
+        raise RuntimeError(
+            f"backend error frame: {err.get('message', 'unknown')} "
+            f"({err.get('error_class', 'unknown')})"
+        )
+    data = terminal.get("data")
+    if not isinstance(data, dict):
+        raise IncompleteStreamError("final frame carried no object payload")
+    return data
 
 
 def run_one(
@@ -112,6 +169,7 @@ def run_one(
     synthesis_variant: Optional[str] = None,
     synthesis_model_variant: Optional[str] = None,
     risk_variant: Optional[str] = None,
+    progressive: bool = False,
 ) -> QueryOutcome:
     outcome = QueryOutcome(fixture=fixture, status="skipped")
     attempts = 0
@@ -125,7 +183,8 @@ def run_one(
                             auth_token=auth_token, profile_token=profile_token,
                             synthesis_variant=synthesis_variant,
                             synthesis_model_variant=synthesis_model_variant,
-                            risk_variant=risk_variant)
+                            risk_variant=risk_variant,
+                            progressive=progressive)
             outcome.status = "completed"
             outcome.raw_response = raw
             outcome.http_status = 200
@@ -231,6 +290,11 @@ def build_arg_parser() -> argparse.ArgumentParser:
                         "which selects the prompt; leave that at control for a "
                         "model experiment. Requires --observability-detail and a "
                         "valid profiling token.")
+    p.add_argument("--progressive", action="store_true",
+                   help="Sprint 3C.1A: request the NDJSON progressive protocol "
+                        "(Accept: application/x-ndjson) and evaluate only the "
+                        "authoritative final frame. Off by default — the legacy "
+                        "single-JSON response is unchanged.")
     p.add_argument("--risk-variant", default="",
                    help="Sprint 3B.3 A/B: risk-agent output-shape variant to "
                         "request (risk_control | risk_fast_a | risk_struct_a). "
@@ -314,7 +378,8 @@ def main(argv: Optional[List[str]] = None) -> int:
                        profile_token=_profile_token or None,
                        synthesis_variant=args.synthesis_variant or None,
                        synthesis_model_variant=args.synthesis_model_variant or None,
-                       risk_variant=args.risk_variant or None)
+                       risk_variant=args.risk_variant or None,
+                       progressive=bool(getattr(args, "progressive", False)))
 
     if concurrency == 1:
         for fx in to_run:

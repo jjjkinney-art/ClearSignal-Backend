@@ -1423,6 +1423,7 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     """
     import asyncio as _asyncio
     import json as _json
+    import time as _time
     from fastapi.responses import StreamingResponse
 
     # ── Sprint 0 pre-flight gate ──────────────────────────────────────────────
@@ -1434,6 +1435,33 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     await _enforce_ask_preflight(http_request, getattr(request, "question", "") or "")
 
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
+
+    # ── Sprint 3C.1A: progressive protocol negotiation ────────────────────────
+    # Opt-in ONLY. Both current consumers require exactly one JSON document —
+    # the validation runner calls resp.json(), the frontend slices from the
+    # first "{" to the end — so emitting NDJSON by default would break them.
+    # A caller sending */* (browser and requests default) is not a match and
+    # receives the legacy bytes unchanged.
+    from .progress import (
+        LEGACY_MEDIA_TYPE as _LEGACY_MEDIA,
+        PROGRESS_MEDIA_TYPE as _PROGRESS_MEDIA,
+        ProgressProjector as _ProgressProjector,
+        encode_frame as _encode_frame,
+        error_frame as _error_frame,
+        final_frame as _final_frame,
+        progressive_requested as _progressive_requested,
+    )
+    _progressive: bool = _progressive_requested(http_request.headers.get("accept"))
+    # Poll cadence while the pipeline runs in the executor. 100 ms keeps the
+    # first real transition (routing completes at ~18 ms, retrieval at ~101 ms)
+    # well inside the 250 ms target while costing ~210 brief lock acquisitions
+    # across a median request.
+    _PROGRESS_POLL_S: float = 0.1
+    # Longest silent gap on the wire before a keepalive is needed. Synthesis is
+    # the only genuinely quiet stretch (~11.8 s median, ~16.7 s p95), so 15 s
+    # keeps every request under Nginx's 60 s window without emitting heartbeats
+    # that duplicate real progress frames.
+    _PROGRESS_HEARTBEAT_S: float = 15.0
 
     # Extract session ID for persistence correlation — prefer X-Session-ID,
     # fall back to X-Request-ID injected by the timing middleware.
@@ -1712,15 +1740,62 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         # Emit keepalive bytes every 25 s while pipeline runs.
         # asyncio.wait_for + asyncio.shield: times out without cancelling fut.
         # Each yielded byte resets Nginx's proxy_read_timeout clock.
-        while not fut.done():
-            try:
-                await _asyncio.wait_for(
-                    _asyncio.shield(fut), timeout=_KEEPALIVE_INTERVAL_S
-                )
-                # Future completed within the window — exit the keepalive loop.
-                break
-            except _asyncio.TimeoutError:
-                yield b"\r\n"  # keepalive: reset Nginx proxy_read_timeout
+        #
+        # Sprint 3C.1A — in progressive mode the same shield/wait_for pattern
+        # runs on a shorter cadence and emits real trace transitions instead of
+        # bare keepalives. The legacy branch below is untouched, so a
+        # non-negotiating caller receives exactly the bytes it does today.
+        if _progressive:
+            _projector = _ProgressProjector()
+            _last_emit = _time.monotonic()
+            for _f in _projector.initial(_trace.total_duration_ms()):
+                yield _encode_frame(_f)
+                _last_emit = _time.monotonic()
+            while not fut.done():
+                try:
+                    await _asyncio.wait_for(
+                        _asyncio.shield(fut), timeout=_PROGRESS_POLL_S
+                    )
+                    break
+                except _asyncio.TimeoutError:
+                    try:
+                        _frames = _projector.project(_trace.progress_snapshot())
+                    except Exception as _pg_exc:  # pragma: no cover - defensive
+                        # Progress projection must never be able to fail the
+                        # request it is only observing.
+                        logger.debug("[ask] progress projection failed: %r", _pg_exc)
+                        _frames = []
+                    for _f in _frames:
+                        yield _encode_frame(_f)
+                        _last_emit = _time.monotonic()
+                    if _time.monotonic() - _last_emit >= _PROGRESS_HEARTBEAT_S:
+                        # Blank line: valid NDJSON no-op that parsers skip, so a
+                        # heartbeat cannot be mistaken for an event.
+                        yield b"\n"
+                        _last_emit = _time.monotonic()
+                except Exception:
+                    # route_question raised inside the wait window. Break so the
+                    # `await fut` below re-raises it into the terminal handler;
+                    # without this the exception escapes the generator entirely
+                    # and the caller gets a broken stream with no error frame.
+                    break
+        else:
+            while not fut.done():
+                try:
+                    await _asyncio.wait_for(
+                        _asyncio.shield(fut), timeout=_KEEPALIVE_INTERVAL_S
+                    )
+                    # Future completed within the window — exit the loop.
+                    break
+                except _asyncio.TimeoutError:
+                    yield b"\r\n"  # keepalive: reset Nginx proxy_read_timeout
+                except Exception:
+                    # Pre-existing gap: the loop sits outside the try below, so
+                    # a route_question exception raised during a keepalive
+                    # window escaped uncaught and produced a broken stream
+                    # instead of the documented error body. Break and let
+                    # `await fut` re-raise it into that handler.
+                    break
 
         # Retrieve result and emit JSON body.
         try:
@@ -2071,7 +2146,13 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             except Exception as _obs_exc:
                 logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)
 
-            yield _json.dumps(_result_dict).encode()
+            # Sprint 3C.1A — the SAME _result_dict is serialized on both paths.
+            # Progressive only wraps it in a terminal frame, so the payload a
+            # caller ends up with cannot diverge between the two modes.
+            if _progressive:
+                yield _encode_frame(_final_frame(_result_dict))
+            else:
+                yield _json.dumps(_result_dict).encode()
         except Exception as exc:
             logger.warning("[ask] route_question raised: %r", exc)
             # Correlation must survive the failure path — without the id the
@@ -2081,7 +2162,17 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 _err_body["_observability"] = _trace.to_dict(include_stages=False)
             except Exception:
                 pass
-            yield _json.dumps(_err_body).encode()
+            if _progressive:
+                # Terminal error frame. The exception message is deliberately
+                # not forwarded — it can carry a prompt fragment or an upstream
+                # response body — only its class name.
+                yield _encode_frame(_error_frame(
+                    "Question routing failed",
+                    error_class=type(exc).__name__,
+                    stage="pipeline",
+                ))
+            else:
+                yield _json.dumps(_err_body).encode()
 
     # X-Accel-Buffering: no — instructs Render/Nginx to disable response
     # buffering and forward each chunk immediately.  Without this, Nginx
@@ -2092,7 +2183,10 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     # 60-second proxy_read_timeout window.
     return StreamingResponse(
         _generate(),
-        media_type="application/json",
+        # Sprint 3C.1A — the content type reflects what is actually on the wire,
+        # so a proxy or client that does not understand NDJSON is never handed
+        # a body labelled application/json that it cannot parse as one object.
+        media_type=_PROGRESS_MEDIA if _progressive else _LEGACY_MEDIA,
         headers={"X-Accel-Buffering": "no"},
     )
 
