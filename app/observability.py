@@ -326,6 +326,33 @@ class RequestTrace:
             self.model_calls.append(entry)
         _emit_log("model_call", self, **entry)
 
+    def progress_snapshot(self) -> Dict[str, Any]:
+        """Thread-safe view of pipeline progress (Sprint 3C.1A).
+
+        Read by the async response generator while ``route_question`` runs in
+        the executor. Returns only stage names, statuses and counts — never
+        stage ``detail``, model output, evidence text or prompt content — so a
+        progress frame built from this cannot carry analytical content even if
+        a future stage starts recording richer detail.
+        """
+        with self._lock:
+            stages = [
+                {"stage": s.stage, "status": s.status,
+                 "offset_ms": round(s.started_offset_ms, 2),
+                 "duration_ms": s.duration_ms}
+                for s in self.stages
+            ]
+            source_count = sum(
+                int(p.get("result_count") or 0) for p in self.provider_calls
+            )
+            provider_count = len(self.provider_calls)
+        return {
+            "stages": stages,
+            "source_count": source_count,
+            "provider_count": provider_count,
+            "elapsed_ms": self.total_duration_ms(),
+        }
+
     def note_agent_meta(self, **detail: Any) -> None:
         """Record agent-side metadata (Sprint 3B.3).
 
