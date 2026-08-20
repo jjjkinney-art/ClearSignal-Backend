@@ -202,6 +202,64 @@ Rules:
 JSON:"""
 
 
+def _structured_variants() -> tuple:
+    """Variant names whose model output needs the structured projection."""
+    try:
+        from .risk_variants import STRUCTURED_RISK_VARIANTS
+        return tuple(STRUCTURED_RISK_VARIANTS)
+    except Exception:  # pragma: no cover - defensive
+        return ()
+
+
+def _run_structured(prompt: str, company: CompanyContext,
+                    relevant: List[RetrievedEvidence]) -> Optional[RiskProfile]:
+    """One model call returning RiskStructured, projected into RiskProfile.
+
+    Returns ``None`` when the output cannot be parsed into a viable structured
+    object. That is deliberately not a silent partial result: an empty or
+    mechanism-less projection would reach synthesis as "this company has no
+    risks", which is worse than degrading the whole call.
+    """
+    from ..observability import note_agent_meta
+    from .risk_structured import (
+        RiskStructured, project_to_risk_profile, projection_is_viable,
+    )
+    from ..schemas import Signal
+
+    structured = get_structured_response(
+        prompt,
+        RiskStructured,
+        model_client,
+        # Identical to the control call — this experiment isolates the response
+        # schema, not the retry or backoff behavior.
+        max_retries=getattr(settings, "agent_max_retries", 1),
+        backoff_factor=settings.model_backoff_factor,
+    )
+
+    viable = projection_is_viable(structured)
+    try:
+        note_agent_meta(
+            risk_parse_ok=bool(viable),
+            risk_item_total=len(getattr(structured, "risk_items", None) or []),
+        )
+    except Exception:  # pragma: no cover - defensive
+        pass
+
+    if not viable:
+        logger.warning(
+            "[%s] structured risk output not viable for %s "
+            "(items=%d) — degrading rather than projecting a hollow profile",
+            _AGENT_NAME, company.ticker,
+            len(getattr(structured, "risk_items", None) or []),
+        )
+        return None
+
+    return project_to_risk_profile(
+        structured, ticker=company.ticker,
+        risk_profile_cls=RiskProfile, signal_cls=Signal,
+    )
+
+
 def run_risk_agent(
     company: CompanyContext,
     evidence: List[RetrievedEvidence],
@@ -256,15 +314,51 @@ def run_risk_agent(
                      _AGENT_NAME, _rv_exc)
         _risk_variant = "risk_control"
 
+    # Sprint 3B.4 — a structured variant asks the model for RiskStructured and
+    # projects it back into RiskProfile. Exactly one model call either way:
+    # only the response schema and the post-parse step differ, so every call
+    # parameter (model, temperature, max_tokens, timeout, retries, backoff)
+    # stays identical to control.
+    _structured = _risk_variant in _structured_variants()
+
     try:
-        result: RiskProfile = get_structured_response(
-            prompt,
-            RiskProfile,
-            model_client,
-            max_retries=getattr(settings, "agent_max_retries", 1),
-            backoff_factor=settings.model_backoff_factor,
-        )
+        if _structured:
+            result = _run_structured(prompt, company, relevant)
+        else:
+            result = get_structured_response(
+                prompt,
+                RiskProfile,
+                model_client,
+                max_retries=getattr(settings, "agent_max_retries", 1),
+                backoff_factor=settings.model_backoff_factor,
+            )
+        if result is None:
+            # Structured parse/projection failed. Degrade exactly as an LLM
+            # failure does rather than shipping a half-populated profile, and
+            # leave the recorded parse failure to invalidate the A/B pair.
+            return _empty_output("Structured risk output could not be parsed.")
         result.evidence_used = [ev.title[:70] for ev in relevant]
+
+        # Sprint 3B.4 — size of the RiskProfile actually handed downstream.
+        # For a structured variant this is the PROJECTED size, so it is
+        # directly comparable with control and shows whether the projection
+        # reconstructed a full-weight profile from a smaller generation.
+        try:
+            from ..observability import note_agent_meta as _note
+            _note(
+                risk_projected_chars=len(str(result.overall or ""))
+                + sum(len(str(k)) for k in (result.key_risks or []))
+                + sum(len(str(getattr(result, f, "") or ""))
+                      for f in ("debt_risk", "competitive_risk",
+                                "regulatory_risk", "concentration_risk")),
+                risk_projected_signals=len(result.signals or []),
+                # NOT "..._key_risks": the observability scrubber treats "key"
+                # as an unsafe marker (it guards api_key), so the count would
+                # be silently dropped. Renamed rather than widening the filter.
+                risk_projected_risk_lines=len(result.key_risks or []),
+            )
+        except Exception:  # pragma: no cover - defensive
+            pass
 
         # Sprint 1C — structured provenance at the SOURCE (see valuation_agent).
         try:

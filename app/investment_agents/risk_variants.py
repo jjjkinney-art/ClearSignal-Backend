@@ -57,11 +57,24 @@ closed to control for any unauthorized caller, unknown name, or empty value.
 """
 from __future__ import annotations
 
+import logging
+import re
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 RISK_VARIANT_CONTROL = "risk_control"
 RISK_VARIANT_FAST_A = "risk_fast_a"
-KNOWN_RISK_VARIANTS = (RISK_VARIANT_CONTROL, RISK_VARIANT_FAST_A)
+# Sprint 3B.4 — structured representation. `risk_fast_a` is retained as a
+# named variant purely so its live failure stays reproducible; it is not a
+# candidate any more (0 keeps across 15 live observations at 11.1% latency).
+RISK_VARIANT_STRUCT_A = "risk_struct_a"
+KNOWN_RISK_VARIANTS = (RISK_VARIANT_CONTROL, RISK_VARIANT_FAST_A,
+                       RISK_VARIANT_STRUCT_A)
+
+# Variants whose model output is RiskStructured rather than RiskProfile, and
+# therefore need the projection step before anything downstream sees them.
+STRUCTURED_RISK_VARIANTS = (RISK_VARIANT_STRUCT_A,)
 
 # Rough English prose ratio, used only to report an approximate token figure
 # next to an exact character count. Never used to support a latency claim.
@@ -103,6 +116,46 @@ Do NOT drop a field. If a field has no evidence, return an empty string for it."
 
 _JSON_CUE = "\n\nJSON:"
 
+# ── Sprint 3B.4: structured representation ───────────────────────────────────
+# The control prompt's output section begins at this exact line. `risk_struct_a`
+# replaces everything from here to the JSON cue and leaves the entire preceding
+# prompt — analyst framing, company context, question emphasis, the evidence
+# block, and the five analytical questions — byte-identical. That is what makes
+# this a representation experiment rather than a scope change: the model is
+# asked the same questions about the same evidence, and only the shape it
+# answers in differs.
+_OUTPUT_SECTION_MARKER = "Produce a JSON object matching the RiskProfile schema with these fields:"
+
+_STRUCT_A_BLOCK = """Produce a JSON object with exactly these top-level keys:
+
+- overall: One concise paragraph summarising the risk profile.
+- confidence: 0.0-1.0 based on evidence completeness.
+- risk_items: array of 3-6 objects. State each material risk EXACTLY ONCE.
+    Do not repeat a risk across items, and do not restate it in `overall`
+    beyond naming it. Each object must have:
+    - category: "debt" | "competitive" | "regulatory" | "concentration" | "other"
+    - mechanism: the causal chain — WHAT changes and HOW it transmits to the
+      thesis. Required. A risk with no mechanism is not analysis.
+    - metric: the specific metric that would move (e.g. "Azure YoY growth").
+      Empty string if the risk is genuinely unquantifiable.
+    - current_value: the metric's current level (e.g. "~29%"). Empty if unknown.
+    - warning_threshold: level at which the thesis weakens (e.g. "25%").
+    - bear_threshold: level at which the thesis breaks (e.g. "20%").
+    - entities: array of specific named competitors, regulators, customers,
+      suppliers or geographies at stake.
+    - citations: array of evidence numbers supporting this item (e.g. [1, 2]).
+    - impact: 0.0-1.0 severity to the thesis.
+    - horizon: "short_term" | "medium_term" | "long_term"
+
+Requirements:
+- Every risk must name the specific {ticker} revenue line, customer segment or
+  competitive dynamic at stake — no generic sector risks.
+- Never invent a figure or a threshold. Leave the field as an empty string when
+  the evidence does not support one.
+- Do not write debt_risk, competitive_risk, regulatory_risk, concentration_risk,
+  key_risks or signals — those are derived from risk_items downstream.
+- Return ONLY valid JSON, no markdown fences or prose outside the JSON object."""
+
 
 def estimate_tokens(text: str) -> int:
     return int(len(text or "") / _CHARS_PER_TOKEN)
@@ -129,16 +182,53 @@ def apply_risk_variant(control_prompt: str, variant: str) -> str:
     production. Any unknown variant also returns it unchanged, so a bad value
     can never produce a novel prompt.
     """
-    if variant != RISK_VARIANT_FAST_A:
+    if variant == RISK_VARIANT_FAST_A:
+        body = control_prompt
+        if body.endswith(_JSON_CUE):
+            body = body[: -len(_JSON_CUE)]
+            return body + "\n" + _FAST_A_BLOCK + _JSON_CUE
+        # Control prompt shape changed — append without assuming the trailing
+        # cue rather than silently placing the block in the wrong position.
+        return body + "\n" + _FAST_A_BLOCK
+
+    if variant == RISK_VARIANT_STRUCT_A:
+        return _apply_struct_a(control_prompt)
+
+    return control_prompt
+
+
+def _apply_struct_a(control_prompt: str) -> str:
+    """Swap the control prompt's output section for the structured spec.
+
+    Everything before the output section is preserved verbatim, so the model
+    receives the identical framing, evidence and analytical questions. If the
+    marker is absent — the control prompt was restructured — this returns the
+    control prompt unchanged rather than guessing where the boundary is, which
+    would risk emitting a prompt with two contradictory output schemas.
+    """
+    idx = control_prompt.find(_OUTPUT_SECTION_MARKER)
+    if idx == -1:
+        logger.warning(
+            "[risk_variants] struct_a output-section marker not found; "
+            "serving control prompt",
+        )
         return control_prompt
 
-    body = control_prompt
-    if body.endswith(_JSON_CUE):
-        body = body[: -len(_JSON_CUE)]
-        return body + "\n" + _FAST_A_BLOCK + _JSON_CUE
-    # Control prompt shape changed — append without assuming the trailing cue
-    # rather than silently producing a prompt with the block in the wrong place.
-    return body + "\n" + _FAST_A_BLOCK
+    head = control_prompt[:idx]
+    ticker = _infer_ticker(control_prompt)
+    block = _STRUCT_A_BLOCK.replace("{ticker}", ticker)
+    return head + block + _JSON_CUE
+
+
+def _infer_ticker(prompt: str) -> str:
+    """Best-effort ticker for the structured spec's specificity requirement.
+
+    The control prompt opens with "Analyse <Company> (<TICKER>)." Falling back
+    to "the company" keeps the instruction grammatical when that shape changes,
+    rather than leaving a literal placeholder in the prompt.
+    """
+    match = re.search(r"\(([A-Z][A-Z0-9.\-]{0,9})\)", prompt[:400])
+    return match.group(1) if match else "the company"
 
 
 def describe_risk_variant(variant: str, *, prompt: Optional[str] = None,

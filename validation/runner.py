@@ -233,7 +233,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
                         "valid profiling token.")
     p.add_argument("--risk-variant", default="",
                    help="Sprint 3B.3 A/B: risk-agent output-shape variant to "
-                        "request (risk_control | risk_fast_a). Independent of "
+                        "request (risk_control | risk_fast_a | risk_struct_a). "
+                        "Independent of "
                         "--synthesis-variant and --synthesis-model-variant; "
                         "leave both at control for a risk experiment. Requires "
                         "--observability-detail and a valid profiling token.")

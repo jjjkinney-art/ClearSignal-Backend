@@ -364,6 +364,29 @@ def risk_execution_status(raw: Any) -> str:
     return "ok"
 
 
+def risk_parse_ok(raw: Any) -> Optional[bool]:
+    """Whether a structured-risk variant parsed and projected successfully.
+
+    Sprint 3B.4 — ``risk_struct_a`` asks the model for a structured object and
+    projects it back into RiskProfile. A parse/projection failure degrades the
+    response exactly as an LLM error does, so comparing it as ordinary content
+    would score an execution failure as a quality regression, the same trap the
+    3B.3.1 timeout guard closes.
+
+    Returns ``None`` when the response carries no parse flag at all — control
+    runs and every artifact predating this sprint — which is not a failure.
+    """
+    if not isinstance(raw, dict):
+        return None
+    obs = raw.get("_observability")
+    if not isinstance(obs, dict):
+        return None
+    meta = obs.get("agent_meta")
+    if not isinstance(meta, dict) or "risk_parse_ok" not in meta:
+        return None
+    return bool(meta.get("risk_parse_ok"))
+
+
 def risk_ab_validity(control: Dict[str, Any], candidate: Dict[str, Any]) -> List[str]:
     """Reasons this pair cannot be scored as a normal quality comparison.
 
@@ -379,6 +402,14 @@ def risk_ab_validity(control: Dict[str, Any], candidate: Dict[str, Any]) -> List
     if status_k in _RISK_FAILURE_STATUSES:
         reasons.append(f"risk comparison invalid: candidate risk agent "
                        f"{_RISK_STATUS_VERB[status_k]}")
+    # Sprint 3B.4 — a structured variant that failed to parse/project served a
+    # degraded profile, so its content is not the candidate's real output.
+    if risk_parse_ok(control) is False:
+        reasons.append("risk comparison invalid: control structured risk "
+                       "output failed to parse")
+    if risk_parse_ok(candidate) is False:
+        reasons.append("risk comparison invalid: candidate structured risk "
+                       "output failed to parse")
     return reasons
 
 
@@ -405,6 +436,8 @@ def compare_risk(control: Dict[str, Any], candidate: Dict[str, Any],
         # fallback, not genuine model output.
         "risk_status_control": risk_execution_status(control),
         "risk_status_candidate": risk_execution_status(candidate),
+        "risk_parse_ok_control": risk_parse_ok(control),
+        "risk_parse_ok_candidate": risk_parse_ok(candidate),
         "risk_invalidity_reasons": risk_ab_validity(control, candidate),
         "risk_entries_control": len(_risk_entries(c_t)),
         "risk_entries_candidate": len(_risk_entries(k_t)),
@@ -657,6 +690,10 @@ def ab_report_md(result: Dict[str, Any]) -> str:
         risk = p.get("risk") or {}
         risk_status = (f"{risk.get('risk_status_control', 'unknown')}/"
                       f"{risk.get('risk_status_candidate', 'unknown')}")
+        # Sprint 3B.4 — surface a structured-parse failure alongside the
+        # execution status; both invalidate a pair for the same reason.
+        if risk.get("risk_parse_ok_candidate") is False:
+            risk_status += " parse-fail"
         lines.append(
             f"| `{p['id']}` | {p['verdict']} | {risk_status} | {p['prose_ratio']} | "
             f"{conf} | {'; '.join(p['reasons'])[:120]} |"

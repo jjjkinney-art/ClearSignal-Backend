@@ -97,8 +97,14 @@ class TestAuthorization:
     def test_case_and_whitespace_normalised(self):
         assert resolve_risk_variant("  RISK_FAST_A  ", authorized=True) == RISK_VARIANT_FAST_A
 
-    def test_known_variants_are_exactly_two(self):
-        assert KNOWN_RISK_VARIANTS == (RISK_VARIANT_CONTROL, RISK_VARIANT_FAST_A)
+    def test_known_variants_are_pinned(self):
+        """Sprint 3B.4 adds risk_struct_a. risk_fast_a is retained as a named
+        variant purely so its live failure stays reproducible; it is no longer
+        a candidate."""
+        from app.investment_agents.risk_variants import RISK_VARIANT_STRUCT_A
+        assert KNOWN_RISK_VARIANTS == (
+            RISK_VARIANT_CONTROL, RISK_VARIANT_FAST_A, RISK_VARIANT_STRUCT_A,
+        )
 
     def test_risk_header_is_distinct_from_synthesis_headers(self):
         from app.observability import (
