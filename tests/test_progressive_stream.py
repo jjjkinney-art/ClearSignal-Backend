@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import time
 
 import pytest
@@ -379,3 +380,172 @@ class TestPipelineUntouched:
         client.post("/ask", json=BODY)
         client.post("/ask", json=BODY, headers=NDJSON)
         assert calls["n"] == 2
+
+
+# ── Sprint 3C.4A: public-safe source labels ──────────────────────────────────
+
+def _provider_stub(providers):
+    """route_question stand-in recording the given (provider, count, status)."""
+    def _run(request):
+        from app.observability import record_provider_call
+        record_stage("routing", 0.1)
+        for prov, count, status in providers:
+            record_provider_call(provider=prov, stage="retrieval",
+                                 duration_ms=5.0, result_count=count,
+                                 status=status)
+        record_stage("retrieval_total", 81.0)
+        time.sleep(0.15)
+        record_stage("agent_total", 500.0)
+        record_stage("synthesis", 400.0)
+        record_stage("integrity_validation", 1.0)
+        return AgentAnswerResponse(company="MSFT", request_id="r",
+                                   agents_used=[], answer={})
+    return _run
+
+
+def _retrieval_frame(monkeypatch, providers):
+    logging.disable(logging.CRITICAL)
+    monkeypatch.setattr(_api(), "route_question", _provider_stub(providers))
+    from app.main import app
+    r = TestClient(app).post("/ask", json=BODY, headers=NDJSON)
+    logging.disable(logging.NOTSET)
+    frames = [json.loads(l) for l in r.text.splitlines() if l.strip()]
+    ret = [f for f in frames
+           if f.get("stage") == "retrieval" and f.get("status") == "complete"]
+    return (ret[0] if ret else None), r.text, frames
+
+
+class TestPublicSourceLabels:
+    def test_single_provider_maps_to_its_public_label(self, monkeypatch):
+        frame, _, _ = _retrieval_frame(monkeypatch, [("sec_edgar", 5, "ok")])
+        assert frame["source_labels"] == ["SEC filings"]
+
+    def test_multiple_providers_map_and_dedupe(self, monkeypatch):
+        # Two news tasks share one provider name — one label, not two.
+        frame, _, _ = _retrieval_frame(monkeypatch, [
+            ("sec_edgar", 2, "ok"), ("news", 1, "ok"), ("news", 3, "ok"),
+        ])
+        assert frame["source_labels"] == ["SEC filings", "News"]
+
+    def test_order_is_deterministic_regardless_of_arrival(self, monkeypatch):
+        forward, _, _ = _retrieval_frame(monkeypatch, [
+            ("news", 1, "ok"), ("fred", 1, "ok"), ("sec_edgar", 1, "ok"),
+        ])
+        reverse, _, _ = _retrieval_frame(monkeypatch, [
+            ("sec_edgar", 1, "ok"), ("fred", 1, "ok"), ("news", 1, "ok"),
+        ])
+        assert forward["source_labels"] == reverse["source_labels"]
+        assert forward["source_labels"] == [
+            "SEC filings", "Macroeconomic data", "News",
+        ]
+
+    @pytest.mark.parametrize("sentinel", [
+        "fmp", "fmp_estimates", "fmp_valuation", "fred", "sec_edgar", "news",
+        "secret_vendor_xyz", "internal_endpoint_name", "Financial Modeling Prep",
+    ])
+    def test_no_internal_provider_name_reaches_the_wire(self, monkeypatch, sentinel):
+        """Vendor and implementation identifiers must never be emitted, whether
+        or not they are in the approved map."""
+        _, body, _ = _retrieval_frame(monkeypatch, [(sentinel, 4, "ok")])
+        # Progress frames only — the final frame's _observability is gated
+        # separately by the Sprint 3A.1 profiling authorization.
+        progress_only = body.split('{"type":"final"')[0]
+        assert sentinel not in progress_only
+
+    def test_unknown_provider_is_omitted_not_passed_through(self, monkeypatch):
+        frame, _, _ = _retrieval_frame(monkeypatch, [
+            ("sec_edgar", 2, "ok"), ("brand_new_vendor", 9, "ok"),
+        ])
+        assert frame["source_labels"] == ["SEC filings"]
+
+    def test_only_unknown_providers_yields_no_labels_but_keeps_count(
+            self, monkeypatch):
+        """An empty label list is omitted; source_count still reports."""
+        frame, _, _ = _retrieval_frame(monkeypatch, [("mystery_vendor", 7, "ok")])
+        assert "source_labels" not in frame
+        assert frame["source_count"] == 7
+
+    def test_provider_that_returned_nothing_is_not_described(self, monkeypatch):
+        """Naming a category for a provider that contributed no evidence would
+        overstate the evidence base."""
+        frame, _, _ = _retrieval_frame(monkeypatch, [
+            ("sec_edgar", 3, "ok"), ("fred", 0, "ok"),
+        ])
+        assert frame["source_labels"] == ["SEC filings"]
+
+    def test_errored_provider_is_not_described(self, monkeypatch):
+        frame, _, _ = _retrieval_frame(monkeypatch, [
+            ("sec_edgar", 3, "ok"), ("fmp", 5, "error"),
+        ])
+        assert frame["source_labels"] == ["SEC filings"]
+
+    def test_labels_appear_only_on_the_retrieval_complete_frame(self, monkeypatch):
+        _, _, frames = _retrieval_frame(monkeypatch, [("sec_edgar", 3, "ok")])
+        carrying = [(f.get("stage"), f.get("status")) for f in frames
+                    if f.get("type") == "progress" and "source_labels" in f]
+        assert carrying == [("retrieval", "complete")]
+
+    def test_frames_stay_within_the_allowlist(self, monkeypatch):
+        _, _, frames = _retrieval_frame(monkeypatch, [("sec_edgar", 3, "ok")])
+        for f in frames:
+            if f.get("type") == "progress":
+                assert set(f) <= ALLOWED_PROGRESS_KEYS, f
+
+    def test_snapshot_never_carries_raw_provider_names(self):
+        """Mapping happens inside progress_snapshot, so raw names never enter
+        the dict the projector reads."""
+        from app.observability import RequestTrace
+        t = RequestTrace("r")
+        for prov in ("fmp", "sec_edgar", "secret_vendor_xyz"):
+            t.record_provider_call(provider=prov, stage="retrieval",
+                                   duration_ms=1.0, result_count=2, status="ok")
+        blob = json.dumps(t.progress_snapshot())
+        for prov in ("fmp", "sec_edgar", "secret_vendor_xyz"):
+            assert prov not in blob
+
+    def test_mapping_is_exhaustive_over_the_router_provider_table(self):
+        """A provider added to the router must be mapped deliberately, not
+        discovered on the wire."""
+        import inspect
+
+        from app.progress import _PROVIDER_PUBLIC_LABELS
+        from app.services import router_service
+        src = inspect.getsource(router_service)
+        start = src.index("_EVIDENCE_PROVIDER_NAMES = {")
+        table = src[start:src.index("}", start)]
+        emitted = set(re.findall(r':\s*"([a-z_]+)"', table))
+        assert emitted, "provider table not found"
+        assert emitted <= set(_PROVIDER_PUBLIC_LABELS), (
+            f"unmapped providers: {emitted - set(_PROVIDER_PUBLIC_LABELS)}"
+        )
+
+    def test_no_label_names_a_vendor(self):
+        from app.progress import _PROVIDER_PUBLIC_LABELS
+        banned = ("fmp", "modeling", "fred", "edgar", "vendor", "api")
+        for label in _PROVIDER_PUBLIC_LABELS.values():
+            low = label.lower()
+            assert not any(b in low for b in banned), label
+
+    def test_label_list_is_bounded(self):
+        from app.progress import MAX_SOURCE_LABELS, public_source_labels
+        labels = public_source_labels(["sec_edgar"] * 50 + ["fmp"] * 50)
+        assert len(labels) <= MAX_SOURCE_LABELS
+
+    def test_public_source_labels_handles_empty_and_junk(self):
+        from app.progress import public_source_labels
+        assert public_source_labels(None) == []
+        assert public_source_labels([]) == []
+        assert public_source_labels([None, "", "  "]) == []
+
+    def test_provider_name_is_matched_case_insensitively(self):
+        from app.progress import public_source_labels
+        assert public_source_labels(["SEC_EDGAR", " fmp "]) == [
+            "SEC filings", "Company financials",
+        ]
+
+    def test_final_payload_is_unaffected_by_labels(self, monkeypatch):
+        """This sprint changes progress metadata only."""
+        _, _, frames = _retrieval_frame(monkeypatch, [("sec_edgar", 3, "ok")])
+        final = [f for f in frames if f["type"] == "final"][0]
+        assert set(final["data"]) >= {"company", "request_id", "answer"}
+        assert "source_labels" not in final["data"]

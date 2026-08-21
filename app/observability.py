@@ -346,10 +346,23 @@ class RequestTrace:
                 int(p.get("result_count") or 0) for p in self.provider_calls
             )
             provider_count = len(self.provider_calls)
+            # Sprint 3C.4A — only providers that actually RETURNED evidence are
+            # described. A provider that errored or came back empty contributed
+            # nothing, so naming its category would overstate the evidence base.
+            contributing = [
+                p.get("provider") for p in self.provider_calls
+                if p.get("status") == STATUS_OK and int(p.get("result_count") or 0) > 0
+            ]
+
+        # Mapped to public categories HERE, so raw provider names — which are
+        # vendor and implementation identifiers — never enter the returned dict
+        # at all. An unmapped provider is dropped, not passed through.
+        from .progress import public_source_labels
         return {
             "stages": stages,
             "source_count": source_count,
             "provider_count": provider_count,
+            "source_labels": public_source_labels(contributing),
             "elapsed_ms": self.total_duration_ms(),
         }
 

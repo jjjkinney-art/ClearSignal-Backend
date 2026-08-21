@@ -69,14 +69,23 @@ def _earnings_ev(ts: str = "2026-04-25T00:00:00Z"):
     )
 
 
+def _days_ago(days: int) -> str:
+    """Return a UTC timestamp with a stable age relative to the test run."""
+    return (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def _stale(days: int = 200):
-    ts = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return _ev(title="Old note", source="research", summary="Old macro note.", timestamp=ts)
+    return _ev(
+        title="Old note", source="research", summary="Old macro note.",
+        timestamp=_days_ago(days),
+    )
 
 
 def _fresh(days: int = 10):
-    ts = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    return _ev(title="Fresh item", source="newsapi", summary="Recent news.", timestamp=ts)
+    return _ev(
+        title="Fresh item", source="newsapi", summary="Recent news.",
+        timestamp=_days_ago(days),
+    )
 
 
 def _make_company(ticker: str = "AAPL", name: str = "Apple Inc.", sector: str = "Technology"):
@@ -403,9 +412,9 @@ class TestScoreDistribution:
     def test_excellent_coverage_scores_above_75(self):
         """Full FMP + fresh evidence + aligned agents → high conviction."""
         evidence = [
-            _fmp_val_ev(ts="2026-05-15T00:00:00Z"),
-            _fmp_analyst_ev(ts="2026-05-15T00:00:00Z"),
-            _earnings_ev(ts="2026-05-01T00:00:00Z"),
+            _fmp_val_ev(ts=_days_ago(5)),
+            _fmp_analyst_ev(ts=_days_ago(6)),
+            _earnings_ev(ts=_days_ago(8)),
             _fresh(days=5), _fresh(days=8),
         ]
         agents = _make_agents(val_conf=0.88, mac_conf=0.82, risk_conf=0.80,

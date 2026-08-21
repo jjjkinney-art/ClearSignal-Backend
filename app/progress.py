@@ -83,8 +83,76 @@ AGENT_COUNT = 6
 # test suite asserts emitted frames never exceed this set.
 ALLOWED_PROGRESS_KEYS = frozenset({
     "type", "stage", "status", "elapsed_ms", "agents_complete",
-    "agents_total", "source_count",
+    "agents_total", "source_count", "source_labels",
 })
+
+# ── Sprint 3C.4A: public-safe source categories ──────────────────────────────
+# Retrieval records an internal provider name per evidence task. Those names are
+# implementation and commercial identifiers — `fmp` is a paid vendor (Financial
+# Modeling Prep), and production output never discloses the data supply chain:
+# the only source wording a user sees today is "SEC filings" and "company
+# investor relations", derived from evidence CONTENT rather than from which
+# service was called.
+#
+# This maps each internal provider onto a category that describes the EVIDENCE,
+# not the supplier. Accuracy matters as much as safety here: analyst consensus
+# is not a company disclosure, so `fmp_estimates` maps to "Analyst estimates"
+# rather than being lumped in with company reporting.
+#
+# The map is exhaustive over `_EVIDENCE_PROVIDER_NAMES` in router_service, and a
+# test pins the two together so a newly added provider cannot silently appear on
+# the wire.
+_PROVIDER_PUBLIC_LABELS: Dict[str, str] = {
+    # Public regulator. Matches the wording production already uses.
+    "sec_edgar": "SEC filings",
+    # Vendor-supplied company financials and profile data.
+    "fmp": "Company financials",
+    # Vendor-supplied valuation ratios.
+    "fmp_valuation": "Market data",
+    # Vendor-supplied consensus estimates — analyst opinion, NOT company output.
+    "fmp_estimates": "Analyst estimates",
+    # Federal Reserve economic series. Named generically: which macro dataset is
+    # queried is an implementation choice, not a source identity the product
+    # otherwise exposes.
+    "fred": "Macroeconomic data",
+    "news": "News",
+}
+
+# Emission order. Fixed rather than derived from set iteration or provider
+# arrival, so the same evidence mix always produces the same list — an order
+# that shifted between requests would look like changing sources.
+_LABEL_ORDER: tuple = (
+    "SEC filings",
+    "Company financials",
+    "Analyst estimates",
+    "Market data",
+    "Macroeconomic data",
+    "News",
+)
+
+# Upper bound on the emitted list. The map cannot currently exceed this, but the
+# cap means a future map expansion cannot turn a progress frame into a payload.
+MAX_SOURCE_LABELS = 8
+
+
+def public_source_labels(providers: Any) -> List[str]:
+    """Map internal provider names to public evidence categories.
+
+    Fails closed: a provider with no approved mapping is OMITTED, never passed
+    through under its raw name. That is the whole point — an unrecognised
+    provider is exactly the case where a vendor identity would otherwise leak.
+
+    Deduplicated (two news tasks share one provider name) and returned in a
+    fixed order.
+    """
+    if not providers:
+        return []
+    found = set()
+    for name in providers:
+        label = _PROVIDER_PUBLIC_LABELS.get(str(name).strip().lower())
+        if label:
+            found.add(label)
+    return [lbl for lbl in _LABEL_ORDER if lbl in found][:MAX_SOURCE_LABELS]
 
 
 def progressive_requested(accept_header: Optional[str]) -> bool:
@@ -113,7 +181,8 @@ def encode_frame(frame: Dict[str, Any]) -> bytes:
 
 def progress_frame(stage: str, status: str, *, elapsed_ms: float,
                    agents_complete: Optional[int] = None,
-                   source_count: Optional[int] = None) -> Dict[str, Any]:
+                   source_count: Optional[int] = None,
+                   source_labels: Optional[List[str]] = None) -> Dict[str, Any]:
     """Build one progress frame from an explicit allowlist of safe fields."""
     frame: Dict[str, Any] = {
         "type": FRAME_PROGRESS,
@@ -126,6 +195,10 @@ def progress_frame(stage: str, status: str, *, elapsed_ms: float,
         frame["agents_total"] = AGENT_COUNT
     if source_count is not None:
         frame["source_count"] = int(source_count)
+    # Sprint 3C.4A — omitted entirely when empty rather than emitted as [], so a
+    # client can treat "absent" and "nothing safe to report" as the same case.
+    if source_labels:
+        frame["source_labels"] = list(source_labels)[:MAX_SOURCE_LABELS]
     return frame
 
 
@@ -212,6 +285,9 @@ class ProgressProjector:
                 kwargs: Dict[str, Any] = {}
                 if semantic == STAGE_RETRIEVAL:
                     kwargs["source_count"] = snapshot.get("source_count") or 0
+                    # Already mapped to public categories by progress_snapshot;
+                    # raw provider names never reach this layer.
+                    kwargs["source_labels"] = snapshot.get("source_labels") or []
                 if semantic == STAGE_AGENTS:
                     kwargs["agents_complete"] = min(agents_done, AGENT_COUNT)
                 frames.append(progress_frame(
