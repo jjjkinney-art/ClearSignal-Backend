@@ -5,7 +5,8 @@ Coverage:
   TestBypassMode        — AUTH_ENABLED=false always stamps system user
   TestExtractBearer     — header parsing edge cases
   TestVerifyJwtHs256    — HS256 JWT accept/reject paths (PyJWT mocked)
-  TestVerifyToken       — _verify_token routing HS256 vs RS256
+  TestVerifyAsymmetric  — ES256/RS256 JWKS verification and algorithm allowlist
+  TestVerifyToken       — _verify_token routing HS256 vs asymmetric JWKS
   TestResolveIdentity   — full bypass / enforcement / no-token / bad-token
   TestMiddlewareDispatch— AuthMiddleware.dispatch stamps request.state
   TestGetCurrentUserId  — dependency fallback logic
@@ -259,11 +260,62 @@ class TestVerifyJwtHs256:
 
 
 # ---------------------------------------------------------------------------
-# 4. TestVerifyToken — routing
+# 4. TestVerifyAsymmetric
+# ---------------------------------------------------------------------------
+
+class TestVerifyAsymmetric:
+    """Supabase JWKS verification supports only RS256 and ES256."""
+
+    @pytest.mark.parametrize("algorithm", ["RS256", "ES256"])
+    def test_accepts_supported_algorithm_and_verifies_claims(self, algorithm):
+        from app.middleware import auth_middleware as _mw
+
+        mock_jwt = MagicMock()
+        mock_jwt.get_unverified_header.return_value = {"alg": algorithm, "kid": "key-1"}
+        mock_jwt.PyJWKClient.return_value.get_signing_key_from_jwt.return_value.key = "public-key"
+        mock_jwt.decode.return_value = {
+            "sub": "user-1",
+            "aud": "authenticated",
+            "exp": 9999999999,
+            "iss": "https://proj.supabase.co/auth/v1",
+        }
+
+        with patch.object(_mw, "_pyjwt", mock_jwt), patch.object(
+            _mw, "_JWT_AVAILABLE", True
+        ), patch.object(_mw, "_jwks_clients", {}):
+            payload = _run(_mw._verify_jwt_asymmetric(
+                "token", "https://proj.supabase.co", "authenticated"
+            ))
+
+        assert payload["sub"] == "user-1"
+        _, kwargs = mock_jwt.decode.call_args
+        assert kwargs["algorithms"] == [algorithm]
+        assert kwargs["issuer"] == "https://proj.supabase.co/auth/v1"
+        assert kwargs["options"]["require"] == ["sub", "exp", "aud", "iss"]
+
+    def test_rejects_algorithm_outside_allowlist(self):
+        from app.middleware import auth_middleware as _mw
+
+        mock_jwt = MagicMock()
+        mock_jwt.get_unverified_header.return_value = {"alg": "HS256"}
+        with patch.object(_mw, "_pyjwt", mock_jwt), patch.object(
+            _mw, "_JWT_AVAILABLE", True
+        ), patch.object(_mw, "_jwks_clients", {}):
+            payload = _run(_mw._verify_jwt_asymmetric(
+                "token", "https://proj.supabase.co", "authenticated"
+            ))
+
+        assert payload is None
+        mock_jwt.PyJWKClient.assert_not_called()
+        mock_jwt.decode.assert_not_called()
+
+
+# ---------------------------------------------------------------------------
+# 5. TestVerifyToken — routing
 # ---------------------------------------------------------------------------
 
 class TestVerifyToken:
-    """_verify_token picks HS256 vs RS256 based on settings."""
+    """_verify_token picks legacy HS256 vs asymmetric JWKS from settings."""
 
     def test_uses_hs256_when_secret_set(self):
         with patch("app.config.settings") as mock_settings:
@@ -281,20 +333,22 @@ class TestVerifyToken:
         mock_hs256.assert_called_once_with("token", "my-secret", "authenticated")
         assert result == {"sub": "u1"}
 
-    def test_uses_rs256_when_no_secret_but_project_url(self):
+    def test_uses_asymmetric_jwks_when_no_secret_but_project_url(self):
         with patch("app.config.settings") as mock_settings:
             mock_settings.supabase_jwt_secret = ""
             mock_settings.supabase_project_url = "https://proj.supabase.co"
             mock_settings.supabase_audience = "authenticated"
             with patch(
-                "app.middleware.auth_middleware._verify_jwt_rs256",
+                "app.middleware.auth_middleware._verify_jwt_asymmetric",
                 new=AsyncMock(return_value={"sub": "u2"}),
-            ) as mock_rs256:
+            ) as mock_asymmetric:
                 from app.middleware.auth_middleware import _verify_token
 
                 result = _run(_verify_token("token"))
 
-        mock_rs256.assert_awaited_once()
+        mock_asymmetric.assert_awaited_once_with(
+            "token", "https://proj.supabase.co", "authenticated"
+        )
         assert result == {"sub": "u2"}
 
     def test_returns_none_when_neither_configured(self):
@@ -309,7 +363,7 @@ class TestVerifyToken:
 
 
 # ---------------------------------------------------------------------------
-# 5. TestResolveIdentity
+# 6. TestResolveIdentity
 # ---------------------------------------------------------------------------
 
 class TestResolveIdentity:
@@ -371,6 +425,7 @@ class TestResolveIdentity:
         assert uid == "real-user-uuid"
         assert sub == "real-user-uuid"
         assert is_auth is True
+        assert req.state.auth_claims == payload
 
     def test_enforcement_payload_missing_sub_returns_none(self):
         req = _make_request(headers={"authorization": "Bearer valid.jwt.token"})
@@ -391,7 +446,7 @@ class TestResolveIdentity:
 
 
 # ---------------------------------------------------------------------------
-# 6. TestMiddlewareDispatch
+# 7. TestMiddlewareDispatch
 # ---------------------------------------------------------------------------
 
 class TestMiddlewareDispatch:
@@ -418,7 +473,11 @@ class TestMiddlewareDispatch:
             return response
 
         with patch("app.middleware.auth_middleware._resolve_identity", side_effect=_fake_resolve):
-            _run(mw.dispatch(req, call_next))
+            with patch(
+                "app.middleware.auth_middleware._resolve_local_user_id",
+                new=AsyncMock(return_value=user_id),
+            ):
+                _run(mw.dispatch(req, call_next))
 
         return req
 
@@ -439,8 +498,14 @@ class TestMiddlewareDispatch:
         assert req.state.user_id is None
         assert req.state.is_authenticated is False
 
-    def test_dispatch_never_raises_on_resolve_failure(self):
-        """Even if _resolve_identity raises, dispatch must complete."""
+    @pytest.mark.parametrize(
+        ("auth_enabled", "expected_user_id"),
+        [(False, SYSTEM_DEFAULT_USER_ID), (True, None)],
+    )
+    def test_dispatch_resolution_failure_respects_auth_mode(
+        self, auth_enabled, expected_user_id
+    ):
+        """Resolution errors bypass only when auth is disabled."""
         from app.middleware.auth_middleware import AuthMiddleware
 
         class _FakeApp:
@@ -459,6 +524,7 @@ class TestMiddlewareDispatch:
             raise RuntimeError("unexpected error")
 
         with patch("app.config.settings") as s:
+            s.auth_enabled = auth_enabled
             s.auth_bypass_user_id = SYSTEM_DEFAULT_USER_ID
             with patch(
                 "app.middleware.auth_middleware._resolve_identity",
@@ -467,13 +533,12 @@ class TestMiddlewareDispatch:
                 # Must not raise
                 _run(mw.dispatch(req, call_next))
 
-        # Falls back to bypass user
-        assert req.state.user_id == SYSTEM_DEFAULT_USER_ID
+        assert req.state.user_id == expected_user_id
         assert req.state.is_authenticated is False
 
 
 # ---------------------------------------------------------------------------
-# 7. TestGetCurrentUserId
+# 8. TestGetCurrentUserId
 # ---------------------------------------------------------------------------
 
 class TestGetCurrentUserId:
@@ -512,7 +577,7 @@ class TestGetCurrentUserId:
 
 
 # ---------------------------------------------------------------------------
-# 8. TestIsAuthenticated
+# 9. TestIsAuthenticated
 # ---------------------------------------------------------------------------
 
 class TestIsAuthenticated:
@@ -556,7 +621,7 @@ class TestIsAuthenticated:
 
 
 # ---------------------------------------------------------------------------
-# 9. TestNoBehaviorChange
+# 10. TestNoBehaviorChange
 # ---------------------------------------------------------------------------
 
 class TestNoBehaviorChange:

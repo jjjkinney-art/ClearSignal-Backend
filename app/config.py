@@ -384,8 +384,9 @@ class Settings(BaseSettings):
     # staged rollout sequence described in docs/PHASE_16_ACCOUNTS_ROLLOUT.md.
     auth_enabled: bool = False
 
-    # Supabase project URL.  Used to derive the JWKS endpoint when RS256
-    # verification is enabled.  Leave empty to use HS256 with supabase_jwt_secret.
+    # Supabase project URL. Used to derive the JWKS endpoint for current
+    # asymmetric RS256/ES256 signing keys. Leave empty only when explicitly
+    # using the legacy HS256 supabase_jwt_secret path.
     # Example: "https://xyzabcde.supabase.co"
     supabase_project_url: str = ""
 

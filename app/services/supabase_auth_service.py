@@ -174,6 +174,7 @@ async def provision_new_user(
     # Create user
     user = await create_user(
         session,
+        user_id=auth_subject,
         email=email,
         account_type="individual",
         email_verified=email_verified,
@@ -264,17 +265,20 @@ async def get_identity_context(session, request) -> IdentityContext:
 
         user = await get_user_by_auth_subject(session, auth_subject)
         if user is None:
-            # First hit for this auth_subject — provision silently
-            # (payload only contains sub; email comes from DB on next request
-            # after the JWT-verified path in resolve_user_from_jwt)
-            logger.info(
-                "[supabase_auth] get_identity_context: unknown auth_subject %s — "
-                "provision deferred to resolve_user_from_jwt",
-                auth_subject,
-            )
-            return ctx
+            claims = getattr(request.state, "auth_claims", None)
+            if not isinstance(claims, dict):
+                logger.warning(
+                    "[supabase_auth] cannot provision %s without verified claims",
+                    auth_subject,
+                )
+                return ctx
+            user = await resolve_user_from_jwt(session, claims)
+            if user is None:
+                return ctx
+            await session.commit()
 
         ctx.user_id = user.id
+        request.state.user_id = user.id
         ctx.email = user.email
         ctx.account_type = user.account_type
 

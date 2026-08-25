@@ -19,7 +19,7 @@ auth middleware and stamped on `request.state.user_id` before every handler.
 | Mode | Behavior |
 |---|---|
 | `AUTH_ENABLED=false` *(default)* | Every request resolves to a single system **bypass** user — the API is effectively single-tenant. No JWT is inspected. |
-| `AUTH_ENABLED=true` | Identity is the verified Supabase JWT `sub`. User-scoped routes return **401** when the token is missing or invalid. |
+| `AUTH_ENABLED=true` | A verified Supabase JWT is resolved to its local account owner. User-scoped routes return **401** when the token is missing, invalid, or cannot be safely mapped. |
 
 Several capabilities are **dark-launched behind flags** and are inert until an
 operator enables them via environment (never in code):
@@ -137,6 +137,10 @@ Supabase JWT session endpoints. Enforced only when `AUTH_ENABLED=true`.
 | GET | `/auth/me` | Current user identity |
 | GET | `/auth/session` | Session state |
 | POST | `/auth/logout` | Logout |
+| GET | `/auth/import/preview` | Preview system-owned starter data available for one-time import |
+| POST | `/auth/import` | Idempotently copy starter data into the signed-in account |
+| GET | `/auth/onboarding` | Current onboarding state |
+| POST | `/auth/onboarding/complete` | Idempotently complete onboarding |
 
 ---
 
