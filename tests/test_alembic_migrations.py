@@ -23,9 +23,10 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_HEAD = "0003_users_billing_columns"
+_HEAD = "0004_portfolios_org_id"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
+_PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
 
 
 def _model_table_count() -> int:
@@ -127,6 +128,40 @@ class TestLegacyUsersBillingColumns:
             rows = dict(cn.execute(text("SELECT id, plan FROM users")).fetchall())
         assert rows["00000000-0000-0000-0000-000000000001"] == "system"
         assert rows["legacy-user"] == "free"
+        assert _rev(p) == _HEAD
+
+
+class TestLegacyPortfolioOrgId:
+    def test_upgrade_repairs_existing_portfolios_table_without_losing_rows(self):
+        """Reproduce the production schema drift that blocked account import."""
+        p = _new_db_path()
+        from app.db.models import Base
+
+        eng = create_engine(f"sqlite:///{p}")
+        Base.metadata.create_all(eng)
+        with eng.begin() as cn:
+            cn.execute(text(
+                "INSERT INTO portfolios "
+                "(id, user_id, name, description, is_default, created_at, updated_at, org_id) "
+                "VALUES ('legacy-portfolio', "
+                "'00000000-0000-0000-0000-000000000001', "
+                "'Legacy Portfolio', 'preserve me', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL)"
+            ))
+            cn.execute(text("ALTER TABLE portfolios DROP COLUMN org_id"))
+
+        command.stamp(_cfg(p), _PRE_PORTFOLIO_ORG_ID)
+        command.upgrade(_cfg(p), "head")
+
+        cols = {c["name"] for c in _insp(p).get_columns("portfolios")}
+        assert "org_id" in cols
+        with eng.connect() as cn:
+            row = cn.execute(text(
+                "SELECT name, description, org_id FROM portfolios "
+                "WHERE id = 'legacy-portfolio'"
+            )).one()
+        assert row.name == "Legacy Portfolio"
+        assert row.description == "preserve me"
+        assert row.org_id is None
         assert _rev(p) == _HEAD
 
 

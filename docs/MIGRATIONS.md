@@ -26,6 +26,7 @@ startup** — migrations are an explicit deployment step.
 | `0001_baseline` | Adopt the full current schema via `create_all(checkfirst=True)` — idempotent (creates on a fresh DB, no-op on an existing one). | Downgrade **DROPS ALL TABLES** — destructive; test/disposable DBs only. |
 | `0002_delivery_ledger_severity` | Versioned replacement for the Phase 10C lifespan ALTER: adds `canonical_severity`, `severity_rank`, and index `ix_delivery_ledger_canonical_severity`. Idempotent (introspects first). | Downgrade drops the two columns + index. Rows preserved; the **column values are discarded**. |
 | `0003_users_billing_columns` | Adds missing `users.plan` and `users.plan_updated_at` columns on legacy databases, defaults existing users to `free`, and restores the system user's `system` plan. | Downgrade drops the two columns. User rows remain, but plan values are discarded. |
+| `0004_portfolios_org_id` | Adds the missing nullable `portfolios.org_id` compatibility column on legacy databases so account import can read the current Portfolio model. | Downgrade drops `org_id`. Portfolio rows remain. |
 
 Because the delta migrations are idempotent, `alembic upgrade head` is safe to run on
 any of the three database states below and converges them to the current schema.
