@@ -9,11 +9,13 @@ FastAPI + multi-agent investment intelligence backend.
 The `Procfile` configures the start command:
 
 ```
-web: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+web: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
 **Important:** The start command must use `$PORT` (Render's injected environment variable).
 Do **not** hardcode a port number — Render will report "No open ports detected" and the deploy will fail.
+The Alembic upgrade runs before the web process starts so an existing database
+receives reviewed additive schema changes before current ORM models query it.
 
 Set the following environment variables in the Render service dashboard:
 - `OPENAI_API_KEY` — your OpenAI key

@@ -23,8 +23,9 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_HEAD = "0002_delivery_ledger_severity"
+_HEAD = "0003_users_billing_columns"
 _BASELINE = "0001_baseline"
+_PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 
 
 def _model_table_count() -> int:
@@ -94,6 +95,38 @@ class TestIdempotency:
         command.upgrade(_cfg(p), "head")  # must not error
         assert set(_insp(p).get_table_names()) == t1
         assert {c["name"] for c in _insp(p).get_columns("delivery_ledger")} == cols1
+        assert _rev(p) == _HEAD
+
+
+class TestLegacyUsersBillingColumns:
+    def test_upgrade_repairs_existing_users_table_without_losing_rows(self):
+        """Reproduce the production schema drift that blocked first login."""
+        p = _new_db_path()
+        from app.db.models import Base
+
+        eng = create_engine(f"sqlite:///{p}")
+        Base.metadata.create_all(eng)
+        with eng.begin() as cn:
+            cn.execute(text(
+                "INSERT INTO users "
+                "(id, email, email_verified, account_type, is_active, plan, plan_updated_at, created_at, updated_at) "
+                "VALUES "
+                "('00000000-0000-0000-0000-000000000001', "
+                " 'system@clearsignal.internal', 1, 'system', 1, 'system', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP), "
+                "('legacy-user', 'legacy@example.com', 1, 'individual', 1, 'free', NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+            ))
+            cn.execute(text("ALTER TABLE users DROP COLUMN plan_updated_at"))
+            cn.execute(text("ALTER TABLE users DROP COLUMN plan"))
+
+        command.stamp(_cfg(p), _PRE_BILLING_COLUMNS)
+        command.upgrade(_cfg(p), "head")
+
+        cols = {c["name"] for c in _insp(p).get_columns("users")}
+        assert {"plan", "plan_updated_at"} <= cols
+        with eng.connect() as cn:
+            rows = dict(cn.execute(text("SELECT id, plan FROM users")).fetchall())
+        assert rows["00000000-0000-0000-0000-000000000001"] == "system"
+        assert rows["legacy-user"] == "free"
         assert _rev(p) == _HEAD
 
 

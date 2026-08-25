@@ -25,8 +25,9 @@ startup** — migrations are an explicit deployment step.
 |---|---|---|
 | `0001_baseline` | Adopt the full current schema via `create_all(checkfirst=True)` — idempotent (creates on a fresh DB, no-op on an existing one). | Downgrade **DROPS ALL TABLES** — destructive; test/disposable DBs only. |
 | `0002_delivery_ledger_severity` | Versioned replacement for the Phase 10C lifespan ALTER: adds `canonical_severity`, `severity_rank`, and index `ix_delivery_ledger_canonical_severity`. Idempotent (introspects first). | Downgrade drops the two columns + index. Rows preserved; the **column values are discarded**. |
+| `0003_users_billing_columns` | Adds missing `users.plan` and `users.plan_updated_at` columns on legacy databases, defaults existing users to `free`, and restores the system user's `system` plan. | Downgrade drops the two columns. User rows remain, but plan values are discarded. |
 
-Because both migrations are idempotent, `alembic upgrade head` is safe to run on
+Because the delta migrations are idempotent, `alembic upgrade head` is safe to run on
 any of the three database states below and converges them to the current schema.
 
 ## The three database states
@@ -108,6 +109,8 @@ If `alembic upgrade head` fails partway:
 - **`0001` downgrade** → `drop_all()` (all data lost). Disposable DBs only.
 - **`0002` downgrade** → drops `canonical_severity` / `severity_rank` (those
   column values are lost; rows are not).
+- **`0003` downgrade** → drops `users.plan` / `users.plan_updated_at` (those
+  column values are lost; user rows are not).
 
 Any future migration that drops a column/table, narrows a type, or backfills with
 data loss **must** document it here and be preceded by a backup.
