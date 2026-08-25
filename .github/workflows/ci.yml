@@ -71,6 +71,7 @@ jobs:
       - name: Auth & billing
         run: >
           python -m pytest -q -o addopts=""
+          tests/test_alembic_migrations.py
           tests/test_services/test_auth_routes.py
           tests/test_services/test_auth_middleware.py
           tests/test_services/test_billing_routes.py
