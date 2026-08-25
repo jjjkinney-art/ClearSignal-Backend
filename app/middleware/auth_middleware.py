@@ -15,7 +15,8 @@ Bypass mode (AUTH_ENABLED=false — the default for all Phase 16 build slices)
 
 Enforcement mode (AUTH_ENABLED=true — PART 7 rollout only)
   Extracts the bearer token from the Authorization header and verifies it
-  cryptographically (HS256 with the Supabase JWT secret, or RS256 via JWKS
+  cryptographically (HS256 with the legacy Supabase JWT secret, or an
+  asymmetric RS256/ES256 signing key via JWKS
   if supabase_jwt_secret is empty and supabase_project_url is configured).
   Sets is_authenticated=True only for a fully valid, non-expired token with
   the correct audience claim.  Invalid / absent tokens set user_id=None and
@@ -36,7 +37,7 @@ PyJWT dependency
 from __future__ import annotations
 
 import logging
-import time
+import asyncio
 from typing import Dict, Optional, Tuple
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -60,11 +61,11 @@ except ImportError:                                        # pragma: no cover
     )
 
 # ---------------------------------------------------------------------------
-# JWKS cache (simple in-memory, 1-hour TTL)
+# JWKS cache lifetime used by PyJWT's client. Supabase edge caches the endpoint
+# for ten minutes, so matching that interval avoids holding rotated keys longer.
 # ---------------------------------------------------------------------------
-_jwks_cache: Optional[Dict] = None
-_jwks_fetched_at: float = 0.0
-_JWKS_TTL_S: float = 3600.0
+_JWKS_TTL_S: float = 600.0
+_jwks_clients: Dict[str, object] = {}
 
 
 # ---------------------------------------------------------------------------
@@ -118,67 +119,58 @@ def _verify_jwt_hs256(token: str, secret: str, audience: str) -> Optional[Dict]:
         return None
 
 
-async def _fetch_jwks(project_url: str) -> Optional[Dict]:
-    """Fetch Supabase JWKS from the well-known endpoint (cached 1h)."""
-    global _jwks_cache, _jwks_fetched_at
+async def _verify_jwt_asymmetric(
+    token: str,
+    project_url: str,
+    audience: str,
+) -> Optional[Dict]:
+    """Verify a Supabase RS256 or ES256 JWT via its JWKS endpoint.
 
-    now = time.monotonic()
-    if _jwks_cache is not None and (now - _jwks_fetched_at) < _JWKS_TTL_S:
-        return _jwks_cache
-
-    jwks_url = f"{project_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
-    try:
-        import httpx
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(jwks_url)
-            resp.raise_for_status()
-            data = resp.json()
-            _jwks_cache = data
-            _jwks_fetched_at = now
-            logger.info("[auth] JWKS refreshed from %s", jwks_url)
-            return data
-    except Exception as exc:
-        logger.warning("[auth] JWKS fetch failed from %s: %r", jwks_url, exc)
-        return _jwks_cache  # return stale cache rather than failing closed
-
-
-async def _verify_jwt_rs256(token: str, project_url: str, audience: str) -> Optional[Dict]:
-    """Verify an RS256 JWT via the Supabase JWKS endpoint."""
+    The token header selects the signing key, but never the allowed algorithm:
+    only Supabase's supported asymmetric algorithms are accepted.  Issuer,
+    audience, expiry, and subject are all required and verified.
+    """
     if not _JWT_AVAILABLE or not _pyjwt:
         return None
 
-    jwks_data = await _fetch_jwks(project_url)
-    if not jwks_data:
+    try:
+        algorithm = _pyjwt.get_unverified_header(token).get("alg")
+    except Exception as exc:
+        logger.debug("[auth] asymmetric JWT header rejected: %r", exc)
+        return None
+
+    if algorithm not in {"RS256", "ES256"}:
+        logger.debug("[auth] asymmetric JWT rejected: unsupported alg=%r", algorithm)
         return None
 
     try:
-        # Use PyJWT's JWKS client to find the matching key by 'kid'
-        jwks_client = _pyjwt.PyJWKClient.__new__(_pyjwt.PyJWKClient)  # type: ignore[attr-defined]
-    except AttributeError:
-        # Older PyJWT versions without PyJWKClient — fall through to HS256
-        return None
-
-    try:
-        from jwt import PyJWKClient as _PyJWKClient  # type: ignore[attr-defined]
-
         jwks_url = f"{project_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
-        client = _PyJWKClient(jwks_url, cache_keys=True, lifespan=int(_JWKS_TTL_S))
-        signing_key = client.get_signing_key_from_jwt(token)
+        issuer = f"{project_url.rstrip('/')}/auth/v1"
+        client = _jwks_clients.get(jwks_url)
+        if client is None:
+            client = _pyjwt.PyJWKClient(
+                jwks_url,
+                cache_keys=True,
+                lifespan=int(_JWKS_TTL_S),
+            )
+            _jwks_clients[jwks_url] = client
+        signing_key = await asyncio.to_thread(client.get_signing_key_from_jwt, token)
         payload: Dict = _pyjwt.decode(
             token,
             signing_key.key,
-            algorithms=["RS256"],
+            algorithms=[algorithm],
             audience=audience,
-            options={"verify_exp": True},
+            issuer=issuer,
+            options={"verify_exp": True, "require": ["sub", "exp", "aud", "iss"]},
         )
         return payload
     except Exception as exc:
-        logger.debug("[auth] RS256 verification failed: %r", exc)
+        logger.debug("[auth] asymmetric JWT verification failed: %r", exc)
         return None
 
 
 async def _verify_token(token: str) -> Optional[Dict]:
-    """Try HS256 first (Supabase default), then RS256 (JWKS-based).
+    """Use legacy HS256 when configured, otherwise Supabase JWKS verification.
 
     Returns the verified payload dict or None.
     """
@@ -192,9 +184,9 @@ async def _verify_token(token: str) -> Optional[Dict]:
             _settings.supabase_audience,
         )
 
-    # RS256 path: use JWKS when project URL is set but no secret
+    # Current Supabase projects use an asymmetric signing key (normally ES256).
     if _settings.supabase_project_url:
-        return await _verify_jwt_rs256(
+        return await _verify_jwt_asymmetric(
             token,
             _settings.supabase_project_url,
             _settings.supabase_audience,
@@ -236,7 +228,34 @@ async def _resolve_identity(request: Request) -> Tuple[Optional[str], Optional[s
     if not sub:
         return None, None, False
 
+    # Preserve only the verified claims for first-login provisioning.  This is
+    # internal request state and is never returned directly to clients.
+    request.state.auth_claims = payload
     return sub, sub, True
+
+
+async def _resolve_local_user_id(request: Request) -> Optional[str]:
+    """Provision or resolve the local owner for verified JWT claims.
+
+    The local ID can differ from the Supabase subject when an older local
+    account is linked by email. Protected routes must therefore use the local
+    ID returned here rather than assuming ``sub == users.id``.
+    """
+    claims = getattr(request.state, "auth_claims", None)
+    if not isinstance(claims, dict):
+        return None
+
+    from app.db.connection import get_session
+    from app.services.supabase_auth_service import resolve_user_from_jwt
+
+    async with get_session() as session:
+        if session is None:
+            return None
+        user = await resolve_user_from_jwt(session, claims)
+        if user is None:
+            return None
+        await session.commit()
+        return str(user.id)
 
 
 # ---------------------------------------------------------------------------
@@ -246,17 +265,23 @@ async def _resolve_identity(request: Request) -> Tuple[Optional[str], Optional[s
 class AuthMiddleware(BaseHTTPMiddleware):
     """Starlette middleware that stamps user identity onto request.state.
 
-    Never raises.  If resolution fails for any reason, falls back to the
-    bypass identity so the request always reaches the route handler.
+    Never raises. Resolution failures retain the bypass identity only while
+    auth is disabled; enforcement mode always fails closed.
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
+        request.state.auth_claims = None
         try:
             user_id, auth_subject, is_authenticated = await _resolve_identity(request)
+            if is_authenticated:
+                user_id = await _resolve_local_user_id(request)
+                if user_id is None:
+                    auth_subject = None
+                    is_authenticated = False
         except Exception as exc:
             logger.warning("[auth] _resolve_identity raised (non-fatal): %r", exc)
             from app.config import settings as _s
-            user_id = _s.auth_bypass_user_id
+            user_id = _s.auth_bypass_user_id if not _s.auth_enabled else None
             auth_subject = None
             is_authenticated = False
 

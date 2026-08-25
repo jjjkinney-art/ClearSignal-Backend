@@ -49,7 +49,9 @@ async def session():
 
 
 def _run(coro):
-    return asyncio.get_event_loop().run_until_complete(coro)
+    # A fresh loop avoids Python 3.12's run-order-dependent
+    # "There is no current event loop" failure after asyncio.run-based tests.
+    return asyncio.run(coro)
 
 
 # ---------------------------------------------------------------------------
@@ -60,6 +62,7 @@ def _make_request(
     user_id: Optional[str] = SYSTEM_DEFAULT_USER_ID,
     auth_subject: Optional[str] = None,
     is_authenticated: bool = False,
+    auth_claims=None,
 ) -> MagicMock:
     req = MagicMock()
 
@@ -70,6 +73,7 @@ def _make_request(
     s.user_id = user_id
     s.auth_subject = auth_subject
     s.is_authenticated = is_authenticated
+    s.auth_claims = auth_claims
     req.state = s
     return req
 
@@ -124,6 +128,7 @@ class TestProvisionNewUser:
         user = await _provision(session)
         assert user is not None
         assert user.auth_subject == "sub-abc"
+        assert user.id == "sub-abc"
         assert user.email == "user@example.com"
         assert user.account_type == "individual"
 
@@ -388,6 +393,29 @@ class TestGetIdentityContextAuth:
         assert ctx.account_type == "individual"
         assert ctx.is_authenticated is True
         assert ctx.bypass_mode is False
+
+    @pytest.mark.asyncio
+    async def test_auth_mode_provisions_from_verified_claims(self, session):
+        from app.services.supabase_auth_service import get_identity_context
+
+        claims = {
+            "sub": "first-login-sub",
+            "email": "First@Example.com",
+            "email_verified": True,
+        }
+        req = _make_request(
+            user_id="first-login-sub",
+            auth_subject="first-login-sub",
+            is_authenticated=True,
+            auth_claims=claims,
+        )
+        with patch("app.config.settings") as s:
+            s.auth_enabled = True
+            ctx = await get_identity_context(session, req)
+
+        assert ctx.user_id == "first-login-sub"
+        assert ctx.email == "first@example.com"
+        assert ctx.account_type == "individual"
 
     @pytest.mark.asyncio
     async def test_auth_mode_unauthenticated_returns_none_fields(self, session):

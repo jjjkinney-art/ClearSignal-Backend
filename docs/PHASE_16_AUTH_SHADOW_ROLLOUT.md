@@ -33,8 +33,8 @@ procedures, and the 30-day soak rationale.
 | Variable | Default | Description |
 |---|---|---|
 | `AUTH_ENABLED` | `false` | Master auth switch. Keep `false` during soak. |
-| `SUPABASE_PROJECT_URL` | `""` | Supabase project URL. Required for RS256 JWKS verification. Example: `https://xyzabcde.supabase.co` |
-| `SUPABASE_JWT_SECRET` | `""` | HS256 JWT secret. Set if using HS256 (simpler; preferred for first activation). |
+| `SUPABASE_PROJECT_URL` | `""` | Supabase project URL. Required for current RS256/ES256 JWKS verification. Example: `https://xyzabcde.supabase.co` |
+| `SUPABASE_JWT_SECRET` | `""` | Legacy HS256 JWT secret. Leave empty for projects using asymmetric signing keys. |
 | `SUPABASE_AUDIENCE` | `authenticated` | JWT `aud` claim value. Leave as default unless custom. |
 | `AUTH_BYPASS_USER_ID` | `00000000-0000-0000-0000-000000000001` | UUID used when bypass is active. **Do not change.** |
 
@@ -67,16 +67,17 @@ API surfaces remain unchanged.
    ```
 
 3. **Supabase project configured:**
-   - Either `SUPABASE_JWT_SECRET` (HS256) or `SUPABASE_PROJECT_URL` (RS256) must be set.
-   - Verify with `GET /admin/auth-status → {"supabase_secret_configured": true}`.
+   - Set `SUPABASE_PROJECT_URL` for current asymmetric keys, or the legacy `SUPABASE_JWT_SECRET` for an HS256 project.
+   - Verify with `GET /admin/auth-status → {"supabase_project_configured": true}`
+     for asymmetric keys, or `{"supabase_secret_configured": true}` for legacy HS256.
 
 4. **30-day soak complete** (see Soak section below).
 
 ### Activation sequence
 
 ```bash
-# 1. Set the JWT secret in your environment / secrets manager
-export SUPABASE_JWT_SECRET="<your-supabase-jwt-secret>"
+# 1. Configure the Supabase project URL (no signing secret is copied)
+export SUPABASE_PROJECT_URL="https://<project-ref>.supabase.co"
 
 # 2. Flip the master switch
 export AUTH_ENABLED=true
@@ -91,11 +92,13 @@ curl https://your-backend.onrender.com/admin/auth-status | jq .
 
 ### JWT verification mode
 
-- **HS256 (recommended first):** Set `SUPABASE_JWT_SECRET`. Fast, no outbound
-  network calls. Suitable for single-region deployments.
-- **RS256 / JWKS:** Set `SUPABASE_PROJECT_URL`. The middleware fetches the
-  JWKS from `{SUPABASE_PROJECT_URL}/auth/v1/keys` and caches it for 1 hour.
-  Required if you want key rotation without a redeploy.
+- **RS256 / ES256 via JWKS (recommended):** Set `SUPABASE_PROJECT_URL` and
+  leave `SUPABASE_JWT_SECRET` empty. The middleware selects the allowed
+  asymmetric algorithm from the token header, verifies `iss`, `aud`, `exp`,
+  and `sub`, and caches the JWKS client for ten-minute key refreshes. Keys are
+  read from `{SUPABASE_PROJECT_URL}/auth/v1/.well-known/jwks.json`.
+- **Legacy HS256:** Set `SUPABASE_JWT_SECRET` only for a project that still
+  issues legacy shared-secret tokens. Do not copy this secret into clients.
 
 ---
 

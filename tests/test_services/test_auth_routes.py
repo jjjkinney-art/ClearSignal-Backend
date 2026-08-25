@@ -16,6 +16,7 @@ TestLogoutEndpoint         — POST /auth/logout
 TestMeResponseShape        — response fields and types
 TestSessionResponseShape   — response fields and types
 TestLogoutResponseShape    — response fields and types
+TestAccountOnboardingRoutes— authenticated import/onboarding endpoints
 TestBypassPreservation     — bypass mode unchanged from pre-Slice-4
 """
 
@@ -375,3 +376,127 @@ class TestBypassPreservation:
             with _patch_session():
                 data = _client().get("/auth/me").json()
         assert data["user_id"] == "00000000-0000-0000-0000-000000000001"
+
+
+# ---------------------------------------------------------------------------
+# 9. TestAccountOnboardingRoutes
+# ---------------------------------------------------------------------------
+
+class TestAccountOnboardingRoutes:
+    @pytest.mark.parametrize(
+        ("method", "path"),
+        [
+            ("get", "/auth/import/preview"),
+            ("post", "/auth/import"),
+            ("get", "/auth/onboarding"),
+            ("post", "/auth/onboarding/complete"),
+        ],
+    )
+    def test_routes_require_verified_authentication(self, method, path):
+        client = _client(is_authenticated=False)
+        response = getattr(client, method)(path)
+        assert response.status_code == 401
+
+    def test_preview_returns_import_counts(self):
+        from app.services.account_import_service import ImportPreview
+
+        result = ImportPreview(
+            user_id="user-1",
+            already_imported=False,
+            watchlist_count=6,
+            portfolio_count=1,
+            position_count=3,
+            delivery_pref_count=1,
+        )
+        session = MagicMock()
+        with _patch_session(session), patch(
+            "app.services.account_import_service.preview_import",
+            new=AsyncMock(return_value=result),
+        ) as preview:
+            response = _client(
+                user_id="user-1", is_authenticated=True
+            ).get("/auth/import/preview")
+
+        assert response.status_code == 200
+        assert response.json()["watchlist_count"] == 6
+        preview.assert_awaited_once_with(session, "user-1")
+
+    def test_import_is_idempotent_service_boundary(self):
+        from app.services.account_import_service import ImportResult
+
+        result = ImportResult(
+            user_id="user-1",
+            already_imported=True,
+            watchlist_copied=0,
+            portfolio_copied=0,
+            position_copied=0,
+            delivery_pref_copied=0,
+            skipped=0,
+        )
+        session = MagicMock()
+        with _patch_session(session), patch(
+            "app.services.account_import_service.execute_import",
+            new=AsyncMock(return_value=result),
+        ):
+            response = _client(
+                user_id="user-1", is_authenticated=True
+            ).post("/auth/import")
+
+        assert response.status_code == 200
+        assert response.json()["already_imported"] is True
+
+    def test_get_onboarding_returns_state(self):
+        from app.services.onboarding_service import OnboardingState
+
+        result = OnboardingState(
+            user_id="user-1",
+            step="import_offered",
+            step_index=2,
+            is_complete=False,
+            next_step="import_completed",
+            completed_at=None,
+        )
+        session = MagicMock()
+        with _patch_session(session), patch(
+            "app.services.onboarding_service.get_onboarding_state",
+            new=AsyncMock(return_value=result),
+        ):
+            response = _client(
+                user_id="user-1", is_authenticated=True
+            ).get("/auth/onboarding")
+
+        assert response.status_code == 200
+        assert response.json()["step"] == "import_offered"
+
+    def test_complete_onboarding_commits(self):
+        from app.services.onboarding_service import OnboardingState
+
+        result = OnboardingState(
+            user_id="user-1",
+            step="onboarding_complete",
+            step_index=4,
+            is_complete=True,
+            next_step=None,
+            completed_at=None,
+        )
+        session = MagicMock()
+        session.commit = AsyncMock()
+        with _patch_session(session), patch(
+            "app.services.onboarding_service.complete_step",
+            new=AsyncMock(return_value=result),
+        ):
+            response = _client(
+                user_id="user-1", is_authenticated=True
+            ).post("/auth/onboarding/complete")
+
+        assert response.status_code == 200
+        assert response.json()["is_complete"] is True
+        session.commit.assert_awaited_once()
+
+    def test_authenticated_route_reports_database_unavailable(self):
+        with _patch_session(None):
+            response = _client(
+                user_id="user-1", is_authenticated=True
+            ).get("/auth/import/preview")
+
+        assert response.status_code == 503

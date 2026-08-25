@@ -23,9 +23,10 @@ Design
 from __future__ import annotations
 
 import logging
+from datetime import datetime
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -58,6 +59,36 @@ class SessionResponse(BaseModel):
 class LogoutResponse(BaseModel):
     status: str
     message: str
+
+
+class ImportPreviewResponse(BaseModel):
+    user_id: str
+    already_imported: bool
+    watchlist_count: int
+    portfolio_count: int
+    position_count: int
+    delivery_pref_count: int
+    estimated_actions: Dict[str, int]
+
+
+class ImportResponse(BaseModel):
+    user_id: str
+    already_imported: bool
+    watchlist_copied: int
+    portfolio_copied: int
+    position_copied: int
+    delivery_pref_copied: int
+    skipped: int
+    audit_run_id: Optional[str]
+
+
+class OnboardingResponse(BaseModel):
+    user_id: str
+    step: str
+    step_index: int
+    is_complete: bool
+    next_step: Optional[str]
+    completed_at: Optional[datetime]
 
 
 # ---------------------------------------------------------------------------
@@ -181,9 +212,110 @@ async def logout(request: Request) -> LogoutResponse:
     return LogoutResponse(status="ok", message="session cleared")
 
 
+@router.get(
+    "/import/preview",
+    response_model=ImportPreviewResponse,
+    summary="Preview existing-data import",
+)
+async def preview_existing_data(request: Request) -> ImportPreviewResponse:
+    """Preview the system-owned starter data available to the signed-in user."""
+    user_id = _require_authenticated_user(request)
+    from app.db.connection import get_session
+    from app.services.account_import_service import preview_import
+
+    async with get_session() as session:
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database unavailable",
+            )
+        result = await preview_import(session, user_id)
+
+    return ImportPreviewResponse(**result.__dict__)
+
+
+@router.post(
+    "/import",
+    response_model=ImportResponse,
+    summary="Import existing data",
+)
+async def import_existing_data(request: Request) -> ImportResponse:
+    """Idempotently copy existing starter data into the signed-in account."""
+    user_id = _require_authenticated_user(request)
+    from app.db.connection import get_session
+    from app.services.account_import_service import execute_import
+
+    async with get_session() as session:
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database unavailable",
+            )
+        result = await execute_import(session, user_id)
+
+    return ImportResponse(**result.__dict__)
+
+
+@router.get(
+    "/onboarding",
+    response_model=OnboardingResponse,
+    summary="Get onboarding state",
+)
+async def get_onboarding(request: Request) -> OnboardingResponse:
+    """Return the signed-in user's current onboarding state."""
+    user_id = _require_authenticated_user(request)
+    from app.db.connection import get_session
+    from app.services.onboarding_service import get_onboarding_state
+
+    async with get_session() as session:
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database unavailable",
+            )
+        result = await get_onboarding_state(session, user_id)
+
+    return OnboardingResponse(**result.__dict__)
+
+
+@router.post(
+    "/onboarding/complete",
+    response_model=OnboardingResponse,
+    summary="Complete onboarding",
+)
+async def complete_onboarding(request: Request) -> OnboardingResponse:
+    """Idempotently mark onboarding complete for the signed-in user."""
+    user_id = _require_authenticated_user(request)
+    from app.db.connection import get_session
+    from app.services.onboarding_service import complete_step
+
+    async with get_session() as session:
+        if session is None:
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Database unavailable",
+            )
+        result = await complete_step(session, user_id)
+        await session.commit()
+
+    return OnboardingResponse(**result.__dict__)
+
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
+def _require_authenticated_user(request: Request) -> str:
+    """Require a verified JWT-backed local identity (never the bypass user)."""
+    if not bool(getattr(request.state, "is_authenticated", False)):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    from app.dependencies.auth import require_user_id
+    return require_user_id(request)
 
 def _get_client_ip(request: Request) -> Optional[str]:
     """Best-effort client IP extraction from X-Forwarded-For or direct connection."""
