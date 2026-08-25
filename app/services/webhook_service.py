@@ -154,6 +154,39 @@ async def _find_user_id(session, customer_id: str) -> Optional[str]:
     return await find_user_id_by_stripe_customer_id(session, customer_id)
 
 
+async def _resolve_subscription_user_id(
+    session,
+    customer_id: str,
+    sub_obj: dict,
+) -> Optional[str]:
+    """Resolve a subscription event to a user despite Stripe event ordering.
+
+    Stripe can deliver ``customer.subscription.*`` before
+    ``checkout.session.completed``.  Checkout creation copies ``user_id`` into
+    subscription metadata, so use that signed metadata to establish the
+    customer link when the checkout event has not done so yet.
+    """
+    user_id = await _find_user_id(session, customer_id)
+    if user_id:
+        return user_id
+
+    metadata = sub_obj.get("metadata") or {}
+    metadata_user_id = metadata.get("user_id", "") or ""
+    if not metadata_user_id or metadata_user_id == SYSTEM_DEFAULT_USER_ID:
+        return None
+
+    from app.db.repositories.billing_repo import set_user_stripe_customer_id
+    await set_user_stripe_customer_id(
+        session,
+        metadata_user_id,
+        customer_id,
+    )
+
+    # Resolve through the persisted customer link so nonexistent or invalid
+    # metadata user IDs cannot create orphaned subscription rows.
+    return await _find_user_id(session, customer_id)
+
+
 async def _after_subscription_change(
     session,
     user_id: str,
@@ -211,7 +244,7 @@ async def handle_subscription_created(session, obj: dict) -> None:
     sub_id      = obj.get("id", "")
     customer_id = obj.get("customer", "") or ""
 
-    user_id = await _find_user_id(session, customer_id)
+    user_id = await _resolve_subscription_user_id(session, customer_id, obj)
     if not user_id:
         logger.warning(
             "[webhook] subscription.created: no user for customer %s — skipping",
@@ -291,7 +324,7 @@ async def handle_subscription_updated(session, obj: dict) -> None:
     existing = await get_subscription_by_stripe_id(session, sub_id)
     if existing is None:
         # Event arrived before subscription.created — upsert.
-        user_id = await _find_user_id(session, customer_id)
+        user_id = await _resolve_subscription_user_id(session, customer_id, obj)
         if not user_id:
             logger.warning(
                 "[webhook] subscription.updated: no user for customer %s", customer_id[:12]

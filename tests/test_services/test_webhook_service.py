@@ -182,8 +182,9 @@ def _make_sub_obj(
     price_id: str = "price_signal_mo",
     interval: str = "month",
     trial_end=None,
+    user_id: str = None,
 ) -> dict:
-    return {
+    obj = {
         "id": sub_id,
         "customer": customer_id,
         "status": status,
@@ -194,6 +195,9 @@ def _make_sub_obj(
         "cancel_at_period_end": False,
         "canceled_at":          None,
     }
+    if user_id is not None:
+        obj["metadata"] = {"user_id": user_id}
+    return obj
 
 
 # ---------------------------------------------------------------------------
@@ -409,6 +413,40 @@ async def test_subscription_created_updates_user_plan(session):
 
     result = await session.execute(select(User).where(User.id == "user-plan-01"))
     user = result.scalar_one()
+    assert user.plan == "pro"
+
+
+@pytest.mark.asyncio
+async def test_subscription_created_before_checkout_uses_metadata(session):
+    """Subscription events may arrive before checkout links the customer."""
+    from app.services.webhook_service import handle_subscription_created
+    from app.db.models import User
+    from app.db.repositories.billing_repo import get_subscription_by_stripe_id
+    from sqlalchemy import select
+
+    with patch("app.config.settings") as cfg:
+        cfg.stripe_price_signal_monthly    = "price_signal_mo"
+        cfg.stripe_price_signal_yearly     = "price_signal_yr"
+        cfg.stripe_price_syndicate_monthly = "price_syndicate_mo"
+
+        await _seed_user(session, user_id="user-race-01", plan="free")
+        obj = _make_sub_obj(
+            sub_id="sub_race_001",
+            customer_id="cus_race_001",
+            price_id="price_signal_mo",
+            user_id="user-race-01",
+        )
+        await handle_subscription_created(session, obj)
+        await session.flush()
+
+    row = await get_subscription_by_stripe_id(session, "sub_race_001")
+    assert row is not None
+    assert row.user_id == "user-race-01"
+    assert row.plan_name == "pro"
+
+    result = await session.execute(select(User).where(User.id == "user-race-01"))
+    user = result.scalar_one()
+    assert user.stripe_customer_id == "cus_race_001"
     assert user.plan == "pro"
 
 
