@@ -117,7 +117,7 @@ class TestEmptySnapshot:
         required = [
             "billing_flags", "subscriptions", "stripe_events",
             "entitlement_cache", "billing_routes", "stripe_enabled",
-            "entitlements_enforced", "subscription_count",
+            "stripe_config_ready", "entitlements_enforced", "subscription_count",
             "subscriptions_by_status", "entitlement_cache_count",
             "stripe_event_count", "processed_webhooks", "skipped_webhooks",
             "billing_routes_present", "safe_state", "db_available", "snapshot_utc",
@@ -338,6 +338,51 @@ class TestSafeState:
         with _patch_flags(stripe_enabled=True, entitlements_enforced=True):
             snap = await build_billing_snapshot(None)
         assert snap["safe_state"] is False
+
+
+class TestStripeActivationReadiness:
+    def test_all_required_values_produce_ready_state(self):
+        from app.services.billing_observability_service import _billing_flags_section
+
+        configured = MagicMock(
+            stripe_enabled=False,
+            entitlements_enforced=False,
+            stripe_secret_key="sk_test_redacted",
+            stripe_price_signal_monthly="price_signal_month",
+            stripe_price_signal_yearly="price_signal_year",
+            stripe_price_syndicate_monthly="price_syndicate_month",
+            stripe_success_url="https://app.example.com/billing/success",
+            stripe_cancel_url="https://app.example.com/billing/cancel",
+            stripe_webhook_secret="whsec_redacted",
+            stripe_portal_return_url="https://app.example.com/billing",
+        )
+
+        with patch("app.config.settings", configured):
+            flags = _billing_flags_section()
+
+        assert flags["stripe_config_ready"] is True
+
+    def test_missing_price_keeps_activation_not_ready(self):
+        from app.services.billing_observability_service import _billing_flags_section
+
+        configured = MagicMock(
+            stripe_enabled=False,
+            entitlements_enforced=False,
+            stripe_secret_key="sk_test_redacted",
+            stripe_price_signal_monthly="price_signal_month",
+            stripe_price_signal_yearly="",
+            stripe_price_syndicate_monthly="price_syndicate_month",
+            stripe_success_url="https://app.example.com/billing/success",
+            stripe_cancel_url="https://app.example.com/billing/cancel",
+            stripe_webhook_secret="whsec_redacted",
+            stripe_portal_return_url="https://app.example.com/billing",
+        )
+
+        with patch("app.config.settings", configured):
+            flags = _billing_flags_section()
+
+        assert flags["stripe_config_ready"] is False
+        assert flags["stripe_signal_yearly_price_set"] is False
 
 
 # ---------------------------------------------------------------------------
