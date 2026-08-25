@@ -352,6 +352,66 @@ async def test_status_stripe_customer_present(fresh_engine):
     assert resp.json()["stripe_customer_present"] is True
 
 
+@pytest.mark.asyncio
+async def test_status_recovers_missing_local_subscription_from_stripe(fresh_engine):
+    """A completed checkout self-heals even when its webhook row was missed."""
+    user_id = "user-reconcile-01"
+    customer_id = "cus_reconcile_01"
+    async with _session_ctx(fresh_engine)() as s:
+        await _seed_user(
+            s,
+            user_id=user_id,
+            stripe_customer_id=customer_id,
+        )
+        await s.commit()
+
+    stripe_subscription = {
+        "id": "sub_reconcile_01",
+        "customer": customer_id,
+        "status": "active",
+        "metadata": {"user_id": user_id},
+        "items": {
+            "data": [
+                {
+                    "price": {
+                        "id": "price_signal_mo",
+                        "recurring": {"interval": "month"},
+                    }
+                }
+            ]
+        },
+        "current_period_start": int(_now().timestamp()),
+        "current_period_end": int(_future(hours=30 * 24).timestamp()),
+        "cancel_at_period_end": False,
+    }
+
+    with patch("app.db.get_session", _session_ctx(fresh_engine)), \
+         patch("app.config.settings") as cfg, \
+         patch(
+             "app.services.stripe_service.retrieve_active_subscription_for_customer",
+             new=AsyncMock(return_value=stripe_subscription),
+         ) as retrieve:
+        cfg.stripe_enabled = True
+        cfg.stripe_price_signal_monthly = "price_signal_mo"
+        cfg.stripe_price_signal_yearly = "price_signal_yr"
+        cfg.stripe_price_syndicate_monthly = "price_syndicate_mo"
+        app = _make_app(fresh_engine, user_id=user_id)
+        with TestClient(app) as client:
+            resp = client.get("/billing/status")
+
+    assert resp.status_code == 200
+    assert resp.json()["plan"] == "pro"
+    assert resp.json()["subscription_status"] == "active"
+    retrieve.assert_awaited_once_with(customer_id)
+
+    async with _session_ctx(fresh_engine)() as s:
+        from app.db.repositories.billing_repo import get_active_subscription
+
+        stored = await get_active_subscription(s, user_id)
+        assert stored is not None
+        assert stored.stripe_subscription_id == "sub_reconcile_01"
+
+
 # ---------------------------------------------------------------------------
 # 7. POST /billing/portal — disabled mode 503
 # ---------------------------------------------------------------------------

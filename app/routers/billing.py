@@ -405,6 +405,39 @@ async def billing_status(request: Request):
         stripe_customer_present = bool(user_row and user_row.stripe_customer_id)
 
         sub = await get_active_subscription(db, user_id)
+
+        # Recovery path for a checkout whose customer link committed but whose
+        # subscription webhook was acknowledged before the local row existed.
+        # Reuse the normal idempotent webhook upsert so reconciliation follows
+        # exactly the same plan mapping, cache invalidation, and user-plan rules.
+        if sub is None and stripe_customer_present:
+            from app.config import settings as cfg
+            from app.services.stripe_service import (
+                retrieve_active_subscription_for_customer,
+            )
+            from app.services.webhook_service import handle_subscription_created
+
+            if cfg.stripe_enabled:
+                try:
+                    stripe_sub = await retrieve_active_subscription_for_customer(
+                        user_row.stripe_customer_id
+                    )
+                    if stripe_sub is not None:
+                        await handle_subscription_created(db, stripe_sub)
+                        await db.commit()
+                        sub = await get_active_subscription(db, user_id)
+                        logger.info(
+                            "[billing] reconciled missing subscription for user %s",
+                            user_id[:8],
+                        )
+                except Exception as exc:
+                    await db.rollback()
+                    logger.warning(
+                        "[billing] subscription reconciliation failed for user %s: %r",
+                        user_id[:8],
+                        exc,
+                    )
+
         ent = await resolve_entitlements(db, user_id)
 
     is_trial  = ent.plan_status == "trialing"

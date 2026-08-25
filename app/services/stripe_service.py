@@ -127,6 +127,37 @@ def resolve_price_id(plan: str, interval: str) -> str:
     return price_id
 
 
+async def retrieve_active_subscription_for_customer(
+    customer_id: str,
+) -> Optional[Dict[str, Any]]:
+    """Return the newest entitlement-bearing Stripe subscription for a customer.
+
+    This is a recovery read used when checkout linked ``users.stripe_customer_id``
+    but a delayed, reordered, or previously acknowledged webhook did not create
+    the local subscription row.  Stripe remains the source of truth; callers can
+    feed the returned snapshot through the normal idempotent webhook upsert.
+    """
+    if not customer_id:
+        return None
+
+    stripe = _require_stripe()
+    response = stripe.Subscription.list(
+        customer=customer_id,
+        status="all",
+        limit=10,
+    )
+    entitlement_statuses = {"active", "trialing", "past_due", "paused"}
+    for subscription in response.data:
+        if getattr(subscription, "status", None) not in entitlement_statuses:
+            continue
+        if hasattr(subscription, "to_dict_recursive"):
+            return subscription.to_dict_recursive()
+        if hasattr(subscription, "to_dict"):
+            return subscription.to_dict()
+        return dict(subscription)
+    return None
+
+
 # ---------------------------------------------------------------------------
 # § create_or_get_customer
 # ---------------------------------------------------------------------------
