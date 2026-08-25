@@ -193,6 +193,7 @@ async def billing_webhook(request: Request):
     from app.services.webhook_service import verify_stripe_signature, process_event
     from app.db.repositories.billing_repo import (
         get_stripe_event_by_stripe_id,
+        get_subscription_by_stripe_id,
         record_stripe_event,
         update_stripe_event_status,
     )
@@ -229,22 +230,45 @@ async def billing_webhook(request: Request):
     event_type:      str = event.get("type", "unknown")
 
     async with _get_session() as db:
-        # Idempotency pre-check.
+        # Idempotency pre-check.  A historical subscription event may have
+        # been acknowledged before checkout linked its customer to a user.
+        # Such an event was marked ``ok`` even though no subscription row was
+        # created.  Permit that specific delivery to be replayed; the
+        # subscription handler itself is an idempotent upsert.
         existing = await get_stripe_event_by_stripe_id(db, stripe_event_id)
         if existing is not None:
-            logger.debug("[webhook] duplicate event %s — skipping", stripe_event_id)
-            return JSONResponse(
-                status_code=200,
-                content={"received": True, "duplicate": True, "event_id": stripe_event_id},
+            replayable = existing.processing_status == "error"
+            if event_type in {
+                "customer.subscription.created",
+                "customer.subscription.updated",
+            }:
+                sub_obj = event.get("data", {}).get("object", {})
+                sub_id = sub_obj.get("id", "") or ""
+                if sub_id and await get_subscription_by_stripe_id(db, sub_id) is None:
+                    replayable = True
+
+            if not replayable:
+                logger.debug("[webhook] duplicate event %s — skipping", stripe_event_id)
+                return JSONResponse(
+                    status_code=200,
+                    content={"received": True, "duplicate": True, "event_id": stripe_event_id},
+                )
+
+            logger.info("[webhook] replaying incomplete event %s", stripe_event_id)
+            await update_stripe_event_status(
+                db,
+                stripe_event_id,
+                processing_status="pending",
             )
 
-        # Record event as pending before processing begins.
-        await record_stripe_event(
-            db,
-            stripe_event_id=stripe_event_id,
-            event_type=event_type,
-            processing_status="pending",
-        )
+        else:
+            # Record event as pending before processing begins.
+            await record_stripe_event(
+                db,
+                stripe_event_id=stripe_event_id,
+                event_type=event_type,
+                processing_status="pending",
+            )
 
         # Process — errors are caught and recorded; 200 is always returned.
         try:

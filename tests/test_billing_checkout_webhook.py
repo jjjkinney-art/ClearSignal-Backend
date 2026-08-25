@@ -242,6 +242,51 @@ def test_webhook_duplicate_is_idempotent():
     _run(scenario)
 
 
+def test_webhook_replays_acknowledged_subscription_without_row():
+    """A resend repairs events acknowledged before customer linking."""
+    from app.routers.billing import billing_webhook
+    from app.db.connection import get_session
+    from app.db.repositories.billing_repo import (
+        get_subscription_by_stripe_id,
+        record_stripe_event,
+    )
+
+    async def scenario():
+        await _seed_user_with_customer()
+        event = _sub_event("evt_replay_1", "sub_replay_1")
+
+        # Reproduce the legacy state: event recorded as ok, but its handler
+        # skipped before creating the subscription row.
+        async with get_session() as db:
+            await record_stripe_event(
+                db,
+                stripe_event_id="evt_replay_1",
+                event_type="customer.subscription.created",
+                processing_status="ok",
+            )
+            await db.commit()
+
+        with _settings(stripe_enabled=True, stripe_webhook_secret="whsec_test"):
+            with patch(
+                "app.services.webhook_service.verify_stripe_signature",
+                return_value=event,
+            ):
+                response = await billing_webhook(_FakeRequest())
+
+        import json
+        body = json.loads(bytes(response.body).decode())
+        assert response.status_code == 200
+        assert body.get("duplicate") is not True
+
+        async with get_session() as db:
+            sub = await get_subscription_by_stripe_id(db, "sub_replay_1")
+        assert sub is not None
+        assert sub.user_id == _USER
+        assert sub.status == "active"
+
+    _run(scenario)
+
+
 def test_webhook_missing_signature_returns_400():
     from app.routers.billing import billing_webhook
     from fastapi import HTTPException
