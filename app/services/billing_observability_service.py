@@ -72,23 +72,46 @@ def _safe_str(val: Any, default: str = "") -> str:
 def _billing_flags_section() -> Dict[str, Any]:
     try:
         from app.config import settings as _s
-        return {
+        flags = {
             "stripe_enabled":          _safe_bool(_s.stripe_enabled),
             "entitlements_enforced":   _safe_bool(_s.entitlements_enforced),
+            "stripe_secret_key_set":   bool(_s.stripe_secret_key),
+            "stripe_signal_monthly_price_set": bool(_s.stripe_price_signal_monthly),
+            "stripe_signal_yearly_price_set": bool(_s.stripe_price_signal_yearly),
+            "stripe_syndicate_monthly_price_set": bool(_s.stripe_price_syndicate_monthly),
             "stripe_success_url_set":  bool(_s.stripe_success_url),
             "stripe_cancel_url_set":   bool(_s.stripe_cancel_url),
             "stripe_webhook_secret_set": bool(_s.stripe_webhook_secret),
             "stripe_portal_return_url_set": bool(_s.stripe_portal_return_url),
         }
+        flags["stripe_config_ready"] = all(
+            flags[key]
+            for key in (
+                "stripe_secret_key_set",
+                "stripe_signal_monthly_price_set",
+                "stripe_signal_yearly_price_set",
+                "stripe_syndicate_monthly_price_set",
+                "stripe_success_url_set",
+                "stripe_cancel_url_set",
+                "stripe_webhook_secret_set",
+                "stripe_portal_return_url_set",
+            )
+        )
+        return flags
     except Exception as exc:
         logger.debug("[billing_obs] flags section failed: %r", exc)
         return {
             "stripe_enabled":              False,
             "entitlements_enforced":       False,
+            "stripe_secret_key_set":       False,
+            "stripe_signal_monthly_price_set": False,
+            "stripe_signal_yearly_price_set": False,
+            "stripe_syndicate_monthly_price_set": False,
             "stripe_success_url_set":      False,
             "stripe_cancel_url_set":       False,
             "stripe_webhook_secret_set":   False,
             "stripe_portal_return_url_set": False,
+            "stripe_config_ready":         False,
         }
 
 
@@ -243,6 +266,7 @@ async def build_billing_snapshot(session) -> Dict[str, Any]:
         "billing_routes": routes,
         # Top-level convenience aliases for quick validation
         "stripe_enabled":          flags["stripe_enabled"],
+        "stripe_config_ready":     _safe_bool(flags.get("stripe_config_ready")),
         "entitlements_enforced":   flags["entitlements_enforced"],
         "subscription_count":      subscriptions["total"],
         "subscriptions_by_status": subscriptions["by_status"],

@@ -79,14 +79,34 @@ In Render (or `.env` locally):
 
 ```
 STRIPE_SECRET_KEY=sk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...    # from Stripe CLI stripe listen
+STRIPE_WEBHOOK_SECRET=whsec_...    # from the Stripe Dashboard webhook endpoint
 STRIPE_PRICE_SIGNAL_MONTHLY=price_test_...
 STRIPE_PRICE_SIGNAL_YEARLY=price_test_...
 STRIPE_PRICE_SYNDICATE_MONTHLY=price_test_...
-STRIPE_SUCCESS_URL=https://app.example.com/billing/success
-STRIPE_CANCEL_URL=https://app.example.com/billing/cancel
-STRIPE_PORTAL_RETURN_URL=https://app.example.com/billing
+STRIPE_SUCCESS_URL=https://ai-intelligence-interface.vercel.app/billing/success
+STRIPE_CANCEL_URL=https://ai-intelligence-interface.vercel.app/billing/cancel
+STRIPE_PORTAL_RETURN_URL=https://ai-intelligence-interface.vercel.app/billing
 ```
+
+Create the Stripe Dashboard webhook endpoint at:
+
+```
+https://clearsignal-backend-dlsc.onrender.com/billing/webhook
+```
+
+Subscribe it to these events:
+
+- `checkout.session.completed`
+- `customer.subscription.created`
+- `customer.subscription.updated`
+- `customer.subscription.deleted`
+- `invoice.payment_succeeded`
+- `invoice.payment_failed`
+- `customer.subscription.trial_will_end`
+
+Before changing `STRIPE_ENABLED`, call `GET /admin/billing-status` and confirm
+`stripe_config_ready=true`. This field reports only whether every required
+value is present; it never exposes keys, webhook secrets, or price IDs.
 
 ### Step 2 — Enable Stripe (test mode)
 
@@ -96,6 +116,7 @@ STRIPE_ENABLED=true
 
 Deploy. Validate with `GET /admin/billing-status`:
 - `stripe_enabled: true`
+- `stripe_config_ready: true`
 - `safe_state: false` (expected — Stripe is now active)
 - `entitlements_enforced: false` (still off — no users blocked)
 
