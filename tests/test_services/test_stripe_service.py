@@ -209,6 +209,34 @@ async def test_customer_creation_new_when_not_found(stripe_mock):
     assert call_kwargs["email"] == "test@example.com"
 
 
+@pytest.mark.asyncio
+async def test_retrieve_active_subscription_for_customer(stripe_mock):
+    from app.services.stripe_service import retrieve_active_subscription_for_customer
+
+    canceled = MagicMock(status="canceled")
+    active = MagicMock(status="active")
+    active.to_dict_recursive.return_value = {
+        "id": "sub_active_001",
+        "customer": "cus_existing_001",
+        "status": "active",
+    }
+    stripe_mock.Subscription.list.return_value = MagicMock(
+        data=[canceled, active]
+    )
+
+    with _patch_settings(_ENABLED_SETTINGS):
+        result = await retrieve_active_subscription_for_customer(
+            "cus_existing_001"
+        )
+
+    assert result["id"] == "sub_active_001"
+    stripe_mock.Subscription.list.assert_called_once_with(
+        customer="cus_existing_001",
+        status="all",
+        limit=10,
+    )
+
+
 # ---------------------------------------------------------------------------
 # 7. Checkout session creation (full mocked Stripe path)
 # ---------------------------------------------------------------------------
