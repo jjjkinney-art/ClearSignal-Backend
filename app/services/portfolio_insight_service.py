@@ -206,7 +206,18 @@ def _fmt_tickers(tickers: List[str]) -> str:
     return ", ".join(tickers[:-1]) + " and " + tickers[-1]
 
 
-def _tmpl_shared_risk_cluster(cluster_label: str, tickers: List[str], stale: bool) -> str:
+def _tmpl_shared_risk_cluster(
+    cluster_label: str,
+    tickers: List[str],
+    stale: bool,
+    exposure_type: str = "thematic",
+) -> str:
+    if exposure_type == "classification":
+        return (
+            f"Portfolio positions {_fmt_tickers(tickers)} share the maintained "
+            f'company classification "{cluster_label}". This is descriptive overlap, '
+            f"not evidence that the positions are correlated."
+        )
     staleness = "  Note: one or more contributing signals may be stale." if stale else ""
     return (
         f"Portfolio positions {_fmt_tickers(tickers)} share a common risk factor: "
@@ -238,9 +249,10 @@ def _tmpl_concentration_risk(
 def _tmpl_shared_failure_mode(analog_label: str, tickers: List[str]) -> str:
     label = analog_label or "an historical failure pattern"
     return (
-        f"Positions {_fmt_tickers(tickers)} are individually matched to {label}.  "
-        f"If the underlying mechanism progresses, multiple holdings may be "
-        f"affected in a correlated sequence."
+        f"Historical analogy only — this does not mean the named episode involved "
+        f"these companies. Positions {_fmt_tickers(tickers)} are independently matched "
+        f"to the risk mechanism represented by {label}. If a similar mechanism "
+        f"progresses, multiple positions could be affected in sequence."
     )
 
 
@@ -291,7 +303,10 @@ def _candidates_from_exposure(
     # 1. Shared risk clusters
     for cluster in proj.shared_exposure_clusters:
         body = _tmpl_shared_risk_cluster(
-            cluster.concern_label, cluster.member_tickers, cluster.stale_input
+            cluster.concern_label,
+            cluster.member_tickers,
+            cluster.stale_input,
+            cluster.dominant_exposure_type,
         )
         candidates.append(InsightCandidate(
             insight_type="shared_risk_cluster",
