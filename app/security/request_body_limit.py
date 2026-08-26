@@ -71,6 +71,9 @@ class RequestBodyLimitMiddleware:
             try:
                 return next(pending)
             except StopIteration:
-                return {"type": "http.request", "body": b"", "more_body": False}
+                # The terminal http.request has already been replayed. Delegate
+                # subsequent calls to the server so response middleware can wait
+                # for the real disconnect instead of seeing a duplicate request.
+                return await receive()
 
         await self.app(scope, replay_receive, send)
