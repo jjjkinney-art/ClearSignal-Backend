@@ -57,7 +57,10 @@ def resolve_brief_entries(
 
     if authenticated:
         if account:
-            return account[:_MAX_TICKERS], "account"
+            # Persisted account rows are already constrained by entitlements.
+            # Paid accounts can exceed the browser-input safety cap, and their
+            # Morning Brief must cover the complete account watchlist.
+            return account, "account"
         if requested:
             return _entries_for_tickers(requested, legacy), "browser_fallback"
         return [], "account"
