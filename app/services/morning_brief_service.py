@@ -94,6 +94,22 @@ def _today_str(reference_date: Optional[str]) -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
+def _format_material_change_shift(event: MaterialChangeEvent) -> str:
+    """Return one complete, singly-prefixed material-change sentence."""
+    ticker = (event.ticker or "").strip()
+    summary = (event.summary or "").strip()
+    prefix = f"{ticker}:"
+
+    # Durable headlines may already include their ticker. Remove any repeated
+    # leading prefixes before adding the canonical one below.
+    while ticker and summary.casefold().startswith(prefix.casefold()):
+        summary = summary[len(prefix):].lstrip()
+
+    if not summary:
+        return ticker
+    return f"{prefix} {summary}"
+
+
 def _entry_priority_score(
     entry: WatchlistEntry,
     change_map: Dict[str, MaterialChangeEvent],
@@ -734,7 +750,7 @@ def generate_morning_brief_v2(
             if len(narrative_shifts) >= 4:
                 break
             if ev.summary:
-                narrative_shifts.append(f"{ev.ticker}: {ev.summary[:80].rstrip('.')}")
+                narrative_shifts.append(_format_material_change_shift(ev))
 
     # ── Section 3: Debate Shifts ───────────────────────────────────────────
     debate_shifts_section = _build_debate_shifts(_event_impacts, _drift)
