@@ -2529,7 +2529,7 @@ async def add_to_watchlist(
         from .db import get_session as _get_session
 
         _user_id = getattr(getattr(request, "state", None), "user_id", "") or ""
-        async with await _get_session() as _db:
+        async with _get_session() as _db:
             _ent = await resolve_entitlements(_db, _user_id)
 
         # Count current watchlist before checking — idempotent adds don't need a block.
@@ -3071,7 +3071,7 @@ async def get_morning_brief_v2(
     reference_date: Optional[str] = None,
     tickers: Optional[str] = Query(
         default=None,
-        description="Comma-separated ticker list from frontend localStorage (fallback when backend list is empty)",
+        description="Comma-separated browser fallback used only when the signed-in account has no persisted watchlist",
     ),
     request: Request = None,
 ) -> dict:
@@ -3086,9 +3086,8 @@ async def get_morning_brief_v2(
       5. Watchlist Drift (per-ticker direction/driver/materiality)
 
     Query params:
-      tickers: comma-separated list of tickers from the frontend watchlist store.
-               Used as fallback when the backend has no registered entries (e.g., fresh
-               server start). The backend will auto-register them and generate a brief.
+      tickers: comma-separated browser fallback for migrated accounts that do not
+               yet have a persisted account watchlist.
       reference_date: ISO date string for the brief header (defaults to today UTC).
     """
     # Phase 17 · Slice 6 — entitlement enforcement (no-op when ENTITLEMENTS_ENFORCED=false)
@@ -3101,7 +3100,7 @@ async def get_morning_brief_v2(
         from .db import get_session as _get_session
 
         _user_id = getattr(getattr(request, "state", None), "user_id", "") or ""
-        async with await _get_session() as _db:
+        async with _get_session() as _db:
             _ent = await resolve_entitlements(_db, _user_id)
         # No weekly usage counter yet — pass 0 (fail-open); blocks at limit=0 only.
         check_briefing_limit(_ent, 0)
@@ -3119,19 +3118,41 @@ async def get_morning_brief_v2(
         from .services.morning_brief_service import generate_morning_brief_v2
         from .services.timeline_store import default_store
         from .schemas import EventImpactAssessment, WatchlistEntry as WLEntry
+        from .services.brief_scope_service import parse_ticker_csv, resolve_brief_entries
 
-        # Fetch watchlist state (sync method — get_watchlist returns List[WatchlistEntry])
-        watchlist_entries = watchlist_service.get_watchlist()
+        # Resolve the brief universe without allowing a signed-in user to inherit
+        # the process-wide legacy watchlist. Account rows are authoritative; the
+        # browser list is a migration fallback only when the account is empty.
+        legacy_entries = watchlist_service.get_watchlist()
+        requested_tickers = parse_ticker_csv(tickers)
+        user_id = getattr(getattr(request, "state", None), "user_id", "") or ""
+        account_entries = []
+        if user_id:
+            try:
+                from .db import get_session as _get_session
+                from .db.repositories.watchlist_repo import ticker_list_active
 
-        # Fallback: if backend has no entries but frontend sent tickers, register them
-        if not watchlist_entries and tickers:
-            frontend_tickers = [t.strip().upper() for t in tickers.split(",") if t.strip()]
-            for ticker_sym in frontend_tickers[:20]:  # cap at 20
-                try:
-                    watchlist_service.add_ticker(ticker_sym, ticker_sym)
-                except Exception:
-                    pass
-            watchlist_entries = watchlist_service.get_watchlist()
+                async with _get_session() as _db:
+                    rows = await ticker_list_active(_db, user_id=user_id) if _db else []
+                metadata = {entry.ticker.upper(): entry for entry in legacy_entries}
+                account_entries = [
+                    metadata.get(row.ticker.upper())
+                    or WLEntry(
+                        ticker=row.ticker,
+                        company_name=row.company_name or row.ticker,
+                        added_at=row.added_at.isoformat() if row.added_at else "",
+                    )
+                    for row in rows
+                ]
+            except Exception as scope_exc:
+                logger.warning("morning_brief_v2 account scope lookup failed: %s", scope_exc)
+
+        watchlist_entries, brief_scope = resolve_brief_entries(
+            account_entries=account_entries,
+            requested_tickers=requested_tickers,
+            legacy_entries=legacy_entries,
+            authenticated=bool(user_id),
+        )
 
         # Fetch current regime
         try:
@@ -3165,7 +3186,10 @@ async def get_morning_brief_v2(
             regime=regime,
             reference_date=reference_date,
         )
-        return brief.model_dump()
+        payload = brief.model_dump()
+        payload["brief_scope"] = brief_scope
+        payload["tracked_tickers"] = ticker_list
+        return payload
     except Exception as exc:
         logger.warning("morning_brief_v2 failed: %s", exc)
         # Return a valid empty-state brief rather than an error object
