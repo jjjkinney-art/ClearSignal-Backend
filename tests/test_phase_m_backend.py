@@ -1055,6 +1055,18 @@ class TestMorningBriefV2Generation:
         brief = generate_morning_brief_v2(watchlist_entries=entries)
         assert brief.ticker_count == 2
 
+    def test_missing_regime_reports_active_watchlist_coverage(self):
+        from app.services.morning_brief_service import generate_morning_brief_v2
+        entries = [self._make_watchlist_entry("AAPL"), self._make_watchlist_entry("MSFT")]
+        brief = generate_morning_brief_v2(watchlist_entries=entries)
+        assert "monitoring remains active across 2 tracked names" in brief.regime_headline
+        assert "no events processed" not in brief.regime_headline.lower()
+
+    def test_missing_regime_without_watchlist_explains_baseline(self):
+        from app.services.morning_brief_service import generate_morning_brief_v2
+        brief = generate_morning_brief_v2(watchlist_entries=[])
+        assert "No watchlist coverage is available yet" in brief.regime_headline
+
     def test_regime_section_populated(self):
         from app.services.morning_brief_service import generate_morning_brief_v2
         regime = self._make_regime()
