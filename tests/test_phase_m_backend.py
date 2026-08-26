@@ -36,6 +36,7 @@ from app.schemas import (
     EvidenceProvenance,
     EventFreshnessScore,
     EventImpactAssessment,
+    MaterialChangeEvent,
     MorningBriefV2,
     ThesisSnapshot,
     WatchlistDriftSummary,
@@ -1092,6 +1093,50 @@ class TestMorningBriefV2Generation:
         )
         assert len(brief.narrative_shifts) > 0
         assert any("AAPL" in s for s in brief.narrative_shifts)
+
+    def test_material_change_shift_does_not_duplicate_ticker(self):
+        from app.services.morning_brief_service import generate_morning_brief_v2
+        change = MaterialChangeEvent(
+            ticker="AAPL",
+            severity="high",
+            summary="AAPL: The original thesis mechanism deteriorated.",
+            change_type="thesis_weakened",
+            timestamp="2026-08-26T00:00:00+00:00",
+            materiality_score=0.8,
+            change_category="thesis_broke",
+        )
+
+        brief = generate_morning_brief_v2(
+            watchlist_entries=[self._make_watchlist_entry("AAPL")],
+            recent_material_changes=[change],
+        )
+
+        assert brief.narrative_shifts == [
+            "AAPL: The original thesis mechanism deteriorated."
+        ]
+
+    def test_material_change_shift_preserves_complete_summary(self):
+        from app.services.morning_brief_service import generate_morning_brief_v2
+        summary = (
+            "The original thesis mechanism deteriorated — the operating story "
+            "no longer supports the prior valuation premium."
+        )
+        change = MaterialChangeEvent(
+            ticker="AAPL",
+            severity="high",
+            summary=summary,
+            change_type="thesis_weakened",
+            timestamp="2026-08-26T00:00:00+00:00",
+            materiality_score=0.8,
+            change_category="thesis_broke",
+        )
+
+        brief = generate_morning_brief_v2(
+            watchlist_entries=[self._make_watchlist_entry("AAPL")],
+            recent_material_changes=[change],
+        )
+
+        assert brief.narrative_shifts == [f"AAPL: {summary}"]
 
     def test_debate_shifts_from_impact_type(self):
         from app.services.morning_brief_service import generate_morning_brief_v2
