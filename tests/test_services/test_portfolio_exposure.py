@@ -244,6 +244,22 @@ class TestSinglePositionPortfolio:
         proj = await project_portfolio_exposure(db_session, p.id)
         assert proj.exposure_pairs == []
 
+
+@pytest.mark.asyncio
+async def test_company_classification_fallback_surfaces_shared_technology_exposure(db_session):
+    p = await _make_portfolio(db_session)
+    for ticker in ("AAPL", "NVDA", "PLTR", "RKLB"):
+        await _add_position(db_session, p.id, ticker)
+    proj = await project_portfolio_exposure(db_session, p.id)
+    assert proj.classification_fallback_used is True
+    technology = next(
+        cluster for cluster in proj.shared_exposure_clusters
+        if cluster.concern_label == "Sector: Technology"
+    )
+    assert technology.member_tickers == ["AAPL", "NVDA", "PLTR"]
+    assert technology.dominant_exposure_type == "classification"
+    assert technology.max_edge_strength == 0.0
+
     @pytest.mark.asyncio
     async def test_single_ticker_no_clusters(self, db_session):
         p = await _make_portfolio(db_session)
