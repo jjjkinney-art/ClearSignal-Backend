@@ -416,3 +416,84 @@ class TestSensitiveEndpoints:
         big = {"ticker": "NVDA", "blob": "x" * 5000}
         r = self._client().post("/events/ingest", json=big)
         assert r.status_code == 413
+
+
+class TestRequestBodyLimitMiddleware:
+    """The hard cap must count streamed bytes, not trust Content-Length."""
+
+    @staticmethod
+    async def _run(messages, *, limit):
+        from app.security.request_body_limit import RequestBodyLimitMiddleware
+
+        received = {}
+        sent = []
+        pending = iter(messages)
+
+        async def receive():
+            try:
+                return next(pending)
+            except StopIteration:
+                return {"type": "http.request", "body": b"", "more_body": False}
+
+        async def send(message):
+            sent.append(message)
+
+        async def downstream(scope, downstream_receive, downstream_send):
+            chunks = []
+            while True:
+                message = await downstream_receive()
+                chunks.append(message.get("body", b""))
+                if not message.get("more_body", False):
+                    break
+            received["body"] = b"".join(chunks)
+            await downstream_send(
+                {"type": "http.response.start", "status": 204, "headers": []}
+            )
+            await downstream_send({"type": "http.response.body", "body": b""})
+
+        app = RequestBodyLimitMiddleware(downstream, max_body_bytes=limit)
+        await app(
+            {
+                "type": "http",
+                "method": "POST",
+                "path": "/ask",
+                "headers": [(b"content-length", b"1")],
+            },
+            receive,
+            send,
+        )
+        return received, sent
+
+    def test_rejects_chunked_body_over_limit_even_with_false_header(self):
+        import asyncio
+
+        received, sent = asyncio.run(
+            self._run(
+                [
+                    {"type": "http.request", "body": b"abcd", "more_body": True},
+                    {"type": "http.request", "body": b"efgh", "more_body": False},
+                ],
+                limit=7,
+            )
+        )
+
+        assert received == {}
+        assert sent[0]["type"] == "http.response.start"
+        assert sent[0]["status"] == 413
+        assert sent[1]["body"] == b'{"detail":"Request body too large."}'
+
+    def test_replays_body_at_exact_limit_without_mutation(self):
+        import asyncio
+
+        received, sent = asyncio.run(
+            self._run(
+                [
+                    {"type": "http.request", "body": b"abcd", "more_body": True},
+                    {"type": "http.request", "body": b"efgh", "more_body": False},
+                ],
+                limit=8,
+            )
+        )
+
+        assert received["body"] == b"abcdefgh"
+        assert sent[0]["status"] == 204
