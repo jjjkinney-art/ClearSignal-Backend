@@ -1,7 +1,12 @@
+import asyncio
 from datetime import datetime, timezone
 from types import SimpleNamespace
 
-from app.services.brief_material_change_service import load_recent_material_changes
+from app.services.brief_material_change_service import (
+    load_recent_material_changes,
+    load_recent_material_changes_from_db,
+    merge_material_changes,
+)
 
 
 NOW = datetime(2026, 8, 26, 16, 0, tzinfo=timezone.utc)
@@ -101,3 +106,93 @@ def test_zero_per_ticker_limit_returns_no_changes():
         now=NOW,
         per_ticker_limit=0,
     ) == []
+
+
+def test_loads_recent_account_scoped_changes_from_durable_feed(monkeypatch):
+    calls = []
+
+    async def fake_feed(session, limit, tickers):
+        calls.append((session, limit, tickers))
+        return {
+            "feed": [
+                {
+                    "ticker": "AAPL",
+                    "delta_id": "delta-recent",
+                    "created_at": "2026-08-26T15:00:00+00:00",
+                    "magnitude": "material",
+                    "stance_changed": True,
+                    "from_stance": "neutral",
+                    "to_stance": "bearish",
+                    "conviction_delta": -0.2,
+                    "headline": "Stance shifted neutral → bearish. Conviction -20pp.",
+                    "concern_tags": ["demand"],
+                },
+                {
+                    "ticker": "MSFT",
+                    "delta_id": "cross-account",
+                    "created_at": "2026-08-26T15:30:00+00:00",
+                    "headline": "Should not escape ticker scope.",
+                },
+                {
+                    "ticker": "AAPL",
+                    "delta_id": "too-old",
+                    "created_at": "2026-08-24T15:00:00+00:00",
+                    "headline": "Old material change.",
+                },
+            ],
+            "next_cursor": None,
+            "has_more": False,
+        }
+
+    monkeypatch.setattr(
+        "app.db.repositories.evolution_repo.get_material_changes_feed",
+        fake_feed,
+    )
+    session = object()
+
+    result = asyncio.run(
+        load_recent_material_changes_from_db(
+            session,
+            [" aapl ", "AAPL"],
+            now=NOW,
+        )
+    )
+
+    assert [change.event_id for change in result] == ["delta-recent"]
+    assert result[0].change_type == "thesis_weakened"
+    assert result[0].severity == "high"
+    assert calls == [(session, 100, ["AAPL"])]
+
+
+def test_merges_durable_and_timeline_changes_without_duplicates():
+    durable = [
+        _change(
+            "AAPL",
+            "2026-08-26T15:00:00Z",
+            event_id="shared",
+            summary="durable",
+        ).data
+    ]
+    timeline = [
+        _change(
+            "AAPL",
+            "2026-08-26T15:00:00Z",
+            event_id="shared",
+            summary="timeline",
+        ).data,
+        _change(
+            "MSFT",
+            "2026-08-26T15:30:00Z",
+            event_id="newer",
+        ).data,
+    ]
+
+    from app.schemas import MaterialChangeEvent
+
+    result = merge_material_changes(
+        [MaterialChangeEvent.model_validate(item) for item in durable],
+        [MaterialChangeEvent.model_validate(item) for item in timeline],
+    )
+
+    assert [change.event_id for change in result] == ["newer", "shared"]
+    assert next(change for change in result if change.event_id == "shared").summary == "durable"
