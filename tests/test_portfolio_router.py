@@ -93,6 +93,31 @@ def test_add_position_is_idempotent():
     _run(_with_db(scenario))
 
 
+def test_company_name_is_resolved_before_persistence():
+    async def scenario():
+        result = await pr.add_position(
+            pr.PositionRequest(ticker="Palantir", membership_class="owned"),
+            request=None,
+        )
+        assert result["ticker"] == "PLTR"
+        assert {p["ticker"] for p in await pr.list_positions(request=None)} == {"PLTR"}
+    _run(_with_db(scenario))
+
+
+def test_normalize_positions_repairs_legacy_company_name():
+    async def scenario():
+        from app.db import get_session
+        from app.db.repositories.portfolio_repo import position_add
+
+        async with get_session() as db:
+            pf = await pr._default_portfolio_id(db, pr._user_id(None))
+            await position_add(db, pf, "PALANTIR", membership_class="owned")
+        result = await pr.normalize_positions(request=None)
+        assert result == {"normalized": [{"from": "PALANTIR", "to": "PLTR"}], "count": 1}
+        assert {p["ticker"] for p in await pr.list_positions(request=None)} == {"PLTR"}
+    _run(_with_db(scenario))
+
+
 def test_remove_nonexistent_returns_false():
     async def scenario():
         rm = await pr.remove_position("ZZZZ", request=None)
@@ -148,6 +173,28 @@ def test_position_request_rejects_bad_membership():
 def test_position_request_requires_ticker():
     with pytest.raises(ValueError):
         pr.PositionRequest(ticker="   ", membership_class="owned")
+
+
+def test_position_request_rejects_unresolved_name_and_invalid_weight():
+    with pytest.raises(ValueError):
+        pr.PositionRequest(ticker="Definitely Not A Company", membership_class="owned")
+    with pytest.raises(ValueError):
+        pr.PositionRequest(ticker="NVDA", membership_class="owned", weight=1.2)
+
+
+def test_refresh_generates_ranked_insights():
+    async def scenario():
+        for ticker in ("AAPL", "NVDA"):
+            await pr.add_position(
+                pr.PositionRequest(ticker=ticker, membership_class="owned"),
+                request=None,
+            )
+        result = await pr.refresh_portfolio_insights(request=None)
+        insights = await pr.portfolio_insights(request=None)
+        assert result["ranked_count"] >= 1
+        assert len(insights) >= 1
+        assert any(row["rank_score"] > 0 for row in insights)
+    _run(_with_db(scenario))
 
 
 def test_endpoints_degrade_when_persistence_disabled():
