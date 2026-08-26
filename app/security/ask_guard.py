@@ -87,7 +87,7 @@ async def enforce_ask_preflight(http_request: Request, question: str) -> str:
 
     # 4. Strict rate limits for /ask: per-IP and per-user (429).
     if cfg.rate_limit_enabled:
-        ip = client_ip(http_request)
+        ip = client_ip(http_request, cfg.rate_limit_trusted_proxy_hops)
         allowed_ip, retry_ip = rate_limiter.check(
             f"ask:ip:{ip}", cfg.rate_limit_ask_per_ip_per_min, cfg.rate_limit_window_s
         )
