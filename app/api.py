@@ -3119,7 +3119,11 @@ async def get_morning_brief_v2(
         from .services.timeline_store import default_store
         from .schemas import EventImpactAssessment, WatchlistEntry as WLEntry
         from .services.brief_scope_service import parse_ticker_csv, resolve_brief_entries
-        from .services.brief_material_change_service import load_recent_material_changes
+        from .services.brief_material_change_service import (
+            load_recent_material_changes,
+            load_recent_material_changes_from_db,
+            merge_material_changes,
+        )
 
         # Resolve the brief universe without allowing a signed-in user to inherit
         # the process-wide legacy watchlist. Account rows are authoritative; the
@@ -3179,7 +3183,38 @@ async def get_morning_brief_v2(
         evaluator = get_default_evaluator()
         ticker_list = [e.ticker for e in watchlist_entries]
         drift = evaluator.get_watchlist_drift(ticker_list) if ticker_list else []
-        recent_material_changes = load_recent_material_changes(default_store, ticker_list)
+
+        # Postgres is authoritative for material thesis deltas because Render's
+        # local timeline directory is ephemeral across deploys. Keep the local
+        # store as a fallback for in-flight events and local development.
+        durable_material_changes = []
+        if ticker_list:
+            try:
+                from .db import get_session as _get_session
+
+                async with _get_session() as _db:
+                    durable_material_changes = (
+                        await load_recent_material_changes_from_db(
+                            _db,
+                            ticker_list,
+                        )
+                        if _db
+                        else []
+                    )
+            except Exception as material_exc:
+                logger.warning(
+                    "morning_brief_v2 durable material-change lookup failed: %s",
+                    material_exc,
+                )
+
+        timeline_material_changes = load_recent_material_changes(
+            default_store,
+            ticker_list,
+        )
+        recent_material_changes = merge_material_changes(
+            durable_material_changes,
+            timeline_material_changes,
+        )
 
         brief = generate_morning_brief_v2(
             watchlist_entries=watchlist_entries,
