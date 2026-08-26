@@ -711,7 +711,19 @@ def generate_morning_brief_v2(
         dominant_narrative = getattr(regime, "dominant_narrative", "") or ""
         regime_factors = list(getattr(regime, "key_macro_factors", []) or [])
 
-    regime_headline = _get_regime_narrative(rate_env, risk_app, dominant_narrative)
+    if not dominant_narrative and rate_env == "uncertain":
+        if ticker_count:
+            regime_headline = (
+                "No new portfolio-wide regime event was available for this brief; "
+                f"monitoring remains active across {ticker_count} tracked names."
+            )
+        else:
+            regime_headline = (
+                "No watchlist coverage is available yet; add tracked names to establish "
+                "a briefing baseline."
+            )
+    else:
+        regime_headline = _get_regime_narrative(rate_env, risk_app, dominant_narrative)
 
     # ── Section 2: What Changed ────────────────────────────────────────────
     narrative_shifts = _build_narrative_shifts(_event_impacts, _drift)
