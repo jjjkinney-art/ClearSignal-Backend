@@ -158,6 +158,10 @@ class PortfolioExposureProjection:
     # True when the failure_mode or catalyst tables could not be read.
     substrate_missing: bool
 
+    # True when shared clusters come from the maintained company
+    # sector/industry classification rather than CrossExposure edges.
+    classification_fallback_used: bool = False
+
 
 # ---------------------------------------------------------------------------
 # Internal helpers
@@ -406,6 +410,52 @@ def _build_shared_clusters(
     return clusters
 
 
+def _build_classification_clusters(
+    tickers: Set[str],
+    weights: Dict[str, Optional[float]],
+) -> List[SharedExposureCluster]:
+    """Build transparent baseline overlap from maintained company metadata.
+
+    This is a fallback only when no CrossExposure concern clusters exist.  It
+    does not claim correlation or a causal exposure; it reports shared sector
+    and industry classifications already maintained by company_detection.
+    """
+    from app.services.company_detection import _COMPANY_DB
+
+    aliases = {"GOOG": "GOOGL"}
+    grouped: Dict[str, Set[str]] = {}
+    for ticker in tickers:
+        info = _COMPANY_DB.get(aliases.get(ticker, ticker), {})
+        for kind in ("sector", "industry"):
+            value = str(info.get(kind, "")).strip()
+            if value:
+                grouped.setdefault(f"{kind.title()}: {value}", set()).add(ticker)
+
+    clusters: List[SharedExposureCluster] = []
+    for label, members in grouped.items():
+        if len(members) < 2:
+            continue
+        member_tickers = sorted(members)
+        member_weights = [weights.get(ticker) for ticker in member_tickers]
+        cluster_weight = (
+            None
+            if any(weight is None for weight in member_weights)
+            else sum(weight for weight in member_weights if weight is not None)
+        )
+        clusters.append(SharedExposureCluster(
+            concern_label=label,
+            member_tickers=member_tickers,
+            cluster_weight=cluster_weight,
+            max_edge_strength=0.0,
+            dominant_exposure_type="classification",
+            stale_input=False,
+            cross_exposure_as_of="",
+            source_refs=[f"company_profile:{ticker}" for ticker in member_tickers],
+        ))
+    clusters.sort(key=lambda cluster: (-len(cluster.member_tickers), cluster.concern_label))
+    return clusters
+
+
 def _build_failure_clusters(
     failure_rows: list,
     analog_labels: Dict[str, str],
@@ -540,6 +590,10 @@ async def project_portfolio_exposure(
     high_corr = [p for p in pairs if p.strength >= CORRELATION_THRESHOLD]
 
     clusters = _build_shared_clusters(pairs, weights)
+    classification_fallback_used = False
+    if not clusters and len(ticker_set) >= 2:
+        clusters = _build_classification_clusters(ticker_set, weights)
+        classification_fallback_used = bool(clusters)
 
     # Compute aggregate freshness fields.
     any_stale = any(p.stale_input for p in pairs)
@@ -584,4 +638,5 @@ async def project_portfolio_exposure(
         cross_exposure_stale=any_stale,
         cross_exposure_as_of=as_of,
         substrate_missing=substrate_missing,
+        classification_fallback_used=classification_fallback_used,
     )
