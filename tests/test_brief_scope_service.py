@@ -25,6 +25,20 @@ def test_authenticated_account_entries_are_authoritative():
     assert scope == "account"
 
 
+def test_authenticated_account_entries_are_not_silently_capped():
+    account_entries = [_entry(f"X{i}") for i in range(24)]
+
+    entries, scope = resolve_brief_entries(
+        account_entries=account_entries,
+        requested_tickers=[],
+        legacy_entries=[],
+        authenticated=True,
+    )
+
+    assert [entry.ticker for entry in entries] == [f"X{i}" for i in range(24)]
+    assert scope == "account"
+
+
 def test_authenticated_empty_account_never_inherits_legacy_watchlist():
     entries, scope = resolve_brief_entries(
         account_entries=[],
