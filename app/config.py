@@ -670,8 +670,15 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     rate_limit_window_s: int = 60
     rate_limit_per_ip_per_min: int = 120         # global default, any route
+    rate_limit_per_user_per_min: int = 180       # authenticated user, any route
+    rate_limit_expensive_per_ip_per_min: int = 6
+    rate_limit_expensive_per_user_per_min: int = 10
     rate_limit_ask_per_ip_per_min: int = 10      # strictest: /ask per IP
     rate_limit_ask_per_user_per_min: int = 20    # /ask per authenticated user
+    # Render/nginx append the connecting address to X-Forwarded-For.  Reading
+    # from the trusted (right-hand) edge prevents a caller-prepended value from
+    # becoming the bucket key.  Set to 0 when the app is exposed directly.
+    rate_limit_trusted_proxy_hops: int = 1
 
     # ── Per-user daily quota on the expensive /ask path ───────────────────
     # -1 = unlimited.  System/bypass user is always unlimited.  Exceed -> 429.

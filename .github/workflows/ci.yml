@@ -56,6 +56,7 @@ jobs:
         run: >
           python -m pytest -q -o addopts=""
           tests/test_launch_security.py
+          tests/test_rate_limit_middleware.py
           tests/test_dependency_pinning.py
 
       - name: Production router regression

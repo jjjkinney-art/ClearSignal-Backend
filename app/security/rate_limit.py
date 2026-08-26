@@ -9,11 +9,31 @@ No prompts, tokens, or user data are stored — only opaque keys and counts.
 """
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from typing import Dict, Optional, Tuple
 
 from starlette.requests import Request
+
+logger = logging.getLogger(__name__)
+
+# Probes and Stripe's signed delivery channel must not share customer traffic
+# budgets.  OPTIONS is handled separately because every route may receive it.
+EXEMPT_PATHS = frozenset(
+    {"/", "/health", "/healthz", "/readyz", "/version", "/billing/webhook"}
+)
+
+# Routes that can trigger provider, model, or portfolio-wide computation.  /ask
+# keeps its existing dedicated preflight limits so it is not charged twice.
+EXPENSIVE_ROUTES = frozenset(
+    {
+        ("POST", "/analyze"),
+        ("POST", "/pipeline/run"),
+        ("POST", "/events/process"),
+        ("POST", "/portfolio/insights/refresh"),
+    }
+)
 
 
 class RateLimiter:
@@ -64,20 +84,44 @@ class RateLimiter:
             self._buckets.clear()
 
 
-def client_ip(request: Request) -> str:
+def client_ip(request: Request, trusted_proxy_hops: int = 1) -> str:
     """Best-effort client IP.
 
-    Honours the first hop of ``X-Forwarded-For`` (set by Render / nginx) and
-    falls back to the socket peer.  Used only as a rate-limit bucket key.
+    Render/nginx append hops to ``X-Forwarded-For``.  Select from the right-hand
+    trusted edge instead of the caller-controlled first value, then fall back
+    to ``X-Real-IP`` or the socket peer.  Used only as a rate-limit bucket key.
     """
     xff = request.headers.get("x-forwarded-for", "")
-    if xff:
-        return xff.split(",")[0].strip()
+    hops = [part.strip() for part in xff.split(",") if part.strip()]
+    if hops and trusted_proxy_hops > 0:
+        index = max(0, len(hops) - trusted_proxy_hops)
+        return hops[index]
     real = request.headers.get("x-real-ip", "")
-    if real:
+    if real and trusted_proxy_hops > 0:
         return real.strip()
     client = getattr(request, "client", None)
     return getattr(client, "host", "") or "unknown"
+
+
+def is_exempt(request: Request) -> bool:
+    return request.method.upper() == "OPTIONS" or request.url.path in EXEMPT_PATHS
+
+
+def is_expensive(request: Request) -> bool:
+    return (request.method.upper(), request.url.path.rstrip("/") or "/") in EXPENSIVE_ROUTES
+
+
+def log_denial(*, scope: str, request: Request, retry_after: int) -> None:
+    """Log only routing metadata; never tokens, bodies, tickers, or user data."""
+    request_id = getattr(request.state, "request_id", "")
+    logger.warning(
+        "rate_limit_denied scope=%s method=%s path=%s retry_after=%s req=%s",
+        scope,
+        request.method,
+        request.url.path,
+        retry_after,
+        request_id,
+    )
 
 
 # Module-level singleton shared across the app.

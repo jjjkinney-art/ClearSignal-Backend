@@ -42,7 +42,7 @@ from typing import Dict, Optional, Tuple
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
-from starlette.responses import Response
+from starlette.responses import JSONResponse, Response
 
 logger = logging.getLogger(__name__)
 
@@ -288,5 +288,52 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request.state.user_id = user_id
         request.state.auth_subject = auth_subject
         request.state.is_authenticated = is_authenticated
+
+        # Identity-aware limits run here, after JWT resolution and before route
+        # work.  The outer edge guard independently limits every IP, including
+        # unauthenticated callers.  The shared bypass identity is deliberately
+        # not treated as a real user bucket in local development.
+        from app.config import settings as _s
+        if _s.rate_limit_enabled:
+            from app.dependencies.auth import SYSTEM_DEFAULT_USER_ID
+            from app.security.rate_limit import (
+                client_ip, is_exempt, is_expensive, log_denial, rate_limiter,
+            )
+
+            if not is_exempt(request):
+                checks = []
+                if is_authenticated and user_id and user_id != SYSTEM_DEFAULT_USER_ID:
+                    checks.append((
+                        f"user:{user_id}",
+                        _s.rate_limit_per_user_per_min,
+                        "global_user",
+                    ))
+                if is_expensive(request):
+                    ip = client_ip(request, _s.rate_limit_trusted_proxy_hops)
+                    checks.append((
+                        f"expensive:ip:{ip}",
+                        _s.rate_limit_expensive_per_ip_per_min,
+                        "expensive_ip",
+                    ))
+                    if is_authenticated and user_id and user_id != SYSTEM_DEFAULT_USER_ID:
+                        checks.append((
+                            f"expensive:user:{user_id}",
+                            _s.rate_limit_expensive_per_user_per_min,
+                            "expensive_user",
+                        ))
+
+                for key, limit, scope in checks:
+                    allowed, retry_after = rate_limiter.check(
+                        key, limit, _s.rate_limit_window_s
+                    )
+                    if not allowed:
+                        log_denial(
+                            scope=scope, request=request, retry_after=retry_after
+                        )
+                        return JSONResponse(
+                            status_code=429,
+                            content={"detail": "Rate limit exceeded. Please slow down."},
+                            headers={"Retry-After": str(retry_after)},
+                        )
 
         return await call_next(request)

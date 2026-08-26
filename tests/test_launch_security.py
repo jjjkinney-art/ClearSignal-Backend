@@ -82,6 +82,10 @@ class TestSecurityConfigDefaults:
     def test_safe_defaults(self):
         from app.config import settings
         assert settings.rate_limit_enabled is True
+        assert settings.rate_limit_per_user_per_min >= 1
+        assert settings.rate_limit_expensive_per_ip_per_min >= 1
+        assert settings.rate_limit_expensive_per_user_per_min >= 1
+        assert settings.rate_limit_trusted_proxy_hops >= 0
         assert settings.ask_daily_quota >= 1
         assert settings.ask_question_max_length >= 100
         assert settings.max_request_body_bytes >= 1024
@@ -135,14 +139,26 @@ class TestRateLimiter:
         assert rl.check("b", 1, 60, now=0)[0] is True   # different key, own budget
         assert rl.check("a", 1, 60, now=0)[0] is False
 
-    def test_client_ip_prefers_forwarded_for(self):
+    def test_client_ip_uses_rightmost_trusted_hop(self):
         from types import SimpleNamespace
         from app.security.rate_limit import client_ip
         req = SimpleNamespace(
-            headers={"x-forwarded-for": "203.0.113.7, 10.0.0.1"},
+            headers={"x-forwarded-for": "198.51.100.99, 203.0.113.7"},
             client=SimpleNamespace(host="10.0.0.1"),
         )
         assert client_ip(req) == "203.0.113.7"
+
+    def test_client_ip_ignores_forwarded_header_when_no_proxy_is_trusted(self):
+        from types import SimpleNamespace
+        from app.security.rate_limit import client_ip
+        req = SimpleNamespace(
+            headers={
+                "x-forwarded-for": "198.51.100.99",
+                "x-real-ip": "198.51.100.98",
+            },
+            client=SimpleNamespace(host="203.0.113.8"),
+        )
+        assert client_ip(req, trusted_proxy_hops=0) == "203.0.113.8"
 
 
 # ─────────────────────────────────────────────────────────────────────────────

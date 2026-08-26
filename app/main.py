@@ -249,8 +249,6 @@ def create_app() -> FastAPI:
     # uptime probes and browsers are never throttled.
     from starlette.responses import JSONResponse as _JSONResponse
 
-    _RL_EXEMPT_PATHS = frozenset({"/", "/health", "/healthz", "/readyz", "/version"})
-
     @app.middleware("http")
     async def _edge_security_guard(request: Request, call_next):
         from .config import settings as _s
@@ -272,16 +270,20 @@ def create_app() -> FastAPI:
         if (
             _s.rate_limit_enabled
             and request.method != "OPTIONS"
-            and request.url.path not in _RL_EXEMPT_PATHS
         ):
-            from .security.rate_limit import rate_limiter, client_ip
-            _ip = client_ip(request)
+            from .security.rate_limit import (
+                client_ip, is_exempt, log_denial, rate_limiter,
+            )
+            if is_exempt(request):
+                return await call_next(request)
+            _ip = client_ip(request, _s.rate_limit_trusted_proxy_hops)
             _allowed, _retry = rate_limiter.check(
                 f"ip:{_ip}",
                 _s.rate_limit_per_ip_per_min,
                 _s.rate_limit_window_s,
             )
             if not _allowed:
+                log_denial(scope="global_ip", request=request, retry_after=_retry)
                 return _JSONResponse(
                     status_code=429,
                     content={"detail": "Rate limit exceeded. Please slow down."},
