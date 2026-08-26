@@ -3119,6 +3119,7 @@ async def get_morning_brief_v2(
         from .services.timeline_store import default_store
         from .schemas import EventImpactAssessment, WatchlistEntry as WLEntry
         from .services.brief_scope_service import parse_ticker_csv, resolve_brief_entries
+        from .services.brief_material_change_service import load_recent_material_changes
 
         # Resolve the brief universe without allowing a signed-in user to inherit
         # the process-wide legacy watchlist. Account rows are authoritative; the
@@ -3178,9 +3179,11 @@ async def get_morning_brief_v2(
         evaluator = get_default_evaluator()
         ticker_list = [e.ticker for e in watchlist_entries]
         drift = evaluator.get_watchlist_drift(ticker_list) if ticker_list else []
+        recent_material_changes = load_recent_material_changes(default_store, ticker_list)
 
         brief = generate_morning_brief_v2(
             watchlist_entries=watchlist_entries,
+            recent_material_changes=recent_material_changes,
             event_impacts=all_impacts,
             watchlist_drift=drift,
             regime=regime,

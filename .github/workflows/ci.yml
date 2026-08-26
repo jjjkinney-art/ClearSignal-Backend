@@ -67,6 +67,7 @@ jobs:
           tests/test_notifications_router.py
           tests/test_watchlist_db_backed.py
           tests/test_auth_scoping.py
+          tests/test_brief_material_change_service.py
 
       - name: Auth & billing
         run: >
