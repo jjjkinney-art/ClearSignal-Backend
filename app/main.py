@@ -255,7 +255,8 @@ def create_app() -> FastAPI:
     async def _edge_security_guard(request: Request, call_next):
         from .config import settings as _s
 
-        # 1. Body-size cap — cheap Content-Length check (JSON API; no uploads).
+        # 1. Fast Content-Length rejection. The outer ASGI body limiter below
+        # counts actual streamed bytes, including requests without this header.
         _cl = request.headers.get("content-length")
         if _cl:
             try:
@@ -289,6 +290,14 @@ def create_app() -> FastAPI:
 
         return await call_next(request)
 
+    # Sprint 4A — enforce the limit against actual ASGI body chunks. Registering
+    # this middleware last makes it the outer request boundary for every route.
+    from .security.request_body_limit import RequestBodyLimitMiddleware
+
+    app.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_body_bytes=_cors_settings.max_request_body_bytes,
+    )
     app.include_router(api_router)
     return app
 
