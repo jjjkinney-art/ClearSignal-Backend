@@ -50,4 +50,258 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
 
     # Phase 10C delivery_ledger column additions have moved OUT of startup into a
     # versioned, reversible Alembic migration (0002_delivery_ledger_severity).
-    # Startup no longer issues DDL; run `alembic upzÓm¢G§²ÚîÆ­yÒÂ&W‡"Â&VB"Â&—72%×ÒÀ¢¢&WGW&â–Æö@¢W†6WBW†6WF–öâ2W†3 ¢ÆövvW"æFV'Vr‚%¶WF…Ò7–ÖÖWG&–2¥uBfW&–f–6F–öâf–ÆVC¢W""ÂW†2¢&WGW&âæöæP  ¦7–æ2FVb÷fW&–g•÷Fö¶Vâ‡Fö¶Vã¢7G"’Óâ÷F–öæÅ´F–7EÓ ¢""%W6RÆVv7’…3#Sbv†Vâ6öæf–wW&VBÂ÷F†W'v—6R7W&6R¥tµ2fW&–f–6F–öâà ¢&WGW&ç2F†RfW&–f–VB–ÆöBF–7B÷"æöæRà¢"" ¢g&öÒæ6öæf–r–×÷'B6WGF–æw22÷6WGF–æw0 ¢2…3#SbFƒ¢&VfW"v†Vâ¥uB6V7&WB—26öæf–wW&V@¢–b÷6WGF–æw2ç7W&6Uö§wE÷6V7&WC ¢&WGW&â÷fW&–g•ö§wEö‡3#Sb€¢Fö¶VâÀ¢÷6WGF–æw2ç7W&6Uö§wE÷6V7&WBÀ¢÷6WGF–æw2ç7W&6UöVF–Væ6RÀ¢ ¢27W'&VçB7W&6R&ö¦V7G2W6Râ7–ÖÖWG&–26–væ–ær¶W’†æ÷&ÖÆÇ’U3#Sb’à¢–b÷6WGF–æw2ç7W&6U÷&ö¦V7E÷W&Ã ¢&WGW&âv—B÷fW&–g•ö§wEö7–ÖÖWG&–2€¢Fö¶VâÀ¢÷6WGF–æw2ç7W&6U÷&ö¦V7E÷W&ÂÀ¢÷6WGF–æw2ç7W&6UöVF–Væ6RÀ¢ ¢ÆövvW"çv&æ–ær€¢%¶WF…ÒUD…ôTä$ÄTC×G'VR'WBæV—F†W"7W&6Uö§wE÷6V7&WBæ÷" ¢'7W&6U÷&ö¦V7E÷W&Â—26öæf–wW&VB(	BÆÂ&WVW7G2VæWF†VçF–6FVB ¢¢&WGW&âæöæP  ¦7–æ2FVb÷&W6öÇfUö–FVçF—G’‡&WVW7C¢&WVW7B’ÓâGWÆU´÷F–öæÅ·7G%ÒÂ÷F–öæÅ·7G%ÒÂ&ööÅÓ ¢""%&WGW&â‡W6W%ö–BÂWF…÷7V&¦V7BÂ—5öWF†VçF–6FVB’f÷"F†R&WVW7Bà ¢'—72ÖöFR„UD…ôTä$ÄTCÖfÇ6R“ ¢(i"…5•5DTÕôDTdTÅEõU4U%ô”BÂæöæRÂfÇ6R’Çv—2(	BæòFö¶Vâ–ç7V7F–öâà ¢Væf÷&6VÖVçBÖöFR„UD…ôTä$ÄTC×G'VR“ ¢fÆ–B¥uB(i"‡7V"Â7V"ÂG'VR¢æòFö¶Vâ(i"„æöæRÂæöæRÂfÇ6R¢&BFö¶Vâ(i"„æöæRÂæöæRÂfÇ6R¢"" ¢g&öÒæ6öæf–r–×÷'B6WGF–æw22÷6WGF–æw0 ¢–bæ÷B÷6WGF–æw2æWF…öVæ&ÆVC ¢&WGW&â÷6WGF–æw2æWF…ö'—75÷W6W%ö–BÂæöæRÂfÇ6P ¢2Væf÷&6VÖVçBF‚(	BöæÇ’&V6†VBv†VâUD…ôTä$ÄTC×G'VP¢Fö¶VâÒöW‡G&7Eö&V&W%÷Fö¶Vâ‡&WVW7B¢–bFö¶Vâ—2æöæS ¢&WGW&âæöæRÂæöæRÂfÇ6P ¢–ÆöBÒv—B÷fW&–g•÷Fö¶Vâ‡Fö¶Vâ¢–b–ÆöB—2æöæS ¢&WGW&âæöæRÂæöæRÂfÇ6P ¢7V"Ò–ÆöBævWB‚'7V""¢–bæ÷B7V# ¢&WGW&âæöæRÂæöæRÂfÇ6P ¢2&W6W'fRöæÇ’F†RfW&–f–VB6Æ–×2f÷"f—'7BÖÆöv–â&÷f—6–öæ–ærâF†—2—0¢2–çFW&æÂ&WVW7B7FFRæB—2æWfW"&WGW&æVBF—&V7FÇ’Fò6Æ–VçG2à¢&WVW7Bç7FFRæWF…ö6Æ–×2Ò–Æö@¢&WGW&â7V"Â7V"ÂG'VP  ¦7–æ2FVb÷&W6öÇfUöÆö6Å÷W6W%ö–B‡&WVW7C¢&WVW7B’Óâ÷F–öæÅ·7G%Ó ¢""%&÷f—6–öâ÷"&W6öÇfRF†RÆö6Â÷væW"f÷"fW&–f–VB¥uB6Æ–×2à ¢F†RÆö6Â”B6âF–ffW"g&öÒF†R7W&6R7V&¦V7Bv†VââöÆFW"Æö6À¢66÷VçB—2Æ–æ¶VB'’VÖ–Ââ&÷FV7FVB&÷WFW2×W7BF†W&Vf÷&RW6RF†RÆö6À¢”B&WGW&æVB†W&R&F†W"F†â77VÖ–ær7V"ÓÒW6W'2æ–Fà¢"" ¢6Æ–×2ÒvWFGG"‡&WVW7Bç7FFRÂ&WF…ö6Æ–×2"ÂæöæR¢–bæ÷B—6–ç7Fæ6R†6Æ–×2ÂF–7B“ ¢&WGW&âæöæP ¢g&öÒæF"æ6öææV7F–öâ–×÷'BvWE÷6W76–öà¢g&öÒç6W'f–6W2ç7W&6UöWF…÷6W'f–6R–×÷'B&W6öÇfU÷W6W%ög&öÕö§w@ ¢7–æ2v—F‚vWE÷6W76–öâ‚’26W76–öã ¢–b6W76–öâ—2æöæS ¢&WGW&âæöæP¢W6W"Òv—B&W6öÇfU÷W6W%ög&öÕö§wB‡6W76–öâÂ6Æ–×2¢–bW6W"—2æöæS ¢&WGW&âæöæP¢v—B6W76–öâæ6öÖÖ—B‚¢&WGW&â7G"‡W6W"æ–B  ¢2ÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÐ¢2Ö–FFÆWv&R6Æ70¢2ÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÒÐ ¦6Æ72WF„Ö–FFÆWv&R„&6T…EEÖ–FFÆWv&R“ ¢""%7F&ÆWGFRÖ–FFÆWv&RF†B7F×2W6W"–FVçF—G’öçFò&WVW7Bç7FFRà ¢æWfW"&—6W2â&W6öÇWF–öâf–ÇW&W2&WF–âF†R'—72–FVçF—G’öæÇ’v†–ÆP¢WF‚—2F—6&ÆVC²Væf÷&6VÖVçBÖöFRÇv—2f–Ç26Æ÷6VBà¢""  ¢7–æ2FVbF—7F6‚‡6VÆbÂ&WVW7C¢&WVW7BÂ6ÆÅöæW‡B’Óâ&W7öç6S ¢&WVW7Bç7FFRæWF…ö6Æ–×2ÒæöæP¢G'“ ¢W6W%ö–BÂWF…÷7V&¦V7BÂ—5öWF†VçF–6FVBÒv—B÷&W6öÇfUö–FVçF—G’‡&WVW7B¢–b—5öWF†VçF–6FVC ¢W6W%ö–BÒv—B÷&W6öÇfUöÆö6Å÷W6W%ö–B‡&WVW7B¢–bW6W%ö–B—2æöæS ¢WF…÷7V&¦V7BÒæöæP¢—5öWF†VçF–6FVBÒfÇ6P¢W†6WBW†6WF–öâ2W†3 ¢ÆövvW"çv&æ–ær‚%¶WF…Ò÷&W6öÇfUö–FVçF—G’&—6VB†æöâÖfFÂ“¢W""ÂW†2¢g&öÒæ6öæf–r–×÷'B6WGF–æw22÷0¢W6W%ö–BÒ÷2æWF…ö'—75÷W6W%ö–B–bæ÷B÷2æWF…öVæ&ÆVBVÇ6RæöæP¢WF…÷7V&¦V7BÒæöæP¢—5öWF†VçF–6FVBÒfÇ6P ¢&WVW7Bç7FFRçW6W%ö–BÒW6W%ö–@¢&WVW7Bç7FFRæWF…÷7V&¦V7BÒWF…÷7V&¦V7@¢&WVW7Bç7FFRæ—5öWF†VçF–6FVBÒ—5öWF†VçF–6FV@ ¢2–FVçF—G’Öv&RÆ–Ö—G2'Vâ†W&RÂgFW"¥uB&W6öÇWF–öâæB&Vf÷&R&÷WFP¢2v÷&²âF†R÷WFW"VFvRwV&B–æFWVæFVçFÇ’Æ–Ö—G2WfW'’•Â–æ6ÇVF–æp¢2VæWF†VçF–6FVB6ÆÆW'2âF†R6†&VB'—72–FVçF—G’—2FVÆ–&W&FVÇ¢2æ÷BG&VFVB2&VÂW6W"'V6¶WB–âÆö6ÂFWfVÆ÷ÖVçBà¢g&öÒæ6öæf–r–×÷'B6WGF–æw22÷0¢–b÷2ç&FUöÆ–Ö—EöVæ&ÆVC ¢g&öÒæFWVæFVæ6–W2æWF‚–×÷'B5•5DTÕôDTdTÅEõU4U%ô”@¢g&öÒç6V7W&—G’ç&FUöÆ–Ö—B–×÷'B€¢6Æ–VçEö—Â—5öW†V×BÂ—5öW‡Vç6—fRÂÆöuöFVæ–ÂÂ&FUöÆ–Ö—FW"À¢ ¢–bæ÷B—5öW†V×B‡&WVW7B“ ¢6†V6·2ÒµÐ¢–b—5öWF†VçF–6FVBæBW6W%ö–BæBW6W%ö–BÒ5•5DTÕôDTdTÅEõU4U%ô”C ¢6†V6·2æVæB‚€¢b'W6W#§·W6W%ö–GÒ"À¢÷2ç&FUöÆ–Ö—E÷W%÷W6W%÷W%öÖ–âÀ¢&vÆö&Å÷W6W""À¢’¢–b—5öW‡Vç6—fR‡&WVW7B“ ¢—Ò6Æ–VçEö—‡&WVW7BÂ÷2ç&FUöÆ–Ö—E÷G'W7FVE÷&÷‡•ö†÷2¢6†V6·2æVæB‚€¢b&W‡Vç6—fS¦—§¶—Ò"À¢÷2ç&FUöÆ–Ö—EöW‡Vç6—fU÷W%ö—÷W%öÖ–âÀ¢&W‡Vç6—fUö—"À¢’¢–b—5öWF†VçF–6FVBæBW6W%ö–BæBW6W%ö–BÒ5•5DTÕôDTdTÅEõU4U%ô”C ¢6†V6·2æVæB‚€¢b&W‡Vç6—fS§W6W#§·W6W%ö–GÒ"À¢÷2ç&FUöÆ–Ö—EöW‡Vç6—fU÷W%÷W6W%÷W%öÖ–âÀ¢&W‡Vç6—fU÷W6W""À¢’ ¢f÷"¶W’ÂÆ–Ö—BÂ66÷R–â6†V6·3 ¢ÆÆ÷vVBÂ&WG'•ögFW"Ò&FUöÆ–Ö—FW"æ6†V6²€¢¶W’ÂÆ–Ö—BÂ÷2ç&FUöÆ–Ö—E÷v–æF÷u÷0¢¢–bæ÷BÆÆ÷vVC ¢ÆöuöFVæ–Â€¢66÷S×66÷RÂ&WVW7C×&WVW7BÂ&WG'•ögFW#×&WG'•ögFW ¢¢&WGW&â¥4ôå&W7öç6R€¢7FGW5ö6öFSÓC#’À¢6öçFVçC×²&FWF–Â#¢%&FRÆ–Ö—BW†6VVFVBâÆV6R6Æ÷rF÷vââ'ÒÀ¢†VFW'3×²%&WG'’ÔgFW"#¢7G"‡&WG'•ögFW"—ÒÀ¢ ¢&WGW&âv—B6ÆÅöæW‡B‡&WVW7B
+    # Startup no longer issues DDL; run `alembic upgrade head` as a deploy step.
+    # (init_db logs a loud warning if the DB is behind head â€” see migration_check.)
+
+    # Phase 10B â€” backfill watched_tickers from flat-file index.json (idempotent)
+    try:
+        from .db import get_session as _get_session
+        from .db.repositories.watchlist_repo import ticker_add as _ticker_add
+        from .services.watchlist_service import watchlist_service as _wl_service
+        async with _get_session() as _wl_session:
+            if _wl_session is not None:
+                _entries = _wl_service.get_watchlist()
+                _bf_added = 0
+                for _e in _entries:
+                    if _e.ticker:
+                        _row = await _ticker_add(
+                            _wl_session,
+                            _e.ticker,
+                            company_name=getattr(_e, "company_name", "") or "",
+                        )
+                        if _row is not None:
+                            _bf_added += 1
+                logger.info("[startup] 10B watched_tickers backfill: %d rows upserted", _bf_added)
+    except Exception as _bf_exc:
+        logger.warning("[startup] 10B watched_tickers backfill failed (non-fatal): %r", _bf_exc)
+
+    # Phase 16 Â· Slice 2 â€” System user seed + NULL ownership claim (idempotent)
+    # Ensures the well-known SYSTEM_DEFAULT_USER row exists and claims every
+    # NULL user_id row across all user-scoped tables.  Runs at every boot;
+    # second and subsequent runs claim 0 rows (idempotent).
+    try:
+        from .db import get_session as _get_session_16
+        from .services.system_user_service import (
+            ensure_system_user as _ensure_system_user,
+            claim_null_ownership as _claim_null,
+        )
+        async with _get_session_16() as _identity_sess:
+            if _identity_sess is not None:
+                await _ensure_system_user(_identity_sess)
+                _claim_result = await _claim_null(_identity_sess)
+                await _identity_sess.commit()
+                logger.info(
+                    "[startup] 16.2 identity: system user seeded, %d orphan rows claimed",
+                    _claim_result.total,
+                )
+    except Exception as _identity_exc:
+        logger.warning("[startup] 16.2 identity seed failed (non-fatal): %r", _identity_exc)
+
+    yield
+
+    # Phase 9A â€” dispose DB engine on shutdown
+    try:
+        from .db import close_db
+        await close_db()
+    except Exception as _exc:
+        logger.warning("[shutdown] persistence layer close failed (non-fatal): %r", _exc)
+
+
+_API_DESCRIPTION = """\
+Backend for **ClearSignal** â€” an AI-powered equity analysis platform.
+
+The conviction engine (frozen, institutionally validated) produces structured
+theses, dossiers, and scenarios. This API exposes the user-facing beta surfaces
+built on top of it.
+
+### Identity & rollout
+
+Most product surfaces are scoped to the acting user:
+
+* **`AUTH_ENABLED=false` (default):** every request resolves to a single system
+  *bypass* user â€” the API behaves single-tenant. No JWT is inspected.
+* **`AUTH_ENABLED=true`:** identity is the verified Supabase JWT `sub`; requests
+  without a valid token receive **401** on user-scoped routes.
+
+Several capabilities are dark-launched behind flags and are inert until enabled
+by an operator (never in code): `STRIPE_ENABLED` (billing), `DELIVERY_SHADOW` /
+`DELIVERY_IN_APP_ENABLED` (real notification delivery), `WATCHLIST_DB_BACKED`
+(persistent multi-instance watchlists), and the scenario build/scoring flags.
+
+### Conventions
+
+* `request.state.user_id` is stamped by the auth middleware before every handler.
+* Read endpoints degrade gracefully when persistence is disabled (empty payloads,
+  never 5xx). `/readyz` is the dependency-aware readiness probe.
+* No endpoint returns buy/sell/hold or price-target language â€” the engine is a
+  describer, not a recommender.
+"""
+
+_OPENAPI_TAGS = [
+    {"name": "health",
+     "description": "Liveness (`/`, `/health`, `/healthz`) and readiness (`/readyz`) "
+                    "probes. `/readyz` returns **503** when a required dependency (DB) "
+                    "is configured but unreachable, so orchestrators can gate traffic."},
+    {"name": "watchlist",
+     "description": "Track tickers and their thesis-snapshot history. Membership is "
+                    "DB-backed when `WATCHLIST_DB_BACKED=true` (persistent, multi-instance) "
+                    "and scoped to the authenticated user; otherwise a local JSON index."},
+    {"name": "portfolio",
+     "description": "Position CRUD plus portfolio-level intelligence â€” concentration / "
+                    "diversification **health**, shared-risk **exposure** clusters, and "
+                    "**insights**. All reads are scoped to the caller's default portfolio."},
+    {"name": "scenarios",
+     "description": "Read-only Scenario Engine â€” *â€œwhat changes if X happens?â€*. Returns "
+                    "descriptive scenario facets per ticker (transmission path, plausibility, "
+                    "confidence). Purely descriptive; no conviction, stance, or price fields."},
+    {"name": "notifications",
+     "description": "In-app notification inbox, unread counts, idempotent read receipts, and "
+                    "delivery preferences. Surfaces the delivery ledger read-only while "
+                    "delivery stays in shadow mode (no real sends)."},
+    {"name": "auth",
+     "description": "Supabase JWT session endpoints (`/auth/me`, `/auth/session`, "
+                    "`/auth/logout`). Enforced only when `AUTH_ENABLED=true`; a system bypass "
+                    "user is used otherwise."},
+    {"name": "billing",
+     "description": "Stripe checkout, webhook receiver, subscription **status**, billing "
+                    "portal, and cancel. Mutating routes return **503** and the webhook is a "
+                    "no-op until `STRIPE_ENABLED=true`. The system user cannot check out."},
+    {"name": "admin",
+     "description": "Internal observability / status snapshots for each subsystem. Not part "
+                    "of the public product surface."},
+]
+
+
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI application."""
+    app = FastAPI(
+        title="ClearSignal API",
+        version="0.1.0",
+        description=_API_DESCRIPTION,
+        openapi_tags=_OPENAPI_TAGS,
+        lifespan=lifespan,
+        contact={"name": "ClearSignal"},
+    )
+
+    # Phase 16 Â· Slice 3 â€” Identity middleware (runs innermost; added first so
+    # CORSMiddleware wraps it and preflight requests are handled before auth).
+    # In bypass mode (AUTH_ENABLED=false) this is a pure no-op: stamps
+    # request.state.user_id = SYSTEM_DEFAULT_USER_ID on every request and
+    # returns immediately without inspecting headers or verifying JWTs.
+    from .middleware.auth_middleware import AuthMiddleware
+    app.add_middleware(AuthMiddleware)
+
+    # CORS â€” environment-driven explicit allowlist (Sprint 0).
+    # Never serve a wildcard origin together with credentials, and never allow
+    # a wildcard origin at all in production.  Localhost dev origins are the
+    # default so local development keeps working out of the box.
+    from .config import settings as _cors_settings
+    _cors_origins = _cors_settings.cors_allow_origins_list
+    _cors_credentials = _cors_settings.cors_allow_credentials
+    if _cors_settings.is_production and "*" in _cors_origins:
+        logger.error(
+            "[cors] wildcard '*' origin is not permitted in production; ignoring it. "
+            "Set CORS_ALLOW_ORIGINS to an explicit frontend allowlist."
+        )
+        _cors_origins = [o for o in _cors_origins if o != "*"]
+    if "*" in _cors_origins and _cors_credentials:
+        # '*' with credentials is invalid per the Fetch spec and browsers reject
+        # it; disable credentials so a real (non-credentialed) wildcard still works.
+        logger.warning(
+            "[cors] '*' origin with credentials is invalid; disabling allow_credentials."
+        )
+        _cors_credentials = False
+    logger.info(
+        "[cors] origins=%s credentials=%s production=%s",
+        _cors_origins or "(none)", _cors_credentials, _cors_settings.is_production,
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_cors_origins,
+        allow_credentials=_cors_credentials,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+    # Request timing + request ID middleware
+    @app.middleware("http")
+    async def add_request_id_and_timing(request: Request, call_next):
+        request_id = str(_uuid.uuid4())[:8]
+        start = time.monotonic()
+        request.state.request_id = request_id
+        response = await call_next(request)
+        elapsed_ms = round((time.monotonic() - start) * 1000)
+        response.headers["X-Request-ID"] = request_id
+        response.headers["X-Response-Time-Ms"] = str(elapsed_ms)
+        logger.info(
+            "%s %s %s | %dms | req=%s",
+            request.method,
+            request.url.path,
+            response.status_code,
+            elapsed_ms,
+            request_id,
+        )
+        return response
+
+    # Edge security guard (Sprint 0): body-size cap + global per-IP rate limit.
+    # Runs outermost (registered last) so abusive requests are rejected before
+    # any handler work.  Health/readiness and CORS preflight are exempt so
+    # uptime probes and browsers are never throttled.
+    from starlette.responses import JSONResponse as _JSONResponse
+
+    @app.middleware("http")
+    async def _edge_security_guard(request: Request, call_next):
+        from .config import settings as _s
+
+        # 1. Fast Content-Length rejection. The outer ASGI body limiter below
+        # counts actual streamed bytes, including requests without this header.
+        _cl = request.headers.get("content-length")
+        if _cl:
+            try:
+                if int(_cl) > _s.max_request_body_bytes:
+                    return _JSONResponse(
+                        status_code=413,
+                        content={"detail": "Request body too large."},
+                    )
+            except ValueError:
+                pass
+
+        # 2. Global per-IP rate limit (all routes except health / preflight).
+        if (
+            _s.rate_limit_enabled
+            and request.method != "OPTIONS"
+        ):
+            from .security.rate_limit import (
+                client_ip, is_exempt, log_denial, rate_limiter,
+            )
+            if is_exempt(request):
+                return await call_next(request)
+            _ip = client_ip(request, _s.rate_limit_trusted_proxy_hops)
+            _allowed, _retry = rate_limiter.check(
+                f"ip:{_ip}",
+                _s.rate_limit_per_ip_per_min,
+                _s.rate_limit_window_s,
+            )
+            if not _allowed:
+                log_denial(scope="global_ip", request=request, retry_after=_retry)
+                return _JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded. Please slow down."},
+                    headers={"Retry-After": str(_retry)},
+                )
+
+        return await call_next(request)
+
+    # Sprint 4A â€” enforce the limit against actual ASGI body chunks. Registering
+    # this middleware last makes it the outer request boundary for every route.
+    from .security.request_body_limit import RequestBodyLimitMiddleware
+
+    app.add_middleware(
+        RequestBodyLimitMiddleware,
+        max_body_bytes=_cors_settings.max_request_body_bytes,
+    )
+    app.include_router(api_router)
+    return app
+
+
+app = create_app()
