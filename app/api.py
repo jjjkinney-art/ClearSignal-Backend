@@ -2094,12 +2094,18 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                                 "severity_counts": _ir.severity_counts(),
                                 "valuation_state": _ir.state,
                                 "price_label": _ir.qualifications.get("price_label"),
+                                "decision_threshold_coverage": _ir.qualifications.get(
+                                    "decision_threshold_coverage"
+                                ),
                                 "violations": [
                                     {"code": v.code, "severity": v.severity, "field": v.field}
                                     for v in _ir.violations
                                 ],
                                 "caveats": [
-                                    c for c in (_ir.qualifications.get("stale_precision_caveat"),)
+                                    c for c in (
+                                        _ir.qualifications.get("stale_precision_caveat"),
+                                        _ir.qualifications.get("threshold_coverage_caveat"),
+                                    )
                                     if c
                                 ],
                             }

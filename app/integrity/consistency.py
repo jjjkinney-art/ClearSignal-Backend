@@ -294,7 +294,40 @@ def _structured_claims_and_thresholds(thesis: Dict[str, Any], res: IntegrityResu
             ),
         ))
 
-    for band in thesis.get("decision_thresholds") or []:
+    raw_bands = thesis.get("decision_thresholds") or []
+    bands = raw_bands if isinstance(raw_bands, (list, tuple)) else []
+    available_thresholds = sum(
+        1 for band in bands
+        if isinstance(band, dict) and not band.get("unavailable")
+    )
+    total_thresholds = len(bands)
+    if total_thresholds:
+        coverage_status = (
+            "complete" if available_thresholds == total_thresholds
+            else "unavailable" if available_thresholds == 0
+            else "partial"
+        )
+        res.qualifications["decision_threshold_coverage"] = {
+            "validated": available_thresholds,
+            "total": total_thresholds,
+            "status": coverage_status,
+        }
+        if available_thresholds < total_thresholds:
+            res.violations.append(IntegrityViolation(
+                code="threshold_coverage_gap", severity=MEDIUM,
+                field="decision_thresholds",
+                message=(
+                    f"only {available_thresholds}/{total_thresholds} decision "
+                    "thresholds passed validation; unavailable bands must not be "
+                    "treated as decision support"
+                ),
+            ))
+            res.qualifications["threshold_coverage_caveat"] = (
+                f"{available_thresholds} of {total_thresholds} decision thresholds "
+                "could be validated from the available evidence."
+            )
+
+    for band in bands:
         if not isinstance(band, dict) or band.get("unavailable"):
             continue  # explicit unavailable is the safe, expected fail-closed state
         bull, bear = band.get("bull_boundary"), band.get("bear_boundary")
@@ -361,6 +394,7 @@ _DEGRADING_CODES = {
     "product_identifier_claim",
     "unqualified_stale_claim",
     "stale_precision",
+    "threshold_coverage_gap",
 }
 
 

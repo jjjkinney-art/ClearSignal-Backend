@@ -311,6 +311,56 @@ class TestBoundaryCompatibility:
         }
         res = validate_thesis_integrity(thesis)
         assert res.ok is True
+        assert res.status == "degraded"
+        assert any(v.code == "threshold_coverage_gap" for v in res.violations)
+        assert res.qualifications["decision_threshold_coverage"] == {
+            "validated": 0, "total": 1, "status": "unavailable",
+        }
+
+    def test_boundary_marks_partial_threshold_coverage_degraded(self):
+        from app.integrity.consistency import validate_thesis_integrity
+        thesis = {
+            "ticker": "AMD", "expectation_regime": "fair",
+            "decision_thresholds": [
+                {"metric": "Data Center Growth", "unavailable": False,
+                 "direction": "higher_is_better", "bull_boundary": 25,
+                 "bear_boundary": 15},
+                {"metric": "Gross Margin", "unavailable": True,
+                 "reason": "unit mismatch"},
+                {"metric": "Forward P/E", "unavailable": True,
+                 "reason": "overlap"},
+            ],
+        }
+        res = validate_thesis_integrity(thesis)
+        assert res.ok is True
+        assert res.status == "degraded"
+        assert res.qualifications["decision_threshold_coverage"] == {
+            "validated": 1, "total": 3, "status": "partial",
+        }
+        assert res.qualifications["threshold_coverage_caveat"] == (
+            "1 of 3 decision thresholds could be validated from the available evidence."
+        )
+
+    def test_boundary_keeps_complete_threshold_coverage_clean(self):
+        from app.integrity.consistency import validate_thesis_integrity
+        thesis = {
+            "ticker": "NVDA", "expectation_regime": "fair",
+            "decision_thresholds": [
+                {"metric": "Data Center Growth", "unavailable": False,
+                 "direction": "higher_is_better", "bull_boundary": 25,
+                 "bear_boundary": 15},
+                {"metric": "Forward P/E", "unavailable": False,
+                 "direction": "lower_is_better", "bull_boundary": 25,
+                 "bear_boundary": 35},
+            ],
+        }
+        res = validate_thesis_integrity(thesis)
+        assert res.ok is True
+        assert res.status == "clean"
+        assert not any(v.code == "threshold_coverage_gap" for v in res.violations)
+        assert res.qualifications["decision_threshold_coverage"] == {
+            "validated": 2, "total": 2, "status": "complete",
+        }
 
 
 class TestLiveAskResponseIncludesStructuredPayloads:
