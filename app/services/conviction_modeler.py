@@ -1278,7 +1278,7 @@ _DURABILITY_MATRIX_MID  = 0.40   # quality cyclical threshold
 #   changes — forces frontend DEV overlay to show the new version.
 # ARCHETYPE_MATRIX_ENABLED: always True in this module — startup.py asserts it.
 #   If this import fails or returns False, the server refuses to start.
-CONVICTION_SCHEMA_VERSION = "7-linear"
+CONVICTION_SCHEMA_VERSION = "7-linear-4h"
 ARCHETYPE_MATRIX_ENABLED  = True
 
 # ── [DEPLOYMENT PROOF] Module-level import-time marker ───────────────────────
@@ -1341,8 +1341,11 @@ def _durability_matrix_label(durability_score: float, expectation_risk: float) -
 
     Narrative/speculative (durability < 0.40):
       exp_risk < 0.40 → "fragile setup"             (narrative but not fully speculative)
-      exp_risk < 0.60 → "speculative setup"         (narrative + material expectation risk)
-      exp_risk ≥ 0.60 → "insufficient conviction"   (narrative + extreme premium → no edge)
+      exp_risk ≥ 0.40 → "speculative setup"         (narrative + material expectation risk)
+
+    ``insufficient conviction`` is an evidence-sufficiency state, not a business
+    archetype.  The matrix deliberately does not infer it from expectation risk;
+    confidence and coverage communicate whether the evidence base is sufficient.
     """
     if durability_score >= _DURABILITY_MATRIX_HIGH:
         # Durable compounder tier — Balanced/Demanding range only.
@@ -1371,10 +1374,8 @@ def _durability_matrix_label(durability_score: float, expectation_risk: float) -
         # Narrative/speculative tier — Speculative range
         if expectation_risk < 0.40:
             label = "fragile setup"
-        elif expectation_risk < 0.60:
-            label = "speculative setup"
         else:
-            label = "insufficient conviction"
+            label = "speculative setup"
 
     # ── Phase 6: Live classification assertion ────────────────────────────────
     # [INVALID_ARCHETYPE_CLASSIFICATION] fires when a durable compounder somehow

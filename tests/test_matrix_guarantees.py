@@ -259,11 +259,11 @@ def test_conviction_result_confidence_reasoning_not_in_api_response_dict():
 # ─────────────────────────────────────────────────────────────────────────────
 
 def test_matrix_schema_version_is_phase6():
-    """CONVICTION_SCHEMA_VERSION must be '7-linear'."""
+    """CONVICTION_SCHEMA_VERSION must identify the Sprint 4H matrix."""
     from app.services.conviction_modeler import CONVICTION_SCHEMA_VERSION
-    assert CONVICTION_SCHEMA_VERSION == "7-linear", (
-        f"CONVICTION_SCHEMA_VERSION={CONVICTION_SCHEMA_VERSION!r} — expected '7-linear'. "
-        "If this fails, the live process has not loaded the 7-linear conviction_modeler."
+    assert CONVICTION_SCHEMA_VERSION == "7-linear-4h", (
+        f"CONVICTION_SCHEMA_VERSION={CONVICTION_SCHEMA_VERSION!r} — expected '7-linear-4h'. "
+        "If this fails, the live process has not loaded the Sprint 4H conviction matrix."
     )
 
 
@@ -306,3 +306,36 @@ def test_durable_matrix_never_returns_speculative():
             f"_durability_matrix_label(durability=0.85, exp_risk={exp_risk}) "
             f"returned {label_hi!r} — FORBIDDEN for durable tier."
         )
+
+
+@pytest.mark.parametrize("ticker", ["TSLA", "PLTR"])
+def test_narrative_premium_profiles_remain_speculative_at_extreme_risk(ticker: str):
+    """Extreme premium risk must not masquerade as an evidence-sufficiency label."""
+    from app.services.company_knowledge import get_knowledge_profile
+    from app.services.conviction_modeler import (
+        _compute_structured_durability,
+        _durability_matrix_label,
+    )
+
+    profile = get_knowledge_profile(ticker)
+    assert profile is not None
+    durability = _compute_structured_durability(profile)
+    assert durability < 0.40, (
+        f"{ticker} should remain in the narrative archetype, got durability={durability:.3f}"
+    )
+    assert _durability_matrix_label(durability, 0.80) == "speculative setup"
+
+
+def test_nvda_live_risk_band_remains_asymmetric_not_speculative():
+    """The quality-cyclical control must not inherit the narrative-tier correction."""
+    from app.services.company_knowledge import get_knowledge_profile
+    from app.services.conviction_modeler import (
+        _compute_structured_durability,
+        _durability_matrix_label,
+    )
+
+    profile = get_knowledge_profile("NVDA")
+    assert profile is not None
+    durability = _compute_structured_durability(profile)
+    assert 0.40 <= durability < 0.60
+    assert _durability_matrix_label(durability, 0.66) == "asymmetric setup"

@@ -277,8 +277,8 @@ def _detect_schema_drift() -> List[Finding]:
     from app.services import conviction_modeler as cm
 
     out: List[Finding] = []
-    if cm.CONVICTION_SCHEMA_VERSION != "7-linear":
-        out.append(Finding("S1", "*", f"schema version is {cm.CONVICTION_SCHEMA_VERSION!r}, expected '7-linear'"))
+    if cm.CONVICTION_SCHEMA_VERSION != "7-linear-4h":
+        out.append(Finding("S1", "*", f"schema version is {cm.CONVICTION_SCHEMA_VERSION!r}, expected '7-linear-4h'"))
     if len(cm._WEIGHTS) != 8:
         out.append(Finding("S1", "*", f"linear weight count is {len(cm._WEIGHTS)}, expected 8"))
     if abs(sum(cm._WEIGHTS.values()) - 1.0) > 1e-9:
