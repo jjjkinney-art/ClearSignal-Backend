@@ -40,7 +40,7 @@ from sqlalchemy import select, or_
 
 from app.db.connection import get_session
 from app.db.models import DeliveryLedger, DigestBatch, Notification
-from app.services.ownership_service import resolve_effective_user_id
+from app.security.authz import resolve_user_scope
 
 logger = logging.getLogger(__name__)
 
@@ -213,6 +213,7 @@ async def list_inbox(
 
     `is_read` is populated from the Notification table when `user_id` is given.
     """
+    uid = resolve_user_scope(request, user_id)
     statuses = _validate_status_filter(status)
 
     min_rank: Optional[int] = None
@@ -242,8 +243,6 @@ async def list_inbox(
             stmt = stmt.order_by(DeliveryLedger.created_at.desc()).limit(limit)
             rows = (await session.execute(stmt)).scalars().all()
 
-            effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
-            uid = effective_uid or _ADMIN_SENTINEL
             ids = [r.id for r in rows]
             read_set = await _read_ids_for(session, uid, ids)
 
@@ -267,6 +266,7 @@ async def get_inbox_item(
     user_id:     Optional[str] = Query(default=None, description="User ID (admin override; omit to use JWT identity)"),
 ) -> InboxItem:
     """Return one delivery_ledger row by ID."""
+    uid = resolve_user_scope(request, user_id)
     try:
         async with get_session() as session:
             row = (await session.execute(
@@ -278,8 +278,6 @@ async def get_inbox_item(
             if row is None:
                 raise HTTPException(status_code=404, detail=f"delivery {delivery_id!r} not found")
 
-            effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
-            uid      = effective_uid or _ADMIN_SENTINEL
             read_set = await _read_ids_for(session, uid, [delivery_id])
 
         return _row_to_inbox(row, read_set)
@@ -309,8 +307,7 @@ async def mark_inbox_read(
 
     No real notification is dispatched; no external sends occur.
     """
-    effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
-    uid = effective_uid or _ADMIN_SENTINEL
+    uid = resolve_user_scope(request, user_id)
     now = datetime.now(timezone.utc)
 
     try:
@@ -379,7 +376,7 @@ async def list_digests(
     Phase 16 · Slice 5: user_id defaults to the request owner identity when
     not provided, ensuring users only see their own digest batches.
     """
-    effective_uid = user_id if user_id is not None else resolve_effective_user_id(request)
+    effective_uid = resolve_user_scope(request, user_id)
     try:
         async with get_session() as session:
             stmt = select(DigestBatch)
@@ -409,13 +406,19 @@ async def list_digests(
     response_model=DigestItem,
     summary="Get a single digest batch",
 )
-async def get_digest(batch_id: str) -> DigestItem:
-    """Return one digest_batches row by ID."""
+async def get_digest(
+    batch_id: str,
+    request: Request = None,
+    user_id: Optional[str] = None,
+) -> DigestItem:
+    """Return one digest batch only within the caller's authorized scope."""
+    effective_uid = resolve_user_scope(request, user_id)
     try:
         async with get_session() as session:
             row = (await session.execute(
                 select(DigestBatch)
                 .where(DigestBatch.id == batch_id)
+                .where(DigestBatch.user_id == effective_uid)
                 .execution_options(populate_existing=True)
             )).scalar_one_or_none()
 

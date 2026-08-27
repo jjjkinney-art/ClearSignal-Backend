@@ -327,12 +327,21 @@ class TestAuthDeliveryPrefs:
 
         with _patch_auth(enabled=False):
             with patch("app.db.connection.get_session", return_value=_null_session()):
-                client = TestClient(self._build_app_for_user(USER_A))
+                client = TestClient(self._build_app_for_user(SYSTEM_DEFAULT_USER_ID))
                 resp = client.get(f"/delivery/preferences?user_id={USER_B}")
         # Should use USER_B (admin override), not USER_A from state
         assert resp.status_code == 200
         data = resp.json()
         assert data.get("user_id") == USER_B
+
+    def test_non_admin_cannot_override_preferences_user(self):
+        from fastapi.testclient import TestClient
+
+        with _patch_auth(enabled=True):
+            client = TestClient(self._build_app_for_user(USER_A))
+            resp = client.get(f"/delivery/preferences?user_id={USER_B}")
+
+        assert resp.status_code == 403
 
 
 # ---------------------------------------------------------------------------
@@ -376,7 +385,7 @@ class TestBypassInbox:
             return _ctx()
 
         with _patch_auth(enabled=False):
-            with patch("app.db.connection.get_session", side_effect=_mock_session_factory):
+            with patch("app.routers.delivery_inbox.get_session", side_effect=_mock_session_factory):
                 client = TestClient(self._build_app())
                 resp = client.get("/delivery/inbox")
         assert resp.status_code == 200
@@ -399,7 +408,7 @@ class TestBypassInbox:
             return _ctx()
 
         with _patch_auth(enabled=False):
-            with patch("app.db.connection.get_session", side_effect=_mock_session_factory):
+            with patch("app.routers.delivery_inbox.get_session", side_effect=_mock_session_factory):
                 client = TestClient(self._build_app())
                 resp = client.get("/delivery/digests")
         assert resp.status_code == 200
@@ -446,7 +455,7 @@ class TestAuthInbox:
             return _ctx()
 
         with _patch_auth(enabled=True):
-            with patch("app.db.connection.get_session", side_effect=_mock_session_factory):
+            with patch("app.routers.delivery_inbox.get_session", side_effect=_mock_session_factory):
                 client = TestClient(self._build_app(USER_A))
                 resp = client.get("/delivery/inbox")
         assert resp.status_code == 200
@@ -470,10 +479,19 @@ class TestAuthInbox:
             return _ctx()
 
         with _patch_auth(enabled=False):
-            with patch("app.db.connection.get_session", side_effect=_mock_session_factory):
+            with patch("app.routers.delivery_inbox.get_session", side_effect=_mock_session_factory):
                 client = TestClient(self._build_app(SYSTEM_DEFAULT_USER_ID))
                 resp = client.get(f"/delivery/inbox?user_id={USER_A}")
         assert resp.status_code == 200
+
+    def test_non_admin_cannot_override_inbox_user(self):
+        from fastapi.testclient import TestClient
+
+        with _patch_auth(enabled=True):
+            client = TestClient(self._build_app(USER_A))
+            resp = client.get(f"/delivery/inbox?user_id={USER_B}")
+
+        assert resp.status_code == 403
 
 
 # ---------------------------------------------------------------------------

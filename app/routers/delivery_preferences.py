@@ -38,7 +38,7 @@ from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import select
 
 from app.db.connection import get_session
-from app.services.ownership_service import resolve_effective_user_id
+from app.security.authz import resolve_user_scope
 from app.db.models import UserDeliveryPref
 from app.db.repositories.delivery_prefs_repo import update_prefs
 from app.services.severity_model import (
@@ -211,7 +211,7 @@ async def get_delivery_preferences(
     """
     channel = _validate_channel(channel)
     # Resolve ownership: explicit admin override → else JWT/bypass identity
-    effective_uid: Optional[str] = user_id if user_id is not None else resolve_effective_user_id(request)
+    effective_uid = resolve_user_scope(request, user_id)
 
     try:
         async with get_session() as session:
@@ -266,7 +266,7 @@ async def patch_delivery_preferences(
     Phase 16 · Slice 5: ownership resolved from request.state when user_id not provided.
     """
     channel = _validate_channel(channel)
-    effective_uid: Optional[str] = user_id if user_id is not None else resolve_effective_user_id(request)
+    effective_uid = resolve_user_scope(request, user_id)
 
     update_fields = body.non_null_fields()
 
