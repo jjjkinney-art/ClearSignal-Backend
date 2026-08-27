@@ -69,7 +69,12 @@ def _make_narrative_profile(ticker: str = "PLTR"):
     )
 
 
-def _run_conviction(ticker: str, profile=None, evidence=None):
+def _run_conviction(
+    ticker: str,
+    profile=None,
+    evidence=None,
+    valuation_stance: str = "",
+):
     """Run compute_conviction() with zero evidence (sparse)."""
     from app.services.conviction_modeler import compute_conviction
     from app.schemas import (
@@ -79,7 +84,7 @@ def _run_conviction(ticker: str, profile=None, evidence=None):
     company = CompanyContext(ticker=ticker, company_name=ticker)
     return compute_conviction(
         evidence            = evidence or [],
-        valuation           = ValuationView(),
+        valuation           = ValuationView(valuation_stance=valuation_stance),
         macro               = MacroSensitivity(),
         risk                = RiskProfile(),
         market              = MarketContext(),
@@ -258,12 +263,12 @@ def test_conviction_result_confidence_reasoning_not_in_api_response_dict():
 # Test 3 — Matrix constants exist and have expected values
 # ─────────────────────────────────────────────────────────────────────────────
 
-def test_matrix_schema_version_is_phase6():
-    """CONVICTION_SCHEMA_VERSION must identify the Sprint 4H matrix."""
+def test_matrix_schema_version_is_sprint_4i():
+    """CONVICTION_SCHEMA_VERSION must identify the Sprint 4I matrix."""
     from app.services.conviction_modeler import CONVICTION_SCHEMA_VERSION
-    assert CONVICTION_SCHEMA_VERSION == "7-linear-4h", (
-        f"CONVICTION_SCHEMA_VERSION={CONVICTION_SCHEMA_VERSION!r} — expected '7-linear-4h'. "
-        "If this fails, the live process has not loaded the Sprint 4H conviction matrix."
+    assert CONVICTION_SCHEMA_VERSION == "7-linear-4i", (
+        f"CONVICTION_SCHEMA_VERSION={CONVICTION_SCHEMA_VERSION!r} — expected '7-linear-4i'. "
+        "If this fails, the live process has not loaded the Sprint 4I conviction matrix."
     )
 
 
@@ -339,3 +344,37 @@ def test_nvda_live_risk_band_remains_asymmetric_not_speculative():
     durability = _compute_structured_durability(profile)
     assert 0.40 <= durability < 0.60
     assert _durability_matrix_label(durability, 0.66) == "asymmetric setup"
+
+
+@pytest.mark.parametrize("ticker", ["TSLA", "PLTR"])
+def test_narrative_profile_floor_survives_fairly_priced_agent_output(ticker: str):
+    """Known narrative dependence must survive an understated valuation stance."""
+    from app.services.company_knowledge import get_knowledge_profile
+
+    profile = get_knowledge_profile(ticker)
+    assert profile is not None
+    result = _run_conviction(
+        ticker,
+        profile=profile,
+        evidence=[],
+        valuation_stance="fairly_valued",
+    )
+
+    assert result.setup_label == "speculative setup", (
+        f"{ticker} with structured narrative dependence should remain speculative "
+        f"even without an overpriced valuation stance, got {result.setup_label!r}"
+    )
+
+
+@pytest.mark.parametrize("ticker", ["NVDA", "MSFT", "COST", "JPM", "ASML"])
+def test_narrative_floor_does_not_spill_into_quality_controls(ticker: str):
+    """Moderate/low/none narrative dependence must not receive the new floor."""
+    from app.services.company_knowledge import get_knowledge_profile
+
+    profile = get_knowledge_profile(ticker)
+    assert profile is not None
+    result = _run_conviction(ticker, profile=profile, evidence=[])
+
+    assert result.setup_label != "speculative setup", (
+        f"{ticker} quality control unexpectedly became speculative"
+    )

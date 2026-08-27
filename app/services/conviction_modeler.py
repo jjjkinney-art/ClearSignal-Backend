@@ -1278,7 +1278,7 @@ _DURABILITY_MATRIX_MID  = 0.40   # quality cyclical threshold
 #   changes — forces frontend DEV overlay to show the new version.
 # ARCHETYPE_MATRIX_ENABLED: always True in this module — startup.py asserts it.
 #   If this import fails or returns False, the server refuses to start.
-CONVICTION_SCHEMA_VERSION = "7-linear-4h"
+CONVICTION_SCHEMA_VERSION = "7-linear-4i"
 ARCHETYPE_MATRIX_ENABLED  = True
 
 # ── [DEPLOYMENT PROOF] Module-level import-time marker ───────────────────────
@@ -1296,19 +1296,41 @@ print(
 )
 
 
-def _compute_expectation_risk(dims: "ConvictionDimensions") -> float:
+_STRUCTURED_NARRATIVE_EXPECTATION_FLOORS: Dict[str, float] = {
+    "high": 0.40,
+    "dominant": 0.45,
+}
+
+
+def _compute_expectation_risk(
+    dims: "ConvictionDimensions",
+    profile: "Optional[CompanyKnowledgeProfile]" = None,
+) -> float:
     """Compute a single expectation-risk score [0, 1] from conviction dimensions.
 
     Combines expectation_fragility (valuation/execution premium) and
     expectation_asymmetry (binary-outcome risk) into a single risk scalar.
 
+    A structured narrative-dependence floor prevents a transient LLM valuation
+    stance from erasing known optionality risk.  The floor is deliberately tied
+    to business-model metadata, not ticker identity: high and dominant narrative
+    dependence imply that material future execution is already required for the
+    thesis to work, even when the valuation agent emits ``fairly_valued``.
+
     Higher = more expectation risk (closer to Speculative).
     Lower  = lower expectation risk (closer to High-Alignment).
     """
-    return round(
+    raw_risk = round(
         0.70 * dims.expectation_fragility + 0.30 * dims.expectation_asymmetry,
         4,
     )
+    narrative_level = (
+        getattr(profile, "narrative_dependence", "") or ""
+    ).strip().lower()
+    structured_floor = _STRUCTURED_NARRATIVE_EXPECTATION_FLOORS.get(
+        narrative_level, 0.0
+    )
+    return round(max(raw_risk, structured_floor), 4)
 
 
 def _durability_matrix_label(durability_score: float, expectation_risk: float) -> str:
@@ -3308,7 +3330,7 @@ def compute_conviction(
     #   - Only business durability class + expectation risk level determine the label.
     #
     # Logging for traceability:
-    _expectation_risk = _compute_expectation_risk(dims)
+    _expectation_risk = _compute_expectation_risk(dims, profile)
     setup_label = _durability_matrix_label(durability_score, _expectation_risk)
     _logger.debug(
         "[matrix_label] ticker=%s durability=%.3f expectation_risk=%.3f → label=%s "
