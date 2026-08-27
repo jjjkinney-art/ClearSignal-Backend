@@ -55,6 +55,11 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _request_for(user_id: str):
+    from types import SimpleNamespace
+    return SimpleNamespace(state=SimpleNamespace(user_id=user_id))
+
+
 def _patch_session(db_session):
     @asynccontextmanager
     async def _fake():
@@ -577,6 +582,30 @@ class TestDigestGet:
         with _patch_session(db_session):
             with pytest.raises(HTTPException) as exc:
                 await get_digest("no-such-batch-id")
+        assert exc.value.status_code == 404
+
+    @pytest.mark.asyncio
+    async def test_get_digest_hides_another_users_batch(self, db_session):
+        from app.db.models import DigestBatch
+        from fastapi import HTTPException
+
+        owner_id = f"owner-{_uid()}"
+        other_id = f"other-{_uid()}"
+        batch = DigestBatch(
+            user_id=owner_id,
+            channel="in_app",
+            period_bucket="2026-08-27",
+            status="open",
+            item_count=1,
+            payload_json={"items": [{"msg": "private"}]},
+        )
+        db_session.add(batch)
+        await db_session.flush()
+
+        with _patch_session(db_session):
+            with pytest.raises(HTTPException) as exc:
+                await get_digest(batch.id, request=_request_for(other_id))
+
         assert exc.value.status_code == 404
 
 

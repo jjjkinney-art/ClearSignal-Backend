@@ -7,6 +7,8 @@ Admin resolution:
 """
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import HTTPException
 from starlette.requests import Request
 
@@ -26,3 +28,17 @@ def require_admin(request: Request) -> str:
     if not is_admin(user_id):
         raise HTTPException(status_code=403, detail="Administrator access required.")
     return user_id
+
+
+def resolve_user_scope(request: Request, requested_user_id: Optional[str] = None) -> str:
+    """Resolve a user-owned route scope without permitting IDOR overrides.
+
+    Ordinary users may omit ``requested_user_id`` or repeat their own ID.
+    Selecting a different user's scope is reserved for configured admins.
+    """
+    acting_user_id = require_user_id(request)
+    if requested_user_id is None or requested_user_id == acting_user_id:
+        return acting_user_id
+    if not is_admin(acting_user_id):
+        raise HTTPException(status_code=403, detail="Administrator access required.")
+    return requested_user_id
