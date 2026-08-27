@@ -673,6 +673,7 @@ class Settings(BaseSettings):
     rate_limit_per_user_per_min: int = 180       # authenticated user, any route
     rate_limit_expensive_per_ip_per_min: int = 6
     rate_limit_expensive_per_user_per_min: int = 10
+    rate_limit_admin_per_user_per_min: int = 30
     rate_limit_ask_per_ip_per_min: int = 10      # strictest: /ask per IP
     rate_limit_ask_per_user_per_min: int = 20    # /ask per authenticated user
     # Render/nginx append the connecting address to X-Forwarded-For.  Reading

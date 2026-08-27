@@ -289,6 +289,26 @@ class AuthMiddleware(BaseHTTPMiddleware):
         request.state.auth_subject = auth_subject
         request.state.is_authenticated = is_authenticated
 
+        # Central access boundary for legacy admin/internal routes and costly
+        # product analysis.  This runs after identity resolution but before any
+        # handler, database mutation, provider call, or model work.
+        from fastapi import HTTPException
+        from app.security.route_access import (
+            access_denied_response,
+            enforce_route_access,
+        )
+        try:
+            enforce_route_access(request)
+        except HTTPException as exc:
+            status_code, content = access_denied_response(exc)
+            logger.warning(
+                "access_denied status=%s method=%s path=%s",
+                status_code,
+                request.method,
+                request.url.path,
+            )
+            return JSONResponse(status_code=status_code, content=content)
+
         # Identity-aware limits run here, after JWT resolution and before route
         # work.  The outer edge guard independently limits every IP, including
         # unauthenticated callers.  The shared bypass identity is deliberately
@@ -297,7 +317,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if _s.rate_limit_enabled:
             from app.dependencies.auth import SYSTEM_DEFAULT_USER_ID
             from app.security.rate_limit import (
-                client_ip, is_exempt, is_expensive, log_denial, rate_limiter,
+                client_ip, is_admin_surface, is_exempt, is_expensive,
+                log_denial, rate_limiter,
             )
 
             if not is_exempt(request):
@@ -321,6 +342,17 @@ class AuthMiddleware(BaseHTTPMiddleware):
                             _s.rate_limit_expensive_per_user_per_min,
                             "expensive_user",
                         ))
+                if (
+                    is_admin_surface(request)
+                    and is_authenticated
+                    and user_id
+                    and user_id != SYSTEM_DEFAULT_USER_ID
+                ):
+                    checks.append((
+                        f"admin:user:{user_id}",
+                        _s.rate_limit_admin_per_user_per_min,
+                        "admin_user",
+                    ))
 
                 for key, limit, scope in checks:
                     allowed, retry_after = rate_limiter.check(

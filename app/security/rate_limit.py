@@ -111,6 +111,12 @@ def is_expensive(request: Request) -> bool:
     return (request.method.upper(), request.url.path.rstrip("/") or "/") in EXPENSIVE_ROUTES
 
 
+def is_admin_surface(request: Request) -> bool:
+    from .route_access import requires_admin
+
+    return requires_admin(request)
+
+
 def log_denial(*, scope: str, request: Request, retry_after: int) -> None:
     """Log only routing metadata; never tokens, bodies, tickers, or user data."""
     request_id = getattr(request.state, "request_id", "")

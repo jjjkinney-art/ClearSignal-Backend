@@ -85,6 +85,7 @@ class TestSecurityConfigDefaults:
         assert settings.rate_limit_per_user_per_min >= 1
         assert settings.rate_limit_expensive_per_ip_per_min >= 1
         assert settings.rate_limit_expensive_per_user_per_min >= 1
+        assert settings.rate_limit_admin_per_user_per_min >= 1
         assert settings.rate_limit_trusted_proxy_hops >= 0
         assert settings.ask_daily_quota >= 1
         assert settings.ask_question_max_length >= 100
