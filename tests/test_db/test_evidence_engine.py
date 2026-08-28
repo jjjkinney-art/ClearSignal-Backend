@@ -185,6 +185,9 @@ def test_profile_override_supplies_deterministic_model_and_sector():
         ("PG", "consumer_staples", "consumer_staples"),
         ("UBER", "travel_marketplace", "consumer_discretionary"),
         ("ABNB", "travel_marketplace", "consumer_discretionary"),
+        ("MCD", "restaurant_chain", "consumer_discretionary"),
+        ("BLK", "asset_manager", "financials"),
+        ("CAT", "industrial_equipment", "industrials"),
     ],
 )
 def test_long_tail_profile_overrides(ticker, expected_model, expected_sector):
@@ -581,6 +584,65 @@ async def test_long_tail_analog_pools_are_seeded(db_session):
         assert len(analog.why_relevant) > 80
         assert len(analog.disanalogy) > 20
         assert len(analog.base_rate_note) > 20
+
+
+@pytest.mark.asyncio
+async def test_recall_closure_analog_pools_are_seeded(db_session):
+    """Sprint 5E pools preserve evidence quality and production seedability."""
+    from app.db.repositories.evidence_repo import get_all_analogs, seed_analogs
+
+    await seed_analogs(db_session)
+    await db_session.commit()
+    rows = await get_all_analogs(db_session)
+
+    expected = {
+        "asset_manager": "rate_shock",
+        "industrial_equipment": "demand_air_pocket",
+    }
+    by_model = {row.business_model: row for row in rows if row.business_model in expected}
+
+    assert set(by_model) == set(expected)
+    for model, mechanism in expected.items():
+        analog = by_model[model]
+        assert analog.mechanism == mechanism
+        assert analog.quality_rating == "strong"
+        assert len(analog.outcome_summary) > 100
+        assert len(analog.why_relevant) > 100
+        assert len(analog.disanalogy) > 20
+        assert len(analog.base_rate_note) > 20
+        assert "http" in analog.source_note
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("ticker", "expected_mechanism"),
+    [
+        ("MCD", "franchise_credibility_crisis"),
+        ("BLK", "rate_shock"),
+        ("CAT", "demand_air_pocket"),
+    ],
+)
+async def test_recall_gap_companies_retrieve_native_analog(
+    db_session, ticker, expected_mechanism
+):
+    """Previously silent benchmark companies now clear the unchanged floor."""
+    from app.db.repositories.evidence_repo import get_all_analogs, seed_analogs
+    from app.evidence_engine import build_fingerprint, retrieve_historical_analogs
+    from app.services.company_knowledge import _KNOWLEDGE_DB
+
+    await seed_analogs(db_session)
+    await db_session.commit()
+    rows = await get_all_analogs(db_session)
+
+    fp = build_fingerprint(
+        "What could break the thesis?",
+        {"bear_thesis": "Demand and execution could weaken."},
+        ticker=ticker,
+        profile=_KNOWLEDGE_DB[ticker],
+    )
+    retrieved = retrieve_historical_analogs(rows, fp)
+
+    assert expected_mechanism in {item["mechanism"] for item in retrieved}
 
 
 @pytest.mark.asyncio
