@@ -93,6 +93,7 @@ _MECHANISM_SIBLINGS: Dict[str, str] = {
 # stated concern/mechanism always outranks it and an unrelated analog still
 # cannot clear the relevance floor on business model alone.
 _BUSINESS_MODEL_NATIVE_MECHANISMS: Dict[str, set[str]] = {
+    "asset_manager": {"multiple_compression", "rate_shock"},
     "cloud_platform": {"multiple_compression"},
     "consumer_staples": {"competitive_displacement"},
     "consumer_hardware": {"demand_air_pocket"},
@@ -103,6 +104,7 @@ _BUSINESS_MODEL_NATIVE_MECHANISMS: Dict[str, set[str]] = {
     "fintech_platform": {"hypergrowth_deceleration"},
     "government_enterprise": {"multiple_compression"},
     "integrated_oil": {"commodity_shock"},
+    "industrial_equipment": {"demand_air_pocket"},
     "internet_platform": {"regulatory_break"},
     "life_science_tools": {"demand_air_pocket"},
     "media_platform": {"multiple_compression"},
@@ -188,10 +190,10 @@ def build_fingerprint(
             "AMZN": "e_commerce",
             "AXP":  "payment_network",
             "KO":   "membership_retail",
-            "MCD":  "membership_retail",
+            "MCD":  "restaurant_chain",
             "INTU": "internet_platform",
             "UNH":  "pharma_pipeline",
-            "BLK":  "financial_intermediary",
+            "BLK":  "asset_manager",
             "SPGI": "ratings_data_oligopoly",
             "MCO":  "ratings_data_oligopoly",
             "MSCI": "ratings_data_oligopoly",
@@ -213,6 +215,7 @@ def build_fingerprint(
             "AMD":  "semiconductor_fabless",
             "AVGO": "semiconductor_fabless",
             "TSM":  "semiconductor_manufacturer",
+            "CAT":  "industrial_equipment",
             "MU":   "semiconductor_manufacturer",
             "INTC": "semiconductor_manufacturer",
             "XOM":  "integrated_oil",
@@ -242,6 +245,9 @@ def build_fingerprint(
         # above and whose sector is unambiguous.
         _ticker_sector_overrides: Dict[str, str] = {
             "MCO":  "financials",
+            "MCD":  "consumer_discretionary",
+            "BLK":  "financials",
+            "CAT":  "industrials",
             "ADP":  "technology",
             "XOM":  "energy",
             "GS":   "financials",
