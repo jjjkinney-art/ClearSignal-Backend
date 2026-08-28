@@ -52,7 +52,16 @@ from .general_finance_evidence import _detect_topics, normalize_macro_query as _
 from ..agents import _YIELD_FALLBACK_ANSWER, _GENERIC_EVIDENCE_FALLBACK
 
 # ── Company detection + investment pipeline imports ───────────────────────────
-from .company_detection import detect_company, resolve_entity, MINIMUM_ROUTE_CONFIDENCE
+from .company_detection import (
+    detect_company,
+    detect_companies,
+    resolve_entity,
+    MINIMUM_ROUTE_CONFIDENCE,
+)
+from .comparative_ranking_service import (
+    build_comparative_ranking,
+    is_comparative_question,
+)
 from .providers.fmp_provider import fetch_valuation_ratios, fetch_analyst_estimates
 from .company_knowledge import get_profile_for_company
 from .evidence_partitioner import partition_evidence
@@ -1575,6 +1584,90 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 request.company_name = _norm_company
     except Exception as _norm_exc:
         logger.debug("[router] ticker normalization failed: %r", _norm_exc)
+
+    # ── Sprint 5I: first-class comparative / ranking route ───────────────────
+    # The legacy single-entity resolver necessarily returns one company, which
+    # made "NVDA vs AMD" silently analyze only NVDA.  Explicit comparative
+    # prompts now resolve every exact entity and return a deterministic,
+    # explainable structural ranking without multiplying LLM/provider calls.
+    _comparison_text = f"{request.company_name} {request.question}".strip()
+    if is_comparative_question(request.question):
+        _comparison_companies = detect_companies(_comparison_text)
+        if len(_comparison_companies) >= 2:
+            request_id = str(uuid.uuid4())
+            _comparison = build_comparative_ranking(
+                _comparison_companies,
+                question=request.question,
+            )
+            _bullets = [
+                (
+                    f"#{entry.rank} {entry.company_name} ({entry.ticker}) — "
+                    f"structural quality {entry.structural_quality_score:.2f} "
+                    f"({entry.quality_tier}); {entry.key_advantage}"
+                )
+                for entry in _comparison.entries
+            ]
+            logger.info(
+                json.dumps({
+                    "event": "comparative_ranking_route",
+                    "request_id": request_id,
+                    "tickers": [entry.ticker for entry in _comparison.entries],
+                    "ranking_basis": _comparison.ranking_basis,
+                    "question": request.question[:120],
+                })
+            )
+            return AgentAnswerResponse(
+                company=", ".join(entry.ticker for entry in _comparison.entries),
+                request_id=request_id,
+                agents_used=["comparative_ranking"],
+                answer={
+                    "comparative_ranking": _comparison.model_dump(),
+                    # Backward-compatible presentation for clients that only
+                    # understand the existing general-answer surface.
+                    "general": {
+                        "answer": _comparison.summary,
+                        "bullets": _bullets,
+                        "caveats": _comparison.caveats,
+                    },
+                },
+                routing={
+                    "pipeline": "comparative_ranking",
+                    "ranking_basis": _comparison.ranking_basis,
+                    "detected_tickers": [entry.ticker for entry in _comparison.entries],
+                },
+            )
+        # With one resolved company, only an explicit cross-company connector
+        # ("vs", "versus", or "or") proves that another entity is missing.
+        # This avoids hijacking valid one-company temporal questions such as
+        # "Compare Apple's margins between 2025 and 2026" and generic education
+        # questions such as "What is the difference between debt and equity?".
+        _has_missing_peer_connector = bool(
+            re.search(r"\b(vs\.?|versus|or)\b", request.question, re.IGNORECASE)
+        )
+        if len(_comparison_companies) == 1 and _has_missing_peer_connector:
+            request_id = str(uuid.uuid4())
+            _resolved = [company.ticker for company in _comparison_companies]
+            return AgentAnswerResponse(
+                company=_resolved[0],
+                request_id=request_id,
+                agents_used=["comparative_router"],
+                answer={"general": {
+                    "answer": (
+                        f"I resolved {_resolved[0]}, but at least two exact company names "
+                        "or ticker symbols are required for a comparative ranking."
+                    ),
+                    "bullets": [
+                        "Try a format such as 'Compare NVDA vs AMD' or 'Rank Visa, Mastercard, and PayPal'."
+                    ],
+                    "caveats": [
+                        "Fuzzy company guesses are excluded from rankings to prevent silent misidentification."
+                    ],
+                }},
+                routing={
+                    "pipeline": "comparative_disambiguation",
+                    "detected_tickers": _resolved,
+                },
+            )
 
     # ── Phase 20A P3+P4: Resolve active ticker from request or session ────────
     # The frontend can send active_ticker explicitly.  When absent, look up the
