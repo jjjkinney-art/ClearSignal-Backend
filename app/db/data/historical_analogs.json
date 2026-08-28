@@ -710,13 +710,13 @@
     "drawdown_pct": -0.18,
     "time_to_trough_days": 180,
     "time_to_recover_days": 365,
-    "outcome_summary": "Debit interchange capped. Visa debit incentive revenue fell but credit growth offset within 4 quarters.",
+    "outcome_summary": "The Federal Reserve's June 2011 Regulation II rule capped covered debit interchange at $0.21 plus 5 bps, effective October 1, 2011. Visa said it materially modified its U.S. debit strategy as routing, volume, and incentive economics changed; the regulated interchange itself was paid between banks, not retained by Visa.",
     "reaction_series": [],
-    "why_relevant": "Direct precedent for regulatory fee compression on a payment network.",
+    "why_relevant": "This is a direct precedent because regulation changed issuer economics and routing choices rather than simply cutting a Visa list price. A current network thesis therefore depends on whether volume growth, credit mix, and pricing outside regulated interchange can absorb the incentive and routing pressure.",
     "disanalogy": "Durbin only affected debit, not credit. A broad cap would be more damaging.",
     "base_rate_note": "Payment network regulatory interventions occur roughly once per decade per jurisdiction.",
     "data_confidence": "strong",
-    "source_note": "Visa 10-K 2011-2012; Fed Regulation II"
+    "source_note": "Federal Reserve Regulation II final rule: https://www.federalreserve.gov/newsevents/pressreleases/bcreg20110629a.htm; Visa FY2011 10-K: https://www.sec.gov/Archives/edgar/data/1403161/000119312511315956/d218694d10k.htm; Visa FY2012 10-K: https://www.sec.gov/Archives/edgar/data/1403161/000138410812000011/v09301210-k.htm"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000025",
@@ -740,13 +740,13 @@
     "drawdown_pct": -0.12,
     "time_to_trough_days": 120,
     "time_to_recover_days": 365,
-    "outcome_summary": "EU interchange capped. V/MA shifted to scheme fees and value-added services. Volume growth offset.",
+    "outcome_summary": "EU Regulation 2015/751 capped consumer debit interchange at 0.2% and credit interchange at 0.3%, with the caps applying from December 9, 2015. Visa reported that the IFR also separated scheme and processing activities and restricted routing and exclusivity, widening the competitive impact beyond the 2 fee caps.",
     "reaction_series": [],
-    "why_relevant": "Shows regulatory fee compression mechanism and adaptation strategies.",
+    "why_relevant": "The episode shows why fee-cap risk is broader than a single rate change: when regulation also opens routing and separates scheme from processing, a network faces both price compression and contestable volume. The thesis depends on retaining traffic and monetizing services that remain outside the capped interchange layer.",
     "disanalogy": "EU caps were known well in advance. A sudden US cap would be more disruptive.",
     "base_rate_note": "Regulatory fee caps have occurred in EU, Australia, India. Networks adapt by shifting fee structures.",
     "data_confidence": "strong",
-    "source_note": "EC Regulation 2015/751"
+    "source_note": "European Commission summary of Regulation (EU) 2015/751: https://eur-lex.europa.eu/EN/legal-content/summary/fees-for-card-based-payments.html; Visa FY2018 10-K: https://www.sec.gov/Archives/edgar/data/1403161/000140316118000055/v093018.htm"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000026",
@@ -796,17 +796,17 @@
     "growth_phase": null,
     "macro_regime": null,
     "event_start": "2016-04-11",
-    "event_end": null,
+    "event_end": "2023-08-31",
     "drawdown_pct": null,
     "time_to_trough_days": null,
     "time_to_recover_days": null,
-    "outcome_summary": "UPI processes 10B+ transactions/month at zero cost. V/MA Indian domestic debit volume stagnated.",
+    "outcome_summary": "UPI went live in September 2016, and India made merchant discount rates for UPI and RuPay debit zero from January 1, 2020. NPCI reported 10.59B UPI transactions worth about INR 15.77T in August 2023, demonstrating national-scale adoption of an account-to-account rail outside card-network acceptance.",
     "reaction_series": [],
-    "why_relevant": "Demonstrates sovereign payment nationalism: government builds zero-fee rail bypassing V/MA entirely.",
+    "why_relevant": "This demonstrates sovereign payment displacement because a regulator-backed, zero-merchant-fee account rail can bypass card acceptance for domestic transactions. A card-network thesis therefore depends on cross-border, credit, fraud, and value-added services remaining differentiated as local rails scale.",
     "disanalogy": "UPI is domestic-only. V/MA retain cross-border and credit niches. India is not V/MA's largest market.",
     "base_rate_note": "Government payment systems launched in 10+ countries since 2016. None eliminated V/MA from their market.",
     "data_confidence": "moderate",
-    "source_note": "NPCI UPI statistics; RBI reports"
+    "source_note": "NPCI UPI product statistics: https://www.npci.org.in/product/upi/product-statistics; RBI Annual Report 2020-21 on zero MDR effective January 1, 2020: https://www.rbi.org.in/Scripts/PublicationsView.aspx?id=21082; RBI report on UPI launch and design: https://www.rbi.org.in/Scripts/PublicationReportDetails.aspx?ID=923&UrlPage="
   },
   {
     "id": "a0000000-0000-4000-8000-000000000028",
@@ -1182,13 +1182,13 @@
     "drawdown_pct": -0.45,
     "time_to_trough_days": 1000,
     "time_to_recover_days": null,
-    "outcome_summary": "Stock fell 45%. Controversial approval but CMS restricted coverage. Revenue negligible. Never recovered.",
+    "outcome_summary": "The FDA granted Aduhelm accelerated approval on June 7, 2021, but the drug produced only $3M of FY2021 revenue. After CMS limited Medicare coverage in April 2022 to qualifying randomized trials, Biogen recorded about $275M of Q1 2022 inventory charges and said demand would be minimal.",
     "reaction_series": [],
-    "why_relevant": "Even FDA approval doesn't guarantee commercial success if payer adoption is lacking.",
+    "why_relevant": "The episode shows why regulatory approval is not the same as commercial validation: when efficacy remains disputed, a dominant payer can restrict coverage and collapse the addressable treated population. A drug thesis therefore depends on evidence quality, reimbursement breadth, and physician adoption together.",
     "disanalogy": "LLY GLP-1 drugs have overwhelming data and traction. Aduhelm had equivocal efficacy.",
     "base_rate_note": "~30% of FDA-approved drugs fail commercially. Highest risk for drugs with controversial data.",
     "data_confidence": "strong",
-    "source_note": "BIIB 10-K 2019-2022; FDA advisory transcripts"
+    "source_note": "CMS Aduhelm coverage decision: https://www.cms.gov/newsroom/press-releases/cms-finalizes-medicare-coverage-policy-monoclonal-antibodies-directed-against-amyloid-treatment; Biogen FY2021 results: https://investors.biogen.com/static-files/e4a90dde-5b3a-4167-887b-96267a6550f1; Biogen Q1 2022 filing: https://investors.biogen.com/node/25441/html"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000041",
@@ -1270,13 +1270,13 @@
     "drawdown_pct": null,
     "time_to_trough_days": null,
     "time_to_recover_days": null,
-    "outcome_summary": "Walmart closed 10% of Sam's fleet. Remaining stores refocused. STRENGTHENED Costco's position.",
+    "outcome_summary": "Walmart announced the closure of 63 Sam's Club locations on January 11, 2018 and planned to convert up to 12 into e-commerce fulfillment centers. In FY2019, Walmart said transfers from closed clubs benefited comparable sales at remaining clubs, while Sam's e-commerce contributed 0.9% to comp growth versus 0.7% in FY2018.",
     "reaction_series": [],
-    "why_relevant": "Shows Costco's dominance: even Walmart cannot profitably compete in all markets.",
+    "why_relevant": "This is relevant because a scaled rival chose network consolidation and digital fulfillment rather than maintaining every warehouse. The episode shows that membership density and local club economics can force retrenchment even when the parent has Walmart's purchasing scale and balance sheet.",
     "disanalogy": "This is POSITIVE for Costco. The relevant risk is Amazon/online eroding warehouse value prop.",
     "base_rate_note": "Warehouse clubs consolidated to 2 players from 4 in 1990s. Membership model concentrates toward single dominant player.",
     "data_confidence": "strong",
-    "source_note": "Walmart earnings 2018; COST membership data"
+    "source_note": "Walmart January 11, 2018 club-fleet announcement: https://corporate.walmart.com/news/2018/01/11/sams-club-shares-changes-to-club-fleet; Walmart FY2019 10-K: https://www.sec.gov/Archives/edgar/data/104169/000010416919000016/wmtform10-kx1312019.htm"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000044",
@@ -1323,17 +1323,17 @@
     "growth_phase": null,
     "macro_regime": null,
     "event_start": "2017-06-16",
-    "event_end": null,
+    "event_end": "2023-09-03",
     "drawdown_pct": null,
     "time_to_trough_days": null,
     "time_to_recover_days": null,
-    "outcome_summary": "Despite $100B+ investment in physical retail, Amazon has NOT impacted Costco membership growth.",
+    "outcome_summary": "Amazon completed its Whole Foods acquisition for $13.2B in net cash on August 28, 2017. Costco's U.S./Canada renewal rate subsequently rose from 90.0% in FY2017 to 92.7% in FY2023, while its worldwide renewal rate increased from 87.0% to 90.4% over the same 6-year period.",
     "reaction_series": [],
-    "why_relevant": "Even Amazon cannot displace Costco's membership value proposition. Evidence of COST moat durability.",
+    "why_relevant": "This is a direct durability test because Amazon combined a paid membership ecosystem with a national premium-grocery footprint, yet Costco renewal rates improved. The evidence suggests the warehouse value proposition and member habit remained differentiated despite a well-funded adjacent competitor.",
     "disanalogy": "Amazon's failure so far doesn't mean it can't eventually. If Prime grocery becomes cheaper than bulk buying, thesis weakens.",
     "base_rate_note": "Amazon has disrupted most retail but warehouse clubs remain resilient. In-store experience creates switching friction.",
     "data_confidence": "moderate",
-    "source_note": "Amazon retail filings; COST membership data"
+    "source_note": "Amazon Q3 2017 10-Q (Whole Foods purchase price and closing): https://www.sec.gov/Archives/edgar/data/1018724/000101872417000135/amzn-20170930x10q.htm; Costco FY2017 10-K: https://www.sec.gov/Archives/edgar/data/909832/000090983217000014/cost10k90317.htm; Costco FY2023 10-K: https://www.sec.gov/Archives/edgar/data/909832/000090983223000042/cost-20230903.htm"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000046",
@@ -1564,13 +1564,13 @@
     "drawdown_pct": -0.2,
     "time_to_trough_days": 90,
     "time_to_recover_days": 365,
-    "outcome_summary": "Stock fell 20%. Government reviewed contractor security. BAH recovered as dependence on contractors proved structural.",
+    "outcome_summary": "Booz Allen terminated Edward Snowden on June 10, 2013 after less than 3 months of employment. Q1 FY2014 revenue slipped 0.3% to $1.43B while adjusted EBITDA rose 16.6% to $158.1M; full-year revenue declined 4.9% to $5.48B from $5.76B.",
     "reaction_series": [],
-    "why_relevant": "Single-event risk for government contractors: one security failure triggers contract reviews.",
+    "why_relevant": "The episode shows how a severe personnel-security failure can create scrutiny without necessarily destroying the franchise because government demand and cleared-contractor capacity remain structural. The current thesis should distinguish reputational shock from measurable award, backlog, and margin deterioration.",
     "disanalogy": "PLTR's software is harder to replace than BAH consulting. Platform switching costs higher.",
     "base_rate_note": "Government contractor scandals: 15-25% declines but rarely permanent contract loss.",
     "data_confidence": "moderate",
-    "source_note": "BAH earnings 2013; clearance reform docs"
+    "source_note": "Booz Allen June 11, 2013 Snowden statement: https://investors.boozallen.com/news-releases/news-release-details/booz-allen-statement-reports-leaked-information; Booz Allen Q1 FY2014 results: https://investors.boozallen.com/news-releases/news-release-details/booz-allen-hamilton-announces-first-quarter-fiscal-2014-results; Booz Allen FY2014 results: https://investors.boozallen.com/static-files/4533f2de-fef1-4286-ac75-52098deb0f17"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000054",
@@ -1633,7 +1633,7 @@
   {
     "id": "a0000000-0000-4000-8000-000000000056",
     "label": "DXC Technology 2019-2021 \u2014 government IT contract attrition",
-    "episode": "Legacy government IT provider lost contracts to cloud-native competitors",
+    "episode": "Legacy IT provider faced project terminations, price-downs, and modernization pressure",
     "entity_ticker": "DXC",
     "sector": "technology",
     "business_model": "government_enterprise",
@@ -1651,13 +1651,13 @@
     "drawdown_pct": -0.7,
     "time_to_trough_days": 910,
     "time_to_recover_days": null,
-    "outcome_summary": "Revenue declined 30%+ as agencies migrated to cloud. Contract renewals fell.",
+    "outcome_summary": "DXC revenue declined from $20.753B in FY2019 to $17.729B in FY2021, a 14.6% drop rather than 30%+. In FY2021, Global Business Services revenue fell 8.5% to $8.336B and Global Infrastructure Services fell 10.3% to $9.393B; organic declines were 6.6% and 11.8%, respectively.",
     "reaction_series": [],
-    "why_relevant": "Technology displacement in government IT: legacy platforms lose to modern alternatives at renewal.",
+    "why_relevant": "This maps to platform displacement because project completions, terminations, price-downs, and shrinking run-rate volumes show how legacy service revenue erodes contract by contract. The thesis should be tested through renewal economics and organic segment trends rather than assuming every decline came from government cloud migration.",
     "disanalogy": "PLTR platform is deeply embedded (ontology, custom workflows). Switching costs much higher than generic IT.",
     "base_rate_note": "Government IT modernization: 5-10 years. Legacy providers retain 50-70% even after transition.",
     "data_confidence": "moderate",
-    "source_note": "DXC 10-K 2019-2021; GSA awards"
+    "source_note": "DXC FY2019 10-K: https://www.sec.gov/Archives/edgar/data/1688568/000168856819000055/dxcfy1910-k.htm; DXC FY2021 results: https://investors.dxc.com/investor-news/news-details/2021/DXC-Technology-Reports-Fourth-Quarter-and-Fiscal-Year-2021-Results/; DXC FY2021 10-K: https://www.sec.gov/Archives/edgar/data/1688568/000168856821000029/dxc-20210331.htm"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000057",
@@ -1765,17 +1765,17 @@
     "growth_phase": null,
     "macro_regime": null,
     "event_start": "2020-01-01",
-    "event_end": null,
+    "event_end": "2023-12-31",
     "drawdown_pct": null,
     "time_to_trough_days": null,
     "time_to_recover_days": null,
-    "outcome_summary": "GCP revenue grew from $8B to $33B. Multi-cloud adoption means enterprises use AWS + Azure + GCP.",
+    "outcome_summary": "Alphabet's Google Cloud revenue grew from $13.059B in 2020 to $33.088B in 2023, a 153% increase. The segment moved from a $5.607B operating loss to $1.716B of operating income, while 2023 revenue growth was led by Google Cloud Platform and then Google Workspace.",
     "reaction_series": [],
-    "why_relevant": "Well-funded third entrant can gain meaningful share. MSFT Azure share gains may slow.",
+    "why_relevant": "The episode demonstrates that a well-funded third platform can scale despite two entrenched leaders because enterprise infrastructure demand supports multiple providers and differentiated workloads. For an incumbent thesis, the monitor is durable revenue growth and profitability at the challenger, not a static market-share estimate.",
     "disanalogy": "Azure enterprise integration (AD, Office, Teams) creates switching costs GCP cannot replicate.",
     "base_rate_note": "Cloud share stabilizes at ~30%/25%/15%. AWS losing 1-2%/year to Azure and GCP combined.",
     "data_confidence": "strong",
-    "source_note": "Synergy Research; Alphabet Cloud filings"
+    "source_note": "Alphabet FY2020 results: https://www.sec.gov/Archives/edgar/data/1652044/000165204421000006/googexhibit991q420.htm; Alphabet FY2023 10-K: https://www.sec.gov/Archives/edgar/data/1652044/000165204424000022/goog-20231231.htm"
   },
   {
     "id": "a0000000-0000-4000-8000-000000000061",
