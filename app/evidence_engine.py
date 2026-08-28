@@ -503,8 +503,27 @@ def _scan_text_for_tags(text: str, tags: List[str]) -> None:
     """Scan text for canonical tag keywords; append matched tags to the list."""
     t = text.lower()
     for tag, keywords in _TAG_KEYWORDS.items():
-        if tag not in tags and any(kw in t for kw in keywords):
+        if tag not in tags and any(_keyword_matches(t, kw) for kw in keywords):
             tags.append(tag)
+
+
+# These entries are intentional stems rather than complete words.  All other
+# keywords require both left and right token boundaries, preventing short
+# tokens such as ``cre`` and ``att`` from matching inside unrelated words.
+_TAG_KEYWORD_PREFIXES = {
+    "geopolit",
+    "model commodit",
+    "hyperscaler depend",
+    "margin compress",
+}
+
+
+def _keyword_matches(text: str, keyword: str) -> bool:
+    """Return whether a tag keyword occurs on safe alphanumeric boundaries."""
+    escaped = re.escape(keyword)
+    left_boundary = r"(?<![a-z0-9])"
+    right_boundary = "" if keyword in _TAG_KEYWORD_PREFIXES else r"(?![a-z0-9])"
+    return re.search(left_boundary + escaped + right_boundary, text) is not None
 
 
 _CANONICAL_TAGS = set(_TAG_TO_PRIMARY_MECHANISM.keys()) | {"concentration_risk", "margin_pressure"}
