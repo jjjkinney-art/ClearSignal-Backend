@@ -86,6 +86,32 @@ _MECHANISM_SIBLINGS: Dict[str, str] = {
     "platform_transition":          "competitive_displacement",
 }
 
+# Structural mechanism priors by business model.  A sparse thesis often names
+# the company but omits the mechanism explicitly; in that case an exact
+# business-model match should still be able to surface the small set of failure
+# modes inherent to that model.  The prior is deliberately partial (0.5), so a
+# stated concern/mechanism always outranks it and an unrelated analog still
+# cannot clear the relevance floor on business model alone.
+_BUSINESS_MODEL_NATIVE_MECHANISMS: Dict[str, set[str]] = {
+    "cloud_platform": {"multiple_compression"},
+    "consumer_hardware": {"demand_air_pocket"},
+    "diversified_bank": {"credit_event"},
+    "e_commerce": {"multiple_compression"},
+    "financial_intermediary": {"credit_event", "rate_shock"},
+    "fintech_platform": {"hypergrowth_deceleration"},
+    "government_enterprise": {"multiple_compression"},
+    "integrated_oil": {"commodity_shock"},
+    "internet_platform": {"regulatory_break"},
+    "membership_retail": {"multiple_compression"},
+    "payment_network": {"network_fee_compression"},
+    "pharma_pipeline": {"patent_cliff"},
+    "ratings_data_oligopoly": {"regulatory_break"},
+    "saas": {"multiple_compression"},
+    "semiconductor_equipment": {"demand_air_pocket"},
+    "semiconductor_fabless": {"inventory_channel_correction"},
+    "semiconductor_manufacturer": {"inventory_channel_correction"},
+}
+
 # ---------------------------------------------------------------------------
 # SetupFingerprint
 # ---------------------------------------------------------------------------
@@ -148,6 +174,15 @@ def build_fingerprint(
         # Ticker-specific overrides for companies whose revenue_model doesn't
         # map cleanly to their analog business_model category.
         _ticker_biz_overrides: Dict[str, str] = {
+            "MSFT": "cloud_platform",
+            "ORCL": "cloud_platform",
+            "AMZN": "e_commerce",
+            "AXP":  "payment_network",
+            "KO":   "membership_retail",
+            "MCD":  "membership_retail",
+            "INTU": "internet_platform",
+            "UNH":  "pharma_pipeline",
+            "BLK":  "financial_intermediary",
             "SPGI": "ratings_data_oligopoly",
             "MCO":  "ratings_data_oligopoly",
             "MSCI": "ratings_data_oligopoly",
@@ -168,11 +203,36 @@ def build_fingerprint(
             "NVDA": "semiconductor_fabless",
             "AMD":  "semiconductor_fabless",
             "AVGO": "semiconductor_fabless",
+            "TSM":  "semiconductor_manufacturer",
+            "MU":   "semiconductor_manufacturer",
+            "INTC": "semiconductor_manufacturer",
+            "XOM":  "integrated_oil",
+            "RBLX": "internet_platform",
+            "DIS":  "internet_platform",
+            "NFLX": "internet_platform",
+            "UBER": "internet_platform",
+            "ABNB": "internet_platform",
+            "PANW": "saas",
             "TSLA": "consumer_hardware",
             "PLTR": "government_enterprise",
         }
         if ticker and ticker.upper() in _ticker_biz_overrides:
             biz_model = _ticker_biz_overrides[ticker.upper()]
+
+        # Narrative-only sector inference is intentionally lightweight and can
+        # miss terse benchmark/production theses.  Keep deterministic sector
+        # metadata for profiled companies whose analog category is curated
+        # above and whose sector is unambiguous.
+        _ticker_sector_overrides: Dict[str, str] = {
+            "MCO":  "financials",
+            "ADP":  "technology",
+            "XOM":  "energy",
+            "GS":   "financials",
+            "ABBV": "healthcare",
+            "PFE":  "healthcare",
+        }
+        if ticker and ticker.upper() in _ticker_sector_overrides:
+            sector = _ticker_sector_overrides[ticker.upper()]
 
     return SetupFingerprint(
         concern_tags=concern_tags,
@@ -294,6 +354,14 @@ def _score_analog(analog, fp: SetupFingerprint) -> float:
             ms = _mechanism_score(primary, analog.mechanism)
             if ms > mech_score:
                 mech_score = ms
+
+    # Exact business-model matches carry a conservative structural prior for
+    # mechanisms native to that model.  This recovers useful analogs when the
+    # generated thesis is sparse without weakening the global relevance floor.
+    analog_biz = getattr(analog, "business_model", "")
+    native_mechanisms = _BUSINESS_MODEL_NATIVE_MECHANISMS.get(fp.business_model or "", set())
+    if fp.business_model == analog_biz and analog.mechanism in native_mechanisms:
+        mech_score = max(mech_score, 0.5)
 
     # 3. Concern-tag Jaccard (weight 0.15)
     analog_tags = set(analog.concern_tags or [])
