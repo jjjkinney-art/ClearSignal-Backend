@@ -152,6 +152,19 @@ def test_intentional_keyword_stems_keep_matching_inflected_words():
     assert "margin_pressure" in fp.concern_tags
 
 
+def test_geopolitical_risk_infers_export_control_secondary_mechanism():
+    """Geopolitical semiconductor risk includes the export-control pathway."""
+    from app.evidence_engine import build_fingerprint
+
+    fp = build_fingerprint(
+        "What could break the thesis?",
+        {"bear_thesis": "Geopolitical export restrictions could expand."},
+    )
+
+    assert "regulatory_break" in fp.inferred_mechanisms
+    assert "export_control_restriction" in fp.inferred_mechanisms
+
+
 def test_profile_override_supplies_deterministic_model_and_sector():
     """Curated profile metadata must repair sparse narrative inference."""
     from types import SimpleNamespace
@@ -175,6 +188,7 @@ def test_profile_override_supplies_deterministic_model_and_sector():
     [
         ("TMO", "life_science_tools", "healthcare"),
         ("NEE", "regulated_utility", "utilities"),
+        ("AWK", "regulated_utility", "utilities"),
         ("AMT", "tower_reit", "real_estate"),
         ("TSLA", "consumer_hardware", "consumer_discretionary"),
         ("CAVA", "restaurant_chain", "consumer_discretionary"),
@@ -320,6 +334,83 @@ def test_native_mechanism_prior_does_not_boost_unrelated_mechanism():
     )
 
     assert _score_analog(analog, fp) < RELEVANCE_FLOOR
+
+
+def test_explicit_pass_suppresses_unrelated_model_native_analog():
+    """An explicit regulatory thesis must not be padded with a patent cliff."""
+    from app.evidence_engine import retrieve_historical_analogs, SetupFingerprint
+
+    regulatory = _AnalogStub(
+        label="Regulatory precedent",
+        mechanism="regulatory_break",
+        concern_tags=["regulatory_risk"],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+    patent = _AnalogStub(
+        label="Patent precedent",
+        mechanism="patent_cliff",
+        concern_tags=[],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+    fp = SetupFingerprint(
+        concern_tags=["regulatory_risk"],
+        inferred_mechanisms=["regulatory_break"],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+
+    result = retrieve_historical_analogs([regulatory, patent], fp)
+
+    assert [item["mechanism"] for item in result] == ["regulatory_break"]
+
+
+def test_model_native_fallback_restores_recall_after_empty_explicit_pass():
+    """A model-native analog remains available when explicit matching is empty."""
+    from app.evidence_engine import retrieve_historical_analogs, SetupFingerprint
+
+    patent = _AnalogStub(
+        label="Patent precedent",
+        mechanism="patent_cliff",
+        concern_tags=[],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+    fp = SetupFingerprint(
+        concern_tags=["regulatory_risk"],
+        inferred_mechanisms=["regulatory_break"],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+
+    result = retrieve_historical_analogs([patent], fp)
+
+    assert [item["mechanism"] for item in result] == ["patent_cliff"]
+
+
+def test_ticker_native_override_survives_noisy_explicit_mechanism():
+    """Curated company risks outrank a misleading generated thesis mechanism."""
+    from app.evidence_engine import retrieve_historical_analogs, SetupFingerprint
+
+    rate_shock = _AnalogStub(
+        label="Utility rate shock",
+        mechanism="rate_shock",
+        concern_tags=["interest_rate_risk"],
+        sector="utilities",
+        business_model="regulated_utility",
+    )
+    fp = SetupFingerprint(
+        concern_tags=["competitive_risk"],
+        inferred_mechanisms=["competitive_displacement"],
+        ticker="AWK",
+        sector="utilities",
+        business_model="regulated_utility",
+    )
+
+    result = retrieve_historical_analogs([rate_shock], fp)
+
+    assert [item["mechanism"] for item in result] == ["rate_shock"]
 
 
 # ---------------------------------------------------------------------------

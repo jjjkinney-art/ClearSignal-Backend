@@ -64,6 +64,7 @@ _TAG_TO_SECONDARY_MECHANISM: Dict[str, str] = {
     "cre_credit_risk":      "rate_shock",
     "ai_adoption_risk":     "competitive_displacement",
     "competitive_risk":     "hypergrowth_deceleration",
+    "geopolitical_risk":    "export_control_restriction",
 }
 
 # Mechanism siblings (partial credit: 0.5 on mechanism match)
@@ -121,6 +122,17 @@ _BUSINESS_MODEL_NATIVE_MECHANISMS: Dict[str, set[str]] = {
     "telecom_carrier": {"competitive_displacement"},
     "tower_reit": {"rate_shock"},
     "travel_marketplace": {"regulatory_break"},
+}
+
+# A small number of diversified or platform companies have structural risk
+# surfaces that their generic revenue-model label cannot express.  These
+# curated overrides remain valid even when a noisy thesis mentions another
+# mechanism; unlike model-level priors, they are company-specific assertions.
+_TICKER_NATIVE_MECHANISMS: Dict[str, set[str]] = {
+    "AWK": {"rate_shock", "regulatory_break"},
+    "BA": {"demand_air_pocket", "franchise_credibility_crisis"},
+    "BRK.B": {"credit_cycle_loss", "rate_shock"},
+    "RBLX": {"competitive_displacement", "hypergrowth_deceleration"},
 }
 
 # ---------------------------------------------------------------------------
@@ -224,6 +236,7 @@ def build_fingerprint(
             "PANW": "saas",
             "TMO":  "life_science_tools",
             "NEE":  "regulated_utility",
+            "AWK":  "regulated_utility",
             "AMT":  "tower_reit",
             "CAVA": "restaurant_chain",
             "DIS":  "media_platform",
@@ -255,6 +268,7 @@ def build_fingerprint(
             "PFE":  "healthcare",
             "TMO":  "healthcare",
             "NEE":  "utilities",
+            "AWK":  "utilities",
             "AMT":  "real_estate",
             "TSLA": "consumer_discretionary",
             "CAVA": "consumer_discretionary",
@@ -302,11 +316,26 @@ def retrieve_historical_analogs(
     if not analogs or not fingerprint:
         return []
 
-    scored: List[Tuple[float, object]] = []
-    for analog in analogs:
-        score = _score_analog(analog, fingerprint)
-        if score >= floor:
-            scored.append((score, analog))
+    def _eligible(*, allow_model_prior: bool) -> List[Tuple[float, object]]:
+        matches: List[Tuple[float, object]] = []
+        for analog in analogs:
+            score = _score_analog(
+                analog,
+                fingerprint,
+                allow_model_prior=allow_model_prior,
+            )
+            if score >= floor:
+                matches.append((score, analog))
+        return matches
+
+    # Explicit thesis mechanisms get the first pass without broad model-level
+    # priors.  If that pass finds nothing, fall back to the structural model
+    # prior rather than returning silence.  This prevents unrelated secondary
+    # analogs while preserving recall for incomplete or noisy thesis tagging.
+    has_explicit_mechanism = bool(fingerprint.inferred_mechanisms)
+    scored = _eligible(allow_model_prior=not has_explicit_mechanism)
+    if not scored and has_explicit_mechanism:
+        scored = _eligible(allow_model_prior=True)
 
     if not scored:
         return []
@@ -357,7 +386,12 @@ def _business_model_score(query_biz: Optional[str], analog_biz: Optional[str]) -
     return _RELATED_BUSINESS_MODELS.get(pair, 0.0)
 
 
-def _score_analog(analog, fp: SetupFingerprint) -> float:
+def _score_analog(
+    analog,
+    fp: SetupFingerprint,
+    *,
+    allow_model_prior: bool = True,
+) -> float:
     """Compute composite relevance score (0–1) for one analog.
 
     Phase 7 reweight: business_model is now the dominant signal (0.30),
@@ -390,11 +424,20 @@ def _score_analog(analog, fp: SetupFingerprint) -> float:
             if ms > mech_score:
                 mech_score = ms
 
-    # Exact business-model matches carry a conservative structural prior for
-    # mechanisms native to that model.  This recovers useful analogs when the
-    # generated thesis is sparse without weakening the global relevance floor.
+    # Exact business-model matches can carry a conservative structural prior.
+    # The retrieval caller disables broad model priors on its explicit first
+    # pass so thesis evidence is not padded with unrelated native risks.
+    # Curated ticker overrides are narrower and remain active regardless.
     analog_biz = getattr(analog, "business_model", "")
-    native_mechanisms = _BUSINESS_MODEL_NATIVE_MECHANISMS.get(fp.business_model or "", set())
+    ticker_key = (fp.ticker or "").upper()
+    if ticker_key in _TICKER_NATIVE_MECHANISMS:
+        native_mechanisms = _TICKER_NATIVE_MECHANISMS[ticker_key]
+    elif allow_model_prior:
+        native_mechanisms = _BUSINESS_MODEL_NATIVE_MECHANISMS.get(
+            fp.business_model or "", set()
+        )
+    else:
+        native_mechanisms = set()
     if fp.business_model == analog_biz and analog.mechanism in native_mechanisms:
         mech_score = max(mech_score, 0.5)
 
