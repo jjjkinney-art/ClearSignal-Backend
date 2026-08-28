@@ -100,6 +100,58 @@ def test_build_fingerprint_empty_thesis():
     assert fp.inferred_mechanisms == []
 
 
+def test_short_tag_keywords_do_not_match_inside_unrelated_words():
+    """Short aliases such as CRE/ATT require token boundaries."""
+    from app.evidence_engine import build_fingerprint
+
+    fp = build_fingerprint(
+        "What could break the thesis?",
+        {
+            "bear_thesis": (
+                "Revenue could decrease if customer attention shifts and the "
+                "company matters less to buyers."
+            ),
+        },
+    )
+
+    assert "cre_credit_risk" not in fp.concern_tags
+    assert "att_privacy_risk" not in fp.concern_tags
+    assert "credit_event" not in fp.inferred_mechanisms
+    assert "regulatory_break" not in fp.inferred_mechanisms
+
+
+def test_short_tag_keywords_still_match_as_standalone_tokens():
+    """Boundary protection must preserve genuine CRE and ATT references."""
+    from app.evidence_engine import build_fingerprint
+
+    fp = build_fingerprint(
+        "What could break the thesis?",
+        {
+            "bear_thesis": (
+                "CRE defaults could rise while Apple's ATT policy reduces tracking."
+            ),
+        },
+    )
+
+    assert "cre_credit_risk" in fp.concern_tags
+    assert "att_privacy_risk" in fp.concern_tags
+    assert "credit_event" in fp.inferred_mechanisms
+    assert "regulatory_break" in fp.inferred_mechanisms
+
+
+def test_intentional_keyword_stems_keep_matching_inflected_words():
+    """Boundary matching preserves explicitly declared prefix stems."""
+    from app.evidence_engine import build_fingerprint
+
+    fp = build_fingerprint(
+        "What could break the thesis?",
+        {"bear_thesis": "Geopolitical pressure could cause margin compression."},
+    )
+
+    assert "geopolitical_risk" in fp.concern_tags
+    assert "margin_pressure" in fp.concern_tags
+
+
 def test_profile_override_supplies_deterministic_model_and_sector():
     """Curated profile metadata must repair sparse narrative inference."""
     from types import SimpleNamespace
