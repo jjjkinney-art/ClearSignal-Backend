@@ -100,6 +100,24 @@ def test_build_fingerprint_empty_thesis():
     assert fp.inferred_mechanisms == []
 
 
+def test_profile_override_supplies_deterministic_model_and_sector():
+    """Curated profile metadata must repair sparse narrative inference."""
+    from types import SimpleNamespace
+
+    from app.evidence_engine import build_fingerprint
+
+    profile = SimpleNamespace(revenue_model="product_sale")
+    fp = build_fingerprint(
+        "What could break the Exxon thesis?",
+        {"bear_thesis": "Demand could weaken."},
+        ticker="XOM",
+        profile=profile,
+    )
+
+    assert fp.business_model == "integrated_oil"
+    assert fp.sector == "energy"
+
+
 # ---------------------------------------------------------------------------
 # _score_analog unit tests
 # ---------------------------------------------------------------------------
@@ -178,6 +196,42 @@ def test_score_analog_sibling_mechanism():
     score = _score_analog(analog, fp)
     # Should get partial mechanism credit (0.5 × 0.30 = 0.15)
     assert score > 0.10, f"Expected sibling partial credit, got {score}"
+
+
+def test_native_mechanism_prior_recovers_sparse_exact_model_match():
+    """A sparse thesis can retrieve one diagnostic, model-native analog."""
+    from app.evidence_engine import _score_analog, SetupFingerprint, RELEVANCE_FLOOR
+
+    analog = _AnalogStub(
+        mechanism="patent_cliff",
+        concern_tags=[],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+    fp = SetupFingerprint(
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+
+    assert _score_analog(analog, fp) >= RELEVANCE_FLOOR
+
+
+def test_native_mechanism_prior_does_not_boost_unrelated_mechanism():
+    """Exact business model alone remains insufficient for a non-native risk."""
+    from app.evidence_engine import _score_analog, SetupFingerprint, RELEVANCE_FLOOR
+
+    analog = _AnalogStub(
+        mechanism="commodity_shock",
+        concern_tags=[],
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+    fp = SetupFingerprint(
+        sector="healthcare",
+        business_model="pharma_pipeline",
+    )
+
+    assert _score_analog(analog, fp) < RELEVANCE_FLOOR
 
 
 # ---------------------------------------------------------------------------
