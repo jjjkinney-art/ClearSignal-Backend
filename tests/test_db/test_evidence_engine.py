@@ -170,6 +170,39 @@ def test_profile_override_supplies_deterministic_model_and_sector():
     assert fp.sector == "energy"
 
 
+@pytest.mark.parametrize(
+    ("ticker", "expected_model", "expected_sector"),
+    [
+        ("TMO", "life_science_tools", "healthcare"),
+        ("NEE", "regulated_utility", "utilities"),
+        ("AMT", "tower_reit", "real_estate"),
+        ("TSLA", "consumer_hardware", "consumer_discretionary"),
+        ("CAVA", "restaurant_chain", "consumer_discretionary"),
+        ("DIS", "media_platform", "consumer_discretionary"),
+        ("LMT", "defense_contractor", "industrials"),
+        ("RTX", "defense_contractor", "industrials"),
+        ("T", "telecom_carrier", "communication_services"),
+        ("PG", "consumer_staples", "consumer_staples"),
+        ("UBER", "travel_marketplace", "consumer_discretionary"),
+        ("ABNB", "travel_marketplace", "consumer_discretionary"),
+    ],
+)
+def test_long_tail_profile_overrides(ticker, expected_model, expected_sector):
+    """Long-tail profiles map deterministically to the enriched analog pools."""
+    from app.evidence_engine import build_fingerprint
+    from app.services.company_knowledge import _KNOWLEDGE_DB
+
+    fp = build_fingerprint(
+        "What could break the thesis?",
+        {"bear_thesis": "Demand and execution could weaken."},
+        ticker=ticker,
+        profile=_KNOWLEDGE_DB[ticker],
+    )
+
+    assert fp.business_model == expected_model
+    assert fp.sector == expected_sector
+
+
 # ---------------------------------------------------------------------------
 # _score_analog unit tests
 # ---------------------------------------------------------------------------
@@ -517,6 +550,37 @@ async def test_seed_and_retrieve_analogs(db_session):
     labels = [r.label for r in rows]
     assert any("Cisco" in lbl for lbl in labels), "Cisco 2000 should be seeded"
     assert any("NVDA" in lbl or "NVIDIA" in lbl for lbl in labels), "NVDA 2018 should be seeded"
+
+
+@pytest.mark.asyncio
+async def test_long_tail_analog_pools_are_seeded(db_session):
+    """Sprint 5D analog categories seed with institutional-quality metadata."""
+    from app.db.repositories.evidence_repo import get_all_analogs, seed_analogs
+
+    await seed_analogs(db_session)
+    await db_session.commit()
+    rows = await get_all_analogs(db_session)
+
+    required_models = {
+        "life_science_tools",
+        "regulated_utility",
+        "tower_reit",
+        "restaurant_chain",
+        "telecom_carrier",
+        "travel_marketplace",
+        "defense_contractor",
+        "media_platform",
+        "consumer_staples",
+    }
+    by_model = {row.business_model: row for row in rows if row.business_model in required_models}
+
+    assert set(by_model) == required_models
+    for analog in by_model.values():
+        assert analog.quality_rating == "strong"
+        assert len(analog.outcome_summary) > 60
+        assert len(analog.why_relevant) > 80
+        assert len(analog.disanalogy) > 20
+        assert len(analog.base_rate_note) > 20
 
 
 @pytest.mark.asyncio
