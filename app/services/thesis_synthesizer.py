@@ -3769,6 +3769,8 @@ def synthesize_thesis(
         thesis.asymmetry_multiplier_applied = conviction.asymmetry_multiplier_applied
         thesis.directional_stance = conviction.directional_stance
         thesis.directional_stance_reasoning = conviction.directional_stance_reasoning
+        thesis.valuation_reference = conviction.valuation_reference
+        thesis.estimate_watch = conviction.estimate_watch
 
         # ── Phase 2: Stamp Analysis Foundation structured provenance ──────────
         # User-facing structured content — no internal labels or telemetry.

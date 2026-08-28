@@ -1101,6 +1101,21 @@ class InvestmentThesis(BaseModel):
     valuation_view: str = Field(
         default="", description="Valuation summary from the valuation agent"
     )
+    valuation_reference: str = Field(
+        default="",
+        description=(
+            "Compact, quantified valuation anchor for the verdict card. Prefers "
+            "substantive valuation-agent output and falls back to the curated company "
+            "profile when live ratio evidence is unavailable."
+        ),
+    )
+    estimate_watch: str = Field(
+        default="",
+        description=(
+            "Single company-specific estimate or KPI threshold that would most change "
+            "the current view. Designed for compact display beside valuation_reference."
+        ),
+    )
     macro_sensitivity: str = Field(
         default="", description="Macro sensitivity summary"
     )

@@ -613,6 +613,49 @@ class TestCompanySpecificUncertainty:
 
 # ── 12. what_increases_conviction specificity ─────────────────────────────────
 
+class TestDecisionDensityAnchors:
+    def test_substantive_live_valuation_wins(self):
+        from app.schemas import ValuationView
+        from app.services.company_knowledge import get_knowledge_profile
+        from app.services.conviction_modeler import _build_valuation_reference
+
+        live = (
+            "Shares trade at 24x forward P/E versus a five-year median of 20x. "
+            "A 10% EPS miss would leave that premium difficult to defend."
+        )
+        result = _build_valuation_reference(
+            ValuationView(overall=live), get_knowledge_profile("NVDA")
+        )
+        assert result == live
+
+    def test_sparse_valuation_falls_back_to_compact_profile(self):
+        from app.schemas import ValuationView
+        from app.services.company_knowledge import get_knowledge_profile
+        from app.services.conviction_modeler import _build_valuation_reference
+
+        result = _build_valuation_reference(
+            ValuationView(overall="Insufficient live ratio evidence."),
+            get_knowledge_profile("NVDA"),
+        )
+        assert result.startswith("Curated reference framework (not live market data):")
+        assert "35-45x" in result
+        assert "$60B+" in result
+        assert result.count(".") <= 2
+
+    def test_conviction_exposes_company_specific_estimate_watch(self):
+        from app.services.conviction_modeler import compute_conviction
+
+        val, mac, risk, mkt, qual = _make_agents()
+        result = compute_conviction(
+            evidence=[], valuation=val, macro=mac, risk=risk, market=mkt,
+            quality=qual, company=_make_company(ticker="NVDA"),
+        )
+        assert result.valuation_reference
+        assert result.estimate_watch
+        assert any(token in result.estimate_watch.lower() for token in ("capex", "asic", "china"))
+        assert any(char.isdigit() for char in result.estimate_watch)
+
+
 class TestWhatIncreasesConviction:
     def _compute(self, evidence, ticker="NVDA", sector="Technology"):
         from app.services.conviction_modeler import compute_conviction
@@ -769,6 +812,8 @@ class TestSchemaFields:
         )
         assert thesis.what_increases_conviction == ""
         assert thesis.conviction_dimensions == {}
+        assert thesis.valuation_reference == ""
+        assert thesis.estimate_watch == ""
 
     def test_conviction_dimensions_stamped_on_thesis_in_synthesizer(self):
         """conviction_dimensions dict is stamped on the thesis after synthesis."""
@@ -799,6 +844,8 @@ class TestSchemaFields:
         assert isinstance(result.conviction_dimensions, dict)
         assert "evidence_quality" in result.conviction_dimensions
         assert "thesis_alignment" in result.conviction_dimensions
+        assert result.valuation_reference
+        assert result.estimate_watch
 
 
 # ── 15. Integration: conviction modeler in synthesize_thesis ──────────────────

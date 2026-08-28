@@ -79,6 +79,8 @@ def _clearsignal_brief(ticker: str) -> str:
         f"Conviction: {r.directional_stance} (score {r.final_score:.2f}). "
         f"Setup: {r.setup_label}. "
         f"Assessment: {r.confidence_reasoning} "
+        f"Valuation reference: {r.valuation_reference} "
+        f"Estimate watch: {r.estimate_watch}. "
         f"What would raise conviction: {r.what_increases_conviction} "
         f"Primary risk: {top_risk}"
     )
@@ -270,29 +272,10 @@ class TestBeatsRawLLM:
 # ═══════════════════════════════════════════════════════════════════════════
 
 class TestProfessionalGrade:
-    # Q1/Q2/Q4/Q5 clear professional grade; Q3 (information density) is the
-    # documented gap — see the xfail below.
-    @pytest.mark.parametrize("idx,dim", [(0, "Q1_decision"), (1, "Q2_first_order"),
-                                          (3, "Q4_specificity"), (4, "Q5_recommend")])
+    @pytest.mark.parametrize("idx,dim", list(enumerate(_DIM_NAMES)))
     def test_meets_professional_threshold(self, panel, idx, dim):
         cs = panel["ClearSignal"][idx]
         assert cs >= 3.5, f"{dim}: ClearSignal {cs} below professional grade 3.5"
-
-    @pytest.mark.xfail(
-        reason="Q3 'contains information I didn't already know' (raw quantitative + "
-               "named-entity density) averages ~3.2 for ClearSignal — just below the "
-               "3.5 professional bar, and Morningstar-style notes edge it (~3.4) because "
-               "they surface valuation data points (fair-value estimate, price/FVE ratio) "
-               "that ClearSignal's conviction-focused brief does not emphasise. Closing "
-               "this needs a PRODUCT change (add valuation/estimate data points to the "
-               "brief), out of scope for a validation battery. Documented as the #1 "
-               "V9-driven improvement.",
-        strict=False,
-    )
-    def test_information_density_professional_grade(self, panel):
-        assert panel["ClearSignal"][2] >= 3.5, (
-            f"Q3 information density {panel['ClearSignal'][2]} below 3.5"
-        )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -339,7 +322,7 @@ class TestOverallRating:
                       and panel["ClearSignal"][3] >= panel["Morningstar"][3])
         lines.append(f"  MINIMUM  (>= raw LLM on all 5):        {'PASS' if llm_ok else 'FAIL'}")
         lines.append(f"  TARGET   (>= 3.5 on all 5):            {n_prof}/5 dims"
-                     f" ({'PASS' if n_prof == 5 else 'PARTIAL — Q3 info-density 3.2'})")
+                     f" ({'PASS' if n_prof == 5 else 'PARTIAL'})")
         lines.append(f"  STRETCH  (>= Morningstar on Q1,Q4):    {'PASS' if stretch_ok else 'FAIL'}")
         print("\n".join(lines))
         assert True

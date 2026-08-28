@@ -95,6 +95,7 @@ from ..schemas import (
     RiskProfile,
     ValuationView,
 )
+from .company_knowledge import get_profile_for_company
 
 # ── Company-specific uncertainty drivers ─────────────────────────────────────
 # Named variables that, when unresolved, suppress conviction for specific tickers.
@@ -522,6 +523,9 @@ class ConvictionResult:
     # ── Expectation Intelligence (Part 3) ─────────────────────────────────────
     expectation_regime:              str = "fair"   # cheap|fair|stretched|euphoric|bubble
     expectation_shift_severity:      str = "none"   # none|minor|moderate|significant|major
+    # ── Decision-density anchors (Sprint 5H) ─────────────────────────────────
+    valuation_reference:             str = ""
+    estimate_watch:                  str = ""
 
 
 # ── Timestamp parser (reuse from calibrator pattern) ─────────────────────────
@@ -551,6 +555,44 @@ def _age_days(ts: Optional[str]) -> Optional[int]:
     if dt is None:
         return None
     return (datetime.now(timezone.utc) - dt).days
+
+
+def _compact_sentences(text: str, *, max_sentences: int = 2) -> str:
+    """Return a whitespace-normalised, sentence-safe excerpt.
+
+    Valuation-agent prose and curated profiles can be several paragraphs long.
+    The verdict surface needs only the first one or two quantified anchors, and
+    must never cut a sentence in the middle.
+    """
+    clean = " ".join((text or "").split())
+    if not clean:
+        return ""
+    sentences = re.split(r"(?<=[.!?])\s+", clean)
+    return " ".join(sentences[:max_sentences]).strip()
+
+
+def _build_valuation_reference(
+    valuation: ValuationView,
+    profile: Optional[CompanyKnowledgeProfile],
+) -> str:
+    """Build a compact valuation anchor without inventing live market data.
+
+    Substantive agent output wins because it can reflect current retrieved
+    evidence. Sparse placeholders fall back to the curated company profile,
+    which is explicitly a reference framework rather than a real-time quote.
+    """
+    live = " ".join((getattr(valuation, "overall", "") or "").split())
+    live_is_substantive = (
+        len(live) >= 60
+        and bool(re.search(r"\d", live))
+        and bool(re.search(r"(P/E|EV/|yield|multiple|fair value|DCF|price)", live, re.I))
+    )
+    if live_is_substantive:
+        return _compact_sentences(live)
+    curated = _compact_sentences(getattr(profile, "valuation_style", "") or "")
+    if not curated:
+        return ""
+    return f"Curated reference framework (not live market data): {curated}"
 
 
 # ── Dimension computers ───────────────────────────────────────────────────────
@@ -3363,6 +3405,9 @@ def compute_conviction(
     what_increases = _build_what_increases_conviction(
         dims, company, uncertainty_drivers, question_intent=question_intent
     )
+    reference_profile = profile or get_profile_for_company(company)
+    valuation_reference = _build_valuation_reference(valuation, reference_profile)
+    estimate_watch = uncertainty_drivers[0] if uncertainty_drivers else ""
 
     # ── Analysis Foundation (user-facing structured provenance) ───────────────
     _af_evidence, _af_constraints, _af_sources = _build_analysis_foundation(
@@ -3433,4 +3478,6 @@ def compute_conviction(
         analysis_foundation_sources       = _af_sources,
         expectation_regime                = _exp_regime,
         expectation_shift_severity        = _exp_shift_sev,
+        valuation_reference               = valuation_reference,
+        estimate_watch                    = estimate_watch,
     )
