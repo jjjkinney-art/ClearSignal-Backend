@@ -460,6 +460,31 @@ class AgentAnswerResponse(BaseModel):
     routing: Dict[str, Any] = Field(default_factory=dict)
 
 
+class ComparativeRankingEntry(BaseModel):
+    """One company in a deterministic cross-company structural ranking."""
+
+    rank: int = Field(..., ge=1)
+    ticker: str
+    company_name: str
+    structural_quality_score: float = Field(..., ge=0.0, le=1.0)
+    quality_tier: str
+    key_advantage: str = ""
+    estimate_watch: str = ""
+    valuation_reference: str = ""
+    data_quality: str = Field(default="profiled")
+
+
+class ComparativeRankingResult(BaseModel):
+    """Explainable comparison that never masquerades as a live return forecast."""
+
+    ranking_basis: str = Field(default="structural_business_quality")
+    leader: str = ""
+    score_spread: float = Field(default=0.0, ge=0.0, le=1.0)
+    summary: str = ""
+    entries: List[ComparativeRankingEntry] = Field(default_factory=list)
+    caveats: List[str] = Field(default_factory=list)
+
+
 # -----------------------------------------------------------------------------
 # Intelligence upgrade models
 #

@@ -5,6 +5,10 @@ Public API
 detect_company(text: str) -> Optional[CompanyContext]
     Backward-compatible helper.  Returns the resolved CompanyContext or None.
 
+detect_companies(text: str, max_companies: int = 8) -> List[CompanyContext]
+    Resolve every explicit ticker and exact company alias in query order.
+    Intended for comparative and ranking questions; never uses fuzzy matching.
+
 normalize_ticker(raw: str) -> Optional[CompanyContext]
     Thin wrapper around detect_company for already-isolated tokens.
 
@@ -1678,6 +1682,60 @@ def detect_company(text: str) -> Optional[CompanyContext]:
     else:
         logger.debug("[company_detection] not_found for text=%r", text[:80])
     return None
+
+
+def detect_companies(text: str, max_companies: int = 8) -> List[CompanyContext]:
+    """Resolve multiple explicitly named companies in left-to-right order.
+
+    Comparative routing must be stricter than single-company assistance: a
+    fuzzy near-match is acceptable as a "Did you mean?" candidate, but it must
+    never silently add a second company to a ranking.  This scanner therefore
+    uses only the two high-confidence mechanisms from :func:`resolve_entity`:
+    registered uppercase tickers and exact word-boundary aliases.
+
+    Overlapping aliases select the longest match (``"berkshire hathaway"``
+    beats ``"berkshire"``), and repeated mentions of the same ticker are
+    deduplicated while preserving the first mention.
+    """
+    if not text or not text.strip() or max_companies <= 0:
+        return []
+
+    matches: list[tuple[int, int, int, CompanyContext]] = []
+
+    # Explicit uppercase tickers receive the highest priority for an identical
+    # span.  Stop-word and registry rules are identical to single detection.
+    for match in _TICKER_RE.finditer(text):
+        ticker = match.group(1).replace("-", ".")
+        if ticker in _TICKER_STOP_WORDS or ticker not in _COMPANY_DB:
+            continue
+        matches.append((match.start(), match.end(), 0, _make_context(ticker, ticker)))
+
+    lower = text.lower()
+    for alias in _ALIAS_KEYS_BY_LENGTH:
+        pattern = re.compile(r"\b" + re.escape(alias) + r"\b")
+        for match in pattern.finditer(lower):
+            ticker = _ALIAS_MAP[alias]
+            matches.append((match.start(), match.end(), 1, _make_context(ticker, alias)))
+
+    # Start position first; for overlapping matches at the same position prefer
+    # the longest span, then an explicit ticker over an alias.
+    matches.sort(key=lambda item: (item[0], -(item[1] - item[0]), item[2]))
+
+    selected: List[CompanyContext] = []
+    selected_tickers: set[str] = set()
+    occupied: list[tuple[int, int]] = []
+    for start, end, _, context in matches:
+        if context.ticker in selected_tickers:
+            continue
+        if any(start < used_end and end > used_start for used_start, used_end in occupied):
+            continue
+        selected.append(context)
+        selected_tickers.add(context.ticker)
+        occupied.append((start, end))
+        if len(selected) >= max_companies:
+            break
+
+    return selected
 
 
 def normalize_ticker(raw: str) -> Optional[CompanyContext]:
