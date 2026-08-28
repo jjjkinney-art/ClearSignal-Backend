@@ -71,6 +71,18 @@ _EXPL_MARKERS = re.compile(
     re.I,
 )
 
+_LEGACY_ENRICHMENT_IDS = {
+    "a0000000-0000-4000-8000-000000000024",
+    "a0000000-0000-4000-8000-000000000025",
+    "a0000000-0000-4000-8000-000000000027",
+    "a0000000-0000-4000-8000-000000000040",
+    "a0000000-0000-4000-8000-000000000043",
+    "a0000000-0000-4000-8000-000000000045",
+    "a0000000-0000-4000-8000-000000000053",
+    "a0000000-0000-4000-8000-000000000056",
+    "a0000000-0000-4000-8000-000000000060",
+}
+
 
 # ---------------------------------------------------------------------------
 # Lightweight analog object mirroring the HistoricalAnalog ORM shape the engine
@@ -328,6 +340,25 @@ class TestExplanatoryValue:
         assert frac >= THRESH["explanatory_floor"], (
             f"Explanatory {frac:.0%} below floor {THRESH['explanatory_floor']:.0%}"
         )
+
+    def test_legacy_enrichments_remain_specific_explanatory_and_sourced(self, library):
+        """Sprint 5G corrections must not regress to vague, unsupported prose."""
+        enriched = {a.id: a for a in library if a.id in _LEGACY_ENRICHMENT_IDS}
+
+        assert set(enriched) == _LEGACY_ENRICHMENT_IDS
+        for analog in enriched.values():
+            score = _score_library_analog(analog)
+            assert score.specific, analog.label
+            assert score.explanatory, analog.label
+            assert "https://" in analog.source_note, analog.label
+
+        completed_operational_windows = {
+            "a0000000-0000-4000-8000-000000000027",
+            "a0000000-0000-4000-8000-000000000045",
+            "a0000000-0000-4000-8000-000000000060",
+        }
+        for analog_id in completed_operational_windows:
+            assert enriched[analog_id].event_end is not None
 
 
 # ═══════════════════════════════════════════════════════════════════════════
