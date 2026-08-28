@@ -581,14 +581,15 @@ try:
         try:
             import asyncio
             try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    pending = asyncio.all_tasks(loop)
-                    for t in pending:
-                        t.cancel()
+                loop = asyncio.get_running_loop()
             except RuntimeError:
-                # No running loop — nothing to clean
+                # No running loop — nothing to clean.  get_running_loop()
+                # avoids Python 3.12's deprecated implicit-loop creation.
                 pass
+            else:
+                pending = asyncio.all_tasks(loop)
+                for t in pending:
+                    t.cancel()
         except Exception:
             pass
         # Final thread audit
