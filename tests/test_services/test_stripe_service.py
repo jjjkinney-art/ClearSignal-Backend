@@ -207,6 +207,7 @@ async def test_customer_creation_new_when_not_found(stripe_mock):
     call_kwargs = stripe_mock.Customer.create.call_args.kwargs
     assert call_kwargs["metadata"]["user_id"] == "user-new-001"
     assert call_kwargs["email"] == "test@example.com"
+    assert call_kwargs["idempotency_key"] == "clearsignal-customer-user-new-001"
 
 
 @pytest.mark.asyncio
@@ -259,6 +260,7 @@ async def test_checkout_session_created(stripe_mock):
     stripe_mock.checkout.Session.create.assert_called_once()
     call_kwargs = stripe_mock.checkout.Session.create.call_args.kwargs
     assert call_kwargs["mode"] == "subscription"
+    assert call_kwargs["client_reference_id"] == "user-chk-001"
     assert call_kwargs["line_items"][0]["price"] == "price_signal_mo_test"
     assert call_kwargs["success_url"] == "https://example.com/billing/success"
     assert call_kwargs["cancel_url"]  == "https://example.com/billing/cancel"
