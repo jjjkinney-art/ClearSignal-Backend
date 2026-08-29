@@ -211,7 +211,10 @@ async def create_or_get_customer(
     if email:
         params["email"] = email
 
-    customer = stripe.Customer.create(**params)
+    customer = stripe.Customer.create(
+        **params,
+        idempotency_key=f"clearsignal-customer-{user_id}",
+    )
     cus_id = customer.id
     logger.info("[stripe] created customer %s for user %s", cus_id[:10], user_id[:8])
     return cus_id
@@ -289,6 +292,7 @@ async def create_checkout_session(
 
     session_params: Dict[str, Any] = {
         "mode":               "subscription",
+        "client_reference_id": user_id,
         "line_items":         [{"price": price_id, "quantity": 1}],
         "success_url":        success_url,
         "cancel_url":         cancel_url,

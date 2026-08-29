@@ -18,10 +18,9 @@ Supported events:
 
 All other events are recorded with processing_status='skipped'.
 
-Handler errors update the stripe_events row to 'error' but never propagate
-to the route — the route always returns 200 so Stripe does not retry partially
-applied events.  The idempotency pre-check (stripe_event_id UNIQUE) is the
-backstop for any race.
+Handler errors roll back all event side effects, mark the event as retryable,
+and return a non-2xx response so Stripe retries delivery. The idempotency
+pre-check (stripe_event_id UNIQUE) is the backstop for duplicate deliveries.
 """
 
 from __future__ import annotations
@@ -34,6 +33,10 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_DEFAULT_USER_ID: str = "00000000-0000-0000-0000-000000000001"
 _GRACE_DAYS: int = 3
+
+
+class UnknownStripePriceError(ValueError):
+    """Raised when a subscription references an unconfigured Stripe price."""
 
 
 def _settings():
@@ -115,8 +118,9 @@ def _billing_interval_from_stripe(interval: str) -> str:
 def _plan_from_price_id(price_id: str) -> str:
     """Reverse-lookup price_id → plan_name using config.
 
-    Falls back to 'pro' for unknown price IDs — the entitlement service is
-    the authoritative source for capabilities; 'pro' is the safer default.
+    Unknown or missing prices fail closed. Granting Signal access for an
+    unrecognised price can turn a Stripe configuration error into an
+    entitlement escalation.
     """
     cfg = _settings()
     if price_id and price_id == cfg.stripe_price_signal_monthly:
@@ -125,11 +129,16 @@ def _plan_from_price_id(price_id: str) -> str:
         return "pro"
     if price_id and price_id == cfg.stripe_price_syndicate_monthly:
         return "teams"
-    if price_id:
-        logger.warning(
-            "[webhook] unknown price_id %.20r — defaulting plan to 'pro'", price_id
-        )
-    return "pro"
+    raise UnknownStripePriceError(
+        f"Unconfigured Stripe price ID: {price_id[:20] if price_id else '<missing>'}"
+    )
+
+
+def _user_plan_for_subscription(plan_name: str, status: str) -> str:
+    """Return the denormalized users.plan value for a subscription state."""
+    if status in {"active", "trialing", "past_due", "paused"}:
+        return plan_name
+    return "free"
 
 
 def _extract_subscription_price(sub_obj: dict):
@@ -295,7 +304,11 @@ async def handle_subscription_created(session, obj: dict) -> None:
             canceled_at=_ts(canceled_at_ts) if canceled_at_ts else None,
         )
 
-    await _after_subscription_change(session, user_id, plan_name)
+    await _after_subscription_change(
+        session,
+        user_id,
+        _user_plan_for_subscription(plan_name, status),
+    )
     logger.info(
         "[webhook] subscription.created: sub=%s user=%s plan=%s status=%s",
         sub_id[:12], user_id[:8], plan_name, status,
@@ -361,7 +374,11 @@ async def handle_subscription_updated(session, obj: dict) -> None:
         )
         user_id_for_cache = existing.user_id
 
-    await _after_subscription_change(session, user_id_for_cache, plan_name)
+    await _after_subscription_change(
+        session,
+        user_id_for_cache,
+        _user_plan_for_subscription(plan_name, status),
+    )
     logger.info(
         "[webhook] subscription.updated: sub=%s plan=%s status=%s",
         sub_id[:12], plan_name, status,
@@ -490,7 +507,6 @@ async def handle_customer_deleted(session, obj: dict) -> None:
     from app.db.repositories.billing_repo import (
         list_subscriptions_by_user,
         update_subscription,
-        invalidate_entitlement_cache,
     )
     from app.db.models import User
     from sqlalchemy import select
@@ -512,7 +528,7 @@ async def handle_customer_deleted(session, obj: dict) -> None:
         user_row.stripe_customer_id = None
         await session.flush()
 
-    await invalidate_entitlement_cache(session, user_id)
+    await _after_subscription_change(session, user_id, "free")
     logger.info("[webhook] customer.deleted: user=%s subscriptions canceled", user_id[:8])
 
 

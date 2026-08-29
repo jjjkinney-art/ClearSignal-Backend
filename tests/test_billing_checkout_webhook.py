@@ -31,6 +31,13 @@ import pytest
 SYSTEM_UID = "00000000-0000-0000-0000-000000000001"
 _USER = "user-chk-1"
 _CUSTOMER = "cus_test_1"
+_WEBHOOK_SETTINGS = {
+    "stripe_enabled": True,
+    "stripe_webhook_secret": "whsec_test",
+    "stripe_price_signal_monthly": "price_signal_mo",
+    "stripe_price_signal_yearly": "price_signal_yr",
+    "stripe_price_syndicate_monthly": "price_syndicate_mo",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -198,7 +205,7 @@ def test_webhook_updates_subscription_state():
     async def scenario():
         await _seed_user_with_customer()
         event = _sub_event("evt_state_1", "sub_state_1")
-        with _settings(stripe_enabled=True, stripe_webhook_secret="whsec_test"):
+        with _settings(**_WEBHOOK_SETTINGS):
             with patch("app.services.webhook_service.verify_stripe_signature",
                        return_value=event):
                 resp = await billing_webhook(_FakeRequest())
@@ -221,7 +228,7 @@ def test_webhook_duplicate_is_idempotent():
     async def scenario():
         await _seed_user_with_customer()
         event = _sub_event("evt_dup_1", "sub_dup_1")
-        with _settings(stripe_enabled=True, stripe_webhook_secret="whsec_test"):
+        with _settings(**_WEBHOOK_SETTINGS):
             with patch("app.services.webhook_service.verify_stripe_signature",
                        return_value=event):
                 first = await billing_webhook(_FakeRequest())
@@ -266,7 +273,7 @@ def test_webhook_replays_acknowledged_subscription_without_row():
             )
             await db.commit()
 
-        with _settings(stripe_enabled=True, stripe_webhook_secret="whsec_test"):
+        with _settings(**_WEBHOOK_SETTINGS):
             with patch(
                 "app.services.webhook_service.verify_stripe_signature",
                 return_value=event,
@@ -283,6 +290,74 @@ def test_webhook_replays_acknowledged_subscription_without_row():
         assert sub is not None
         assert sub.user_id == _USER
         assert sub.status == "active"
+
+    _run(scenario)
+
+
+def test_webhook_handler_failure_rolls_back_and_requests_retry():
+    """A verified handler failure must not commit partial billing state."""
+    from app.routers.billing import billing_webhook
+    from app.db.connection import get_session
+    from app.db.models import User
+    from app.db.repositories.billing_repo import (
+        get_stripe_event_by_stripe_id,
+        get_subscription_by_stripe_id,
+    )
+    from sqlalchemy import select
+
+    async def scenario():
+        await _seed_user_with_customer()
+        event = _sub_event("evt_retry_1", "sub_retry_1")
+
+        async def partially_mutate_then_fail(db, verified_event):
+            result = await db.execute(select(User).where(User.id == _USER))
+            result.scalar_one().plan = "teams"
+            await db.flush()
+            raise RuntimeError("transient database failure")
+
+        with _settings(**_WEBHOOK_SETTINGS):
+            with patch(
+                "app.services.webhook_service.verify_stripe_signature",
+                return_value=event,
+            ):
+                with patch(
+                    "app.services.webhook_service.process_event",
+                    side_effect=partially_mutate_then_fail,
+                ):
+                    failed = await billing_webhook(_FakeRequest())
+
+                assert failed.status_code == 500
+                import json
+                failed_body = json.loads(bytes(failed.body).decode())
+                assert failed_body == {
+                    "received": False,
+                    "retryable": True,
+                    "event_id": "evt_retry_1",
+                }
+
+                async with get_session() as db:
+                    user = (
+                        await db.execute(select(User).where(User.id == _USER))
+                    ).scalar_one()
+                    event_row = await get_stripe_event_by_stripe_id(
+                        db, "evt_retry_1"
+                    )
+                    assert user.plan == "free"
+                    assert event_row.processing_status == "error"
+                    assert await get_subscription_by_stripe_id(
+                        db, "sub_retry_1"
+                    ) is None
+
+                # Stripe retries the same event ID. Error rows are replayable,
+                # and the normal idempotent upsert completes the transition.
+                retried = await billing_webhook(_FakeRequest())
+                assert retried.status_code == 200
+
+        async with get_session() as db:
+            sub = await get_subscription_by_stripe_id(db, "sub_retry_1")
+            event_row = await get_stripe_event_by_stripe_id(db, "evt_retry_1")
+        assert sub is not None and sub.status == "active"
+        assert event_row.processing_status == "ok"
 
     _run(scenario)
 

@@ -735,6 +735,7 @@ async def test_customer_deleted_cancels_and_clears_link(session):
     result = await session.execute(select(User).where(User.id == "user-custdel-01"))
     user = result.scalar_one()
     assert user.stripe_customer_id is None
+    assert user.plan == "free"
 
 
 # ---------------------------------------------------------------------------
@@ -784,7 +785,10 @@ def test_map_stripe_status_all_values():
 # ---------------------------------------------------------------------------
 
 def test_plan_from_price_id_known_ids():
-    from app.services.webhook_service import _plan_from_price_id
+    from app.services.webhook_service import (
+        UnknownStripePriceError,
+        _plan_from_price_id,
+    )
 
     with patch("app.config.settings") as cfg:
         cfg.stripe_price_signal_monthly    = "price_signal_mo"
@@ -794,7 +798,49 @@ def test_plan_from_price_id_known_ids():
         assert _plan_from_price_id("price_signal_mo")    == "pro"
         assert _plan_from_price_id("price_signal_yr")    == "pro"
         assert _plan_from_price_id("price_syndicate_mo") == "teams"
-        assert _plan_from_price_id("price_unknown")      == "pro"  # safe fallback
+        with pytest.raises(UnknownStripePriceError):
+            _plan_from_price_id("price_unknown")
+        with pytest.raises(UnknownStripePriceError):
+            _plan_from_price_id("")
+
+
+@pytest.mark.asyncio
+async def test_terminal_subscription_update_resets_denormalized_user_plan(session):
+    from app.services.webhook_service import handle_subscription_updated
+    from app.db.models import User
+    from sqlalchemy import select
+
+    await _seed_user(
+        session,
+        user_id="user-terminal-01",
+        stripe_customer_id="cus_terminal_01",
+        plan="pro",
+    )
+    await _seed_subscription(
+        session,
+        user_id="user-terminal-01",
+        sub_id="sub_terminal_001",
+        customer_id="cus_terminal_01",
+        status="active",
+    )
+
+    with patch("app.config.settings") as cfg:
+        cfg.stripe_price_signal_monthly = "price_signal_mo"
+        cfg.stripe_price_signal_yearly = "price_signal_yr"
+        cfg.stripe_price_syndicate_monthly = "price_syndicate_mo"
+        obj = _make_sub_obj(
+            sub_id="sub_terminal_001",
+            customer_id="cus_terminal_01",
+            status="unpaid",
+            price_id="price_signal_mo",
+        )
+        await handle_subscription_updated(session, obj)
+        await session.flush()
+
+    result = await session.execute(
+        select(User).where(User.id == "user-terminal-01")
+    )
+    assert result.scalar_one().plan == "free"
 
 
 # ---------------------------------------------------------------------------

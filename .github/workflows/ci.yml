@@ -79,6 +79,7 @@ jobs:
           tests/test_services/test_auth_routes.py
           tests/test_services/test_auth_middleware.py
           tests/test_services/test_billing_routes.py
+          tests/test_services/test_billing_observability.py
           tests/test_billing_checkout_webhook.py
           tests/test_services/test_stripe_service.py
           tests/test_services/test_webhook_service.py

@@ -120,7 +120,9 @@ class TestEmptySnapshot:
             "stripe_config_ready", "entitlements_enforced", "subscription_count",
             "subscriptions_by_status", "entitlement_cache_count",
             "stripe_event_count", "processed_webhooks", "skipped_webhooks",
-            "billing_routes_present", "safe_state", "db_available", "snapshot_utc",
+            "unresolved_webhook_errors", "pending_webhooks",
+            "billing_routes_present", "billing_live_ready", "safe_state",
+            "db_available", "snapshot_utc",
         ]
         for key in required:
             assert key in snap, f"Missing key: {key}"
@@ -135,6 +137,9 @@ class TestEmptySnapshot:
         assert snap["entitlement_cache_count"] == 0
         assert snap["processed_webhooks"] == 0
         assert snap["skipped_webhooks"] == 0
+        assert snap["unresolved_webhook_errors"] == 0
+        assert snap["pending_webhooks"] == 0
+        assert snap["billing_live_ready"] is False
         assert snap["subscriptions_by_status"] == {}
         assert snap["db_available"] is False
 
@@ -339,6 +344,64 @@ class TestSafeState:
             snap = await build_billing_snapshot(None)
         assert snap["safe_state"] is False
 
+
+class TestBillingLiveReadiness:
+    @pytest.mark.asyncio
+    async def test_live_ready_requires_full_config_enforcement_and_clean_events(self, db):
+        from app.services.billing_observability_service import build_billing_snapshot
+
+        ready_flags = {
+            "stripe_enabled": True,
+            "entitlements_enforced": True,
+            "stripe_config_ready": True,
+        }
+        with patch(
+            "app.services.billing_observability_service._billing_flags_section",
+            return_value=ready_flags,
+        ):
+            with patch(
+                "app.services.billing_observability_service._stripe_events_section",
+                return_value={
+                    "total": 1,
+                    "by_status": {"ok": 1},
+                    "processed_count": 1,
+                    "skipped_count": 0,
+                    "error_count": 0,
+                    "pending_count": 0,
+                },
+            ):
+                snap = await build_billing_snapshot(db)
+
+        assert snap["billing_live_ready"] is True
+
+    @pytest.mark.asyncio
+    async def test_unresolved_webhook_error_blocks_live_readiness(self, db):
+        from app.services.billing_observability_service import build_billing_snapshot
+
+        ready_flags = {
+            "stripe_enabled": True,
+            "entitlements_enforced": True,
+            "stripe_config_ready": True,
+        }
+        with patch(
+            "app.services.billing_observability_service._billing_flags_section",
+            return_value=ready_flags,
+        ):
+            with patch(
+                "app.services.billing_observability_service._stripe_events_section",
+                return_value={
+                    "total": 1,
+                    "by_status": {"error": 1},
+                    "processed_count": 0,
+                    "skipped_count": 0,
+                    "error_count": 1,
+                    "pending_count": 0,
+                },
+            ):
+                snap = await build_billing_snapshot(db)
+
+        assert snap["unresolved_webhook_errors"] == 1
+        assert snap["billing_live_ready"] is False
 
 class TestStripeActivationReadiness:
     def test_all_required_values_produce_ready_state(self):
