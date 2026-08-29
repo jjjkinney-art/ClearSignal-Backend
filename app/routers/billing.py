@@ -374,7 +374,9 @@ async def billing_status(request: Request):
     )
     from app.db import get_session as _get_session
 
-    user_id: str = getattr(request.state, "user_id", None) or _SYS
+    from app.dependencies.auth import require_user_id
+
+    user_id: str = require_user_id(request)
 
     # System user fast-path — no DB query.
     if user_id == _SYS:
