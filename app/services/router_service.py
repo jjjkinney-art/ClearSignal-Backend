@@ -57,6 +57,7 @@ from .company_detection import (
     detect_companies,
     resolve_entity,
     MINIMUM_ROUTE_CONFIDENCE,
+    intent_allows_company_detection,
 )
 from .comparative_ranking_service import (
     build_comparative_ranking,
@@ -1828,7 +1829,10 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     #   • not found, no candidates → fall through to general finance
     _text_detected_company: Optional[CompanyContext] = None
     _entity_resolution = None
-    if not request.company_name.strip():
+    if (
+        not request.company_name.strip()
+        and intent_allows_company_detection(getattr(request, "intent", None))
+    ):
         # Only run text detection when the frontend did not supply a company.
         try:
             _entity_resolution = resolve_entity(request.question)
