@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pathlib
 import tempfile
+from datetime import datetime, timedelta, timezone
 import pytest
 
 
@@ -68,7 +69,8 @@ class TestRetrievalTagging:
 
     def test_recent_evidence_gets_recent_change_tag(self):
         from app.services.conviction_modeler import _classify_evidence_tags
-        ev = _make_evidence("The company raised guidance last quarter.", timestamp="2026-05-20")
+        recent_ts = (datetime.now(timezone.utc) - timedelta(days=20)).strftime("%Y-%m-%d")
+        ev = _make_evidence("The company raised guidance last quarter.", timestamp=recent_ts)
         tagged = _classify_evidence_tags([ev])
         assert "recent_change" in tagged[0].retrieval_tags
 

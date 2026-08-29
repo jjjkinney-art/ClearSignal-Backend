@@ -174,11 +174,14 @@ class TestCoverageGapDetection:
     def test_all_coverage_present_zero_penalty(self):
         """Full coverage — recent FMP + analyst + earnings — yields zero penalty."""
         from app.services.confidence_calibrator import compute_evidence_coverage_gaps
+        fresh_ts = (datetime.now(timezone.utc) - timedelta(days=20)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
         ev = [
-            _fmp_valuation_ev(),
-            _fmp_analyst_ev(),
-            _earnings_ev(timestamp="2026-04-20T00:00:00Z"),  # < 90 days ago
-            _make_evidence(timestamp="2026-04-10T00:00:00Z"),  # recent general
+            _fmp_valuation_ev(timestamp=fresh_ts),
+            _fmp_analyst_ev(timestamp=fresh_ts),
+            _earnings_ev(timestamp=fresh_ts),
+            _make_evidence(timestamp=fresh_ts),
         ]
         penalty, gaps = compute_evidence_coverage_gaps(ev)
         assert penalty == 0.0
@@ -247,7 +250,10 @@ class TestCoverageDetectorFunctions:
 
     def test_has_recent_earnings_detects_fresh(self):
         from app.services.confidence_calibrator import _has_recent_earnings
-        ev = [_earnings_ev(timestamp="2026-05-01T00:00:00Z")]
+        fresh_ts = (datetime.now(timezone.utc) - timedelta(days=20)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        ev = [_earnings_ev(timestamp=fresh_ts)]
         assert _has_recent_earnings(ev) is True
 
     def test_has_recent_earnings_false_for_old(self):
@@ -668,7 +674,10 @@ class TestStaleEvidenceGovernance:
 
     def test_fresh_evidence_no_warn(self):
         from app.services.thesis_synthesizer import _check_stale_evidence_warning
-        ev = [_make_evidence(timestamp="2026-05-10T00:00:00Z")]
+        fresh_ts = (datetime.now(timezone.utc) - timedelta(days=20)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
+        ev = [_make_evidence(timestamp=fresh_ts)]
         thesis = self._make_thesis(confidence=0.85)
         warnings = _check_stale_evidence_warning(ev, thesis)
         assert len(warnings) == 0
@@ -753,10 +762,13 @@ class TestConfidenceChainInSynthesizer:
         val, mac, risk, mkt, qual = self._make_agents()
         stub_thesis = self._make_thesis_stub(confidence=0.78)
 
+        fresh_ts = (datetime.now(timezone.utc) - timedelta(days=20)).strftime(
+            "%Y-%m-%dT%H:%M:%SZ"
+        )
         evidence = [
-            _fmp_valuation_ev(timestamp="2026-05-10T00:00:00Z"),
-            _fmp_analyst_ev(timestamp="2026-05-10T00:00:00Z"),
-            _earnings_ev(timestamp="2026-05-01T00:00:00Z"),
+            _fmp_valuation_ev(timestamp=fresh_ts),
+            _fmp_analyst_ev(timestamp=fresh_ts),
+            _earnings_ev(timestamp=fresh_ts),
         ]
 
         with patch("app.services.thesis_synthesizer._call_with_json_enforcement",
@@ -781,8 +793,10 @@ class TestConfidenceChainInSynthesizer:
                 evidence=evidence,
             )
 
-        # With full coverage the score should be unchanged (or very close)
-        assert abs(result.confidence_score - 0.78) < 0.01
+        # The Phase 7 conviction modeler is the authoritative headline score;
+        # full coverage must not append a coverage-gap discount.
+        assert result.score_source == "conviction_modeler"
+        assert "conviction discount was applied" not in (result.confidence_reasoning or "").lower()
 
     def test_confidence_never_goes_negative(self):
         """Accumulated penalties never push confidence below 0."""
@@ -851,7 +865,9 @@ class TestConfidenceChainInSynthesizer:
                 evidence=evidence,
             )
 
-        assert "Coverage gaps" in (result.confidence_reasoning or "")
+        reasoning = (result.confidence_reasoning or "").lower()
+        assert "conviction discount was applied" in reasoning
+        assert "valuation anchor absent" in reasoning
 
 
 # ── 6. Build provenance block unit tests ─────────────────────────────────────

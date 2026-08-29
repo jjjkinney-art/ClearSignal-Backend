@@ -100,7 +100,10 @@ class TestRetrievedEvidenceSchema:
             d = ev.model_dump()
         except AttributeError:
             d = ev.dict()
-        assert set(d.keys()) == {"title", "source", "summary", "timestamp", "relevance_score"}
+        assert set(d.keys()) == {
+            "title", "source", "summary", "timestamp", "relevance_score",
+            "retrieval_tags", "retrieval_weight",
+        }
 
 
 # ── retrieve_general_finance_evidence (production stub) ──────────────────────

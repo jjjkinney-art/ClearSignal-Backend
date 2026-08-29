@@ -11,9 +11,9 @@ cross-signal compound risk phrase.  On Render free tier the Nginx
 proxy_read_timeout is ~61 s.  For slow-synthesis companies (AAPL: ~30-40 s)
 the retry pushes total request time past the ceiling, causing a silent 504.
 
-Fix: measure wall-clock time elapsed since _synthesis_call_start.  If elapsed
-> _COMPOUND_RETRY_WALL_BUDGET_S (22 s), skip the retry and publish the
-advisory MISSING_COMPOUND_RISK warning instead.
+Fix: measure wall-clock time elapsed since _synthesis_call_start. On the
+current Render tier the budget is intentionally 0 seconds, so the optional
+retry is disabled and the advisory MISSING_COMPOUND_RISK warning is published.
 
 Tests
 -----
@@ -72,6 +72,10 @@ def _bear_with_compound() -> str:
 
 # ── Test 1: budget available → retry executes ─────────────────────────────────
 
+@pytest.mark.skipif(
+    _COMPOUND_RETRY_WALL_BUDGET_S <= 0,
+    reason="optional compound retry is disabled on the current Render tier",
+)
 class TestRetryExecutesWhenBudgetAvailable:
     """When synthesis elapsed < _COMPOUND_RETRY_WALL_BUDGET_S, retry fires."""
 
@@ -293,8 +297,8 @@ class TestNoCompoundViolation:
 class TestBudgetConstant:
     """_COMPOUND_RETRY_WALL_BUDGET_S must be a reasonable value."""
 
-    def test_constant_is_positive(self):
-        assert _COMPOUND_RETRY_WALL_BUDGET_S > 0
+    def test_constant_matches_current_tier_policy(self):
+        assert _COMPOUND_RETRY_WALL_BUDGET_S == 0.0
 
     def test_constant_is_below_render_ceiling(self):
         """Budget must leave room for agents + safety margin."""
@@ -303,12 +307,11 @@ class TestBudgetConstant:
         assert _COMPOUND_RETRY_WALL_BUDGET_S < 61.0, \
             "Budget must be below Render ceiling"
 
-    def test_constant_allows_typical_fast_requests(self):
-        """NVDA/AMZN typical synthesis times (10-15 s) must be under budget."""
+    def test_constant_disables_retry_for_typical_fast_requests(self):
+        """The free-tier policy must skip even otherwise-fast synthesis retries."""
         fast_synthesis_times = [8.0, 10.0, 12.0, 15.0]
         for t in fast_synthesis_times:
-            assert t <= _COMPOUND_RETRY_WALL_BUDGET_S, \
-                f"Fast synthesis at {t}s should be under budget={_COMPOUND_RETRY_WALL_BUDGET_S}s"
+            assert t > _COMPOUND_RETRY_WALL_BUDGET_S
 
     def test_constant_blocks_aapl_slow_synthesis(self):
         """AAPL typical slow synthesis (25-40 s) must exceed budget."""
@@ -317,10 +320,11 @@ class TestBudgetConstant:
             assert t > _COMPOUND_RETRY_WALL_BUDGET_S, \
                 f"AAPL slow synthesis at {t}s must exceed budget={_COMPOUND_RETRY_WALL_BUDGET_S}s"
 
-    def test_constant_in_reasonable_range(self):
-        """Budget must be in [10, 40] seconds — sanity bounds."""
-        assert 10.0 <= _COMPOUND_RETRY_WALL_BUDGET_S <= 40.0, (
-            f"Budget {_COMPOUND_RETRY_WALL_BUDGET_S}s is outside the reasonable [10, 40]s range"
+    def test_constant_is_zero_or_in_paid_tier_range(self):
+        """Zero disables the retry; a re-enabled budget must stay in safe bounds."""
+        assert (
+            _COMPOUND_RETRY_WALL_BUDGET_S == 0.0
+            or 10.0 <= _COMPOUND_RETRY_WALL_BUDGET_S <= 40.0
         )
 
 
@@ -339,10 +343,10 @@ class TestTimerMechanics:
     def test_elapsed_comparison_direction(self):
         """Verify comparison: elapsed <= budget → allow; elapsed > budget → skip."""
         budget = _COMPOUND_RETRY_WALL_BUDGET_S
-        assert 5.0 <= budget    # allow
-        assert 20.0 <= budget   # allow (20 <= 22)
-        assert 30.0 > budget    # skip (30 > 22)
-        assert 40.0 > budget    # skip
+        assert 5.0 > budget
+        assert 20.0 > budget
+        assert 30.0 > budget
+        assert 40.0 > budget
 
     def test_synthesis_start_timer_is_float(self):
         """time.monotonic() returns a float — type matches annotation."""

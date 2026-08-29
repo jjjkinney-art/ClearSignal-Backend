@@ -5,7 +5,6 @@ Python runtime pin is removed/malformed.  They do not hit the network.
 """
 from __future__ import annotations
 
-import configparser
 import re
 import subprocess
 from pathlib import Path
@@ -55,26 +54,16 @@ def test_runtime_pin_is_python_311():
     )
 
 
-def test_frontend_gitlink_has_submodule_metadata():
-    """The tracked frontend gitlink must be clonable, not an orphaned SHA."""
-    config = configparser.ConfigParser()
-    assert config.read(_ROOT / ".gitmodules"), ".gitmodules is missing or unreadable"
-
-    section = 'submodule "Ai-Intelligence-interface"'
-    assert config.has_section(section)
-    assert config.get(section, "path") == "Ai-Intelligence-interface"
-    assert config.get(section, "url") == (
-        "https://github.com/jjjkinney-art/Ai-Intelligence-interface.git"
+def test_frontend_repository_is_not_embedded_as_a_gitlink():
+    """Backend CI must not depend on cloning the separately deployed frontend."""
+    assert not (_ROOT / ".gitmodules").exists(), (
+        "backend should not carry frontend submodule metadata"
     )
-
     tracked = subprocess.run(
         ["git", "ls-files", "--stage", "Ai-Intelligence-interface"],
         cwd=_ROOT,
         check=True,
         capture_output=True,
         text=True,
-    ).stdout.split()
-    assert tracked and tracked[0] == "160000", (
-        "Ai-Intelligence-interface must remain a gitlink (mode 160000)"
-    )
-    assert re.fullmatch(r"[0-9a-f]{40}", tracked[1])
+    ).stdout.strip()
+    assert not tracked, "frontend repository must remain independent of backend checkout"

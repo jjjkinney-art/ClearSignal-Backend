@@ -702,19 +702,19 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
     # synthesis.stance is set by _derive_stance_and_confidence (step 3) which
     # runs before this fallback (step 5), so prefer it over final_verdict.
     _known = {"bullish", "bearish", "constructive", "cautious", "neutral", "mixed"}
-    stance = (synthesis.stance or "").lower().strip()
+    stance = (getattr(synthesis, "stance", "") or "").lower().strip()
     if stance not in _known:
         # Extract first known word from final_verdict if stance is missing/sentence
-        fv = (synthesis.final_verdict or "").lower()
+        fv = (getattr(synthesis, "final_verdict", "") or "").lower()
         stance = next((w for w in _known if w in fv), "neutral")
 
     # ── Collect raw material ──────────────────────────────────────────────────
-    drivers = [d.strip() for d in (synthesis.key_drivers_ranked or []) if d and d.strip()]
-    risks   = [r.strip() for r in (synthesis.key_risks_ranked   or []) if r and r.strip()]
-    bulls   = [b.strip() for b in (synthesis.bull_case          or []) if b and b.strip()]
-    bears   = [b.strip() for b in (synthesis.bear_case          or []) if b and b.strip()]
+    drivers = [d.strip() for d in (getattr(synthesis, "key_drivers_ranked", []) or []) if d and d.strip()]
+    risks   = [r.strip() for r in (getattr(synthesis, "key_risks_ranked", []) or []) if r and r.strip()]
+    bulls   = [b.strip() for b in (getattr(synthesis, "bull_case", []) or []) if b and b.strip()]
+    bears   = [b.strip() for b in (getattr(synthesis, "bear_case", []) or []) if b and b.strip()]
     monitor = next(
-        (m.strip() for m in (synthesis.what_to_monitor or []) if m and m.strip()),
+        (m.strip() for m in (getattr(synthesis, "what_to_monitor", []) or []) if m and m.strip()),
         None,
     )
 
@@ -733,7 +733,7 @@ def _build_fallback_reasoning(synthesis: SynthesisOutput, company: str) -> str:
     # When a driver signal is available, use it directly — it's already natural
     # language ranked by importance.  Generic path is intentionally brief; the
     # signal data should do the work, not a pre-written sentence bank.
-    score = synthesis.confidence_score or 0.0
+    score = getattr(synthesis, "confidence_score", 0.0) or 0.0
     if driver:
         d_text = driver.strip().rstrip(".,;: ")
         s2 = d_text[0].upper() + d_text[1:] + "."
@@ -834,8 +834,9 @@ def _normalize_synthesis(synthesis: SynthesisOutput, company: str = "") -> Synth
     synthesis.what_would_change_this_view = _derive_change_triggers(synthesis)
 
     # 5. Guarantee verdict_reasoning is always non-empty
-    print(f"LLM RAW VERDICT_REASONING: {synthesis.verdict_reasoning!r}")
-    if not synthesis.verdict_reasoning or not synthesis.verdict_reasoning.strip():
+    raw_verdict_reasoning = getattr(synthesis, "verdict_reasoning", "") or ""
+    print(f"LLM RAW VERDICT_REASONING: {raw_verdict_reasoning!r}")
+    if not raw_verdict_reasoning.strip():
         print(f"FALLBACK TRIGGERED for company={company!r} — LLM returned empty verdict_reasoning")
         synthesis.verdict_reasoning = _build_fallback_reasoning(synthesis, company)
 

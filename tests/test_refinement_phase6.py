@@ -496,11 +496,11 @@ class TestCompressionFloor:
         )
 
     def test_durable_bonus_scale_constant_exists(self):
-        """_DURABILITY_BONUS_SCALE must equal 0.10."""
+        """Phase 7 durability persistence scale remains calibrated at 0.18."""
         from app.services.conviction_modeler import _DURABILITY_BONUS_SCALE
-        assert _DURABILITY_BONUS_SCALE == 0.10, (
-            f"_DURABILITY_BONUS_SCALE={_DURABILITY_BONUS_SCALE} — expected 0.10. "
-            "The durability persistence bonus scale must be 0.10."
+        assert _DURABILITY_BONUS_SCALE == 0.18, (
+            f"_DURABILITY_BONUS_SCALE={_DURABILITY_BONUS_SCALE} — expected 0.18 "
+            "under the Phase 7 linear durability calibration."
         )
 
     def test_durable_compounder_score_higher_than_without_profile(self):
@@ -533,19 +533,17 @@ def test_conviction_weights_sum_to_one():
     )
 
 
-def test_conviction_weights_evidence_quality_raised():
-    """evidence_quality weight must be >= 0.20 (raised from 0.20 in Phase 5)."""
+def test_conviction_weights_evidence_quality_phase7():
+    """Phase 7 separates evidence availability from structural quality."""
     from app.services.conviction_modeler import _WEIGHTS
-    assert _WEIGHTS["evidence_quality"] >= 0.20, (
-        f"evidence_quality weight={_WEIGHTS['evidence_quality']} — expected >= 0.20. "
-        "Phase 6 raised this weight to de-emphasise valuation and emphasise evidence."
+    assert _WEIGHTS["evidence_quality"] == 0.16, (
+        f"evidence_quality weight={_WEIGHTS['evidence_quality']} — expected 0.16."
     )
 
 
-def test_conviction_weights_valuation_certainty_reduced():
-    """valuation_certainty weight must be <= 0.12 (reduced in Phase 6)."""
+def test_conviction_weights_valuation_certainty_phase7():
+    """Phase 7 rebalances valuation certainty after adding linear durability."""
     from app.services.conviction_modeler import _WEIGHTS
-    assert _WEIGHTS["valuation_certainty"] <= 0.12, (
-        f"valuation_certainty weight={_WEIGHTS['valuation_certainty']} — expected <= 0.12. "
-        "Phase 6 reduced this to prevent valuation alone from dominating conviction."
+    assert _WEIGHTS["valuation_certainty"] == 0.15, (
+        f"valuation_certainty weight={_WEIGHTS['valuation_certainty']} — expected 0.15."
     )

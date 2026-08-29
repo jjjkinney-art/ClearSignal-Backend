@@ -157,11 +157,11 @@ class TestStanceMapping:
             f"Expected 'Avoid' at final_score=0.32; got {stance!r}."
         )
 
-    def test_sell_fires_at_very_low_score(self):
-        """Very low conviction → Sell."""
+    def test_very_low_score_without_structural_break_is_avoid(self):
+        """Low confidence alone is Avoid; Sell requires structural deterioration."""
         stance, _ = _run_stance(final_score=0.18, frag=0.75)
-        assert stance == "Sell", (
-            f"Expected 'Sell' at final_score=0.18; got {stance!r}."
+        assert stance == "Avoid", (
+            f"Expected 'Avoid' at final_score=0.18 without a structural break; got {stance!r}."
         )
 
     def test_all_stance_outputs_are_valid_vocabulary(self):

@@ -50,6 +50,25 @@ jobs:
       - name: Collection determinism (0 collection errors)
         run: python -m pytest tests/ --collect-only -q -o addopts=""
 
+      # A few legacy source-audit modules replace imports during collection.
+      # Running each file in a fresh interpreter preserves test isolation while
+      # still making every test module a required part of the release gate.
+      - name: Full repository regression (isolated per file)
+        shell: bash
+        run: |
+          mapfile -d '' test_files < <(find tests -name 'test_*.py' -print0 | sort -z)
+          failures=()
+          for test_file in "${test_files[@]}"; do
+            if ! python -m pytest -q -o addopts="" --disable-warnings --tb=short "$test_file"; then
+              failures+=("$test_file")
+            fi
+          done
+          if (( ${#failures[@]} )); then
+            printf 'Failed test files:\n'
+            printf ' - %s\n' "${failures[@]}"
+            exit 1
+          fi
+
       # Each suite below runs in its own process (deterministic per-area), matching
       # the documented test constraints (see docs/API.md). Any failure fails the job.
       - name: Launch-security & reproducibility

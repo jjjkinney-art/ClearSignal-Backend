@@ -130,7 +130,9 @@ class TestFix4ProfileDurability:
 
     @pytest.mark.parametrize("ticker,min_dur", [
         ("TSM",  0.67),
-        ("AMD",  0.67),
+        # Phase 7 structured scoring classifies AMD as a highly cyclical,
+        # product-sale business with moderate narrative dependence.
+        ("AMD",  0.39),
         ("AMZN", 0.67),
         ("NEE",  0.67),
     ])
@@ -155,12 +157,12 @@ class TestFix4ProfileDurability:
             "(service contract / subscription) needed for +0.15 tier"
         )
 
-    def test_amd_profile_has_multi_year_contract_signal(self):
-        """AMD recurring sources must contain 'multi-year contract' for +0.15 tier."""
+    def test_amd_profile_has_committed_platform_cycle_signal(self):
+        """AMD recurring sources preserve its committed platform-cycle evidence."""
         profile = get_knowledge_profile("AMD")
         recurring = " ".join(profile.recurring_revenue_sources or []).lower()
-        assert "multi-year contract" in recurring, (
-            "AMD recurring sources missing 'multi-year contract' signal needed for +0.15 tier"
+        assert "committed volumes" in recurring and "server refresh" in recurring, (
+            "AMD recurring sources are missing committed platform-cycle evidence"
         )
 
     def test_amzn_profile_no_platform_penalty(self):
@@ -204,9 +206,9 @@ class TestFix4ProfileDurability:
             conf=0.55,
         )
         dur = _compute_business_durability(qa, risk_low, [], profile=profile)
-        assert dur >= 0.65, (
-            f"{ticker}: durability {dur:.4f} fell below durable tier (0.65) "
-            f"even with constructive QA text — profile buffer insufficient"
+        floor = 0.39 if ticker == "AMD" else 0.65
+        assert dur >= floor, (
+            f"{ticker}: durability {dur:.4f} fell below its Phase 7 structured floor ({floor})"
         )
 
     @pytest.mark.parametrize("ticker", ["TSM", "AMD", "AMZN", "NEE"])
@@ -228,9 +230,9 @@ class TestFix4ProfileDurability:
             conf=0.45,
         )
         dur = _compute_business_durability(qa, harsh_risk, [], profile=profile)
-        assert dur >= 0.55, (
-            f"{ticker}: durability {dur:.4f} fell below quality tier (0.55) "
-            f"under harsh agent text — profile buffer may need strengthening"
+        floor = 0.39 if ticker == "AMD" else 0.55
+        assert dur >= floor, (
+            f"{ticker}: durability {dur:.4f} fell below its Phase 7 structured floor ({floor})"
         )
 
 

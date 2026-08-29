@@ -446,6 +446,8 @@ SECTION DEPTH HIERARCHY — driven by the debate type:
 CONCLUSION REQUIREMENT — 2 sentences HARD CAP, positioning-first, PM-grade:
 The conclusion is the most important output. It must read like a portfolio manager's one-line
 assessment after reviewing a full IC memo — not an academic summary or mechanism explanation.
+GOOD conclusions lead with the priced setup and end with the company-specific fulcrum.
+FORBIDDEN: generic conclusions that could apply unchanged to another company.
 
 SENTENCE 1 — Positioning verdict (REQUIRED):
   Open with the BOTTOM-LINE SETUP VIEW: what is the market pricing, and is that defensible?
@@ -1436,6 +1438,8 @@ This should be the answer to: "If you had to name ONE thing that matters most ri
   "conclusion"              : string — decision-compressive PM-grade conclusion. HARD LIMIT: 2 sentences. \
 LEAD WITH POSITIONING AND EXPECTATION STRUCTURE — not mechanism explanation. \
 Think of the final line of a trade desk recommendation memo: bottom-line view first, then the fulcrum. \
+FORBIDDEN: generic conclusions that could apply unchanged to another company. \
+GOOD conclusions explicitly connect the priced setup to the company-specific fulcrum. \
 \
 MANDATORY STRUCTURE: \
   Sentence 1 → Positioning call OR expectation structure — the bottom-line view. \

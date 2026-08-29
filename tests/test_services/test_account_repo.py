@@ -447,9 +447,9 @@ class TestNoPasswordColumn:
         discuss the *absence* of a password column are expected and allowed.
         """
         from pathlib import Path
-        migration = Path(
-            "/Users/juliankinney/Downloads/ai_analyst_backend 3/New Digianalyst/"
-            "app/db/migrations/009_accounts_identity.sql"
+        migration = (
+            Path(__file__).resolve().parents[2]
+            / "app/db/migrations/009_accounts_identity.sql"
         ).read_text()
 
         # Scan DDL lines only (strip comment lines).
