@@ -1232,7 +1232,7 @@ _CONTEXT_WORDS: frozenset[str] = frozenset({
     "risk", "risks", "reward", "rewards", "return", "returns",
     "bull", "bear", "rally", "correction", "crash", "recovery",
     "macro", "micro", "cyclical", "secular", "structural", "tactical",
-    "why", "when", "where", "which", "whose", "whom",
+    "why", "when", "where", "which", "whose", "whom", "doing",
     "high", "low", "much", "many", "some", "most", "more", "less",
     "because", "since", "given", "despite", "although", "however",
     "currently", "recently", "historically", "going", "forward",
@@ -1453,9 +1453,24 @@ def _fuzzy_token_match(
         # a reasonable range of the window length (avoids matching
         # a 2-char window against a 15-char alias).
         wlen = len(window)
+        # Fuzzy resolution is for spelling mistakes, not partial company-name
+        # matches.  Requiring the same token count prevents an ordinary word
+        # such as "brown" from resolving to the two-token alias
+        # "brown forman" while preserving real typo cases such as
+        # "Roket Lab" -> "rocket lab" and "Nvidea" -> "nvidia".
+        window_token_count = len(window.split())
+        comparable_aliases = [
+            key for key in alias_keys
+            if len(key.split()) == window_token_count
+            and abs(len(key) - wlen) <= max(4, wlen // 2)
+            and all(
+                difflib.SequenceMatcher(None, window_token, alias_token).ratio() >= cutoff
+                for window_token, alias_token in zip(window.split(), key.split())
+            )
+        ]
         close = difflib.get_close_matches(
             window,
-            [k for k in alias_keys if abs(len(k) - wlen) <= max(4, wlen // 2)],
+            comparable_aliases,
             n=5,
             cutoff=cutoff,
         )

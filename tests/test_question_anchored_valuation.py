@@ -701,8 +701,10 @@ class TestSynthesisPromptValuationStance:
             original_user_question="What is the investment thesis for Vertex?",
             question_intent="investment_thesis",
         )
-        # Standard anchor block should appear, not valuation stance override
-        assert "QUESTION-ANCHORED DIRECT ANSWER RULES" in prompt
+        # The investment-thesis-specific anchor should appear, not the generic
+        # or valuation-stance instruction blocks.
+        assert "SECTION MANDATES — BUSINESS MODEL / INVESTMENT THESIS QUESTION" in prompt
+        assert "QUESTION-ANCHORED DIRECT ANSWER RULES" not in prompt
         assert "VALUATION STANCE ANSWER" not in prompt
 
     def test_low_confidence_valuation_prompt_includes_caveat(self):
