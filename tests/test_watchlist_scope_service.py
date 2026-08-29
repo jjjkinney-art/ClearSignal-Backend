@@ -1,6 +1,9 @@
 from types import SimpleNamespace
 
-from app.services.watchlist_scope_service import should_use_db_watchlist
+from app.services.watchlist_scope_service import (
+    is_authenticated_watchlist_request,
+    should_use_db_watchlist,
+)
 
 
 def _request(*, authenticated: bool):
@@ -30,3 +33,9 @@ def test_legacy_local_mode_remains_available_when_both_are_false():
 
 def test_missing_request_state_fails_closed_to_legacy_mode():
     assert not should_use_db_watchlist(None, feature_enabled=False)
+
+
+def test_authenticated_request_detection_is_explicit():
+    assert is_authenticated_watchlist_request(_request(authenticated=True))
+    assert not is_authenticated_watchlist_request(_request(authenticated=False))
+    assert not is_authenticated_watchlist_request(None)

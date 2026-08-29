@@ -78,6 +78,7 @@ logger = logging.getLogger(__name__)
 _DEFAULT_DATA_DIR = ".clearSignal_watchlist"
 _INDEX_FILE       = "index.json"
 _TIMELINE_DIR     = ".clearSignal_timeline"   # reuse existing timeline store dir
+_SYSTEM_DEFAULT_USER_ID = "00000000-0000-0000-0000-000000000001"
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +87,11 @@ _TIMELINE_DIR     = ".clearSignal_timeline"   # reuse existing timeline store di
 
 def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _is_account_scoped(user_id: Optional[str]) -> bool:
+    """True when membership belongs to a real authenticated account."""
+    return bool(user_id) and user_id != _SYSTEM_DEFAULT_USER_ID
 
 
 def _ticker_upper(ticker: str) -> str:
@@ -239,8 +245,13 @@ class WatchlistService:
         from ..db.repositories.watchlist_repo import ticker_add as _db_add
         t = _ticker_upper(ticker)
         row = await _db_add(session, t, company_name, user_id=user_id)
-        # Also update file index (best-effort; keeps metadata in sync)
-        file_entry = self._add_ticker_file(t, company_name)
+        # Never mirror a real account's private membership into the shared
+        # legacy index. The file remains available only to local/system mode.
+        file_entry = (
+            WatchlistEntry(ticker=t, company_name=company_name or t, added_at=_now_iso())
+            if _is_account_scoped(user_id)
+            else self._add_ticker_file(t, company_name)
+        )
         if row is None:
             return file_entry
         file_index = self._load_index()
@@ -260,7 +271,9 @@ class WatchlistService:
         from ..db.repositories.watchlist_repo import ticker_deactivate as _db_deactivate
         t = _ticker_upper(ticker)
         db_ok = await _db_deactivate(session, t, user_id=user_id)
-        file_ok = self._remove_ticker_file(t)
+        # A real account must not mutate the process-wide legacy index. Doing
+        # so can remove metadata used by another account or local operator.
+        file_ok = False if _is_account_scoped(user_id) else self._remove_ticker_file(t)
         return db_ok or file_ok
 
     async def is_tracked_async(
@@ -301,7 +314,9 @@ class WatchlistService:
 
         db_rows = await _db_list(session, user_id=user_id)
         if not db_rows:
-            return self.get_watchlist()  # DB empty or disabled — file fallback
+            # Empty is authoritative for real accounts. Falling back here
+            # exposes the shared legacy membership list to a new account.
+            return [] if _is_account_scoped(user_id) else self.get_watchlist()
 
         file_index = self._load_index()
         entries: List[WatchlistEntry] = []
@@ -337,13 +352,14 @@ class WatchlistService:
         t = _ticker_upper(ticker)
 
         if session is None:
-            return self.get_entry(ticker)
+            return None if _is_account_scoped(user_id) else self.get_entry(ticker)
 
         row = await _db_get(session, t, user_id=user_id)
 
         if row is None:
-            # Not in DB yet — fall back to file (migration period)
-            return self.get_entry(ticker)
+            # Not in a real account's DB means not watched. Legacy/system mode
+            # keeps the migration fallback for local compatibility.
+            return None if _is_account_scoped(user_id) else self.get_entry(ticker)
 
         if not row.active:
             return None  # DB says removed; file is stale

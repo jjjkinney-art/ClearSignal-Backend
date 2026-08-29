@@ -2498,14 +2498,15 @@ async def market_resolve(
 async def get_watchlist(request: Request = None) -> list:
     """Return all watchlist entries sorted by most-recently-added.
 
-    Phase 10B · Slice 2: when ``watchlist_db_backed`` is enabled, membership is
-    read from the DB-backed async path (persistent, multi-instance safe); the
-    async path falls back to the JSON-file index when the DB is empty/unavailable
-    so behaviour is preserved. Default path is unchanged (JSON file).
+    Authenticated accounts always use durable, user-scoped membership. Legacy
+    local/system operation may still use the file-backed index.
     """
     from .config import settings as _wl_s
     from .dependencies.auth import require_user_id as _require_uid
-    from .services.watchlist_scope_service import should_use_db_watchlist
+    from .services.watchlist_scope_service import (
+        is_authenticated_watchlist_request,
+        should_use_db_watchlist,
+    )
     _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
     if should_use_db_watchlist(
         request,
@@ -2517,7 +2518,12 @@ async def get_watchlist(request: Request = None) -> list:
                 entries = await watchlist_service.get_watchlist_async(_db, user_id=_uid)
             return [e.model_dump() for e in entries]
         except Exception as _exc:
-            logger.warning("[watchlist] DB-backed read failed, file fallback: %r", _exc)
+            logger.warning("[watchlist] DB-backed read failed: %r", _exc)
+            if is_authenticated_watchlist_request(request):
+                raise HTTPException(
+                    status_code=503,
+                    detail="Watchlist persistence is temporarily unavailable.",
+                ) from _exc
     return [e.model_dump() for e in watchlist_service.get_watchlist()]
 
 
@@ -2547,11 +2553,16 @@ async def add_to_watchlist(
         _user_id = getattr(getattr(request, "state", None), "user_id", "") or ""
         async with _get_session() as _db:
             _ent = await resolve_entitlements(_db, _user_id)
+            _already_tracked = await watchlist_service.is_tracked_async(
+                _db, ticker, user_id=_uid,
+            )
+            _current = len(
+                await watchlist_service.get_watchlist_async(_db, user_id=_uid)
+            )
 
-        # Count current watchlist before checking — idempotent adds don't need a block.
-        _already_tracked = watchlist_service.is_tracked(ticker)
+        # Count only the acting account's membership. Idempotent adds do not
+        # consume an additional entitlement slot.
         if not _already_tracked:
-            _current = len(watchlist_service.get_watchlist())
             check_watchlist_limit(_ent, _current)
     except EntitlementViolation as _exc:
         raise HTTPException(status_code=402, detail=_exc.as_dict())
@@ -2562,7 +2573,10 @@ async def add_to_watchlist(
 
     # Phase 10B · Slice 2 — DB-backed membership when enabled (dual-writes file).
     from .config import settings as _wl_s
-    from .services.watchlist_scope_service import should_use_db_watchlist
+    from .services.watchlist_scope_service import (
+        is_authenticated_watchlist_request,
+        should_use_db_watchlist,
+    )
     if should_use_db_watchlist(
         request,
         feature_enabled=getattr(_wl_s, "watchlist_db_backed", False),
@@ -2574,7 +2588,12 @@ async def add_to_watchlist(
                     _db, ticker, company_name, user_id=_uid)
             return entry.model_dump()
         except Exception as _exc:
-            logger.warning("[watchlist] DB-backed add failed, file fallback: %r", _exc)
+            logger.warning("[watchlist] DB-backed add failed: %r", _exc)
+            if is_authenticated_watchlist_request(request):
+                raise HTTPException(
+                    status_code=503,
+                    detail="Watchlist persistence is temporarily unavailable.",
+                ) from _exc
 
     entry = watchlist_service.add_ticker(ticker, company_name)
     return entry.model_dump()
@@ -2594,7 +2613,10 @@ async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
     """
     from .config import settings as _wl_s
     from .dependencies.auth import require_user_id as _require_uid
-    from .services.watchlist_scope_service import should_use_db_watchlist
+    from .services.watchlist_scope_service import (
+        is_authenticated_watchlist_request,
+        should_use_db_watchlist,
+    )
     _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
     if should_use_db_watchlist(
         request,
@@ -2607,7 +2629,12 @@ async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
                     _db, ticker, user_id=_uid)
             return {"ticker": ticker.upper(), "removed": removed}
         except Exception as _exc:
-            logger.warning("[watchlist] DB-backed remove failed, file fallback: %r", _exc)
+            logger.warning("[watchlist] DB-backed remove failed: %r", _exc)
+            if is_authenticated_watchlist_request(request):
+                raise HTTPException(
+                    status_code=503,
+                    detail="Watchlist persistence is temporarily unavailable.",
+                ) from _exc
 
     removed = watchlist_service.remove_ticker(ticker)
     return {"ticker": ticker.upper(), "removed": removed}

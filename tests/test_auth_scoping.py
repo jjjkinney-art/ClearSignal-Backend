@@ -25,6 +25,8 @@ import pytest
 
 from app.routers import portfolio as pr
 from app.routers import notifications as nr
+from app.routers import billing as br
+from app.routers import delivery_preferences as dpr
 
 _SYS = "00000000-0000-0000-0000-000000000001"
 _USER_A = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
@@ -109,6 +111,69 @@ def test_watchlist_scoped_by_user():
     _run(scenario)
 
 
+def test_empty_account_watchlist_never_inherits_legacy_membership(tmp_path):
+    """A new authenticated account must see an authoritative empty list."""
+    async def scenario():
+        from app.db.connection import get_session
+        from app.services.watchlist_service import WatchlistService
+
+        service = WatchlistService(
+            data_dir=str(tmp_path / "watchlist"),
+            timeline_dir=str(tmp_path / "timeline"),
+        )
+        service._add_ticker_file("SPGI", "S&P Global")
+
+        async with get_session() as db:
+            assert await service.get_watchlist_async(db, user_id=_USER_A) == []
+            assert await service.get_entry_async(db, "SPGI", user_id=_USER_A) is None
+            assert not await service.is_tracked_async(db, "SPGI", user_id=_USER_A)
+    _run(scenario)
+
+
+def test_account_watchlist_writes_never_mutate_shared_legacy_index(tmp_path):
+    """User B cannot remove User A's row or shared file metadata."""
+    async def scenario():
+        from app.db.connection import get_session
+        from app.services.watchlist_service import WatchlistService
+
+        service = WatchlistService(
+            data_dir=str(tmp_path / "watchlist"),
+            timeline_dir=str(tmp_path / "timeline"),
+        )
+        service._add_ticker_file("SPGI", "S&P Global")
+
+        async with get_session() as db:
+            await service.add_ticker_async(db, "NVDA", "NVIDIA", user_id=_USER_A)
+            await db.commit()
+
+            assert "NVDA" not in service._load_index()
+            assert await service.remove_ticker_async(db, "NVDA", user_id=_USER_B) is False
+            assert await service.is_tracked_async(db, "NVDA", user_id=_USER_A) is True
+            assert "SPGI" in service._load_index()
+    _run(scenario)
+
+
+def test_authenticated_watchlist_db_failure_fails_closed(monkeypatch):
+    """A persistence outage must not expose the shared file fallback."""
+    async def scenario():
+        from fastapi import HTTPException
+        from app import api
+
+        async def fail_db(*args, **kwargs):
+            raise RuntimeError("database unavailable")
+
+        def forbidden_file_fallback():
+            raise AssertionError("authenticated request reached shared file fallback")
+
+        monkeypatch.setattr(api.watchlist_service, "get_watchlist_async", fail_db)
+        monkeypatch.setattr(api.watchlist_service, "get_watchlist", forbidden_file_fallback)
+
+        with pytest.raises(HTTPException) as exc:
+            await api.get_watchlist(request=_req(_USER_A))
+        assert exc.value.status_code == 503
+    _run(scenario)
+
+
 # ---------------------------------------------------------------------------
 # Notifications — read-state scoped by user
 # ---------------------------------------------------------------------------
@@ -134,6 +199,78 @@ def test_notification_read_state_scoped_by_user():
         unread_b = await nr.unread_notifications(request=_req(_USER_B))
         assert unread_a["count"] == 0, "A marked it read"
         assert unread_b["count"] == 1, "B's read-state is independent"
+    _run(scenario)
+
+
+# ---------------------------------------------------------------------------
+# Preferences — user isolation and IDOR protection
+# ---------------------------------------------------------------------------
+
+def test_delivery_preferences_are_scoped_and_cross_user_override_is_forbidden():
+    async def scenario():
+        from fastapi import HTTPException
+
+        changed = await dpr.patch_delivery_preferences(
+            _req(_USER_A),
+            dpr.DeliveryPrefsPatch(enabled=False, daily_cap=7),
+            channel="in_app",
+            user_id=None,
+        )
+        other = await dpr.get_delivery_preferences(
+            _req(_USER_B), channel="in_app", user_id=None,
+        )
+
+        assert changed.user_id == _USER_A
+        assert changed.enabled is False and changed.daily_cap == 7
+        assert other.user_id == _USER_B
+        assert other.row_exists is False and other.enabled is True
+
+        with pytest.raises(HTTPException) as exc:
+            await dpr.get_delivery_preferences(
+                _req(_USER_A), channel="in_app", user_id=_USER_B,
+            )
+        assert exc.value.status_code == 403
+    _run(scenario)
+
+
+# ---------------------------------------------------------------------------
+# Billing — user isolation and fail-closed authentication
+# ---------------------------------------------------------------------------
+
+def test_billing_status_is_scoped_to_the_authenticated_user():
+    async def scenario():
+        from app.db.connection import get_session
+        from app.db.models import User
+
+        async with get_session() as db:
+            db.add_all([
+                User(id=_USER_A, email="a@example.test", plan="free"),
+                User(
+                    id=_USER_B,
+                    email="b@example.test",
+                    plan="free",
+                    stripe_customer_id="cus_user_b",
+                ),
+            ])
+            await db.commit()
+
+        status_a = await br.billing_status(_req(_USER_A))
+        status_b = await br.billing_status(_req(_USER_B))
+
+        assert status_a["user_id"] == _USER_A
+        assert status_b["user_id"] == _USER_B
+        assert status_a["stripe_customer_present"] is False
+        assert status_b["stripe_customer_present"] is True
+    _run(scenario)
+
+
+def test_billing_status_rejects_missing_authenticated_identity():
+    from fastapi import HTTPException
+
+    async def scenario():
+        with pytest.raises(HTTPException) as exc:
+            await br.billing_status(_req(None))
+        assert exc.value.status_code == 401
     _run(scenario)
 
 
