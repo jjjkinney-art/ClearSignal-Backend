@@ -650,7 +650,8 @@ _INVESTMENT_INTENT_KEYWORDS: frozenset = frozenset([
     "pipeline", "approval", "trial", "clinical",
     # Broader investment-question patterns.
     "worth", "performance", "position", "upside", "downside",
-    "dividend", "yield", "multiple", "pe ratio", "p/e",
+    "dividend", "dividend yield", "earnings yield", "free cash flow yield",
+    "fcf yield", "multiple", "pe ratio", "p/e",
 ])
 
 
@@ -663,6 +664,32 @@ def _has_investment_intent(question: str) -> bool:
     """
     q = question.lower()
     return any(kw in q for kw in _INVESTMENT_INTENT_KEYWORDS)
+
+
+def _is_bare_company_reference(question: str, resolution: Any) -> bool:
+    """Return whether *question* consists only of the resolved entity.
+
+    Exact aliases normally bypass the investment-intent gate so inputs such as
+    ``"ASML"`` and ``"Visa"`` open the company pipeline.  That bypass must not
+    turn a clearly non-investment sentence such as ``"Tell me about Apple"``
+    into an expensive investment analysis merely because it contains an exact
+    alias.  Comparing normalized full-query text to the actual matched alias or
+    ticker preserves the intentional bare-name shortcut without overriding the
+    intent classifier for full sentences.
+    """
+    if resolution is None or resolution.context is None:
+        return False
+
+    def _normal(value: str) -> str:
+        return re.sub(r"[^a-z0-9.]+", " ", value.lower()).strip()
+
+    normalized_question = _normal(question)
+    normalized_alias = _normal(resolution.matched_text or "")
+    normalized_ticker = _normal(resolution.context.ticker)
+    return bool(normalized_question) and normalized_question in {
+        normalized_alias,
+        normalized_ticker,
+    }
 
 
 # ── Question-intent classifier ────────────────────────────────────────────────
@@ -1591,7 +1618,19 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     # prompts now resolve every exact entity and return a deterministic,
     # explainable structural ranking without multiplying LLM/provider calls.
     _comparison_text = f"{request.company_name} {request.question}".strip()
-    if is_comparative_question(request.question):
+    # A supplied primary company is authoritative.  Treat bare ``vs`` /
+    # ``versus`` as context (for example, a valuation premium versus peers),
+    # unless the user also uses an explicit comparison/ranking instruction.
+    # Without a supplied primary company, ``NVDA vs AMD`` remains an explicit
+    # comparative request.
+    _strong_comparison_request = bool(re.search(
+        r"\b(compare|comparison|rank|ranking|better|best|choose|between)\b",
+        request.question,
+        re.IGNORECASE,
+    ))
+    if is_comparative_question(request.question) and (
+        not request.company_name.strip() or _strong_comparison_request
+    ):
         _comparison_companies = detect_companies(_comparison_text)
         if len(_comparison_companies) >= 2:
             request_id = str(uuid.uuid4())
@@ -1915,6 +1954,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     _is_high_conf_entity = (
         _entity_resolution is not None
         and _entity_resolution.method in ("exact_ticker", "alias_exact")
+        and _is_bare_company_reference(request.question, _entity_resolution)
     )
     if _text_detected_company is not None and (_has_intent or _is_high_conf_entity):
         request_id = str(uuid.uuid4())

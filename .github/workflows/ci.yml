@@ -88,3 +88,13 @@ jobs:
           tests/test_conviction_integration.py
           tests/test_conviction_modeler.py
           tests/test_directional_stance.py
+
+      - name: Release-closure intelligence regressions
+        run: >
+          python -m pytest -q -o addopts=""
+          tests/test_company_detection.py
+          tests/test_company_routing.py
+          tests/test_question_anchored_valuation.py
+          tests/test_comparative_ranking.py
+          tests/benchmark/v4_analog_usefulness.py
+          tests/benchmark/v9_blind_analyst_evaluation.py

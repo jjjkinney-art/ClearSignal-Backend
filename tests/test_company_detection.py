@@ -258,6 +258,9 @@ class TestDetectCompanyReturnType:
         ctx = _detect("the quick brown fox jumped over the lazy dog")
         assert ctx is None
 
+    def test_partial_multiword_alias_does_not_fuzzy_resolve(self):
+        assert _detect("brown fox") is None
+
     def test_ticker_field_is_non_empty_string(self):
         ctx = _detect("TSLA is rallying")
         assert ctx is not None
