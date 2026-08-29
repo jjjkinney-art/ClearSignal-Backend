@@ -68,6 +68,25 @@ logger = logging.getLogger(__name__)
 # routed to the wrong company.
 MINIMUM_ROUTE_CONFIDENCE: float = 0.85
 
+NON_COMPANY_INTENTS: frozenset[str] = frozenset({
+    "market_question",
+    "investing_education",
+    "portfolio_question",
+    "general_fallback",
+})
+
+
+def intent_allows_company_detection(intent: str | None) -> bool:
+    """Return whether free-text company detection may influence routing.
+
+    Explicit general-answer intents are authoritative.  Without this boundary,
+    fuzzy entity resolution can reinterpret ordinary words such as "driving"
+    as a company alias and silently route a broad question to the investment
+    pipeline.
+    """
+    normalized = (intent or "").strip().lower()
+    return normalized not in NON_COMPANY_INTENTS
+
 # ---------------------------------------------------------------------------
 # Stop-words — common English words that look like valid tickers
 # ---------------------------------------------------------------------------

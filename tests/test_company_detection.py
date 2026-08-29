@@ -17,7 +17,11 @@ No network calls, no LLM calls.
 from __future__ import annotations
 
 import pytest
-from app.services.company_detection import detect_company, normalize_ticker
+from app.services.company_detection import (
+    detect_company,
+    intent_allows_company_detection,
+    normalize_ticker,
+)
 from app.schemas import CompanyContext
 
 
@@ -360,3 +364,21 @@ class TestEdgeCases:
         # "AND" is in the stop-word set; make sure it is filtered
         ctx = _detect("AND the market moves on")
         assert ctx is None
+
+
+class TestIntentBoundary:
+    @pytest.mark.parametrize(
+        "intent",
+        [
+            "market_question",
+            "investing_education",
+            "portfolio_question",
+            "general_fallback",
+        ],
+    )
+    def test_general_answer_intents_block_company_detection(self, intent):
+        assert intent_allows_company_detection(intent) is False
+
+    @pytest.mark.parametrize("intent", [None, "", "company_analysis"])
+    def test_company_or_unspecified_intents_allow_detection(self, intent):
+        assert intent_allows_company_detection(intent) is True

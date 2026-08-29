@@ -1563,13 +1563,19 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             if _raw_company:
                 _pre_dispatch_ticker = _norm_ticker(_raw_company)
             else:
-                # company_name is blank — extract from question using entity detection.
-                # detect_company is fast (regex + alias lookup) and safe to call sync.
-                try:
-                    from .services.company_detection import detect_company as _detect_co
-                    _co = _detect_co(request.question)
-                    _pre_dispatch_ticker = _co.ticker if _co else None
-                except Exception:
+                # Explicit general-answer intents must not inherit investment
+                # memory from a fuzzy company match in ordinary prose.
+                from .services.company_detection import (
+                    detect_company as _detect_co,
+                    intent_allows_company_detection as _allows_company_detection,
+                )
+                if _allows_company_detection(getattr(request, "intent", None)):
+                    try:
+                        _co = _detect_co(request.question)
+                        _pre_dispatch_ticker = _co.ticker if _co else None
+                    except Exception:
+                        _pre_dispatch_ticker = None
+                else:
                     _pre_dispatch_ticker = None
 
             if _pre_dispatch_ticker:
