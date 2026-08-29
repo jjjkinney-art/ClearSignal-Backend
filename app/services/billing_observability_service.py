@@ -22,7 +22,9 @@ Snapshot structure
   stripe_events      — total, by processing_status, error count
   entitlement_cache  — row count, indicates cache population
   billing_routes     — which /billing/* routes are registered
-  safe_state         — True when stripe_enabled=False OR shadow conditions met
+  safe_state         — True when Stripe and entitlement enforcement are off
+  billing_live_ready — True only when live config, enforcement, DB, routes, and
+                       webhook queues are healthy
   db_available       — False if DB was unreachable this call
   snapshot_utc       — ISO-8601 timestamp
 """
@@ -257,6 +259,19 @@ async def build_billing_snapshot(session) -> Dict[str, Any]:
     ent_cache     = await _entitlement_cache_section(session)
     routes        = _billing_routes_section()
     safe_state    = _compute_safe_state(flags)
+    unresolved_webhook_errors = stripe_events["error_count"]
+    pending_webhooks = stripe_events["pending_count"]
+    billing_live_ready = all(
+        (
+            flags["stripe_enabled"],
+            _safe_bool(flags.get("stripe_config_ready")),
+            flags["entitlements_enforced"],
+            db_available,
+            all(routes.values()),
+            unresolved_webhook_errors == 0,
+            pending_webhooks == 0,
+        )
+    )
 
     return {
         "billing_flags": flags,
@@ -274,7 +289,10 @@ async def build_billing_snapshot(session) -> Dict[str, Any]:
         "stripe_event_count":      stripe_events["total"],
         "processed_webhooks":      stripe_events["processed_count"],
         "skipped_webhooks":        stripe_events["skipped_count"],
+        "unresolved_webhook_errors": unresolved_webhook_errors,
+        "pending_webhooks":        pending_webhooks,
         "billing_routes_present":  all(routes.values()),
+        "billing_live_ready":      billing_live_ready,
         "safe_state":              safe_state,
         "db_available":            db_available,
         "snapshot_utc":            _now_iso(),
