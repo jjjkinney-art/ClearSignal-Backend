@@ -177,16 +177,14 @@ async def billing_webhook(request: Request):
 
     Return codes:
         200 — event received (processed, skipped, or duplicate)
+        500 — verified event failed atomically and must be retried
         400 — missing or invalid Stripe-Signature header
         400 — STRIPE_WEBHOOK_SECRET not configured
         200 — STRIPE_ENABLED=false (webhook is inactive; safe no-op)
 
-    Note:
-        After a valid signature the route ALWAYS returns 200, even if the
-        processing handler raises — we write processing_status='error' to
-        stripe_events and log, but never return 5xx.  Returning 5xx would
-        cause Stripe to retry an event whose side effects may have partially
-        applied, risking duplicate subscription rows or double plan changes.
+    Handler failures are transactionally rolled back before the event is marked
+    `error`. Returning 500 asks Stripe to retry; the event ID and idempotent
+    subscription upserts make that retry safe.
     """
     from app.config import settings as cfg
     from app.services.stripe_service import StripeDisabledError, StripeMisconfiguredError
@@ -270,13 +268,17 @@ async def billing_webhook(request: Request):
                 processing_status="pending",
             )
 
-        # Process — errors are caught and recorded; 200 is always returned.
+        # Persist the pending marker before processing. Event handlers run in a
+        # new transaction so a failure can roll back every partial mutation.
+        await db.commit()
+
         try:
             outcome = await process_event(db, event)
             await update_stripe_event_status(db, stripe_event_id, processing_status=outcome)
             await db.commit()
         except Exception as exc:
             logger.error("[webhook] handler error for %s %s: %r", event_type, stripe_event_id, exc)
+            await db.rollback()
             try:
                 await update_stripe_event_status(
                     db,
@@ -286,7 +288,15 @@ async def billing_webhook(request: Request):
                 )
                 await db.commit()
             except Exception:
-                pass
+                await db.rollback()
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "received": False,
+                    "retryable": True,
+                    "event_id": stripe_event_id,
+                },
+            )
 
     return JSONResponse(
         status_code=200,
