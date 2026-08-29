@@ -968,12 +968,12 @@ async def admin_billing_status() -> dict:
     DB-down-safe: DB sections degrade to zeros rather than 500.
 
     Key validation fields:
-      safe_state             — True when stripe_enabled=False AND entitlements_enforced=False
-      stripe_enabled         — must be False throughout shadow phase
-      entitlements_enforced  — must be False throughout shadow phase
-      billing_routes_present — True when all 5 billing routes are registered
-      subscription_count     — 0 in shadow phase (no real subscriptions yet)
-      stripe_event_count     — 0 in shadow phase (no webhook events yet)
+      billing_live_ready        — True only when the paid-production gate passes
+      stripe_config_ready       — True when every required Stripe value is set
+      billing_routes_present    — True when all 5 billing routes are registered
+      unresolved_webhook_errors — must be 0 before paid beta access
+      pending_webhooks          — must be 0 after the processing window
+      safe_state                — True only in the disabled shadow configuration
     """
     from .services.billing_observability_service import build_billing_snapshot
     from .db.connection import get_session
