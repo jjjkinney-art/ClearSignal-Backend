@@ -23,6 +23,20 @@ Set the following environment variables in the Render service dashboard:
 
 ## Local Development
 
+Clone with the frontend submodule so cross-repository contract tests can read
+the matching interface source:
+
+```bash
+git clone --recurse-submodules https://github.com/jjjkinney-art/ClearSignal-Backend.git
+```
+
+For an existing clone, initialize or refresh it with:
+
+```bash
+git submodule sync --recursive
+git submodule update --init --recursive
+```
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
