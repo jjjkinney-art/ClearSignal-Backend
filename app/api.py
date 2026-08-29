@@ -2505,8 +2505,12 @@ async def get_watchlist(request: Request = None) -> list:
     """
     from .config import settings as _wl_s
     from .dependencies.auth import require_user_id as _require_uid
+    from .services.watchlist_scope_service import should_use_db_watchlist
     _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
-    if getattr(_wl_s, "watchlist_db_backed", False):
+    if should_use_db_watchlist(
+        request,
+        feature_enabled=getattr(_wl_s, "watchlist_db_backed", False),
+    ):
         try:
             from .db import get_session as _get_session
             async with _get_session() as _db:
@@ -2558,7 +2562,11 @@ async def add_to_watchlist(
 
     # Phase 10B · Slice 2 — DB-backed membership when enabled (dual-writes file).
     from .config import settings as _wl_s
-    if getattr(_wl_s, "watchlist_db_backed", False):
+    from .services.watchlist_scope_service import should_use_db_watchlist
+    if should_use_db_watchlist(
+        request,
+        feature_enabled=getattr(_wl_s, "watchlist_db_backed", False),
+    ):
         try:
             from .db import get_session as _get_session
             async with _get_session() as _db:
@@ -2586,8 +2594,12 @@ async def remove_from_watchlist(ticker: str, request: Request = None) -> dict:
     """
     from .config import settings as _wl_s
     from .dependencies.auth import require_user_id as _require_uid
+    from .services.watchlist_scope_service import should_use_db_watchlist
     _uid = _require_uid(request)   # 401 when unauthenticated under enforcement mode
-    if getattr(_wl_s, "watchlist_db_backed", False):
+    if should_use_db_watchlist(
+        request,
+        feature_enabled=getattr(_wl_s, "watchlist_db_backed", False),
+    ):
         try:
             from .db import get_session as _get_session
             async with _get_session() as _db:
