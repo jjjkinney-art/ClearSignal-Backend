@@ -25,6 +25,23 @@ The validator never prints or writes the token. It verifies:
 - read-only billing/entitlement state; and
 - an authenticated deterministic comparison through `/ask`.
 
+## Account-isolation gate
+
+Required CI also runs `tests/test_auth_scoping.py` and
+`tests/test_watchlist_scope_service.py`. Together they verify that:
+
+- an empty authenticated watchlist cannot inherit shared legacy membership;
+- authenticated watchlist reads and writes fail closed during a database error;
+- one account cannot read or remove another account's watchlist or portfolio data;
+- notification read state and delivery preferences remain user-scoped;
+- an ordinary user cannot select another user's preference scope; and
+- billing status rejects a missing identity and resolves only the acting user's row.
+
+Before invited beta, repeat the critical read/write journeys in production with
+two real non-admin accounts. Record only pass/fail results and opaque account
+labels; never copy access tokens, customer IDs, emails, portfolio contents, or
+other account data into the release record.
+
 The default comparison route does not invoke the LLM pipeline. To exercise one
 full provider-backed analysis as a deliberate release-candidate check:
 
