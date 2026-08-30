@@ -59,7 +59,19 @@ jobs:
           mapfile -d '' test_files < <(find tests -name 'test_*.py' -print0 | sort -z)
           failures=()
           for test_file in "${test_files[@]}"; do
-            if ! python -m pytest -q -o addopts="" --disable-warnings --tb=short "$test_file"; then
+            if output=$(python -m pytest -q -o addopts="" --disable-warnings --tb=short "$test_file" 2>&1); then
+              status=0
+            else
+              status=$?
+            fi
+            printf '%s\n' "$output"
+            # Pytest returns 5 when an intentionally retired module skips at
+            # collection without collecting tests. Accept that only when the
+            # output proves the file actually reported an explicit skip.
+            if (( status == 5 )) && grep -Eq '[0-9]+ skipped' <<< "$output"; then
+              continue
+            fi
+            if (( status != 0 )); then
               failures+=("$test_file")
             fi
           done
