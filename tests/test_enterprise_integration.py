@@ -174,7 +174,13 @@ _stub("app.agents",
     run_research_agent=lambda *a, **k: _schema_mod.ResearchAnalysis(),
     run_education_agent=lambda *a, **k: _schema_mod.EducationAnalysis(),
     run_accounting_agent=lambda *a, **k: _schema_mod.AccountingAnalysis(),
-    run_synthesizer_agent=lambda *a, **k: _MockSynth(),
+    # Resolve the exact schema class used by analysis_service at call time.
+    # Other test modules may have imported the real Pydantic schemas before
+    # this legacy stub module is collected, so a local BaseModel double is not
+    # necessarily accepted by AnalysisResponse validation.
+    run_synthesizer_agent=lambda *a, **k: sys.modules[
+        "app.services.analysis_service"
+    ].SynthesisOutput(final_verdict="test verdict"),
 )
 
 # Stub remaining services used by analysis_service

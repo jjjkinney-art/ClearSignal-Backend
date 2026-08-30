@@ -42,9 +42,13 @@ _MIGRATION = _ROOT / "app" / "db" / "migrations" / "015_user_learning.sql"
 # Engine / session fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
-def engine():
-    return create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+@pytest_asyncio.fixture()
+async def engine():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture()

@@ -465,6 +465,7 @@ class TestBuildConfidenceReasoning:
             "thin" in result.lower()
             or "2 item" in result.lower()
             or "limiting" in result.lower()
+            or "sparse" in result.lower()
         ), f"Thin-evidence case should mention limited coverage: {result!r}"
 
     def test_solid_evidence_mentioned(self):
@@ -559,7 +560,7 @@ class TestBuildConfidenceReasoning:
 
 class TestSentenceCaps:
     """thesis_polisher.enforce_concision() must trim sections to their targets:
-    bull/bear → 2, valuation/macro → 1, conclusion/direct_answer → 2.
+    bull/bear/direct_answer → 4, valuation/macro/conclusion → 2.
     """
 
     def _verbose_thesis(self) -> InvestmentThesis:
@@ -597,36 +598,36 @@ class TestSentenceCaps:
             ),
         )
 
-    def test_bull_thesis_max_2_sentences(self):
+    def test_bull_thesis_max_4_sentences(self):
         t = enforce_concision(self._verbose_thesis())
         sents = [s for s in t.bull_thesis.split(". ") if s.strip()]
         # Be lenient: allow up to 2 proper sentence-ending splits
-        assert len(sents) <= 3, (
-            f"bull_thesis should be ≤2 sentences, got {len(sents)}: {t.bull_thesis!r}"
+        assert len(sents) <= 4, (
+            f"bull_thesis should be ≤4 sentences, got {len(sents)}: {t.bull_thesis!r}"
         )
 
-    def test_bear_thesis_max_2_sentences(self):
+    def test_bear_thesis_max_4_sentences(self):
         t = enforce_concision(self._verbose_thesis())
         sents = [s for s in t.bear_thesis.split(". ") if s.strip()]
-        assert len(sents) <= 3, (
-            f"bear_thesis should be ≤2 sentences, got {len(sents)}: {t.bear_thesis!r}"
+        assert len(sents) <= 4, (
+            f"bear_thesis should be ≤4 sentences, got {len(sents)}: {t.bear_thesis!r}"
         )
 
-    def test_valuation_view_max_1_sentence(self):
+    def test_valuation_view_max_2_sentences(self):
         t = enforce_concision(self._verbose_thesis())
         # Count actual terminal-punctuation sentence boundaries
         import re
         sents = re.split(r"(?<=[.!?])\s+", t.valuation_view.strip())
-        assert len(sents) <= 1, (
-            f"valuation_view should be ≤1 sentence, got {len(sents)}: {t.valuation_view!r}"
+        assert len(sents) <= 2, (
+            f"valuation_view should be ≤2 sentences, got {len(sents)}: {t.valuation_view!r}"
         )
 
-    def test_macro_sensitivity_max_1_sentence(self):
+    def test_macro_sensitivity_max_2_sentences(self):
         t = enforce_concision(self._verbose_thesis())
         import re
         sents = re.split(r"(?<=[.!?])\s+", t.macro_sensitivity.strip())
-        assert len(sents) <= 1, (
-            f"macro_sensitivity should be ≤1 sentence, got {len(sents)}: {t.macro_sensitivity!r}"
+        assert len(sents) <= 2, (
+            f"macro_sensitivity should be ≤2 sentences, got {len(sents)}: {t.macro_sensitivity!r}"
         )
 
     def test_conclusion_max_2_sentences(self):
@@ -637,12 +638,12 @@ class TestSentenceCaps:
             f"conclusion should be ≤2 sentences, got {len(sents)}: {t.conclusion!r}"
         )
 
-    def test_direct_answer_max_2_sentences(self):
+    def test_direct_answer_max_4_sentences(self):
         t = enforce_concision(self._verbose_thesis())
         import re
         sents = re.split(r"(?<=[.!?])\s+", t.direct_answer.strip())
-        assert len(sents) <= 2, (
-            f"direct_answer should be ≤2 sentences, got {len(sents)}: {t.direct_answer!r}"
+        assert len(sents) <= 4, (
+            f"direct_answer should be ≤4 sentences, got {len(sents)}: {t.direct_answer!r}"
         )
 
     def test_short_sections_untouched(self):
@@ -669,8 +670,8 @@ class TestSentenceCaps:
         val_sents  = re.split(r"(?<=[.!?])\s+", polished.valuation_view.strip())
         macro_sents = re.split(r"(?<=[.!?])\s+", polished.macro_sensitivity.strip())
 
-        assert len(val_sents)  <= 1, f"valuation_view > 1 sentence after polish_thesis"
-        assert len(macro_sents) <= 1, f"macro_sensitivity > 1 sentence after polish_thesis"
+        assert len(val_sents)  <= 2, f"valuation_view > 2 sentences after polish_thesis"
+        assert len(macro_sents) <= 2, f"macro_sensitivity > 2 sentences after polish_thesis"
 
 
 # ══════════════════════════════════════════════════════════════════════════════

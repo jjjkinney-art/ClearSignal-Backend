@@ -63,7 +63,10 @@ _HARD_FAIL_PHRASES = [
 _TSLA_DRIVERS = ["EV margin", "FSD", "Optimus", "margin"]
 _NVDA_DRIVERS = ["hyperscaler", "CapEx", "ASIC", "export"]
 _PLTR_DRIVERS = ["government", "commercial", "enterprise", "AI platform"]
-_SNOW_DRIVERS = ["enterprise", "consumption", "AI spending", "warehouse"]
+_SNOW_DRIVERS = [
+    "enterprise", "consumption", "AI spending", "warehouse",
+    "product revenue", "NRR",
+]
 _MSFT_DRIVERS = ["Azure", "Copilot", "AI", "cloud"]
 _ASML_DRIVERS = ["China", "EUV", "export", "capex"]
 

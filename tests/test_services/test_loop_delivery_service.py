@@ -346,6 +346,7 @@ class TestGuardrailsMuteUntil:
         monkeypatch.setattr(ds, "_cfg_quiet_hours_end",   lambda: 7)
 
         nbu = _future(3600)  # 1 hour in the future
+        flush_now = nbu - timedelta(seconds=1)
         result = await enqueue(
             db_session, user_id=f"user:{_uid()}", channel="in_app",
             target_key=f"HON:{_uid()}", payload={"x": 1},
@@ -353,8 +354,9 @@ class TestGuardrailsMuteUntil:
         )
         assert result.status == "pending"
 
-        # Flush at 12:00 — row has not_before_utc 1 hour ahead so repo skips it
-        results = await flush_pending_shadow(db_session, now=_at_hour(12), limit=50)
+        # Flush immediately before not_before_utc so the assertion is stable
+        # regardless of the UTC hour when CI happens to execute this file.
+        results = await flush_pending_shadow(db_session, now=flush_now, limit=50)
         assert len(results) == 0  # Row deferred, not processed
 
         # Row must still be pending in DB (not suppressed)

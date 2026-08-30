@@ -61,12 +61,13 @@ async def test_create_all_is_idempotent(fresh_engine):
 
 
 # ---------------------------------------------------------------------------
-# 2. Table count — 24 tables on a fresh DB
+# 2. Every declared model table exists on a fresh DB
 # ---------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_db_table_count_is_24(fresh_engine):
-    """db_table_count must be 28 after Phase 10C Slice 2 adds three delivery tables."""
+async def test_db_table_count_matches_metadata(fresh_engine):
+    """A fresh database must contain every table declared by the ORM metadata."""
+    from app.db.models import Base
     from sqlalchemy import text
 
     async with fresh_engine.connect() as conn:
@@ -75,10 +76,10 @@ async def test_db_table_count_is_24(fresh_engine):
         )
         count = result.scalar()
 
-    # 35 Phase 9–16 tables + 3 Phase 17 billing tables = 38
-    assert count == 38, (
-        f"Expected 38 tables (35 Phase 9–16 + 3 Phase 17 billing), "
-        f"got {count}. Check that all models are defined in app/db/models.py."
+    expected = len(Base.metadata.tables)
+    assert count == expected, (
+        f"Expected {expected} ORM tables, got {count}. "
+        "Check that every model is included in Base.metadata."
     )
 
 

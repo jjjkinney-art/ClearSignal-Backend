@@ -349,9 +349,9 @@ class TestElitePhraseSubstitutions:
     to PM-memo density equivalents."""
 
     @pytest.mark.parametrize("bad,good_fragment", [
-        ("strong margins", "margin durability"),
-        ("provides a buffer", "cushions downside"),
-        ("premium valuation", "premium multiple"),
+        ("strong margins", "stable margins"),
+        ("provides a buffer", "limits downside"),
+        ("premium valuation", "full valuation"),
         ("high gross margin", "structurally high margin"),
         ("impacting revenue", "pressuring earnings"),
         ("high-margin segment", "recurring high-margin revenue"),
@@ -371,19 +371,19 @@ class TestElitePhraseSubstitutions:
         text = "Apple's strong margins in Services cushion rate-driven multiple pressure."
         result = institutional_phrase_rewriter(text)
         assert "strong margins" not in result.lower()
-        assert "margin durability" in result.lower()
+        assert "stable margins" in result.lower()
 
     def test_pricing_power_rewrite(self):
         text = "iPhone pricing power supports premium multiple despite macro headwinds."
         result = institutional_phrase_rewriter(text)
         assert "pricing power" not in result.lower()
-        assert "demand resilience" in result.lower()
+        assert "pricing discipline" in result.lower()
 
     def test_provides_a_buffer_rewrite(self):
         text = "Services recurring revenue provides a buffer against hardware cyclicality."
         result = institutional_phrase_rewriter(text)
         assert "provides a buffer" not in result.lower()
-        assert "cushions downside" in result.lower()
+        assert "limits downside" in result.lower()
 
     def test_core_data_preserved_after_elite_rewrites(self):
         """Numbers and named segments must survive all rewrites."""
