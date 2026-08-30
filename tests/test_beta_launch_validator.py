@@ -48,7 +48,9 @@ def test_free_shadow_beta_passes():
         }),
     ])
 
-    results, blocked = run_beta_readiness(client, token="secret")
+    results, blocked = run_beta_readiness(
+        client, token="beta-secret", admin_token="admin-secret"
+    )
 
     assert blocked is False
     assert all(result.passed for result in results)
@@ -56,6 +58,10 @@ def test_free_shadow_beta_passes():
         "/admin/billing-status", "/admin/loop/status"
     ]
     assert all("secret" not in result.detail for result in results)
+    assert [call[3] for call in client.calls[-2:]] == [
+        "admin-secret", "admin-secret"
+    ]
+    assert all(call[3] == "beta-secret" for call in client.calls[2:-2])
 
 
 def test_paid_beta_requires_live_billing():
@@ -68,7 +74,12 @@ def test_paid_beta_requires_live_billing():
         }),
     ])
 
-    results, _ = run_beta_readiness(client, token="secret", paid_beta=True)
+    results, _ = run_beta_readiness(
+        client,
+        token="beta-secret",
+        admin_token="admin-secret",
+        paid_beta=True,
+    )
 
     assert any(r.name == "billing_mode" and not r.passed for r in results)
 
@@ -84,7 +95,10 @@ def test_duplicate_delivery_is_stop_ship():
     ])
 
     results, _ = run_beta_readiness(
-        client, token="secret", allow_live_delivery=True
+        client,
+        token="beta-secret",
+        admin_token="admin-secret",
+        allow_live_delivery=True,
     )
 
     assert any(
@@ -100,3 +114,19 @@ def test_missing_token_stops_before_admin_snapshots():
     assert blocked is True
     assert all(result.passed for result in results)
     assert [call[1] for call in client.calls] == ["/health", "/ask"]
+
+
+def test_missing_admin_token_stops_after_product_acceptance():
+    client = FakeClient(_base_responses())
+
+    results, blocked = run_beta_readiness(
+        client, token="beta-secret", admin_token=None
+    )
+
+    assert blocked is True
+    assert all(result.passed for result in results)
+    assert [call[1] for call in client.calls] == [
+        "/health", "/ask", "/auth/session", "/auth/me",
+        "/billing/status", "/ask",
+    ]
+    assert all(not call[1].startswith("/admin/") for call in client.calls)

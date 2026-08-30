@@ -7,8 +7,9 @@ window is 14 days. Do not broaden access during that window.
 
 1. Required CI is green on the exact commit being deployed.
 2. The deployed build commit matches that release candidate.
-3. `tests/validate_beta_launch.py` exits `0` with a short-lived authenticated
-   token from a designated non-admin beta account.
+3. `tests/validate_beta_launch.py` exits `0` with two short-lived tokens: one
+   from a designated non-admin beta account for product checks and one from a
+   designated admin operator account for read-only operational snapshots.
 4. The two-account isolation rehearsal in `docs/PRODUCTION_ACCEPTANCE.md` passes.
 5. If beta users can pay, the full rehearsal in
    `docs/BILLING_INTEGRITY_ACCEPTANCE.md` passes in Stripe test mode before the
@@ -22,9 +23,11 @@ Free beta with delivery held in shadow:
 
 ```bash
 export CLEARSIGNAL_ACCESS_TOKEN="<short-lived access token>"
+export CLEARSIGNAL_ADMIN_ACCESS_TOKEN="<short-lived admin access token>"
 export EXPECTED_BUILD_COMMIT="<deployed backend commit>"
 python tests/validate_beta_launch.py
 unset CLEARSIGNAL_ACCESS_TOKEN
+unset CLEARSIGNAL_ADMIN_ACCESS_TOKEN
 ```
 
 Paid beta and/or live continuous delivery require deliberate opt-in:
@@ -35,7 +38,7 @@ python tests/validate_beta_launch.py --allow-live-delivery
 python tests/validate_beta_launch.py --paid-beta --allow-live-delivery
 ```
 
-The validator is read-only. It never prints or persists the token. Record only
+The validator is read-only. It never prints or persists either token. Record only
 the commit, UTC timestamp, selected mode, check names, and pass/fail outcome.
 
 ## Stop-ship conditions
