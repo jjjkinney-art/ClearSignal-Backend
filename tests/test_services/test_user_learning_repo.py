@@ -49,9 +49,13 @@ _ROOT = pathlib.Path(__file__).parent.parent.parent
 # Engine / session fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
-def engine():
-    return create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+@pytest_asyncio.fixture()
+async def engine():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    try:
+        yield engine
+    finally:
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture()
