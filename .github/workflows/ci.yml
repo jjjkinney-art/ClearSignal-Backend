@@ -130,5 +130,6 @@ jobs:
           tests/test_question_anchored_valuation.py
           tests/test_comparative_ranking.py
           tests/test_production_acceptance_validator.py
+          tests/test_beta_launch_validator.py
           tests/benchmark/v4_analog_usefulness.py
           tests/benchmark/v9_blind_analyst_evaluation.py
