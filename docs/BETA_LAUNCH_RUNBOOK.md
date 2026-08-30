@@ -58,7 +58,7 @@ the commit, UTC timestamp, selected mode, check names, and pass/fail outcome.
 
 1. Stop new invitations.
 2. Disable continuous delivery with `POST /admin/loop/disable`; confirm
-   `/admin/loop/status` reports `effective_enabled: false`.
+   `/admin/loop-status` reports `effective_enabled: false`.
 3. For billing incidents, set `ENTITLEMENTS_ENFORCED=false` first so users are
    not incorrectly blocked, then set `STRIPE_ENABLED=false` to stop new Stripe
    operations. Preserve webhook and subscription records for diagnosis.
