@@ -55,7 +55,7 @@ def test_free_shadow_beta_passes():
     assert blocked is False
     assert all(result.passed for result in results)
     assert [call[1] for call in client.calls[-2:]] == [
-        "/admin/billing-status", "/admin/loop/status"
+        "/admin/billing-status", "/admin/loop-status"
     ]
     assert all("secret" not in result.detail for result in results)
     assert [call[3] for call in client.calls[-2:]] == [
