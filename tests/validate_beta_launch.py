@@ -36,6 +36,7 @@ def run_beta_readiness(
     client: HttpClient,
     *,
     token: str | None,
+    admin_token: str | None = None,
     expected_commit: str | None = None,
     paid_beta: bool = False,
     allow_live_delivery: bool = False,
@@ -50,7 +51,17 @@ def run_beta_readiness(
     if blocked or not token:
         return results, True
 
-    status, billing = client.request("GET", "/admin/billing-status", token=token)
+    # Product acceptance deliberately uses a non-admin beta account. Operator
+    # snapshots are protected by the central /admin boundary and therefore
+    # require a distinct short-lived admin credential. Never silently reuse
+    # the beta user's token: doing so makes a correct production policy return
+    # 403 and obscures which boundary was actually exercised.
+    if not admin_token:
+        return results, True
+
+    status, billing = client.request(
+        "GET", "/admin/billing-status", token=admin_token
+    )
     billing = billing if isinstance(billing, dict) else {}
     billing_ready = (
         billing.get("billing_live_ready") is True
@@ -64,7 +75,7 @@ def run_beta_readiness(
         f"ready={billing_ready}",
     ))
 
-    status, loop = client.request("GET", "/admin/loop/status", token=token)
+    status, loop = client.request("GET", "/admin/loop/status", token=admin_token)
     loop = loop if isinstance(loop, dict) else {}
     delivery = loop.get("delivery")
     delivery = delivery if isinstance(delivery, dict) else {}
@@ -126,6 +137,7 @@ def main(argv: list[str] | None = None) -> int:
     results, blocked = run_beta_readiness(
         HttpClient(args.url),
         token=os.environ.get("CLEARSIGNAL_ACCESS_TOKEN"),
+        admin_token=os.environ.get("CLEARSIGNAL_ADMIN_ACCESS_TOKEN"),
         expected_commit=args.expected_commit,
         paid_beta=args.paid_beta,
         allow_live_delivery=args.allow_live_delivery,
@@ -139,8 +151,9 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     if blocked:
         print(
-            "BLOCK authenticated beta checks require CLEARSIGNAL_ACCESS_TOKEN; "
-            "the token is never printed or persisted."
+            "BLOCK authenticated beta checks require both "
+            "CLEARSIGNAL_ACCESS_TOKEN and CLEARSIGNAL_ADMIN_ACCESS_TOKEN; "
+            "tokens are never printed or persisted."
         )
         return 2
     return 0
