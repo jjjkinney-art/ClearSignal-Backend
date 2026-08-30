@@ -75,7 +75,7 @@ def run_beta_readiness(
         f"ready={billing_ready}",
     ))
 
-    status, loop = client.request("GET", "/admin/loop/status", token=admin_token)
+    status, loop = client.request("GET", "/admin/loop-status", token=admin_token)
     loop = loop if isinstance(loop, dict) else {}
     delivery = loop.get("delivery")
     delivery = delivery if isinstance(delivery, dict) else {}
