@@ -71,6 +71,45 @@ The public route surface is frozen in
 [`tests/contracts/api_surface_v1.json`](../tests/contracts/api_surface_v1.json)
 and enforced by `tests/test_api_surface_contract.py`.
 
+### Why the import smoke reports 108 routes but the contract holds 104 entries
+
+The two numbers count different things, and both are correct.
+
+* `len(app.routes)` — what the CI import smoke step prints — counts **route
+  objects** registered on the application: **108**.
+* The contract counts distinct **`(method, path)` pairs**, excluding `HEAD`
+  and `OPTIONS`: **104**.
+
+The difference is exactly the four dedicated `HEAD`-only route objects:
+
+```
+HEAD /        HEAD /health        HEAD /healthz        HEAD /readyz
+```
+
+`108 − 4 = 104`.
+
+These exist because Milestone 8 split `GET` and `HEAD` into separate routes to
+give each a unique `operationId` (a single handler serving both emitted
+duplicate ids and broke client generators). The `HEAD` variants are
+deliberately kept out of the OpenAPI schema and serve uptime monitors only.
+
+The mapping is one-to-one because **no route object exposes more than one
+non-`HEAD`/`OPTIONS` method** — verified, count zero — so 104 route objects
+yield exactly 104 pairs.
+
+Excluding `HEAD` loses no coverage: all eight excluded pairs are `HEAD`, none
+is any other method, and **every excluded path is still covered under `GET`**,
+so no path disappears from the contract. The framework-generated documentation
+routes (`/openapi.json`, `/docs`, `/docs/oauth2-redirect`, `/redoc`) are
+**included** as `GET` entries rather than excluded — they are part of the
+published surface and `test_launch_access_policy.py` already depends on
+`/openapi.json`.
+
+`OPTIONS` is excluded on the same principle: it is supplied by CORS middleware
+rather than by the application, so it is not an application contract.
+
+### Contract semantics
+
 The contract is a **floor, not an exact match**:
 
 * every recorded `(method, path)` must continue to exist;
