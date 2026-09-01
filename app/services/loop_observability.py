@@ -245,7 +245,14 @@ async def _watchlist_section(session) -> Dict[str, Any]:
         drift_skip_count = ds_r.scalar() or 0
 
         return {
+            # NOTE: active_ticker_count counts ACTIVE ROWS across every
+            # account, not distinct tickers. One row per (account, ticker) is
+            # expected, so N accounts watching the same ticker legitimately
+            # produce N rows. The two fields below make that explicit so a
+            # large row count is not misread as duplication.
             "active_ticker_count": len(active_tickers),
+            "distinct_ticker_count": len(set(active_tickers)),
+            "active_row_count":    len(active_tickers),
             "active_tickers":      active_tickers,
             "scan_jobs_total":     scan_jobs_total,
             "duplicate_job_combos": duplicate_job_combos,
@@ -255,6 +262,8 @@ async def _watchlist_section(session) -> Dict[str, Any]:
         logger.debug("[observability] watchlist_section failed: %r", exc)
         return {
             "active_ticker_count": 0,
+            "distinct_ticker_count": 0,
+            "active_row_count":    0,
             "active_tickers":      [],
             "scan_jobs_total":     0,
             "duplicate_job_combos": 0,
@@ -379,7 +388,8 @@ async def build_snapshot(session=None) -> Dict[str, Any]:
         delivery_sec  = {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0}
         locks_sec     = {"tick_lock": None, "tick_lock_held": False}
         watchlist_sec = {
-            "active_ticker_count": 0, "active_tickers": [],
+            "active_ticker_count": 0, "distinct_ticker_count": 0,
+            "active_row_count": 0, "active_tickers": [],
             "scan_jobs_total": 0, "duplicate_job_combos": 0, "drift_skip_count": 0,
         }
 
@@ -453,7 +463,8 @@ def build_snapshot_sync(session=None) -> Dict[str, Any]:
         "delivery":    {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0},
         "locks":       {"tick_lock": None, "tick_lock_held": False},
         "watchlist":   {
-            "active_ticker_count": 0, "active_tickers": [],
+            "active_ticker_count": 0, "distinct_ticker_count": 0,
+            "active_row_count": 0, "active_tickers": [],
             "scan_jobs_total": 0, "duplicate_job_combos": 0, "drift_skip_count": 0,
         },
         "guardrails":  guardrails_sec,
