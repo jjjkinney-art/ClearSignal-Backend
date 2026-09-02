@@ -529,3 +529,250 @@ def test_errors_are_sanitised_to_the_exception_class_only():
     msg = T._sanitise(_Boom("SELECT * FROM users WHERE email='a@b.c'"))
     assert msg == "_Boom"
     assert "@" not in msg and "SELECT" not in msg
+
+
+# ===========================================================================
+# § POSTGRESQL READ-ONLY ORDERING AND TRANSACTION CLEANUP (Section 0.8C.2)
+#
+# These use a RECORDING session with a synthetic dialect rather than scanning
+# source text, so ordering is proven by observed call sequence. No PostgreSQL
+# server and no new dependency is required.
+# ===========================================================================
+
+class _RecordingSession:
+    """Records every database interaction in order. Never writes."""
+
+    def __init__(self, dialect="postgresql", rows=None, fail_on_read_only=False):
+        self.calls = []                      # ordered log of operations
+        self._dialect = dialect
+        self._rows = rows or []
+        self._fail_on_read_only = fail_on_read_only
+        self.bind = self                     # session.bind.dialect.name
+        self.dialect = self
+        self.name = dialect
+
+    async def execute(self, statement, *a, **k):
+        text = " ".join(str(statement).split()).upper()
+        if "SET TRANSACTION READ ONLY" in text:
+            self.calls.append("SET_READ_ONLY")
+            if self._fail_on_read_only:
+                raise RuntimeError(
+                    "permission denied for relation watched_tickers "
+                    "[SQL: SELECT secret FROM users WHERE email='leak@example.test']")
+            return _FakeResult([])
+        self.calls.append("SELECT")
+        return _FakeResult(self._rows)
+
+    async def rollback(self):
+        self.calls.append("ROLLBACK")
+
+    async def close(self):
+        self.calls.append("CLOSE")
+
+    # Forbidden operations — presence in `calls` fails the tests below.
+    async def commit(self):
+        self.calls.append("COMMIT")
+
+    async def flush(self, *a, **k):
+        self.calls.append("FLUSH")
+
+    def add(self, *a, **k):
+        self.calls.append("ADD")
+
+
+class _FakeResult:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def all(self):
+        return list(self._rows)
+
+    def one(self):
+        return self._rows[0] if self._rows else (0, 0)
+
+
+class _OwnedFactory:
+    """Mimics async_sessionmaker(): the CLI owns and closes this session."""
+
+    def __init__(self, session):
+        self.session = session
+
+    def __call__(self):
+        return self
+
+    async def __aenter__(self):
+        return self.session
+
+    async def __aexit__(self, *exc):
+        await self.session.close()
+        return False
+
+
+def _drive(coro_factory):
+    try:
+        prev = asyncio.get_event_loop()
+    except RuntimeError:
+        prev = None
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        return loop.run_until_complete(coro_factory())
+    finally:
+        loop.close()
+        asyncio.set_event_loop(prev)
+
+
+def _no_expectations():
+    return {f: None for f in T.EXPECTATION_FIELDS}
+
+
+# --- A / B: read-only is issued, and issued FIRST -------------------------
+
+def test_postgresql_issues_set_transaction_read_only_before_any_selection():
+    s = _RecordingSession("postgresql")
+    report = _drive(lambda: T.analyse(s, _no_expectations()))
+    assert "SET_READ_ONLY" in s.calls, "READ ONLY was never issued"
+    assert s.calls[0] == "SET_READ_ONLY", (
+        "the FIRST statement must be SET TRANSACTION READ ONLY, got %r"
+        % (s.calls[:3],)
+    )
+    assert "SELECT" in s.calls, "selection never ran"
+    assert s.calls.index("SET_READ_ONLY") < s.calls.index("SELECT"), (
+        "every candidate-selection query must follow READ ONLY"
+    )
+    assert report["transaction_mode"] == "postgresql:read_only"
+
+
+def test_read_only_precedes_every_selection_not_just_the_first():
+    s = _RecordingSession("postgresql")
+    _drive(lambda: T.analyse(s, _no_expectations()))
+    first_ro = s.calls.index("SET_READ_ONLY")
+    for i, call in enumerate(s.calls):
+        if call == "SELECT":
+            assert i > first_ro, "a selection ran before READ ONLY"
+
+
+# --- C: failure path ------------------------------------------------------
+
+def test_read_only_failure_prevents_selection_and_still_releases():
+    s = _RecordingSession("postgresql", fail_on_read_only=True)
+    factory = _OwnedFactory(s)
+    with pytest.raises(RuntimeError):
+        _drive(lambda: T.analyse_with_owned_session(factory, _no_expectations()))
+    assert "SELECT" not in s.calls, (
+        "no selection may run when READ ONLY could not be established"
+    )
+    assert s.calls == ["SET_READ_ONLY", "ROLLBACK", "CLOSE"], (
+        "failure path must roll back then close; got %r" % (s.calls,)
+    )
+
+
+def test_cli_failure_exit_is_non_zero_and_sanitised(monkeypatch):
+    import contextlib
+    import io
+
+    s = _RecordingSession("postgresql", fail_on_read_only=True)
+
+    async def _boom(*a, **k):
+        raise RuntimeError(
+            "connection to server at 'db.internal' failed "
+            "[SQL: SELECT * FROM users] [parameters: ('secret@example.test',)]")
+
+    monkeypatch.setattr(T, "analyse_with_owned_session", _boom)
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = T.main(["--database-url", "sqlite+aiosqlite:///:memory:",
+                     "--no-expectations"])
+    assert rc == 4
+    out = buf.getvalue()
+    payload = json.loads(out)
+    assert payload["error"] == "analysis_failed"
+    assert payload["error_type"] == "RuntimeError"
+    assert payload["plan_fingerprint"] is None
+    for leak in ("SELECT", "parameters", "db.internal", "://", "@", "secret"):
+        assert leak not in out, "sanitised error leaked %r" % leak
+
+
+# --- D / E: success and mismatch both release, in the right order ---------
+
+def test_success_rolls_back_before_close_and_never_commits():
+    s = _RecordingSession("postgresql")
+    factory = _OwnedFactory(s)
+    report = _drive(
+        lambda: T.analyse_with_owned_session(factory, _no_expectations()))
+    assert report["dry_run"] is True
+    assert "ROLLBACK" in s.calls and "CLOSE" in s.calls
+    assert s.calls.index("ROLLBACK") < s.calls.index("CLOSE"), (
+        "rollback must happen before the context manager closes the session"
+    )
+    assert "COMMIT" not in s.calls
+    assert "FLUSH" not in s.calls
+    assert "ADD" not in s.calls
+    assert s.calls[-1] == "CLOSE"
+
+
+def test_expectation_mismatch_still_releases_and_withholds_fingerprint():
+    s = _RecordingSession("postgresql")
+    factory = _OwnedFactory(s)
+    expected = _no_expectations()
+    expected["active_rows"] = 4242            # cannot match an empty plan
+    report = _drive(lambda: T.analyse_with_owned_session(factory, expected))
+    assert report["expectation_match"] is False
+    assert report["plan_fingerprint"] is None
+    assert s.calls.index("ROLLBACK") < s.calls.index("CLOSE")
+    assert "COMMIT" not in s.calls
+
+
+# --- F: non-PostgreSQL takes the documented no-op path --------------------
+
+@pytest.mark.parametrize("dialect", ["sqlite", "mysql"])
+def test_non_postgresql_dialects_take_the_no_op_path(dialect):
+    s = _RecordingSession(dialect)
+    report = _drive(lambda: T.analyse(s, _no_expectations()))
+    assert "SET_READ_ONLY" not in s.calls, (
+        "%s must not be sent a PostgreSQL-only statement" % dialect
+    )
+    assert report["transaction_mode"] == "%s:not_supported" % dialect
+    assert "COMMIT" not in s.calls and "FLUSH" not in s.calls
+
+
+# --- G: caller-owned sessions keep their own lifecycle --------------------
+
+def test_analyse_does_not_close_or_roll_back_a_caller_owned_session():
+    """analyse() must impose no lifecycle side effects on a borrowed session."""
+    s = _RecordingSession("postgresql")
+    _drive(lambda: T.analyse(s, _no_expectations()))
+    assert "ROLLBACK" not in s.calls, (
+        "analyse() must not roll back a session it does not own"
+    )
+    assert "CLOSE" not in s.calls, (
+        "analyse() must not close a session it does not own"
+    )
+
+
+def test_release_transaction_is_safe_when_nothing_to_roll_back():
+    class _NoTx:
+        async def rollback(self):
+            raise RuntimeError("no transaction is active")
+
+    _drive(lambda: T._release_transaction(_NoTx()))   # must not raise
+
+
+def test_owned_session_helper_does_not_use_autocommitting_begin():
+    """session.begin() commits on success — forbidden for a dry-run tool.
+
+    Scans executable code only: the tool's docstring legitimately explains why
+    session.begin() is not used, and prose must not trip its own check.
+    """
+    import io
+    import tokenize
+
+    code = []
+    for tok in tokenize.generate_tokens(
+            io.StringIO(_TOOL_PATH.read_text()).readline):
+        if tok.type in (tokenize.COMMENT, tokenize.STRING):
+            continue
+        code.append(tok.string)
+    joined = " ".join(code)
+    assert "session . begin" not in joined
+    assert ".begin(" not in joined.replace(" ", "")

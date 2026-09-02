@@ -299,7 +299,52 @@ async def _set_read_only(session) -> str:
     return "%s:not_supported" % dialect
 
 
+async def _release_transaction(session) -> None:
+    """Roll back the CLI-owned transaction. Never commits; never mutates.
+
+    ROLLBACK is transaction cleanup, not a write: it discards the read
+    snapshot this tool opened. It runs BEFORE the session context manager
+    closes the session, so no transaction is left dangling for the pool to
+    reclaim implicitly.
+
+    Safe when there is nothing to roll back — a session with no open
+    transaction, or one already released, must not turn into an error that
+    masks the real result.
+    """
+    try:
+        await session.rollback()
+    except Exception:  # noqa: BLE001 — cleanup must never mask the outcome
+        pass
+
+
+async def analyse_with_owned_session(session_factory,
+                                     expected: Dict[str, Optional[int]]
+                                     ) -> Dict[str, Any]:
+    """Analyse using a session this tool CREATES AND OWNS.
+
+    The rollback belongs here, not in ``analyse``: ``analyse`` accepts a
+    caller-owned session and must not impose lifecycle side effects on it.
+    Ordering is deliberate — roll back inside the ``async with`` body so the
+    release happens strictly before the context manager closes the session.
+
+    Deliberately NOT ``session.begin()``: that context manager COMMITS on
+    successful exit, which is exactly what a dry-run tool must never do.
+    """
+    async with session_factory() as session:
+        try:
+            return await analyse(session, expected)
+        finally:
+            await _release_transaction(session)
+
+
 async def analyse(session, expected: Dict[str, Optional[int]]) -> Dict[str, Any]:
+    """Read-only analysis against a CALLER-OWNED session.
+
+    This function opens no transaction of its own beyond the implicit read
+    transaction, and deliberately does NOT roll back or close: the caller owns
+    that session and is responsible for its lifecycle. The CLI wraps this in
+    ``analyse_with_owned_session``, which does release what it owns.
+    """
     tx_mode = await _set_read_only(session)
     plan = await build_plan(session)
     report = summarise(plan)
@@ -386,8 +431,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         engine = create_async_engine(url, future=True)
         try:
             maker = async_sessionmaker(engine, expire_on_commit=False)
-            async with maker() as session:
-                return await analyse(session, expected)
+            return await analyse_with_owned_session(maker, expected)
         finally:
             await engine.dispose()
 

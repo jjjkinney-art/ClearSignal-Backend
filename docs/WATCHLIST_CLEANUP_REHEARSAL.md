@@ -85,6 +85,42 @@ bound parameters cannot leak through a failure path.
 was obtained (e.g. `postgresql:read_only`). It contains no host, database name
 or credential.
 
+## Transaction lifecycle
+
+On PostgreSQL, `SET TRANSACTION READ ONLY` is issued as the **first** statement,
+strictly before any candidate-selection query. If it fails, **no selection runs
+at all** — the tool aborts rather than reading under an unrestricted
+transaction. Other dialects take a documented no-op path and report
+`<dialect>:not_supported`; safety there rests on the tool containing no writes,
+which the source scan and write-method wrapper enforce.
+
+The CLI **creates and owns** its session, and therefore releases it:
+
+```
+async with session_factory() as session:   # CLI-owned
+    try:
+        return await analyse(session, expected)
+    finally:
+        await _release_transaction(session)  # ROLLBACK, then the context
+                                             # manager closes the session
+```
+
+`ROLLBACK` is transaction cleanup, not a write — it discards the read snapshot
+this tool opened. It runs on **every** path (success, expectation mismatch, and
+exception) and strictly **before** close, so no transaction is left for the
+pool to reclaim implicitly. Rolling back when no transaction remains is handled
+safely and never masks the real outcome.
+
+`session.begin()` is deliberately **not** used: that context manager COMMITS on
+successful exit, which a dry-run tool must never do. A test asserts it is absent
+from the executable code.
+
+**Caller-owned sessions remain the caller's responsibility.** `analyse()`
+accepts a borrowed session and imposes no lifecycle side effects on it — it
+neither rolls back nor closes. Anything calling `analyse()` directly (the tests
+do) must release its own session. Only `analyse_with_owned_session()` releases,
+because only it owns what it created.
+
 `orphan_owner_count` is an **unenforced** referential check computed by outer
 join — there is no foreign key between `watched_tickers.user_id` and
 `users.id`, and the columns are not even the same width (`VARCHAR(64)` vs
