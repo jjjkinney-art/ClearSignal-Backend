@@ -63,6 +63,13 @@ async def _make_session():
 
 
 def _run(body):
+    """Run one async body without disturbing the ambient event loop.
+
+    Deliberately NOT asyncio.run(): on Python 3.9 that sets the current event
+    loop to None on exit, which breaks sibling modules that legitimately use
+    asyncio.get_event_loop().run_until_complete(...). This saves and restores
+    whatever loop policy state was in place.
+    """
     async def _outer():
         engine, maker = await _make_session()
         try:
@@ -71,7 +78,17 @@ def _run(body):
         finally:
             await engine.dispose()
 
-    asyncio.run(_outer())
+    try:
+        prev = asyncio.get_event_loop()
+    except RuntimeError:
+        prev = None
+    loop = asyncio.new_event_loop()
+    try:
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(_outer())
+    finally:
+        loop.close()
+        asyncio.set_event_loop(prev)
 
 
 async def _add_row(db, user_id, ticker, active=True):
