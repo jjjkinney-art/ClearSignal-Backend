@@ -15,7 +15,9 @@ Design principles
   - No secrets.  API keys, database URLs, and user tokens are never
     included in the snapshot.
   - Fast.  DB queries are lightweight aggregates (GROUP BY state/outcome,
-    COUNT(*)); no full-table scans or JOINs.
+    COUNT(*)).  The watchlist integrity aggregates add GROUP BY/HAVING over
+    watched_tickers and one LEFT JOIN to users for the orphan-owner check;
+    all counting happens in the database, never by materialising rows.
   - Deterministic schema.  All keys are always present; absent/failed
     data is represented by 0 / null / {} rather than omitted keys.
   - Thread-safe for in-process telemetry reads (loop_canary_telemetry
@@ -205,7 +207,82 @@ async def _watchlist_section(session) -> Dict[str, Any]:
     """Return watched-ticker and seeding state for shadow readiness validation."""
     try:
         from sqlalchemy import select, func, text
-        from app.db.models import WatchedTicker, ScheduledJob
+        from app.db.models import WatchedTicker, ScheduledJob, User
+
+        # ---- watchlist integrity aggregates ----------------------------------
+        # All computed in the database (GROUP BY / COUNT / SUM). Rows are never
+        # pulled into Python to be counted. Aggregate-only by construction: no
+        # user id, row id, email or group-level record leaves these queries.
+        #
+        # A "membership group" is (user_id, ticker) over ACTIVE rows with a
+        # non-null owner. A group is duplicated when COUNT(*) > 1, and its
+        # excess is COUNT(*) - 1 (the rows beyond the one legitimate row).
+        _mem_groups = (
+            select(func.count().label("c"))
+            .select_from(WatchedTicker)
+            .where(WatchedTicker.active.is_(True))
+            .where(WatchedTicker.user_id.isnot(None))
+            .group_by(WatchedTicker.user_id, WatchedTicker.ticker)
+            .having(func.count() > 1)
+            .subquery()
+        )
+        dup_mem = (await session.execute(
+            select(
+                func.count(),
+                func.coalesce(func.sum(_mem_groups.c.c - 1), 0),
+            ).select_from(_mem_groups)
+        )).one()
+        duplicate_membership_groups = int(dup_mem[0] or 0)
+        duplicate_membership_excess_rows = int(dup_mem[1] or 0)
+
+        # Legacy groups are keyed on ticker alone: the null-owner namespace is
+        # a single shared watchlist, so two active null-owner rows for one
+        # ticker are duplicates of each other.
+        _legacy_groups = (
+            select(func.count().label("c"))
+            .select_from(WatchedTicker)
+            .where(WatchedTicker.active.is_(True))
+            .where(WatchedTicker.user_id.is_(None))
+            .group_by(WatchedTicker.ticker)
+            .having(func.count() > 1)
+            .subquery()
+        )
+        dup_leg = (await session.execute(
+            select(
+                func.count(),
+                func.coalesce(func.sum(_legacy_groups.c.c - 1), 0),
+            ).select_from(_legacy_groups)
+        )).one()
+        duplicate_legacy_groups = int(dup_leg[0] or 0)
+        duplicate_legacy_excess_rows = int(dup_leg[1] or 0)
+
+        active_owner_count = int((await session.execute(
+            select(func.count(func.distinct(WatchedTicker.user_id)))
+            .where(WatchedTicker.active.is_(True))
+            .where(WatchedTicker.user_id.isnot(None))
+        )).scalar() or 0)
+
+        # Orphan owners: active non-null owner values with no users-table row.
+        # NOTE: there is NO foreign key between watched_tickers.user_id and
+        # users.id (and the column widths differ: VARCHAR(64) vs VARCHAR(36)),
+        # so this is an unenforced referential check computed by outer join,
+        # not a constraint the database guarantees.
+        _orph = (await session.execute(
+            select(
+                func.count(func.distinct(WatchedTicker.user_id)),
+                func.count(),
+            )
+            .select_from(
+                WatchedTicker.__table__.outerjoin(
+                    User.__table__, User.id == WatchedTicker.user_id
+                )
+            )
+            .where(WatchedTicker.active.is_(True))
+            .where(WatchedTicker.user_id.isnot(None))
+            .where(User.id.is_(None))
+        )).one()
+        orphan_owner_count = int(_orph[0] or 0)
+        orphan_active_row_count = int(_orph[1] or 0)
 
         # Active ticker count and list
         tr = await session.execute(
@@ -245,14 +322,23 @@ async def _watchlist_section(session) -> Dict[str, Any]:
         drift_skip_count = ds_r.scalar() or 0
 
         return {
-            # NOTE: active_ticker_count counts ACTIVE ROWS across every
-            # account, not distinct tickers. One row per (account, ticker) is
-            # expected, so N accounts watching the same ticker legitimately
-            # produce N rows. The two fields below make that explicit so a
-            # large row count is not misread as duplication.
+            # COMPATIBILITY: active_ticker_count is HISTORICAL and counts
+            # ACTIVE ROWS, not distinct securities. Its name predates
+            # multi-account ownership. It is preserved verbatim; do NOT read
+            # it as a count of distinct tickers. Use distinct_ticker_count for
+            # securities and active_row_count for rows.
             "active_ticker_count": len(active_tickers),
-            "distinct_ticker_count": len(set(active_tickers)),
             "active_row_count":    len(active_tickers),
+            "distinct_ticker_count": len(set(active_tickers)),
+            "active_owner_count":  active_owner_count,
+            # Duplicate integrity aggregates (DB-computed, aggregate-only).
+            "duplicate_membership_groups":     duplicate_membership_groups,
+            "duplicate_membership_excess_rows": duplicate_membership_excess_rows,
+            "duplicate_legacy_groups":         duplicate_legacy_groups,
+            "duplicate_legacy_excess_rows":    duplicate_legacy_excess_rows,
+            # Unenforced referential check — no FK exists on this column.
+            "orphan_owner_count":      orphan_owner_count,
+            "orphan_active_row_count": orphan_active_row_count,
             "active_tickers":      active_tickers,
             "scan_jobs_total":     scan_jobs_total,
             "duplicate_job_combos": duplicate_job_combos,
@@ -262,8 +348,15 @@ async def _watchlist_section(session) -> Dict[str, Any]:
         logger.debug("[observability] watchlist_section failed: %r", exc)
         return {
             "active_ticker_count": 0,
-            "distinct_ticker_count": 0,
             "active_row_count":    0,
+            "distinct_ticker_count": 0,
+            "active_owner_count": 0,
+            "duplicate_membership_groups": 0,
+            "duplicate_membership_excess_rows": 0,
+            "duplicate_legacy_groups": 0,
+            "duplicate_legacy_excess_rows": 0,
+            "orphan_owner_count": 0,
+            "orphan_active_row_count": 0,
             "active_tickers":      [],
             "scan_jobs_total":     0,
             "duplicate_job_combos": 0,
@@ -388,8 +481,16 @@ async def build_snapshot(session=None) -> Dict[str, Any]:
         delivery_sec  = {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0}
         locks_sec     = {"tick_lock": None, "tick_lock_held": False}
         watchlist_sec = {
-            "active_ticker_count": 0, "distinct_ticker_count": 0,
-            "active_row_count": 0, "active_tickers": [],
+            "active_ticker_count": 0, "active_row_count": 0,
+            "distinct_ticker_count": 0,
+            "active_owner_count": 0,
+            "duplicate_membership_groups": 0,
+            "duplicate_membership_excess_rows": 0,
+            "duplicate_legacy_groups": 0,
+            "duplicate_legacy_excess_rows": 0,
+            "orphan_owner_count": 0,
+            "orphan_active_row_count": 0,
+            "active_tickers": [],
             "scan_jobs_total": 0, "duplicate_job_combos": 0, "drift_skip_count": 0,
         }
 
@@ -463,8 +564,16 @@ def build_snapshot_sync(session=None) -> Dict[str, Any]:
         "delivery":    {"total": 0, "by_status": {}, "shadow_count": 0, "duplicate_total": 0},
         "locks":       {"tick_lock": None, "tick_lock_held": False},
         "watchlist":   {
-            "active_ticker_count": 0, "distinct_ticker_count": 0,
-            "active_row_count": 0, "active_tickers": [],
+            "active_ticker_count": 0, "active_row_count": 0,
+            "distinct_ticker_count": 0,
+            "active_owner_count": 0,
+            "duplicate_membership_groups": 0,
+            "duplicate_membership_excess_rows": 0,
+            "duplicate_legacy_groups": 0,
+            "duplicate_legacy_excess_rows": 0,
+            "orphan_owner_count": 0,
+            "orphan_active_row_count": 0,
+            "active_tickers": [],
             "scan_jobs_total": 0, "duplicate_job_combos": 0, "drift_skip_count": 0,
         },
         "guardrails":  guardrails_sec,

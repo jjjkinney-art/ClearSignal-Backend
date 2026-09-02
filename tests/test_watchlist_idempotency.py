@@ -268,6 +268,60 @@ def test_duplicate_does_not_break_get_and_resolves_deterministically():
     _run(body)
 
 
+def test_duplicate_warning_carries_no_identifying_data(caplog):
+    """Containment must stay observable without leaking identity."""
+    import logging
+
+    records = []
+
+    async def body(db):
+        from app.db.repositories.watchlist_repo import ticker_add, ticker_deactivate
+
+        await _force_duplicate(db, USER_A, "AAPL")
+        with caplog.at_level(logging.WARNING,
+                             logger="app.db.repositories.watchlist_repo"):
+            await ticker_add(db, "AAPL", "Apple", user_id=USER_A)
+            await ticker_deactivate(db, "AAPL", user_id=USER_A)
+        records.extend(r.getMessage() for r in caplog.records)
+
+    _run(body)
+
+    assert records, "duplicates must emit a warning, not pass silently"
+    joined = " ".join(records)
+    assert "AAPL" in joined, "public ticker is expected"
+    assert "2" in joined, "the duplicate count is expected"
+    # Nothing identifying.
+    assert USER_A not in joined
+    assert USER_B not in joined
+    assert "@" not in joined
+    for r in records:
+        assert "scoped=True" in r or "scoped=" in r, (
+            "ownership must be reported as a boolean, never as an id"
+        )
+
+
+def test_duplicate_containment_does_not_silently_absorb(caplog):
+    """A duplicate must remain visible to operators via the aggregates."""
+    import logging
+
+    async def body(db):
+        from app.db.repositories.watchlist_repo import ticker_get
+        from app.services.loop_observability import _watchlist_section
+
+        await _force_duplicate(db, USER_A, "AAPL")
+        with caplog.at_level(logging.WARNING,
+                             logger="app.db.repositories.watchlist_repo"):
+            await ticker_get(db, "AAPL", user_id=USER_A)
+
+        section = await _watchlist_section(db)
+        assert section["duplicate_membership_groups"] == 1, (
+            "containment must not hide the corruption it absorbs"
+        )
+        assert section["duplicate_membership_excess_rows"] == 1
+
+    _run(body)
+
+
 def test_duplicate_in_one_account_does_not_affect_another():
     async def body(db):
         from app.db.repositories.watchlist_repo import ticker_add, ticker_deactivate

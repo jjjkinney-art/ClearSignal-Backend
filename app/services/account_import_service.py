@@ -162,15 +162,26 @@ async def _is_already_imported(session, user_id: str) -> bool:
 
 
 async def _count_system_tickers(session) -> int:
+    """Distinct active starter tickers an import can actually create.
+
+    Counts DISTINCT ticker, not rows. execute_import skips any ticker the
+    user already owns, so N duplicate system rows for one ticker still
+    produce exactly one row for the importing user. Counting rows here
+    overstated the preview by the duplicate factor — with duplicated system
+    starter data that is a large, user-visible overstatement on the
+    onboarding screen.
+
+    Distinct-counted in the database; rows are never materialised.
+    """
     from app.db.models import WatchedTicker
     from sqlalchemy import select, func
 
     result = await session.execute(
-        select(func.count(WatchedTicker.id))
+        select(func.count(func.distinct(WatchedTicker.ticker)))
         .where(WatchedTicker.user_id == SYSTEM_DEFAULT_USER_ID)
         .where(WatchedTicker.active.is_(True))
     )
-    return result.scalar_one() or 0
+    return result.scalar() or 0
 
 
 async def _count_system_portfolios(session) -> int:
