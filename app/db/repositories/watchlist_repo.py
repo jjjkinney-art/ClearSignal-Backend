@@ -11,6 +11,16 @@ Deduplication is application-level: ``ticker_add`` checks for an existing
 on the nullable user_id column because NULL != NULL in most SQL dialects,
 which makes such an index unreliable for the global-watchlist (user_id=NULL)
 use case.
+
+Because that check-then-insert is not atomic, two concurrent adds for the
+same (user_id, ticker) can both observe "no row" and both insert.  Nothing
+in the schema prevents the resulting pair.  These helpers therefore select
+DEFENSIVELY: they resolve the oldest matching row rather than asserting that
+exactly one exists, so a duplicate degrades to a warning instead of raising
+MultipleResultsFound and permanently breaking add/remove for that ticker.
+
+Tolerance is not a fix for the race — only a unique index can close it, and
+that requires a migration.  It bounds the blast radius until one exists.
 """
 
 from __future__ import annotations
@@ -26,6 +36,50 @@ logger = logging.getLogger(__name__)
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _owner_clause(model, user_id: Optional[str]):
+    """Ownership predicate. NULL user_id is the global/legacy watchlist."""
+    return (
+        model.user_id == user_id
+        if user_id is not None
+        else model.user_id.is_(None)
+    )
+
+
+def _membership_stmt(model, ticker: str, user_id: Optional[str]):
+    """Deterministically ordered membership query for one (user_id, ticker).
+
+    Ordered oldest-first so that, if duplicates exist, every call site agrees
+    on which row is authoritative.
+    """
+    from sqlalchemy import select
+
+    return (
+        select(model)
+        .where(model.ticker == ticker)
+        .where(_owner_clause(model, user_id))
+        .order_by(model.added_at.asc(), model.id.asc())
+    )
+
+
+def _resolve_one(rows: List, ticker: str, user_id: Optional[str]):
+    """Return the authoritative row, warning (not raising) on duplicates.
+
+    Deliberately replaces ``scalar_one_or_none()``. With no unique index the
+    duplicate case is reachable, and raising there would make the ticker
+    impossible to add or remove through the API — a permanent, unrecoverable
+    state for that user. Logs an opaque count; never logs account contents.
+    """
+    if not rows:
+        return None
+    if len(rows) > 1:
+        logger.warning(
+            "[watchlist] %d duplicate rows for ticker=%s (scoped=%s); "
+            "using oldest. A unique index is required to prevent this.",
+            len(rows), ticker, user_id is not None,
+        )
+    return rows[0]
 
 
 def _to_naive_utc(dt: Optional[datetime]) -> Optional[datetime]:
@@ -63,18 +117,11 @@ async def ticker_add(
 
     t = ticker.strip().upper()
 
-    stmt = (
-        select(WatchedTicker)
-        .where(WatchedTicker.ticker == t)
-        .where(
-            WatchedTicker.user_id == user_id
-            if user_id is not None
-            else WatchedTicker.user_id.is_(None)
-        )
-        .execution_options(populate_existing=True)
+    stmt = _membership_stmt(WatchedTicker, t, user_id).execution_options(
+        populate_existing=True
     )
     result = await session.execute(stmt)
-    row = result.scalar_one_or_none()
+    row = _resolve_one(list(result.scalars().all()), t, user_id)
 
     if row is not None:
         if not row.active:
@@ -108,31 +155,33 @@ async def ticker_deactivate(
     """Soft-delete: set active=False.
 
     Returns True if a row was found and deactivated, False otherwise.
+
+    Deactivates EVERY row for this (user_id, ticker). With no unique index a
+    duplicate pair is reachable; deactivating only one would leave the ticker
+    still on the watchlist after the user removed it, which is the wrong
+    observable behaviour. With no duplicates this is identical to before.
     """
     if session is None:
         return False
 
     from app.db.models import WatchedTicker
-    from sqlalchemy import select
 
     t = ticker.strip().upper()
-    stmt = (
-        select(WatchedTicker)
-        .where(WatchedTicker.ticker == t)
-        .where(
-            WatchedTicker.user_id == user_id
-            if user_id is not None
-            else WatchedTicker.user_id.is_(None)
-        )
-    )
-    result = await session.execute(stmt)
-    row = result.scalar_one_or_none()
+    result = await session.execute(_membership_stmt(WatchedTicker, t, user_id))
+    rows = list(result.scalars().all())
 
-    if row is None:
+    if not rows:
         return False
+    if len(rows) > 1:
+        logger.warning(
+            "[watchlist] deactivating %d duplicate rows for ticker=%s "
+            "(scoped=%s)", len(rows), t, user_id is not None,
+        )
 
-    row.active = False
-    row.updated_at = _now()
+    now = _now()
+    for row in rows:
+        row.active = False
+        row.updated_at = now
     await session.flush()
     return True
 
@@ -142,26 +191,21 @@ async def ticker_get(
     ticker: str,
     user_id: Optional[str] = None,
 ):
-    """Return the WatchedTicker row (active or inactive) or None."""
+    """Return the WatchedTicker row (active or inactive) or None.
+
+    Resolves the oldest row when duplicates exist rather than raising.
+    """
     if session is None:
         return None
 
     from app.db.models import WatchedTicker
-    from sqlalchemy import select
 
     t = ticker.strip().upper()
-    stmt = (
-        select(WatchedTicker)
-        .where(WatchedTicker.ticker == t)
-        .where(
-            WatchedTicker.user_id == user_id
-            if user_id is not None
-            else WatchedTicker.user_id.is_(None)
-        )
-        .execution_options(populate_existing=True)
+    stmt = _membership_stmt(WatchedTicker, t, user_id).execution_options(
+        populate_existing=True
     )
     result = await session.execute(stmt)
-    return result.scalar_one_or_none()
+    return _resolve_one(list(result.scalars().all()), t, user_id)
 
 
 async def ticker_list_active(
@@ -241,17 +285,8 @@ async def backfill_from_index(
         if not t:
             continue
 
-        stmt = (
-            select(WatchedTicker)
-            .where(WatchedTicker.ticker == t)
-            .where(
-                WatchedTicker.user_id == user_id
-                if user_id is not None
-                else WatchedTicker.user_id.is_(None)
-            )
-        )
-        result = await session.execute(stmt)
-        existing = result.scalar_one_or_none()
+        result = await session.execute(_membership_stmt(WatchedTicker, t, user_id))
+        existing = _resolve_one(list(result.scalars().all()), t, user_id)
         if existing is not None:
             continue
 
