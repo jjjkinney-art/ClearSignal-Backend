@@ -542,11 +542,13 @@ def test_errors_are_sanitised_to_the_exception_class_only():
 class _RecordingSession:
     """Records every database interaction in order. Never writes."""
 
-    def __init__(self, dialect="postgresql", rows=None, fail_on_read_only=False):
+    def __init__(self, dialect="postgresql", rows=None, fail_on_read_only=False,
+                 fail_on_rollback=False):
         self.calls = []                      # ordered log of operations
         self._dialect = dialect
         self._rows = rows or []
         self._fail_on_read_only = fail_on_read_only
+        self._fail_on_rollback = fail_on_rollback
         self.bind = self                     # session.bind.dialect.name
         self.dialect = self
         self.name = dialect
@@ -564,6 +566,13 @@ class _RecordingSession:
         return _FakeResult(self._rows)
 
     async def rollback(self):
+        # Record the ATTEMPT first, so a failed rollback is still observable
+        # in the ordering log. "ROLLBACK" means the attempt succeeded.
+        self.calls.append("ROLLBACK_ATTEMPT")
+        if self._fail_on_rollback:
+            raise RuntimeError(
+                "could not roll back: connection to 'db.internal:5432' lost "
+                "[SQL: ROLLBACK] [parameters: ('owner@example.test',)]")
         self.calls.append("ROLLBACK")
 
     async def close(self):
@@ -662,7 +671,8 @@ def test_read_only_failure_prevents_selection_and_still_releases():
     assert "SELECT" not in s.calls, (
         "no selection may run when READ ONLY could not be established"
     )
-    assert s.calls == ["SET_READ_ONLY", "ROLLBACK", "CLOSE"], (
+    assert s.calls == ["SET_READ_ONLY", "ROLLBACK_ATTEMPT", "ROLLBACK",
+                       "CLOSE"], (
         "failure path must roll back then close; got %r" % (s.calls,)
     )
 
@@ -751,11 +761,27 @@ def test_analyse_does_not_close_or_roll_back_a_caller_owned_session():
 
 
 def test_release_transaction_is_safe_when_nothing_to_roll_back():
-    class _NoTx:
-        async def rollback(self):
-            raise RuntimeError("no transaction is active")
+    """Real AsyncSession semantics: rollback with no active transaction is a
+    no-op. That is WHY blanket suppression is unnecessary — proven against a
+    real session rather than a fake that raises."""
+    async def body():
+        from sqlalchemy.ext.asyncio import (
+            create_async_engine, async_sessionmaker)
+        from app.db.models import Base
 
-    _drive(lambda: T._release_transaction(_NoTx()))   # must not raise
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            maker = async_sessionmaker(engine, expire_on_commit=False)
+            async with maker() as session:
+                # No statement issued: there is no transaction to release.
+                await T._release_transaction(session)      # must not raise
+                await T._release_transaction(session)      # idempotent
+        finally:
+            await engine.dispose()
+
+    _drive(body)
 
 
 def test_owned_session_helper_does_not_use_autocommitting_begin():
@@ -776,3 +802,126 @@ def test_owned_session_helper_does_not_use_autocommitting_begin():
     joined = " ".join(code)
     assert "session . begin" not in joined
     assert ".begin(" not in joined.replace(" ", "")
+
+
+# ===========================================================================
+# § ROLLBACK MUST FAIL CLOSED (Section 0.8C.3)
+#
+# _release_transaction deliberately does NOT suppress exceptions. A rollback
+# that silently "succeeds" after failing would mean the tool reports a clean
+# rehearsal while the read snapshot was never released.
+# ===========================================================================
+
+def test_rollback_failure_after_successful_analysis_fails_closed():
+    """A — analysis succeeded, but releasing the transaction did not."""
+    s = _RecordingSession("postgresql", fail_on_rollback=True)
+    factory = _OwnedFactory(s)
+    with pytest.raises(RuntimeError):
+        _drive(lambda: T.analyse_with_owned_session(factory, _no_expectations()))
+
+    assert "ROLLBACK_ATTEMPT" in s.calls, "rollback must always be attempted"
+    assert "ROLLBACK" not in s.calls, "the rollback did not actually succeed"
+    assert "CLOSE" in s.calls, "the owned session must still be closed"
+    assert s.calls.index("ROLLBACK_ATTEMPT") < s.calls.index("CLOSE"), (
+        "the rollback attempt must precede close"
+    )
+    assert "COMMIT" not in s.calls and "FLUSH" not in s.calls
+
+
+def test_cli_rollback_failure_is_non_zero_sanitised_and_withholds_plan(monkeypatch):
+    """A — no fingerprint, no success payload, nothing identifying leaks."""
+    import contextlib
+    import io
+
+    s = _RecordingSession("postgresql", fail_on_rollback=True)
+    real = T.analyse_with_owned_session
+
+    async def _with_failing_session(session_factory, expected):
+        # Drive the REAL wrapper, substituting only the session it owns.
+        return await real(_OwnedFactory(s), expected)
+
+    monkeypatch.setattr(T, "analyse_with_owned_session", _with_failing_session)
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = T.main(["--database-url", "sqlite+aiosqlite:///:memory:",
+                     "--no-expectations"])
+    out = buf.getvalue()
+    payload = json.loads(out)
+
+    assert rc == 4, "a failed rollback must not exit zero"
+    assert payload["error"] == "analysis_failed"
+    assert payload["error_type"] == "RuntimeError"
+    assert payload["plan_fingerprint"] is None, (
+        "no authorizable plan may be emitted when rollback failed"
+    )
+    assert payload["expectation_match"] is False
+    assert "active_row_count_before" not in payload, (
+        "no success result may be emitted alongside a rollback failure"
+    )
+    for leak in ("ROLLBACK]", "parameters", "db.internal", "5432", "://", "@",
+                 "SQL:"):
+        assert leak not in out, "sanitised error leaked %r" % leak
+    assert "CLOSE" in s.calls, "the owned session must still be closed"
+    assert "ROLLBACK" not in s.calls
+
+
+def test_rollback_failure_while_handling_read_only_failure(monkeypatch):
+    """B — both the analysis and the release fail; still closed, still quiet."""
+    import contextlib
+    import io
+
+    s = _RecordingSession("postgresql", fail_on_read_only=True,
+                          fail_on_rollback=True)
+    real = T.analyse_with_owned_session
+
+    async def _patched(session_factory, expected):
+        return await real(_OwnedFactory(s), expected)
+
+    monkeypatch.setattr(T, "analyse_with_owned_session", _patched)
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = T.main(["--database-url", "sqlite+aiosqlite:///:memory:",
+                     "--no-expectations"])
+    out = buf.getvalue()
+
+    assert rc == 4
+    assert json.loads(out)["plan_fingerprint"] is None
+    assert "SELECT" not in s.calls, "no selection may run"
+    assert s.calls == ["SET_READ_ONLY", "ROLLBACK_ATTEMPT", "CLOSE"], (
+        "attempt rollback, then close, even when both failed; got %r" % (s.calls,)
+    )
+    for leak in ("permission denied", "watched_tickers", "db.internal",
+                 "parameters", "SQL:", "://", "@"):
+        assert leak not in out, "leaked %r" % leak
+
+
+def test_release_transaction_does_not_swallow_exceptions():
+    """The regression this commit exists to prevent."""
+    class _Boom:
+        async def rollback(self):
+            raise RuntimeError("rollback genuinely failed")
+
+    with pytest.raises(RuntimeError):
+        _drive(lambda: T._release_transaction(_Boom()))
+
+
+def test_successful_path_ordering_is_unchanged():
+    """D — SET_READ_ONLY -> SELECT... -> ROLLBACK -> CLOSE."""
+    s = _RecordingSession("postgresql")
+    factory = _OwnedFactory(s)
+    _drive(lambda: T.analyse_with_owned_session(factory, _no_expectations()))
+    assert s.calls[0] == "SET_READ_ONLY"
+    assert "SELECT" in s.calls
+    assert s.calls[-3:] == ["ROLLBACK_ATTEMPT", "ROLLBACK", "CLOSE"]
+    assert "COMMIT" not in s.calls
+
+
+def test_caller_owned_session_still_untouched_by_lifecycle():
+    """E — analyse() must not attempt rollback or close on a borrowed session."""
+    s = _RecordingSession("postgresql", fail_on_rollback=True)
+    _drive(lambda: T.analyse(s, _no_expectations()))   # must not raise
+    assert "ROLLBACK_ATTEMPT" not in s.calls
+    assert "ROLLBACK" not in s.calls
+    assert "CLOSE" not in s.calls

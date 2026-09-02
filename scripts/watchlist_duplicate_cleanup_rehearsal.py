@@ -307,14 +307,18 @@ async def _release_transaction(session) -> None:
     closes the session, so no transaction is left dangling for the pool to
     reclaim implicitly.
 
-    Safe when there is nothing to roll back — a session with no open
-    transaction, or one already released, must not turn into an error that
-    masks the real result.
+    Deliberately NOT wrapped in a blanket ``except``. This is a safety
+    control, and a control that reports success when it failed is worse than
+    no control at all. ``AsyncSession.rollback()`` is a no-op when no
+    transaction is active, so suppression buys nothing and would only hide a
+    genuine failure to release the read snapshot.
+
+    A real failure therefore propagates: the CLI exits non-zero with a
+    sanitised error, and no plan fingerprint or success result is emitted.
+    The owned session is still closed, because this runs inside the session
+    context manager's body.
     """
-    try:
-        await session.rollback()
-    except Exception:  # noqa: BLE001 — cleanup must never mask the outcome
-        pass
+    await session.rollback()
 
 
 async def analyse_with_owned_session(session_factory,

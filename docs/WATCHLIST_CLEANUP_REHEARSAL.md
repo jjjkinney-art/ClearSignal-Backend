@@ -108,8 +108,19 @@ async with session_factory() as session:   # CLI-owned
 `ROLLBACK` is transaction cleanup, not a write — it discards the read snapshot
 this tool opened. It runs on **every** path (success, expectation mismatch, and
 exception) and strictly **before** close, so no transaction is left for the
-pool to reclaim implicitly. Rolling back when no transaction remains is handled
-safely and never masks the real outcome.
+pool to reclaim implicitly.
+
+**A failed rollback invalidates the rehearsal.** The rollback is *not* wrapped
+in a blanket `except`: a safety control that reports success when it failed is
+worse than no control. If the rollback genuinely fails, the tool exits non-zero
+with a sanitised error and emits **no plan fingerprint and no success result** —
+even when the analysis itself completed. The owned session is still closed. A
+rehearsal whose transaction could not be released is not an authorizable
+rehearsal.
+
+Suppression is also unnecessary: `AsyncSession.rollback()` is a no-op when no
+transaction is active, which is proven against a real session rather than
+assumed.
 
 `session.begin()` is deliberately **not** used: that context manager COMMITS on
 successful exit, which a dry-run tool must never do. A test asserts it is absent
