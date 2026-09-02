@@ -54,10 +54,31 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     # (init_db logs a loud warning if the DB is behind head — see migration_check.)
 
     # Phase 10B — backfill watched_tickers from flat-file index.json (idempotent)
+    #
+    # OWNERSHIP INVARIANT — do not remove the explicit user_id argument below.
+    #
+    # ticker_add deduplicates within a single ownership namespace: it looks for
+    # an existing (user_id, ticker) row and only inserts when none is found.
+    # Startup-seeded rows PERMANENTLY reside in the system-owner namespace,
+    # because the Phase 16.2 hook further down this same startup path runs
+    # `UPDATE ... SET user_id = SYSTEM_DEFAULT_USER_ID WHERE user_id IS NULL`.
+    #
+    # Seeding into NULL and letting that hook claim ownership afterwards
+    # defeats the deduplication entirely: the next boot's lookup searches the
+    # NULL namespace, which the claim has just emptied, finds nothing, and
+    # re-inserts every ticker. That produced one duplicate row per index.json
+    # ticker on every single boot (Section 0.8B).
+    #
+    # Passing the owner explicitly makes the check run in the namespace the
+    # rows actually end up in. The end state is identical; only the dedup
+    # lookup changes.
     try:
         from .db import get_session as _get_session
         from .db.repositories.watchlist_repo import ticker_add as _ticker_add
         from .services.watchlist_service import watchlist_service as _wl_service
+        from .services.system_user_service import (
+            SYSTEM_DEFAULT_USER_ID as _SYSTEM_OWNER,
+        )
         async with _get_session() as _wl_session:
             if _wl_session is not None:
                 _entries = _wl_service.get_watchlist()
@@ -68,6 +89,7 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
                             _wl_session,
                             _e.ticker,
                             company_name=getattr(_e, "company_name", "") or "",
+                            user_id=_SYSTEM_OWNER,
                         )
                         if _row is not None:
                             _bf_added += 1
