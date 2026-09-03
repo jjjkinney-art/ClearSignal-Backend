@@ -23,7 +23,9 @@ from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-_HEAD = "0004_portfolios_org_id"
+# Deliberately pinned rather than derived: adding a revision must be an
+# explicit, acknowledged change here, not something a test silently absorbs.
+_HEAD = "0005_watchlist_unique_active"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"

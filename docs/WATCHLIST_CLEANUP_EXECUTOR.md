@@ -150,8 +150,11 @@ verification aborts before any write. Tested.
 
 ## Not included
 
-* No migration and **neither partial unique index** — those remain a separate,
-  later, separately approved step, and must come *after* cleanup.
+* **No index is created or dropped by this tool.** The two partial unique
+  indexes now exist as Alembic revision `0005_watchlist_unique_active`
+  (Section 0.8E) — written, tested, and **not yet applied to production**.
+  They must be applied only *after* cleanup has run, because
+  `CREATE UNIQUE INDEX CONCURRENTLY` cannot succeed over duplicated data.
 * No endpoint, no scheduling, no configuration change.
 * No production connection is made by this branch.
 
