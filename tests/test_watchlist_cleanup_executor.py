@@ -112,6 +112,79 @@ async def _expectations(maker):
         }, R.plan_fingerprint(plan)
 
 
+
+class _PgProxy:
+    """SQLite fixture presented as PostgreSQL, intercepting LOCK TABLE.
+
+    Tests exercise the REAL dialect guard rather than bypassing it: the guard
+    still runs, still demands postgresql, and still issues LOCK TABLE — only
+    the statement itself is swallowed, because SQLite cannot execute it.
+    """
+
+    def __init__(self, inner, dialect="postgresql", lock_fails=False):
+        self._inner = inner
+        self.calls = []
+        self.bind = self
+        self.dialect = self
+        self.name = dialect
+        self._lock_fails = lock_fails
+
+    async def execute(self, statement, *a, **k):
+        text = " ".join(str(statement).split()).upper()
+        if "LOCK TABLE" in text:
+            self.calls.append("LOCK")
+            if self._lock_fails:
+                raise RuntimeError("could not obtain lock on watched_tickers")
+            return _Empty()
+        if text.startswith("UPDATE"):
+            self.calls.append("UPDATE")
+        elif text.startswith("SELECT"):
+            self.calls.append("SELECT")
+        return await self._inner.execute(statement, *a, **k)
+
+    def add(self, obj):
+        self.calls.append("AUDIT_ADD")
+        return self._inner.add(obj)
+
+    async def flush(self, *a, **k):
+        return await self._inner.flush(*a, **k)
+
+    async def commit(self):
+        self.calls.append("COMMIT")
+        return await self._inner.commit()
+
+    async def rollback(self):
+        self.calls.append("ROLLBACK")
+        return await self._inner.rollback()
+
+
+class _PgFactory:
+    """async_sessionmaker() that yields a PostgreSQL-presenting session."""
+
+    def __init__(self, maker, dialect="postgresql", lock_fails=False):
+        self._maker = maker
+        self._dialect = dialect
+        self._lock_fails = lock_fails
+        self.proxy = None
+        self._cm = None
+
+    def __call__(self):
+        return self
+
+    async def __aenter__(self):
+        self._cm = self._maker()
+        inner = await self._cm.__aenter__()
+        self.proxy = _PgProxy(inner, self._dialect, self._lock_fails)
+        return self.proxy
+
+    async def __aexit__(self, *exc):
+        return await self._cm.__aexit__(*exc)
+
+
+def _pg(maker, dialect="postgresql", lock_fails=False):
+    return _PgFactory(maker, dialect, lock_fails)
+
+
 # ===========================================================================
 # § VERIFICATION HAPPENS BEFORE ANY WRITE
 # ===========================================================================
@@ -122,7 +195,7 @@ def test_fingerprint_mismatch_writes_nothing():
         before = await _counts(maker)
         exp, _fp = await _expectations(maker)
         with pytest.raises(X.VerificationError) as ei:
-            await X.run_owned(maker, exp, "f" * 64, uuid.uuid4().hex)
+            await X.run_owned(_pg(maker), exp, "f" * 64, uuid.uuid4().hex)
         assert "fingerprint_mismatch" in str(ei.value)
         assert await _counts(maker) == before, "no row or audit row may change"
 
@@ -136,7 +209,7 @@ def test_expectation_mismatch_writes_nothing():
         exp, fp = await _expectations(maker)
         exp["membership_candidate_rows"] = 999
         with pytest.raises(X.VerificationError) as ei:
-            await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+            await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         assert "expectation_mismatch" in str(ei.value)
         assert await _counts(maker) == before
 
@@ -150,7 +223,7 @@ def test_expectation_is_checked_before_the_fingerprint():
         exp, _ = await _expectations(maker)
         exp["active_rows"] = 1234
         with pytest.raises(X.VerificationError) as ei:
-            await X.run_owned(maker, exp, "a" * 64, uuid.uuid4().hex)
+            await X.run_owned(_pg(maker), exp, "a" * 64, uuid.uuid4().hex)
         assert "expectation_mismatch" in str(ei.value)
 
     _run(body)
@@ -165,7 +238,7 @@ def test_candidate_set_change_after_approval_is_rejected():
         await _seed(maker, [(OWNER_2, "BBB", 0, True)])
         before = await _counts(maker)
         with pytest.raises(X.VerificationError):
-            await X.run_owned(maker, exp, approved, uuid.uuid4().hex)
+            await X.run_owned(_pg(maker), exp, approved, uuid.uuid4().hex)
         assert await _counts(maker) == before
 
     _run(body)
@@ -255,13 +328,100 @@ def test_audit_is_written_before_the_update():
     _run(body)
 
 
-def test_non_postgresql_lock_takes_the_documented_no_op_path():
+def test_sqlite_execution_is_refused_before_selection_or_mutation():
+    """A mutating executor may NOT proceed without the table lock."""
     async def body(maker):
-        async with maker() as db:
-            mode = await X.acquire_table_lock(db)
-        assert mode == "sqlite:not_supported"
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
+        before = await _counts(maker)
+        exp, fp = await _expectations(maker)
+        with pytest.raises(X.UnsupportedDialectError) as ei:
+            await X.run_owned(maker, exp, fp, uuid.uuid4().hex)   # raw sqlite
+        assert "unsupported_dialect" in str(ei.value)
+        assert await _counts(maker) == before, (
+            "a refused dialect must leave the database untouched"
+        )
 
     _run(body)
+
+
+@pytest.mark.parametrize("dialect", ["sqlite", "mysql", "oracle", "mssql", ""])
+def test_non_postgresql_dialects_are_refused(dialect):
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
+        before = await _counts(maker)
+        exp, fp = await _expectations(maker)
+        factory = _pg(maker, dialect=dialect)
+        with pytest.raises(X.UnsupportedDialectError):
+            await X.run_owned(factory, exp, fp, uuid.uuid4().hex)
+        # A defensive rollback on the refused session is correct and expected;
+        # nothing else may have happened.
+        assert set(factory.proxy.calls) <= {"ROLLBACK"}, (
+            "no lock, query, audit row or DML may run on a refused dialect; "
+            "got %r" % (factory.proxy.calls,)
+        )
+        assert await _counts(maker) == before
+
+    _run(body)
+
+
+def test_dialect_detection_failure_is_refused():
+    class _NoDialect:
+        bind = None
+
+    async def body(maker):
+        with pytest.raises(X.UnsupportedDialectError) as ei:
+            await X.acquire_table_lock(_NoDialect())
+        assert "dialect_detection_failed" in str(ei.value)
+
+    _run(body)
+
+
+def test_postgresql_proceeds_only_after_the_lock_is_taken():
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
+        exp, fp = await _expectations(maker)
+        factory = _pg(maker)
+        report = await X.run_owned(factory, exp, fp, uuid.uuid4().hex)
+        calls = factory.proxy.calls
+        assert calls[0] == "LOCK", "nothing may precede the lock: %r" % (calls[:3],)
+        assert report["lock_mode"] == "postgresql:share_row_exclusive"
+        assert calls.index("LOCK") < calls.index("SELECT")
+        assert calls.index("LOCK") < calls.index("UPDATE")
+
+    _run(body)
+
+
+def test_lock_acquisition_failure_writes_nothing_and_never_commits():
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
+        before = await _counts(maker)
+        exp, fp = await _expectations(maker)
+        factory = _pg(maker, lock_fails=True)
+        with pytest.raises(RuntimeError):
+            await X.run_owned(factory, exp, fp, uuid.uuid4().hex)
+        calls = factory.proxy.calls
+        assert "SELECT" not in calls, "no plan selection after a failed lock"
+        assert "AUDIT_ADD" not in calls, "no audit rows after a failed lock"
+        assert "UPDATE" not in calls, "no DML after a failed lock"
+        assert "COMMIT" not in calls, "must never commit"
+        assert "ROLLBACK" in calls
+        assert await _counts(maker) == before
+
+    _run(body)
+
+
+def test_cli_refuses_a_non_postgresql_database(monkeypatch, tmp_path):
+    """The CLI boundary must reject SQLite even though fixtures use it."""
+    db = tmp_path / "x.sqlite"
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///%s" % db)
+    rc, out = _cli(["--execute", "--approved-fingerprint", "a" * 64]
+                   + [arg for f in X.EXPECTATION_FIELDS
+                      for arg in ("--expect-" + f.replace("_", "-"), "0")])
+    payload = json.loads(out)
+    assert rc == 4
+    assert payload["error"] == "unsupported_database"
+    assert payload["error_type"] == "UnsupportedDialectError"
+    assert payload["executed"] is False
 
 
 # ===========================================================================
@@ -278,7 +438,7 @@ def test_owned_and_legacy_partitions_are_cleaned_independently():
         exp, fp = await _expectations(maker)
         assert exp["membership_candidate_rows"] == 1
         assert exp["legacy_candidate_rows"] == 1
-        report = await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+        report = await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         assert report["affected_rows"] == 2
         assert report["active_row_count_after"] == 3
         assert report["membership_duplicate_groups_after"] == 0
@@ -296,7 +456,7 @@ def test_same_ticker_under_different_owners_survives():
         ])
         exp, fp = await _expectations(maker)
         assert exp["membership_candidate_rows"] == 0
-        report = await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+        report = await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         assert report["affected_rows"] == 0
         assert report["active_row_count_after"] == 3
         assert report["active_owner_count_after"] == 3
@@ -313,7 +473,7 @@ def test_inactive_history_is_untouched():
             (OWNER_1, "AAA", 2, False), (OWNER_1, "AAA", 3, False),
         ])
         exp, fp = await _expectations(maker)
-        await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+        await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         async with maker() as db:
             rows = (await db.execute(select(WatchedTicker))).scalars().all()
         assert len(rows) == 4, "no row may be deleted"
@@ -342,7 +502,7 @@ def test_exact_affected_row_accounting_at_scale():
         assert exp["membership_duplicate_groups"] == 24
         assert exp["membership_candidate_rows"] == 1031
 
-        report = await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+        report = await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         assert report["candidate_rows"] == 1031
         assert report["affected_rows"] == 1031
         assert report["active_row_count_after"] == 124
@@ -371,7 +531,7 @@ def test_audit_failure_rolls_everything_back():
         X.write_audit = _boom
         try:
             with pytest.raises(RuntimeError):
-                await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+                await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         finally:
             X.write_audit = original
         assert await _counts(maker) == before, (
@@ -404,7 +564,7 @@ def test_affected_row_count_mismatch_rolls_everything_back():
                 return res
 
         async with maker() as inner:
-            wrapped = _ShortUpdate(inner)
+            wrapped = _ShortUpdate(_PgProxy(inner))
             with pytest.raises(X.ExecutionError) as ei:
                 await X.execute_cleanup(wrapped, exp, fp, uuid.uuid4().hex)
             await inner.rollback()
@@ -432,7 +592,7 @@ def test_failed_postcondition_rolls_everything_back(monkeypatch):
 
         monkeypatch.setattr(R, "summarise", _poisoned)
         with pytest.raises(X.ExecutionError) as ei:
-            await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+            await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         assert "postcondition_failed" in str(ei.value)
         assert await _counts(maker) == before
 
@@ -448,7 +608,7 @@ def test_success_commits_once_and_records_the_operation():
         await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
         exp, fp = await _expectations(maker)
         op = uuid.uuid4().hex
-        report = await X.run_owned(maker, exp, fp, op)
+        report = await X.run_owned(_pg(maker), exp, fp, op)
         assert report["executed"] is True
         assert report["dry_run"] is False
         assert report["affected_rows"] == 3
@@ -466,11 +626,11 @@ def test_second_execution_with_the_old_fingerprint_fails_closed():
     async def body(maker):
         await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
         exp, fp = await _expectations(maker)
-        await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+        await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         after_first = await _counts(maker)
 
         with pytest.raises(X.VerificationError):
-            await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+            await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         assert await _counts(maker) == after_first, (
             "a replayed approval must change nothing"
         )
@@ -493,7 +653,7 @@ def test_operation_ref_alone_recovers_exactly_the_deactivated_rows():
         ])
         exp, fp = await _expectations(maker)
         op = uuid.uuid4().hex
-        await X.run_owned(maker, exp, fp, op)
+        await X.run_owned(_pg(maker), exp, fp, op)
 
         async with maker() as db:
             recovered = await X.audited_row_ids(db, op)
@@ -518,7 +678,7 @@ def test_rollback_reactivates_exactly_this_operations_rows():
         ])
         exp, fp = await _expectations(maker)
         op = uuid.uuid4().hex
-        await X.run_owned(maker, exp, fp, op)
+        await X.run_owned(_pg(maker), exp, fp, op)
         assert (await _counts(maker))["active"] == 1
 
         # The rollback path, driven only by the opaque operation reference.
@@ -546,12 +706,12 @@ def test_two_operations_do_not_share_a_rollback_scope():
         await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
         exp, fp = await _expectations(maker)
         op1 = uuid.uuid4().hex
-        await X.run_owned(maker, exp, fp, op1)
+        await X.run_owned(_pg(maker), exp, fp, op1)
 
         await _seed(maker, [(OWNER_2, "BBB", i, True) for i in range(2)])
         exp2, fp2 = await _expectations(maker)
         op2 = uuid.uuid4().hex
-        await X.run_owned(maker, exp2, fp2, op2)
+        await X.run_owned(_pg(maker), exp2, fp2, op2)
 
         async with maker() as db:
             a = await X.audited_row_ids(db, op1)
@@ -621,7 +781,7 @@ def test_output_is_aggregate_only():
             (OWNER_2, "BBB", 0, True),
         ])
         exp, fp = await _expectations(maker)
-        report = await X.run_owned(maker, exp, fp, uuid.uuid4().hex)
+        report = await X.run_owned(_pg(maker), exp, fp, uuid.uuid4().hex)
         blob = json.dumps(report, default=str)
         assert OWNER_1 not in blob and OWNER_2 not in blob
         assert "AAA" not in blob and "BBB" not in blob
@@ -642,7 +802,7 @@ def test_operation_ref_is_opaque_and_carries_no_row_identity():
         await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
         exp, fp = await _expectations(maker)
         op = uuid.uuid4().hex
-        report = await X.run_owned(maker, exp, fp, op)
+        report = await X.run_owned(_pg(maker), exp, fp, op)
         async with maker() as db:
             ids = [r.id for r in (await db.execute(
                 select(WatchedTicker))).scalars().all()]
@@ -710,7 +870,7 @@ def test_write_audit_propagates_a_flush_failure():
         async with maker() as db:
             plan = await R.build_plan(db)
             with pytest.raises(RuntimeError):
-                await X.write_audit(_FlushFails(db), uuid.uuid4().hex, plan)
+                await X.write_audit(_FlushFails(_PgProxy(db)), uuid.uuid4().hex, plan)
             await db.rollback()
 
     _run(body)
@@ -724,7 +884,7 @@ def test_audit_flush_failure_rolls_the_whole_cleanup_back():
         exp, fp = await _expectations(maker)
 
         async with maker() as inner:
-            wrapped = _FlushFails(inner)
+            wrapped = _FlushFails(_PgProxy(inner))
             with pytest.raises(RuntimeError):
                 await X.execute_cleanup(wrapped, exp, fp, uuid.uuid4().hex)
             await inner.rollback()
@@ -754,3 +914,110 @@ def test_write_audit_contains_no_blanket_exception_suppression():
     assert "except" not in joined, (
         "write_audit must not catch anything — audit failure must abort"
     )
+
+
+# ===========================================================================
+# § ROLLBACK IS ATOMIC AND FAILS CLOSED
+# ===========================================================================
+
+def test_rollback_restores_every_audited_row_or_none():
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
+        exp, fp = await _expectations(maker)
+        op = uuid.uuid4().hex
+        await X.run_owned(_pg(maker), exp, fp, op)
+        assert (await _counts(maker))["active"] == 1
+
+        async with maker() as db:
+            restored = await X.rollback_operation(db, op)
+            await db.commit()
+        assert restored == 3
+        assert (await _counts(maker))["active"] == 4
+
+    _run(body)
+
+
+def test_rollback_fails_closed_when_a_row_cannot_be_restored():
+    """A partial restoration is never acceptable."""
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
+        exp, fp = await _expectations(maker)
+        op = uuid.uuid4().hex
+        await X.run_owned(_pg(maker), exp, fp, op)
+        after_cleanup = await _counts(maker)
+
+        class _ShortRestore:
+            def __init__(self, inner):
+                self._inner = inner
+
+            def __getattr__(self, name):
+                return getattr(self._inner, name)
+
+            async def execute(self, statement, *a, **k):
+                res = await self._inner.execute(statement, *a, **k)
+                if " ".join(str(statement).split()).upper().startswith("UPDATE"):
+                    class _R:
+                        rowcount = 1        # only one of three restored
+                    return _R()
+                return res
+
+        async with maker() as inner:
+            with pytest.raises(X.ExecutionError) as ei:
+                await X.rollback_operation(_ShortRestore(inner), op)
+            await inner.rollback()
+        assert "rollback_row_count_mismatch" in str(ei.value)
+        assert await _counts(maker) == after_cleanup, (
+            "a failed rollback must leave the post-cleanup state intact"
+        )
+
+    _run(body)
+
+
+def test_rollback_refuses_an_unknown_operation_reference():
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
+        async with maker() as db:
+            with pytest.raises(X.ExecutionError) as ei:
+                await X.rollback_operation(db, uuid.uuid4().hex)
+        assert "no_audited_rows_for_operation" in str(ei.value)
+
+    _run(body)
+
+
+def test_rollback_would_violate_the_future_unique_indexes():
+    """Ordering constraint: rollback RECREATES duplicates by design.
+
+    Simulated with the same partial unique index Phase C will add. Reactivating
+    this operation's rows must fail while that index exists — which is exactly
+    why rollback after Phase C requires dropping the indexes first.
+    """
+    async def body(maker):
+        from sqlalchemy import text
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
+        exp, fp = await _expectations(maker)
+        op = uuid.uuid4().hex
+        await X.run_owned(_pg(maker), exp, fp, op)
+
+        # Phase C's index, created here ONLY inside this throwaway fixture.
+        async with maker() as db:
+            await db.execute(text(
+                "CREATE UNIQUE INDEX uq_owner_ticker_active "
+                "ON watched_tickers (user_id, ticker) "
+                "WHERE active AND user_id IS NOT NULL"))
+            await db.commit()
+
+        async with maker() as db:
+            with pytest.raises(Exception) as ei:
+                await X.rollback_operation(db, op)
+                await db.commit()
+            assert "UNIQUE" in str(ei.value).upper() or "unique" in str(ei.value)
+            await db.rollback()
+
+    _run(body)
+
+
+def test_rollback_helper_is_not_exposed_through_the_cli():
+    declared = {opt for action in X._parser()._actions
+                for opt in action.option_strings}
+    for flag in ("--rollback", "--restore", "--undo", "--reactivate"):
+        assert flag not in declared, "rollback is its own approval: %s" % flag

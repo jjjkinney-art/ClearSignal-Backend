@@ -52,8 +52,36 @@ against a plan nobody approved.
 **The lock is taken before the plan is computed.** That is the whole point: the
 row set cannot change between the fingerprint check and the `UPDATE`.
 `SHARE ROW EXCLUSIVE` blocks concurrent writers and other lock holders but not
-plain `SELECT`, so the product stays readable while cleanup runs. Non-PostgreSQL
-dialects take a documented no-op path and report `<dialect>:not_supported`.
+plain `SELECT`, so the product stays readable while cleanup runs.
+
+**PostgreSQL only — no degraded path.** The rehearsal may fall back to a no-op
+on other dialects because it only reads. A *mutating* executor may not: its
+correctness depends on holding the lock, so any dialect that cannot take one is
+refused outright rather than silently proceeding unlocked. Dialect-detection
+failure is refused for the same reason — not knowing whether the lock was taken
+is indistinguishable from not taking it. The refusal happens before plan
+selection, before any audit row and before any DML, so a refused run leaves the
+database completely untouched. Test fixtures may still use SQLite, but they go
+*through* the guard with a simulated dialect rather than around it.
+
+## Rollback and the future unique indexes — ordering constraint
+
+Rollback **recreates the duplicates by design**. Once Phase C's two partial
+unique indexes exist, reactivating those rows violates
+`uq_watched_tickers_owner_ticker_active`, and the `UPDATE` fails.
+
+**Rollback after Phase C therefore requires dropping the indexes first**, then
+restoring, then re-running cleanup and re-creating them. `rollback_operation`
+does not hide this: the integrity error surfaces and the operator must make
+that call deliberately. A test creates the same partial index in a throwaway
+fixture and proves the rollback is rejected while it exists.
+
+Rollback is also **atomic and fail-closed**: every audited row must be restored
+or the caller must roll back. `rollback_operation` asserts the affected count
+equals the audited count and raises `rollback_row_count_mismatch` otherwise — a
+partial restoration would leave the watchlist in a state neither the cleanup
+nor the rollback describes. It is deliberately **not exposed through the CLI**;
+rollback is its own approval.
 
 Any mismatch or exception rolls the whole transaction back. **A partial cleanup
 is never committed.**

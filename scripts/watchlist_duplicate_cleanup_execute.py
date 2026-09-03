@@ -115,6 +115,14 @@ POSTCONDITION_FIELDS = (
 )
 
 
+class UnsupportedDialectError(Exception):
+    """The database cannot provide the required table lock. Nothing was run.
+
+    Raised before plan selection, audit writes and DML, so a refusal leaves
+    the database completely untouched.
+    """
+
+
 class VerificationError(Exception):
     """Verification failed before any write. Nothing was mutated."""
 
@@ -137,24 +145,34 @@ def _now() -> datetime:
 # ---------------------------------------------------------------------------
 
 async def acquire_table_lock(session) -> str:
-    """Lock watched_tickers against concurrent writers. Readers unaffected.
+    """Lock watched_tickers against concurrent writers, or REFUSE TO RUN.
 
     SHARE ROW EXCLUSIVE blocks INSERT/UPDATE/DELETE and other lock holders,
     but not plain SELECT, so the product stays readable while cleanup runs.
 
-    Must be called BEFORE the plan is built: the whole point is that the row
-    set cannot change between the fingerprint check and the UPDATE.
+    Called BEFORE the plan is built: the row set must not change between the
+    fingerprint check and the UPDATE.
+
+    POSTGRESQL ONLY, deliberately. The rehearsal may degrade to a no-op on
+    other dialects because it only reads; a MUTATING executor may not. This
+    executor's correctness depends on holding the lock, so a dialect that
+    cannot take it is refused outright rather than silently proceeding
+    unlocked. Detection failure is refused for the same reason: not knowing
+    whether the lock was taken is indistinguishable from not taking it.
+
+    There is no execution path that continues without the lock. Raises
+    UnsupportedDialectError before any selection, audit row or DML.
     """
     from sqlalchemy import text
     try:
         dialect = session.bind.dialect.name  # type: ignore[union-attr]
-    except Exception:
-        return "unknown"
-    if dialect == "postgresql":
-        await session.execute(
-            text("LOCK TABLE watched_tickers IN SHARE ROW EXCLUSIVE MODE"))
-        return "postgresql:share_row_exclusive"
-    return "%s:not_supported" % dialect
+    except Exception as exc:
+        raise UnsupportedDialectError("dialect_detection_failed") from exc
+    if dialect != "postgresql":
+        raise UnsupportedDialectError("unsupported_dialect")
+    await session.execute(
+        text("LOCK TABLE watched_tickers IN SHARE ROW EXCLUSIVE MODE"))
+    return "postgresql:share_row_exclusive"
 
 
 # ---------------------------------------------------------------------------
@@ -209,6 +227,42 @@ async def audited_row_ids(session, operation_ref: str) -> List[str]:
         .where(AuditLog.resource_id.like(prefix + "%"))
     )
     return [rid[len(prefix):] for (rid,) in result.all() if rid]
+
+
+async def rollback_operation(session, operation_ref: str) -> int:
+    """Reactivate exactly the rows one cleanup operation deactivated.
+
+    Atomic and fail-closed: every audited row must be restored, or the caller
+    must roll back. A partial restoration is never acceptable -- it would
+    leave the watchlist in a state neither the cleanup nor the rollback
+    describes. Raises ExecutionError on any shortfall.
+
+    Deliberately NOT exposed through the CLI. Rollback is its own approval.
+
+    ORDERING CONSTRAINT -- read before using this after Phase C:
+    reactivating these rows RECREATES the duplicates by design. Once the two
+    partial unique indexes exist, that violates them and the UPDATE will fail.
+    Rollback after the indexes are deployed therefore requires dropping them
+    first. This helper refuses rather than pretending otherwise: the caller
+    sees the integrity error and must make that call deliberately.
+    """
+    from sqlalchemy import update
+    from app.db.models import WatchedTicker
+
+    row_ids = await audited_row_ids(session, operation_ref)
+    if not row_ids:
+        raise ExecutionError("no_audited_rows_for_operation")
+
+    result = await session.execute(
+        update(WatchedTicker)
+        .where(WatchedTicker.id.in_(row_ids))
+        .values(active=True, updated_at=_now())
+        .execution_options(synchronize_session=False)
+    )
+    restored = int(result.rowcount or 0)
+    if restored != len(row_ids):
+        raise ExecutionError("rollback_row_count_mismatch")
+    return restored
 
 
 # ---------------------------------------------------------------------------
@@ -415,6 +469,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     try:
         asyncio.set_event_loop(loop)
         report = loop.run_until_complete(_run())
+    except UnsupportedDialectError as exc:
+        _emit(dict(base, error="unsupported_database",
+                   error_type=_sanitise(exc), reason=str(exc)))
+        return 4
     except VerificationError as exc:
         _emit(dict(base, error="verification_failed",
                    error_type=_sanitise(exc), reason=str(exc)))
