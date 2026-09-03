@@ -675,3 +675,82 @@ def test_executor_reuses_the_rehearsal_module_not_a_copy():
     assert "partition_by" not in joined
     assert X.R.build_plan is R.build_plan
     assert X.R.plan_fingerprint is R.plan_fingerprint
+
+
+# ===========================================================================
+# § AUDIT WRITE MUST NOT FAIL OPEN
+#
+# account_import_service._audit swallows exceptions so audit failures never
+# block a user action. That trade-off is wrong for cleanup: a run whose
+# rollback record failed to write must not commit. These tests exercise
+# write_audit's OWN error propagation, not a substituted stub.
+# ===========================================================================
+
+class _FlushFails:
+    """Session whose flush() fails — i.e. the audit INSERT is rejected."""
+
+    def __init__(self, inner):
+        self._inner = inner
+        self.added = 0
+
+    def __getattr__(self, name):
+        return getattr(self._inner, name)
+
+    def add(self, obj):
+        self.added += 1
+        return self._inner.add(obj)
+
+    async def flush(self, *a, **k):
+        raise RuntimeError("audit insert rejected by the database")
+
+
+def test_write_audit_propagates_a_flush_failure():
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(3)])
+        async with maker() as db:
+            plan = await R.build_plan(db)
+            with pytest.raises(RuntimeError):
+                await X.write_audit(_FlushFails(db), uuid.uuid4().hex, plan)
+            await db.rollback()
+
+    _run(body)
+
+
+def test_audit_flush_failure_rolls_the_whole_cleanup_back():
+    """End to end: the audit INSERT fails, so no row may be deactivated."""
+    async def body(maker):
+        await _seed(maker, [(OWNER_1, "AAA", i, True) for i in range(4)])
+        before = await _counts(maker)
+        exp, fp = await _expectations(maker)
+
+        async with maker() as inner:
+            wrapped = _FlushFails(inner)
+            with pytest.raises(RuntimeError):
+                await X.execute_cleanup(wrapped, exp, fp, uuid.uuid4().hex)
+            await inner.rollback()
+
+        assert await _counts(maker) == before, (
+            "a rejected audit write must leave every row untouched"
+        )
+
+    _run(body)
+
+
+def test_write_audit_contains_no_blanket_exception_suppression():
+    """Guard the regression directly, in code rather than prose."""
+    import io
+    import tokenize
+
+    src = _EXEC_PATH.read_text()
+    start = src.index("async def write_audit(")
+    end = src.index("async def audited_row_ids(")
+    body = src[start:end]
+    code = []
+    for tok in tokenize.generate_tokens(io.StringIO(body).readline):
+        if tok.type in (tokenize.COMMENT, tokenize.STRING):
+            continue
+        code.append(tok.string)
+    joined = " ".join(code)
+    assert "except" not in joined, (
+        "write_audit must not catch anything — audit failure must abort"
+    )
