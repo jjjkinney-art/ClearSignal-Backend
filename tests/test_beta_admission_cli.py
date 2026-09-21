@@ -51,13 +51,31 @@ FORBIDDEN_OUTPUT = BOUND + ["@example.test", "sqlite", "aiosqlite", ".db", PEPPE
 # Fixtures
 # ---------------------------------------------------------------------------
 
+_MIGRATE = """
+import sys
+from alembic import command
+from alembic.config import Config
+root, path, revision = sys.argv[1:4]
+cfg = Config(root + "/alembic.ini")
+cfg.set_main_option("script_location", root + "/alembic")
+cfg.set_main_option("sqlalchemy.url", "sqlite+aiosqlite:///" + path)
+command.upgrade(cfg, revision)
+"""
+
+
 def _migrate(path: str, revision: str = "head") -> None:
-    from alembic import command
-    from alembic.config import Config
-    cfg = Config(os.path.join(ROOT, "alembic.ini"))
-    cfg.set_main_option("script_location", os.path.join(ROOT, "alembic"))
-    cfg.set_main_option("sqlalchemy.url", f"sqlite+aiosqlite:///{path}")
-    command.upgrade(cfg, revision)
+    """Migrate in a SEPARATE PROCESS, exactly as a deploy does.
+
+    alembic/env.py calls logging.config.fileConfig(), whose default
+    disable_existing_loggers=True silently disables every logger that already
+    exists in the calling process. Running it inside pytest disabled
+    app.db.repositories.watchlist_repo for every later test, which broke an
+    unrelated caplog assertion in the full suite. Out of process, it can't.
+    """
+    subprocess.run(
+        [sys.executable, "-c", _MIGRATE, ROOT, path, revision],
+        cwd=ROOT, check=True, capture_output=True, timeout=120,
+    )
 
 
 def _seed(path: str) -> None:
