@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0005_watchlist_unique_active"
+_HEAD = "0006_access_grants"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -278,3 +278,83 @@ class TestDataPreservation:
             assert {"canonical_severity", "severity_rank"} <= cols
             sev = cn.execute(text("SELECT canonical_severity FROM delivery_ledger WHERE id='d1'")).scalar()
             assert sev is None  # documented: downgrade discards the column data, not the row
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 0.15 — access_grants (0006)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestAccessGrantsMigration:
+    """Upgrade and downgrade behaviour of the admission-grant table.
+
+    Explicit in both directions: the upgrade must create the table with its
+    replay guard, and the downgrade must remove it and nothing else — no user,
+    watchlist or portfolio row may be touched by either direction.
+    """
+
+    _PREVIOUS = "0005_watchlist_unique_active"
+
+    def test_upgrade_creates_table_with_the_replay_guard(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        insp = _insp(p)
+
+        assert "access_grants" in insp.get_table_names()
+        cols = {c["name"] for c in insp.get_columns("access_grants")}
+        assert {
+            "id", "kind", "email_locator", "subject", "status",
+            "expires_at", "redeemed_at", "revoked_at", "note_ref",
+            "created_at", "updated_at",
+        } <= cols
+
+        # The UNIQUE subject is the guard that does not depend on app code.
+        unique_cols = [
+            tuple(c["column_names"]) for c in insp.get_unique_constraints("access_grants")
+        ]
+        indexed_unique = [
+            tuple(i["column_names"]) for i in insp.get_indexes("access_grants") if i["unique"]
+        ]
+        assert ("subject",) in unique_cols or ("subject",) in indexed_unique
+
+    def test_downgrade_removes_only_this_table(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        before = set(_insp(p).get_table_names()) - {"access_grants"}
+
+        command.downgrade(cfg, self._PREVIOUS)
+
+        after = set(_insp(p).get_table_names())
+        assert "access_grants" not in after
+        assert before <= after, "downgrade must not remove anything else"
+        assert _rev(p) == self._PREVIOUS
+
+    def test_upgrade_downgrade_roundtrip_preserves_user_rows(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, self._PREVIOUS)
+
+        eng = create_engine(f"sqlite:///{p}")
+        with eng.begin() as cn:
+            cn.execute(text(
+                "INSERT INTO users (id, email, email_verified, account_type, "
+                "is_active, plan, created_at, updated_at) VALUES "
+                "('u-1', 'row@example.test', 0, 'individual', 1, 'free', "
+                "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
+            ))
+
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+
+        with eng.connect() as cn:
+            assert cn.execute(text("SELECT count(*) FROM users")).scalar() == 1
+
+    def test_upgrade_is_idempotent_over_an_existing_table(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+        # Table already gone; re-running upgrade recreates it cleanly.
+        command.upgrade(cfg, "head")
+        assert "access_grants" in _insp(p).get_table_names()
+        assert _rev(p) == _HEAD

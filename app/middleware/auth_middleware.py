@@ -250,9 +250,16 @@ async def _resolve_local_user_id(request: Request) -> Optional[str]:
 
     async with get_session() as session:
         if session is None:
+            # Persistence unavailable. NOT an admission denial: leave the flag
+            # alone so the caller gets the ordinary unauthenticated answer
+            # rather than a misleading "not in the beta".
             return None
         user = await resolve_user_from_jwt(session, claims)
         if user is None:
+            # The token verified but the identity was not admitted. Commit so
+            # the sanitised denial audit row survives, then mark the request.
+            request.state.admission_denied = True
+            await session.commit()
             return None
         await session.commit()
         return str(user.id)
@@ -271,6 +278,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next) -> Response:
         request.state.auth_claims = None
+        request.state.admission_denied = False
         try:
             user_id, auth_subject, is_authenticated = await _resolve_identity(request)
             if is_authenticated:

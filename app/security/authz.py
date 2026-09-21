@@ -22,10 +22,27 @@ def is_admin(user_id: str) -> bool:
     return user_id in settings.admin_user_ids_list
 
 
+def identity_is_bound(request: Request) -> bool:
+    """True when this request's local user was resolved from a verified subject.
+
+    Section 0.15. Administrator status attaches to an explicitly bound
+    identity, never to an address. Since email-based binding no longer
+    exists, an authenticated request always carries the subject it resolved
+    by; this asserts that structural fact at the privilege boundary rather
+    than assuming it.
+    """
+    if not settings.auth_enabled:
+        return True    # bypass mode: single-tenant operator, no JWT at all
+    state = getattr(request, "state", None)
+    if not bool(getattr(state, "is_authenticated", False)):
+        return False
+    return bool(getattr(state, "auth_subject", None))
+
+
 def require_admin(request: Request) -> str:
     """Return the acting user_id if admin; raise 401 (unauth) or 403 (non-admin)."""
     user_id = require_user_id(request)   # 401 when AUTH_ENABLED and no valid token
-    if not is_admin(user_id):
+    if not is_admin(user_id) or not identity_is_bound(request):
         raise HTTPException(status_code=403, detail="Administrator access required.")
     return user_id
 

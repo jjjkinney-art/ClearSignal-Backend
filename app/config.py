@@ -714,6 +714,36 @@ class Settings(BaseSettings):
     # =false to disable the boundary check (validators remain importable/tested).
     content_integrity_enabled: bool = True
 
+    # ── Section 0.15 · controlled-beta admission gate ─────────────────────
+    # Three modes, ALWAYS supplied as an explicit environment value:
+    #
+    #   "off"      (DEFAULT) — no admission gate. A verified identity may be
+    #                          provisioned exactly as it is today.
+    #   "shadow"            — the admission decision is computed and audited,
+    #                          but a denial does NOT block provisioning.
+    #   "enforce"           — a new identity is provisioned ONLY when it
+    #                          redeems an active operator grant.
+    #
+    # Unset, empty, malformed or unknown values resolve to "off": they
+    # PRESERVE CURRENT PRODUCTION BEHAVIOUR rather than silently enforcing.
+    # A typo must never lock an approved operator out of production, and
+    # enforcement must never switch on by accident — it is a deliberate
+    # configuration step taken after grants exist.
+    #
+    # This is NOT the fail-closed part of the design. The identity-binding
+    # invariants (bind by `sub` only, never bind by email, never overwrite an
+    # existing subject, deny on conflict) are unconditional and apply in every
+    # mode, including "off".
+    beta_admission_mode: str = "off"
+
+    # Provider identities accepted by the admission gate, comma separated.
+    # Compared against the GoTrue-controlled app_metadata provider chain.
+    beta_admission_providers: str = "google"
+
+    # Optional server-side pepper for the grant email locator (HMAC key).
+    # Changing it invalidates every existing unredeemed grant by design.
+    beta_admission_pepper: str = ""
+
     # ── Derived helpers (properties, not settings fields) ─────────────────
     @property
     def is_production(self) -> bool:
@@ -726,6 +756,20 @@ class Settings(BaseSettings):
     @property
     def cors_allow_origins_list(self) -> list:
         return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+
+    @property
+    def beta_admission_mode_normalized(self) -> str:
+        """Resolve the admission mode, defaulting UNKNOWN VALUES TO "off".
+
+        Deliberate: an unreadable flag preserves current behaviour instead of
+        enforcing a gate nobody configured. Enforcement is opt-in only.
+        """
+        raw = (self.beta_admission_mode or "").strip().lower()
+        return raw if raw in ("off", "shadow", "enforce") else "off"
+
+    @property
+    def beta_admission_providers_list(self) -> list:
+        return [p.strip().lower() for p in self.beta_admission_providers.split(",") if p.strip()]
 
     @property
     def admin_user_ids_list(self) -> list:

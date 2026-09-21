@@ -1603,6 +1603,52 @@ class UserSettings(Base):
 
 
 # ---------------------------------------------------------------------------
+# 34b. access_grants  (Section 0.15 — controlled-beta admission)
+# ---------------------------------------------------------------------------
+
+class AccessGrant(Base):
+    """An operator approval that admits exactly one Supabase identity.
+
+    Two kinds of grant:
+
+      kind='invite'   Created BEFORE the person has ever authenticated, when
+                      no `sub` exists yet. It carries `email_locator` only —
+                      an HMAC of the normalised address, never the address.
+                      The locator is a ONE-TIME ADMISSION LOOKUP KEY. It is
+                      never an identity key: the moment the grant is redeemed
+                      the row is bound to `subject` and every later login
+                      resolves by `subject` alone.
+
+      kind='subject'  Created for an identity that already exists (the
+                      grandfathering path). Bound to `subject` from birth and
+                      carries no locator at all.
+
+    `subject` is UNIQUE: one identity can hold at most one grant, so a second
+    grant can never be redeemed by an already-admitted subject.
+
+    Nothing here stores an email address, a name or a user id.
+    """
+
+    __tablename__ = "access_grants"
+
+    id            = Column(String(36),  primary_key=True, default=_uuid)
+    kind          = Column(String(20),  nullable=False, default="invite")
+    # HMAC-SHA256 hex of the normalised email. NULL for kind='subject'.
+    email_locator = Column(String(64),  nullable=True,  default=None, index=True)
+    # Supabase JWT 'sub'. NULL until redeemed. Unique when present.
+    subject       = Column(String(255), nullable=True,  default=None, unique=True)
+    status        = Column(String(20),  nullable=False, default="approved")
+    expires_at    = Column(DateTime(timezone=True), nullable=True, default=None)
+    redeemed_at   = Column(DateTime(timezone=True), nullable=True, default=None)
+    revoked_at    = Column(DateTime(timezone=True), nullable=True, default=None)
+    # Opaque operator reference into the private invitation ledger.
+    note_ref      = Column(String(64),  nullable=True,  default=None)
+    created_at    = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at    = Column(DateTime(timezone=True), nullable=False, default=_now,
+                           onupdate=_now)
+
+
+# ---------------------------------------------------------------------------
 # 35. audit_log  (append-only mutation trail — NO UPDATE OR DELETE)
 # ---------------------------------------------------------------------------
 
