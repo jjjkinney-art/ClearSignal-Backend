@@ -80,6 +80,9 @@ DENY_UNTRUSTED_PROVIDER = "untrusted_provider"
 DENY_MALFORMED = "malformed_claims"
 DENY_RACE = "redemption_lost"
 DENY_CONFLICT = "identity_conflict"
+DENY_REVOKED = "grant_revoked"
+DENY_EXPIRED = "grant_expired"
+DENY_CONFIG = "admission_config_invalid"
 
 
 def _now() -> datetime:
@@ -116,21 +119,27 @@ def normalize_email(raw: Optional[str]) -> str:
 def email_locator(raw_email: str, pepper: Optional[str] = None) -> str:
     """HMAC-SHA256 of the normalised address. The address itself is discarded.
 
-    A pepper makes the stored locator useless to anyone who can read the table
-    but not the server configuration. Without one this is still a one-way
-    digest, so the table never contains a readable address either way.
+    The pepper is MANDATORY and has NO fallback. An unkeyed digest would be
+    trivially guessable offline: an attacker with read access to the table
+    could hash a list of candidate addresses and learn exactly who has been
+    invited. Every caller that creates, looks up or redeems a locator goes
+    through here, so a missing or weak pepper refuses the operation outright.
     """
+    from app.config import AdmissionConfigError, admission_pepper_ok, settings
+
     if pepper is None:
-        try:
-            from app.config import settings
-            pepper = settings.beta_admission_pepper
-        except Exception:
-            pepper = ""
+        pepper = getattr(settings, "beta_admission_pepper", "")
+    if not admission_pepper_ok(pepper):
+        # Names the variable and the rule; never the value.
+        raise AdmissionConfigError(
+            "BETA_ADMISSION_PEPPER is required for email-locator grants"
+        )
+
     normalized = normalize_email(raw_email)
     if not normalized:
         return ""
     return hmac.new(
-        (pepper or "clearsignal-admission").encode("utf-8"),
+        pepper.strip().encode("utf-8"),
         normalized.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
@@ -460,13 +469,20 @@ async def redeem_for_identity(session, identity: TrustedIdentity) -> AdmissionDe
     from app.db.models import AccessGrant
 
     # An identity that already holds a grant is admitted without consuming
-    # another one. This is the replay-safe path for a repeated first login.
+    # another one — but the grant must still be LIVE. This is the path every
+    # established account takes on every login under enforcement, so it is
+    # also where revocation and expiry actually bite.
     held = (await session.execute(
         select(AccessGrant).where(AccessGrant.subject == identity.subject)
     )).scalars().first()
     if held is not None:
+        if held.status == STATUS_REVOKED:
+            return AdmissionDecision(False, DENY_REVOKED)
         if held.status != STATUS_APPROVED:
             return AdmissionDecision(False, DENY_NO_GRANT)
+        expires = _aware(held.expires_at)
+        if expires is not None and expires <= _now():
+            return AdmissionDecision(False, DENY_EXPIRED)
         return AdmissionDecision(True, grant_id=str(held.id))
 
     if not identity.email:
@@ -506,10 +522,18 @@ async def redeem_for_identity(session, identity: TrustedIdentity) -> AdmissionDe
     return AdmissionDecision(False, DENY_NO_GRANT if candidates == [] else DENY_RACE)
 
 
-async def evaluate_admission(session, claims: Dict[str, Any]) -> AdmissionDecision:
-    """Decide whether an unknown identity may be provisioned. Fail-closed.
+async def evaluate_admission(
+    session,
+    claims: Dict[str, Any],
+    *,
+    user_exists: bool = False,
+) -> AdmissionDecision:
+    """Decide whether this identity may be admitted. Fail-closed.
 
-    Called only when no local user is bound to this subject yet.
+    Called for EVERY identity under shadow and enforce, not only unknown
+    ones. ``user_exists`` is recorded for audit clarity; it deliberately does
+    NOT relax the decision. An established account with no live grant is
+    denied under enforcement, which is what makes revocation real.
     """
     identity = trusted_identity(claims)
     if identity is None:
@@ -522,5 +546,7 @@ async def evaluate_admission(session, claims: Dict[str, Any]) -> AdmissionDecisi
     try:
         return await redeem_for_identity(session, identity)
     except Exception as exc:
+        # Includes a missing/weak pepper: a locator cannot be computed, so no
+        # admission decision can be made, so nobody is admitted.
         logger.warning("[admission] redemption failed closed: %r", type(exc).__name__)
         return AdmissionDecision(False, DENY_MALFORMED)

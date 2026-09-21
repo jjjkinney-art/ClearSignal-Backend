@@ -111,15 +111,15 @@ async def resolve_user_from_jwt(
 
     ref = grants.subject_ref(auth_subject)
 
-    # Fast path — existing user already bound to this Supabase subject.
-    # This is the ONLY way an established identity resolves, in every mode.
-    user = await get_user_by_auth_subject(session, auth_subject)
-    if user is not None:
-        await touch_last_sign_in(session, user.id)
-        return user
-
     # ------------------------------------------------------------------
-    # Unknown subject. Everything below is first-login admission.
+    # Admission runs for EVERY identity, established or new.
+    #
+    # An earlier revision returned an already-bound user here, before any
+    # grant was consulted. That made revocation meaningless under enforcement:
+    # the one account you most want to be able to cut off — an existing one —
+    # was the one the gate never looked at. The lookup by subject still
+    # happens below, but it no longer short-circuits the decision, and it no
+    # longer writes (touch_last_sign_in) before the decision is made.
     # ------------------------------------------------------------------
     identity = grants.trusted_identity(payload)
     if identity is None or identity.is_anonymous or not identity.email:
@@ -133,6 +133,53 @@ async def resolve_user_from_jwt(
         )
         logger.info("[supabase_auth] admission denied subject_ref=%s", ref)
         return None
+
+    # Established identity? Looked up now, acted on only after the gate.
+    user = await get_user_by_auth_subject(session, auth_subject)
+
+    # Admission gate. "off" leaves admission as it was; "shadow" evaluates
+    # every identity and audits without denying; "enforce" requires an active
+    # grant bound to THIS subject, for established accounts as well as new ones.
+    from app.config import AdmissionConfigError
+    try:
+        from app.config import settings
+        mode = settings.beta_admission_mode_normalized
+    except AdmissionConfigError:
+        # An unreadable policy is not an open door. Deny, and say nothing
+        # about the configured value.
+        await grants.audit_admission(
+            session, action=grants.ACTION_DENY, ref=ref, detail=grants.DENY_CONFIG,
+        )
+        logger.warning(
+            "[supabase_auth] admission configuration invalid; denying subject_ref=%s", ref,
+        )
+        return None
+
+    # Narrow, explicit exemption: the system sentinel only. It is the
+    # single-tenant/bypass identity the product itself runs as, never a
+    # human account, and it holds no grant. Nothing else is exempt — an
+    # administrator is an ordinary human identity to this gate.
+    is_system_identity = auth_subject == SYSTEM_DEFAULT_USER_ID
+
+    if mode in ("shadow", "enforce") and not is_system_identity:
+        decision = await grants.evaluate_admission(
+            session, payload, user_exists=user is not None,
+        )
+        if not decision.allowed:
+            await grants.audit_admission(
+                session, action=grants.ACTION_DENY, ref=ref, detail=decision.reason,
+            )
+            logger.info(
+                "[supabase_auth] admission denied subject_ref=%s mode=%s", ref, mode,
+            )
+            if mode == "enforce":
+                # Deny before any write: no provisioning, no rebinding, no
+                # import, not even a last-sign-in timestamp.
+                return None
+
+    if user is not None:
+        await touch_last_sign_in(session, user.id)
+        return user
 
     # Identity conflict — a different local row already owns this address.
     #
@@ -149,26 +196,6 @@ async def resolve_user_from_jwt(
         )
         logger.info("[supabase_auth] identity conflict subject_ref=%s", ref)
         return None
-
-    # Admission gate. "off" preserves current behaviour; "shadow" computes and
-    # audits the decision without blocking; "enforce" requires a grant.
-    try:
-        from app.config import settings
-        mode = settings.beta_admission_mode_normalized
-    except Exception:
-        mode = "off"
-
-    if mode in ("shadow", "enforce"):
-        decision = await grants.evaluate_admission(session, payload)
-        if not decision.allowed:
-            await grants.audit_admission(
-                session, action=grants.ACTION_DENY, ref=ref, detail=decision.reason,
-            )
-            logger.info(
-                "[supabase_auth] admission denied subject_ref=%s mode=%s", ref, mode,
-            )
-            if mode == "enforce":
-                return None
 
     # First login — provision a new user with profile + settings
     user = await provision_new_user(

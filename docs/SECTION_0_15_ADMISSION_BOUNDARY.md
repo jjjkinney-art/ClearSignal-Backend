@@ -18,6 +18,9 @@ local user and full product access. The threats that matter:
 | T4 | An attacker sets `user_metadata.email` to a victim's address | The email fallback read it | Never read |
 | T5 | An anonymous or provider-less identity is provisioned | Would be provisioned | Denied in every mode |
 | T6 | One invitation is redeemed by several identities | n/a | Conditional UPDATE plus a UNIQUE subject |
+| T6b | A revoked or expired account keeps working | n/a | Every login under `enforce` needs a live grant bound to its `sub` |
+| T6c | A typo in the mode silently reopens admission | n/a | Unsupported values abort startup |
+| T6d | The locator table is offline-guessable | n/a | Mandatory pepper; no fallback key |
 | T7 | Denials reveal whether an address is invited | n/a | One fixed 403 for every reason |
 | T8 | Operator work leaks identities into logs, arguments or output | Emails in INFO logs | Opaque refs and aggregate counts only |
 
@@ -74,15 +77,15 @@ Stated exactly, and enforced in every mode including `off`:
 ## 4. First-login grant lifecycle
 
 ```
-operator approves          person signs in                later logins
-(masked address prompt)    (Google, first time)
+operator approves          person signs in                every later login
+(masked address prompt)    (Google, first time)           (enforce / shadow)
         │                          │                           │
-   HMAC locator                redeem: conditional UPDATE   lookup by sub
-   status=approved     ──►     subject := sub               (no grant read)
-   subject=NULL                redeemed_at := now
-        │                          │
-   revoke ─► status=revoked    expired / revoked / already
-                               redeemed ─► generic denial
+   HMAC locator                redeem: conditional UPDATE   bound grant for THIS
+   status=approved     ──►     subject := sub               sub must be approved
+   subject=NULL                redeemed_at := now           and unexpired
+        │                          │                           │
+   revoke ─► status=revoked    expired / revoked / already   revoked / expired /
+                               redeemed ─► generic denial    missing ─► denial
 ```
 
 * **Atomic.** Redemption is `UPDATE … WHERE subject IS NULL AND redeemed_at
@@ -91,8 +94,18 @@ operator approves          person signs in                later logins
 * **Replay-safe.** A repeated first login finds the grant already bound to
   the same subject and is admitted without consuming another. A different
   subject presenting the same address is denied.
-* **Revocation after admission** does not delete the user; it removes future
-  admission. Removing an existing user's access is a separate operator action.
+* **Revocation is real.** Under `enforce`, every login — established accounts
+  included — requires an approved, unexpired grant bound to that exact `sub`.
+  Revoking a grant denies that account's **next** request. The user row is not
+  deleted: revocation removes access, it does not un-provision.
+* **Denial writes nothing about the user.** The decision is made before any
+  write, so a denied login is not provisioned, not rebound, not imported and
+  not even stamped with a sign-in time. The only trace is one sanitised
+  `deny` audit row keyed by an opaque subject reference.
+* **Exemption is narrow.** Only the system sentinel identity — the one the
+  product runs as internally, never a human — is exempt. Administrators are
+  not exempt: no emergency-access bypass exists, and none should be added
+  without its own design and approval.
 
 ## 5. Existing-account transition
 
@@ -109,32 +122,51 @@ address or count appears in source, migrations, tests, documentation or any
 commit**. Rows with no `auth_subject` are skipped, never granted. Output is
 aggregate counts only. It has **not been run**.
 
-Established accounts do not actually depend on this to keep working: they
-resolve by `sub` and never consult a grant. The grandfathering exists so the
-grant table is a complete record of who is authorised, and so revocation is
-possible for them too.
+**This is a mandatory prerequisite for `enforce`, not an optional tidy-up.**
+Under enforcement every established account needs a live grant bound to its
+own `sub`. Enable `enforce` without running this and every existing account —
+including the administrator's — is denied on its next request. A test proves
+exactly that lockout, and that grandfathering resolves it.
+
+(An earlier draft of this section claimed established accounts kept working
+without grandfathering. That was true only because the subject fast path
+skipped the gate entirely, which also made revocation meaningless. The fast
+path has been corrected; the claim is withdrawn.)
 
 ## 6. Default-off rollout sequence
 
 `BETA_ADMISSION_MODE` ∈ `off` (default) · `shadow` · `enforce`.
 
-**Unset, empty, malformed or unknown resolves to `off`.** The deliberate
-choice is to preserve current behaviour rather than to enforce: a typo must
-never lock the operator out of production, and enforcement must never begin
-by accident. The fail-closed half of the design — the binding invariants in
-§3 — is unconditional and applies in `off` too.
+**Only unset or empty resolves to `off`** — that is the environment's only way
+of saying "nothing configured". Any other value that is not exactly one of the
+three supported words (after trimming and case-folding) is a **configuration
+error**: startup aborts with a message naming the variable and the rule, never
+the value. A typo such as `enfore` therefore can never silently reopen
+admission. If an invalid value ever reaches a request anyway, that request is
+denied, not admitted.
+
+`BETA_ADMISSION_PEPPER` (at least 32 characters) is **required** for any
+operation that creates, looks up or redeems an email-locator grant, and startup
+aborts in `shadow` or `enforce` without it. There is no fallback key: an unkeyed
+digest would let anyone who can read the table test candidate addresses offline
+and learn who was invited. `off` starts without a pepper.
+
+The binding invariants in §3 are unconditional and apply in `off` too.
 
 | Step | Action | Effect |
 |---|---|---|
 | 1 | Deploy this branch | Binding invariants live; gate off; behaviour otherwise unchanged |
-| 2 | `grandfather-existing --execute` | Existing identities hold subject grants |
-| 3 | `BETA_ADMISSION_MODE=shadow` | Denials computed and audited; nobody blocked |
-| 4 | Review the audit aggregate | Confirms the decision matches expectation |
-| 5 | `approve` each invitee | Grants exist before any invitation is sent |
-| 6 | `BETA_ADMISSION_MODE=enforce` | Open signup closes |
+| 2 | Set `BETA_ADMISSION_PEPPER` (≥ 32 chars, secret) | Required before any locator exists |
+| 3 | `grandfather-existing` dry run, then `--execute` | **Mandatory.** Every existing identity holds a subject grant |
+| 4 | `BETA_ADMISSION_MODE=shadow` | Every identity evaluated and audited; nobody blocked |
+| 5 | Review the audit aggregate: denials for existing accounts must be **zero** | Proves step 3 was complete |
+| 6 | `approve` each invitee | Grants exist before any invitation is sent |
+| 7 | `BETA_ADMISSION_MODE=enforce` | Open signup closes; revocation takes effect |
 
-Steps 2–6 are configuration and operator actions requiring separate approval.
-**Until step 6, production signup remains open.**
+Steps 2–7 are configuration and operator actions requiring separate approval.
+**Until step 7, production signup remains open.** Do not skip step 5: a
+non-zero count of existing-account denials in shadow means step 7 would lock
+someone out.
 
 ## 7. Operator procedure
 
@@ -161,8 +193,10 @@ sign-in and never learns whether an address or invitation exists.
 
 Ordering matters, and the safe direction is the simple one:
 
-1. **Configuration first:** set `BETA_ADMISSION_MODE=off`. That alone
-   restores pre-section admission behaviour, with no deploy.
+1. **Configuration first:** set `BETA_ADMISSION_MODE=off` (or unset it). That
+   alone restores pre-section admission behaviour, with no deploy. Do **not**
+   "disable" the gate with any other value: an unsupported value now aborts
+   startup.
 2. **Code:** revert the branch. The binding invariants go away with it, which
    reintroduces the T2/T3 rebinding exposure; prefer step 1.
 3. **Migration:** `alembic downgrade` drops `access_grants`. Do this only

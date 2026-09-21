@@ -14,6 +14,11 @@ Test matrix
   10. TestGrandfathering         — existing identities authorised by subject
   11. TestLogSanitisation        — no raw address in INFO logs
   12. TestOperatorOutput         — aggregate counts and opaque refs only
+  13. TestEstablishedAccountEnforcement
+                                 — existing ordinary and admin accounts with
+                                   active / missing / expired / revoked grants
+                                   in off / shadow / enforce
+  14. TestPepperRequired         — no locator operation without a strong pepper
 """
 
 from __future__ import annotations
@@ -58,13 +63,34 @@ async def session():
     await engine.dispose()
 
 
+#: A pepper of the required strength. Test-only, not a production value.
+TEST_PEPPER = "t" * 48
+
+
 @pytest.fixture
 def mode(monkeypatch):
-    """Set the admission mode for one test."""
+    """Set the admission mode for one test, with a valid pepper configured.
+
+    shadow/enforce cannot evaluate a locator without a pepper, so the fixture
+    supplies one. The tests that assert the pepper requirement itself clear it
+    deliberately.
+    """
     from app.config import settings
+
+    monkeypatch.setattr(settings, "beta_admission_pepper", TEST_PEPPER, raising=False)
 
     def _set(value):
         monkeypatch.setattr(settings, "beta_admission_mode", value, raising=False)
+    return _set
+
+
+@pytest.fixture
+def pepper(monkeypatch):
+    """Set or clear the pepper for one test."""
+    from app.config import settings
+
+    def _set(value):
+        monkeypatch.setattr(settings, "beta_admission_pepper", value, raising=False)
     return _set
 
 
@@ -90,15 +116,66 @@ class TestGateDefault:
         from app.config import Settings
         assert Settings().beta_admission_mode_normalized == "off"
 
-    @pytest.mark.parametrize("value", ["", "   ", "ENFORCED", "true", "1", "yes",
-                                       "enforce!", "shadow mode", "off\n"])
-    def test_malformed_and_unknown_resolve_to_off(self, value, mode):
+    def test_unset_is_off(self):
+        from app.config import resolve_admission_mode
+        assert resolve_admission_mode(None) == "off"
+
+    @pytest.mark.parametrize("value", ["", "   ", "\n", "\t "])
+    def test_empty_is_off_because_that_is_how_unset_arrives(self, value):
+        """An environment variable cannot express None; "" IS unset."""
+        from app.config import resolve_admission_mode
+        assert resolve_admission_mode(value) == "off"
+
+    @pytest.mark.parametrize("value", [
+        "ENFORCED",     # typo of a real word
+        "enfore",       # plain typo
+        "true", "1", "yes", "on",
+        "enforce!",     # punctuation-polluted
+        " shadow mode ",  # whitespace-polluted unsupported value
+        "off\nenforce",   # smuggled second value
+        "OFF ;",
+    ])
+    def test_unknown_or_malformed_fails_closed(self, value):
+        """An explicitly supplied unsupported value must NOT read as "off".
+
+        Silently degrading a typo to "off" would reopen admission while the
+        operator believed the gate was on. It is a configuration error.
+        """
+        from app.config import AdmissionConfigError, resolve_admission_mode
+        with pytest.raises(AdmissionConfigError):
+            resolve_admission_mode(value)
+
+    @pytest.mark.parametrize("value", [1, 0, True, [], {}, object()])
+    def test_wrong_type_fails_closed(self, value):
+        from app.config import AdmissionConfigError, resolve_admission_mode
+        with pytest.raises(AdmissionConfigError):
+            resolve_admission_mode(value)
+
+    def test_error_never_discloses_the_configured_value(self):
+        from app.config import AdmissionConfigError, resolve_admission_mode
+        secret = "enforce-but-with-a-typo-and-a-secret"
+        with pytest.raises(AdmissionConfigError) as exc:
+            resolve_admission_mode(secret)
+        assert secret not in str(exc.value)
+
+    def test_startup_validation_rejects_a_bad_mode(self):
+        from app.config import AdmissionConfigError, validate_admission_config
+
+        class Bad:
+            beta_admission_mode = "enfore"
+            beta_admission_pepper = TEST_PEPPER
+
+        with pytest.raises(AdmissionConfigError):
+            validate_admission_config(Bad())
+
+    @pytest.mark.asyncio
+    async def test_invalid_mode_denies_at_request_time(self, session, monkeypatch):
+        """Defence in depth: if a bad value ever reaches a request, deny."""
         from app.config import settings
-        mode(value)
-        # Deliberate choice: an unreadable flag PRESERVES CURRENT BEHAVIOUR.
-        # It must never silently enforce (locking out approved operators) and
-        # never silently loosen anything beyond today's behaviour.
-        assert settings.beta_admission_mode_normalized == "off"
+        monkeypatch.setattr(settings, "beta_admission_mode", "enfore", raising=False)
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        assert await resolve_user_from_jwt(session, claims()) is None
+        assert await _user_count(session) == 0
 
     @pytest.mark.parametrize("value,expected", [
         ("off", "off"), ("shadow", "shadow"), ("enforce", "enforce"),
@@ -185,7 +262,29 @@ class TestFirstLoginApproved:
         assert user.email == EMAIL_A.lower()
 
     @pytest.mark.asyncio
-    async def test_second_login_resolves_by_subject_without_a_grant(self, session, mode):
+    async def test_second_login_needs_no_second_grant(self, session, mode):
+        """A repeated login reuses the bound grant; it never consumes another."""
+        mode("enforce")
+        from app.services.access_grant_service import create_invite_grant, grant_status_counts
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+
+        await create_invite_grant(session, raw_email=EMAIL_A)
+        first = await resolve_user_from_jwt(session, claims())
+        assert first is not None
+
+        again = await resolve_user_from_jwt(session, claims())
+        assert again is not None and again.id == first.id
+        assert await _user_count(session) == 1
+        counts = await grant_status_counts(session)
+        assert counts["total"] == 1 and counts["approved_redeemed"] == 1
+
+    @pytest.mark.asyncio
+    async def test_revocation_cuts_off_the_bound_account(self, session, mode):
+        """Revoking after admission denies the NEXT login under enforcement.
+
+        The account row is not deleted — revocation removes access, it does
+        not un-provision.
+        """
         mode("enforce")
         from app.services.access_grant_service import create_invite_grant, revoke_grant
         from app.services.supabase_auth_service import resolve_user_from_jwt
@@ -194,11 +293,11 @@ class TestFirstLoginApproved:
         first = await resolve_user_from_jwt(session, claims())
         assert first is not None
 
-        # Even a later revocation does not un-provision; resolution is by sub.
         await revoke_grant(session, subject=SUBJECT_A)
-        again = await resolve_user_from_jwt(session, claims())
-        assert again is not None and again.id == first.id
-        assert await _user_count(session) == 1
+        await session.flush()
+
+        assert await resolve_user_from_jwt(session, claims()) is None
+        assert await _user_count(session) == 1, "the row survives; only access is cut"
 
 
 class TestFirstLoginDenied:
@@ -327,7 +426,8 @@ class TestGrantLifecycle:
         assert await _user_count(session) == 1
 
     @pytest.mark.asyncio
-    async def test_grant_stores_no_address(self, session):
+    async def test_grant_stores_no_address(self, session, pepper):
+        pepper(TEST_PEPPER)
         from sqlalchemy import select
         from app.db.models import AccessGrant
         from app.services.access_grant_service import create_invite_grant
@@ -344,7 +444,8 @@ class TestGrantLifecycle:
 
 class TestConcurrentRedemption:
     @pytest.mark.asyncio
-    async def test_one_grant_admits_exactly_one_of_two_racing_identities(self, tmp_path):
+    async def test_one_grant_admits_exactly_one_of_two_racing_identities(self, tmp_path, mode):
+        mode("enforce")
         """Two different subjects redeem the same grant at once.
 
         A file-backed database, because each connection to an in-memory
@@ -625,7 +726,8 @@ class TestLogSanitisation:
 
 class TestOperatorOutput:
     @pytest.mark.asyncio
-    async def test_status_counts_are_aggregate_only(self, session):
+    async def test_status_counts_are_aggregate_only(self, session, pepper):
+        pepper(TEST_PEPPER)
         from app.services.access_grant_service import create_invite_grant, grant_status_counts
         await create_invite_grant(session, raw_email=EMAIL_A)
         counts = await grant_status_counts(session)
@@ -647,3 +749,276 @@ class TestOperatorOutput:
         ref = subject_ref(SUBJECT_A)
         assert SUBJECT_A not in ref and len(ref) == 12
         assert ref == subject_ref(SUBJECT_A) != subject_ref(SUBJECT_B)
+
+
+# ---------------------------------------------------------------------------
+# 13. Enforcement and revocation for ESTABLISHED accounts
+# ---------------------------------------------------------------------------
+
+async def _establish(session, subject=SUBJECT_A, email=EMAIL_A):
+    """Create an ordinary, subject-bound account the way a first login does."""
+    from app.config import settings
+    from app.services.supabase_auth_service import resolve_user_from_jwt
+    before = settings.beta_admission_mode
+    settings.beta_admission_mode = "off"
+    try:
+        user = await resolve_user_from_jwt(session, claims(subject=subject, email=email))
+    finally:
+        settings.beta_admission_mode = before
+    assert user is not None
+    return user
+
+
+async def _grant_state(session, subject, state):
+    """Put this subject's grant into `state`: active | missing | expired | revoked."""
+    from app.services.access_grant_service import (
+        create_subject_grant, revoke_grant, STATUS_APPROVED,
+    )
+    from sqlalchemy import select
+    from app.db.models import AccessGrant
+
+    if state == "missing":
+        return
+    await create_subject_grant(session, subject=subject)
+    if state == "active":
+        return
+    row = (await session.execute(
+        select(AccessGrant).where(AccessGrant.subject == subject)
+    )).scalars().first()
+    if state == "expired":
+        row.expires_at = datetime.now(timezone.utc) - timedelta(seconds=1)
+        row.status = STATUS_APPROVED
+    elif state == "revoked":
+        await revoke_grant(session, subject=subject)
+    await session.flush()
+
+
+class TestEstablishedAccountEnforcement:
+    """The account the gate most needs to be able to cut off is an existing one.
+
+    An earlier revision returned a subject-bound user before consulting any
+    grant, so revocation did nothing under enforcement. These tests pin the
+    corrected semantics across all three modes.
+    """
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("state", ["active", "missing", "expired", "revoked"])
+    async def test_off_mode_never_denies_an_established_account(self, session, mode, state):
+        user = await _establish(session)
+        await _grant_state(session, SUBJECT_A, state)
+        mode("off")
+
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        again = await resolve_user_from_jwt(session, claims())
+        assert again is not None and again.id == user.id
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("state", ["active", "missing", "expired", "revoked"])
+    async def test_shadow_mode_evaluates_but_never_denies(self, session, mode, state):
+        user = await _establish(session)
+        await _grant_state(session, SUBJECT_A, state)
+        mode("shadow")
+
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        again = await resolve_user_from_jwt(session, claims())
+        assert again is not None and again.id == user.id
+
+        actions = [a for (a, _r, _i) in await _audit_actions(session)]
+        if state == "active":
+            assert "deny" not in actions
+        else:
+            assert "deny" in actions, "shadow must produce evidence it would have denied"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("state,admitted", [
+        ("active", True), ("missing", False), ("expired", False), ("revoked", False),
+    ])
+    async def test_enforce_mode_requires_a_live_bound_grant(self, session, mode, state, admitted):
+        user = await _establish(session)
+        await _grant_state(session, SUBJECT_A, state)
+        mode("enforce")
+
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        result = await resolve_user_from_jwt(session, claims())
+
+        if admitted:
+            assert result is not None and result.id == user.id
+        else:
+            assert result is None, f"{state} grant must deny an established account"
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize("state", ["missing", "expired", "revoked"])
+    async def test_denial_mutates_no_user_data(self, session, mode, state):
+        """Denial writes nothing about the user — not even a sign-in stamp."""
+        from sqlalchemy import select, func
+        from app.db.models import User, WatchedTicker, Portfolio, AuditLog
+        from app.db.repositories.account_repo import get_user
+
+        user = await _establish(session)
+        await _grant_state(session, SUBJECT_A, state)
+        await session.flush()
+
+        before = await get_user(session, user.id)
+        before_sign_in = before.last_sign_in_at
+        before_subject = before.auth_subject
+        before_email = before.email
+        before_users = (await session.execute(select(func.count()).select_from(User))).scalar()
+
+        mode("enforce")
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        assert await resolve_user_from_jwt(session, claims()) is None
+
+        after = await get_user(session, user.id)
+        assert after.last_sign_in_at == before_sign_in, "no sign-in stamp on denial"
+        assert after.auth_subject == before_subject, "no rebinding on denial"
+        assert after.email == before_email
+        assert (await session.execute(select(func.count()).select_from(User))).scalar() == before_users
+        # No starter data was imported on the way out.
+        assert (await session.execute(select(func.count()).select_from(WatchedTicker))).scalar() in (0, None)
+        assert (await session.execute(select(func.count()).select_from(Portfolio))).scalar() in (0, None)
+        # The only trace of the login attempt is the sanitised denial event.
+        rows = (await session.execute(select(AuditLog))).scalars().all()
+        assert [r.action for r in rows][-1] == "deny"
+        assert len([r for r in rows if r.action == "deny"]) == 1
+        assert EMAIL_A.lower() not in " ".join(str(r.resource_id) for r in rows)
+
+    @pytest.mark.asyncio
+    async def test_admin_does_not_bypass_enforcement(self, session, mode, monkeypatch):
+        """Admin is an ordinary human identity to this gate.
+
+        No emergency-access bypass exists, deliberately: one is not invented
+        here, and if it is ever wanted it must be designed and approved.
+        """
+        from app.config import settings
+        from app.security.authz import is_admin
+
+        admin_user = await _establish(session)
+        monkeypatch.setattr(settings, "admin_user_ids", admin_user.id, raising=False)
+        assert is_admin(admin_user.id), "precondition: this really is the admin"
+
+        await _grant_state(session, SUBJECT_A, "revoked")
+        mode("enforce")
+
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        assert await resolve_user_from_jwt(session, claims()) is None
+
+    @pytest.mark.asyncio
+    async def test_grandfathering_is_what_makes_enforcement_survivable(self, session, mode):
+        """The documented rollout prerequisite, proven rather than asserted."""
+        from app.services.access_grant_service import grandfather_existing_subjects
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+
+        user = await _establish(session)
+        mode("enforce")
+        assert await resolve_user_from_jwt(session, claims()) is None, (
+            "without grandfathering, enforcement locks out existing accounts"
+        )
+
+        mode("off")
+        result = await grandfather_existing_subjects(session)
+        assert result["granted"] == 1
+        await session.flush()
+
+        mode("enforce")
+        again = await resolve_user_from_jwt(session, claims())
+        assert again is not None and again.id == user.id
+
+    @pytest.mark.asyncio
+    async def test_system_identity_exemption_is_narrow(self, session, mode):
+        """Only the system sentinel is exempt — not admins, not anyone else."""
+        from app.services.supabase_auth_service import (
+            SYSTEM_DEFAULT_USER_ID, resolve_user_from_jwt,
+        )
+        from app.db.repositories.account_repo import create_user
+
+        await create_user(
+            session, user_id=SYSTEM_DEFAULT_USER_ID, email="system@clearsignal.internal",
+            account_type="system", auth_subject=SYSTEM_DEFAULT_USER_ID,
+        )
+        await _establish(session, subject=SUBJECT_B, email=EMAIL_B)
+        await session.flush()
+        mode("enforce")
+
+        system = await resolve_user_from_jwt(
+            session, claims(subject=SYSTEM_DEFAULT_USER_ID, email="system@clearsignal.internal"),
+        )
+        assert system is not None, "the product's own identity is exempt"
+
+        # An ordinary account with no grant is not.
+        assert await resolve_user_from_jwt(session, claims(subject=SUBJECT_B, email=EMAIL_B)) is None
+
+
+# ---------------------------------------------------------------------------
+# 14. Pepper is mandatory wherever a locator is involved
+# ---------------------------------------------------------------------------
+
+class TestPepperRequired:
+    @pytest.mark.parametrize("value", [None, "", "   ", "short", "x" * 31, 12345])
+    def test_locator_refuses_without_a_strong_pepper(self, value, pepper):
+        from app.config import AdmissionConfigError
+        from app.services.access_grant_service import email_locator
+        pepper(value)
+        with pytest.raises(AdmissionConfigError):
+            email_locator(EMAIL_A)
+
+    def test_minimum_length_is_enforced_exactly(self, pepper):
+        from app.config import ADMISSION_PEPPER_MIN_LENGTH
+        from app.services.access_grant_service import email_locator
+        pepper("y" * ADMISSION_PEPPER_MIN_LENGTH)
+        assert len(email_locator(EMAIL_A)) == 64
+
+    def test_no_unkeyed_fallback_exists_in_source(self):
+        """Mutation guard: a default key must not creep back in."""
+        import inspect
+        from app.services import access_grant_service as mod
+        source = inspect.getsource(mod.email_locator)
+        assert "clearsignal-admission" not in source
+        assert "admission_pepper_ok" in source
+
+    def test_different_peppers_give_different_locators(self, pepper):
+        from app.services.access_grant_service import email_locator
+        pepper("a" * 40)
+        first = email_locator(EMAIL_A)
+        pepper("b" * 40)
+        assert email_locator(EMAIL_A) != first
+
+    @pytest.mark.asyncio
+    async def test_grant_creation_refuses_without_a_pepper(self, session, pepper):
+        from app.config import AdmissionConfigError
+        from app.services.access_grant_service import create_invite_grant
+        pepper("")
+        with pytest.raises(AdmissionConfigError):
+            await create_invite_grant(session, raw_email=EMAIL_A)
+
+    def test_off_mode_starts_without_a_pepper(self):
+        from app.config import validate_admission_config
+
+        class Cfg:
+            beta_admission_mode = "off"
+            beta_admission_pepper = ""
+
+        assert validate_admission_config(Cfg()) == "off"
+
+    @pytest.mark.parametrize("gate_mode", ["shadow", "enforce"])
+    def test_locator_modes_fail_startup_without_a_pepper(self, gate_mode):
+        from app.config import AdmissionConfigError, validate_admission_config
+
+        class Cfg:
+            beta_admission_mode = gate_mode
+            beta_admission_pepper = "too-short"
+
+        with pytest.raises(AdmissionConfigError) as exc:
+            validate_admission_config(Cfg())
+        assert "too-short" not in str(exc.value), "never echo the configured value"
+
+    @pytest.mark.asyncio
+    async def test_missing_pepper_denies_rather_than_admits(self, session, mode, pepper):
+        """A locator that cannot be computed is a denial, never a free pass."""
+        from app.services.access_grant_service import create_invite_grant
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+
+        await create_invite_grant(session, raw_email=EMAIL_A)   # fixture pepper
+        mode("enforce")
+        pepper("")                                             # then lose it
+        assert await resolve_user_from_jwt(session, claims()) is None
+        assert await _user_count(session) == 0
