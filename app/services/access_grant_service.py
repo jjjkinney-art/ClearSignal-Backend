@@ -371,6 +371,48 @@ async def revoke_grant(
     return len(rows)
 
 
+async def plan_grandfather(session) -> Dict[str, int]:
+    """READ-ONLY preview of grandfather_existing_subjects. Issues SELECTs only.
+
+    The dry run must be strictly read-only: an earlier revision previewed by
+    running the real write and rolling it back, which still sent INSERTs for
+    grant and audit rows. This computes the same aggregate from reads alone.
+    """
+    plan = {"examined": 0, "would_grant": 0, "already_granted": 0, "skipped_unbound": 0}
+    if session is None:
+        return plan
+
+    from sqlalchemy import select
+    from app.db.models import User, AccessGrant
+
+    existing_subjects = {
+        row for (row,) in (await session.execute(select(AccessGrant.subject))).all()
+        if row
+    }
+    for (subject,) in (await session.execute(select(User.auth_subject))).all():
+        plan["examined"] += 1
+        if not subject:
+            plan["skipped_unbound"] += 1
+        elif subject in existing_subjects:
+            plan["already_granted"] += 1
+        else:
+            plan["would_grant"] += 1
+            existing_subjects.add(subject)
+    return plan
+
+
+async def count_subject_grants(session) -> int:
+    """Aggregate count used to assert the execute path's row delta."""
+    if session is None:
+        return 0
+    from sqlalchemy import select, func
+    from app.db.models import AccessGrant
+    return int((await session.execute(
+        select(func.count()).select_from(AccessGrant)
+        .where(AccessGrant.kind == KIND_SUBJECT)
+    )).scalar() or 0)
+
+
 async def grandfather_existing_subjects(session, *, note_ref: Optional[str] = None) -> Dict[str, int]:
     """Create a subject grant for every already-bound local identity.
 

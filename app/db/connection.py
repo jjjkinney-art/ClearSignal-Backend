@@ -98,6 +98,20 @@ async def close_db() -> None:
     _db_enabled = False
 
 
+def get_session_factory():
+    """Return the initialised session factory, or None when persistence is off.
+
+    For callers that must control the transaction boundary themselves (the
+    Section 0.15 operator tool): unlike ``get_session`` this does NOT commit on
+    exit, so a read-only run can never be turned into a write by a context
+    manager. Returns None until ``init_db`` has succeeded — callers must treat
+    that as "refuse", never as "carry on without a database".
+    """
+    if not _db_enabled or _session_factory is None:
+        return None
+    return _session_factory
+
+
 @asynccontextmanager
 async def get_session() -> AsyncGenerator:
     """Async context manager that yields an AsyncSession or None.
