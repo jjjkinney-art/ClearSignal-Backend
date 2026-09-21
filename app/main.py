@@ -97,6 +97,14 @@ async def lifespan(app: FastAPI):  # type: ignore[type-arg]
     except Exception as _bf_exc:
         logger.warning("[startup] 10B watched_tickers backfill failed (non-fatal): %r", _bf_exc)
 
+    # Section 0.15 — controlled-beta admission configuration.
+    # Deliberately NOT wrapped in a try/except: a misconfigured admission gate
+    # must abort startup rather than serve requests with an unreadable policy.
+    # The error names the variable and the rule, never the configured value.
+    from .config import settings as _admission_settings, validate_admission_config
+    _admission_mode = validate_admission_config(_admission_settings)
+    logger.info("[startup] admission gate mode=%s", _admission_mode)
+
     # Phase 16 · Slice 2 — System user seed + NULL ownership claim (idempotent)
     # Ensures the well-known SYSTEM_DEFAULT_USER row exists and claims every
     # NULL user_id row across all user-scoped tables.  Runs at every boot;

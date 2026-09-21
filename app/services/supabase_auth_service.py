@@ -8,10 +8,15 @@ login.  All subsequent logins are a single SELECT by auth_subject.
 Key invariants
 --------------
 - No password handling anywhere.  Supabase Auth is the sole credential custodian.
-- auth_subject (JWT 'sub') is the canonical Supabase identity handle.
-- Email is case-folded before write.
-- Email-collision path: if a local row already has the same email but no
-  auth_subject, bind the JWT sub to it rather than creating a duplicate.
+- auth_subject (JWT 'sub') is the canonical Supabase identity handle, and the
+  ONLY permanent identity key. Section 0.15 removed every other binding path.
+- Email is case-folded before write. It is a display/contact label: it never
+  locates, merges, rebinds or authorises a local user.
+- Identity conflict (an address already held by another local row) FAILS
+  CLOSED. Nothing is rebound and no user is provisioned.
+- An existing auth_subject is never overwritten.
+- user_metadata is user-writable and is never consulted for email, admission
+  or identity binding.
 - All public functions are null-session safe: they return IdentityContext or
   None safely when called with session=None.
 - provision_new_user is idempotent: SELECT first, INSERT only if absent.
@@ -87,12 +92,12 @@ async def resolve_user_from_jwt(
     if not auth_subject:
         return None
 
-    raw_email = (
-        payload.get("email")
-        or (payload.get("user_metadata") or {}).get("email", "")
-        or ""
-    )
-    email = raw_email.strip().lower()
+    # Section 0.15: the user_metadata fallback is GONE. user_metadata is
+    # writable by the account holder, so honouring user_metadata.email let a
+    # caller nominate somebody else's address. Only the top-level claim, which
+    # GoTrue populates from auth.users.email, is read.
+    raw_email = payload.get("email")
+    email = raw_email.strip().lower() if isinstance(raw_email, str) else ""
     email_verified = bool(
         payload.get("email_verified")
         or payload.get("email_confirmed_at")
@@ -101,38 +106,102 @@ async def resolve_user_from_jwt(
     from app.db.repositories.account_repo import (
         get_user_by_auth_subject,
         get_user_by_email,
-        update_user,
     )
+    from app.services import access_grant_service as grants
 
-    # Fast path — existing user already bound to this Supabase subject
+    ref = grants.subject_ref(auth_subject)
+
+    # ------------------------------------------------------------------
+    # Admission runs for EVERY identity, established or new.
+    #
+    # An earlier revision returned an already-bound user here, before any
+    # grant was consulted. That made revocation meaningless under enforcement:
+    # the one account you most want to be able to cut off — an existing one —
+    # was the one the gate never looked at. The lookup by subject still
+    # happens below, but it no longer short-circuits the decision, and it no
+    # longer writes (touch_last_sign_in) before the decision is made.
+    # ------------------------------------------------------------------
+    identity = grants.trusted_identity(payload)
+    if identity is None or identity.is_anonymous or not identity.email:
+        # Unconditional, mode-independent: an identity with no
+        # provider-supplied address, or an anonymous one, is never
+        # provisioned. There is nothing to bind it to that we can trust.
+        await grants.audit_admission(
+            session, action=grants.ACTION_DENY, ref=ref,
+            detail=grants.DENY_ANONYMOUS if (identity and identity.is_anonymous)
+            else grants.DENY_NO_TRUSTED_EMAIL,
+        )
+        logger.info("[supabase_auth] admission denied subject_ref=%s", ref)
+        return None
+
+    # Established identity? Looked up now, acted on only after the gate.
     user = await get_user_by_auth_subject(session, auth_subject)
+
+    # Admission gate. "off" leaves admission as it was; "shadow" evaluates
+    # every identity and audits without denying; "enforce" requires an active
+    # grant bound to THIS subject, for established accounts as well as new ones.
+    from app.config import AdmissionConfigError
+    try:
+        from app.config import settings
+        mode = settings.beta_admission_mode_normalized
+    except AdmissionConfigError:
+        # An unreadable policy is not an open door. Deny, and say nothing
+        # about the configured value.
+        await grants.audit_admission(
+            session, action=grants.ACTION_DENY, ref=ref, detail=grants.DENY_CONFIG,
+        )
+        logger.warning(
+            "[supabase_auth] admission configuration invalid; denying subject_ref=%s", ref,
+        )
+        return None
+
+    # Narrow, explicit exemption: the system sentinel only. It is the
+    # single-tenant/bypass identity the product itself runs as, never a
+    # human account, and it holds no grant. Nothing else is exempt — an
+    # administrator is an ordinary human identity to this gate.
+    is_system_identity = auth_subject == SYSTEM_DEFAULT_USER_ID
+
+    if mode in ("shadow", "enforce") and not is_system_identity:
+        decision = await grants.evaluate_admission(
+            session, payload, user_exists=user is not None,
+        )
+        if not decision.allowed:
+            await grants.audit_admission(
+                session, action=grants.ACTION_DENY, ref=ref, detail=decision.reason,
+            )
+            logger.info(
+                "[supabase_auth] admission denied subject_ref=%s mode=%s", ref, mode,
+            )
+            if mode == "enforce":
+                # Deny before any write: no provisioning, no rebinding, no
+                # import, not even a last-sign-in timestamp.
+                return None
+
     if user is not None:
         await touch_last_sign_in(session, user.id)
         return user
 
-    # Email-collision path — local account exists but not yet bound
-    if email:
-        user = await get_user_by_email(session, email)
-        if user is not None:
-            await update_user(
-                session,
-                user.id,
-                auth_subject=auth_subject,
-                email_verified=email_verified,
-                last_sign_in_at=_now(),
-            )
-            logger.info(
-                "[supabase_auth] bound auth_subject to existing user email=%s user_id=%s",
-                email,
-                user.id,
-            )
-            return user
+    # Identity conflict — a different local row already owns this address.
+    #
+    # This is where the old email-collision REBIND used to happen. Binding a
+    # new subject onto an existing row let anyone who could obtain a token
+    # carrying that address take the row over, inheriting whatever it had,
+    # including administrator status. It now FAILS CLOSED: the existing row
+    # keeps its own auth_subject, nothing is overwritten, and no user is
+    # provisioned. Email is a label here, never an identity key.
+    colliding = await get_user_by_email(session, identity.email)
+    if colliding is not None:
+        await grants.audit_admission(
+            session, action=grants.ACTION_DENY, ref=ref, detail=grants.DENY_CONFLICT,
+        )
+        logger.info("[supabase_auth] identity conflict subject_ref=%s", ref)
+        return None
 
     # First login — provision a new user with profile + settings
     user = await provision_new_user(
         session,
         auth_subject=auth_subject,
-        email=email,
+        email=identity.email,
         email_verified=email_verified,
     )
     return user
@@ -171,22 +240,45 @@ async def provision_new_user(
         await _ensure_profile_settings(session, existing.id, upsert_profile, upsert_settings)
         return existing
 
-    # Create user
-    user = await create_user(
-        session,
-        user_id=auth_subject,
-        email=email,
-        account_type="individual",
-        email_verified=email_verified,
-        auth_subject=auth_subject,
-    )
+    # Guard: the local id is taken by a row bound to a DIFFERENT subject.
+    # Reusing it would silently move an established account onto this token.
+    from app.db.repositories.account_repo import get_user as _get_user
+    occupant = await _get_user(session, auth_subject)
+    if occupant is not None and getattr(occupant, "auth_subject", None) != auth_subject:
+        from app.services.access_grant_service import subject_ref as _subject_ref
+        logger.info(
+            "[supabase_auth] local id conflict, refusing to provision subject_ref=%s",
+            _subject_ref(auth_subject),
+        )
+        return None
+
+    # Create user. A unique-constraint race (two concurrent first logins)
+    # surfaces here as an IntegrityError: deny rather than half-provision.
+    try:
+        user = await create_user(
+            session,
+            user_id=auth_subject,
+            email=email,
+            account_type="individual",
+            email_verified=email_verified,
+            auth_subject=auth_subject,
+        )
+    except Exception as exc:
+        from app.services.access_grant_service import subject_ref as _subject_ref
+        logger.info(
+            "[supabase_auth] provisioning failed closed subject_ref=%s error=%s",
+            _subject_ref(auth_subject), type(exc).__name__,
+        )
+        return None
     if user is None:
         return None
 
+    # Section 0.15: no email, no user id. An opaque, one-way subject reference
+    # still correlates this event with the matching audit row.
+    from app.services.access_grant_service import subject_ref as _subject_ref
     logger.info(
-        "[supabase_auth] provisioned new user user_id=%s email=%s",
-        user.id,
-        email,
+        "[supabase_auth] provisioned new user subject_ref=%s",
+        _subject_ref(auth_subject),
     )
 
     await _ensure_profile_settings(session, user.id, upsert_profile, upsert_settings)

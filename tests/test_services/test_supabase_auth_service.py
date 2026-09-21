@@ -7,7 +7,7 @@ TestNullSessionSafety        — all functions return safe defaults when session
 TestProvisionNewUser         — creates user + profile + settings rows
 TestProvisionIdempotency     — second call returns same row, no duplicate
 TestResolveUserFromJwt       — fast path (known sub), email-bind, first-login
-TestEmailCollisionBind       — existing email user gets auth_subject bound
+TestEmailCollisionFailsClosed — a matching address never rebinds a user
 TestTouchLastSignIn          — updates last_sign_in_at timestamp
 TestGetIdentityContextBypass — bypass mode never hits DB
 TestGetIdentityContextAuth   — auth mode loads email/account_type from DB
@@ -254,27 +254,42 @@ class TestResolveUserFromJwt:
         assert user2.id == first_id
 
     @pytest.mark.asyncio
-    async def test_email_from_user_metadata(self, session):
+    async def test_user_metadata_email_is_never_used(self, session):
+        """Section 0.15 reversal of the previous behaviour.
+
+        user_metadata is writable by the account holder, so honouring
+        user_metadata.email let a caller nominate any address — including
+        somebody else's. An identity with no provider-supplied address is now
+        refused outright rather than provisioned from metadata.
+        """
         from app.services.supabase_auth_service import resolve_user_from_jwt
         payload = {
             "sub": "meta-sub",
             "user_metadata": {"email": "Meta@Example.COM"},
         }
-        user = await resolve_user_from_jwt(session, payload)
-        assert user is not None
-        assert user.email == "meta@example.com"
+        assert await resolve_user_from_jwt(session, payload) is None
+
+        from app.db.repositories.account_repo import get_user_by_email
+        assert await get_user_by_email(session, "meta@example.com") is None
 
 
 # ---------------------------------------------------------------------------
-# 5. TestEmailCollisionBind
+# 5. TestEmailCollisionFailsClosed
 # ---------------------------------------------------------------------------
 
-class TestEmailCollisionBind:
+class TestEmailCollisionFailsClosed:
+    """Section 0.15: the collision REBIND is gone.
+
+    These two tests previously asserted the opposite — that a matching address
+    bound the JWT subject onto the existing row. That was the account-takeover
+    path: anyone who could obtain a token carrying an address inherited the
+    local row behind it, including its administrator status. A collision now
+    denies, changes nothing, and provisions nobody.
+    """
+
     @pytest.mark.asyncio
-    async def test_existing_email_user_gets_auth_subject_bound(self, session):
-        """Local user with no auth_subject gets bound when JWT arrives."""
-        from app.db.repositories.account_repo import create_user
-        # Pre-existing user (e.g. imported, no Supabase subject yet)
+    async def test_existing_email_user_is_never_rebound(self, session):
+        from app.db.repositories.account_repo import create_user, get_user
         existing = await create_user(
             session, email="existing@example.com", account_type="individual"
         )
@@ -282,28 +297,36 @@ class TestEmailCollisionBind:
         assert existing.auth_subject is None
 
         from app.services.supabase_auth_service import resolve_user_from_jwt
-        payload = {"sub": "supabase-sub-xyz", "email": "Existing@Example.COM"}
-        user = await resolve_user_from_jwt(session, payload)
+        payload = {
+            "sub": "supabase-sub-xyz",
+            "email": "Existing@Example.COM",
+            "app_metadata": {"provider": "google", "providers": ["google"]},
+        }
+        assert await resolve_user_from_jwt(session, payload) is None
 
-        assert user.id == existing.id
-        assert user.auth_subject == "supabase-sub-xyz"
+        unchanged = await get_user(session, existing.id)
+        assert unchanged.auth_subject is None, "existing row must be untouched"
 
     @pytest.mark.asyncio
-    async def test_bind_does_not_change_account_type(self, session):
+    async def test_collision_provisions_no_second_user(self, session):
+        from sqlalchemy import select, func
+        from app.db.models import User
         from app.db.repositories.account_repo import create_user
-        existing = await create_user(
-            session,
-            email="inst@example.com",
-            account_type="institutional",
+
+        await create_user(
+            session, email="inst@example.com", account_type="institutional",
         )
         await session.flush()
 
         from app.services.supabase_auth_service import resolve_user_from_jwt
-        user = await resolve_user_from_jwt(session, {"sub": "inst-sub", "email": "inst@example.com"})
-        assert user.account_type == "institutional"
+        assert await resolve_user_from_jwt(
+            session, {"sub": "inst-sub", "email": "inst@example.com"}
+        ) is None
+
+        total = (await session.execute(select(func.count()).select_from(User))).scalar()
+        assert total == 1
 
 
-# ---------------------------------------------------------------------------
 # 6. TestTouchLastSignIn
 # ---------------------------------------------------------------------------
 

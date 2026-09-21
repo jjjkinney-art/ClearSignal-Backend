@@ -123,5 +123,9 @@ async def enforce_ask_preflight(http_request: Request, question: str) -> str:
     # All gates passed — consume one quota unit (only for real users).
     if not is_system:
         usage_tracker.incr_daily(user_id, _ASK_EVENT)
-    logger.info("[ask] preflight ok (user=%.8s system=%s)", user_id, is_system)
+    # Section 0.15: opaque one-way reference, not a user-id prefix.
+    from app.services.access_grant_service import subject_ref as _subject_ref
+    logger.info(
+        "[ask] preflight ok (subject_ref=%s system=%s)", _subject_ref(user_id), is_system
+    )
     return user_id

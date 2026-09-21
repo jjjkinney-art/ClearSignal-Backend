@@ -19,6 +19,11 @@ from starlette.requests import Request
 SYSTEM_DEFAULT_USER_ID: str = "00000000-0000-0000-0000-000000000001"
 
 
+# The single, stable controlled-beta denial message. Deliberately says
+# nothing about why, and is identical for every denial reason.
+ADMISSION_DENIED_DETAIL = "This account does not have access to the controlled beta."
+
+
 def get_current_user_id(request: Request) -> Optional[str]:
     """Return the acting user's ID for this request.
 
@@ -64,8 +69,15 @@ def require_user_id(request: Request) -> str:
     """
     uid = get_current_user_id(request)
     if uid is None:
-        # Reached only under AUTH_ENABLED=true with no/invalid JWT.
         from fastapi import HTTPException
+        # Section 0.15: a verified token whose identity was not admitted gets
+        # ONE stable answer, identical for every denial reason — no grant, a
+        # revoked grant, an expired grant, an address conflict or an
+        # untrusted provider all look the same from outside. Nothing here
+        # reveals whether an account, address or invitation exists.
+        if getattr(getattr(request, "state", None), "admission_denied", False):
+            raise HTTPException(status_code=403, detail=ADMISSION_DENIED_DETAIL)
+        # Reached only under AUTH_ENABLED=true with no/invalid JWT.
         raise HTTPException(status_code=401, detail="Authentication required.")
     return uid
 

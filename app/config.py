@@ -28,6 +28,79 @@ except Exception:  # pragma: no cover
     _CONFIG_DICT = None  # type: ignore[assignment]
 
 
+# ---------------------------------------------------------------------------
+# Section 0.15 — controlled-beta admission configuration
+#
+# These are module-level and pure so that the same rules apply to a settings
+# object built from the environment, to a test double, and to a monkeypatched
+# attribute. No function here ever includes a configured VALUE in a message:
+# an error names the variable and the rule, never what was supplied.
+# ---------------------------------------------------------------------------
+
+ADMISSION_MODES = ("off", "shadow", "enforce")
+
+#: Modes that can evaluate an email locator, and therefore require the pepper.
+ADMISSION_LOCATOR_MODES = ("shadow", "enforce")
+
+#: Minimum pepper length. An HMAC key shorter than this is guessable offline
+#: against a candidate address list, which is exactly what the locator exists
+#: to prevent.
+ADMISSION_PEPPER_MIN_LENGTH = 32
+
+
+class AdmissionConfigError(RuntimeError):
+    """Admission configuration is unusable. Never carries the value."""
+
+
+def resolve_admission_mode(raw) -> str:
+    """Return the admission mode, or raise AdmissionConfigError.
+
+    Unset (None) and empty/whitespace resolve to "off": that is the only
+    representation the environment gives us for "nothing was configured".
+    Every OTHER unsupported value — a typo, an unknown word, a non-string —
+    fails closed rather than silently reading as "off".
+    """
+    if raw is None:
+        return "off"
+    if not isinstance(raw, str):
+        raise AdmissionConfigError(
+            "BETA_ADMISSION_MODE must be one of: %s" % ", ".join(ADMISSION_MODES)
+        )
+    value = raw.strip().lower()
+    if value == "":
+        return "off"
+    if value not in ADMISSION_MODES:
+        raise AdmissionConfigError(
+            "BETA_ADMISSION_MODE is not a supported value; expected one of: %s"
+            % ", ".join(ADMISSION_MODES)
+        )
+    return value
+
+
+def admission_pepper_ok(raw) -> bool:
+    """True when the pepper is present and long enough. No fallback exists."""
+    if not isinstance(raw, str):
+        return False
+    return len(raw.strip()) >= ADMISSION_PEPPER_MIN_LENGTH
+
+
+def validate_admission_config(settings_obj) -> str:
+    """Startup gate. Returns the resolved mode, or raises AdmissionConfigError.
+
+    Called from application startup so a misconfiguration is refused loudly at
+    boot instead of quietly widening admission at request time.
+    """
+    mode = resolve_admission_mode(getattr(settings_obj, "beta_admission_mode", None))
+    if mode in ADMISSION_LOCATOR_MODES and not admission_pepper_ok(
+        getattr(settings_obj, "beta_admission_pepper", "")
+    ):
+        raise AdmissionConfigError(
+            "BETA_ADMISSION_PEPPER is required in %s mode and must be at least "
+            "%d characters" % (mode, ADMISSION_PEPPER_MIN_LENGTH)
+        )
+    return mode
+
+
 class Settings(BaseSettings):
     """Application settings loaded from environment variables.
 
@@ -714,6 +787,41 @@ class Settings(BaseSettings):
     # =false to disable the boundary check (validators remain importable/tested).
     content_integrity_enabled: bool = True
 
+    # ── Section 0.15 · controlled-beta admission gate ─────────────────────
+    # Three modes:
+    #
+    #   "off"      (DEFAULT) — no admission gate. A verified identity may be
+    #                          provisioned exactly as it is today.
+    #   "shadow"            — every identity is evaluated against grant state
+    #                          and audited, but nothing is denied.
+    #   "enforce"           — every non-system human identity must hold an
+    #                          active grant bound to its own `sub`.
+    #
+    # ONLY unset and empty mean "off" — that is the framework's unavoidable
+    # representation of "the operator said nothing".
+    #
+    # An explicitly supplied value that is not one of the three supported
+    # words is a CONFIGURATION ERROR and fails closed: it aborts startup
+    # (see validate_admission_config) rather than silently reopening
+    # admission. A typo like "enfore" must never read as "off".
+    #
+    # The identity-binding invariants (bind by `sub` only, never bind by
+    # email, never overwrite an existing subject, deny on conflict) are
+    # unconditional and apply in every mode, including "off".
+    beta_admission_mode: str = "off"
+
+    # Provider identities accepted by the admission gate, comma separated.
+    # Compared against the GoTrue-controlled app_metadata provider chain.
+    beta_admission_providers: str = "google"
+
+    # Server-side pepper for the grant email locator (HMAC key). REQUIRED
+    # before any locator is created, looked up or redeemed, and required at
+    # startup whenever the mode can evaluate locators (shadow or enforce).
+    # There is NO fallback key: an unkeyed digest would make the locator
+    # table offline-guessable from a list of candidate addresses.
+    # Changing it invalidates every existing unredeemed grant by design.
+    beta_admission_pepper: str = ""
+
     # ── Derived helpers (properties, not settings fields) ─────────────────
     @property
     def is_production(self) -> bool:
@@ -726,6 +834,23 @@ class Settings(BaseSettings):
     @property
     def cors_allow_origins_list(self) -> list:
         return [o.strip() for o in self.cors_allow_origins.split(",") if o.strip()]
+
+    @property
+    def beta_admission_mode_normalized(self) -> str:
+        """Resolve the admission mode. Raises on an unsupported value.
+
+        Only unset/empty means "off". Anything else the operator actually
+        typed must be a supported word or the caller fails closed.
+        """
+        return resolve_admission_mode(self.beta_admission_mode)
+
+    @property
+    def beta_admission_pepper_ok(self) -> bool:
+        return admission_pepper_ok(self.beta_admission_pepper)
+
+    @property
+    def beta_admission_providers_list(self) -> list:
+        return [p.strip().lower() for p in self.beta_admission_providers.split(",") if p.strip()]
 
     @property
     def admin_user_ids_list(self) -> list:
