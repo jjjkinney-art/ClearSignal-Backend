@@ -176,6 +176,25 @@ python3 scripts/beta_admission.py approve --expires-days 14 --note-ref R-001
 python3 scripts/beta_admission.py revoke
 ```
 
+**How the tool reaches the database.** It initialises persistence through the
+application's own path — `settings.database_url` → `init_db` → the app's
+session factory — and nothing else. (The first release imported `get_session`
+without ever calling `init_db`, so every command refused with "persistence
+unavailable" against a healthy production database.)
+
+**Refusal order.** Nothing reaches a business `SELECT` until every step passes:
+admission config valid → pepper present → `DATABASE_URL` configured → engine
+initialised → transaction opened (read-only verified for `status` and the
+dry run) → database exactly at this code's Alembic head, with `users` and
+`access_grants` present. Each refusal prints one fixed line, e.g.
+`refused: schema unavailable`, and exits 2.
+
+**Dry run is strictly read-only.** It runs inside a verified read-only
+transaction (`SET TRANSACTION READ ONLY` on PostgreSQL) and issues SELECTs
+only. `--execute` is one transaction: it plans, writes, asserts that granted
+rows equal both the plan and the table delta, and commits only if all three
+agree — otherwise it rolls back and reports `row-count mismatch`.
+
 `approve` and `revoke` read the address from a **masked prompt**. It is never
 an argument, never echoed, never logged and never stored: only its HMAC is.
 `--note-ref` is an opaque reference into the private invitation ledger. The
