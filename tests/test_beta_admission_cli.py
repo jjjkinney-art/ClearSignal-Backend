@@ -416,3 +416,244 @@ class TestStatementCapture:
         cli = _load_cli()
         asyncio.run(cli.cmd_grandfather(_Args()))
         assert connection.get_session_factory() is None
+
+
+# ---------------------------------------------------------------------------
+# Section 0.16 — double masked confirmation, driven through a real terminal
+# ---------------------------------------------------------------------------
+
+import pty
+import select
+import signal
+import time
+
+ADDRESS = "canary.person@example.test"
+TYPO = "canary.persn@example.test"
+
+
+def _pty_run(args, entries, db, *, pepper=PEPPER, timeout=90):
+    """Run the real CLI on a pseudo-terminal, as the Render Shell does.
+
+    ``entries`` is a list of byte strings; each is written only after a
+    masked prompt has appeared. Returns (exit_code, everything the terminal
+    displayed). With echo off, nothing typed may appear in that transcript.
+    """
+    env = {k: v for k, v in os.environ.items()
+           if not k.startswith(("DATABASE_URL", "BETA_ADMISSION_"))}
+    env["DATABASE_URL"] = f"sqlite+aiosqlite:///{db}"
+    if pepper is not None:
+        env["BETA_ADMISSION_PEPPER"] = pepper
+    argv = [sys.executable, SCRIPT, *args]
+
+    pid, fd = pty.fork()
+    if pid == 0:                                    # child: the operator's shell
+        os.chdir(ROOT)
+        os.execve(sys.executable, argv, env)
+
+    transcript = b""
+    sent = 0
+    deadline = time.time() + timeout
+    timed_out = True
+    try:
+        while time.time() < deadline:
+            ready, _, _ = select.select([fd], [], [], 0.2)
+            if not ready:
+                continue
+            try:
+                chunk = os.read(fd, 4096)
+            except OSError:            # the child closed the terminal: it has exited
+                chunk = b""
+            if not chunk:
+                timed_out = False
+                break
+            transcript += chunk
+            # Answer each masked prompt only once it has actually appeared.
+            while sent < len(entries) and transcript.count(b"(input hidden):") > sent:
+                os.write(fd, entries[sent])
+                sent += 1
+        if timed_out:
+            os.kill(pid, signal.SIGKILL)
+    finally:
+        # Always reap with a BLOCKING wait. A WNOHANG poll returns (0, 0) while
+        # the child is still running, and mistaking that 0 for an exit status
+        # would report success for a run that refused.
+        _, status = os.waitpid(pid, 0)
+        os.close(fd)
+    # A terminal ends lines with CRLF; normalise so output parses like a pipe's.
+    text = transcript.decode("utf-8", "replace").replace("\r\n", "\n")
+    return os.waitstatus_to_exitcode(status), text
+
+
+def _grant_rows(path: str) -> dict:
+    conn = sqlite3.connect(path)
+    try:
+        rows = conn.execute(
+            "SELECT status, subject IS NOT NULL, email_locator IS NOT NULL FROM access_grants"
+        ).fetchall()
+    finally:
+        conn.close()
+    return {
+        "total": len(rows),
+        "approved": sum(1 for r in rows if r[0] == "approved"),
+        "revoked": sum(1 for r in rows if r[0] == "revoked"),
+        "with_locator": sum(1 for r in rows if r[2]),
+    }
+
+
+def _assert_address_never_shown(transcript: str, *addresses: str) -> None:
+    lowered = transcript.lower()
+    for address in addresses:
+        assert address.lower() not in lowered, "an address was displayed"
+        # Nor any recognisable fragment of it.
+        assert address.split("@")[0].lower() not in lowered
+    _assert_no_leak(transcript)
+
+
+class TestDoubleMaskedEntry:
+    """The address is asked for twice, masked, and must match before any DB work."""
+
+    def test_matching_entries_create_one_grant(self, db_path):
+        code, out = _pty_run(
+            ["approve", "--note-ref", "R-001"],
+            [ADDRESS.encode() + b"\r", ADDRESS.upper().encode() + b"\r"],
+            db_path,
+        )
+        assert code == 0, out
+        assert "state=EXECUTED" in out and "committed=True" in out
+        assert _values(out)["created"] == 1
+        assert _grant_rows(db_path) == {"total": 1, "approved": 1, "revoked": 0, "with_locator": 1}
+        _assert_address_never_shown(out, ADDRESS)
+
+    def test_both_prompts_are_masked(self, db_path):
+        code, out = _pty_run(
+            ["approve"], [ADDRESS.encode() + b"\r", ADDRESS.encode() + b"\r"], db_path,
+        )
+        assert code == 0
+        assert out.count("(input hidden):") == 2, "the address must be requested exactly twice"
+        assert "Confirm address to approve" in out
+        _assert_address_never_shown(out, ADDRESS)
+
+    def test_approve_mismatch_refuses_and_leaves_storage_identical(self, db_path):
+        before = _digest(db_path)
+        code, out = _pty_run(
+            ["approve"], [ADDRESS.encode() + b"\r", TYPO.encode() + b"\r"], db_path,
+        )
+        assert code == 2
+        assert "refused: address entries do not match" in out
+        assert _digest(db_path) == before
+        _assert_address_never_shown(out, ADDRESS, TYPO)
+
+    def test_revoke_mismatch_refuses_and_leaves_storage_identical(self, db_path):
+        assert _pty_run(["approve"], [ADDRESS.encode() + b"\r"] * 2, db_path)[0] == 0
+        before = _digest(db_path)
+        code, out = _pty_run(
+            ["revoke"], [ADDRESS.encode() + b"\r", TYPO.encode() + b"\r"], db_path,
+        )
+        assert code == 2
+        assert "refused: address entries do not match" in out
+        assert _digest(db_path) == before
+        assert _grant_rows(db_path)["revoked"] == 0
+        _assert_address_never_shown(out, ADDRESS, TYPO)
+
+    def test_matching_revoke_revokes(self, db_path):
+        assert _pty_run(["approve"], [ADDRESS.encode() + b"\r"] * 2, db_path)[0] == 0
+        code, out = _pty_run(["revoke"], [ADDRESS.encode() + b"\r"] * 2, db_path)
+        assert code == 0, out
+        assert _values(out)["revoked"] == 1
+        assert _grant_rows(db_path)["revoked"] == 1
+        _assert_address_never_shown(out, ADDRESS)
+
+    def test_revoke_of_an_unknown_address_fails_closed(self, db_path):
+        code, out = _pty_run(["revoke"], [ADDRESS.encode() + b"\r"] * 2, db_path)
+        assert code == 2
+        assert _values(out)["revoked"] == 0
+
+    def test_approval_stays_idempotent(self, db_path):
+        for _ in range(2):
+            assert _pty_run(["approve"], [ADDRESS.encode() + b"\r"] * 2, db_path)[0] == 0
+        assert _grant_rows(db_path)["total"] == 1
+
+    @pytest.mark.parametrize("first,second,category", [
+        (b"", b"", "address missing"),
+        (b"   ", b"   ", "address missing"),
+        (b"not-an-address", b"not-an-address", "address malformed"),
+        (b"two@@at.example", b"two@@at.example", "address malformed"),
+        (b"space in@example.test", b"space in@example.test", "address malformed"),
+        (b"nodot@example", b"nodot@example", "address malformed"),
+    ])
+    def test_invalid_input_refuses_before_any_write(self, db_path, first, second, category):
+        before = _digest(db_path)
+        code, out = _pty_run(["approve"], [first + b"\r", second + b"\r"], db_path)
+        assert code == 2
+        assert f"refused: {category}" in out
+        assert _digest(db_path) == before
+
+    @pytest.mark.parametrize("command", ["approve", "revoke"])
+    def test_eof_at_either_prompt_fails_closed(self, db_path, command):
+        before = _digest(db_path)
+        for entries in ([b"\x04"], [ADDRESS.encode() + b"\r", b"\x04"]):
+            code, out = _pty_run([command], entries, db_path)
+            assert code == 2, out
+            assert "refused: address entry cancelled" in out
+            _assert_address_never_shown(out, ADDRESS)
+        assert _digest(db_path) == before
+
+    @pytest.mark.parametrize("command", ["approve", "revoke"])
+    def test_interrupt_at_either_prompt_fails_closed(self, db_path, command):
+        before = _digest(db_path)
+        for entries in ([b"\x03"], [ADDRESS.encode() + b"\r", b"\x03"]):
+            code, out = _pty_run([command], entries, db_path)
+            assert code == 2, out
+            assert "refused: address entry cancelled" in out
+            assert "Traceback" not in out
+            _assert_address_never_shown(out, ADDRESS)
+        assert _digest(db_path) == before
+
+    def test_mismatch_never_initialises_persistence(self, db_path, monkeypatch):
+        """In-process: the refusal happens before init_db is ever called."""
+        cli = _load_cli()
+        from app.config import settings
+        from app.db import connection
+        monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{db_path}", raising=False)
+        monkeypatch.setattr(settings, "beta_admission_pepper", PEPPER, raising=False)
+        monkeypatch.setattr(settings, "beta_admission_mode", "", raising=False)
+        calls = {"init": 0}
+
+        async def counting_init(url):
+            calls["init"] += 1
+
+        monkeypatch.setattr(connection, "init_db", counting_init)
+        monkeypatch.setattr(cli.sys.stdin, "isatty", lambda: True, raising=False)
+        answers = iter([ADDRESS, TYPO])
+        monkeypatch.setattr(cli.getpass, "getpass", lambda prompt="": next(answers))
+
+        with pytest.raises(cli.Refused) as exc:
+            asyncio.run(cli.cmd_approve(type("A", (), {"expires_days": None, "note_ref": None})()))
+        assert exc.value.category == "address entries do not match"
+        assert calls["init"] == 0
+
+    def test_echo_fallback_is_refused(self, monkeypatch):
+        """getpass degrading to echo must never be accepted."""
+        import warnings
+        cli = _load_cli()
+
+        def echoing(prompt=""):
+            warnings.warn("Can not control echo on the terminal.", cli.getpass.GetPassWarning)
+            return ADDRESS
+
+        monkeypatch.setattr(cli.getpass, "getpass", echoing)
+        with pytest.raises(cli.Refused) as exc:
+            cli._read_masked("Address (input hidden): ")
+        assert exc.value.category == "address entry cannot be masked on this terminal"
+
+    def test_no_address_input_other_than_the_masked_prompt(self):
+        """No --email flag and no environment-variable address input exist."""
+        source = open(SCRIPT, encoding="utf-8").read()
+        assert "--email" not in source and "--address" not in source
+        assert "os.environ.get(\"BETA_ADMISSION_ADDRESS" not in source
+        assert "getenv(" not in source and "environ[" not in source
+
+    def test_address_never_in_process_arguments(self, db_path):
+        """The child's argv carries only the subcommand and opaque flags."""
+        argv = [sys.executable, SCRIPT, "approve", "--note-ref", "R-001"]
+        assert all("@" not in a for a in argv)
