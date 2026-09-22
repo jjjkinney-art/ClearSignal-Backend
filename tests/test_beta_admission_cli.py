@@ -627,10 +627,50 @@ class TestDoubleMaskedEntry:
         answers = iter([ADDRESS, TYPO])
         monkeypatch.setattr(cli.getpass, "getpass", lambda prompt="": next(answers))
 
+        args = type("A", (), {"command": "approve", "expires_days": None, "note_ref": None})()
         with pytest.raises(cli.Refused) as exc:
-            asyncio.run(cli.cmd_approve(type("A", (), {"expires_days": None, "note_ref": None})()))
+            cli.run_command(args, cli.cmd_approve)
         assert exc.value.category == "address entries do not match"
         assert calls["init"] == 0
+
+    @pytest.mark.parametrize("command", ["approve", "revoke"])
+    def test_prompts_run_outside_any_event_loop(self, db_path, monkeypatch, command):
+        """Regression for CI #143 (Python 3.11).
+
+        Since 3.11, asyncio.run() installs a SIGINT handler whose first Ctrl-C
+        only schedules cancellation on the event loop. A blocking masked prompt
+        inside that loop starves it, so one Ctrl-C did nothing. The prompts must
+        therefore be read before any event loop exists. This asserts that
+        directly, so it fails on every Python version, not only on 3.11.
+        """
+        cli = _load_cli()
+        from app.config import settings
+        monkeypatch.setattr(settings, "database_url", f"sqlite+aiosqlite:///{db_path}", raising=False)
+        monkeypatch.setattr(settings, "beta_admission_pepper", PEPPER, raising=False)
+        monkeypatch.setattr(settings, "beta_admission_mode", "", raising=False)
+        monkeypatch.setattr(cli.sys.stdin, "isatty", lambda: True, raising=False)
+
+        loop_state = []
+
+        def recording_getpass(prompt=""):
+            try:
+                asyncio.get_running_loop()
+                loop_state.append("inside a running event loop")
+            except RuntimeError:
+                loop_state.append("outside")
+            return ADDRESS
+
+        monkeypatch.setattr(cli.getpass, "getpass", recording_getpass)
+        received = {}
+
+        async def handler(args, address):
+            received["address_matches"] = address == ADDRESS.lower()
+            return 0
+
+        args = type("A", (), {"command": command, "expires_days": None, "note_ref": None})()
+        assert cli.run_command(args, handler) == 0
+        assert loop_state == ["outside", "outside"]
+        assert received == {"address_matches": True}
 
     def test_echo_fallback_is_refused(self, monkeypatch):
         """getpass degrading to echo must never be accepted."""

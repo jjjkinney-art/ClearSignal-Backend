@@ -323,12 +323,10 @@ async def cmd_grandfather(args) -> int:
     return 0
 
 
-async def cmd_approve(args) -> int:
+async def cmd_approve(args, address: str) -> int:
+    """Create an invite grant. ``address`` was confirmed by collect_address()."""
     from app.services.access_grant_service import create_invite_grant, grant_status_counts
     op = _operation_ref()
-    _preflight_config()                       # refuse before prompting
-    # Both entries are captured and compared before any connection exists.
-    address = _prompt_confirmed_email("approve")
     expires_at = None
     if args.expires_days:
         expires_at = datetime.now(timezone.utc) + timedelta(days=args.expires_days)
@@ -353,12 +351,10 @@ async def cmd_approve(args) -> int:
     return 0
 
 
-async def cmd_revoke(_args) -> int:
+async def cmd_revoke(_args, address: str) -> int:
+    """Revoke by address. ``address`` was confirmed by collect_address()."""
     from app.services.access_grant_service import revoke_grant
     op = _operation_ref()
-    _preflight_config()
-    # Both entries are captured and compared before any connection exists.
-    address = _prompt_confirmed_email("revoke")
     async with open_session(read_only=False) as (session, mode):
         revoked = await revoke_grant(session, raw_email=address)
         del address
@@ -368,6 +364,33 @@ async def cmd_revoke(_args) -> int:
         {"revoked": revoked},
     )
     return 0 if revoked else 2
+
+
+# Commands that need an address typed at the terminal.
+ADDRESS_COMMANDS = ("approve", "revoke")
+
+
+def collect_address(command: str) -> str:
+    """Refuse on configuration, then read and confirm the address. Synchronous.
+
+    This MUST run before asyncio.run(), never inside a coroutine. Since
+    Python 3.11 asyncio.run() installs its own SIGINT handler whose first
+    Ctrl-C only schedules cancellation of the main task on the event loop; a
+    blocking getpass() inside that loop never lets the cancellation run, so a
+    single Ctrl-C would do nothing (production runs Python 3.11). Outside the
+    loop, Ctrl-C raises KeyboardInterrupt in getpass() as the operator expects,
+    and every refusal still happens before persistence is initialised.
+    """
+    _preflight_config()                       # refuse before prompting
+    return _prompt_confirmed_email(command)
+
+
+def run_command(args, handler) -> int:
+    """Prompt (if needed) outside any event loop, then run the async handler."""
+    if args.command in ADDRESS_COMMANDS:
+        address = collect_address(args.command)
+        return asyncio.run(handler(args, address))
+    return asyncio.run(handler(args))
 
 
 def main() -> int:
@@ -402,7 +425,7 @@ def main() -> int:
         parser.print_help()
         return 3
     try:
-        return asyncio.run(handler(args))
+        return run_command(args, handler)
     except Refused as refusal:
         print(f"refused: {refusal.category}")
         return 2
