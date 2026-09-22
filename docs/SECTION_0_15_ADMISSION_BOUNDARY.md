@@ -1,8 +1,9 @@
 # Controlled-beta admission boundary — Section 0.15
 
-Status: **implemented, not deployed, gate OFF by default.** Nothing in this
-section enables the gate, creates a grant, sends an invitation, or changes any
-production configuration.
+Status: **deployed and enforced.** The code defaults the gate to `off`; in
+production it was moved through `shadow` to `enforce` by separately approved
+configuration steps at Section 0.15 closure, with zero admission denials for
+existing accounts in either phase. No invitation has been sent.
 
 ## 1. Threat model
 
@@ -120,7 +121,9 @@ python3 scripts/beta_admission.py grandfather-existing --execute  # commits
 It reads `users.auth_subject` at run time, so **no production identity, id,
 address or count appears in source, migrations, tests, documentation or any
 commit**. Rows with no `auth_subject` are skipped, never granted. Output is
-aggregate counts only. It has **not been run**.
+aggregate counts only. It was run in production at Section 0.15 closure:
+4 subject grants from 5 accounts examined, 1 unbound system row skipped, and
+idempotent on re-run.
 
 **This is a mandatory prerequisite for `enforce`, not an optional tidy-up.**
 Under enforcement every established account needs a live grant bound to its
@@ -195,7 +198,8 @@ only. `--execute` is one transaction: it plans, writes, asserts that granted
 rows equal both the plan and the table delta, and commits only if all three
 agree — otherwise it rolls back and reports `row-count mismatch`.
 
-`approve` and `revoke` read the address from a **masked prompt**. It is never
+`approve` and `revoke` read the address **twice**, from **masked prompts**, and
+refuse before any database work unless both entries match (Section 0.16). It is never
 an argument, never echoed, never logged and never stored: only its HMAC is.
 `--note-ref` is an opaque reference into the private invitation ledger. The
 tool prints counts and opaque references only, and refuses a piped address.
@@ -248,3 +252,8 @@ Still required before any invitation, and **not** implemented here:
 This section implements no technical hook for any of them. Their content and
 whether they are legally sufficient is **not assessed here**; no legal review
 has been performed or is claimed.
+
+## 12. Related runbooks
+
+* `SECTION_0_16_CANARY_RUNBOOK.md` — one-person controlled-beta canary.
+* `ACCOUNT_DELETION_RUNBOOK.md` — manual account and data deletion.
