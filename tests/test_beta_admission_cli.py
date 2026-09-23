@@ -431,7 +431,7 @@ ADDRESS = "canary.person@example.test"
 TYPO = "canary.persn@example.test"
 
 
-def _pty_run(args, entries, db, *, pepper=PEPPER, timeout=90):
+def _pty_run(args, entries, db, *, pepper=PEPPER, timeout=90, marker=b"(input hidden):"):
     """Run the real CLI on a pseudo-terminal, as the Render Shell does.
 
     ``entries`` is a list of byte strings; each is written only after a
@@ -468,7 +468,7 @@ def _pty_run(args, entries, db, *, pepper=PEPPER, timeout=90):
                 break
             transcript += chunk
             # Answer each masked prompt only once it has actually appeared.
-            while sent < len(entries) and transcript.count(b"(input hidden):") > sent:
+            while sent < len(entries) and transcript.count(marker) > sent:
                 os.write(fd, entries[sent])
                 sent += 1
         if timed_out:
@@ -697,3 +697,206 @@ class TestDoubleMaskedEntry:
         """The child's argv carries only the subcommand and opaque flags."""
         argv = [sys.executable, SCRIPT, "approve", "--note-ref", "R-001"]
         assert all("@" not in a for a in argv)
+
+
+# ---------------------------------------------------------------------------
+# Section 0.16 amendment — clearing one pending invitation by opaque reference
+# ---------------------------------------------------------------------------
+
+NOTE_REF = "R-002"
+CONFIRM_MARKER = b"re-type the full ref"
+
+
+def _seed_production_shape(path: str) -> None:
+    """Four bound subject grants, one revoked invitation, one pending one.
+
+    Inserted directly so the pending invitation's locator belongs to an
+    address the test never supplies — exactly the production situation where
+    revoke-by-address cannot reach it.
+    """
+    conn = sqlite3.connect(path)
+    try:
+        for i in range(4):
+            conn.execute(
+                "INSERT INTO access_grants (id, kind, email_locator, subject, status, "
+                "redeemed_at, created_at, updated_at) VALUES "
+                "(?, 'subject', NULL, ?, 'approved', CURRENT_TIMESTAMP, "
+                "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                (f"subject-grant-{i}", f"bound-subject-{i}"),
+            )
+        conn.execute(
+            "INSERT INTO access_grants (id, kind, email_locator, subject, status, "
+            "revoked_at, created_at, updated_at) VALUES "
+            "('11111111-1111-4111-8111-111111111111', 'invite', ?, NULL, 'revoked', "
+            "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", ("a" * 64,),
+        )
+        conn.execute(
+            "INSERT INTO access_grants (id, kind, email_locator, subject, status, "
+            "note_ref, created_at, updated_at) VALUES "
+            "('22222222-2222-4222-8222-222222222222', 'invite', ?, NULL, 'approved', "
+            "?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)", ("b" * 64, NOTE_REF),
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
+PENDING_REF = "22222222-2222-4222-8222-222222222222"
+SUBJECT_REF = "subject-grant-0"
+
+
+def _grant_status_map(path: str) -> dict:
+    conn = sqlite3.connect(path)
+    try:
+        rows = conn.execute("SELECT kind, status, count(*) FROM access_grants "
+                            "GROUP BY kind, status").fetchall()
+    finally:
+        conn.close()
+    return {(k, s): n for k, s, n in rows}
+
+
+class TestRevokeInviteByReferenceCLI:
+    def test_pending_invites_lists_the_reference_without_any_address(self, db_path):
+        _seed_production_shape(db_path)
+        before = _digest(db_path)
+
+        code, out = _run("pending-invites", db=db_path)
+
+        assert code == 0, out
+        assert "read_only=True" in out
+        assert f"ref={PENDING_REF}" in out
+        assert f"note_ref={NOTE_REF}" in out
+        assert _values(out)["pending_invitations"] == 1
+        assert "b" * 64 not in out and "a" * 64 not in out      # no locator
+        assert "subject-grant" not in out                       # no subject grant
+        _assert_no_leak(out)
+        assert _digest(db_path) == before, "listing must not write"
+
+    def test_confirmation_mismatch_refuses_and_leaves_storage_identical(self, db_path):
+        _seed_production_shape(db_path)
+        before = _digest(db_path)
+
+        code, out = _pty_run(["revoke-invite", "--ref", PENDING_REF],
+                             [b"not-the-ref\r"], db_path, marker=CONFIRM_MARKER)
+
+        assert code == 2, out
+        assert "refused: confirmation did not match; nothing changed" in out
+        assert _digest(db_path) == before
+
+    def test_matching_confirmation_revokes_exactly_one(self, db_path):
+        _seed_production_shape(db_path)
+        assert _grant_status_map(db_path)[("subject", "approved")] == 4
+
+        code, out = _pty_run(["revoke-invite", "--ref", PENDING_REF],
+                             [PENDING_REF.encode() + b"\r"], db_path, marker=CONFIRM_MARKER)
+
+        assert code == 0, out
+        assert "state=EXECUTED" in out and "revoked=1" in out
+        values = _values(out)
+        assert values["approved_pending"] == 0
+        assert values["revoked"] == 2
+        assert values["subject_grants"] == 4
+        assert values["invite_grants"] == 2
+        assert values["total"] == 6
+        statuses = _grant_status_map(db_path)
+        assert statuses[("subject", "approved")] == 4, "subject grants must be untouched"
+        assert statuses[("invite", "revoked")] == 2
+        assert ("invite", "approved") not in statuses
+        _assert_no_leak(out)
+
+    def test_a_unique_prefix_is_enough(self, db_path):
+        _seed_production_shape(db_path)
+        prefix = PENDING_REF[:12]
+
+        code, out = _pty_run(["revoke-invite", "--ref", prefix],
+                             [PENDING_REF.encode() + b"\r"], db_path, marker=CONFIRM_MARKER)
+
+        assert code == 0, out
+        assert _grant_status_map(db_path)[("subject", "approved")] == 4
+
+    def test_a_subject_grant_reference_is_refused(self, db_path):
+        _seed_production_shape(db_path)
+        before = _digest(db_path)
+
+        code, out = _pty_run(["revoke-invite", "--ref", SUBJECT_REF],
+                             [], db_path, marker=CONFIRM_MARKER)
+
+        assert code == 2, out
+        assert "refused: no pending invitation matches that reference" in out
+        assert _digest(db_path) == before
+
+    def test_short_reference_is_refused(self, db_path):
+        _seed_production_shape(db_path)
+        before = _digest(db_path)
+        code, out = _pty_run(["revoke-invite", "--ref", "2222"], [], db_path,
+                             marker=CONFIRM_MARKER)
+        assert code == 2 and "refused: reference too short" in out
+        assert _digest(db_path) == before
+
+    def test_piped_confirmation_is_refused(self, db_path):
+        _seed_production_shape(db_path)
+        before = _digest(db_path)
+
+        code, out = _run("revoke-invite", "--ref", PENDING_REF, db=db_path)
+
+        assert code == 2
+        assert "refused: confirmation must be typed interactively, not piped" in out
+        assert _digest(db_path) == before
+
+    def test_second_run_finds_nothing_left_to_revoke(self, db_path):
+        _seed_production_shape(db_path)
+        assert _pty_run(["revoke-invite", "--ref", PENDING_REF],
+                        [PENDING_REF.encode() + b"\r"], db_path,
+                        marker=CONFIRM_MARKER)[0] == 0
+
+        code, out = _pty_run(["revoke-invite", "--ref", PENDING_REF], [], db_path,
+                             marker=CONFIRM_MARKER)
+
+        assert code == 2
+        assert "refused: no pending invitation matches that reference" in out
+        code, out = _run("pending-invites", db=db_path)
+        assert _values(out)["pending_invitations"] == 0
+
+    # ── defence in depth: the two assertions inside the write transaction ────
+    # Reached only if the service layer misbehaves, so they are driven directly
+    # with the service call patched. Both must roll back and commit nothing.
+
+    def test_row_count_other_than_one_rolls_back(self, capture, monkeypatch):
+        log, db_path = capture
+        _seed_production_shape(db_path)
+        cli = _load_cli()
+        from app.services import access_grant_service as svc
+
+        async def revokes_nothing(session, grant_id):
+            return 0
+
+        monkeypatch.setattr(svc, "revoke_invite_by_id", revokes_nothing)
+        with pytest.raises(cli.Refused) as exc:
+            asyncio.run(cli.cmd_revoke_invite(object(), PENDING_REF))
+
+        assert exc.value.category == "row-count mismatch; rolled back"
+        assert log["commits"] == 0
+        assert _grant_status_map(db_path)[("invite", "approved")] == 1
+
+    def test_a_moved_subject_grant_count_rolls_back(self, capture, monkeypatch):
+        log, db_path = capture
+        _seed_production_shape(db_path)
+        cli = _load_cli()
+        from app.services import access_grant_service as svc
+        real = svc.revoke_invite_by_id
+
+        async def also_touches_a_subject_grant(session, grant_id):
+            from sqlalchemy import text
+            changed = await real(session, grant_id)
+            await session.execute(text(
+                "UPDATE access_grants SET status='revoked' WHERE kind='subject' "
+                "AND id=:i"), {"i": SUBJECT_REF})
+            return changed
+
+        monkeypatch.setattr(svc, "revoke_invite_by_id", also_touches_a_subject_grant)
+        with pytest.raises(cli.Refused) as exc:
+            asyncio.run(cli.cmd_revoke_invite(object(), PENDING_REF))
+
+        assert exc.value.category == "row-count mismatch; rolled back"
+        assert log["commits"] == 0
+        assert _grant_status_map(db_path)[("subject", "approved")] == 4

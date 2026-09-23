@@ -333,6 +333,115 @@ async def create_subject_grant(
     return str(grant.id)
 
 
+#: Shortest grant-reference prefix accepted by resolve_pending_invite. Shorter
+#: prefixes are refused rather than risking an ambiguous match.
+MIN_REF_LENGTH = 8
+
+
+async def list_pending_invites(session) -> list:
+    """Read-only listing of PENDING INVITATIONS, by opaque reference.
+
+    Returns the grant id (a random UUID, derived from nothing), the operator's
+    own note reference, and dates. Never an address, never a locator, and
+    never a subject grant: the caller has no way to reach one through here.
+    """
+    if session is None:
+        return []
+
+    from sqlalchemy import select
+    from app.db.models import AccessGrant
+
+    rows = (await session.execute(
+        select(AccessGrant)
+        .where(AccessGrant.kind == KIND_INVITE)
+        .where(AccessGrant.status == STATUS_APPROVED)
+        .where(AccessGrant.redeemed_at.is_(None))
+        .order_by(AccessGrant.created_at)
+    )).scalars().all()
+    return [{
+        "ref": str(row.id),
+        "note_ref": row.note_ref or "",
+        "created": _aware(row.created_at).date().isoformat() if row.created_at else "",
+        "expires": _aware(row.expires_at).date().isoformat() if row.expires_at else "none",
+    } for row in rows]
+
+
+async def resolve_pending_invite(session, ref: str):
+    """Resolve an opaque reference to exactly one pending invitation.
+
+    Returns ``(row, state)`` where state is "ok", "none", "ambiguous" or
+    "too_short". Only pending invitations are candidates, so a subject
+    grant's id resolves to "none" rather than ever being returned.
+    """
+    if session is None:
+        return None, "none"
+    ref = (ref or "").strip().lower()
+    if len(ref) < MIN_REF_LENGTH:
+        return None, "too_short"
+
+    from sqlalchemy import select
+    from app.db.models import AccessGrant
+
+    rows = (await session.execute(
+        select(AccessGrant)
+        .where(AccessGrant.kind == KIND_INVITE)
+        .where(AccessGrant.status == STATUS_APPROVED)
+        .where(AccessGrant.redeemed_at.is_(None))
+    )).scalars().all()
+    matches = [row for row in rows if str(row.id).lower().startswith(ref)]
+    if not matches:
+        return None, "none"
+    if len(matches) > 1:
+        return None, "ambiguous"
+    return matches[0], "ok"
+
+
+async def revoke_invite_by_id(session, grant_id: str) -> int:
+    """Revoke ONE pending invitation by its exact id. Returns rows changed.
+
+    Every condition lives in the WHERE clause, so the database — not Python —
+    enforces them: the row must be an invitation, still approved, unredeemed
+    and unbound. A subject grant can therefore never be modified here, and
+    neither can an already revoked or redeemed invitation.
+    """
+    if session is None or not grant_id:
+        return 0
+
+    from sqlalchemy import update
+    from app.db.models import AccessGrant
+
+    now = _now()
+    outcome = await session.execute(
+        update(AccessGrant)
+        .where(AccessGrant.id == grant_id)
+        .where(AccessGrant.kind == KIND_INVITE)
+        .where(AccessGrant.status == STATUS_APPROVED)
+        .where(AccessGrant.redeemed_at.is_(None))
+        .where(AccessGrant.subject.is_(None))
+        .values(status=STATUS_REVOKED, revoked_at=now, updated_at=now)
+        .execution_options(synchronize_session=False)
+    )
+    changed = int(outcome.rowcount or 0)
+    if changed:
+        # Opaque: an invitation has no subject, so the grant id is the ref.
+        await audit_admission(session, action=ACTION_REVOKE, ref=str(grant_id), detail=KIND_INVITE)
+    session.expire_all()          # Core UPDATE: drop any stale ORM state before re-counting
+    return changed
+
+
+async def count_approved_subject_grants(session) -> int:
+    """Subject grants still APPROVED. The invariant a revoke must not move."""
+    if session is None:
+        return 0
+    from sqlalchemy import select, func
+    from app.db.models import AccessGrant
+    return int((await session.execute(
+        select(func.count()).select_from(AccessGrant)
+        .where(AccessGrant.kind == KIND_SUBJECT)
+        .where(AccessGrant.status == STATUS_APPROVED)
+    )).scalar() or 0)
+
+
 async def revoke_grant(
     session,
     *,
