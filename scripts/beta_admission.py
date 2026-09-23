@@ -29,8 +29,11 @@ Refusal order — nothing reaches a business SELECT until every step passes
 
 Privacy
 -------
-* An email address is NEVER a command-line argument. `approve` and `revoke`
-  read it from a masked prompt and hash it immediately.
+* An email address is NEVER a command-line argument or environment variable.
+  `approve` and `revoke` read it TWICE from masked prompts, refuse on any
+  mismatch before touching the database, and hash it immediately. A single
+  masked entry would hide a typo, and a typo is a live grant for someone
+  else's address.
 * Output is counts, booleans, the admission mode, the dry-run/executed state
   and an opaque per-run operation reference. Never an address, identity,
   subject, locator, token, credential or database URL.
@@ -75,11 +78,65 @@ def _operation_ref() -> str:
     return uuid.uuid4().hex[:12]
 
 
-def _prompt_email(purpose: str) -> str:
-    """Read an address without echoing it. Never returned to stdout."""
+_ADDRESS_MAX_LENGTH = 320
+
+
+def _read_masked(prompt: str) -> str:
+    """One masked read. Refuses rather than ever falling back to echo.
+
+    ``getpass`` silently degrades to reading with echo ON when it cannot
+    control the terminal, emitting only a GetPassWarning. That would put the
+    address on screen and in any terminal recording, so the warning is turned
+    into a refusal.
+    """
+    import warnings
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", getpass.GetPassWarning)
+            return getpass.getpass(prompt)
+    except getpass.GetPassWarning:
+        raise Refused("address entry cannot be masked on this terminal")
+    except (EOFError, KeyboardInterrupt):
+        raise Refused("address entry cancelled")
+
+
+def _address_well_formed(value: str) -> bool:
+    """A shape check only. It never reveals why an address was rejected."""
+    if not value or len(value) > _ADDRESS_MAX_LENGTH:
+        return False
+    if any(ch.isspace() for ch in value) or value.count("@") != 1:
+        return False
+    local, domain = value.split("@")
+    return bool(local) and "." in domain and not domain.startswith(".") \
+        and not domain.endswith(".") and ".." not in domain
+
+
+def _prompt_confirmed_email(purpose: str) -> str:
+    """Read the address twice, masked, and return it only if both agree.
+
+    Neither entry is ever echoed, printed, logged or placed in an exception.
+    Both are captured before either is normalised, and the comparison is
+    made on the normalised form the locator itself uses. Every failure is a
+    fixed-word refusal raised BEFORE any database work begins, so a refused
+    run never opens a connection, let alone a write transaction.
+    """
     if not sys.stdin.isatty():
         raise Refused("address must be typed interactively, not piped")
-    return getpass.getpass(f"Address to {purpose} (input hidden): ").strip()
+
+    first = _read_masked(f"Address to {purpose} (input hidden): ")
+    second = _read_masked(f"Confirm address to {purpose} (input hidden): ")
+
+    from app.services.access_grant_service import normalize_email
+    a, b = normalize_email(first), normalize_email(second)
+    del first, second
+
+    if not a or not b:
+        raise Refused("address missing")
+    if a != b:
+        raise Refused("address entries do not match")
+    if not _address_well_formed(a):
+        raise Refused("address malformed")
+    return a
 
 
 def _preflight_config() -> str:
@@ -266,13 +323,10 @@ async def cmd_grandfather(args) -> int:
     return 0
 
 
-async def cmd_approve(args) -> int:
+async def cmd_approve(args, address: str) -> int:
+    """Create an invite grant. ``address`` was confirmed by collect_address()."""
     from app.services.access_grant_service import create_invite_grant, grant_status_counts
     op = _operation_ref()
-    _preflight_config()                       # refuse before prompting
-    address = _prompt_email("approve")
-    if not address:
-        return 3
     expires_at = None
     if args.expires_days:
         expires_at = datetime.now(timezone.utc) + timedelta(days=args.expires_days)
@@ -297,13 +351,10 @@ async def cmd_approve(args) -> int:
     return 0
 
 
-async def cmd_revoke(_args) -> int:
+async def cmd_revoke(_args, address: str) -> int:
+    """Revoke by address. ``address`` was confirmed by collect_address()."""
     from app.services.access_grant_service import revoke_grant
     op = _operation_ref()
-    _preflight_config()
-    address = _prompt_email("revoke")
-    if not address:
-        return 3
     async with open_session(read_only=False) as (session, mode):
         revoked = await revoke_grant(session, raw_email=address)
         del address
@@ -313,6 +364,33 @@ async def cmd_revoke(_args) -> int:
         {"revoked": revoked},
     )
     return 0 if revoked else 2
+
+
+# Commands that need an address typed at the terminal.
+ADDRESS_COMMANDS = ("approve", "revoke")
+
+
+def collect_address(command: str) -> str:
+    """Refuse on configuration, then read and confirm the address. Synchronous.
+
+    This MUST run before asyncio.run(), never inside a coroutine. Since
+    Python 3.11 asyncio.run() installs its own SIGINT handler whose first
+    Ctrl-C only schedules cancellation of the main task on the event loop; a
+    blocking getpass() inside that loop never lets the cancellation run, so a
+    single Ctrl-C would do nothing (production runs Python 3.11). Outside the
+    loop, Ctrl-C raises KeyboardInterrupt in getpass() as the operator expects,
+    and every refusal still happens before persistence is initialised.
+    """
+    _preflight_config()                       # refuse before prompting
+    return _prompt_confirmed_email(command)
+
+
+def run_command(args, handler) -> int:
+    """Prompt (if needed) outside any event loop, then run the async handler."""
+    if args.command in ADDRESS_COMMANDS:
+        address = collect_address(args.command)
+        return asyncio.run(handler(args, address))
+    return asyncio.run(handler(args))
 
 
 def main() -> int:
@@ -347,7 +425,7 @@ def main() -> int:
         parser.print_help()
         return 3
     try:
-        return asyncio.run(handler(args))
+        return run_command(args, handler)
     except Refused as refusal:
         print(f"refused: {refusal.category}")
         return 2
