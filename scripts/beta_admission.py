@@ -4,7 +4,17 @@
     python3 scripts/beta_admission.py status
     python3 scripts/beta_admission.py approve [--expires-days N] [--note-ref REF]
     python3 scripts/beta_admission.py revoke
+    python3 scripts/beta_admission.py pending-invites
+    python3 scripts/beta_admission.py revoke-invite --ref REF
     python3 scripts/beta_admission.py grandfather-existing [--execute]
+
+An invitation can also be cleared WITHOUT its address. `pending-invites`
+lists pending invitations by an opaque grant reference (a random UUID) plus
+the operator's own --note-ref label, and `revoke-invite` revokes exactly one
+of them after a visible typed confirmation. That path exists because a
+locator lookup is impossible if the address spelling is unknown or the pepper
+was rotated after the invitation was created. It can never select or modify a
+subject grant: every guard is in the UPDATE's WHERE clause.
 
 Persistence
 -----------
@@ -54,6 +64,7 @@ import sys
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -263,6 +274,13 @@ async def open_session(*, read_only: bool):
 # Commands
 # ---------------------------------------------------------------------------
 
+def _aware_date(value) -> str:
+    """Date only, for operator display. Never a time, never an identifier."""
+    from app.services.access_grant_service import _aware
+    value = _aware(value)
+    return value.date().isoformat() if value is not None else "-"
+
+
 def _print_block(title: str, values: dict) -> None:
     print(title)
     for key in sorted(values):
@@ -351,6 +369,94 @@ async def cmd_approve(args, address: str) -> int:
     return 0
 
 
+async def cmd_pending_invites(_args) -> int:
+    """List pending invitations by opaque reference. Read-only."""
+    from app.services.access_grant_service import grant_status_counts, list_pending_invites
+    op = _operation_ref()
+    async with open_session(read_only=True) as (session, mode):
+        rows = await list_pending_invites(session)
+        counts = await grant_status_counts(session)
+    print(f"pending-invites  operation_ref={op}  mode={mode}  read_only=True")
+    for row in rows:
+        # ref is a random UUID; note_ref is the operator's own ledger label.
+        print(f"  ref={row['ref']}  note_ref={row['note_ref'] or '-'}  "
+              f"created={row['created']}  expires={row['expires']}")
+    print(f"  {'pending_invitations':<22} {len(rows)}")
+    print(f"  {'approved_pending':<22} {counts['approved_pending']}")
+    return 0
+
+
+async def preview_invite(args) -> Dict[str, Any]:
+    """Stage 1: resolve the reference and read the before-counts. READ-ONLY."""
+    from app.services.access_grant_service import grant_status_counts, resolve_pending_invite
+    async with open_session(read_only=True) as (session, mode):
+        row, state = await resolve_pending_invite(session, args.ref)
+        if state != "ok":
+            raise Refused({
+                "none": "no pending invitation matches that reference",
+                "ambiguous": "reference is ambiguous",
+                "too_short": "reference too short",
+            }[state])
+        return {
+            "id": str(row.id),
+            "note_ref": row.note_ref or "-",
+            "created": _aware_date(row.created_at),
+            "mode": mode,
+            "before": await grant_status_counts(session),
+        }
+
+
+async def cmd_revoke_invite(_args, grant_id: str) -> int:
+    """Stage 3: revoke exactly that invitation, in one asserted transaction."""
+    from app.services.access_grant_service import (
+        count_approved_subject_grants, grant_status_counts, revoke_invite_by_id,
+    )
+    op = _operation_ref()
+    async with open_session(read_only=False) as (session, mode):
+        subjects_before = await count_approved_subject_grants(session)
+        changed = await revoke_invite_by_id(session, grant_id)
+        await session.flush()
+        subjects_after = await count_approved_subject_grants(session)
+        after = await grant_status_counts(session)
+        if changed != 1 or subjects_after != subjects_before:
+            # open_session rolls back on the way out: nothing partial survives.
+            raise Refused("row-count mismatch; rolled back")
+        await session.commit()
+    _print_block(
+        f"revoke-invite  operation_ref={op}  mode={mode}  state=EXECUTED  "
+        f"committed=True  revoked=1",
+        after,
+    )
+    return 0
+
+
+def run_revoke_invite(args) -> int:
+    """Preview, confirm, execute — the confirmation OUTSIDE any event loop.
+
+    The reference is opaque and identifies nobody, so the confirmation is
+    deliberately VISIBLE: seeing it is what lets the operator check they are
+    revoking the invitation they meant. Hidden entry stays where it belongs,
+    on the address prompts of approve/revoke.
+    """
+    _preflight_config()
+    if not sys.stdin.isatty():
+        raise Refused("confirmation must be typed interactively, not piped")
+
+    preview = asyncio.run(preview_invite(args))
+    print("about to revoke this pending invitation:")
+    print(f"  ref={preview['id']}  note_ref={preview['note_ref']}  created={preview['created']}")
+    print(f"  approved_pending {preview['before']['approved_pending']}  "
+          f"revoked {preview['before']['revoked']}  "
+          f"subject_grants {preview['before']['subject_grants']}")
+    try:
+        typed = input("re-type the full ref to confirm (anything else aborts): ").strip().lower()
+    except (EOFError, KeyboardInterrupt):
+        raise Refused("confirmation cancelled")
+    if typed != preview["id"].lower():
+        raise Refused("confirmation did not match; nothing changed")
+    return asyncio.run(cmd_revoke_invite(args, preview["id"]))
+
+
 async def cmd_revoke(_args, address: str) -> int:
     """Revoke by address. ``address`` was confirmed by collect_address()."""
     from app.services.access_grant_service import revoke_grant
@@ -406,6 +512,16 @@ def main() -> int:
 
     sub.add_parser("revoke", help="revoke by address (masked prompt)")
 
+    sub.add_parser("pending-invites",
+                   help="list pending invitations by opaque reference (read-only)")
+
+    revoke_invite = sub.add_parser(
+        "revoke-invite",
+        help="revoke ONE pending invitation by its opaque reference",
+    )
+    revoke_invite.add_argument("--ref", required=True,
+                               help="grant reference, or a prefix of at least 8 characters")
+
     grandfather = sub.add_parser(
         "grandfather-existing",
         help="grant every already-bound identity, by subject (read-only dry run by default)",
@@ -418,13 +534,16 @@ def main() -> int:
         "status": cmd_status,
         "approve": cmd_approve,
         "revoke": cmd_revoke,
+        "pending-invites": cmd_pending_invites,
         "grandfather-existing": cmd_grandfather,
     }
     handler = handlers.get(args.command)
-    if handler is None:
+    if handler is None and args.command != "revoke-invite":
         parser.print_help()
         return 3
     try:
+        if args.command == "revoke-invite":
+            return run_revoke_invite(args)
         return run_command(args, handler)
     except Refused as refusal:
         print(f"refused: {refusal.category}")

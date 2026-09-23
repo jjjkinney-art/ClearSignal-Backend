@@ -1022,3 +1022,217 @@ class TestPepperRequired:
         pepper("")                                             # then lose it
         assert await resolve_user_from_jwt(session, claims()) is None
         assert await _user_count(session) == 0
+
+
+# ---------------------------------------------------------------------------
+# 15. Revoking one pending invitation by opaque reference (no address needed)
+# ---------------------------------------------------------------------------
+
+async def _production_shape(session):
+    """Four subject grants, one revoked invitation, one pending invitation.
+
+    The shape production is actually in: the pending invitation's address is
+    unknown (a spelling variant, or the pepper was rotated after it was
+    created), so it cannot be reached by locator.
+    """
+    from app.services.access_grant_service import (
+        create_invite_grant, create_subject_grant, revoke_grant,
+    )
+    for i in range(4):
+        await create_subject_grant(session, subject=f"bound-subject-{i}")
+    await create_invite_grant(session, raw_email="already.revoked@example.test")
+    assert await revoke_grant(session, raw_email="already.revoked@example.test") == 1
+    pending_id = await create_invite_grant(
+        session, raw_email="unknown.spelling@example.test", note_ref="R-002",
+    )
+    await session.flush()
+    return pending_id
+
+
+async def _statuses(session):
+    from sqlalchemy import select
+    from app.db.models import AccessGrant
+    rows = (await session.execute(select(AccessGrant))).scalars().all()
+    return {(r.kind, r.status): sum(
+        1 for x in rows if x.kind == r.kind and x.status == r.status) for r in rows}
+
+
+class TestRevokeInviteByReference:
+    @pytest.mark.asyncio
+    async def test_listing_shows_only_pending_invitations(self, session, mode):
+        mode("off")
+        from app.services.access_grant_service import list_pending_invites
+        await _production_shape(session)
+
+        rows = await list_pending_invites(session)
+
+        assert len(rows) == 1, "the revoked invitation and subject grants are excluded"
+        assert rows[0]["note_ref"] == "R-002"
+        assert set(rows[0]) == {"ref", "note_ref", "created", "expires"}
+
+    @pytest.mark.asyncio
+    async def test_listing_exposes_no_address_or_locator(self, session, mode):
+        mode("off")
+        from app.services.access_grant_service import email_locator, list_pending_invites
+        await _production_shape(session)
+
+        blob = str(await list_pending_invites(session))
+
+        assert "unknown.spelling@example.test" not in blob
+        assert email_locator("unknown.spelling@example.test") not in blob
+
+    @pytest.mark.asyncio
+    async def test_revokes_only_the_pending_invitation(self, session, mode):
+        mode("off")
+        from app.services.access_grant_service import (
+            count_approved_subject_grants, grant_status_counts, revoke_invite_by_id,
+        )
+        pending_id = await _production_shape(session)
+        before = await grant_status_counts(session)
+        assert (before["approved_pending"], before["revoked"], before["subject_grants"]) == (1, 1, 4)
+        subjects_before = await count_approved_subject_grants(session)
+
+        changed = await revoke_invite_by_id(session, pending_id)
+        await session.flush()
+        after = await grant_status_counts(session)
+
+        assert changed == 1
+        assert after["approved_pending"] == 0
+        assert after["revoked"] == 2
+        assert after["subject_grants"] == 4
+        assert after["invite_grants"] == 2
+        assert after["total"] == before["total"]
+        assert after["approved_redeemed"] == before["approved_redeemed"]
+        assert await count_approved_subject_grants(session) == subjects_before
+
+    @pytest.mark.asyncio
+    async def test_a_subject_grant_reference_is_never_selectable(self, session, mode):
+        """The whole point: a subject grant cannot be reached by this path."""
+        mode("off")
+        from sqlalchemy import select
+        from app.db.models import AccessGrant
+        from app.services.access_grant_service import (
+            KIND_SUBJECT, resolve_pending_invite, revoke_invite_by_id,
+        )
+        await _production_shape(session)
+        subject_grant = (await session.execute(
+            select(AccessGrant).where(AccessGrant.kind == KIND_SUBJECT)
+        )).scalars().first()
+        before = await _statuses(session)
+
+        row, state = await resolve_pending_invite(session, str(subject_grant.id))
+        changed = await revoke_invite_by_id(session, str(subject_grant.id))
+        await session.flush()
+
+        assert (row, state) == (None, "none")
+        assert changed == 0
+        assert await _statuses(session) == before
+
+    @pytest.mark.asyncio
+    async def test_already_revoked_invitation_is_not_selectable(self, session, mode):
+        mode("off")
+        from sqlalchemy import select
+        from app.db.models import AccessGrant
+        from app.services.access_grant_service import (
+            STATUS_REVOKED, resolve_pending_invite, revoke_invite_by_id,
+        )
+        await _production_shape(session)
+        revoked = (await session.execute(
+            select(AccessGrant).where(AccessGrant.status == STATUS_REVOKED)
+        )).scalars().first()
+
+        assert await resolve_pending_invite(session, str(revoked.id)) == (None, "none")
+        assert await revoke_invite_by_id(session, str(revoked.id)) == 0
+
+    @pytest.mark.asyncio
+    async def test_redeemed_invitation_is_not_selectable(self, session, mode):
+        """A redeemed invitation belongs to an admitted identity: hands off."""
+        mode("enforce")
+        from app.services.access_grant_service import (
+            create_invite_grant, resolve_pending_invite, revoke_invite_by_id,
+        )
+        from app.services.supabase_auth_service import resolve_user_from_jwt
+        grant_id = await create_invite_grant(session, raw_email=EMAIL_A)
+        assert await resolve_user_from_jwt(session, claims()) is not None
+        await session.flush()
+
+        assert await resolve_pending_invite(session, grant_id) == (None, "none")
+        assert await revoke_invite_by_id(session, grant_id) == 0
+
+    @pytest.mark.asyncio
+    async def test_ambiguous_prefix_refuses_and_changes_nothing(self, session, mode):
+        """Two pending invitations deliberately sharing a prefix.
+
+        Random UUIDs practically never collide on 8 characters, so the ids are
+        constructed here; otherwise this branch would never be exercised and a
+        removed ambiguity check would go unnoticed.
+        """
+        mode("off")
+        from app.db.models import AccessGrant
+        from app.services.access_grant_service import (
+            KIND_INVITE, STATUS_APPROVED, resolve_pending_invite,
+        )
+        await _production_shape(session)
+        shared = "abcdef01"
+        for suffix in ("aaaa", "bbbb"):
+            session.add(AccessGrant(
+                id=f"{shared}-{suffix}-4111-8111-111111111111",
+                kind=KIND_INVITE, email_locator="c" * 64, subject=None,
+                status=STATUS_APPROVED, note_ref=None,
+            ))
+        await session.flush()
+        before = await _statuses(session)
+
+        row, state = await resolve_pending_invite(session, shared)
+
+        assert (row, state) == (None, "ambiguous")
+        assert await _statuses(session) == before, "resolving must change nothing"
+
+    @pytest.mark.asyncio
+    async def test_a_longer_prefix_disambiguates(self, session, mode):
+        mode("off")
+        from app.db.models import AccessGrant
+        from app.services.access_grant_service import (
+            KIND_INVITE, STATUS_APPROVED, resolve_pending_invite,
+        )
+        await _production_shape(session)
+        shared = "abcdef01"
+        for suffix in ("aaaa", "bbbb"):
+            session.add(AccessGrant(
+                id=f"{shared}-{suffix}-4111-8111-111111111111",
+                kind=KIND_INVITE, email_locator="c" * 64, subject=None,
+                status=STATUS_APPROVED, note_ref=None,
+            ))
+        await session.flush()
+
+        row, state = await resolve_pending_invite(session, f"{shared}-aaaa")
+        assert state == "ok" and str(row.id).endswith("111111111111")
+
+    @pytest.mark.asyncio
+    async def test_short_reference_refuses(self, session, mode):
+        mode("off")
+        from app.services.access_grant_service import MIN_REF_LENGTH, resolve_pending_invite
+        pending_id = await _production_shape(session)
+        assert await resolve_pending_invite(session, pending_id[:MIN_REF_LENGTH - 1]) == (None, "too_short")
+
+    @pytest.mark.asyncio
+    async def test_unique_prefix_resolves(self, session, mode):
+        mode("off")
+        from app.services.access_grant_service import MIN_REF_LENGTH, resolve_pending_invite
+        pending_id = await _production_shape(session)
+        row, state = await resolve_pending_invite(session, pending_id[:MIN_REF_LENGTH])
+        assert state == "ok" and str(row.id) == pending_id
+
+    @pytest.mark.asyncio
+    async def test_audit_records_the_opaque_grant_reference_only(self, session, mode):
+        mode("off")
+        from app.services.access_grant_service import revoke_invite_by_id
+        pending_id = await _production_shape(session)
+        await revoke_invite_by_id(session, pending_id)
+        await session.flush()
+
+        rows = await _audit_actions(session)
+        revoke_rows = [r for r in rows if r[0] == "revoke"]
+        blob = " ".join(str(r[2]) for r in revoke_rows)
+        assert "unknown.spelling@example.test" not in blob
+        assert pending_id in blob          # the opaque grant id is the reference
