@@ -1012,6 +1012,15 @@ def _run_investment_pipeline(
             logger.warning("[router] sec evidence failed for %s: %r", ticker, _e)
             return []
 
+    def _fetch_sec_revenue():
+        try:
+            from .verified_sec_fact_service import fetch_verified_revenue_claim
+            claim = fetch_verified_revenue_claim(ticker)
+            return [claim] if claim else []
+        except Exception as _e:
+            logger.warning("[router] verified SEC revenue unavailable for %s: %r", ticker, _e)
+            return []
+
     def _fetch_news_company():
         try:
             return _news_provider.fetch_company_news(ticker) or []
@@ -1058,6 +1067,11 @@ def _run_investment_pipeline(
         "valuation": _fetch_valuation_ratios,
         "estimates": _fetch_analyst_estimates,
     }
+    # The optional structured fact runs alongside evidence retrieval, within
+    # the existing ten-second ceiling. It is supplemental to the generated
+    # answer and only requested for an explicit revenue question.
+    if re.search(r"\brevenues?\b", question, re.IGNORECASE):
+        _ev_tasks["sec_revenue"] = _fetch_sec_revenue
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
@@ -1108,7 +1122,7 @@ def _run_investment_pipeline(
 
         return _obs_bind(_run)
 
-    _ev_pool = ThreadPoolExecutor(max_workers=7)
+    _ev_pool = ThreadPoolExecutor(max_workers=len(_ev_tasks))
     try:
         _ev_futures_map = {k: _ev_pool.submit(_observed(k, fn))
                            for k, fn in _ev_tasks.items()}
@@ -1142,6 +1156,7 @@ def _run_investment_pipeline(
     fred_evidence:   list = _ev_results.get("fred",      [])
     _val_ratios:     list = _ev_results.get("valuation", [])
     _analyst_ests:   list = _ev_results.get("estimates", [])
+    _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
     evidence = market_evidence + fred_evidence + _val_ratios + _analyst_ests
 
     print(
@@ -1566,6 +1581,9 @@ def _run_investment_pipeline(
         answer={
             "investment_thesis": thesis_dict,
             "backend_version":   _backend_version,   # [DEPLOYMENT PROOF]
+            # Separate from generated prose: these are exact XBRL observations
+            # with claim-bound filing links, never inferred citations.
+            "verified_sec_facts": _verified_sec_facts,
         },
         routing={
             "pipeline": "investment_thesis",

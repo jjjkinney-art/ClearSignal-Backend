@@ -93,7 +93,16 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
 def get_company_fact_records(cik: str, *, concept: str, unit: str,
                              user_agent: str = "") -> list[SecFactRecord]:
     """Fetch a specified concept's observations; fail closed on SEC errors."""
-    if not cik or not cik.isdigit() or not concept or not unit:
+    return get_company_fact_records_for_concepts(
+        cik, concepts=(concept,), unit=unit, user_agent=user_agent,
+    )
+
+
+def get_company_fact_records_for_concepts(
+    cik: str, *, concepts: tuple[str, ...], unit: str, user_agent: str = "",
+) -> list[SecFactRecord]:
+    """Fetch several explicit concepts in one Company Facts request."""
+    if not cik or not cik.isdigit() or not concepts or not all(concepts) or not unit:
         return []
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik.zfill(10)}.json"
     try:
@@ -102,7 +111,8 @@ def get_company_fact_records(cik: str, *, concept: str, unit: str,
         data = response.json()
         if not isinstance(data, dict) or str(data.get("cik", "")) != str(int(cik)):
             return []
-        return parse_company_fact_records(data, concept=concept, unit=unit)
+        return [record for concept in concepts
+                for record in parse_company_fact_records(data, concept=concept, unit=unit)]
     except Exception as exc:
         logger.warning("SEC structured fact retrieval failed for CIK %s: %s", cik, exc)
         return []
