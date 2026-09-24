@@ -41,6 +41,28 @@ def _filing_link(entry: ElementTree.Element) -> Optional[str]:
     return None
 
 
+def _parse_filing_feed(xml_text: str, count: int) -> List[FilingItem]:
+    """Parse entry-scoped SEC filing metadata without making a network call."""
+    root = ElementTree.fromstring(xml_text)
+    filings: List[FilingItem] = []
+    for entry in root.findall(f"{_ATOM}entry")[:count]:
+        title = (entry.findtext(f"{_ATOM}title") or "").strip()
+        filing_date = (entry.findtext(f"{_ATOM}updated") or "")[:10]
+        try:
+            date.fromisoformat(filing_date)
+        except ValueError:
+            continue
+        if not title:
+            continue
+        filings.append(FilingItem({
+            "filing_type": title.split()[0],
+            "filing_date": filing_date,
+            "title": title,
+            "url": _filing_link(entry),
+        }))
+    return filings
+
+
 class FilingItem(dict):
     """Simple dictionary subclass representing a filing event.
 
@@ -89,26 +111,7 @@ def get_recent_filings(company: str, ticker: Optional[str] = None, user_agent: s
     try:
         resp = requests.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
-        root = ElementTree.fromstring(resp.text)
-        filings: List[FilingItem] = []
-        for entry in root.findall(f"{_ATOM}entry")[:count]:
-            title = (entry.findtext(f"{_ATOM}title") or "").strip()
-            filing_date = (entry.findtext(f"{_ATOM}updated") or "")[:10]
-            try:
-                date.fromisoformat(filing_date)
-            except ValueError:
-                continue
-            if not title:
-                continue
-            # Derive the filing type from the beginning of the title
-            filing_type = title.split()[0]
-            filings.append(FilingItem({
-                "filing_type": filing_type,
-                "filing_date": filing_date,
-                "title": title,
-                "url": _filing_link(entry),
-            }))
-        return filings
+        return _parse_filing_feed(resp.text, count)
     except Exception as exc:
         logger.warning(f"SEC EDGAR retrieval failed for {ticker}: {exc}")
         return []
