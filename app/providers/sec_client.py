@@ -11,12 +11,56 @@ exceptions so that failures never propagate up the call stack.
 from __future__ import annotations
 
 import logging
-import re
+from datetime import date
 from typing import List, Optional
+from urllib.parse import urlsplit
+from xml.etree import ElementTree
 
 import requests  # type: ignore
 
 logger = logging.getLogger(__name__)
+_ATOM = "{http://www.w3.org/2005/Atom}"
+
+
+def _filing_link(entry: ElementTree.Element) -> Optional[str]:
+    """Return only a direct SEC archive link from this specific Atom entry."""
+    for link in entry.findall(f"{_ATOM}link"):
+        if link.get("rel", "alternate") != "alternate":
+            continue
+        href = link.get("href", "")
+        try:
+            parsed = urlsplit(href)
+            port = parsed.port
+        except ValueError:
+            continue
+        if (parsed.scheme == "https" and parsed.hostname == "www.sec.gov"
+                and parsed.username is None and parsed.password is None
+                and port is None and parsed.path.startswith("/Archives/edgar/data/")
+                and not parsed.fragment and not any(ord(c) < 33 or c == "\\" for c in href)):
+            return href
+    return None
+
+
+def _parse_filing_feed(xml_text: str, count: int) -> List[FilingItem]:
+    """Parse entry-scoped SEC filing metadata without making a network call."""
+    root = ElementTree.fromstring(xml_text)
+    filings: List[FilingItem] = []
+    for entry in root.findall(f"{_ATOM}entry")[:count]:
+        title = (entry.findtext(f"{_ATOM}title") or "").strip()
+        filing_date = (entry.findtext(f"{_ATOM}updated") or "")[:10]
+        try:
+            date.fromisoformat(filing_date)
+        except ValueError:
+            continue
+        if not title:
+            continue
+        filings.append(FilingItem({
+            "filing_type": title.split()[0],
+            "filing_date": filing_date,
+            "title": title,
+            "url": _filing_link(entry),
+        }))
+    return filings
 
 
 class FilingItem(dict):
@@ -67,23 +111,7 @@ def get_recent_filings(company: str, ticker: Optional[str] = None, user_agent: s
     try:
         resp = requests.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
-        text = resp.text
-        # Extract filing titles and dates using a naive regex.  The first
-        # <title> element is the feed title and is skipped.  Dates come
-        # from <updated> tags.  We pair titles and dates by index.
-        titles = re.findall(r"<title>(.*?)</title>", text, re.DOTALL)
-        dates = re.findall(r"<updated>(\d{4}-\d{2}-\d{2})", text)
-        filings: List[FilingItem] = []
-        for title, date in zip(titles[1:], dates):
-            # Derive the filing type from the beginning of the title
-            filing_type = title.split()[0] if title else ""
-            filings.append(FilingItem({
-                "filing_type": filing_type,
-                "filing_date": date,
-                "title": title,
-                "url": None,
-            }))
-        return filings
+        return _parse_filing_feed(resp.text, count)
     except Exception as exc:
         logger.warning(f"SEC EDGAR retrieval failed for {ticker}: {exc}")
         return []
