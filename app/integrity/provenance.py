@@ -8,7 +8,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
+from ipaddress import ip_address
 from typing import Optional
+from urllib.parse import urlsplit
 
 
 class Provenance(str, Enum):
@@ -28,6 +30,52 @@ _QUALIFIER = {
     Provenance.HEURISTIC: "rule-of-thumb",
     Provenance.DERIVED: "derived",
 }
+
+
+@dataclass(frozen=True)
+class ClaimDocumentReference:
+    """An explicitly bound document for one claim, supplied by its producer.
+
+    Construct this only after matching the figure to the actual source record.
+    A source label, evidence-pool dimension, or filing type is insufficient.
+    URL validation prevents malformed navigation targets; it does not prove
+    that the document supports the figure.
+    """
+
+    reference_id: str
+    title: str
+    provider: str
+    url: str
+    published_at: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        if not all(isinstance(v, str) and v.strip() for v in (
+            self.reference_id, self.title, self.provider, self.url,
+        )):
+            raise ValueError("document reference requires an id, title, provider, and URL")
+        try:
+            parsed = urlsplit(self.url)
+            host = parsed.hostname
+            port = parsed.port  # validate malformed ports too
+        except ValueError as exc:
+            raise ValueError("invalid document URL") from exc
+        try:
+            public_host = ip_address(host).is_global if host else False
+        except ValueError:
+            public_host = bool(host and "." in host and not host.endswith((".local", ".internal")))
+        if (parsed.scheme != "https" or not host or parsed.username or parsed.password
+                or port is not None or not public_host
+                or any(ord(c) < 33 or c == "\\" for c in self.url)):
+            raise ValueError("document URL must be a public HTTPS URL without credentials or port")
+
+    def to_dict(self) -> dict:
+        return {
+            "reference_id": self.reference_id,
+            "title": self.title,
+            "provider": self.provider,
+            "url": self.url,
+            "published_at": self.published_at,
+        }
 
 
 @dataclass
@@ -70,6 +118,7 @@ class QuantitativeClaim:
     # of WHERE the figure appeared, so canonicalization must not treat it as
     # evidence that two claims are semantically different.
     assumptions_inferred: bool = False
+    document_ref: Optional[ClaimDocumentReference] = None
 
     def must_qualify(self) -> bool:
         return self.provenance in _MUST_QUALIFY or self.stale
@@ -126,6 +175,7 @@ class QuantitativeClaim:
             "freshness_status": self.freshness_status,
             "polarity": self.polarity,
             "assumptions_inferred": self.assumptions_inferred,
+            "document_ref": self.document_ref.to_dict() if self.document_ref else None,
             "rendered": self.render(),
         }
 

@@ -23,11 +23,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 
-@pytest.fixture()
-def engine():
+@pytest_asyncio.fixture()
+async def engine():
     """Function-scoped: the scorer reads ALL vectors of a target_type as
     candidates, so tests must not share state via a module-scoped DB."""
-    return create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    db_engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    try:
+        yield db_engine
+    finally:
+        await db_engine.dispose()
 
 
 @pytest_asyncio.fixture()
