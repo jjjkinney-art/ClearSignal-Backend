@@ -13,7 +13,10 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.integrity.provenance import Provenance, QuantitativeClaim, validate_claim, validate_claim_sourced
+from app.integrity.provenance import (
+    ClaimDocumentReference, Provenance, QuantitativeClaim, validate_claim,
+    validate_claim_sourced,
+)
 from app.integrity.claim_extraction import extract_claims, attach_agent_claims
 from app.integrity.threshold_parsing import parse_threshold_zone, build_decision_thresholds
 from app.integrity.thesis_wiring import attach_structured_content
@@ -34,6 +37,32 @@ def _freshness(**dims):
 # ── A. Quantitative claim tests ──────────────────────────────────────────────
 
 class TestQuantitativeClaimsA:
+    def test_document_reference_requires_explicit_binding(self):
+        extracted = extract_claims("Reported revenue of $61.9B per the 10-Q.", ticker="MSFT")
+        assert extracted
+        assert all(c.to_dict()["document_ref"] is None for c in extracted)
+
+        document = ClaimDocumentReference(
+            reference_id="filing-2026-q2", title="Quarterly filing", provider="SEC",
+            url="https://www.sec.gov/Archives/edgar/data/123/filing.htm",
+            published_at="2026-07-15",
+        )
+        claim = QuantitativeClaim(
+            "$61.9B", Provenance.REPORTED, source="10-Q", as_of="2026-06-30",
+            document_ref=document,
+        )
+        assert claim.to_dict()["document_ref"] == document.to_dict()
+
+    @pytest.mark.parametrize("url", [
+        "javascript:alert(1)", "http://www.sec.gov/filing", "https://localhost/filing",
+        "https://127.0.0.1/filing", "https://10.0.0.1/filing",
+        "https://user:pass@www.sec.gov/filing", "https://www.sec.gov:443/filing",
+        "https://www.sec.gov\\@evil.test/filing", "https://www.sec.gov/filing\nfoo",
+    ])
+    def test_document_reference_rejects_unsafe_navigation(self, url):
+        with pytest.raises(ValueError):
+            ClaimDocumentReference("filing-1", "Filing", "SEC", url)
+
     def test_reported_with_source_and_date_passes(self):
         c = QuantitativeClaim("$61.9B", Provenance.REPORTED, as_of="2026-06-30", source="10-Q")
         assert validate_claim(c) is None
