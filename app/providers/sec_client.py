@@ -11,6 +11,8 @@ exceptions so that failures never propagate up the call stack.
 from __future__ import annotations
 
 import logging
+import re
+from dataclasses import dataclass
 from datetime import date
 from typing import List, Optional
 from urllib.parse import urlsplit
@@ -20,6 +22,90 @@ import requests  # type: ignore
 
 logger = logging.getLogger(__name__)
 _ATOM = "{http://www.w3.org/2005/Atom}"
+_ACCESSION = re.compile(r"\d{10}-\d{2}-\d{6}\Z")
+
+
+@dataclass(frozen=True)
+class SecFactRecord:
+    """One XBRL observation, tied to its filing and reporting period."""
+
+    cik: str
+    taxonomy: str
+    concept: str
+    label: str
+    unit: str
+    value: int | float
+    start: Optional[str]
+    end: str
+    filed: str
+    form: str
+    accession: str
+    filing_url: str
+
+
+def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[SecFactRecord]:
+    """Select observations for one explicit US-GAAP concept and unit.
+
+    Do not infer that a number in generated prose represents this concept.
+    Each returned URL is a filing index, identified by that observation's
+    accession; it is not a claim citation until a producer binds the fact.
+    """
+    cik = str(data.get("cik", ""))
+    if not cik.isdigit() or not concept or not unit:
+        return []
+    facts = data.get("facts", {})
+    gaap = facts.get("us-gaap", {}) if isinstance(facts, dict) else {}
+    entry = gaap.get(concept, {}) if isinstance(gaap, dict) else {}
+    units = entry.get("units", {}) if isinstance(entry, dict) else {}
+    observations = units.get(unit, []) if isinstance(units, dict) else []
+    if not isinstance(observations, list):
+        return []
+    records = []
+    for item in observations:
+        if not isinstance(item, dict):
+            continue
+        accession, form = item.get("accn"), item.get("form")
+        if not isinstance(accession, str) or not _ACCESSION.fullmatch(accession):
+            continue
+        if form not in ("10-K", "10-Q", "10-K/A", "10-Q/A"):
+            continue
+        end, filed, start = item.get("end"), item.get("filed"), item.get("start")
+        try:
+            date.fromisoformat(end)
+            date.fromisoformat(filed)
+            if start is not None:
+                date.fromisoformat(start)
+        except (TypeError, ValueError):
+            continue
+        value = item.get("val")
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        records.append(SecFactRecord(
+            cik=cik, taxonomy="us-gaap", concept=concept,
+            label=str(entry.get("label", concept)), unit=unit, value=value,
+            start=start, end=end, filed=filed, form=form, accession=accession,
+            filing_url=(f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/"
+                        f"{accession.replace('-', '')}/{accession}-index.htm"),
+        ))
+    return records
+
+
+def get_company_fact_records(cik: str, *, concept: str, unit: str,
+                             user_agent: str = "") -> list[SecFactRecord]:
+    """Fetch a specified concept's observations; fail closed on SEC errors."""
+    if not cik or not cik.isdigit() or not concept or not unit:
+        return []
+    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik.zfill(10)}.json"
+    try:
+        response = requests.get(url, headers={"User-Agent": user_agent or "ai-analyst-bot/0.1"}, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        if not isinstance(data, dict) or str(data.get("cik", "")) != str(int(cik)):
+            return []
+        return parse_company_fact_records(data, concept=concept, unit=unit)
+    except Exception as exc:
+        logger.warning("SEC structured fact retrieval failed for CIK %s: %s", cik, exc)
+        return []
 
 
 def _filing_link(entry: ElementTree.Element) -> Optional[str]:

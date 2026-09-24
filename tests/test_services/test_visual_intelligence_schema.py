@@ -46,9 +46,13 @@ _MIGRATION = _ROOT / "app" / "db" / "migrations" / "019_visual_intelligence.sql"
 # Engine / session fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
-def engine():
-    return create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+@pytest_asyncio.fixture()
+async def engine():
+    instance = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    try:
+        yield instance
+    finally:
+        await instance.dispose()
 
 
 @pytest_asyncio.fixture()
