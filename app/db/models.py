@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 59 tables.
+SQLAlchemy ORM models — 61 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -91,6 +91,8 @@ Visual Intelligence (Phase 19 · Slice 1)
 57. visual_spec_cache           — Cached visual specifications (upsert on unique key)
 58. visual_experience_event     — Append-only visual generation log
 59. ai_visual_generation_log    — Append-only AI generation audit log (no prompt text)
+60. research_conversations      — Account-owned durable research investigations
+61. research_messages           — Ordered account-owned conversation messages
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -2926,4 +2928,68 @@ class AIVisualGenerationLog(Base):
         Index("ix_avgl_user_id",     "user_id"),
         Index("ix_avgl_visual_type", "visual_type"),
         Index("ix_avgl_run_reason",  "run_reason"),
+    )
+
+
+# ── Cross-conversation research memory ──────────────────────────────────────
+
+
+class ResearchConversation(Base):
+    """Account-owned durable research investigation.
+
+    The owner is resolved from authentication and is immutable after insert.
+    Deleted rows are excluded from normal reads and recall; a separate hard-
+    delete path exists for verified account/data deletion.
+    """
+
+    __tablename__ = "research_conversations"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(255), nullable=False)
+    title   = Column(String(200), nullable=False, default="")
+
+    scope_tickers       = _json_col(nullable=False, default=list)
+    scope_started_at    = Column(DateTime(timezone=True), nullable=True)
+    scope_ended_at      = Column(DateTime(timezone=True), nullable=True)
+    scope_portfolio_id  = Column(String(36), nullable=True)
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_research_conversations_owner_updated", "user_id", "updated_at"),
+        Index("ix_research_conversations_owner_deleted", "user_id", "deleted_at"),
+    )
+
+
+class ResearchMessage(Base):
+    """Ordered message in an account-owned research conversation.
+
+    ``displayed_snapshot`` is versioned structured output exactly as presented
+    to the user (claims, evidence links, freshness and uncertainty). It is not
+    interpreted as model instructions when later retrieved.
+    """
+
+    __tablename__ = "research_messages"
+
+    id              = Column(String(36), primary_key=True, default=_uuid)
+    conversation_id = Column(String(36), nullable=False)
+    user_id         = Column(String(255), nullable=False)
+    ordinal         = Column(Integer, nullable=False)
+    role            = Column(String(20), nullable=False)
+    text            = Column(Text, nullable=False, default="")
+    request_ref     = Column(String(100), nullable=True)
+    snapshot_version = Column(Integer, nullable=False, default=1)
+    displayed_snapshot = _json_col(nullable=False, default=dict)
+    created_at      = Column(DateTime(timezone=True), nullable=False, default=_now)
+
+    __table_args__ = (
+        UniqueConstraint("conversation_id", "ordinal",
+                         name="uq_research_messages_conversation_ordinal"),
+        UniqueConstraint("conversation_id", "request_ref", "role",
+                         name="uq_research_messages_request_role"),
+        Index("ix_research_messages_owner_created", "user_id", "created_at"),
+        Index("ix_research_messages_conversation", "conversation_id", "ordinal"),
     )

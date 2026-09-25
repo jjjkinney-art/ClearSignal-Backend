@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0006_access_grants"
+_HEAD = "0007_research_conversations"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -319,7 +319,7 @@ class TestAccessGrantsMigration:
     def test_downgrade_removes_only_this_table(self):
         p = _new_db_path()
         cfg = _cfg(p)
-        command.upgrade(cfg, "head")
+        command.upgrade(cfg, "0006_access_grants")
         before = set(_insp(p).get_table_names()) - {"access_grants"}
 
         command.downgrade(cfg, self._PREVIOUS)
@@ -343,7 +343,7 @@ class TestAccessGrantsMigration:
                 "CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)"
             ))
 
-        command.upgrade(cfg, "head")
+        command.upgrade(cfg, "0006_access_grants")
         command.downgrade(cfg, self._PREVIOUS)
 
         with eng.connect() as cn:
@@ -352,9 +352,49 @@ class TestAccessGrantsMigration:
     def test_upgrade_is_idempotent_over_an_existing_table(self):
         p = _new_db_path()
         cfg = _cfg(p)
-        command.upgrade(cfg, "head")
+        command.upgrade(cfg, "0006_access_grants")
         command.downgrade(cfg, self._PREVIOUS)
         # Table already gone; re-running upgrade recreates it cleanly.
         command.upgrade(cfg, "head")
         assert "access_grants" in _insp(p).get_table_names()
         assert _rev(p) == _HEAD
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Cross-conversation memory storage (0007)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestResearchConversationMigration:
+    _PREVIOUS = "0006_access_grants"
+
+    def test_upgrade_creates_owned_conversation_tables(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        insp = _insp(p)
+        assert {"research_conversations", "research_messages"} <= set(insp.get_table_names())
+        conversation_cols = {column["name"]: column for column in insp.get_columns(
+            "research_conversations"
+        )}
+        message_cols = {column["name"]: column for column in insp.get_columns(
+            "research_messages"
+        )}
+        assert conversation_cols["user_id"]["nullable"] is False
+        assert message_cols["user_id"]["nullable"] is False
+        assert {"scope_tickers", "deleted_at"} <= set(conversation_cols)
+        assert {"request_ref", "snapshot_version", "displayed_snapshot"} <= set(message_cols)
+
+    def test_downgrade_removes_only_research_memory_tables(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        before = set(_insp(p).get_table_names()) - {
+            "research_conversations", "research_messages",
+        }
+
+        command.downgrade(cfg, self._PREVIOUS)
+
+        after = set(_insp(p).get_table_names())
+        assert "research_conversations" not in after
+        assert "research_messages" not in after
+        assert before <= after
+        assert _rev(p) == self._PREVIOUS
