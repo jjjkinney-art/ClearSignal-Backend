@@ -1,6 +1,8 @@
 """Authenticated research cannot read shared, ticker-scoped legacy memory."""
 
 import json
+from datetime import datetime, timezone
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -152,3 +154,31 @@ def test_authenticated_pipeline_never_reads_or_writes_global_thesis_history(monk
     shared_store.process_new_thesis.assert_not_called()
     assert synthesis.call_args.kwargs["prior_snapshot"] is None
     assert response.answer["investment_thesis"]["bull_thesis"] == "Fresh analysis"
+
+
+@pytest.mark.asyncio
+async def test_account_watchlist_metadata_never_comes_from_shared_file(monkeypatch):
+    from app.db.repositories import watchlist_repo
+    from app.services.watchlist_service import WatchlistService
+
+    service = WatchlistService()
+    row = SimpleNamespace(
+        ticker="AAPL", company_name="Apple", added_at=datetime.now(timezone.utc), active=True,
+    )
+    shared = {"AAPL": {
+        "ticker": "AAPL", "company_name": "Another account's analysis",
+        "latest_thesis_trend": "weakening", "added_at": "2020-01-01T00:00:00Z",
+    }}
+    monkeypatch.setattr(service, "_load_index", lambda: shared)
+    monkeypatch.setattr(watchlist_repo, "ticker_list_active", AsyncMock(return_value=[row]))
+    monkeypatch.setattr(watchlist_repo, "ticker_get", AsyncMock(return_value=row))
+    monkeypatch.setattr(watchlist_repo, "ticker_add", AsyncMock(return_value=row))
+    owner = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+
+    for entry in (
+        (await service.get_watchlist_async(object(), user_id=owner))[0],
+        await service.get_entry_async(object(), "AAPL", user_id=owner),
+        await service.add_ticker_async(object(), "AAPL", "Apple", user_id=owner),
+    ):
+        assert entry.company_name == "Apple"
+        assert entry.latest_thesis_trend != "weakening"
