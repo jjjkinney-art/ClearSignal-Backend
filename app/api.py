@@ -1432,7 +1432,7 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     # entitlements (when enforced), per-IP + per-user rate limits, and the per-
     # user daily quota.  Fails closed on misconfiguration.  Never logs the prompt.
     from .security.ask_guard import enforce_ask_preflight as _enforce_ask_preflight
-    await _enforce_ask_preflight(http_request, getattr(request, "question", "") or "")
+    _acting_user_id = await _enforce_ask_preflight(http_request, getattr(request, "question", "") or "")
 
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
 
@@ -2172,6 +2172,25 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             except Exception as _obs_exc:
                 logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)
 
+            # Persist only the authenticated owner's thesis, before emitting the
+            # final answer. This never calls the legacy shared ticker memory path.
+            from .config import settings as _history_settings
+            if _history_settings.auth_enabled:
+                try:
+                    from .db.connection import get_session_factory as _history_factory
+                    from .services.owned_research import save_thesis as _save_owned_thesis
+                    _factory = _history_factory()
+                    if _factory is not None:
+                        async with _factory() as _history_session:
+                            await _save_owned_thesis(
+                                _history_session, user_id=_acting_user_id,
+                                question=request.question, company_name=request.company_name,
+                                session_id=_session_id, result=result,
+                            )
+                            await _history_session.commit()
+                except Exception:
+                    logger.warning("[ask] account-owned thesis could not be saved")
+
             # Sprint 3C.1A — the SAME _result_dict is serialized on both paths.
             # Progressive only wraps it in a terminal frame, so the payload a
             # caller ends up with cannot diverge between the two modes.
@@ -2853,6 +2872,39 @@ async def get_alert_priority(ticker: str) -> dict:
 
 
 # ── History ───────────────────────────────────────────────────────────────────
+
+@router.get("/research/history", tags=["history"])
+async def get_owned_research_history(
+    request: Request,
+    ticker: Optional[str] = Query(default=None, pattern=r"^[A-Za-z0-9.\-]{1,20}$"),
+    limit: int = Query(default=30, ge=1, le=100),
+) -> list:
+    """Return only the current account's saved company thesis snapshots."""
+    from .dependencies.auth import require_user_id
+    from .db.connection import get_session_factory
+    from .services.owned_research import list_theses
+    owner = require_user_id(request)
+    factory = get_session_factory()
+    if factory is None:
+        raise HTTPException(status_code=503, detail="Research history is unavailable.")
+    async with factory() as session:
+        return await list_theses(session, user_id=owner, ticker=ticker, limit=limit)
+
+
+@router.get("/research/history/{record_id}", tags=["history"])
+async def get_owned_research_record(record_id: str, request: Request) -> dict:
+    from .dependencies.auth import require_user_id
+    from .db.connection import get_session_factory
+    from .services.owned_research import get_thesis
+    owner = require_user_id(request)
+    factory = get_session_factory()
+    if factory is None:
+        raise HTTPException(status_code=503, detail="Research history is unavailable.")
+    async with factory() as session:
+        record = await get_thesis(session, user_id=owner, record_id=record_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Research record not found.")
+    return record
 
 @router.get("/history", tags=["history"])
 async def get_history(
