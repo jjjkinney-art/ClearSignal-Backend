@@ -1361,12 +1361,17 @@ def _run_investment_pipeline(
     _t_synthesis = time.time()
     _t_synthesis_m = time.monotonic()
     _SYNTHESIS_WALL_CAP_S = 56.0
+    # The legacy snapshot store is ticker-wide, not account-owned. It cannot
+    # provide a signed-in participant's prior thesis or accept their new one.
+    from ..config import settings as _history_settings
+    _legacy_history_enabled = not _history_settings.auth_enabled
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
-    try:
-        prior_snapshot = watchlist_service.get_latest_snapshot(ticker)
-    except Exception as exc:
-        logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
+    if _legacy_history_enabled:
+        try:
+            prior_snapshot = watchlist_service.get_latest_snapshot(ticker)
+        except Exception as exc:
+            logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
 
     def _run_synthesis():
         return synthesize_thesis(
@@ -1466,14 +1471,15 @@ def _run_investment_pipeline(
     # Backfill diff results onto thesis so the API response carries thesis_trend,
     # what_changed, and change_drivers for the frontend "What Changed" section.
     # Fire-and-forget: failure here must NEVER fail the API response.
-    try:
-        _change_event, _diff = watchlist_service.process_new_thesis(thesis)
-        if _diff is not None:
-            thesis.thesis_trend   = _diff.thesis_trend or "unclear"
-            thesis.what_changed   = list(_diff.what_changed or [])
-            thesis.change_drivers = list(_diff.change_drivers or [])
-    except Exception as exc:
-        logger.warning("[router] process_new_thesis failed for %s: %r", ticker, exc)
+    if _legacy_history_enabled:
+        try:
+            _change_event, _diff = watchlist_service.process_new_thesis(thesis)
+            if _diff is not None:
+                thesis.thesis_trend   = _diff.thesis_trend or "unclear"
+                thesis.what_changed   = list(_diff.what_changed or [])
+                thesis.change_drivers = list(_diff.change_drivers or [])
+        except Exception as exc:
+            logger.warning("[router] process_new_thesis failed for %s: %r", ticker, exc)
 
     try:
         thesis_dict = thesis.model_dump()
