@@ -254,6 +254,8 @@ class WatchlistService:
         )
         if row is None:
             return file_entry
+        if _is_account_scoped(user_id):
+            return self._row_to_entry(row)
         file_index = self._load_index()
         fallback = self._entry_from_dict(file_index.get(t, {})) if t in file_index else None
         return self._row_to_entry(row, fallback=fallback)
@@ -318,6 +320,11 @@ class WatchlistService:
             # exposes the shared legacy membership list to a new account.
             return [] if _is_account_scoped(user_id) else self.get_watchlist()
 
+        if _is_account_scoped(user_id):
+            entries = [self._row_to_entry(row) for row in db_rows]
+            entries.sort(key=lambda e: e.added_at or "", reverse=True)
+            return entries
+
         file_index = self._load_index()
         entries: List[WatchlistEntry] = []
         for row in db_rows:
@@ -363,6 +370,9 @@ class WatchlistService:
 
         if not row.active:
             return None  # DB says removed; file is stale
+
+        if _is_account_scoped(user_id):
+            return self._row_to_entry(row)
 
         file_index = self._load_index()
         file_data = file_index.get(t)
