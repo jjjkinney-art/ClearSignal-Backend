@@ -1547,7 +1547,13 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         # returns "UNKNOWN", which has no DB row.  We therefore try two sources:
         #   1. company_name field (fast path for explicit ticker/company entry)
         #   2. detect_company(question) — same entity detection the router uses
-        _request = request  # default: no memory enrichment
+        # Pydantic's `exclude=True` hides internal fields on serialization but
+        # does not reject them on input. Never forward client-supplied memory
+        # text or structured memory to synthesis.
+        _request = request.model_copy(update={
+            "memory_context_block": None,
+            "memory_context_data": None,
+        })
         _pre_dispatch_ticker: str | None = None
         try:
             from .db import get_session as _get_session
@@ -1578,14 +1584,18 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 else:
                     _pre_dispatch_ticker = None
 
-            if _pre_dispatch_ticker:
+            # The legacy memory tables aggregate by ticker, not by owner. In
+            # authenticated beta they must never be injected into a user's
+            # prompt until the account-owned conversation store is available.
+            from .config import settings as _memory_settings
+            if _pre_dispatch_ticker and not _memory_settings.auth_enabled:
                 async with _get_session() as _mem_session:
                     _mem_ctx = await _get_mem(_mem_session, _pre_dispatch_ticker)
 
                 if _mem_ctx:
                     _mem_block = _fmt_mem(_mem_ctx)
                     _mem_data = _mem_for_resp(_mem_ctx)
-                    _request = request.model_copy(update={
+                    _request = _request.model_copy(update={
                         "memory_context_block": _mem_block,
                         "memory_context_data": _mem_data,
                     })
@@ -1810,15 +1820,17 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             # Phase 9A: fire-and-forget persistence (never blocks response).
             try:
                 from .db.persistence import persist_analysis_result as _persist
-                _asyncio.create_task(
-                    _persist(
-                        question=request.question,
-                        company_name=request.company_name,
-                        session_id=_session_id,
-                        result=result,
-                    ),
-                    name=f"persist-{_session_id[:8]}",
-                )
+                from .config import settings as _persist_settings
+                if not _persist_settings.auth_enabled:
+                    _asyncio.create_task(
+                        _persist(
+                            question=request.question,
+                            company_name=request.company_name,
+                            session_id=_session_id,
+                            result=result,
+                        ),
+                        name=f"persist-{_session_id[:8]}",
+                    )
             except Exception as _p_exc:
                 logger.debug("[ask] persistence task creation failed (non-fatal): %r", _p_exc)
 
@@ -1835,7 +1847,9 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     if isinstance(_result_dict.get("answer"), dict)
                     else None
                 )
-                if isinstance(_thesis_in_answer, dict) and _thesis_in_answer.get("memory_context") is None:
+                from .config import settings as _stamp_settings
+                if (not _stamp_settings.auth_enabled and isinstance(_thesis_in_answer, dict)
+                        and _thesis_in_answer.get("memory_context") is None):
                     # Pre-dispatch didn't produce memory — try with confirmed ticker.
                     _confirmed_ticker = (
                         result.routing.get("detected_ticker")
@@ -2846,6 +2860,9 @@ async def get_history(
     limit: int = 50,
 ) -> list:
     """Return analysis history, optionally filtered by ticker."""
+    from .config import settings
+    if settings.auth_enabled:
+        raise HTTPException(status_code=503, detail="Account-owned history is unavailable.")
     from .services.history_service import get_analysis_history
     try:
         entries = get_analysis_history(ticker=ticker, limit=limit)
@@ -2857,6 +2874,9 @@ async def get_history(
 @router.get("/history/summary", tags=["history"])
 async def get_history_summary_endpoint() -> dict:
     """Return a summary of tracked history."""
+    from .config import settings
+    if settings.auth_enabled:
+        raise HTTPException(status_code=503, detail="Account-owned history is unavailable.")
     from .services.history_service import get_history_summary
     try:
         return get_history_summary()
