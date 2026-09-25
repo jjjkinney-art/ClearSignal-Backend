@@ -1,6 +1,6 @@
 # Cross-conversation memory: implementation contract
 
-Status: design contract for the required pre-public-launch JARVIS milestone. No endpoint described here is live solely because this document exists. Voice is outside this launch scope.
+Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema and private CRUD/search service are now present, but no conversation or recall endpoint is live yet. Voice is outside this launch scope.
 
 ## User promise
 
