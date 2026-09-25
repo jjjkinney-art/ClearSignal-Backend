@@ -6,17 +6,16 @@ import tempfile
 from types import SimpleNamespace
 
 import pytest
-from fastapi import HTTPException
-
-from app import api
-from app.services.owned_research import get_thesis, list_theses, save_thesis
 
 
 def test_owned_research_isolated_and_authorized():
     async def scenario():
+        from fastapi import HTTPException
+        from app import api
         from app.db.connection import close_db, get_session_factory, init_db
         from sqlalchemy.ext.asyncio import create_async_engine
         from app.db.models import Base, ThesisVersion
+        from app.services.owned_research import get_thesis, list_theses, save_thesis
 
         fd, path = tempfile.mkstemp(suffix=".db")
         os.close(fd)
