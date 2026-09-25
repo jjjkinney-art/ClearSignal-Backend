@@ -1606,7 +1606,7 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                     )
         except Exception as _mem_exc:
             logger.debug("[ask] 9C pre-dispatch memory read failed (non-fatal): %r", _mem_exc)
-            # _request remains as original request — no memory, no problem
+            # _request retains its sanitized, memory-free input.
 
         # ── Slice 5A + 5C/5D: Dossier injection (shadow + canary) ─────────────
         # One dossier fetch shared between the 5A shadow telemetry path and the
