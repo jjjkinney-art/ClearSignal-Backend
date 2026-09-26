@@ -129,8 +129,58 @@ def test_research_conversation_routes_registered():
 
     methods_by_path = {}
     for route in app.routes:
-        if route.path.startswith("/research/conversations"):
+        if route.path.startswith("/research/"):
             methods_by_path.setdefault(route.path, set()).update(route.methods)
     assert methods_by_path["/research/conversations"] >= {"GET", "POST"}
     assert methods_by_path["/research/conversations/{conversation_id}"] >= {"GET", "DELETE"}
     assert methods_by_path["/research/conversations/{conversation_id}/messages"] == {"POST"}
+    assert methods_by_path["/research/recall"] == {"POST"}
+
+
+def test_research_recall_route_is_authenticated_and_owner_scoped():
+    async def scenario():
+        from app.db.connection import close_db, init_db
+        from app.db.models import Base
+        from app.routers.research_conversations import (
+            ConversationCreateRequest,
+            UserMessageCreateRequest,
+            append_research_user_message,
+            create_research_conversation,
+        )
+        from app.routers.research_recall import RecallRequest, recall_research
+        from sqlalchemy.ext.asyncio import create_async_engine
+
+        fd, path = tempfile.mkstemp(suffix=".db")
+        os.close(fd)
+        url = f"sqlite+aiosqlite:///{path}"
+        engine = create_async_engine(url)
+        try:
+            async with engine.begin() as connection:
+                await connection.run_sync(Base.metadata.create_all)
+            await engine.dispose()
+            await init_db(url)
+            owner = SimpleNamespace(state=SimpleNamespace(user_id="owner-a"))
+            stranger = SimpleNamespace(state=SimpleNamespace(user_id="owner-b"))
+            conversation = await create_research_conversation(
+                ConversationCreateRequest(title="Tesla China competition", tickers=["TSLA"]),
+                owner,
+            )
+            await append_research_user_message(
+                conversation["id"],
+                UserMessageCreateRequest(text="Tesla faces intense Chinese EV competition."),
+                owner,
+            )
+            recalled = await recall_research(
+                RecallRequest(query="Tesla China competition", ticker="tsla"), owner,
+            )
+            assert recalled["status"] == "matched"
+            assert recalled["candidates"][0]["conversation"]["id"] == conversation["id"]
+            assert (await recall_research(
+                RecallRequest(query="Tesla China competition", ticker="TSLA"), stranger,
+            ))["status"] == "unavailable"
+        finally:
+            await close_db()
+            await engine.dispose()
+            os.unlink(path)
+
+    asyncio.run(scenario())
