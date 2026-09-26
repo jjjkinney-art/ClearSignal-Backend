@@ -421,6 +421,33 @@ class QuestionRequest(BaseModel):
                     "is explicitly mentioned in the question.",
     )
 
+    # ── Track D — explicit account-owned investigation persistence ───────────
+    # The browser may point /ask at a conversation it already created through
+    # the protected research API. Ownership is re-checked server-side before
+    # either turn is written; an unknown or foreign id is never disclosed.
+    research_conversation_id: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=64,
+        description="Account-owned research conversation that should receive this completed turn.",
+    )
+    research_request_ref: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=100,
+        description="Client-generated idempotency reference for this research turn.",
+    )
+
+    @field_validator("research_conversation_id", "research_request_ref")
+    @classmethod
+    def _validate_research_reference(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("Research references must not be blank")
+        return cleaned
+
     # ── Phase 9C — internal memory injection ─────────────────────────────────────
     # Set by api.py BEFORE dispatching to route_question; never sent by clients.
     # memory_context_block: formatted prompt text injected into synthesis.

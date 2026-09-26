@@ -2198,6 +2198,36 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 except Exception:
                     logger.warning("[ask] account-owned thesis could not be saved")
 
+            # Save a completed research turn only when the authenticated client
+            # supplied an explicit account-owned conversation id. Both messages
+            # share one transaction and the assistant snapshot is the exact
+            # post-integrity payload emitted below. Foreign/missing ids remain
+            # indistinguishable and never fall back to a shared ticker store.
+            if (
+                _history_settings.auth_enabled
+                and request.research_conversation_id
+            ):
+                try:
+                    from .db.connection import get_session_factory as _conversation_factory
+                    from .services.research_conversations import (
+                        append_completed_turn as _append_completed_turn,
+                    )
+                    _research_factory = _conversation_factory()
+                    if _research_factory is not None:
+                        async with _research_factory() as _research_session:
+                            _saved_turn = await _append_completed_turn(
+                                _research_session,
+                                user_id=_acting_user_id,
+                                conversation_id=request.research_conversation_id,
+                                question=request.question,
+                                response=_result_dict,
+                                request_ref=request.research_request_ref or _obs_request_id,
+                            )
+                            if _saved_turn:
+                                await _research_session.commit()
+                except Exception:
+                    logger.warning("[ask] account-owned research turn could not be saved")
+
             # Sprint 3C.1A — the SAME _result_dict is serialized on both paths.
             # Progressive only wraps it in a terminal frame, so the payload a
             # caller ends up with cannot diverge between the two modes.

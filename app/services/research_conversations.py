@@ -22,6 +22,7 @@ MAX_MESSAGE_LENGTH = 50_000
 MAX_SNAPSHOT_BYTES = 100_000
 MAX_SEARCH_LENGTH = 200
 MAX_LIST_LIMIT = 50
+RESPONSE_SNAPSHOT_VERSION = 1
 
 
 def _owner(user_id: str) -> str:
@@ -165,6 +166,63 @@ async def append_message(session, *, user_id: str, conversation_id: str,
     conversation.updated_at = datetime.now(timezone.utc)
     await session.flush()
     return _message(row)
+
+
+def assistant_text_from_response(response: dict) -> str:
+    """Return exact searchable text from a completed /ask response.
+
+    Prefer explicit answer fields that already exist in the emitted payload.
+    When a response has only a structured shape, serialize that shape instead
+    of manufacturing a summary or conclusion.
+    """
+    answer = response.get("answer")
+    candidates: list[object] = []
+    if isinstance(answer, dict):
+        thesis = answer.get("investment_thesis")
+        if isinstance(thesis, dict):
+            candidates.extend((thesis.get("direct_answer"), thesis.get("conclusion")))
+        candidates.extend((answer.get("answer"), answer.get("direct_answer")))
+    candidates.append(answer)
+    for candidate in candidates:
+        if isinstance(candidate, str) and candidate.strip():
+            return candidate.strip()
+    return json.dumps(answer if answer is not None else {}, ensure_ascii=False, sort_keys=True)
+
+
+async def append_completed_turn(session, *, user_id: str, conversation_id: str,
+                                question: str, response: dict,
+                                request_ref: Optional[str] = None) -> bool:
+    """Atomically stage one successful user/assistant turn for the owner.
+
+    The caller controls the transaction boundary. Any validation failure in
+    the assistant snapshot therefore rolls back the user message too.
+    """
+    if not isinstance(response, dict):
+        raise ValueError("Completed research response must be an object")
+    user_message = await append_message(
+        session,
+        user_id=user_id,
+        conversation_id=conversation_id,
+        role="user",
+        text=question,
+        request_ref=request_ref,
+    )
+    if user_message is None:
+        return False
+    assistant_message = await append_message(
+        session,
+        user_id=user_id,
+        conversation_id=conversation_id,
+        role="assistant",
+        text=assistant_text_from_response(response),
+        request_ref=request_ref,
+        displayed_snapshot={
+            "response_version": RESPONSE_SNAPSHOT_VERSION,
+            "response": response,
+        },
+        snapshot_version=RESPONSE_SNAPSHOT_VERSION,
+    )
+    return assistant_message is not None
 
 
 async def list_conversations(session, *, user_id: str, query: Optional[str] = None,
