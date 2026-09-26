@@ -117,6 +117,16 @@ except Exception as _recall_err:
     logger.warning("[api] research_recall router unavailable: %r", _recall_err)
 
 
+try:
+    from .routers.research_personalization import router as _research_personalization_router
+    router.include_router(_research_personalization_router)
+except Exception as _personalization_err:
+    logger.warning(
+        "[api] research_personalization router unavailable: %r",
+        _personalization_err,
+    )
+
+
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
 

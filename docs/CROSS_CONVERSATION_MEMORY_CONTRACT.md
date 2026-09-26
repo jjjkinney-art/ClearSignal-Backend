@@ -1,6 +1,6 @@
 # Cross-conversation memory: implementation contract
 
-Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema, private CRUD/search API, `/ask` persistence, and bounded owner-filtered text recall endpoint are present. Recall remains transparent retrieval only: saved text is not silently injected into new answers, and no current-evidence refresh or semantic/vector retrieval is enabled yet. Voice is outside this launch scope.
+Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema, private CRUD/search API, `/ask` persistence, bounded owner-filtered text recall, and an explicit account-owned Intelligence profile API are present. Recall remains transparent retrieval only: saved text is not silently injected into new answers. Personalization stores only user-selected structured settings and is not model prompt context yet. No current-evidence refresh or semantic/vector retrieval is enabled. Voice is outside this launch scope.
 
 ## User promise
 
@@ -29,6 +29,7 @@ Start retrieval with a bounded, account-filtered text search over messages and e
 3. A user-initiated `/ask` can carry an owned conversation ID and explicit scope. On a successful response, atomically append the question and the displayed answer snapshot or record an honest interrupted/failed state. Never claim to have stored an answer that did not persist. Retrying with the same request reference must not duplicate messages or charge repeated model calls merely to recover history.
 4. `POST /research/recall`: take a natural-language query and optional scope, retrieve only current-owner candidates, and return `matched`, `ambiguous`, or `unavailable` with dates and original conversation references. For a question asking what is true **now**, perform a separate on-demand evidence check with its own timestamp. If that check fails, show the historical answer and say that the present conclusion cannot be verified.
 5. `DELETE /research/conversations/{id}` and an account-wide export/deletion path must invalidate retrieval records and remove associated personal data according to the published retention/deletion policy. Support cannot bypass identity verification or the existing deletion runbook.
+6. `GET`, `PUT`, and `DELETE /research/personalization` expose only the authenticated account's explicit structured Intelligence profile. Absence returns transparent disabled defaults. Settings must not be inferred from transcripts, holdings, or legacy rows, and enabling the profile does not authorize silent transcript injection.
 
 Names and payloads above are proposed contracts, not permission to expose incomplete endpoints. Define response schemas, size limits, retention, quotas and error behavior before implementation. Keep automatic monitoring off until its own rollout gate.
 
