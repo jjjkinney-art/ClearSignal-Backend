@@ -288,6 +288,33 @@ class TestRouteQuestionInvestmentPipelineFixB:
             router_service.route_question(request)
             mock_pipeline.assert_called_once()
 
+    @pytest.mark.parametrize(
+        "question",
+        [
+            "What is Tesla doing to set itself up to do well in 2030 and beyond?",
+            "What advantages does Tesla have over rivals in the U.S. and China?",
+        ],
+    )
+    def test_explicit_company_analysis_routes_natural_research_questions(self, question):
+        """Structured company scope must not depend on legacy keyword matching."""
+        from app.services import router_service
+
+        assert not router_service._has_investment_intent(question)
+        mock_response = MagicMock()
+
+        with patch.object(
+            router_service,
+            "_run_investment_pipeline",
+            return_value=mock_response,
+        ) as mock_pipeline:
+            request = self._make_request(
+                company_name="TSLA",
+                question=question,
+                intent="company_analysis",
+            )
+            router_service.route_question(request)
+            mock_pipeline.assert_called_once()
+
     def test_non_company_intent_not_rerouted(self):
         """market_question intent must NOT be routed to investment pipeline."""
         from app.services import router_service
