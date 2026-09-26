@@ -103,6 +103,13 @@ try:
 except Exception as _nt_err:
     logger.warning("[api] notifications router unavailable: %r", _nt_err)
 
+# Track D · account-owned investigation persistence API
+try:
+    from .routers.research_conversations import router as _research_conversations_router
+    router.include_router(_research_conversations_router)
+except Exception as _rc_err:
+    logger.warning("[api] research_conversations router unavailable: %r", _rc_err)
+
 
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
