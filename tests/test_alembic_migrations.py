@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0007_research_conversations"
+_HEAD = "0008_research_personalization"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -386,7 +386,7 @@ class TestResearchConversationMigration:
     def test_downgrade_removes_only_research_memory_tables(self):
         p = _new_db_path()
         cfg = _cfg(p)
-        command.upgrade(cfg, "head")
+        command.upgrade(cfg, "0007_research_conversations")
         before = set(_insp(p).get_table_names()) - {
             "research_conversations", "research_messages",
         }
@@ -397,4 +397,46 @@ class TestResearchConversationMigration:
         assert "research_conversations" not in after
         assert "research_messages" not in after
         assert before <= after
+        assert _rev(p) == self._PREVIOUS
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Explicit Intelligence Mode personalization (0008)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestResearchPersonalizationMigration:
+    _PREVIOUS = "0007_research_conversations"
+
+    def test_upgrade_creates_owned_profile_table(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        insp = _insp(p)
+        assert "research_personalization_profiles" in insp.get_table_names()
+        columns = {
+            column["name"]: column
+            for column in insp.get_columns("research_personalization_profiles")
+        }
+        assert columns["user_id"]["nullable"] is False
+        assert columns["enabled"]["nullable"] is False
+        assert {
+            "response_depth",
+            "time_horizon",
+            "analysis_emphasis",
+            "evidence_style",
+            "origin",
+        } <= set(columns)
+        unique_sets = {
+            tuple(item["column_names"])
+            for item in insp.get_unique_constraints("research_personalization_profiles")
+        }
+        assert ("user_id",) in unique_sets
+
+    def test_downgrade_removes_only_profile_table(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+        tables = set(_insp(p).get_table_names())
+        assert "research_personalization_profiles" not in tables
+        assert {"research_conversations", "research_messages"} <= tables
         assert _rev(p) == self._PREVIOUS
