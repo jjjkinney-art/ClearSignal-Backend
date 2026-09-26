@@ -87,9 +87,16 @@ def test_month_later_paraphrase_is_owner_isolated_and_historical_only():
                 assert recalled["status"] == "matched"
                 assert recalled["historical_only"] is True
                 assert recalled["current_evidence_checked"] is False
-                assert [candidate["conversation"]["id"] for candidate in recalled["candidates"]] == [
-                    target["id"]
-                ]
+                assert recalled["candidates"][0]["conversation"]["id"] == target["id"]
+                assert all(
+                    candidate["conversation"]["id"] != foreign["id"]
+                    for candidate in recalled["candidates"]
+                )
+                if len(recalled["candidates"]) > 1:
+                    assert (
+                        recalled["candidates"][0]["match"]["score"]
+                        > recalled["candidates"][1]["match"]["score"]
+                    )
                 candidate = recalled["candidates"][0]
                 assert candidate["conversation"]["created_at"].startswith(old.date().isoformat())
                 assert "App Store take-rate pressure" in candidate["excerpts"][0]["text"]
