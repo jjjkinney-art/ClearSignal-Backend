@@ -1,9 +1,9 @@
 """Protected HTTP surface for account-owned research conversations.
 
-This router exposes the private persistence layer without enabling semantic
-recall or accepting client-authored assistant conclusions.  Assistant turns
-will be written server-side when the authenticated ``/ask`` integration is
-added; this first route slice only permits users to append their own text.
+This router exposes the private persistence layer without accepting
+client-authored assistant conclusions. Assistant turns are written server-side
+by the authenticated ``/ask`` integration; this route only permits clients to
+append their own text.
 """
 
 from __future__ import annotations

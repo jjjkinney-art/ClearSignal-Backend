@@ -15,6 +15,7 @@ from app.services.research_conversations import (
     get_conversation,
     hard_delete_conversation,
     list_conversations,
+    recall_conversations,
     soft_delete_conversation,
 )
 
@@ -191,6 +192,90 @@ def test_assistant_text_falls_back_to_exact_structured_answer():
     assert assistant_text_from_response({"answer": {"bullets": ["One", "Two"]}}) == (
         '{"bullets": ["One", "Two"]}'
     )
+
+
+def test_recall_is_owner_scoped_transparent_and_handles_ambiguity():
+    async def scenario():
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with factory() as session:
+                first = await create_conversation(
+                    session, user_id="owner-a", title="Apple App Store regulation",
+                    tickers=["AAPL"],
+                )
+                await append_message(
+                    session, user_id="owner-a", conversation_id=first["id"], role="user",
+                    text="What is the concern about App Store regulation?",
+                )
+                await append_message(
+                    session, user_id="owner-a", conversation_id=first["id"], role="assistant",
+                    text="Regulatory pressure could weaken App Store economics.",
+                    displayed_snapshot={"response": {"evidence": [{"url": "https://example.test"}]}},
+                )
+                foreign = await create_conversation(
+                    session, user_id="owner-b", title="Apple App Store regulation",
+                    tickers=["AAPL"],
+                )
+                await append_message(
+                    session, user_id="owner-b", conversation_id=foreign["id"], role="assistant",
+                    text="A secret foreign-owner conclusion about App Store regulation.",
+                )
+                await session.commit()
+
+            async with factory() as session:
+                result = await recall_conversations(
+                    session, user_id="owner-a",
+                    query="What was that Apple regulation concern?", ticker="AAPL",
+                )
+                assert result["status"] == "matched"
+                assert [item["conversation"]["id"] for item in result["candidates"]] == [first["id"]]
+                assert "secret" not in str(result)
+                assert result["candidates"][0]["excerpts"][0]["created_at"]
+                assert result["candidates"][0]["match"]["reason"]
+                assert await recall_conversations(
+                    session, user_id="owner-a", query="semiconductor inventory cycle"
+                ) == {
+                    "status": "unavailable",
+                    "query": "semiconductor inventory cycle",
+                    "scope": {"ticker": None},
+                    "historical_only": True,
+                    "current_evidence_checked": False,
+                    "candidates": [],
+                }
+
+                second = await create_conversation(
+                    session, user_id="owner-a", title="Apple regulation follow-up",
+                    tickers=["AAPL"],
+                )
+                await append_message(
+                    session, user_id="owner-a", conversation_id=second["id"], role="user",
+                    text="Revisit the Apple regulation concern.",
+                )
+                await session.commit()
+                ambiguous = await recall_conversations(
+                    session, user_id="owner-a", query="Apple regulation concern", ticker="AAPL",
+                )
+                assert ambiguous["status"] == "ambiguous"
+                assert len(ambiguous["candidates"]) == 2
+
+                assert await soft_delete_conversation(
+                    session, user_id="owner-a", conversation_id=first["id"]
+                )
+                await session.commit()
+                after_delete = await recall_conversations(
+                    session, user_id="owner-a", query="App Store economics", ticker="AAPL",
+                )
+                assert all(
+                    item["conversation"]["id"] != first["id"]
+                    for item in after_delete["candidates"]
+                )
+        finally:
+            await engine.dispose()
+
+    asyncio.run(scenario())
 
 
 def test_question_request_research_references_are_bounded_and_trimmed():

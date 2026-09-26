@@ -1,6 +1,6 @@
 # Cross-conversation memory: implementation contract
 
-Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema and private CRUD/search service are now present, but no conversation or recall endpoint is live yet. Voice is outside this launch scope.
+Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema, private CRUD/search API, `/ask` persistence, and bounded owner-filtered text recall endpoint are present. Recall remains transparent retrieval only: saved text is not silently injected into new answers, and no current-evidence refresh or semantic/vector retrieval is enabled yet. Voice is outside this launch scope.
 
 ## User promise
 
