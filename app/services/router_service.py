@@ -1928,10 +1928,15 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _has_intent,
     )
 
-    # ── Fast path: explicit company_name + investment intent ─────────────────
-    # When the caller supplies a non-empty company_name and the question has
-    # investment intent, resolve the company directly and route to the full
-    # investment pipeline without the text-detection detour.
+    # ── Fast path: explicit company analysis scope ────────────────────────────
+    # When the caller explicitly supplies both a company and company_analysis
+    # intent, that structured scope is authoritative. Natural research prompts
+    # such as "What is Tesla doing to win in 2030?" do not necessarily contain
+    # one of the legacy investment-keyword patterns, but they still require the
+    # full investment pipeline and its stable investment_thesis response shape.
+    #
+    # Callers that omit intent retain the keyword heuristic for backward
+    # compatibility. Explicit non-company intents remain excluded below.
     #
     # Why this is needed: the text-detection block above (lines 1118-1175) is
     # intentionally skipped when company_name is non-empty, so _text_detected_company
@@ -1948,7 +1953,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     })
     if (
         request.company_name.strip()
-        and _has_intent
+        and (request.intent == "company_analysis" or _has_intent)
         and request.intent not in _NON_COMPANY_INTENTS
     ):
         _explicit_company = detect_company(request.company_name.strip())
