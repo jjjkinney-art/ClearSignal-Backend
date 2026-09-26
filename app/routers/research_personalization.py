@@ -43,8 +43,9 @@ def _factory():
 async def get_research_personalization(request: Request) -> dict:
     from app.services.research_personalization import get_profile
 
+    owner = _owner(request)
     async with _factory()() as session:
-        return await get_profile(session, user_id=_owner(request))
+        return await get_profile(session, user_id=owner)
 
 
 @router.put("", summary="Set explicit Intelligence Mode preferences")
@@ -54,10 +55,11 @@ async def put_research_personalization(
 ) -> dict:
     from app.services.research_personalization import upsert_profile
 
+    owner = _owner(request)
     async with _factory()() as session:
         profile = await upsert_profile(
             session,
-            user_id=_owner(request),
+            user_id=owner,
             enabled=body.enabled,
             response_depth=body.response_depth,
             time_horizon=body.time_horizon,
@@ -72,8 +74,9 @@ async def put_research_personalization(
 async def delete_research_personalization(request: Request) -> dict:
     from app.services.research_personalization import delete_profile
 
+    owner = _owner(request)
     async with _factory()() as session:
-        deleted = await delete_profile(session, user_id=_owner(request))
+        deleted = await delete_profile(session, user_id=owner)
         if deleted:
             await session.commit()
     return {"deleted": deleted}
