@@ -2993,3 +2993,32 @@ class ResearchMessage(Base):
         Index("ix_research_messages_owner_created", "user_id", "created_at"),
         Index("ix_research_messages_conversation", "conversation_id", "ordinal"),
     )
+
+class ResearchPersonalizationProfile(Base):
+    """Explicit, account-owned Intelligence Mode preferences.
+
+    This profile is written only from user-controlled settings. It is never
+    inferred from research transcripts, holdings, or legacy rows, and it is not
+    model prompt context until a separately gated integration opts in.
+    """
+
+    __tablename__ = "research_personalization_profiles"
+
+    id      = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(255), nullable=False, unique=True)
+
+    enabled           = Column(Boolean, nullable=False, default=False)
+    response_depth    = Column(String(20), nullable=False, default="balanced")
+    time_horizon      = Column(String(20), nullable=False, default="mixed")
+    analysis_emphasis = Column(String(20), nullable=False, default="balanced")
+    evidence_style    = Column(String(30), nullable=False, default="primary_sources")
+    origin            = Column(String(30), nullable=False, default="explicit_user_setting")
+
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+    __table_args__ = (
+        Index("ix_research_personalization_owner", "user_id"),
+    )
+
