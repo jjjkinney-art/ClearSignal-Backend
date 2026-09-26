@@ -1,13 +1,14 @@
-"""Private account-owned conversation persistence for research memory.
+"""Private account-owned conversation persistence and bounded text recall.
 
-No API route imports this module yet. The service deliberately starts with
-bounded text search and explicit scope/date filters; semantic recall comes only
-after isolation, deletion and retrieval-quality acceptance tests pass.
+The service deliberately starts with deterministic text search and explicit
+scope/date filters. Semantic recall comes only after isolation, deletion and
+retrieval-quality acceptance tests pass.
 """
 
 from __future__ import annotations
 
 import json
+import re
 from datetime import datetime, timezone
 from typing import Iterable, Optional
 
@@ -22,7 +23,16 @@ MAX_MESSAGE_LENGTH = 50_000
 MAX_SNAPSHOT_BYTES = 100_000
 MAX_SEARCH_LENGTH = 200
 MAX_LIST_LIMIT = 50
+MAX_RECALL_MESSAGES = 500
+MAX_RECALL_CANDIDATES = 3
 RESPONSE_SNAPSHOT_VERSION = 1
+
+_RECALL_STOPWORDS = {
+    "a", "about", "an", "and", "are", "as", "at", "be", "did", "do",
+    "for", "from", "had", "has", "have", "i", "in", "is", "it", "last",
+    "me", "month", "my", "of", "on", "or", "our", "that", "the", "this",
+    "to", "was", "we", "were", "what", "when", "which", "with", "you",
+}
 
 
 def _owner(user_id: str) -> str:
@@ -67,6 +77,38 @@ def _message(row: ResearchMessage) -> dict:
         "displayed_snapshot": dict(row.displayed_snapshot or {}),
         "created_at": row.created_at.isoformat(),
     }
+
+
+def _recall_tokens(value: str) -> set[str]:
+    """Normalize ordinary-language recall terms without an external index.
+
+    This intentionally remains deterministic and inspectable. It is not a
+    semantic/vector search and never sends stored text to a model.
+    """
+    tokens: set[str] = set()
+    for raw in re.findall(r"[a-z0-9]+", (value or "").lower()):
+        if raw in _RECALL_STOPWORDS or len(raw) < 2:
+            continue
+        token = raw
+        for suffix in ("ation", "ments", "ment", "ing", "ies", "ed", "s"):
+            if token.endswith(suffix) and len(token) - len(suffix) >= 4:
+                token = token[:-len(suffix)]
+                break
+        tokens.add(token)
+    return tokens
+
+
+def _excerpt(text: str, matched_tokens: set[str], limit: int = 360) -> str:
+    cleaned = " ".join((text or "").split())
+    if len(cleaned) <= limit:
+        return cleaned
+    lowered = cleaned.lower()
+    positions = [lowered.find(token) for token in matched_tokens if lowered.find(token) >= 0]
+    start = max(0, (min(positions) if positions else 0) - 80)
+    end = min(len(cleaned), start + limit)
+    prefix = "…" if start else ""
+    suffix = "…" if end < len(cleaned) else ""
+    return f"{prefix}{cleaned[start:end].strip()}{suffix}"
 
 
 async def create_conversation(session, *, user_id: str, title: str = "",
@@ -261,6 +303,140 @@ async def list_conversations(session, *, user_id: str, query: Optional[str] = No
         ResearchConversation.updated_at.desc(), ResearchConversation.id.desc(),
     ).limit(bounded_limit))).scalars().all()
     return [_conversation(row) for row in rows]
+
+
+async def recall_conversations(session, *, user_id: str, query: str,
+                               ticker: Optional[str] = None,
+                               created_after: Optional[datetime] = None,
+                               created_before: Optional[datetime] = None,
+                               limit: int = MAX_RECALL_CANDIDATES) -> dict:
+    """Return explicit owner-scoped recall candidates without prompt injection.
+
+    Retrieval is deliberately bounded and deterministic. Owner and deletion
+    predicates are applied in SQL before any in-process ranking. The returned
+    excerpts are quotations from saved messages, never synthesized summaries.
+    """
+    owner = _owner(user_id)
+    normalized_query = (query or "").strip()[:MAX_SEARCH_LENGTH]
+    query_tokens = _recall_tokens(normalized_query)
+    if not query_tokens:
+        return {
+            "status": "unavailable", "query": normalized_query,
+            "scope": {"ticker": (ticker or "").strip().upper()[:20] or None},
+            "historical_only": True,
+            "current_evidence_checked": False,
+            "candidates": [],
+        }
+
+    stmt = (
+        select(ResearchConversation, ResearchMessage)
+        .join(
+            ResearchMessage,
+            ResearchMessage.conversation_id == ResearchConversation.id,
+        )
+        .where(
+            ResearchConversation.user_id == owner,
+            ResearchConversation.deleted_at.is_(None),
+            ResearchMessage.user_id == owner,
+        )
+    )
+    wanted_ticker = (ticker or "").strip().upper()[:20]
+    if wanted_ticker:
+        stmt = stmt.where(
+            func.lower(cast(ResearchConversation.scope_tickers, String)).contains(
+                f'"{wanted_ticker.lower()}"'
+            )
+        )
+    if created_after:
+        stmt = stmt.where(ResearchConversation.created_at >= created_after)
+    if created_before:
+        stmt = stmt.where(ResearchConversation.created_at <= created_before)
+    rows = (await session.execute(
+        stmt.order_by(ResearchMessage.created_at.desc()).limit(MAX_RECALL_MESSAGES)
+    )).all()
+
+    grouped: dict[str, dict] = {}
+    for conversation, message in rows:
+        candidate = grouped.setdefault(conversation.id, {
+            "conversation": conversation,
+            "messages": [],
+            "matched_tokens": set(),
+            "score": 0.0,
+        })
+        message_tokens = _recall_tokens(message.text)
+        title_tokens = _recall_tokens(conversation.title)
+        ticker_tokens = {str(value).lower() for value in (conversation.scope_tickers or [])}
+        overlap = query_tokens & (message_tokens | title_tokens | ticker_tokens)
+        if overlap:
+            coverage = len(overlap) / len(query_tokens)
+            precision = len(overlap) / max(1, len(message_tokens | title_tokens | ticker_tokens))
+            score = coverage * 0.8 + min(precision, 0.2)
+            if normalized_query.lower() in message.text.lower():
+                score += 0.08
+            candidate["score"] = max(candidate["score"], score)
+            candidate["matched_tokens"].update(overlap)
+        candidate["messages"].append(message)
+
+    ranked = sorted(
+        (item for item in grouped.values() if item["score"] >= 0.34),
+        key=lambda item: (
+            item["score"],
+            item["conversation"].updated_at,
+            item["conversation"].id,
+        ),
+        reverse=True,
+    )
+    bounded_limit = max(1, min(int(limit), MAX_RECALL_CANDIDATES))
+    selected = ranked[:bounded_limit]
+    candidates = []
+    for item in selected:
+        conversation = item["conversation"]
+        matching_messages = sorted(
+            (
+                message for message in item["messages"]
+                if query_tokens & _recall_tokens(message.text)
+            ),
+            key=lambda message: (message.created_at, message.ordinal),
+            reverse=True,
+        )[:2]
+        if not matching_messages:
+            matching_messages = sorted(
+                item["messages"],
+                key=lambda message: (message.created_at, message.ordinal),
+                reverse=True,
+            )[:2]
+        candidates.append({
+            "conversation": _conversation(conversation),
+            "match": {
+                "score": round(min(item["score"], 1.0), 3),
+                "terms": sorted(item["matched_tokens"]),
+                "reason": "Shared terms in your saved title, scope, or transcript.",
+            },
+            "excerpts": [{
+                "message_id": message.id,
+                "role": message.role,
+                "text": _excerpt(message.text, item["matched_tokens"]),
+                "created_at": message.created_at.isoformat(),
+                "snapshot_version": message.snapshot_version,
+                "displayed_snapshot": dict(message.displayed_snapshot or {}),
+            } for message in matching_messages],
+        })
+
+    status = "unavailable"
+    if candidates:
+        status = "matched"
+        if len(selected) > 1:
+            top, second = selected[0]["score"], selected[1]["score"]
+            if second >= top * 0.8 and top - second <= 0.12:
+                status = "ambiguous"
+    return {
+        "status": status,
+        "query": normalized_query,
+        "scope": {"ticker": wanted_ticker or None},
+        "historical_only": True,
+        "current_evidence_checked": False,
+        "candidates": candidates,
+    }
 
 
 async def soft_delete_conversation(session, *, user_id: str,
