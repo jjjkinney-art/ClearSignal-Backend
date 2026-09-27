@@ -437,8 +437,17 @@ class QuestionRequest(BaseModel):
         max_length=100,
         description="Client-generated idempotency reference for this research turn.",
     )
+    research_memory_conversation_id: Optional[str] = Field(
+        default=None,
+        min_length=1,
+        max_length=64,
+        description="Explicitly selected account-owned prior investigation for a fresh analysis.",
+    )
 
-    @field_validator("research_conversation_id", "research_request_ref")
+    @field_validator(
+        "research_conversation_id", "research_request_ref",
+        "research_memory_conversation_id",
+    )
     @classmethod
     def _validate_research_reference(cls, value: Optional[str]) -> Optional[str]:
         if value is None:
@@ -467,6 +476,14 @@ class QuestionRequest(BaseModel):
     personalization_context_data: Optional[Dict[str, Any]] = Field(
         default=None, exclude=True,
         description="[internal] Validated explicit Intelligence presentation settings.",
+    )
+    research_memory_context_block: Optional[str] = Field(
+        default=None, exclude=True,
+        description="[internal] Server-built quotation of a selected historical thesis snapshot.",
+    )
+    research_memory_context_data: Optional[Dict[str, Any]] = Field(
+        default=None, exclude=True,
+        description="[internal] Ownership-validated selected research metadata.",
     )
 
     # ── Slice 5C/5D — internal dossier injection ──────────────────────────────
