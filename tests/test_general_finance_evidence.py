@@ -102,7 +102,7 @@ class TestRetrievedEvidenceSchema:
             d = ev.dict()
         assert set(d.keys()) == {
             "title", "source", "summary", "timestamp", "relevance_score",
-            "retrieval_tags", "retrieval_weight",
+            "url", "retrieval_tags", "retrieval_weight",
         }
 
 
