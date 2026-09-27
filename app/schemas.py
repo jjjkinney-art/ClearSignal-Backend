@@ -461,6 +461,14 @@ class QuestionRequest(BaseModel):
         description="[internal] Structured memory dict for API response stamping.",
     )
 
+    # ── Account-owned Intelligence presentation profile ──────────────────────
+    # Sanitized and attached server-side after authentication. Client-supplied
+    # values are always discarded in api.py before routing.
+    personalization_context_data: Optional[Dict[str, Any]] = Field(
+        default=None, exclude=True,
+        description="[internal] Validated explicit Intelligence presentation settings.",
+    )
+
     # ── Slice 5C/5D — internal dossier injection ──────────────────────────────
     # Set by api.py pre-dispatch when this session is in the injected canary
     # cohort; never sent by clients.  When non-None the synthesiser includes
