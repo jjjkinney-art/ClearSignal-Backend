@@ -93,6 +93,7 @@ def _article_to_evidence(article: dict, relevance: float) -> RetrievedEvidence:
         source=f"NewsAPI / {source_name}",
         summary=summary or title,
         timestamp=published,
+        url=url or None,
         relevance_score=relevance,
     )
 
