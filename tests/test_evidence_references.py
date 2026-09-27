@@ -17,6 +17,7 @@ def _item(**changes):
 def test_explicit_public_https_url_is_inspectable():
     refs = build_evidence_references([_item(url="https://example.com/apple")])
     assert refs == [{
+        "id": "E1",
         "title": "Apple update",
         "source": "NewsAPI / Reuters",
         "published_at": "2026-09-27",

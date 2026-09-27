@@ -1509,6 +1509,9 @@ def _run_investment_pipeline(
                 "evidence_changes": [],
             }
 
+    from .source_answer import apply_source_answer_gate
+    _source_answer = apply_source_answer_gate(thesis, question, evidence)
+
     try:
         thesis_dict = thesis.model_dump()
     except Exception:
@@ -1637,6 +1640,7 @@ def _run_investment_pipeline(
             # Retrieval metadata is deliberately separate from generated prose.
             # URLs are sanitized and never include provider request credentials.
             "evidence_references": _evidence_references,
+            "source_answer": _source_answer,
         },
         routing={
             "pipeline": "investment_thesis",
