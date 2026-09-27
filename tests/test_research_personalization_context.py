@@ -2,7 +2,6 @@
 
 import inspect
 
-from app.api import _sanitize_question_request_context
 from app.schemas import (
     CompanyContext,
     MacroSensitivity,
@@ -18,6 +17,7 @@ from app.services.research_personalization_context import (
     build_applied_profile,
     format_profile_for_prompt,
     response_metadata,
+    sanitize_question_request_context,
 )
 from app.services.thesis_synthesizer import _build_synthesis_prompt
 
@@ -123,7 +123,7 @@ def test_client_cannot_supply_any_internal_ask_context():
             "evidence_style": "balanced_sources",
         },
     )
-    sanitized = _sanitize_question_request_context(request)
+    sanitized = sanitize_question_request_context(request)
     assert sanitized.memory_context_block is None
     assert sanitized.memory_context_data is None
     assert sanitized.dossier_context_block is None
