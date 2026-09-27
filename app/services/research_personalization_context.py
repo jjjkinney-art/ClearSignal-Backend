@@ -156,5 +156,7 @@ def sanitize_question_request_context(request):
         "memory_context_block": None,
         "memory_context_data": None,
         "personalization_context_data": None,
+        "research_memory_context_block": None,
+        "research_memory_context_data": None,
         "dossier_context_block": None,
     })
