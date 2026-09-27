@@ -1621,6 +1621,9 @@ def _run_investment_pipeline(
     if _selected_research_comparison is not None:
         _selected_research_metadata["comparison"] = _selected_research_comparison
 
+    from .evidence_references import build_evidence_references
+    _evidence_references = build_evidence_references(evidence)
+
     return AgentAnswerResponse(
         company=ticker,
         request_id=request_id,
@@ -1631,6 +1634,9 @@ def _run_investment_pipeline(
             # Separate from generated prose: these are exact XBRL observations
             # with claim-bound filing links, never inferred citations.
             "verified_sec_facts": _verified_sec_facts,
+            # Retrieval metadata is deliberately separate from generated prose.
+            # URLs are sanitized and never include provider request credentials.
+            "evidence_references": _evidence_references,
         },
         routing={
             "pipeline": "investment_thesis",
