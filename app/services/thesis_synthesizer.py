@@ -1570,6 +1570,7 @@ def _build_synthesis_prompt(
     pre_synthesized_answer: Optional[str] = None,
     memory_context_block: Optional[str] = None,
     dossier_context_block: Optional[str] = None,
+    personalization_context_data: Optional[Dict[str, Any]] = None,
 ) -> str:
     # Plain-text agent summaries with question-aware sub-field injection (Phase 2 Lever 2).
     # For each question_intent, the most analytically relevant sub-field from the
@@ -2108,6 +2109,22 @@ def _build_synthesis_prompt(
         else ""
     )
 
+    # Explicit account-owned presentation settings are rendered exclusively
+    # through fixed server mappings. Invalid or missing context is a byte-for-
+    # byte no-op for the baseline prompt.
+    try:
+        from .research_personalization_context import format_profile_for_prompt
+        _personalization_block = format_profile_for_prompt(
+            personalization_context_data
+        )
+    except Exception:
+        _personalization_block = ""
+    _personalization_section = (
+        f"\n{_personalization_block}\n"
+        if _personalization_block
+        else ""
+    )
+
     return f"""You are a senior investment analyst producing an institutional-quality investment thesis.
 
 CRITICAL OUTPUT RULES — READ FIRST:
@@ -2117,7 +2134,7 @@ CRITICAL OUTPUT RULES — READ FIRST:
 - Do NOT write "Investment Thesis for...", "Bull Case:", "Bear Case:" or any other headings.
 - Your ENTIRE response must start with {{ and end with }}.
 - Any non-JSON output will cause a parse failure.
-{_memory_section}{_dossier_section}
+{_memory_section}{_dossier_section}{_personalization_section}
 COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
@@ -3267,6 +3284,7 @@ def synthesize_thesis(
     pre_synthesized_answer: Optional[str] = None,
     memory_context_block: Optional[str] = None,
     dossier_context_block: Optional[str] = None,
+    personalization_context_data: Optional[Dict[str, Any]] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -3373,6 +3391,7 @@ def synthesize_thesis(
         pre_synthesized_answer=pre_synthesized_answer,
         memory_context_block=memory_context_block,
         dossier_context_block=dossier_context_block,
+        personalization_context_data=personalization_context_data,
     )
 
     # ── Sprint 3B.1: prompt variant + section instrumentation ────────────────
