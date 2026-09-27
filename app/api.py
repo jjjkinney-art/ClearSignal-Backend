@@ -1576,6 +1576,7 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         _request = request.model_copy(update={
             "memory_context_block": None,
             "memory_context_data": None,
+            "personalization_context_data": None,
         })
         _pre_dispatch_ticker: str | None = None
         try:
@@ -1630,6 +1631,38 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         except Exception as _mem_exc:
             logger.debug("[ask] 9C pre-dispatch memory read failed (non-fatal): %r", _mem_exc)
             # _request retains its sanitized, memory-free input.
+
+        # ── Explicit account-owned Intelligence presentation profile ─────────
+        # This is deliberately separate from research memory. Only persisted,
+        # enabled, server-validated enums can cross the boundary; prompt text,
+        # transcripts, holdings, and legacy ticker-wide records are never read.
+        try:
+            from .config import settings as _personalization_settings
+            if _personalization_settings.auth_enabled and _acting_user_id:
+                from .db import get_session as _get_personalization_session
+                from .services.research_personalization import (
+                    get_profile as _get_personalization_profile,
+                )
+                from .services.research_personalization_context import (
+                    build_applied_profile as _build_applied_profile,
+                )
+                async with _get_personalization_session() as _personalization_session:
+                    _stored_profile = await _get_personalization_profile(
+                        _personalization_session,
+                        user_id=_acting_user_id,
+                    )
+                _applied_profile = _build_applied_profile(_stored_profile)
+                if _applied_profile is not None:
+                    _request = _request.model_copy(update={
+                        "personalization_context_data": _applied_profile,
+                    })
+        except Exception as _personalization_exc:
+            logger.debug(
+                "[ask] Intelligence profile read failed (non-fatal): %r",
+                _personalization_exc,
+            )
+            # Fail open for availability and closed for personalization:
+            # the already-sanitized request keeps the baseline prompt.
 
         # ── Slice 5A + 5C/5D: Dossier injection (shadow + canary) ─────────────
         # One dossier fetch shared between the 5A shadow telemetry path and the
