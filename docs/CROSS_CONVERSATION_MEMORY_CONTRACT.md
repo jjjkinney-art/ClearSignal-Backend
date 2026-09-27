@@ -1,6 +1,6 @@
 # Cross-conversation memory: implementation contract
 
-Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema, private CRUD/search API, `/ask` persistence, bounded owner-filtered text recall, and an explicit account-owned Intelligence profile API are present. Recall remains transparent retrieval only: saved text is not silently injected into new answers. Personalization stores only user-selected structured settings and is not model prompt context yet. No current-evidence refresh or semantic/vector retrieval is enabled. Voice is outside this launch scope.
+Status: implementation contract for the required pre-public-launch JARVIS milestone. The additive account-owned conversation/message schema, private CRUD/search API, `/ask` persistence, bounded owner-filtered text recall, and an explicit account-owned Intelligence profile API are present. Recall search remains transparent retrieval only: saved text is never silently injected. A user may explicitly select one same-ticker conversation for a fresh analysis; the server revalidates ownership and deletion state, extracts only a bounded structured thesis snapshot, labels it historical and untrusted, and runs the normal fresh evidence pipeline. Raw transcript text, ambiguous search results, other users' records, and shared legacy ticker memory cannot enter that prompt. Intelligence personalization now applies only fixed, user-selected presentation directives and cannot change evidence retrieval or conclusions. Semantic/vector retrieval is not enabled. Voice is outside this launch scope.
 
 ## User promise
 
@@ -30,6 +30,7 @@ Start retrieval with a bounded, account-filtered text search over messages and e
 4. `POST /research/recall`: take a natural-language query and optional scope, retrieve only current-owner candidates, and return `matched`, `ambiguous`, or `unavailable` with dates and original conversation references. For a question asking what is true **now**, perform a separate on-demand evidence check with its own timestamp. If that check fails, show the historical answer and say that the present conclusion cannot be verified.
 5. `DELETE /research/conversations/{id}` and an account-wide export/deletion path must invalidate retrieval records and remove associated personal data according to the published retention/deletion policy. Support cannot bypass identity verification or the existing deletion runbook.
 6. `GET`, `PUT`, and `DELETE /research/personalization` expose only the authenticated account's explicit structured Intelligence profile. Absence returns transparent disabled defaults. Settings must not be inferred from transcripts, holdings, or legacy rows, and enabling the profile does not authorize silent transcript injection.
+7. `/ask` may carry `research_memory_conversation_id` only after the user explicitly chooses a recall candidate. The backend resolves the record inside the authenticated owner boundary, requires its stored ticker scope to match the new company analysis, and uses the latest valid assistant `displayed_snapshot`. Missing, foreign, deleted, mismatched, transcript-only, and malformed records fail closed. Response routing metadata discloses whether the historical record was applied and whether fresh evidence was available.
 
 Names and payloads above are proposed contracts, not permission to expose incomplete endpoints. Define response schemas, size limits, retention, quotas and error behavior before implementation. Keep automatic monitoring off until its own rollout gate.
 
@@ -45,5 +46,6 @@ Names and payloads above are proposed contracts, not permission to expose incomp
 
 1. Audit and close the unscoped legacy history boundary. Determine whether the current route can be made account-owned from available data or must return an unavailable state until new persistence exists.
 2. Land the additive owned-conversation schema and tested CRUD/search service with strict isolation and deletion; keep the new endpoints dark.
-3. Integrate `/ask` and Intelligence Mode through one conversation contract, then expose recent history and transparent recall. Preserve original source links and timestamps.
-4. Run the month-later and two-account acceptance tests against production-equivalent data, observe a limited cohort, and update the public-launch gate only after the results pass.
+3. Integrate `/ask` and Intelligence Mode through one conversation contract, then expose recent history, transparent recall, and explicit user-selected historical comparison. Preserve original source links and timestamps.
+4. Connect the explicit selection control in the signed-in frontend and show applied/unavailable/current-evidence state without presenting history as current fact.
+5. Run the month-later and two-account acceptance tests against production-equivalent data, observe a limited cohort, and update the public-launch gate only after the results pass.

@@ -1571,6 +1571,7 @@ def _build_synthesis_prompt(
     memory_context_block: Optional[str] = None,
     dossier_context_block: Optional[str] = None,
     personalization_context_data: Optional[Dict[str, Any]] = None,
+    research_memory_context_block: Optional[str] = None,
 ) -> str:
     # Plain-text agent summaries with question-aware sub-field injection (Phase 2 Lever 2).
     # For each question_intent, the most analytically relevant sub-field from the
@@ -2124,6 +2125,11 @@ def _build_synthesis_prompt(
         if _personalization_block
         else ""
     )
+    _selected_research_section = (
+        f"\n{research_memory_context_block}\n"
+        if research_memory_context_block
+        else ""
+    )
 
     return f"""You are a senior investment analyst producing an institutional-quality investment thesis.
 
@@ -2134,7 +2140,7 @@ CRITICAL OUTPUT RULES — READ FIRST:
 - Do NOT write "Investment Thesis for...", "Bull Case:", "Bear Case:" or any other headings.
 - Your ENTIRE response must start with {{ and end with }}.
 - Any non-JSON output will cause a parse failure.
-{_memory_section}{_dossier_section}{_personalization_section}
+{_memory_section}{_dossier_section}{_selected_research_section}{_personalization_section}
 COMPANY: {company.company_name} ({ticker})
 Sector: {company.sector or "Unknown"} | Industry: {company.industry or "Unknown"}
 
@@ -3285,6 +3291,7 @@ def synthesize_thesis(
     memory_context_block: Optional[str] = None,
     dossier_context_block: Optional[str] = None,
     personalization_context_data: Optional[Dict[str, Any]] = None,
+    research_memory_context_block: Optional[str] = None,
 ) -> InvestmentThesis:
     """Synthesise agent outputs into an InvestmentThesis.
 
@@ -3392,6 +3399,7 @@ def synthesize_thesis(
         memory_context_block=memory_context_block,
         dossier_context_block=dossier_context_block,
         personalization_context_data=personalization_context_data,
+        research_memory_context_block=research_memory_context_block,
     )
 
     # ── Sprint 3B.1: prompt variant + section instrumentation ────────────────
