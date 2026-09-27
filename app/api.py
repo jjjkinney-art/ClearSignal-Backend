@@ -1414,6 +1414,16 @@ async def analyze(request: AnalysisRequest, http_request: Request) -> AnalysisRe
         raise HTTPException(status_code=500, detail="Analysis failed to complete") from exc
 
 
+def _sanitize_question_request_context(request: QuestionRequest) -> QuestionRequest:
+    """Discard every client-supplied internal prompt context field."""
+    return request.model_copy(update={
+        "memory_context_block": None,
+        "memory_context_data": None,
+        "personalization_context_data": None,
+        "dossier_context_block": None,
+    })
+
+
 @router.post(
     "/ask",
     summary="Ask a question to a specialist agent",
@@ -1573,11 +1583,7 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         # Pydantic's `exclude=True` hides internal fields on serialization but
         # does not reject them on input. Never forward client-supplied memory
         # text or structured memory to synthesis.
-        _request = request.model_copy(update={
-            "memory_context_block": None,
-            "memory_context_data": None,
-            "personalization_context_data": None,
-        })
+        _request = _sanitize_question_request_context(request)
         _pre_dispatch_ticker: str | None = None
         try:
             from .db import get_session as _get_session
