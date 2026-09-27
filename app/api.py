@@ -1631,6 +1631,51 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             logger.debug("[ask] 9C pre-dispatch memory read failed (non-fatal): %r", _mem_exc)
             # _request retains its sanitized, memory-free input.
 
+        # ── Explicit account-owned research memory selection ────────────────
+        # The client supplies only a conversation id. The server resolves it
+        # inside the authenticated owner boundary, requires the same ticker,
+        # and reads only a structured assistant snapshot (never transcript text).
+        _selected_research_id = getattr(
+            request, "research_memory_conversation_id", None
+        )
+        if _selected_research_id:
+            _selected_research_context = {"applied": False, "status": "unavailable"}
+            try:
+                from .config import settings as _research_memory_settings
+                if (
+                    _research_memory_settings.auth_enabled
+                    and _acting_user_id
+                    and _pre_dispatch_ticker
+                ):
+                    from .db import get_session as _get_research_memory_session
+                    from .services.research_memory_context import (
+                        load_selected_research_context as _load_selected_research,
+                    )
+                    async with _get_research_memory_session() as _research_memory_session:
+                        _selected_research_context = await _load_selected_research(
+                            _research_memory_session,
+                            user_id=_acting_user_id,
+                            conversation_id=_selected_research_id,
+                            target_ticker=_pre_dispatch_ticker,
+                        )
+                _request = _request.model_copy(update={
+                    "research_memory_context_block": _selected_research_context.get(
+                        "prompt_block"
+                    ),
+                    "research_memory_context_data": _selected_research_context,
+                })
+            except Exception as _research_memory_exc:
+                logger.debug(
+                    "[ask] selected research memory read failed (non-fatal): %r",
+                    _research_memory_exc,
+                )
+                _request = _request.model_copy(update={
+                    "research_memory_context_block": None,
+                    "research_memory_context_data": {
+                        "applied": False, "status": "unavailable",
+                    },
+                })
+
         # ── Explicit account-owned Intelligence presentation profile ─────────
         # This is deliberately separate from research memory. Only persisted,
         # enabled, server-validated enums can cross the boundary; prompt text,
