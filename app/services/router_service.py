@@ -952,6 +952,7 @@ def _run_investment_pipeline(
     memory_context_block: Optional[str] = None,
     memory_context_data: Optional[dict] = None,
     dossier_context_block: Optional[str] = None,
+    personalization_context_data: Optional[dict] = None,
 ) -> AgentAnswerResponse:
     """Run the full 5-agent investment pipeline for a detected company.
 
@@ -1391,6 +1392,9 @@ def _run_investment_pipeline(
             memory_context_block=memory_context_block,
             # Slice 5C/5D: prior-dossier context block (None when not in canary)
             dossier_context_block=dossier_context_block,
+            # Explicit account-owned presentation preferences. This structured
+            # enum-only context is rendered through a fixed allowlist downstream.
+            personalization_context_data=personalization_context_data,
         )
 
     from ..schemas import InvestmentThesis as _InvestmentThesis
@@ -1580,6 +1584,13 @@ def _run_investment_pipeline(
     except Exception:
         pass
 
+    from .research_personalization_context import (
+        response_metadata as _personalization_response_metadata,
+    )
+    _personalization_metadata = _personalization_response_metadata(
+        personalization_context_data
+    )
+
     return AgentAnswerResponse(
         company=ticker,
         request_id=request_id,
@@ -1597,6 +1608,7 @@ def _run_investment_pipeline(
             "detected_company": company.company_name,
             "evidence_count": len(evidence),
             "pipeline_elapsed_s": round(time.time() - _pipeline_t0, 2),
+            "personalization": _personalization_metadata,
         },
     )
 
@@ -1838,6 +1850,9 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                             memory_context_block=getattr(request, "memory_context_block", None),
                             memory_context_data=getattr(request, "memory_context_data", None),
                             dossier_context_block=getattr(request, "dossier_context_block", None),
+                            personalization_context_data=getattr(
+                                request, "personalization_context_data", None
+                            ),
                         )
         except Exception as _scn_exc:
             logger.warning("[router] scenario routing failed: %r", _scn_exc)
@@ -1975,6 +1990,9 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 memory_context_block=getattr(request, "memory_context_block", None),
                 memory_context_data=getattr(request, "memory_context_data", None),
                 dossier_context_block=getattr(request, "dossier_context_block", None),
+                personalization_context_data=getattr(
+                    request, "personalization_context_data", None
+                ),
             )
 
     # Route to full investment pipeline when a company is detected from question
@@ -2008,6 +2026,9 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             memory_context_block=getattr(request, "memory_context_block", None),
             memory_context_data=getattr(request, "memory_context_data", None),
             dossier_context_block=getattr(request, "dossier_context_block", None),
+            personalization_context_data=getattr(
+                request, "personalization_context_data", None
+            ),
         )
 
     # ── Graceful "Did you mean?" fallback ────────────────────────────────────
