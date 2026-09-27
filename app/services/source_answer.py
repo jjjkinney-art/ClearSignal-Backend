@@ -13,6 +13,11 @@ _SOURCE_REQUEST_RE = re.compile(
 _LEGACY_SOURCE_RE = re.compile(r"\s*\[Source:\s*https?://[^\]]+\]\s*", re.IGNORECASE)
 
 
+def is_source_answer_request(question: str) -> bool:
+    """Return whether the user explicitly requested evidence attribution."""
+    return bool(_SOURCE_REQUEST_RE.search(question or ""))
+
+
 def _claim_text(item: object) -> str | None:
     source = str(getattr(item, "source", "") or "")
     summary = str(getattr(item, "summary", "") or "").strip()
@@ -29,7 +34,7 @@ def _claim_text(item: object) -> str | None:
 
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object]) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""
-    if not _SOURCE_REQUEST_RE.search(question or ""):
+    if not is_source_answer_request(question):
         return None
 
     claims: list[dict] = []

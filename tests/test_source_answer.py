@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 from app.schemas import RetrievedEvidence
-from app.services.source_answer import apply_source_answer_gate
+from app.services.source_answer import apply_source_answer_gate, is_source_answer_request
 
 
 def _evidence(title, source, summary):
@@ -49,3 +49,23 @@ def test_non_source_question_is_unchanged():
     thesis = SimpleNamespace(direct_answer="Original answer")
     assert apply_source_answer_gate(thesis, "What is Apple's thesis?", []) is None
     assert thesis.direct_answer == "Original answer"
+
+
+def test_structured_sec_fact_is_claim_level_evidence():
+    thesis = SimpleNamespace(direct_answer="")
+    evidence = [_evidence(
+        "AAPL revenue", "SEC EDGAR — structured XBRL fact",
+        "AAPL revenue increased 12.0% to $100B for the period ended 2025-03-31.",
+    )]
+    result = apply_source_answer_gate(
+        thesis, "Which source supports Apple's revenue growth?", evidence,
+    )
+    assert result["status"] == "attributed"
+    assert result["claims"][0]["reference_id"] == "E1"
+
+
+def test_production_acceptance_question_requests_sources():
+    assert is_source_answer_request(
+        "What are the three strongest pieces of current evidence supporting "
+        "Apple's long-term growth thesis, and which source supports each one?"
+    )
