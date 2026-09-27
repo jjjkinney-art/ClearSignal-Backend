@@ -990,7 +990,7 @@ def _run_investment_pipeline(
     from ..observability import record_stage as _obs_stage_record_early
     _obs_stage_record_early("routing", (time.monotonic() - _t_intent_m) * 1000.0)
 
-    # ── Evidence retrieval (7-task parallel pool) ────────────────────────────
+    # ── Evidence retrieval (parallel provider pool) ──────────────────────────
     # Previously `retrieve_market_evidence` was called as ONE parallel task but
     # internally made 4 sequential HTTP calls (FMP→SEC→NewsAPI co→NewsAPI macro)
     # = 12-16s wall time.  Now each provider is its own independent task in a
@@ -1022,6 +1022,14 @@ def _run_investment_pipeline(
             return [claim] if claim else []
         except Exception as _e:
             logger.warning("[router] verified SEC revenue unavailable for %s: %r", ticker, _e)
+            return []
+
+    def _fetch_sec_metrics():
+        try:
+            from .verified_sec_metric_service import fetch_verified_metric_evidence
+            return fetch_verified_metric_evidence(ticker)
+        except Exception as _e:
+            logger.warning("[router] verified SEC metrics unavailable for %s: %r", ticker, _e)
             return []
 
     def _fetch_news_company():
@@ -1059,7 +1067,7 @@ def _run_investment_pipeline(
     _EVIDENCE_PROVIDER_NAMES = {
         "fmp": "fmp", "sec": "sec_edgar", "news_co": "news",
         "news_macro": "news", "fred": "fred", "valuation": "fmp_valuation",
-        "estimates": "fmp_estimates",
+        "estimates": "fmp_estimates", "sec_metrics": "sec_edgar",
     }
     _ev_tasks = {
         "fmp":       _fetch_fmp,
@@ -1075,6 +1083,9 @@ def _run_investment_pipeline(
     # answer and only requested for an explicit revenue question.
     if re.search(r"\brevenues?\b", question, re.IGNORECASE):
         _ev_tasks["sec_revenue"] = _fetch_sec_revenue
+    from .source_answer import is_source_answer_request
+    if is_source_answer_request(question):
+        _ev_tasks["sec_metrics"] = _fetch_sec_metrics
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
@@ -1160,10 +1171,13 @@ def _run_investment_pipeline(
     _val_ratios:     list = _ev_results.get("valuation", [])
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
-    evidence = market_evidence + fred_evidence + _val_ratios + _analyst_ests
+    _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
+    # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
+    # claim-level facts rather than generic filing-discovery metadata.
+    evidence = _sec_metric_evidence + market_evidence + fred_evidence + _val_ratios + _analyst_ests
 
     print(
-        f"[TIMING] [{ticker}] evidence_retrieval(7-parallel)={time.time()-_t_evidence:.2f}s "
+        f"[TIMING] [{ticker}] evidence_retrieval(parallel)={time.time()-_t_evidence:.2f}s "
         f"fmp={len(_fmp_ev)} sec={len(_sec_ev)} "
         f"news_co={len(_news_co)} news_macro={len(_news_macro)} "
         f"fred={len(fred_evidence)} val_ratios={len(_val_ratios)} "
