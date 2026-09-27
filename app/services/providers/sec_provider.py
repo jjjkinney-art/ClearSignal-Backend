@@ -188,9 +188,13 @@ def _fetch_by_cik(
     evidence: List[RetrievedEvidence] = []
     seen_keys: set = set()
 
-    for form_type, file_date, period, accession, primary_document in zip(
-        form_types, filing_dates, report_dates, accession_numbers, primary_documents
+    for index, (form_type, file_date, period) in enumerate(
+        zip(form_types, filing_dates, report_dates)
     ):
+        accession = accession_numbers[index] if index < len(accession_numbers) else None
+        primary_document = (
+            primary_documents[index] if index < len(primary_documents) else None
+        )
         if file_date < cutoff:
             # All subsequent filings are older — stop scanning.
             break
