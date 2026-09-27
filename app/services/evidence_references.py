@@ -61,6 +61,7 @@ def build_evidence_references(items: Iterable[object]) -> list[dict]:
             continue
         seen.add(identity)
         references.append({
+            "id": f"E{len(references) + 1}",
             "title": title[:300],
             "source": source[:120],
             "published_at": published_at[:40] or None,
