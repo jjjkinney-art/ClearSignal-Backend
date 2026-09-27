@@ -55,6 +55,13 @@ class RetrievedEvidence(BaseModel):
     source: str = Field(..., description="Publication or data provider name")
     summary: str = Field(..., description="1-3 sentence summary of the relevant finding")
     timestamp: str = Field(..., description="Publication date (YYYY-MM-DD)")
+    url: Optional[str] = Field(
+        default=None,
+        description=(
+            "Public source URL when the provider supplies one. Provider request "
+            "URLs and credentials must never be stored here."
+        ),
+    )
     relevance_score: float = Field(
         default=1.0,
         ge=0.0,
