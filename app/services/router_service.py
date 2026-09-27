@@ -1488,6 +1488,27 @@ def _run_investment_pipeline(
         except Exception as exc:
             logger.warning("[router] process_new_thesis failed for %s: %r", ticker, exc)
 
+    # ── Evidence-gated selected-research comparison ─────────────────────────
+    # The model may read the explicitly selected historical quotation, but it
+    # cannot promote continuity into a directional change. A deterministic
+    # gate requires attributable, related evidence newer than the prior record.
+    _selected_research_comparison = None
+    if research_memory_context_data and research_memory_context_data.get("applied") is True:
+        try:
+            from .research_comparison import apply_evidence_gated_comparison
+            _selected_research_comparison = apply_evidence_gated_comparison(
+                thesis, research_memory_context_data, evidence
+            )
+        except Exception as exc:
+            logger.warning("[router] selected research comparison failed for %s: %r", ticker, exc)
+            _selected_research_comparison = {
+                "comparison_version": 1,
+                "status": "unavailable",
+                "direction": "unclear",
+                "reason": "The historical comparison could not be verified.",
+                "evidence_changes": [],
+            }
+
     try:
         thesis_dict = thesis.model_dump()
     except Exception:
@@ -1597,6 +1618,8 @@ def _run_investment_pipeline(
     _selected_research_metadata = _research_memory_metadata(
         research_memory_context_data, evidence_count=len(evidence)
     )
+    if _selected_research_comparison is not None:
+        _selected_research_metadata["comparison"] = _selected_research_comparison
 
     return AgentAnswerResponse(
         company=ticker,
