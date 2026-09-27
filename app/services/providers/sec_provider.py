@@ -98,6 +98,7 @@ def _make_evidence(
     form_type: str,
     file_date: str,
     period: str,
+    filing_url: str | None = None,
 ) -> RetrievedEvidence:
     """Build a RetrievedEvidence object from filing metadata."""
     label      = _form_label(form_type)
@@ -116,6 +117,7 @@ def _make_evidence(
         source="SEC EDGAR",
         summary=summary,
         timestamp=file_date,
+        url=filing_url,
         relevance_score=0.90 if form_type == "10-K" else 0.85,
     )
 
@@ -178,13 +180,17 @@ def _fetch_by_cik(
     filing_dates = recent.get("filingDate", [])
     form_types   = recent.get("form", [])
     report_dates = recent.get("reportDate", [])
+    accession_numbers = recent.get("accessionNumber", [])
+    primary_documents = recent.get("primaryDocument", [])
 
     # Filings are newest-first.
     cutoff   = _years_ago(years_back)
     evidence: List[RetrievedEvidence] = []
     seen_keys: set = set()
 
-    for form_type, file_date, period in zip(form_types, filing_dates, report_dates):
+    for form_type, file_date, period, accession, primary_document in zip(
+        form_types, filing_dates, report_dates, accession_numbers, primary_documents
+    ):
         if file_date < cutoff:
             # All subsequent filings are older — stop scanning.
             break
@@ -196,7 +202,17 @@ def _fetch_by_cik(
             continue
         seen_keys.add(key)
 
-        evidence.append(_make_evidence(entity_name, form_type, file_date, period))
+        filing_url = None
+        if accession and primary_document:
+            accession_compact = str(accession).replace("-", "")
+            cik_compact = str(int(cik))
+            filing_url = (
+                f"https://www.sec.gov/Archives/edgar/data/{cik_compact}/"
+                f"{accession_compact}/{primary_document}"
+            )
+        evidence.append(_make_evidence(
+            entity_name, form_type, file_date, period, filing_url
+        ))
 
         if len(evidence) >= limit:
             break
