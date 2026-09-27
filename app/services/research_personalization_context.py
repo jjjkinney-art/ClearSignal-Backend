@@ -149,3 +149,12 @@ def response_metadata(profile: Mapping[str, Any] | None) -> dict:
         "analysis_emphasis": profile["analysis_emphasis"],
         "evidence_style": profile["evidence_style"],
     }
+
+def sanitize_question_request_context(request):
+    """Discard every client-supplied internal prompt context field."""
+    return request.model_copy(update={
+        "memory_context_block": None,
+        "memory_context_data": None,
+        "personalization_context_data": None,
+        "dossier_context_block": None,
+    })
