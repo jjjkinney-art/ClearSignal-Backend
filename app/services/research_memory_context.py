@@ -23,6 +23,7 @@ _TEXT_FIELDS = (
     "one_sentence_thesis",
 )
 _LIST_FIELDS = ("key_drivers", "key_risks", "what_to_monitor")
+_NUMBER_FIELDS = ("confidence_score", "evidence_count")
 
 
 def _clean_text(value: object) -> str:
@@ -49,6 +50,10 @@ def _extract_thesis(snapshot: Mapping[str, Any]) -> dict:
             items = [item for item in items if item]
             if items:
                 bounded[field] = items
+    for field in _NUMBER_FIELDS:
+        value = thesis.get(field)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            bounded[field] = float(value) if field == "confidence_score" else int(value)
     return bounded
 
 
