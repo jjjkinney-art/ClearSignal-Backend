@@ -11,17 +11,21 @@ import hashlib
 import ipaddress
 import re
 import socket
+from io import BytesIO
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 from urllib.parse import parse_qsl, urljoin, urlsplit
 
 import requests
+from pypdf import PdfReader
+from pypdf.errors import PdfReadError
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
 MAX_EXTRACTED_CHARS = 120_000
 MAX_REDIRECTS = 3
+MAX_PDF_PAGES = 250
 _ALLOWED_TYPES = {
     "text/html", "application/xhtml+xml", "text/plain", "application/pdf",
 }
@@ -42,6 +46,14 @@ class DocumentSection:
 
 
 @dataclass(frozen=True)
+class DocumentPage:
+    page_number: int
+    start_offset: int
+    end_offset: int
+    text: str
+
+
+@dataclass(frozen=True)
 class PublicDocument:
     requested_url: str
     final_url: str
@@ -51,6 +63,7 @@ class PublicDocument:
     title: str | None
     text: str
     sections: tuple[DocumentSection, ...]
+    pages: tuple[DocumentPage, ...]
     extraction_method: str
     text_ready: bool
     accessed_at: str
@@ -124,6 +137,47 @@ class _HTMLTextExtractor(HTMLParser):
 def _clean_text(value: str) -> str:
     value = value.replace("\x00", " ")
     return re.sub(r"\s+", " ", value).strip()
+
+
+def _extract_pdf(
+    body: bytes,
+) -> tuple[str | None, str, tuple[DocumentPage, ...]]:
+    if not body.startswith(b"%PDF-"):
+        raise PublicDocumentError("document content did not match PDF media type")
+    try:
+        reader = PdfReader(BytesIO(body), strict=False)
+        if reader.is_encrypted:
+            raise PublicDocumentError("encrypted PDF documents are not supported")
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise PublicDocumentError("PDF exceeds the page limit")
+        title_value = getattr(reader.metadata, "title", None) if reader.metadata else None
+        title = _clean_text(str(title_value))[:300] if title_value else None
+        page_texts: list[str] = []
+        extracted_chars = 0
+        for page in reader.pages:
+            value = _clean_text(page.extract_text() or "")
+            extracted_chars += len(value)
+            if extracted_chars > MAX_EXTRACTED_CHARS:
+                raise PublicDocumentError("PDF extracted text exceeds the limit")
+            page_texts.append(value)
+    except PublicDocumentError:
+        raise
+    except (PdfReadError, ValueError, TypeError, OSError, KeyError, RecursionError) as exc:
+        raise PublicDocumentError("PDF could not be parsed safely") from exc
+
+    text_parts: list[str] = []
+    pages: list[DocumentPage] = []
+    offset = 0
+    for page_number, value in enumerate(page_texts, start=1):
+        if not value:
+            continue
+        if text_parts:
+            offset += 1
+        start = offset
+        text_parts.append(value)
+        offset += len(value)
+        pages.append(DocumentPage(page_number, start, offset, value))
+    return title, " ".join(text_parts), tuple(pages)
 
 
 def _validate_public_url(url: str) -> str:
@@ -237,11 +291,13 @@ def fetch_public_document(
     digest = hashlib.sha256(body).hexdigest()
     accessed_at = datetime.now(timezone.utc).isoformat()
     if media_type == "application/pdf":
+        title, text, pages = _extract_pdf(body)
         return PublicDocument(
             requested_url=requested_url, final_url=current_url,
             content_type=media_type, content_hash=digest, byte_count=len(body),
-            title=None, text="", sections=(), extraction_method="unknown",
-            text_ready=False,
+            title=title, text=text, sections=(), pages=pages,
+            extraction_method="pdf_text" if text else "unknown",
+            text_ready=bool(text),
             accessed_at=accessed_at, publisher=publisher,
             published_at=published_at, document_type=document_type,
             source_type=source_type, source_tier=source_tier,
@@ -259,7 +315,7 @@ def fetch_public_document(
     return PublicDocument(
         requested_url=requested_url, final_url=current_url,
         content_type=media_type, content_hash=digest, byte_count=len(body),
-        title=title, text=text, sections=sections, extraction_method=method,
+        title=title, text=text, sections=sections, pages=(), extraction_method=method,
         text_ready=True,
         accessed_at=accessed_at, publisher=publisher,
         published_at=published_at, document_type=document_type,
