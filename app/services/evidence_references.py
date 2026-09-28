@@ -47,6 +47,42 @@ def _evidence_url(item: object) -> str | None:
     return _safe_public_url(match.group(1)) if match else None
 
 
+def _metadata(item: object) -> dict:
+    """Return explicit metadata, with conservative legacy-source fallbacks."""
+    source = str(getattr(item, "source", "") or "").lower()
+    source_type = str(getattr(item, "source_type", "unknown") or "unknown")
+    source_tier = str(getattr(item, "source_tier", "unverified") or "unverified")
+    claim_type = str(getattr(item, "claim_type", "unknown") or "unknown")
+    extraction_method = str(
+        getattr(item, "extraction_method", "unknown") or "unknown"
+    )
+    if source_type == "unknown":
+        if "sec edgar" in source:
+            source_type = "regulatory_filing"
+            source_tier = "primary"
+            claim_type = (
+                "reported_fact" if "structured xbrl" in source else "filing_metadata"
+            )
+        elif "fred" in source:
+            source_type, source_tier = "government_dataset", "primary"
+        elif "reuters" in source or "associated press" in source:
+            source_type, source_tier = "news", "reputable_secondary"
+        elif "fmp" in source or "financial modeling prep" in source:
+            source_type, source_tier = "market_data", "authoritative_secondary"
+    return {
+        "source_type": source_type,
+        "source_tier": source_tier,
+        "claim_type": claim_type,
+        "document_type": getattr(item, "document_type", None),
+        "reporting_period_start": getattr(item, "reporting_period_start", None),
+        "reporting_period_end": getattr(item, "reporting_period_end", None),
+        "filed_at": getattr(item, "filed_at", None),
+        "section": getattr(item, "section", None),
+        "page": getattr(item, "page", None),
+        "extraction_method": extraction_method,
+    }
+
+
 def build_evidence_references(items: Iterable[object]) -> list[dict]:
     """Return bounded, non-secret evidence metadata in retrieval order."""
     references: list[dict] = []
@@ -67,5 +103,6 @@ def build_evidence_references(items: Iterable[object]) -> list[dict]:
             "published_at": published_at[:40] or None,
             "url": url,
             "inspectable": bool(url),
+            **_metadata(item),
         })
     return references
