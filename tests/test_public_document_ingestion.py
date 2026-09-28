@@ -1,10 +1,14 @@
 import socket
+from io import BytesIO
 
 import pytest
 import requests
+from pypdf import PdfWriter
+from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from app.services.public_document_ingestion import (
     MAX_DOCUMENT_BYTES,
+    MAX_PDF_PAGES,
     PublicDocumentError,
     deduplicate_documents,
     fetch_public_document,
@@ -28,6 +32,30 @@ class _Response:
 
     def close(self):
         self.closed = True
+
+
+def _pdf_with_pages(*values: str, title: str | None = None) -> bytes:
+    writer = PdfWriter()
+    font = DictionaryObject({
+        NameObject("/Type"): NameObject("/Font"),
+        NameObject("/Subtype"): NameObject("/Type1"),
+        NameObject("/BaseFont"): NameObject("/Helvetica"),
+    })
+    font_ref = writer._add_object(font)
+    for value in values:
+        page = writer.add_blank_page(width=612, height=792)
+        page[NameObject("/Resources")] = DictionaryObject({
+            NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref}),
+        })
+        escaped = value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        stream = DecodedStreamObject()
+        stream.set_data(f"BT /F1 12 Tf 72 720 Td ({escaped}) Tj ET".encode("latin-1"))
+        page[NameObject("/Contents")] = writer._add_object(stream)
+    if title:
+        writer.add_metadata({"/Title": title})
+    output = BytesIO()
+    writer.write(output)
+    return output.getvalue()
 
 
 @pytest.fixture(autouse=True)
@@ -122,12 +150,67 @@ def test_rejects_unsupported_content_and_marks_pdf_not_text_ready(monkeypatch):
     with pytest.raises(PublicDocumentError):
         fetch_public_document("https://example.com/report")
 
-    pdf = _Response(b"%PDF-1.7 example", content_type="application/pdf")
+    writer = PdfWriter()
+    writer.add_blank_page(width=72, height=72)
+    buffer = BytesIO()
+    writer.write(buffer)
+    pdf = _Response(buffer.getvalue(), content_type="application/pdf")
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: pdf)
     document = fetch_public_document("https://example.com/report.pdf")
     assert document.content_type == "application/pdf"
     assert document.text_ready is False
     assert document.text == ""
+
+
+def test_rejects_mislabeled_encrypted_and_overlong_pdfs(monkeypatch):
+    monkeypatch.setattr(
+        requests, "get",
+        lambda *args, **kwargs: _Response(b"not a pdf", content_type="application/pdf"),
+    )
+    with pytest.raises(PublicDocumentError):
+        fetch_public_document("https://example.com/report.pdf")
+
+    encrypted = PdfWriter()
+    encrypted.add_blank_page(width=72, height=72)
+    encrypted.encrypt("secret")
+    buffer = BytesIO()
+    encrypted.write(buffer)
+    monkeypatch.setattr(
+        requests, "get",
+        lambda *args, **kwargs: _Response(buffer.getvalue(), content_type="application/pdf"),
+    )
+    with pytest.raises(PublicDocumentError, match="encrypted"):
+        fetch_public_document("https://example.com/encrypted.pdf")
+
+    overlong = PdfWriter()
+    for _ in range(MAX_PDF_PAGES + 1):
+        overlong.add_blank_page(width=72, height=72)
+    buffer = BytesIO()
+    overlong.write(buffer)
+    monkeypatch.setattr(
+        requests, "get",
+        lambda *args, **kwargs: _Response(buffer.getvalue(), content_type="application/pdf"),
+    )
+    with pytest.raises(PublicDocumentError, match="page limit"):
+        fetch_public_document("https://example.com/long.pdf")
+
+
+def test_extracts_pdf_text_with_page_anchors_and_title(monkeypatch):
+    body = _pdf_with_pages("Revenue increased 12%.", "Guidance was raised.", title="Acme Q2")
+    monkeypatch.setattr(
+        requests, "get",
+        lambda *args, **kwargs: _Response(body, content_type="application/pdf"),
+    )
+
+    document = fetch_public_document("https://example.com/results.pdf")
+
+    assert document.title == "Acme Q2"
+    assert document.text == "Revenue increased 12%. Guidance was raised."
+    assert document.extraction_method == "pdf_text"
+    assert document.text_ready is True
+    assert [page.page_number for page in document.pages] == [1, 2]
+    for page in document.pages:
+        assert document.text[page.start_offset:page.end_offset] == page.text
 
 
 def test_deduplicates_byte_identical_documents(monkeypatch):
