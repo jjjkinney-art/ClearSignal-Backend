@@ -117,6 +117,10 @@ def comparable_metric_evidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
         timestamp=current.filed, url=current.filing_url, relevance_score=0.99,
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="reported_fact", document_type=current.form,
+        reporting_period_start=current.start, reporting_period_end=current.end,
+        filed_at=current.filed, extraction_method="structured_xbrl",
     )
 
 
@@ -177,4 +181,8 @@ def comparable_instant_metric_evidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
         timestamp=current.filed, url=current.filing_url, relevance_score=0.99,
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="reported_fact", document_type=current.form,
+        reporting_period_end=current.end, filed_at=current.filed,
+        extraction_method="structured_xbrl",
     )
