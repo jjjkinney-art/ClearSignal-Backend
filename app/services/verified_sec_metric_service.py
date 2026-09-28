@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 
 from ..config import settings
 from ..integrity.sec_metric_evidence import (
@@ -14,6 +15,8 @@ from ..schemas import RetrievedEvidence
 from .providers.sec_provider import _load_ticker_cik_map
 
 _TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z])?\Z")
+_LATEST_PERIOD_ANCHOR = ("Assets", "USD")
+_MAX_STALENESS_DAYS = 550
 _METRICS = (
     (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"),
      "revenue", ("revenue", "revenues", "sales", "top line", "top-line"), "USD", "duration"),
@@ -97,6 +100,26 @@ _METRICS = (
      "reported insurance loss and benefit reserves",
      ("insurance loss reserves", "loss and benefit reserves", "claims reserves",
       "loss reserves"), "USD", "instant"),
+    (("RevenueRemainingPerformanceObligation",),
+     "remaining performance obligations",
+     ("remaining performance obligations", "remaining performance obligation", "rpo"),
+     "USD", "instant"),
+    (("ContractWithCustomerLiability",), "total contract liabilities",
+     ("total contract liabilities", "total deferred revenue"), "USD", "instant"),
+    (("ContractWithCustomerLiabilityCurrent", "DeferredRevenueCurrent"),
+     "current contract liabilities",
+     ("current contract liabilities", "current contract liability",
+      "current deferred revenue", "deferred revenue"), "USD", "instant"),
+    (("ContractWithCustomerLiabilityNoncurrent", "DeferredRevenueNoncurrent"),
+     "noncurrent contract liabilities",
+     ("noncurrent contract liabilities", "non-current contract liabilities",
+      "long-term deferred revenue", "long term deferred revenue"), "USD", "instant"),
+    (("ContractWithCustomerLiabilityRevenueRecognized",),
+     "revenue recognized from contract liabilities",
+     ("revenue recognized from contract liabilities",
+      "revenue recognized from deferred revenue", "deferred revenue recognized",
+      "contract liability revenue recognition"),
+     "USD", "duration"),
 )
 
 
@@ -105,12 +128,36 @@ def _requested_metrics(question: str | None) -> tuple:
     normalized = re.sub(r"\s+", " ", (question or "").lower()).strip()
     if not normalized:
         return _METRICS
-    matched = tuple(
-        metric for metric in _METRICS
-        if any(re.search(rf"(?<!\w){re.escape(term)}(?!\w)", normalized)
-               for term in metric[2])
-    )
-    return matched or _METRICS
+    matches = [
+        (metric, tuple(
+            term for term in metric[2]
+            if re.search(rf"(?<!\w){re.escape(term)}(?!\w)", normalized)
+        ))
+        for metric in _METRICS
+    ]
+    matches = [(metric, terms) for metric, terms in matches if terms]
+    if not matches:
+        return _METRICS
+    selected = []
+    for metric, terms in matches:
+        other_terms = {
+            other_term
+            for other_metric, other_matches in matches if other_metric is not metric
+            for other_term in other_matches
+        }
+        # "total deferred revenue" should not also retrieve generic revenue or
+        # current deferred revenue. Preserve genuine multi-metric questions by
+        # suppressing a metric only when every one of its matches is contained
+        # within a longer matched phrase belonging to another metric.
+        if all(any(
+            term != other
+            and re.search(rf"(?<!\w){re.escape(term)}(?!\w)", other)
+            for other in other_terms
+        )
+               for term in terms):
+            continue
+        selected.append(metric)
+    return tuple(selected) or _METRICS
 
 
 def fetch_verified_metric_evidence(
@@ -126,10 +173,18 @@ def fetch_verified_metric_evidence(
     concept_units = tuple(
         (concept, unit) for concepts, _, _, unit, _ in metrics for concept in concepts
     )
+    concept_units = tuple(dict.fromkeys((*concept_units, _LATEST_PERIOD_ANCHOR)))
     records = get_company_fact_records_for_concept_units(
         cik, concept_units=concept_units,
         user_agent=getattr(settings, "sec_user_agent", "") or "",
     )
+    anchor_ends = [
+        record.end for record in records
+        if record.concept == _LATEST_PERIOD_ANCHOR[0]
+        and record.unit == _LATEST_PERIOD_ANCHOR[1]
+        and record.start is None
+    ]
+    latest_issuer_end = max(anchor_ends) if anchor_ends else None
     evidence = []
     for concepts, metric_name, _, unit, period_kind in metrics:
         builder = (
@@ -146,6 +201,13 @@ def fetch_verified_metric_evidence(
                 concepts=(concept,), metric_name=metric_name, unit=unit,
             )) is not None
         ), None)
+        if item is not None and latest_issuer_end and item.reporting_period_end:
+            age = (
+                date.fromisoformat(latest_issuer_end)
+                - date.fromisoformat(item.reporting_period_end)
+            ).days
+            if age > _MAX_STALENESS_DAYS:
+                item = None
         if item is not None:
             evidence.append(item)
     return evidence
