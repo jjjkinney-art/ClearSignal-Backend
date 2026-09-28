@@ -1027,7 +1027,7 @@ def _run_investment_pipeline(
     def _fetch_sec_metrics():
         try:
             from .verified_sec_metric_service import fetch_verified_metric_evidence
-            return fetch_verified_metric_evidence(ticker)
+            return fetch_verified_metric_evidence(ticker, question=question)
         except Exception as _e:
             logger.warning("[router] verified SEC metrics unavailable for %s: %r", ticker, _e)
             return []
