@@ -47,6 +47,10 @@ class ClaimDocumentReference:
     provider: str
     url: str
     published_at: Optional[str] = None
+    page: Optional[int] = None
+    section: Optional[str] = None
+    content_hash: Optional[str] = None
+    quote: Optional[str] = None
 
     def __post_init__(self) -> None:
         if not all(isinstance(v, str) and v.strip() for v in (
@@ -67,15 +71,39 @@ class ClaimDocumentReference:
                 or port is not None or not public_host
                 or any(ord(c) < 33 or c == "\\" for c in self.url)):
             raise ValueError("document URL must be a public HTTPS URL without credentials or port")
+        if self.page is not None and (isinstance(self.page, bool) or self.page < 1):
+            raise ValueError("document page must be a positive integer")
+        if self.section is not None and not self.section.strip():
+            raise ValueError("document section cannot be blank")
+        if self.content_hash is not None and (
+            len(self.content_hash) != 64
+            or any(character not in "0123456789abcdef" for character in self.content_hash)
+        ):
+            raise ValueError("document content hash must be lowercase SHA-256")
+        if self.quote is not None and (not self.quote.strip() or len(self.quote) > 300):
+            raise ValueError("document quote must contain 1-300 characters")
+        if (self.page is not None or self.section is not None) and not (
+            self.content_hash and self.quote
+        ):
+            raise ValueError("anchored document references require a hash and bounded quote")
 
     def to_dict(self) -> dict:
-        return {
+        payload = {
             "reference_id": self.reference_id,
             "title": self.title,
             "provider": self.provider,
             "url": self.url,
             "published_at": self.published_at,
         }
+        if self.page is not None:
+            payload["page"] = self.page
+        if self.section is not None:
+            payload["section"] = self.section
+        if self.content_hash is not None:
+            payload["content_hash"] = self.content_hash
+        if self.quote is not None:
+            payload["quote"] = self.quote
+        return payload
 
 
 @dataclass
