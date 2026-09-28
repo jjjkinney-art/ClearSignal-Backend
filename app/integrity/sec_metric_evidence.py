@@ -10,19 +10,30 @@ from ..providers.sec_client import SecFactRecord
 from ..schemas import RetrievedEvidence
 
 
-def _money(value: int | float) -> str:
+def _scaled(value: int | float, *, prefix: str = "", suffix: str = "") -> str:
     amount = Decimal(str(value))
     sign = "-" if amount < 0 else ""
     amount = abs(amount)
-    for divisor, suffix in ((Decimal("1e12"), "T"), (Decimal("1e9"), "B"),
-                            (Decimal("1e6"), "M")):
+    for divisor, scale in ((Decimal("1e12"), "T"), (Decimal("1e9"), "B"),
+                           (Decimal("1e6"), "M")):
         if amount >= divisor:
             rendered = f"{amount / divisor:.1f}".rstrip("0").rstrip(".")
-            return f"{sign}${rendered}{suffix}"
+            return f"{sign}{prefix}{rendered}{scale}{suffix}"
     rendered = format(amount, ",f")
     if "." in rendered:
         rendered = rendered.rstrip("0").rstrip(".")
-    return f"{sign}${rendered}"
+    return f"{sign}{prefix}{rendered}{suffix}"
+
+
+def _value(value: int | float, unit: str) -> str:
+    if unit == "USD":
+        return _scaled(value, prefix="$")
+    if unit == "shares":
+        return _scaled(value, suffix=" shares")
+    if unit == "USD/shares":
+        amount = Decimal(str(value))
+        return f"${amount:,.2f} per share"
+    raise ValueError("unsupported SEC fact unit")
 
 
 def _duration(record: SecFactRecord) -> int | None:
@@ -36,15 +47,16 @@ def _duration(record: SecFactRecord) -> int | None:
 
 def comparable_metric_evidence(
     records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
-    concepts: tuple[str, ...], metric_name: str,
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD",
 ) -> RetrievedEvidence | None:
     """Return a latest-versus-prior-period fact, or fail closed on ambiguity."""
-    if not ticker or not expected_cik.isdigit() or not concepts or not metric_name:
+    if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
+            or unit not in {"USD", "shares", "USD/shares"}):
         return None
     eligible = [
         record for record in records
         if record.cik.lstrip("0") == expected_cik.lstrip("0")
-        and record.concept in concepts and record.unit == "USD"
+        and record.concept in concepts and record.unit == unit
         and _duration(record) is not None
     ]
     if not eligible:
@@ -97,12 +109,72 @@ def comparable_metric_evidence(
     direction = "increased" if change >= 0 else "decreased"
     summary = (
         f"{ticker} {metric_name} {direction} {abs(change):.1f}% to "
-        f"{_money(current.value)} for the period ended {current.end}, from "
-        f"{_money(prior.value)} in the comparable prior-year period ended "
+        f"{_value(current.value, unit)} for the period ended {current.end}, from "
+        f"{_value(prior.value, unit)} in the comparable prior-year period ended "
         f"{prior.end}."
     )
     return RetrievedEvidence(
-        title=f"{ticker} {metric_name}: {_money(current.value)} ({current.end})",
+        title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
+        source="SEC EDGAR — structured XBRL fact", summary=summary,
+        timestamp=current.filed, url=current.filing_url, relevance_score=0.99,
+    )
+
+
+def comparable_instant_metric_evidence(
+    records: Sequence[SecFactRecord], *, ticker: str, expected_cik: str,
+    concepts: tuple[str, ...], metric_name: str, unit: str = "USD",
+) -> RetrievedEvidence | None:
+    """Return a latest-versus-prior-year point-in-time fact."""
+    if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
+            or unit not in {"USD", "shares"}):
+        return None
+    eligible = [
+        record for record in records
+        if record.cik.lstrip("0") == expected_cik.lstrip("0")
+        and record.concept in concepts and record.unit == unit
+        and record.start is None
+    ]
+    if not eligible:
+        return None
+
+    latest_end = max(record.end for record in eligible)
+    latest_rows = [record for record in eligible if record.end == latest_end]
+    latest_filed = max(record.filed for record in latest_rows)
+    latest_rows = [record for record in latest_rows if record.filed == latest_filed]
+    if len({(r.concept, r.value, r.accession) for r in latest_rows}) != 1:
+        return None
+    current = latest_rows[0]
+    current_family = "annual" if current.form.startswith("10-K") else "quarterly"
+    current_end = date.fromisoformat(current.end)
+    candidates = [
+        record for record in eligible
+        if record.concept == current.concept and record.end < current.end
+        and ("annual" if record.form.startswith("10-K") else "quarterly") == current_family
+        and 350 <= (current_end - date.fromisoformat(record.end)).days <= 380
+    ]
+    if not candidates:
+        return None
+    prior_end = max(record.end for record in candidates)
+    prior_rows = [record for record in candidates if record.end == prior_end]
+    prior_filed = max(record.filed for record in prior_rows)
+    prior_rows = [record for record in prior_rows if record.filed == prior_filed]
+    if len({(r.value, r.accession) for r in prior_rows}) != 1:
+        return None
+    prior = prior_rows[0]
+    if prior.value == 0:
+        return None
+
+    change = ((Decimal(str(current.value)) - Decimal(str(prior.value)))
+              / abs(Decimal(str(prior.value))) * 100)
+    direction = "increased" if change >= 0 else "decreased"
+    summary = (
+        f"{ticker} {metric_name} {direction} {abs(change):.1f}% to "
+        f"{_value(current.value, unit)} as of {current.end}, from "
+        f"{_value(prior.value, unit)} as of the comparable prior-year date "
+        f"{prior.end}."
+    )
+    return RetrievedEvidence(
+        title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
         timestamp=current.filed, url=current.filing_url, relevance_score=0.99,
     )
