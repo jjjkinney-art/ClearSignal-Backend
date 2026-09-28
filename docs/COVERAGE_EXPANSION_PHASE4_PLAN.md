@@ -5,6 +5,8 @@
 **Current coverage:** 80/118 structured (68%)
 **Target:** 118/118 structured (100%)
 
+> **Historical scope note (2026-09-28):** This plan covers static `CompanyKnowledgeProfile` completion only. The active roadmap for live, source-backed company research—including sector metrics, foreign issuers, unstructured primary documents, public-web sources, and cross-conversation evidence memory—is [Universal Public Intelligence Roadmap](UNIVERSAL_PUBLIC_INTELLIGENCE_ROADMAP.md).
+
 ---
 
 ## 1. Coverage Report
