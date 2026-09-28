@@ -100,6 +100,23 @@ def test_extracts_visible_html_title_sections_and_hash(monkeypatch):
     assert response.closed is True
 
 
+def test_extracts_bounded_safe_html_links(monkeypatch):
+    response = _Response(b"""
+        <a href="/results/q2.pdf#page=2">Q2 earnings presentation</a>
+        <a href="https://example.com/results/q2.pdf">Duplicate</a>
+        <a href="http://example.com/insecure.pdf">Insecure</a>
+        <a href="javascript:alert(1)">Unsafe</a>
+        <a href="https://example.com/private?token=secret">Credential</a>
+    """)
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: response)
+
+    document = fetch_public_document("https://example.com/investors")
+
+    assert [(link.url, link.label) for link in document.links] == [
+        ("https://example.com/results/q2.pdf", "Q2 earnings presentation"),
+    ]
+
+
 def test_rejects_private_hosts_credentials_fragments_and_sensitive_queries(monkeypatch):
     with pytest.raises(PublicDocumentError):
         fetch_public_document("http://example.com/report")
