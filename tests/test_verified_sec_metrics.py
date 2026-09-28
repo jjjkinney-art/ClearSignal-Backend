@@ -275,3 +275,68 @@ def test_service_uses_ordered_concept_fallback_without_mixing_aliases(monkeypatc
     )
     assert len(evidence) == 1
     assert "decreased 10.0%" in evidence[0].summary
+
+
+def test_bank_metric_pack_uses_correct_period_semantics(monkeypatch):
+    prior_flow = _record(concept="InterestIncomeExpenseNet", value=10_000_000_000)
+    current_flow = replace(
+        prior_flow, value=11_000_000_000, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    prior_deposits = replace(_record(), concept="Deposits", start=None,
+                             value=1_000_000_000_000)
+    current_deposits = replace(
+        prior_deposits, value=1_100_000_000_000, end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"JPM": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [prior_flow, current_flow, prior_deposits, current_deposits],
+    )
+
+    interest = service.fetch_verified_metric_evidence(
+        "JPM", question="Which source supports JPM's net interest income growth?",
+    )
+    deposits = service.fetch_verified_metric_evidence(
+        "JPM", question="Which source supports JPM's total deposits?",
+    )
+
+    assert len(interest) == 1
+    assert "for the period ended 2025-03-31" in interest[0].summary
+    assert interest[0].title.startswith("JPM net interest income:")
+    assert len(deposits) == 1
+    assert "as of 2025-03-31" in deposits[0].summary
+    assert deposits[0].title.startswith("JPM deposits:")
+
+
+def test_bank_metric_pack_has_question_aware_concept_and_unit_mapping():
+    cases = {
+        "net interest income": ("InterestIncomeExpenseNet", "USD", "duration"),
+        "total deposits": ("Deposits", "USD", "instant"),
+        "net loans": (
+            "FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss",
+            "USD", "instant",
+        ),
+        "allowance for credit losses": (
+            "FinancingReceivableAllowanceForCreditLossExcludingAccruedInterest",
+            "USD", "instant",
+        ),
+        "credit loss provision": (
+            "FinancingReceivableExcludingAccruedInterestCreditLossExpenseReversal",
+            "USD", "duration",
+        ),
+        "gross charge-offs": (
+            "FinancingReceivableExcludingAccruedInterestAllowanceForCreditLossWriteoff",
+            "USD", "duration",
+        ),
+        "net charge-offs": (
+            "FinancingReceivableExcludingAccruedInterestAllowanceForCreditLossWriteoffAfterRecovery",
+            "USD", "duration",
+        ),
+    }
+    for phrase, expected in cases.items():
+        selected = service._requested_metrics(f"Which source supports the latest {phrase}?")
+        assert len(selected) == 1
+        concepts, _, _, unit, period_kind = selected[0]
+        assert (concepts[0], unit, period_kind) == expected
