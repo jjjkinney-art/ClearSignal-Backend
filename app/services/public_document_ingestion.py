@@ -15,7 +15,7 @@ from io import BytesIO
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from html.parser import HTMLParser
-from urllib.parse import parse_qsl, urljoin, urlsplit
+from urllib.parse import parse_qsl, urldefrag, urljoin, urlsplit
 
 import requests
 from pypdf import PdfReader
@@ -54,6 +54,12 @@ class DocumentPage:
 
 
 @dataclass(frozen=True)
+class DocumentLink:
+    url: str
+    label: str
+
+
+@dataclass(frozen=True)
 class PublicDocument:
     requested_url: str
     final_url: str
@@ -64,6 +70,7 @@ class PublicDocument:
     text: str
     sections: tuple[DocumentSection, ...]
     pages: tuple[DocumentPage, ...]
+    links: tuple[DocumentLink, ...]
     extraction_method: str
     text_ready: bool
     accessed_at: str
@@ -88,6 +95,9 @@ class _HTMLTextExtractor(HTMLParser):
         self._parts: list[str] = []
         self._headings: list[tuple[str, int]] = []
         self._heading_parts: list[str] = []
+        self._active_link: str | None = None
+        self._link_parts: list[str] = []
+        self._links: list[tuple[str, str]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         tag = tag.lower()
@@ -98,6 +108,10 @@ class _HTMLTextExtractor(HTMLParser):
         elif not self._blocked_depth and tag in self._HEADINGS:
             self._heading_depth += 1
             self._heading_parts = []
+        elif not self._blocked_depth and tag == "a":
+            href = next((value for key, value in attrs if key.lower() == "href"), None)
+            self._active_link = href.strip() if href else None
+            self._link_parts = []
 
     def handle_endtag(self, tag: str) -> None:
         tag = tag.lower()
@@ -111,6 +125,11 @@ class _HTMLTextExtractor(HTMLParser):
                 self._headings.append((heading[:300], len(" ".join(self._parts))))
             self._heading_depth -= 1
             self._heading_parts = []
+        elif not self._blocked_depth and tag == "a" and self._active_link:
+            label = _clean_text(" ".join(self._link_parts))[:300]
+            self._links.append((self._active_link, label))
+            self._active_link = None
+            self._link_parts = []
 
     def handle_data(self, data: str) -> None:
         if self._blocked_depth:
@@ -122,16 +141,44 @@ class _HTMLTextExtractor(HTMLParser):
             self._title_parts.append(value)
         if self._heading_depth:
             self._heading_parts.append(value)
+        if self._active_link:
+            self._link_parts.append(value)
         self._parts.append(value)
 
-    def result(self) -> tuple[str | None, str, tuple[DocumentSection, ...]]:
+    def result(self) -> tuple[
+        str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
+    ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
         text = _clean_text(" ".join(self._parts))[:MAX_EXTRACTED_CHARS]
         sections = tuple(
             DocumentSection(heading=heading, start_offset=min(offset, len(text)))
             for heading, offset in self._headings[:200]
         )
-        return title, text, sections
+        return title, text, sections, tuple(self._links[:500])
+
+
+def _normalize_links(
+    base_url: str, links: tuple[tuple[str, str], ...],
+) -> tuple[DocumentLink, ...]:
+    normalized: list[DocumentLink] = []
+    seen: set[str] = set()
+    for href, label in links:
+        try:
+            resolved, _ = urldefrag(urljoin(base_url, href))
+            parsed = urlsplit(resolved)
+            port = parsed.port
+        except ValueError:
+            continue
+        if (parsed.scheme != "https" or not parsed.hostname or parsed.username
+                or parsed.password or port not in (None, 443)):
+            continue
+        if any(key.lower() in _SENSITIVE_QUERY_KEYS for key, _ in parse_qsl(parsed.query)):
+            continue
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        normalized.append(DocumentLink(url=resolved, label=label))
+    return tuple(normalized)
 
 
 def _clean_text(value: str) -> str:
@@ -295,7 +342,7 @@ def fetch_public_document(
         return PublicDocument(
             requested_url=requested_url, final_url=current_url,
             content_type=media_type, content_hash=digest, byte_count=len(body),
-            title=title, text=text, sections=(), pages=pages,
+            title=title, text=text, sections=(), pages=pages, links=(),
             extraction_method="pdf_text" if text else "unknown",
             text_ready=bool(text),
             accessed_at=accessed_at, publisher=publisher,
@@ -306,16 +353,20 @@ def fetch_public_document(
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
-        title, text, sections = parser.result()
+        title, text, sections, raw_links = parser.result()
+        links = _normalize_links(current_url, raw_links)
         method = "html"
     else:
-        title, text, sections, method = None, _clean_text(decoded)[:MAX_EXTRACTED_CHARS], (), "manual"
+        title, text, sections, links, method = (
+            None, _clean_text(decoded)[:MAX_EXTRACTED_CHARS], (), (), "manual"
+        )
     if not text:
         raise PublicDocumentError("document contained no extractable text")
     return PublicDocument(
         requested_url=requested_url, final_url=current_url,
         content_type=media_type, content_hash=digest, byte_count=len(body),
-        title=title, text=text, sections=sections, pages=(), extraction_method=method,
+        title=title, text=text, sections=sections, pages=(), links=links,
+        extraction_method=method,
         text_ready=True,
         accessed_at=accessed_at, publisher=publisher,
         published_at=published_at, document_type=document_type,
