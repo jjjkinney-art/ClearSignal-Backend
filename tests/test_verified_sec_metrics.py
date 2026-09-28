@@ -340,3 +340,58 @@ def test_bank_metric_pack_has_question_aware_concept_and_unit_mapping():
         assert len(selected) == 1
         concepts, _, _, unit, period_kind = selected[0]
         assert (concepts[0], unit, period_kind) == expected
+
+
+def test_insurer_metric_pack_uses_correct_period_semantics(monkeypatch):
+    prior_premiums = _record(concept="PremiumsEarnedNet", value=10_000_000_000)
+    current_premiums = replace(
+        prior_premiums, value=11_000_000_000, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    prior_reserve = replace(_record(), concept="UnearnedPremiums", start=None,
+                            value=20_000_000_000)
+    current_reserve = replace(
+        prior_reserve, value=22_000_000_000, end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"CB": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [
+            prior_premiums, current_premiums, prior_reserve, current_reserve,
+        ],
+    )
+
+    premiums = service.fetch_verified_metric_evidence(
+        "CB", question="Which source supports Chubb's net premiums earned?",
+    )
+    reserves = service.fetch_verified_metric_evidence(
+        "CB", question="Which source supports Chubb's unearned premium reserve?",
+    )
+
+    assert len(premiums) == 1
+    assert "for the period ended 2025-03-31" in premiums[0].summary
+    assert premiums[0].title.startswith("CB net premiums earned:")
+    assert len(reserves) == 1
+    assert "as of 2025-03-31" in reserves[0].summary
+    assert reserves[0].title.startswith("CB unearned premium reserve:")
+
+
+def test_insurer_metric_pack_has_question_aware_concept_mapping():
+    cases = {
+        "net premiums earned": ("PremiumsEarnedNet", "duration"),
+        "net premiums written": ("PremiumsWrittenNet", "duration"),
+        "claims incurred": ("PolicyholderBenefitsAndClaimsIncurredNet", "duration"),
+        "net investment income": ("NetInvestmentIncome", "duration"),
+        "unearned premium reserve": ("UnearnedPremiums", "instant"),
+        "loss reserves": (
+            "SupplementalInformationForPropertyCasualtyInsuranceUnderwritersReservesForUnpaidClaimsAndClaimsAdjustmentExpense",
+            "instant",
+        ),
+    }
+    for phrase, expected in cases.items():
+        selected = service._requested_metrics(f"Which source supports the latest {phrase}?")
+        assert len(selected) == 1
+        concepts, _, _, unit, period_kind = selected[0]
+        assert unit == "USD"
+        assert (concepts[0], period_kind) == expected
