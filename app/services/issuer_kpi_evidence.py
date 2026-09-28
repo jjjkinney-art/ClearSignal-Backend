@@ -17,7 +17,7 @@ from .public_document_ingestion import PublicDocument
 _ALLOWED_SOURCE_TYPES = {"issuer_release", "investor_presentation", "regulatory_filing"}
 _ALLOWED_DOCUMENT_TYPES = {
     "earnings_release", "investor_presentation", "shareholder_letter",
-    "press_release", "sec_exhibit",
+    "press_release", "sec_exhibit", "8-K", "8-K/A", "6-K", "6-K/A",
 }
 _VALUE = (
     r"(?P<value>\$?\s*-?\d[\d,]*(?:\.\d+)?\s*"
@@ -205,7 +205,10 @@ def kpi_as_evidence(kpi: SourceBoundKpi, document: PublicDocument) -> RetrievedE
     return RetrievedEvidence(
         title=f"{kpi.claim.ticker} {kpi.metric}: {kpi.value_text}",
         source=document.publisher or "Issuer",
-        summary=f"{kpi.metric} was reported as {kpi.value_text}. Source text ({location}): “{kpi.quote}”",
+        summary=(
+            f"{kpi.claim.ticker} reported {kpi.metric} as {kpi.value_text} "
+            f"in the cited primary document ({location})."
+        ),
         timestamp=document.published_at or "",
         url=document.final_url,
         relevance_score=0.98,
