@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 31503)
+Total output lines: 2594
+
 """
 Routing service for natural language questions.
 
@@ -1032,6 +1035,17 @@ def _run_investment_pipeline(
             logger.warning("[router] verified SEC metrics unavailable for %s: %r", ticker, _e)
             return []
 
+    def _fetch_issuer_kpis():
+        try:
+            from .live_issuer_kpi_service import fetch_live_issuer_kpi_evidence
+            from ..config import settings
+            return fetch_live_issuer_kpi_evidence(
+                ticker, question=question, user_agent=settings.sec_user_agent,
+            )
+        except Exception as _e:
+            logger.warning("[router] issuer KPI evidence unavailable for %s: %r", ticker, _e)
+            return []
+
     def _fetch_news_company():
         try:
             return _news_provider.fetch_company_news(ticker) or []
@@ -1068,6 +1082,7 @@ def _run_investment_pipeline(
         "fmp": "fmp", "sec": "sec_edgar", "news_co": "news",
         "news_macro": "news", "fred": "fred", "valuation": "fmp_valuation",
         "estimates": "fmp_estimates", "sec_metrics": "sec_edgar",
+        "issuer_kpis": "sec_edgar_documents",
     }
     _ev_tasks = {
         "fmp":       _fetch_fmp,
@@ -1086,6 +1101,9 @@ def _run_investment_pipeline(
     from .source_answer import is_source_answer_request
     if is_source_answer_request(question):
         _ev_tasks["sec_metrics"] = _fetch_sec_metrics
+    from .live_issuer_kpi_service import requested_issuer_kpi_aliases
+    if requested_issuer_kpi_aliases(question):
+        _ev_tasks["issuer_kpis"] = _fetch_issuer_kpis
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
@@ -1172,16 +1190,19 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
+    _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.
-    evidence = _sec_metric_evidence + market_evidence + fred_evidence + _val_ratios + _analyst_ests
+    evidence = (_issuer_kpi_evidence + _sec_metric_evidence + market_evidence
+                + fred_evidence + _val_ratios + _analyst_ests)
 
     print(
         f"[TIMING] [{ticker}] evidence_retrieval(parallel)={time.time()-_t_evidence:.2f}s "
         f"fmp={len(_fmp_ev)} sec={len(_sec_ev)} "
         f"news_co={len(_news_co)} news_macro={len(_news_macro)} "
         f"fred={len(fred_evidence)} val_ratios={len(_val_ratios)} "
-        f"estimates={len(_analyst_ests)} total={len(evidence)}"
+        f"estimates={len(_analyst_ests)} issuer_kpis={len(_issuer_kpi_evidence)} "
+        f"total={len(evidence)}"
     )
     _obs_stage_record("retrieval_total", (time.monotonic()-_t_evidence_m)*1000.0)
 
@@ -1223,144 +1244,7 @@ def _run_investment_pipeline(
     _t_agents_m = time.monotonic()
     print(f"[TIMING] [{ticker}] starting 6 parallel agents (agent_model used by model_client)")
 
-    from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
-
-    def _run_valuation():
-        return run_valuation_agent(
-            company, partition.valuation,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_macro():
-        return run_investment_macro_agent(
-            company, partition.macro,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_risk():
-        return run_risk_agent(
-            company, partition.risk,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_market():
-        return run_market_agent(
-            company, partition.market,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_quality():
-        return run_quality_agent(
-            company, partition.quality,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_question_answerer():
-        return run_question_answerer(
-            question=question,
-            intent=question_intent,
-            company=company,
-            profile=profile,
-            evidence=evidence,
-        )
-
-    _agent_tasks = {
-        "valuation":          _run_valuation,
-        "macro":              _run_macro,
-        "risk":               _run_risk,
-        "market":             _run_market,
-        "quality":            _run_quality,
-        "question_answerer":  _run_question_answerer,  # Phase 4 Q-First
-    }
-    _agent_defaults = {
-        "valuation":         ValuationView(summary="Valuation analysis unavailable.", confidence=0.0),
-        "macro":             MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0),
-        "risk":              RiskProfile(overall="Risk analysis unavailable.", confidence=0.0),
-        "market":            MarketContext(overall="Market context unavailable.", confidence=0.0),
-        "quality":           QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0),
-        "question_answerer": "",  # Q-First default: empty string (fallback to mandate-only)
-    }
-
-    # ── Agent pool with hard wall-clock cap ──────────────────────────────────
-    # Use the same wait(timeout) pattern as the evidence pool — do NOT use
-    # `with ThreadPoolExecutor` (its __exit__ calls shutdown(wait=True) which
-    # blocks until all 6 agents complete, which could be up to 15.5s each,
-    # but we want a hard Python-side wall cap in addition to the httpx timeout).
-    # Wall cap = 16s  (agent_timeout=15s + 1s margin for httpx exception propagation).
-    # On Render Starter: budget evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = 82.5s
-    _AGENT_WALL_CAP_S = 16.0
-    _agent_pool = ThreadPoolExecutor(max_workers=6)
-    _agent_results: dict = {}
-    try:
-        # Sprint 3A — per-agent wall time. Same wrapper shape as the evidence
-        # pool: re-binds the trace inside the worker thread, records duration
-        # and failure class, returns the agent's own value untouched. The 16s
-        # wall cap and abandon-on-timeout behavior are unchanged; an abandoned
-        # agent is recorded as a timeout below rather than silently omitted.
-        def _observed_agent(name: str, fn):
-            def _run():
-                _t0 = time.monotonic()
-                try:
-                    result = fn()
-                except Exception as _exc:
-                    _obs_stage_record(
-                        f"agent.{name}", (time.monotonic() - _t0) * 1000.0,
-                        status="error", error_class=type(_exc).__name__,
-                    )
-                    raise
-                _obs_stage_record(
-                    f"agent.{name}", (time.monotonic() - _t0) * 1000.0, status="ok",
-                )
-                return result
-
-            return _obs_bind(_run)
-
-        _agent_futures: dict[str, Future] = {
-            name: _agent_pool.submit(_observed_agent(name, fn))
-            for name, fn in _agent_tasks.items()
-        }
-        _cf_wait(list(_agent_futures.values()), timeout=_AGENT_WALL_CAP_S, return_when=ALL_COMPLETED)
-        for name, fut in _agent_futures.items():
-            if fut.done():
-                try:
-                    _agent_results[name] = fut.result()
-                except Exception as exc:
-                    logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
-                    _agent_results[name] = _agent_defaults[name]
-            else:
-                logger.warning("[router] %s_agent abandoned (>%.0fs wall cap) for %s", name, _AGENT_WALL_CAP_S, ticker)
-                # The worker never returned, so it could not record itself.
-                _obs_stage_record(
-                    f"agent.{name}", _AGENT_WALL_CAP_S * 1000.0,
-                    status="timeout", error_class="WallCapExceeded",
-                )
-                _agent_results[name] = _agent_defaults[name]
-    except Exception as _pool_exc:
-        logger.warning("[router] agent pool error for %s (%r)", ticker, _pool_exc)
-        _agent_results = {name: _agent_defaults[name] for name in _agent_tasks}
-    finally:
-        _agent_pool.shutdown(wait=False)
-
-    valuation            = _agent_results["valuation"]
-    macro                = _agent_results["macro"]
-    risk                 = _agent_results["risk"]
-    market               = _agent_results["market"]
-    quality              = _agent_results["quality"]
-    pre_synthesized_answer = _agent_results.get("question_answerer", "") or ""
-
-    _agents_elapsed = time.time() - _t_agents
-    print(
-        f"[TIMING] [{ticker}] parallel_agents={_agents_elapsed:.2f}s "
+    from ..schemas impo…1503 tokens truncated…f"[TIMING] [{ticker}] parallel_agents={_agents_elapsed:.2f}s "
         f"pre_synthesized_answer={'set' if pre_synthesized_answer else 'empty'} "
         f"({len(pre_synthesized_answer)} chars) "
         f"elapsed_so_far={time.time()-_pipeline_t0:.2f}s"
