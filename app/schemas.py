@@ -10,7 +10,7 @@ specialist agent's output as well as the synthesizer's final summary.
 from __future__ import annotations
 
 import uuid as _uuid
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 
 # Import field_validator for pydantic v2; fall back to validator for v1.  In v2
@@ -68,6 +68,29 @@ class RetrievedEvidence(BaseModel):
         le=1.0,
         description="Relevance score 0.0–1.0; higher items are shown first in the prompt",
     )
+    source_type: Literal[
+        "regulatory_filing", "issuer_release", "investor_presentation",
+        "transcript", "regulator", "government_dataset", "exchange",
+        "news", "trade_publication", "market_data", "user_supplied", "unknown",
+    ] = Field(default="unknown", description="Normalized public-source family")
+    source_tier: Literal[
+        "primary", "authoritative_secondary", "reputable_secondary", "unverified",
+    ] = Field(default="unverified", description="Source-quality tier, independent of relevance")
+    claim_type: Literal[
+        "reported_fact", "estimate", "calculation", "inference", "filing_metadata", "unknown",
+    ] = Field(default="unknown", description="How the evidence supports a claim")
+    document_type: Optional[str] = Field(
+        default=None, description="Document or dataset type, such as 10-Q or earnings release",
+    )
+    reporting_period_start: Optional[str] = Field(default=None)
+    reporting_period_end: Optional[str] = Field(default=None)
+    filed_at: Optional[str] = Field(default=None)
+    section: Optional[str] = Field(default=None)
+    page: Optional[int] = Field(default=None, ge=1)
+    extraction_method: Literal[
+        "structured_xbrl", "structured_api", "html", "pdf_text", "ocr",
+        "publisher_feed", "manual", "unknown",
+    ] = Field(default="unknown")
 
     # ── Retrieval intelligence tags (Part 1 — Retrieval Enrichment) ──────────
     # Assigned by _classify_evidence_tags() in conviction_modeler.  Each tag

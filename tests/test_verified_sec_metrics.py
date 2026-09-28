@@ -35,6 +35,13 @@ def test_builds_claim_level_yoy_evidence_bound_to_current_filing():
     assert "period ended 2025-03-31" in item.summary
     assert item.url == current.filing_url
     assert item.source == "SEC EDGAR — structured XBRL fact"
+    assert item.source_type == "regulatory_filing"
+    assert item.source_tier == "primary"
+    assert item.claim_type == "reported_fact"
+    assert item.document_type == "10-Q"
+    assert item.reporting_period_start == "2025-01-01"
+    assert item.reporting_period_end == "2025-03-31"
+    assert item.extraction_method == "structured_xbrl"
 
 
 def test_prefers_quarter_over_ytd_for_same_period_end_and_filing():
@@ -207,6 +214,9 @@ def test_instant_comparison_uses_point_in_time_semantics_and_filing_url():
     assert "increased 25.0% to $25B as of 2025-03-31" in item.summary
     assert "from $20B as of the comparable prior-year date" in item.summary
     assert item.url == current.filing_url
+    assert item.reporting_period_start is None
+    assert item.reporting_period_end == "2025-03-31"
+    assert item.filed_at == "2025-05-01"
 
 
 def test_instant_comparison_rejects_duration_wrong_unit_and_ambiguity():
