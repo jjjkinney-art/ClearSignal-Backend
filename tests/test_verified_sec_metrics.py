@@ -85,3 +85,72 @@ def test_service_fetches_once_and_returns_supported_metrics(monkeypatch):
     assert [item.title.split(":")[0] for item in evidence] == [
         "AAPL revenue", "AAPL operating cash flow"]
     assert service.fetch_verified_metric_evidence("AAPL/../") == []
+
+
+def test_service_supports_general_company_metric_family(monkeypatch):
+    prior = _record()
+    current = _record(value=110, start="2025-01-01", end="2025-03-31",
+                      filed="2025-05-01", accession="0000320193-25-000001")
+    concepts = {
+        "GrossProfit": (80, 88),
+        "NetIncomeLoss": (50, 55),
+        "ResearchAndDevelopmentExpense": (20, 24),
+        "PaymentsToAcquirePropertyPlantAndEquipment": (10, 12),
+        "ShareBasedCompensation": (5, 6),
+        "PaymentsForRepurchaseOfCommonStock": (15, 18),
+        "PaymentsOfDividendsCommonStock": (4, 5),
+    }
+    records = []
+    for concept, (prior_value, current_value) in concepts.items():
+        records.extend([
+            replace(prior, concept=concept, value=prior_value),
+            replace(current, concept=concept, value=current_value),
+        ])
+    requested = []
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concepts",
+        lambda *args, **kwargs: requested.append(kwargs["concepts"]) or records,
+    )
+
+    evidence = service.fetch_verified_metric_evidence("AAPL")
+
+    titles = [item.title.split(":")[0] for item in evidence]
+    assert titles == [
+        "AAPL gross profit", "AAPL net income",
+        "AAPL research and development", "AAPL capital expenditure",
+        "AAPL stock-based compensation", "AAPL share repurchases",
+        "AAPL dividends paid",
+    ]
+    assert set(concepts).issubset(set(requested[0]))
+
+
+def test_service_narrows_explicit_metric_question_before_sec_fetch(monkeypatch):
+    prior = replace(_record(), concept="ResearchAndDevelopmentExpense", value=20)
+    current = replace(
+        prior, value=24, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    requested = []
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concepts",
+        lambda *args, **kwargs: requested.append(kwargs["concepts"]) or [prior, current],
+    )
+
+    evidence = service.fetch_verified_metric_evidence(
+        "AAPL", question="Which source supports Apple's latest R&D growth?",
+    )
+
+    assert requested == [("ResearchAndDevelopmentExpense",)]
+    assert len(evidence) == 1
+    assert evidence[0].title.startswith("AAPL research and development:")
+
+
+def test_metric_selection_does_not_expand_gross_profit_to_net_income():
+    selected = service._requested_metrics(
+        "Which source supports the latest gross profit comparison?",
+    )
+    assert [(metric_name, concepts) for concepts, metric_name, _ in selected] == [
+        ("gross profit", ("GrossProfit",)),
+    ]
