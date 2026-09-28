@@ -501,3 +501,59 @@ def test_service_rejects_metric_far_older_than_latest_issuer_period(monkeypatch)
     assert service.fetch_verified_metric_evidence(
         "MSFT", question="Which source supports contract liability revenue recognition?",
     ) == []
+
+
+def test_reit_metric_pack_uses_correct_period_semantics(monkeypatch):
+    prior_income = _record(concept="LeaseIncome", value=1_000_000_000)
+    current_income = replace(
+        prior_income, value=1_100_000_000, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    prior_property = replace(_record(), concept="RealEstateInvestmentPropertyNet",
+                             start=None, value=20_000_000_000)
+    current_property = replace(
+        prior_property, value=22_000_000_000, end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"O": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [
+            prior_income, current_income, prior_property, current_property,
+        ],
+    )
+
+    income = service.fetch_verified_metric_evidence(
+        "O", question="Which source supports Realty Income's lease income?",
+    )
+    property_value = service.fetch_verified_metric_evidence(
+        "O", question="Which source supports Realty Income's net investment property?",
+    )
+
+    assert len(income) == 1
+    assert "for the period ended 2025-03-31" in income[0].summary
+    assert len(property_value) == 1
+    assert "as of 2025-03-31" in property_value[0].summary
+
+
+def test_reit_metric_pack_has_question_aware_concept_mapping():
+    cases = {
+        "lease income": ("LeaseIncome", "duration"),
+        "net investment property": ("RealEstateInvestmentPropertyNet", "instant"),
+        "investment property at cost": ("RealEstateInvestmentPropertyAtCost", "instant"),
+        "real estate accumulated depreciation": (
+            "RealEstateInvestmentPropertyAccumulatedDepreciation", "instant",
+        ),
+        "real estate acquisitions": ("PaymentsToAcquireCommercialRealEstate", "duration"),
+        "real estate disposition proceeds": (
+            "ProceedsFromRealEstateAndRealEstateJointVentures", "duration",
+        ),
+        "secured debt": ("SecuredDebt", "instant"),
+        "real estate impairment": ("ImpairmentOfRealEstate", "duration"),
+    }
+    for phrase, expected in cases.items():
+        selected = service._requested_metrics(f"Which source supports the latest {phrase}?")
+        assert len(selected) == 1
+        concepts, _, _, unit, period_kind = selected[0]
+        assert unit == "USD"
+        assert (concepts[0], period_kind) == expected
