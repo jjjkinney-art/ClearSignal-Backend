@@ -152,7 +152,7 @@ def test_service_narrows_explicit_metric_question_before_sec_fetch(monkeypatch):
         "AAPL", question="Which source supports Apple's latest R&D growth?",
     )
 
-    assert requested == [(('ResearchAndDevelopmentExpense', 'USD'),)]
+    assert requested == [(('ResearchAndDevelopmentExpense', 'USD'), ('Assets', 'USD'))]
     assert len(evidence) == 1
     assert evidence[0].title.startswith("AAPL research and development:")
 
@@ -251,7 +251,7 @@ def test_service_fetches_mixed_units_once_and_routes_period_semantics(monkeypatc
     evidence = service.fetch_verified_metric_evidence(
         "AAPL", question="Which source supports Apple's cash balance?",
     )
-    assert calls == [(('CashAndCashEquivalentsAtCarryingValue', 'USD'),)]
+    assert calls == [(('CashAndCashEquivalentsAtCarryingValue', 'USD'), ('Assets', 'USD'))]
     assert len(evidence) == 1
     assert evidence[0].title.startswith("AAPL cash and cash equivalents:")
 
@@ -395,3 +395,109 @@ def test_insurer_metric_pack_has_question_aware_concept_mapping():
         concepts, _, _, unit, period_kind = selected[0]
         assert unit == "USD"
         assert (concepts[0], period_kind) == expected
+
+
+def test_saas_metric_pack_uses_correct_period_semantics(monkeypatch):
+    prior_rpo = replace(_record(), concept="RevenueRemainingPerformanceObligation",
+                        start=None, value=100_000_000_000)
+    current_rpo = replace(
+        prior_rpo, value=120_000_000_000, end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001",
+    )
+    prior_recognized = replace(
+        _record(), concept="ContractWithCustomerLiabilityRevenueRecognized",
+        value=10_000_000_000,
+    )
+    current_recognized = replace(
+        prior_recognized, value=11_000_000_000, start="2025-01-01",
+        end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001",
+    )
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"MSFT": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [
+            prior_rpo, current_rpo, prior_recognized, current_recognized,
+        ],
+    )
+
+    rpo = service.fetch_verified_metric_evidence(
+        "MSFT", question="Which source supports Microsoft's RPO growth?",
+    )
+    recognized = service.fetch_verified_metric_evidence(
+        "MSFT", question="Which source supports contract liability revenue recognition?",
+    )
+
+    assert len(rpo) == 1
+    assert "as of 2025-03-31" in rpo[0].summary
+    assert rpo[0].title.startswith("MSFT remaining performance obligations:")
+    assert len(recognized) == 1
+    assert "for the period ended 2025-03-31" in recognized[0].summary
+
+
+def test_saas_metric_pack_has_question_aware_concept_mapping():
+    cases = {
+        "rpo": ("RevenueRemainingPerformanceObligation", "instant"),
+        "total deferred revenue": ("ContractWithCustomerLiability", "instant"),
+        "deferred revenue": ("ContractWithCustomerLiabilityCurrent", "instant"),
+        "noncurrent contract liabilities": (
+            "ContractWithCustomerLiabilityNoncurrent", "instant",
+        ),
+        "revenue recognized from contract liabilities": (
+            "ContractWithCustomerLiabilityRevenueRecognized", "duration",
+        ),
+    }
+    for phrase, expected in cases.items():
+        selected = service._requested_metrics(f"Which source supports the latest {phrase}?")
+        assert len(selected) == 1
+        concepts, _, _, unit, period_kind = selected[0]
+        assert unit == "USD"
+        assert (concepts[0], period_kind) == expected
+
+
+def test_metric_selection_prefers_specific_phrases_and_keeps_multi_metric_queries():
+    selected = service._requested_metrics(
+        "Which source supports total deferred revenue?",
+    )
+    assert [metric_name for _, metric_name, _, _, _ in selected] == [
+        "total contract liabilities",
+    ]
+
+    selected = service._requested_metrics(
+        "Which sources support revenue and net income?",
+    )
+    assert [metric_name for _, metric_name, _, _, _ in selected] == [
+        "revenue", "net income",
+    ]
+
+    selected = service._requested_metrics(
+        "Compare current contract liabilities with noncurrent contract liabilities.",
+    )
+    assert [metric_name for _, metric_name, _, _, _ in selected] == [
+        "current contract liabilities", "noncurrent contract liabilities",
+    ]
+
+
+def test_service_rejects_metric_far_older_than_latest_issuer_period(monkeypatch):
+    prior = replace(
+        _record(), concept="ContractWithCustomerLiabilityRevenueRecognized",
+        value=10_000_000_000, start="2019-01-01", end="2019-03-31",
+        filed="2019-05-01", accession="0000320193-19-000001",
+    )
+    stale_current = replace(
+        prior, value=11_000_000_000, start="2020-01-01", end="2020-03-31",
+        filed="2020-05-01", accession="0000320193-20-000001",
+    )
+    latest_assets = replace(
+        _record(), concept="Assets", start=None, value=100_000_000_000,
+        end="2026-03-31", filed="2026-05-01",
+        accession="0000320193-26-000001",
+    )
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"MSFT": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [prior, stale_current, latest_assets],
+    )
+    assert service.fetch_verified_metric_evidence(
+        "MSFT", question="Which source supports contract liability revenue recognition?",
+    ) == []
