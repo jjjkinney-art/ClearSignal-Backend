@@ -34,6 +34,24 @@ def test_builds_claim_level_yoy_evidence_bound_to_current_filing():
     assert item.source == "SEC EDGAR — structured XBRL fact"
 
 
+def test_prefers_quarter_over_ytd_for_same_period_end_and_filing():
+    prior_quarter = _record()
+    current_quarter = _record(
+        value=112, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    current_ytd = replace(current_quarter, value=330, start="2024-07-01")
+    item = comparable_metric_evidence(
+        [prior_quarter, current_quarter, current_ytd],
+        ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    )
+    assert item is not None
+    assert "increased 12.0%" in item.summary
+    assert "to $112" in item.summary
+    assert "$330" not in item.summary
+
+
 def test_rejects_wrong_entity_missing_comparable_and_ambiguous_concepts():
     prior = _record()
     current = _record(value=112, start="2025-01-01", end="2025-03-31",
