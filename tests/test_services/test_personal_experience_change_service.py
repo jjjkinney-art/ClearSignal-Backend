@@ -540,7 +540,7 @@ class TestDetectWatchlistChanges:
     async def test_watched_changed_memory_returns_candidate(self, db):
         from app.services.personal_experience_change_service import detect_watchlist_changes
         uid = _uid()
-        await _seed_watchlist_and_memory(db, ticker="AAPL", user_id=None)
+        await _seed_watchlist_and_memory(db, ticker="AAPL", user_id=uid)
         result = await detect_watchlist_changes(db, user_id=uid, run_override=True)
         assert len(result) >= 1
         assert result[0]["entity_key"] == "AAPL"
@@ -551,7 +551,7 @@ class TestDetectWatchlistChanges:
             detect_watchlist_changes, _hash_fields,
         )
         uid = _uid()
-        _, tm = await _seed_watchlist_and_memory(db, ticker="MSFT", user_id=None)
+        _, tm = await _seed_watchlist_and_memory(db, ticker="MSFT", user_id=uid)
         current_hash = _hash_fields("cautious", 0.6, "valuation", 3)
         await _seed_cursor(db, uid, "ticker", "MSFT", state_hash=current_hash)
         result = await detect_watchlist_changes(db, user_id=uid, run_override=True)
@@ -562,7 +562,7 @@ class TestDetectWatchlistChanges:
     async def test_candidate_change_type(self, db):
         from app.services.personal_experience_change_service import detect_watchlist_changes
         uid = _uid()
-        await _seed_watchlist_and_memory(db, ticker="NVDA", user_id=None)
+        await _seed_watchlist_and_memory(db, ticker="NVDA", user_id=uid)
         result = await detect_watchlist_changes(db, user_id=uid, run_override=True)
         nvda = [r for r in result if r["entity_key"] == "NVDA"]
         assert nvda[0]["change_type"] == "watchlist_drift"
@@ -573,6 +573,31 @@ class TestDetectWatchlistChanges:
         result = await detect_watchlist_changes(
             db, user_id=_uid(), run_override=False)
         assert result == []
+
+    @pytest.mark.asyncio
+    async def test_legacy_null_owner_watchlist_is_never_personalized(self, db):
+        from app.services.personal_experience_change_service import detect_watchlist_changes
+        await _seed_watchlist_and_memory(db, ticker="LEGACY", user_id=None)
+
+        result = await detect_watchlist_changes(db, user_id=_uid(), run_override=True)
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_other_account_watchlist_is_never_personalized(self, db):
+        from app.services.personal_experience_change_service import detect_watchlist_changes
+        await _seed_watchlist_and_memory(db, ticker="PRIVATE", user_id=_uid())
+
+        result = await detect_watchlist_changes(db, user_id=_uid(), run_override=True)
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_blank_owner_is_rejected_before_query(self, db):
+        from app.services.personal_experience_change_service import detect_watchlist_changes
+        await _seed_watchlist_and_memory(db, ticker="AAPL", user_id=None)
+
+        assert await detect_watchlist_changes(db, user_id="", run_override=True) == []
 
     @pytest.mark.asyncio
     async def test_null_session_empty(self):
