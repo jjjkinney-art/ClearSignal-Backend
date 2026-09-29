@@ -19,7 +19,10 @@ logger = logging.getLogger(__name__)
 _KPI_ALIASES: dict[str, tuple[str, ...]] = {
     "annual recurring revenue": ("annual recurring revenue", "ARR"),
     "remaining performance obligations": (
-        "remaining performance obligations", "current RPO", "cRPO",
+        "current remaining performance obligation",
+        "remaining performance obligations",
+        "remaining performance obligation",
+        "current RPO", "cRPO",
     ),
     "monthly active users": ("monthly active users", "MAU", "MAUs"),
     "daily active users": ("daily active users", "DAU", "DAUs"),
@@ -31,7 +34,7 @@ _KPI_ALIASES: dict[str, tuple[str, ...]] = {
     "comparable sales": ("comparable sales", "same-store sales", "same store sales"),
     "occupancy": ("occupancy rate", "occupancy"),
     "RevPAR": ("RevPAR", "revenue per available room"),
-    "deliveries": ("vehicle deliveries", "deliveries"),
+    "deliveries": ("total vehicle deliveries", "vehicle deliveries", "deliveries"),
     "production": ("vehicle production", "production volume"),
     "gross margin": ("gross margin",),
     "net retention rate": ("net retention rate", "net revenue retention", "NRR"),
