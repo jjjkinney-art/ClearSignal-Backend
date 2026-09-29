@@ -55,7 +55,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 ## Next implementation slices
 
 1. **Implemented in the registry slice:** versioned issuer metadata now stratifies all existing 36 fixtures, enforces structural integrity, and reports the current 12/100 issuer coverage honestly. Continue growing the core universe without discarding prior baselines.
-2. Add append-only local artifact writing for manifests, outputs, scorecards, and ledger entries, using atomic creation and duplicate-run rejection.
+2. **Implemented in the artifact-store slice:** append-only local run bundles now publish manifests, outputs and scorecards atomically with duplicate-run rejection; forward shadow entries are immutable and hash-chained. Continue with production-safe storage/retention design only after the offline contract is accepted.
 3. Add point-in-time source adapters and leakage audits.
 4. Add factual/citation graders calibrated against adjudicated examples.
 5. Add blind analytical-review assignment and agreement reporting.
@@ -77,3 +77,17 @@ python3 scripts/benchmark_registry_audit.py --strict-targets
 ```
 
 Registry v1 maps the original 36 fixtures to 12 unique issuers. It deliberately reports zero mid-cap and zero small/micro-cap coverage. This prevents the historical large-company suite from being mistaken for evidence that ClearSignal already performs consistently across the public-company universe.
+
+## Append-only evidence artifacts
+
+`validation.benchmark_artifacts.BenchmarkArtifactStore` provides the offline evidence contract. Each completed run is staged in a private directory, fsynced, and atomically published under its immutable `run_id`. The store refuses duplicate identifiers and verifies the manifest, output, scorecard, and bundle hashes independently.
+
+Forward shadow observations are stored as one immutable file per event. Every entry records the prior entry hash, making deletion, reordering, payload alteration, or head corruption detectable. A file lock serializes local writers and an optional expected-head hash prevents stale writers from appending to an unexpected chain.
+
+Verify a store without changing it:
+
+```bash
+python3 scripts/benchmark_artifact_verify.py /path/to/artifact-store
+```
+
+This filesystem implementation is an offline foundation, not authorization to put private production research into local artifacts. A later production design must define encrypted storage, access control, retention/deletion, backups, operator permissions, regional handling, and account-owned data boundaries before any user-derived record is admitted.
