@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "registry_version": 1,
+  "classification_as_of": "2026-09-29",
+  "coverage_targets": {
+    "issuer_count": 100,
+    "minimum_by_market_cap": {
+      "mega_large": 30,
+      "mid": 30,
+      "small_micro": 30
+    },
+    "minimum_sector_count": 10,
+    "minimum_complexity_tag_count": 20
+  },
+  "issuers": [
+    {
+      "ticker": "AAPL",
+      "company": "Apple",
+      "market_cap_tier": "mega_large",
+      "sector": "Information Technology",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["non_calendar_fiscal_year", "services_hardware_mix"]
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML",
+      "market_cap_tier": "mega_large",
+      "sector": "Information Technology",
+      "domicile": "NL",
+      "reporting_basis": "IFRS",
+      "complexity_tags": ["adr", "foreign_private_issuer", "non_us_reporting"]
+    },
+    {
+      "ticker": "BA",
+      "company": "Boeing",
+      "market_cap_tier": "mega_large",
+      "sector": "Industrials",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["program_accounting", "regulatory_quality"]
+    },
+    {
+      "ticker": "COST",
+      "company": "Costco",
+      "market_cap_tier": "mega_large",
+      "sector": "Consumer Staples",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["membership_economics", "non_calendar_fiscal_year"]
+    },
+    {
+      "ticker": "JPM",
+      "company": "JPMorgan",
+      "market_cap_tier": "mega_large",
+      "sector": "Financials",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["bank_accounting", "regulated_financial"]
+    },
+    {
+      "ticker": "LLY",
+      "company": "Eli Lilly",
+      "market_cap_tier": "mega_large",
+      "sector": "Health Care",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["adjusted_metrics", "pipeline_and_patent"]
+    },
+    {
+      "ticker": "MSFT",
+      "company": "Microsoft",
+      "market_cap_tier": "mega_large",
+      "sector": "Information Technology",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["non_calendar_fiscal_year", "segment_complexity"]
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA",
+      "market_cap_tier": "mega_large",
+      "sector": "Information Technology",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["cycle_exposure", "non_calendar_fiscal_year"]
+    },
+    {
+      "ticker": "PLTR",
+      "company": "Palantir",
+      "market_cap_tier": "mega_large",
+      "sector": "Information Technology",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["government_commercial_mix", "issuer_defined_kpis"]
+    },
+    {
+      "ticker": "TSLA",
+      "company": "Tesla",
+      "market_cap_tier": "mega_large",
+      "sector": "Consumer Discretionary",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["multi_business", "non_gaap_metrics"]
+    },
+    {
+      "ticker": "V",
+      "company": "Visa",
+      "market_cap_tier": "mega_large",
+      "sector": "Financials",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["network_economics", "non_calendar_fiscal_year"]
+    },
+    {
+      "ticker": "XOM",
+      "company": "ExxonMobil",
+      "market_cap_tier": "mega_large",
+      "sector": "Energy",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["commodity_cycle", "segment_reporting"]
+    }
+  ]
+}

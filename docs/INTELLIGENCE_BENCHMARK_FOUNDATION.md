@@ -54,7 +54,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 
 ## Next implementation slices
 
-1. Add a versioned registry that stratifies the existing 36 fixtures and grows the core universe to at least 100 companies without discarding prior baselines.
+1. **Implemented in the registry slice:** versioned issuer metadata now stratifies all existing 36 fixtures, enforces structural integrity, and reports the current 12/100 issuer coverage honestly. Continue growing the core universe without discarding prior baselines.
 2. Add append-only local artifact writing for manifests, outputs, scorecards, and ledger entries, using atomic creation and duplicate-run rejection.
 3. Add point-in-time source adapters and leakage audits.
 4. Add factual/citation graders calibrated against adjudicated examples.
@@ -62,3 +62,18 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 6. Add paraphrase groups, memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
 
+## Registry audit
+
+Run the offline structural audit after changing either the fixture suite or issuer registry:
+
+```bash
+python3 scripts/benchmark_registry_audit.py
+```
+
+The default command fails on registry/fixture integrity defects but reports launch-target gaps without failing. CI can adopt the strict launch-coverage gate when the expansion is intended to be complete:
+
+```bash
+python3 scripts/benchmark_registry_audit.py --strict-targets
+```
+
+Registry v1 maps the original 36 fixtures to 12 unique issuers. It deliberately reports zero mid-cap and zero small/micro-cap coverage. This prevents the historical large-company suite from being mistaken for evidence that ClearSignal already performs consistently across the public-company universe.
