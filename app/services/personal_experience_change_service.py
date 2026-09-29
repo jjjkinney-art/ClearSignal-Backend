@@ -343,21 +343,27 @@ async def detect_watchlist_changes(
     user_id: str,
     run_override: Optional[bool] = None,
 ) -> List[Dict[str, Any]]:
-    """Detect watchlist items whose thesis (ticker_memory) changed."""
+    """Detect account-owned watchlist items whose ticker memory changed.
+
+    Legacy ``user_id IS NULL`` memberships are intentionally excluded.  A
+    personalized experience may use shared public-market evidence only after
+    the authenticated account has established relevance through its own
+    watchlist row.
+    """
     if not _enabled(run_override):
         return []
-    if session is None:
+    owner = (user_id or "").strip()
+    if session is None or not owner:
         return []
     try:
         from app.db.models import WatchedTicker, TickerMemory
         from sqlalchemy import select
         from app.db.repositories.personal_experience_repo import get_experience_cursor
 
-        wt_stmt = select(WatchedTicker).where(WatchedTicker.active == True)  # noqa: E712
-        if user_id:
-            wt_stmt = wt_stmt.where(
-                (WatchedTicker.user_id == user_id) | (WatchedTicker.user_id == None)  # noqa: E711
-            )
+        wt_stmt = select(WatchedTicker).where(
+            WatchedTicker.active == True,  # noqa: E712
+            WatchedTicker.user_id == owner,
+        )
         wt_result = await session.execute(wt_stmt)
         watched = list(wt_result.scalars().all())
         tickers = [_attr(w, "ticker", "") for w in watched if _attr(w, "ticker", "")]
@@ -382,7 +388,7 @@ async def detect_watchlist_changes(
                 int(_attr(mem, "version_count", 0)),
             )
             cursor = await get_experience_cursor(
-                session, user_id=user_id,
+                session, user_id=owner,
                 entity_type="ticker", entity_key=ticker,
             )
             old_hash = _attr(cursor, "last_state_hash", "") if cursor else ""
