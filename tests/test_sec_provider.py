@@ -150,6 +150,87 @@ class TestFormFiltering:
         assert "8-K" in result[0].title or "Current Report" in result[0].title
 
 
+class TestResultsPrioritization:
+
+    def test_cik_lookup_prioritizes_results_items_before_newer_unrelated_8k(
+        self, monkeypatch,
+    ):
+        sec_provider._ticker_cik_cache = None
+        submissions = {
+            "name": "Acme, Inc.",
+            "filings": {"recent": {
+                "form": ["8-K", "8-K", "8-K", "8-K"],
+                "filingDate": ["2026-09-20", "2026-09-10", "2026-08-20", "2026-08-10"],
+                "reportDate": ["2026-09-20", "2026-09-10", "2026-08-20", "2026-08-10"],
+                "accessionNumber": ["1", "2", "3", "4"],
+                "primaryDocument": ["a.htm", "b.htm", "c.htm", "d.htm"],
+                "items": ["5.02", "7.01,9.01", "2.02,9.01", "2.02,9.01"],
+            }},
+        }
+
+        def fetch(url, timeout=10):
+            if "company_tickers" in url:
+                return {"0": {"ticker": "ACME", "cik_str": 1}}
+            return submissions
+
+        monkeypatch.setattr(sec_provider, "_fetch_json", fetch)
+        results = sec_provider.fetch_recent_filings(
+            "ACME", forms=["8-K"], limit=2, prefer_results=True,
+        )
+
+        assert [result.timestamp for result in results] == ["2026-08-20", "2026-08-10"]
+
+    def test_default_cik_lookup_preserves_newest_first_behavior(self, monkeypatch):
+        sec_provider._ticker_cik_cache = None
+        submissions = {
+            "name": "Acme, Inc.",
+            "filings": {"recent": {
+                "form": ["8-K", "8-K"],
+                "filingDate": ["2026-09-20", "2026-08-20"],
+                "reportDate": ["2026-09-20", "2026-08-20"],
+                "items": ["5.02", "2.02,9.01"],
+            }},
+        }
+
+        def fetch(url, timeout=10):
+            if "company_tickers" in url:
+                return {"0": {"ticker": "ACME", "cik_str": 1}}
+            return submissions
+
+        monkeypatch.setattr(sec_provider, "_fetch_json", fetch)
+        results = sec_provider.fetch_recent_filings("ACME", forms=["8-K"], limit=1)
+
+        assert [result.timestamp for result in results] == ["2026-09-20"]
+
+    def test_cik_lookup_prioritizes_paired_foreign_results_6k(self, monkeypatch):
+        sec_provider._ticker_cik_cache = None
+        submissions = {
+            "name": "Global Music S.A.",
+            "filings": {"recent": {
+                "form": ["6-K", "6-K", "6-K", "6-K"],
+                "filingDate": ["2026-09-03", "2026-08-20", "2026-08-04", "2026-08-04"],
+                "reportDate": ["2026-09-03", "2026-08-20", "2026-06-30", "2026-08-04"],
+                "accessionNumber": ["1", "2", "3", "4"],
+                "primaryDocument": ["a.htm", "b.htm", "statements.htm", "cover.htm"],
+                "items": ["", "", "", ""],
+            }},
+        }
+
+        def fetch(url, timeout=10):
+            if "company_tickers" in url:
+                return {"0": {"ticker": "MUSIC", "cik_str": 2}}
+            return submissions
+
+        monkeypatch.setattr(sec_provider, "_fetch_json", fetch)
+        results = sec_provider.fetch_recent_filings(
+            "MUSIC", forms=["6-K"], limit=2, prefer_results=True,
+        )
+
+        assert [result.url.rsplit("/", 1)[-1] for result in results] == [
+            "cover.htm", "statements.htm",
+        ]
+
+
 # ── Graceful failure ──────────────────────────────────────────────────────────
 
 class TestGracefulFailure:
