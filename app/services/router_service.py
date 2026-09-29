@@ -1032,6 +1032,17 @@ def _run_investment_pipeline(
             logger.warning("[router] verified SEC metrics unavailable for %s: %r", ticker, _e)
             return []
 
+    def _fetch_issuer_kpis():
+        try:
+            from .live_issuer_kpi_service import fetch_live_issuer_kpi_evidence
+            from ..config import settings
+            return fetch_live_issuer_kpi_evidence(
+                ticker, question=question, user_agent=settings.sec_user_agent,
+            )
+        except Exception as _e:
+            logger.warning("[router] issuer KPI evidence unavailable for %s: %r", ticker, _e)
+            return []
+
     def _fetch_news_company():
         try:
             return _news_provider.fetch_company_news(ticker) or []
@@ -1068,6 +1079,7 @@ def _run_investment_pipeline(
         "fmp": "fmp", "sec": "sec_edgar", "news_co": "news",
         "news_macro": "news", "fred": "fred", "valuation": "fmp_valuation",
         "estimates": "fmp_estimates", "sec_metrics": "sec_edgar",
+        "issuer_kpis": "sec_edgar_documents",
     }
     _ev_tasks = {
         "fmp":       _fetch_fmp,
@@ -1086,6 +1098,9 @@ def _run_investment_pipeline(
     from .source_answer import is_source_answer_request
     if is_source_answer_request(question):
         _ev_tasks["sec_metrics"] = _fetch_sec_metrics
+    from .live_issuer_kpi_service import requested_issuer_kpi_aliases
+    if requested_issuer_kpi_aliases(question):
+        _ev_tasks["issuer_kpis"] = _fetch_issuer_kpis
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
@@ -1172,16 +1187,19 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
+    _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.
-    evidence = _sec_metric_evidence + market_evidence + fred_evidence + _val_ratios + _analyst_ests
+    evidence = (_issuer_kpi_evidence + _sec_metric_evidence + market_evidence
+                + fred_evidence + _val_ratios + _analyst_ests)
 
     print(
         f"[TIMING] [{ticker}] evidence_retrieval(parallel)={time.time()-_t_evidence:.2f}s "
         f"fmp={len(_fmp_ev)} sec={len(_sec_ev)} "
         f"news_co={len(_news_co)} news_macro={len(_news_macro)} "
         f"fred={len(fred_evidence)} val_ratios={len(_val_ratios)} "
-        f"estimates={len(_analyst_ests)} total={len(evidence)}"
+        f"estimates={len(_analyst_ests)} issuer_kpis={len(_issuer_kpi_evidence)} "
+        f"total={len(evidence)}"
     )
     _obs_stage_record("retrieval_total", (time.monotonic()-_t_evidence_m)*1000.0)
 

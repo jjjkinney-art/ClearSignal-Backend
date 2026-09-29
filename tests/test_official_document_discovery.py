@@ -50,6 +50,21 @@ def test_accepts_strict_sec_archive_document_but_rejects_sec_lookalikes():
     assert candidates[0].publisher == "SEC EDGAR"
 
 
+def test_classifies_strict_sec_exhibit_99_link():
+    document = _index(
+        DocumentLink(
+            "https://www.sec.gov/Archives/edgar/data/123/0001/exhibit991.htm",
+            "EX-99.1",
+        ),
+    )
+
+    candidates = discover_official_documents(document, issuer_hosts=("investor.acme.com",))
+
+    assert len(candidates) == 1
+    assert candidates[0].document_type == "sec_exhibit"
+    assert candidates[0].source_type == "regulatory_filing"
+
+
 def test_rejects_untrusted_index_and_invalid_limits():
     document = _index(DocumentLink("https://investor.acme.com/release.pdf", "Press Release"))
     assert discover_official_documents(

@@ -420,6 +420,13 @@ class TestPublicSourceLabels:
         frame, _, _ = _retrieval_frame(monkeypatch, [("sec_edgar", 5, "ok")])
         assert frame["source_labels"] == ["SEC filings"]
 
+    def test_sec_document_provider_uses_existing_public_label(self, monkeypatch):
+        frame, body, _ = _retrieval_frame(monkeypatch, [
+            ("sec_edgar_documents", 1, "ok"),
+        ])
+        assert frame["source_labels"] == ["SEC filings"]
+        assert "sec_edgar_documents" not in body.split('{"type":"final"')[0]
+
     def test_multiple_providers_map_and_dedupe(self, monkeypatch):
         # Two news tasks share one provider name — one label, not two.
         frame, _, _ = _retrieval_frame(monkeypatch, [

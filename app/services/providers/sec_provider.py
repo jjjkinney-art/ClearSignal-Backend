@@ -119,6 +119,9 @@ def _make_evidence(
         timestamp=file_date,
         url=filing_url,
         relevance_score=0.90 if form_type == "10-K" else 0.85,
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="filing_metadata", document_type=form_type,
+        filed_at=file_date, extraction_method="publisher_feed",
     )
 
 

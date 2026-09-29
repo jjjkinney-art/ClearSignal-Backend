@@ -105,6 +105,7 @@ ALLOWED_PROGRESS_KEYS = frozenset({
 _PROVIDER_PUBLIC_LABELS: Dict[str, str] = {
     # Public regulator. Matches the wording production already uses.
     "sec_edgar": "SEC filings",
+    "sec_edgar_documents": "SEC filings",
     # Vendor-supplied company financials and profile data.
     "fmp": "Company financials",
     # Vendor-supplied valuation ratios.

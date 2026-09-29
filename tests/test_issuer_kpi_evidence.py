@@ -44,7 +44,8 @@ def test_extracts_requested_kpi_with_exact_pdf_page_binding():
     evidence = kpi_as_evidence(kpi, document)
     assert evidence.page == 2
     assert evidence.claim_type == "reported_fact"
-    assert second in evidence.summary
+    assert "cited primary document (page 2)" in evidence.summary
+    assert second not in evidence.summary
 
 
 def test_extracts_percentage_with_html_section_binding():

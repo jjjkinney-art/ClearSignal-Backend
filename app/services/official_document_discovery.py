@@ -29,6 +29,10 @@ _CLASSIFIERS = (
     )),
     ("press_release", "issuer_release", ("press release", "news release")),
 )
+_SEC_EXHIBIT = re.compile(
+    r"(?:\bexhibit\s*99(?:\.\d+)?\b|\bex-?99(?:\.\d+)?\b|(?:^|[/_-])ex99(?:\d+)?)",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -103,6 +107,8 @@ def discover_official_documents(
         if not (sec_document or issuer_document):
             continue
         classified = _classify(link.label, link.url)
+        if sec_document and not classified and _SEC_EXHIBIT.search(f"{link.label} {link.url}"):
+            classified = ("sec_exhibit", "regulatory_filing")
         if not classified:
             continue
         document_type, source_type = classified
