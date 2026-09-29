@@ -58,7 +58,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 2. **Implemented in the artifact-store slice:** append-only local run bundles now publish manifests, outputs and scorecards atomically with duplicate-run rejection; forward shadow entries are immutable and hash-chained. Continue with production-safe storage/retention design only after the offline contract is accepted.
 3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
-5. Add blind analytical-review assignment and agreement reporting.
+5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
 6. Add paraphrase groups, memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
 
@@ -119,3 +119,17 @@ python3 scripts/benchmark_factual_grade.py grade-input.json --require-complete
 ```
 
 The resulting scorecard exposes `material_numerical_accuracy`, `claim_source_binding`, `fabricated_material_sources`, pending review count, per-claim dimension results, and explicit findings. Automated entailment may be introduced only after its outputs are calibrated against double-reviewed human examples and its version is recorded with the benchmark run.
+
+## Blind analytical review
+
+Analytical quality is evaluated from packets that expose an opaque output ID, the case question, the analysis and a rubric version—but reject model, provider, prompt, build, treatment, variant and memory identities, including nested metadata. Every output requires at least two distinct assigned reviewers. Submissions are bound to the exact assignment, reviewer, output and rubric version.
+
+The fixed v1 dimensions are responsiveness, reasoning, materiality, counterarguments, uncertainty and usefulness, each scored from 1–5 with a required rationale and `pass`, `review`, or `fail` verdict. Reporting includes normalized analytical quality, pairwise dimension agreement within one rubric point, mean absolute score gap, verdict agreement, missing assignments and outputs requiring adjudication. Missing reviews, verdict disagreement, or a mean dimension gap above one leave the suite incomplete.
+
+Score a prepared review bundle:
+
+```bash
+python3 scripts/benchmark_blind_review.py blind-review.json --require-complete
+```
+
+The offline layer does not reveal the mapping from opaque output IDs to source runs. That mapping and the blinding secret belong in a separately access-controlled coordinator; neither may be included in reviewer packets or scorecard artifacts.
