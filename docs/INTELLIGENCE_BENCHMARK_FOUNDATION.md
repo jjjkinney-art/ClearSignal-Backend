@@ -56,7 +56,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 
 1. **Implemented in the registry slice:** versioned issuer metadata now stratifies all existing 36 fixtures, enforces structural integrity, and reports the current 12/100 issuer coverage honestly. Continue growing the core universe without discarding prior baselines.
 2. **Implemented in the artifact-store slice:** append-only local run bundles now publish manifests, outputs and scorecards atomically with duplicate-run rejection; forward shadow entries are immutable and hash-chained. Continue with production-safe storage/retention design only after the offline contract is accepted.
-3. Add point-in-time source adapters and leakage audits.
+3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
 4. Add factual/citation graders calibrated against adjudicated examples.
 5. Add blind analytical-review assignment and agreement reporting.
 6. Add paraphrase groups, memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
@@ -91,3 +91,17 @@ python3 scripts/benchmark_artifact_verify.py /path/to/artifact-store
 ```
 
 This filesystem implementation is an offline foundation, not authorization to put private production research into local artifacts. A later production design must define encrypted storage, access control, retention/deletion, backups, operator permissions, regional handling, and account-owned data boundaries before any user-derived record is admitted.
+
+## Point-in-time source admission
+
+Historical evaluation must use the timestamp at which the exact admitted bytes became public. The adapter therefore uses SEC acceptance time for filings, publication time for issuer releases/news/transcripts, observation time for market and consensus data, and an explicit availability time for other sources. Retrieval time is never accepted as a publication fallback.
+
+If a document was later amended, `revision_published_at` supersedes the original date for those revised bytes. A pre-boundary original publication cannot authorize a post-boundary revision. Historical bytes retrieved after the case date require a valid SHA-256 hash; otherwise the audit cannot prove that later content did not leak into the case and fails closed.
+
+Audit a proposed source manifest before running a historical case:
+
+```bash
+python3 scripts/benchmark_point_in_time_audit.py source-manifest.json
+```
+
+Future source versions, missing semantic timestamps, impossible retrieval ordering, missing document identity, invalid version hashes, and duplicate source IDs are stop-ship findings. Properly timestamped secondary sources may be admitted but retain an explicit human-review finding for provenance and entailment.
