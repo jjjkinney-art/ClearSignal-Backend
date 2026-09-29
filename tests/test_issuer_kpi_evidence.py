@@ -98,3 +98,66 @@ def test_unrequested_numbers_and_instruction_text_are_not_metrics():
 
     assert [result.metric for result in results] == ["gross margin"]
     assert results[0].value_text == "46%"
+
+
+def test_extracts_real_issuer_prose_with_approximation():
+    text = "Current remaining performance obligation was approximately $33.6 billion."
+    document = _document(text, pages=(DocumentPage(1, 0, len(text), text),))
+
+    results = extract_source_bound_kpis(
+        document,
+        ticker="CRM",
+        metric_aliases={
+            "remaining performance obligations": (
+                "current remaining performance obligation",
+                "current RPO",
+            ),
+        },
+    )
+
+    assert len(results) == 1
+    assert (results[0].raw_value, results[0].unit) == (33_600_000_000, "USD")
+
+
+def test_extracts_flattened_issuer_table_value_without_inventing_a_verb():
+    text = "Outlook for Q2 Total MAUs 778 million."
+    document = _document(text, pages=(DocumentPage(1, 0, len(text), text),))
+
+    results = extract_source_bound_kpis(
+        document,
+        ticker="SPOT",
+        metric_aliases={"monthly active users": ("Total MAUs", "MAUs")},
+    )
+
+    assert len(results) == 1
+    assert (results[0].raw_value, results[0].unit) == (778_000_000, "count")
+
+
+def test_extracts_percentage_spelled_out_in_issuer_release():
+    text = "Worldwide RevPAR increased 4.2 percent compared to the prior-year quarter."
+    document = _document(text, pages=(DocumentPage(1, 0, len(text), text),))
+
+    results = extract_source_bound_kpis(
+        document, ticker="MAR", metric_aliases={"RevPAR": ("Worldwide RevPAR",)},
+    )
+
+    assert len(results) == 1
+    assert (results[0].raw_value, results[0].unit) == (4.2, "%")
+
+
+def test_extracts_comma_separated_unscaled_count_but_rejects_ambiguous_table():
+    single = "Total vehicle deliveries 443,956."
+    document = _document(single, pages=(DocumentPage(1, 0, len(single), single),))
+    aliases = {"deliveries": ("Total vehicle deliveries", "deliveries")}
+
+    results = extract_source_bound_kpis(document, ticker="TSLA", metric_aliases=aliases)
+    assert len(results) == 1
+    assert (results[0].raw_value, results[0].unit) == (443_956, "count")
+
+    ambiguous = "Model 3/Y deliveries 422,405. Total vehicle deliveries 443,956."
+    ambiguous_document = _document(
+        ambiguous, pages=(DocumentPage(1, 0, len(ambiguous), ambiguous),),
+    )
+    assert extract_source_bound_kpis(
+        ambiguous_document, ticker="TSLA", metric_aliases=aliases,
+    ) == []
