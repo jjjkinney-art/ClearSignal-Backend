@@ -19,14 +19,16 @@ _ALLOWED_DOCUMENT_TYPES = {
     "earnings_release", "investor_presentation", "shareholder_letter",
     "press_release", "sec_exhibit", "8-K", "8-K/A", "6-K", "6-K/A",
 }
+_VALUE_START = r"\$?\s*-?\d"
 _VALUE = (
-    r"(?P<value>\$?\s*-?\d[\d,]*(?:\.\d+)?\s*"
-    r"(?:%|x|basis points|bps|thousand|million|billion|trillion|[KMBT])?)"
+    rf"(?P<value>{_VALUE_START}[\d,]*(?:\.\d+)?\s*"
+    r"(?:%|percent|x|basis points|bps|thousand|million|billion|trillion|[KMBT])?)"
 )
 _VERB = (
     r"(?:was|were|reached|totaled|stood\s+at|grew\s+to|increased\s+to|"
-    r"decreased\s+to|rose\s+to|fell\s+to|of|:)"
+    r"decreased\s+to|rose\s+to|fell\s+to|grew|increased|decreased|declined|of|:)"
 )
+_APPROXIMATION = r"(?:approximately|about|roughly|nearly|over|more\s+than)?\s*"
 
 
 @dataclass(frozen=True)
@@ -62,7 +64,7 @@ def _parse_value(value: str) -> tuple[float, str] | None:
         scale = Decimal("1e9")
     elif re.search(r"(?:\btrillion\b|\bT\b)", compact, re.IGNORECASE):
         scale = Decimal("1e12")
-    if "%" in compact:
+    if "%" in compact or "percent" in lowered:
         unit = "%"
     elif lowered.endswith("x"):
         unit = "x"
@@ -70,7 +72,7 @@ def _parse_value(value: str) -> tuple[float, str] | None:
         unit = "bp"
     elif currency:
         unit = "USD"
-    elif scale != 1:
+    elif scale != 1 or "," in compact:
         unit = "count"
     else:
         return None
@@ -144,8 +146,14 @@ def extract_source_bound_kpis(
         alias_pattern = "|".join(
             sorted((re.escape(alias) for alias in clean_aliases), key=len, reverse=True)
         )
+        # Issuer releases commonly express KPIs in prose ("was approximately
+        # $33.6 billion") or flattened HTML tables ("Total MAUs 778 million").
+        # The direct-table alternative requires immediate adjacency; the
+        # existing single-identity rule below still rejects ambiguous tables.
         pattern = re.compile(
-            rf"(?P<alias>{alias_pattern})\s*(?:\([^)]{{1,80}}\))?\s*{_VERB}\s*{_VALUE}",
+            rf"(?P<alias>{alias_pattern})\s*(?:\([^)]{{1,80}}\))?\s*"
+            rf"(?:{_VERB}\s*{_APPROXIMATION}|(?={_VALUE_START}))"
+            rf"{_VALUE}",
             re.IGNORECASE,
         )
         matches = []
