@@ -35,6 +35,10 @@ def _evidence(*, title, summary, timestamp, source="SEC EDGAR"):
         summary=summary,
         timestamp=timestamp,
         source=source,
+        url="https://www.sec.gov/filing.htm",
+        document_type="10-Q",
+        page=7,
+        section=None,
     )
 
 
@@ -94,11 +98,27 @@ def test_allows_direction_only_with_new_related_attributable_evidence():
         "source": "SEC EDGAR",
         "published_at": "2026-08-10",
         "matched_terms": ["accelerated", "cloud", "demand"],
+        "url": "https://www.sec.gov/filing.htm",
+        "document_type": "10-Q",
+        "page": 7,
+        "section": None,
     }]
     assert thesis.thesis_trend == "strengthening"
     assert thesis.what_changed == [
         "Quarterly filing shows cloud demand acceleration — SEC EDGAR (2026-08-10)"
     ]
+    delta = result["longitudinal_delta"]
+    assert delta["prior"]["conclusion"] == "Cloud demand was the main growth driver."
+    assert delta["current"]["conclusion"] == thesis.direct_answer
+    assert delta["change"]["direction"] == "strengthened"
+    assert delta["confidence_movement"] == {
+        "prior": 0.6,
+        "current": 0.68,
+        "delta": 0.08,
+        "direction": "increased",
+        "evidentiary_status": "context_only",
+    }
+    assert delta["supporting_evidence"][0]["url"].startswith("https://www.sec.gov/")
 
 
 def test_confidence_change_alone_never_proves_thesis_change():
@@ -109,6 +129,8 @@ def test_confidence_change_alone_never_proves_thesis_change():
     assert result["direction"] == "unchanged"
     assert result["confidence_delta"] == 0.35
     assert result["evidence_changes"] == []
+    assert result["longitudinal_delta"]["confidence_movement"]["direction"] == "increased"
+    assert result["longitudinal_delta"]["confidence_movement"]["evidentiary_status"] == "context_only"
 
 
 def test_malformed_historical_timestamp_fails_closed():
@@ -118,3 +140,22 @@ def test_malformed_historical_timestamp_fails_closed():
     )
     assert result["status"] == "unavailable"
     assert result["direction"] == "unclear"
+    assert result["longitudinal_delta"]["change"]["status"] == "unavailable"
+
+
+def test_structured_trend_is_evidence_gated_when_conclusion_omits_direction_words():
+    thesis = _thesis("Cloud demand accelerated in the current quarter.")
+    thesis.thesis_trend = "strengthening"
+    result = apply_evidence_gated_comparison(thesis, _context(), [])
+
+    assert result["status"] == "insufficient_new_evidence"
+    assert result["claimed_direction_rejected"] == "strengthened"
+
+
+def test_current_conclusion_falls_back_to_conclusion_field_in_delta():
+    thesis = _thesis("Current evidence retains the prior view.")
+    thesis.direct_answer = ""
+    result = apply_evidence_gated_comparison(thesis, _context(), [])
+
+    assert result["current_conclusion"] == thesis.conclusion
+    assert result["longitudinal_delta"]["current"]["conclusion"] == thesis.conclusion
