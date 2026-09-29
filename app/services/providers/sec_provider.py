@@ -161,6 +161,7 @@ def _fetch_by_cik(
     forms: List[str],
     limit: int,
     years_back: int,
+    prefer_results: bool = False,
 ) -> List[RetrievedEvidence]:
     """Look up *ticker* → CIK, then fetch filings via the submissions API.
 
@@ -185,10 +186,25 @@ def _fetch_by_cik(
     report_dates = recent.get("reportDate", [])
     accession_numbers = recent.get("accessionNumber", [])
     primary_documents = recent.get("primaryDocument", [])
+    filing_items = recent.get("items", [])
+    # Foreign issuers often publish results as paired 6-Ks on one filing date:
+    # one report carries the quarter-end reportDate and the companion cover
+    # carries the filing date plus the earnings exhibit.  SEC 6-K metadata has
+    # no Item 2.02 equivalent, so identify those dates before ranking.
+    foreign_results_dates = {
+        str(filing_dates[index])
+        for index, form_type in enumerate(form_types)
+        if form_type in {"6-K", "6-K/A"}
+        and index < len(filing_dates)
+        and index < len(report_dates)
+        and report_dates[index]
+        and report_dates[index] != filing_dates[index]
+    }
 
     # Filings are newest-first.
     cutoff   = _years_ago(years_back)
     evidence: List[RetrievedEvidence] = []
+    ranked_evidence: list[tuple[int, int, RetrievedEvidence]] = []
     seen_keys: set = set()
 
     for index, (form_type, file_date, period) in enumerate(
@@ -217,12 +233,37 @@ def _fetch_by_cik(
                 f"https://www.sec.gov/Archives/edgar/data/{cik_compact}/"
                 f"{accession_compact}/{primary_document}"
             )
-        evidence.append(_make_evidence(
+        item_codes = str(filing_items[index]) if index < len(filing_items) else ""
+        item_set = {value.strip() for value in item_codes.split(",") if value.strip()}
+        result = _make_evidence(
             entity_name, form_type, file_date, period, filing_url
-        ))
+        )
+        if prefer_results:
+            # 8-K Item 2.02 is Results of Operations and Financial Condition;
+            # Item 7.01 is Regulation FD disclosure, commonly used for KPI
+            # releases such as production and deliveries.  The SEC metadata is
+            # trusted for prioritization only; document evidence still has to
+            # pass retrieval, extraction, anchoring, and ambiguity checks.
+            if "2.02" in item_set:
+                rank = 4
+            elif "7.01" in item_set:
+                rank = 3
+            elif form_type in {"6-K", "6-K/A"} and file_date in foreign_results_dates:
+                # Prefer the same-day cover first because it commonly links to
+                # Exhibit 99; keep the quarter-dated companion immediately next.
+                rank = 2 if period == file_date else 1
+            else:
+                rank = 0
+            ranked_evidence.append((rank, index, result))
+        else:
+            evidence.append(result)
 
-        if len(evidence) >= limit:
+        if not prefer_results and len(evidence) >= limit:
             break
+
+    if prefer_results:
+        ranked_evidence.sort(key=lambda value: (-value[0], value[1]))
+        evidence = [value[2] for value in ranked_evidence[:limit]]
 
     print(
         f"[DIAG] SEC EDGAR (CIK): {len(evidence)} filing(s) for "
@@ -361,6 +402,7 @@ def fetch_recent_filings(
     forms: List[str] | None = None,
     limit: int = 5,
     years_back: int = 2,
+    prefer_results: bool = False,
 ) -> List[RetrievedEvidence]:
     """Search EDGAR for recent filings by *company* and return evidence objects.
 
@@ -376,6 +418,9 @@ def fetch_recent_filings(
         Maximum number of evidence objects to return.
     years_back : int
         Only include filings from the last *n* years.
+    prefer_results : bool
+        For ticker/CIK lookups, rank 8-K Items 2.02 and 7.01 ahead of
+        unrelated current reports while preserving recency within each rank.
 
     Returns
     -------
@@ -406,7 +451,9 @@ def fetch_recent_filings(
     looks_like_ticker = bool(_TICKER_RE.match(company))
     if looks_like_ticker:
         try:
-            result = _fetch_by_cik(company, forms, limit, years_back)
+            result = _fetch_by_cik(
+                company, forms, limit, years_back, prefer_results=prefer_results,
+            )
             if result:
                 return result
         except HTTPError as exc:
