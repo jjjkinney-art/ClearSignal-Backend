@@ -31,6 +31,9 @@ def test_question_gate_selects_only_explicit_supported_kpis():
     }
     assert service.requested_issuer_kpi_aliases("How did the company perform?") == {}
     assert service.requested_issuer_kpi_aliases("Explain users and sales") == {}
+    assert "remaining performance obligations" in service.requested_issuer_kpi_aliases(
+        "What was Salesforce's current remaining performance obligation?",
+    )
 
 
 def test_fetches_current_report_and_returns_only_bound_evidence(monkeypatch):
