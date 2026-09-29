@@ -57,7 +57,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 1. **Implemented in the registry slice:** versioned issuer metadata now stratifies all existing 36 fixtures, enforces structural integrity, and reports the current 12/100 issuer coverage honestly. Continue growing the core universe without discarding prior baselines.
 2. **Implemented in the artifact-store slice:** append-only local run bundles now publish manifests, outputs and scorecards atomically with duplicate-run rejection; forward shadow entries are immutable and hash-chained. Continue with production-safe storage/retention design only after the offline contract is accepted.
 3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
-4. Add factual/citation graders calibrated against adjudicated examples.
+4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. Add blind analytical-review assignment and agreement reporting.
 6. Add paraphrase groups, memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
@@ -105,3 +105,17 @@ python3 scripts/benchmark_point_in_time_audit.py source-manifest.json
 ```
 
 Future source versions, missing semantic timestamps, impossible retrieval ordering, missing document identity, invalid version hashes, and duplicate source IDs are stop-ship findings. Properly timestamped secondary sources may be admitted but retain an explicit human-review finding for provenance and entailment.
+
+## Factual and citation grading
+
+The factual grader scores each frozen claim across value/sign, unit, currency, fiscal period, consolidated-or-segment scope, expected document identity, document existence, and citation entailment. A material numerical claim passes only when every numerical dimension is correct. Citation binding passes only when the cited document exists, matches the frozen reference source, and an explicit adjudication says the cited evidence supports the claim.
+
+Entailment is never inferred from keyword overlap. Adjudications record a reviewer identity, rationale and one of `supports`, `partial`, `contradicts`, `not_found`, or `pending`. Pending or missing adjudication remains incorrect for the launch-gate ratio and sets `fully_adjudicated=false`; it is never silently counted as a pass.
+
+Grade a prepared claim set:
+
+```bash
+python3 scripts/benchmark_factual_grade.py grade-input.json --require-complete
+```
+
+The resulting scorecard exposes `material_numerical_accuracy`, `claim_source_binding`, `fabricated_material_sources`, pending review count, per-claim dimension results, and explicit findings. Automated entailment may be introduced only after its outputs are calibrated against double-reviewed human examples and its version is recorded with the benchmark run.
