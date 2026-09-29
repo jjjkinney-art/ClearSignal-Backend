@@ -67,7 +67,7 @@ def fetch_live_issuer_kpi_evidence(
     try:
         filings = sec_provider.fetch_recent_filings(
             ticker.upper().strip(), forms=["8-K", "8-K/A", "6-K", "6-K/A"],
-            limit=max_documents, years_back=2,
+            limit=max_documents, years_back=2, prefer_results=True,
         ) or []
     except Exception as exc:
         logger.warning("issuer KPI filing discovery failed for %s: %r", ticker, exc)

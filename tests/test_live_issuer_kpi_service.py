@@ -56,7 +56,7 @@ def test_fetches_current_report_and_returns_only_bound_evidence(monkeypatch):
     assert evidence[0].source_type == "regulatory_filing"
     assert calls == {
         "ticker": "NFLX", "forms": ["8-K", "8-K/A", "6-K", "6-K/A"],
-        "limit": 2, "years_back": 2,
+        "limit": 2, "years_back": 2, "prefer_results": True,
     }
 
 
