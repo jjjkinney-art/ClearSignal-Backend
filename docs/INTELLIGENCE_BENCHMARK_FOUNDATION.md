@@ -59,7 +59,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
-6. **Paraphrase, memory A/B, and proactive replay implemented:** paraphrases expose material output drift; matched memory experiments isolate personalization lift and safety; frozen event replay now tests event detection, thesis relevance, assumption linkage, impact, confidence, evidence, timing, noise, and owner isolation. Next add protected subgroup scorecards.
+6. **Paraphrase, memory A/B, proactive replay, and protected subgroup scorecards implemented:** the benchmark now exposes material wording instability, isolates memory lift and safety, replays thesis-aware event detection, and prevents aggregate results from hiding under-sampled or failing issuer groups. Continue expanding frozen cases until every protected group meets its declared sample floor.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
 
 ## Registry audit
@@ -177,3 +177,17 @@ python3 scripts/benchmark_proactive_replay.py replay.json --require-safe
 ```
 
 An empty replay suite is not safe to expand. Passing offline replay does not start monitoring or authorize user-facing alerts; live scheduling still requires cost limits, quotas, operator visibility, delivery deduplication and kill-switch verification.
+
+## Protected subgroup scorecards
+
+Each benchmark observation carries issuer metadata for market-cap tier, coverage tier, domicile, sector, profitability, evidence mode, reporting complexity and personalization mode. The scorecard evaluates explicitly configured protected groups against frozen metric thresholds, maximum gaps from the overall result, minimum observation counts and minimum distinct-issuer counts.
+
+Overall averages never override subgroup evidence. A group with too few observations or issuers is `insufficient`, not passing. A group fails when a required metric is missing, breaches its absolute threshold, or regresses from the overall benchmark by more than the declared gap. Critical case failures—including fabricated material sources, privacy exposure and point-in-time leakage—remain launch blockers regardless of group averages.
+
+Run the offline evaluator with:
+
+```bash
+python3 scripts/benchmark_subgroup_scorecard.py subgroups.json --require-pass
+```
+
+The launch gate may consume `subgroup_regression_count`, but this report also preserves insufficient groups and critical case failures separately so missing small-company evidence cannot be mistaken for acceptable performance.
