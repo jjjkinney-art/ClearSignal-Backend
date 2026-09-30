@@ -27,6 +27,11 @@ startup** — migrations are an explicit deployment step.
 | `0002_delivery_ledger_severity` | Versioned replacement for the Phase 10C lifespan ALTER: adds `canonical_severity`, `severity_rank`, and index `ix_delivery_ledger_canonical_severity`. Idempotent (introspects first). | Downgrade drops the two columns + index. Rows preserved; the **column values are discarded**. |
 | `0003_users_billing_columns` | Adds missing `users.plan` and `users.plan_updated_at` columns on legacy databases, defaults existing users to `free`, and restores the system user's `system` plan. | Downgrade drops the two columns. User rows remain, but plan values are discarded. |
 | `0004_portfolios_org_id` | Adds the missing nullable `portfolios.org_id` compatibility column on legacy databases so account import can read the current Portfolio model. | Downgrade drops `org_id`. Portfolio rows remain. |
+| `0005_watchlist_unique_active_membership` | Enforces one active watchlist membership per owner and ticker. | Downgrade removes the supporting uniqueness structure. |
+| `0006_access_grants` | Adds explicit account access-grant records for guarded rollout. | Downgrade removes access-grant rows and their table. |
+| `0007_research_conversations` | Adds account-owned research conversations and ordered messages. | Downgrade removes both conversation tables and their data. |
+| `0008_research_personalization` | Adds explicit account-owned Intelligence Mode preferences. | Downgrade removes personalization profiles. |
+| `0009_benchmark_shadow_state` | Adds synthetic benchmark job heads, hash-chained lifecycle transitions, and durable kill state. No research content is stored. | Downgrade removes the three isolated benchmark operational tables and their data. |
 
 Because the delta migrations are idempotent, `alembic upgrade head` is safe to run on
 any of the three database states below and converges them to the current schema.
@@ -62,8 +67,8 @@ The database URL is resolved by `alembic/env.py` from `DATABASE_URL`
 2. Review the pending migrations: `alembic history` and `git diff` the new
    revision files.
 3. Put the service in maintenance / drain if the migration is not
-   backward-compatible with the currently running code (the two migrations here
-   are additive and backward-compatible, so zero-downtime is fine).
+   backward-compatible with the currently running code. Migration `0009` is
+   additive and inert without a scheduler, so it is safe to apply before code.
 4. Run the migration as a release step **before** the new app version serves
    traffic:
    ```bash
@@ -98,7 +103,8 @@ If `alembic upgrade head` fails partway:
    with the pre-migration schema for additive changes).
 2. Inspect state: `alembic current` (last good revision) and the migration error.
 3. Fix-forward (preferred): correct the migration and re-run `alembic upgrade
-   head` — the two migrations here are idempotent, so re-running is safe.
+   head` — the delta migrations introspect existing state where needed, so
+   re-running after correcting the cause is safe.
 4. If the DB is left inconsistent and cannot be fixed forward: **restore the
    pre-deploy backup** and retry.
 5. Postgres note: Alembic wraps each migration in a transaction, so a failing
@@ -112,6 +118,8 @@ If `alembic upgrade head` fails partway:
   column values are lost; rows are not).
 - **`0003` downgrade** → drops `users.plan` / `users.plan_updated_at` (those
   column values are lost; user rows are not).
+- **`0009` downgrade** → drops synthetic benchmark reservations, transition
+  audits, and durable kill-state metadata. It never touches account research.
 
 Any future migration that drops a column/table, narrows a type, or backfills with
 data loss **must** document it here and be preceded by a backup.

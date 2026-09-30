@@ -60,7 +60,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
 6. **Paraphrase, memory A/B, proactive replay, and protected subgroup scorecards implemented:** the benchmark now exposes material wording instability, isolates memory lift and safety, replays thesis-aware event detection, and prevents aggregate results from hiding under-sampled or failing issuer groups. Continue expanding frozen cases until every protected group meets its declared sample floor.
-7. **Shadow safety control plane implemented:** the inert-default admission boundary now enforces cost ceilings, daily/account/issuer quotas, concurrency, timeouts, capability allowlists, idempotency, synthetic-owner isolation, operator status and manual/automatic kill switches. It owns no scheduler and executes no research. Continue with a separately reviewed scheduler integration only after this boundary is accepted and durable production storage is designed.
+7. **Shadow safety and durable-state foundations implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions and kill state now survive restarts with explicit retention. Neither layer owns a scheduler or executes research. Continue with authenticated operator controls before any separately reviewed dry-run scheduler integration.
 
 ## Registry audit
 
@@ -204,4 +204,12 @@ The operator can validate a configuration without activating work:
 python3 scripts/benchmark_shadow_safety.py shadow-policy.json --require-inert
 ```
 
-Production scheduling remains blocked until encrypted durable state, retention, operator authentication, deployment-level locking, provider cancellation and explicit rollout approval are designed and verified.
+Production scheduling remains blocked until operator authentication, provider cancellation and explicit rollout approval are designed and verified.
+
+## Durable shadow state
+
+Migration `0009_benchmark_shadow_state` adds three isolated operational tables: a mutable job head, an append-only hash-chained transition audit and a versioned global kill-switch record. The tables accept synthetic benchmark identifiers and operational metadata only; there are no prompt, question, answer, evidence or payload columns.
+
+Claims and renewals use holder identity plus monotonic fence tokens so a restarted or delayed worker cannot complete work after its lease was superseded. Expired leases recover to `timed_out` exactly once and conservatively charge the full reserved cost. Request identifiers remain idempotent across sessions and deployments, while reuse with a changed fingerprint fails closed. Manual/automatic kill state uses version compare-and-swap and survives process restarts.
+
+Retention cleanup is the only deletion path. It removes a terminal job and its transition chain only after `retention_until`; reserved or running jobs are never eligible. The state service imports no scheduler, provider, delivery or notification module and therefore cannot activate live work.

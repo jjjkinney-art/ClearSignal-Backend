@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0008_research_personalization"
+_HEAD = "0009_benchmark_shadow_state"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -439,4 +439,56 @@ class TestResearchPersonalizationMigration:
         tables = set(_insp(p).get_table_names())
         assert "research_personalization_profiles" not in tables
         assert {"research_conversations", "research_messages"} <= tables
+        assert _rev(p) == self._PREVIOUS
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Durable Intelligence Benchmark shadow state (0009)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class TestBenchmarkShadowStateMigration:
+    _PREVIOUS = "0008_research_personalization"
+
+    def test_upgrade_creates_isolated_operational_tables(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        insp = _insp(p)
+        tables = set(insp.get_table_names())
+        assert {
+            "benchmark_shadow_jobs", "benchmark_shadow_transitions",
+            "benchmark_shadow_control",
+        } <= tables
+        job_columns = {item["name"] for item in insp.get_columns("benchmark_shadow_jobs")}
+        assert {
+            "request_fingerprint", "account_ref", "lease_expires_at",
+            "fence_token", "retention_until",
+        } <= job_columns
+        assert not {"prompt", "question", "answer", "evidence", "payload"} & job_columns
+        unique_sets = {
+            tuple(item["column_names"])
+            for item in insp.get_unique_constraints("benchmark_shadow_transitions")
+        }
+        assert ("job_id", "sequence") in unique_sets
+        checks = {
+            item["name"]
+            for item in insp.get_check_constraints("benchmark_shadow_jobs")
+        }
+        assert {
+            "ck_benchmark_shadow_synthetic_owner",
+            "ck_benchmark_shadow_estimated_cost",
+            "ck_benchmark_shadow_actual_cost",
+            "ck_benchmark_shadow_status",
+        } <= checks
+
+    def test_downgrade_removes_only_benchmark_shadow_tables(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+        tables = set(_insp(p).get_table_names())
+        assert not {
+            "benchmark_shadow_jobs", "benchmark_shadow_transitions",
+            "benchmark_shadow_control",
+        } & tables
+        assert "research_personalization_profiles" in tables
         assert _rev(p) == self._PREVIOUS
