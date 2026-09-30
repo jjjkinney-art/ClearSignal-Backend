@@ -106,6 +106,9 @@ def test_added_routes_are_reported_but_do_not_fail(capsys):
         ("POST", "/admin/loop/disable"),
         ("POST", "/admin/loop/enable"),
         ("GET", "/admin/billing-status"),
+        ("GET", "/admin/benchmark-shadow/status"),
+        ("POST", "/admin/benchmark-shadow/kill"),
+        ("POST", "/admin/benchmark-shadow/restore"),
     ],
 )
 def test_launch_critical_endpoints_exist(method, path):

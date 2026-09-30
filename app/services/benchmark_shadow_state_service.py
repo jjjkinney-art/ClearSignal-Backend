@@ -331,3 +331,68 @@ async def verify_transition_chain(session, job_id: str) -> Tuple[str, ...]:
 
 async def purge_retained(session, *, now: datetime) -> Tuple[str, ...]:
     return tuple(await repo.purge_expired_terminal(session, _instant(now, "now")))
+
+
+async def append_operator_audit(
+    session, *, actor_id: str, action: str, occurred_at: datetime,
+    ip_address: Optional[str] = None, user_agent: Optional[str] = None,
+) -> str:
+    """Append the mandatory security audit for a kill-state mutation."""
+    if session is None:
+        raise ShadowStateError("database unavailable")
+    from app.db.models import AuditLog
+    identifier = str(uuid.uuid4())
+    session.add(AuditLog(
+        id=identifier, user_id=_text(actor_id, "actor_id"),
+        resource="benchmark_shadow_control", resource_id="global",
+        action=_text(action, "action", 40),
+        ip_address=str(ip_address)[:45] if ip_address else None,
+        user_agent=str(user_agent)[:500] if user_agent else None,
+        created_at=_instant(occurred_at, "occurred_at"),
+    ))
+    await session.flush()
+    return identifier
+
+
+async def build_operator_snapshot(session, *, now: datetime) -> Dict[str, Any]:
+    """Return aggregate, identity-free state for the authenticated admin API."""
+    instant = _instant(now, "now")
+    if session is None:
+        return {
+            "db_available": False, "control_initialized": False,
+            "manual_kill": True, "automatic_kill": True,
+            "effective_killed": True, "control_version": None,
+            "reason_code": "database_unavailable", "status_counts": {},
+            "job_count": 0, "transition_count": 0,
+            "estimated_cost_usd": 0.0, "actual_cost_usd": 0.0,
+            "expired_active_leases": 0, "integrity_error_count": 0,
+            "transition_integrity": False, "scheduler_present": False,
+            "execution_enabled": False, "safe_state": True,
+        }
+    control = await repo.control_read(session)
+    metrics = await repo.operator_metrics(session, instant)
+    integrity_errors = 0
+    for job_id in await repo.all_job_ids(session):
+        integrity_errors += len(await verify_transition_chain(session, job_id))
+    initialized = control is not None
+    manual = True if control is None else bool(control.manual_kill)
+    automatic = True if control is None else bool(control.automatic_kill)
+    integrity_ok = integrity_errors == 0
+    return {
+        "db_available": True, "control_initialized": initialized,
+        "manual_kill": manual, "automatic_kill": automatic,
+        "effective_killed": manual or automatic,
+        "control_version": None if control is None else control.version,
+        "reason_code": (
+            "control_uninitialized" if control is None else control.reason_code
+        ),
+        **metrics,
+        "integrity_error_count": integrity_errors,
+        "transition_integrity": integrity_ok,
+        # Structural truth for this slice: there is no scheduler import/path.
+        "scheduler_present": False, "execution_enabled": False,
+        "safe_state": bool(
+            integrity_ok
+            and metrics["expired_active_leases"] == 0
+        ),
+    }

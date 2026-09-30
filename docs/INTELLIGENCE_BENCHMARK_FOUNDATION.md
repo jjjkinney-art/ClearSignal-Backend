@@ -204,7 +204,9 @@ The operator can validate a configuration without activating work:
 python3 scripts/benchmark_shadow_safety.py shadow-policy.json --require-inert
 ```
 
-Production scheduling remains blocked until operator authentication, provider cancellation and explicit rollout approval are designed and verified.
+Production scheduling remains blocked until provider cancellation, a separately
+reviewed dry-run scheduler integration, and explicit rollout approval are
+designed and verified.
 
 ## Durable shadow state
 
@@ -213,3 +215,9 @@ Migration `0009_benchmark_shadow_state` adds three isolated operational tables: 
 Claims and renewals use holder identity plus monotonic fence tokens so a restarted or delayed worker cannot complete work after its lease was superseded. Expired leases recover to `timed_out` exactly once and conservatively charge the full reserved cost. Request identifiers remain idempotent across sessions and deployments, while reuse with a changed fingerprint fails closed. Manual/automatic kill state uses version compare-and-swap and survives process restarts.
 
 Retention cleanup is the only deletion path. It removes a terminal job and its transition chain only after `retention_until`; reserved or running jobs are never eligible. The state service imports no scheduler, provider, delivery or notification module and therefore cannot activate live work.
+
+## Authenticated operator controls
+
+The central `/admin/*` boundary and explicit handler-level administrator checks protect three benchmark endpoints: aggregate status, engage manual kill, and restore manual control. Mutations require the last observed control version; stale concurrent operators receive `409` rather than overwriting newer state. Every effective mutation appends a security audit row with the authenticated actor.
+
+`POST /admin/benchmark-shadow/restore` clears only `manual_kill`. It never clears `automatic_kill`, cannot enable execution, and cannot create or claim a job. Status responses contain aggregate counts, costs, lease health and transition-integrity state but no synthetic account references, job identifiers, prompts, evidence or outputs.
