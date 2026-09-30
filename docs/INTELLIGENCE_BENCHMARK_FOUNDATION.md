@@ -60,7 +60,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
 6. **Paraphrase, memory A/B, proactive replay, and protected subgroup scorecards implemented:** the benchmark now exposes material wording instability, isolates memory lift and safety, replays thesis-aware event detection, and prevents aggregate results from hiding under-sampled or failing issuer groups. Continue expanding frozen cases until every protected group meets its declared sample floor.
-7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
+7. **Shadow safety control plane implemented:** the inert-default admission boundary now enforces cost ceilings, daily/account/issuer quotas, concurrency, timeouts, capability allowlists, idempotency, synthetic-owner isolation, operator status and manual/automatic kill switches. It owns no scheduler and executes no research. Continue with a separately reviewed scheduler integration only after this boundary is accepted and durable production storage is designed.
 
 ## Registry audit
 
@@ -191,3 +191,17 @@ python3 scripts/benchmark_subgroup_scorecard.py subgroups.json --require-pass
 ```
 
 The launch gate may consume `subgroup_regression_count`, but this report also preserves insufficient groups and critical case failures separately so missing small-company evidence cannot be mistaken for acceptable performance.
+
+## Shadow safety control plane
+
+`validation.shadow_safety` is the admission boundary for a future benchmark scheduler. Its default policy is disabled and dry-run. It rejects non-synthetic account references, non-allowlisted capabilities, duplicate identifiers with changed payloads, work above declared cost ceilings, exhausted daily/account/issuer quotas, concurrency overflow and requests received while either kill switch is engaged.
+
+Dry-run decisions reserve no job and incur no cost. An enabled non-dry-run policy may create a reservation, but this module cannot execute research, call a provider, write account-owned memory or send a notification. Timeout reaping and kill-switch cancellation release active capacity while preserving terminal audit state. Actual cost above the daily budget automatically engages a fail-closed kill switch.
+
+The operator can validate a configuration without activating work:
+
+```bash
+python3 scripts/benchmark_shadow_safety.py shadow-policy.json --require-inert
+```
+
+Production scheduling remains blocked until encrypted durable state, retention, operator authentication, deployment-level locking, provider cancellation and explicit rollout approval are designed and verified.
