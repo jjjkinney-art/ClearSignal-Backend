@@ -60,7 +60,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
 6. **Paraphrase, memory A/B, proactive replay, and protected subgroup scorecards implemented:** the benchmark now exposes material wording instability, isolates memory lift and safety, replays thesis-aware event detection, and prevents aggregate results from hiding under-sampled or failing issuer groups. Continue expanding frozen cases until every protected group meets its declared sample floor.
-7. **Shadow safety, durable state, operator controls, provider cancellation, and an inert scheduler implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions, kill state, aggregate administrator controls, and content-free provider cancellation acknowledgements survive restarts with explicit retention. The scheduler evaluates one caller-supplied tick, requires dry-run admission, and cannot reserve or execute work. Continue only with reviewed synthetic fixture selection and a deployment-level dry-run rehearsal.
+7. **Shadow safety, durable state, operator controls, provider cancellation, inert scheduling, and a frozen rehearsal implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions, kill state, aggregate administrator controls, and content-free provider cancellation acknowledgements survive restarts with explicit retention. The scheduler evaluates one caller-supplied tick, requires dry-run admission, and cannot reserve or execute work. A registry-pinned seven-issuer rehearsal spans six sectors, two domiciles and US GAAP/IFRS while explicitly preserving the known mid-cap and small/micro-cap gaps. Continue by running this rehearsal in the deployment environment before considering any execution capability.
 
 ## Registry audit
 
@@ -228,6 +228,26 @@ This integration does not authorize a cron trigger or live execution. The next
 review must freeze synthetic fixture selection, verify a production-equivalent
 dry-run deployment, and confirm zero provider calls, user-memory writes and
 notifications before any broader scheduler capability is considered.
+
+## Frozen dry-run rehearsal
+
+`validation/shadow_schedule.v1.json` pins seven synthetic schedules to issuer
+registry v1 and its exact content hash. The selection spans six sectors, the US
+and Netherlands, and US GAAP/IFRS. Because the current registry contains only
+mega/large-cap issuers, the manifest must state the `mid_cap` and `small_micro`
+gaps; the rehearsal rejects attempts to hide either gap.
+
+Run the same deterministic tick locally or in the deployment environment:
+
+```bash
+python3 scripts/benchmark_shadow_rehearsal.py \
+  --at 2026-10-01T00:01:00Z
+```
+
+The rehearsal passes only when every decision is dry-run, active jobs and
+reserved cost remain zero, and the isolated integration has no provider,
+research, memory, delivery or notification dependency. This is deployment
+evidence, not permission to enable live execution.
 
 ## Durable shadow state
 
