@@ -276,3 +276,51 @@ async def purge_expired_terminal(session, cutoff: datetime) -> List[str]:
     await session.execute(delete(Job).where(Job.id.in_(ids)))
     await session.flush()
     return ids
+
+
+async def operator_metrics(session, now: datetime) -> dict:
+    """Aggregate-only operational metrics; returns no job or owner identifiers."""
+    if session is None:
+        return {
+            "status_counts": {}, "estimated_cost_usd": 0.0,
+            "actual_cost_usd": 0.0, "expired_active_leases": 0,
+            "job_count": 0, "transition_count": 0,
+        }
+    from sqlalchemy import case, func, select
+    _, Job, Transition = _models()
+    status_rows = await session.execute(
+        select(Job.status, func.count(Job.id)).group_by(Job.status)
+    )
+    costs = (
+        await session.execute(select(
+            func.coalesce(func.sum(Job.estimated_cost_usd), 0.0),
+            func.coalesce(func.sum(Job.actual_cost_usd), 0.0),
+            func.count(Job.id),
+            func.coalesce(func.sum(case(
+                (
+                    (Job.status == "running")
+                    & (Job.lease_expires_at < now), 1
+                ), else_=0,
+            )), 0),
+        ))
+    ).one()
+    transition_count = (
+        await session.execute(select(func.count(Transition.id)))
+    ).scalar_one()
+    return {
+        "status_counts": {row[0]: int(row[1]) for row in status_rows.fetchall()},
+        "estimated_cost_usd": float(costs[0] or 0),
+        "actual_cost_usd": float(costs[1] or 0),
+        "job_count": int(costs[2] or 0),
+        "expired_active_leases": int(costs[3] or 0),
+        "transition_count": int(transition_count or 0),
+    }
+
+
+async def all_job_ids(session) -> Sequence[str]:
+    if session is None:
+        return ()
+    from sqlalchemy import select
+    _, Job, _ = _models()
+    result = await session.execute(select(Job.id).order_by(Job.id))
+    return tuple(row[0] for row in result.fetchall())

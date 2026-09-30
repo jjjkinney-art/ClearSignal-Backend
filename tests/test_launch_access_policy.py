@@ -73,7 +73,10 @@ def _policy_settings(monkeypatch):
     rate_limiter.reset()
 
 
-@pytest.mark.parametrize("path", ["/admin/auth-status", "/admin/loop/disable"])
+@pytest.mark.parametrize("path", [
+    "/admin/auth-status", "/admin/loop/disable",
+    "/admin/benchmark-shadow/status",
+])
 async def test_admin_namespace_rejects_unauthenticated(monkeypatch, path):
     response = await _dispatch(monkeypatch, _request(path), None)
     assert response.status_code == 401
@@ -84,6 +87,7 @@ async def test_admin_namespace_rejects_unauthenticated(monkeypatch, path):
     [
         ("/admin/auth-status", "GET"),
         ("/admin/loop/disable", "POST"),
+        ("/admin/benchmark-shadow/kill", "POST"),
         ("/pipeline/run", "POST"),
         ("/events/process", "POST"),
         ("/events/ingest", "POST"),
@@ -99,6 +103,8 @@ async def test_member_cannot_reach_operator_surface(monkeypatch, path, method):
     [
         ("/admin/auth-status", "GET"),
         ("/admin/loop/disable", "POST"),
+        ("/admin/benchmark-shadow/status", "GET"),
+        ("/admin/benchmark-shadow/kill", "POST"),
         ("/pipeline/run", "POST"),
         ("/events/process", "POST"),
     ],

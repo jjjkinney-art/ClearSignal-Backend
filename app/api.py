@@ -75,6 +75,13 @@ try:
 except Exception as _aa_err:
     logger.warning("[api] admin_auth router unavailable: %r", _aa_err)
 
+# Intelligence Benchmark — authenticated, inert shadow-state controls
+try:
+    from .routers.benchmark_shadow_admin import router as _benchmark_shadow_admin_router
+    router.include_router(_benchmark_shadow_admin_router)
+except Exception as _bsa_err:
+    logger.warning("[api] benchmark_shadow_admin router unavailable: %r", _bsa_err)
+
 # Phase 17 · Slice 3 — billing routes (POST /billing/checkout)
 try:
     from .routers.billing import router as _billing_router
