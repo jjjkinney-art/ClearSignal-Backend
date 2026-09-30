@@ -59,7 +59,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
-6. Add paraphrase groups, memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
+6. **Paraphrase consistency implemented:** all-pairs comparison now detects material drift in answer behavior, thesis direction, confidence, factual/source signatures, and risk/catalyst coverage without requiring identical prose. Next add memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
 
 ## Registry audit
@@ -133,3 +133,17 @@ python3 scripts/benchmark_blind_review.py blind-review.json --require-complete
 ```
 
 The offline layer does not reveal the mapping from opaque output IDs to source runs. That mapping and the blinding secret belong in a separately access-controlled coordinator; neither may be included in reviewer packets or scorecard artifacts.
+
+## Paraphrase consistency
+
+Each frozen paraphrase group binds semantically equivalent but textually distinct questions to one case, issuer, as-of boundary, and source snapshot. The runner supplies structured output signatures; this evaluator never guesses semantic equivalence from wording and never treats prose similarity as quality.
+
+Every pair in a group is compared, not merely each variant against a favored baseline. Material inconsistencies include changed answer/abstain/clarify behavior, changed thesis direction, confidence movement beyond an explicit tolerance, missing or conflicting material claim signatures, changed source binding, and risk or catalyst overlap below an explicit floor. Harmless prose and ordering differences are ignored.
+
+Run the offline evaluator with:
+
+```bash
+python3 scripts/benchmark_paraphrase_consistency.py paraphrases.json --require-consistent
+```
+
+The scorecard reports pair- and group-level consistency plus every material finding. Empty suites remain visibly unevaluated, and any material inconsistency can fail the CLI gate. Thresholds are recorded in the input rather than inferred or silently relaxed.
