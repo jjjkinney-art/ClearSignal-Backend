@@ -59,7 +59,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
-6. **Paraphrase consistency and memory A/B implemented:** all-pairs paraphrase comparison detects material drift without requiring identical prose. Matched memory control/treatment evaluation now measures personalization lift and recall while blocking cross-account, cross-ticker, stale/deleted, unsupported, and integrity-regressing behavior. Next add proactive-event replay and protected subgroup scorecards.
+6. **Paraphrase, memory A/B, and proactive replay implemented:** paraphrases expose material output drift; matched memory experiments isolate personalization lift and safety; frozen event replay now tests event detection, thesis relevance, assumption linkage, impact, confidence, evidence, timing, noise, and owner isolation. Next add protected subgroup scorecards.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
 
 ## Registry audit
@@ -163,3 +163,17 @@ python3 scripts/benchmark_memory_ab.py memory-ab.json --require-safe
 ```
 
 An empty suite is never considered safe. Passing this structural evaluator does not authorize automatic transcript injection or broader rollout; production-equivalent owner isolation, deletion, latency, cost and limited-cohort quality gates remain required by the cross-conversation memory contract.
+
+## Proactive-noticing event replay
+
+Each replay joins a frozen synthetic account-owned thesis to a later public event, an explicit expected relevance/impact judgment, and any observed alert. The thesis must predate the event, the ticker must match, and the evaluator rejects non-synthetic owner identifiers. Expected assumption links and confidence-change ranges are frozen before scoring.
+
+The scorecard measures relevant-event detection recall, alert precision, thesis-impact accuracy, timeliness, assumption-link recall/precision, noise, privacy exposure and look-ahead leakage. Alerts must bind to the frozen event source, target the correct owner and ticker, appear only after publication, stay inside the replay window, link only known assumptions, and keep confidence movement inside the adjudicated range. Missing material alerts, source errors, impact errors, privacy violations and pre-publication alerts fail closed. Late and duplicate alerts remain visible as usefulness/noise failures rather than being hidden in an average.
+
+Run the offline evaluator with:
+
+```bash
+python3 scripts/benchmark_proactive_replay.py replay.json --require-safe
+```
+
+An empty replay suite is not safe to expand. Passing offline replay does not start monitoring or authorize user-facing alerts; live scheduling still requires cost limits, quotas, operator visibility, delivery deduplication and kill-switch verification.
