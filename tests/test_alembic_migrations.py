@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0010_benchmark_provider_cancellation"
+_HEAD = "0010_benchmark_cancellation"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -54,6 +54,16 @@ def _insp(path: str):
 def _rev(path: str):
     with create_engine(f"sqlite:///{path}").connect() as cn:
         return cn.execute(text("SELECT version_num FROM alembic_version")).scalar()
+
+
+def test_all_revision_identifiers_fit_default_alembic_version_column():
+    """PostgreSQL's default alembic_version.version_num is VARCHAR(32)."""
+    from alembic.script import ScriptDirectory
+
+    scripts = ScriptDirectory.from_config(_cfg(_new_db_path()))
+    revisions = tuple(scripts.walk_revisions())
+    assert revisions
+    assert all(len(item.revision) <= 32 for item in revisions)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
