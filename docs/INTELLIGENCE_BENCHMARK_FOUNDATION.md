@@ -60,7 +60,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
 6. **Paraphrase, memory A/B, proactive replay, and protected subgroup scorecards implemented:** the benchmark now exposes material wording instability, isolates memory lift and safety, replays thesis-aware event detection, and prevents aggregate results from hiding under-sampled or failing issuer groups. Continue expanding frozen cases until every protected group meets its declared sample floor.
-7. **Shadow safety, durable state, operator controls, and provider cancellation implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions, kill state, aggregate administrator controls, and content-free provider cancellation acknowledgements survive restarts with explicit retention. No layer owns a scheduler or executes research. Continue only with a separately reviewed inert dry-run scheduler integration.
+7. **Shadow safety, durable state, operator controls, provider cancellation, and an inert scheduler implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions, kill state, aggregate administrator controls, and content-free provider cancellation acknowledgements survive restarts with explicit retention. The scheduler evaluates one caller-supplied tick, requires dry-run admission, and cannot reserve or execute work. Continue only with reviewed synthetic fixture selection and a deployment-level dry-run rehearsal.
 
 ## Registry audit
 
@@ -206,6 +206,28 @@ python3 scripts/benchmark_shadow_safety.py shadow-policy.json --require-inert
 
 Production scheduling remains blocked until a separately reviewed dry-run
 scheduler integration and explicit rollout approval are designed and verified.
+
+## Inert dry-run scheduler
+
+`validation.shadow_scheduler` converts fixed synthetic schedules into
+deterministic slot-bound request identifiers and evaluates a single
+caller-supplied tick through the shadow safety boundary. It has no daemon,
+system clock, database, provider, research, memory, delivery or notification
+dependency. It rejects non-synthetic accounts, schedules faster than five
+minutes, duplicate schedule identifiers, unbounded catch-up and every safety
+policy where `dry_run` is false.
+
+The command below produces a content-free audit plan and fails if any active
+reservation appears:
+
+```bash
+python3 scripts/benchmark_shadow_scheduler.py schedule.json --require-inert
+```
+
+This integration does not authorize a cron trigger or live execution. The next
+review must freeze synthetic fixture selection, verify a production-equivalent
+dry-run deployment, and confirm zero provider calls, user-memory writes and
+notifications before any broader scheduler capability is considered.
 
 ## Durable shadow state
 
