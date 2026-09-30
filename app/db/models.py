@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 66 tables.
+SQLAlchemy ORM models — 67 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -97,6 +97,7 @@ Visual Intelligence (Phase 19 · Slice 1)
 64. benchmark_shadow_jobs       — Synthetic benchmark job head + fenced lease
 65. benchmark_shadow_transitions — Append-only hash-chained state audit
 66. benchmark_shadow_control    — Durable global kill-switch state
+67. benchmark_shadow_cancellations — Provider cancellation acknowledgements
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -3118,3 +3119,37 @@ class BenchmarkShadowControl(Base):
     updated_by = Column(String(200), nullable=False)
     updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
                         onupdate=_now)
+
+
+class BenchmarkShadowCancellation(Base):
+    """Content-free audit of one external provider cancellation attempt."""
+
+    __tablename__ = "benchmark_shadow_cancellations"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    job_id = Column(String(36), nullable=False)
+    fence_token = Column(Integer, nullable=False)
+    provider_name = Column(String(80), nullable=False)
+    operation_ref_hash = Column(String(64), nullable=False)
+    attempt_number = Column(Integer, nullable=False)
+    outcome = Column(String(30), nullable=False, default="pending")
+    reason_code = Column(String(100), nullable=False)
+    attempted_by = Column(String(200), nullable=False)
+    requested_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    completed_at = Column(DateTime(timezone=True), nullable=True)
+    failure_code = Column(String(100), nullable=True)
+    call_token = Column(String(36), nullable=True)
+    call_deadline = Column(DateTime(timezone=True), nullable=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "outcome IN ('pending','calling','acknowledged','rejected','timed_out','error')",
+            name="ck_benchmark_shadow_cancellation_outcome",
+        ),
+        UniqueConstraint(
+            "job_id", "fence_token", "attempt_number",
+            name="uq_benchmark_shadow_cancellation_attempt",
+        ),
+        Index("ix_benchmark_shadow_cancellation_job", "job_id", "requested_at"),
+        Index("ix_benchmark_shadow_cancellation_outcome", "outcome", "requested_at"),
+    )

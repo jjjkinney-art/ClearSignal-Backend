@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0009_benchmark_shadow_state"
+_HEAD = "0010_benchmark_provider_cancellation"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -491,4 +491,40 @@ class TestBenchmarkShadowStateMigration:
             "benchmark_shadow_control",
         } & tables
         assert "research_personalization_profiles" in tables
+        assert _rev(p) == self._PREVIOUS
+
+
+class TestBenchmarkProviderCancellationMigration:
+    _PREVIOUS = "0009_benchmark_shadow_state"
+
+    def test_upgrade_adds_content_free_cancellation_audit(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        insp = _insp(p)
+        assert "benchmark_shadow_cancellations" in set(insp.get_table_names())
+        columns = {
+            item["name"]
+            for item in insp.get_columns("benchmark_shadow_cancellations")
+        }
+        assert {
+            "job_id", "fence_token", "provider_name", "operation_ref_hash",
+            "attempt_number", "outcome", "failure_code", "call_token",
+            "call_deadline",
+        } <= columns
+        assert not {
+            "operation_reference", "prompt", "question", "answer",
+            "evidence", "payload",
+        } & columns
+
+    def test_downgrade_removes_only_cancellation_audit(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+        tables = set(_insp(p).get_table_names())
+        assert "benchmark_shadow_cancellations" not in tables
+        assert {
+            "benchmark_shadow_jobs", "benchmark_shadow_transitions",
+            "benchmark_shadow_control",
+        } <= tables
         assert _rev(p) == self._PREVIOUS
