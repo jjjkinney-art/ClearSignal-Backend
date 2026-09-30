@@ -98,6 +98,48 @@ async def test_status_is_admin_only_and_contains_aggregate_state(tmp_path, monke
 
 
 @pytest.mark.asyncio
+async def test_rehearsal_is_admin_only_aggregate_and_inert():
+    result = await admin.benchmark_shadow_rehearsal(_request(ADMIN_ID))
+    assert result["passed"] is True
+    assert result["issuer_count"] == 7
+    assert result["sector_count"] == 6
+    assert result["decision_counts"] == {"dry_run": 7}
+    assert result["active_jobs"] == 0
+    assert result["reserved_cost_usd"] == 0
+    assert result["execution_enabled"] is False
+    assert all(result["checks"].values())
+    serialized = str(result)
+    for private_detail in (
+        "synthetic:", "shadow-v1", "v1-aapl", "account_ref", "issuer_id",
+    ):
+        assert private_detail not in serialized
+
+    with pytest.raises(HTTPException) as forbidden:
+        await admin.benchmark_shadow_rehearsal(_request(MEMBER_ID))
+    assert forbidden.value.status_code == 403
+    with pytest.raises(HTTPException) as unauthenticated:
+        await admin.benchmark_shadow_rehearsal(
+            _request(None, authenticated=False)
+        )
+    assert unauthenticated.value.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_rehearsal_failure_is_redacted_and_fails_closed(monkeypatch):
+    def unavailable(**_kwargs):
+        raise RuntimeError("secret provider detail")
+
+    monkeypatch.setattr(admin, "run_rehearsal", unavailable)
+    with pytest.raises(HTTPException) as failure:
+        await admin.benchmark_shadow_rehearsal(_request(ADMIN_ID))
+    assert failure.value.status_code == 503
+    assert failure.value.detail == (
+        "Benchmark shadow rehearsal unavailable: RuntimeError"
+    )
+    assert "secret" not in failure.value.detail
+
+
+@pytest.mark.asyncio
 async def test_kill_is_versioned_idempotent_and_audited(tmp_path, monkeypatch):
     engine, factory = await _database(tmp_path)
     _install_session(monkeypatch, factory)
@@ -201,9 +243,9 @@ async def test_disabled_database_fails_closed(monkeypatch):
     assert unavailable_mutation.value.status_code == 503
 
 
-def test_operator_router_has_no_execution_or_delivery_dependencies():
+def test_operator_router_has_no_live_execution_or_delivery_dependencies():
     source = open(admin.__file__, encoding="utf-8").read()
-    forbidden = ("scheduler", "provider", "deliver", "notification", "research")
+    forbidden = ("provider", "deliver", "notification", "research")
     imports = tuple(
         node.module or ""
         for node in __import__("ast").walk(__import__("ast").parse(source))

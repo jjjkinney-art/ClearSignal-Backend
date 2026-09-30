@@ -249,6 +249,13 @@ reserved cost remain zero, and the isolated integration has no provider,
 research, memory, delivery or notification dependency. This is deployment
 evidence, not permission to enable live execution.
 
+An authenticated administrator may invoke the same frozen check in a deployed
+build with `POST /admin/benchmark-shadow/rehearsal`. The response exposes only
+aggregate counts, hashes, declared coverage gaps and pass/fail checks; synthetic
+account references, schedule identifiers and issuer identifiers are omitted.
+The route neither requires nor writes benchmark database state and always
+reports `execution_enabled=false`.
+
 ## Durable shadow state
 
 Migration `0009_benchmark_shadow_state` adds three isolated operational tables: a mutable job head, an append-only hash-chained transition audit and a versioned global kill-switch record. The tables accept synthetic benchmark identifiers and operational metadata only; there are no prompt, question, answer, evidence or payload columns.

@@ -34,7 +34,7 @@
       "issuer_id": "AAPL",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     },
     {
@@ -43,7 +43,7 @@
       "issuer_id": "ASML",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     },
     {
@@ -52,7 +52,7 @@
       "issuer_id": "COST",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     },
     {
@@ -61,7 +61,7 @@
       "issuer_id": "JPM",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     },
     {
@@ -70,7 +70,7 @@
       "issuer_id": "LLY",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     },
     {
@@ -79,7 +79,7 @@
       "issuer_id": "TSLA",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     },
     {
@@ -88,7 +88,7 @@
       "issuer_id": "XOM",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
-      "starts_at": "2026-10-01T00:00:00Z",
+      "starts_at": "2026-09-30T00:00:00Z",
       "interval_seconds": 86400
     }
   ]
