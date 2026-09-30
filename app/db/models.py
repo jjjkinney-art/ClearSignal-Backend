@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models — 61 tables.
+SQLAlchemy ORM models — 66 tables.
 
 Phase 9A: initial schema (tables 1–9)
 Phase 9B: user_id added to thesis_versions, memory_entries, personalized_insights;
@@ -91,8 +91,12 @@ Visual Intelligence (Phase 19 · Slice 1)
 57. visual_spec_cache           — Cached visual specifications (upsert on unique key)
 58. visual_experience_event     — Append-only visual generation log
 59. ai_visual_generation_log    — Append-only AI generation audit log (no prompt text)
-60. research_conversations      — Account-owned durable research investigations
-61. research_messages           — Ordered account-owned conversation messages
+61. research_conversations      — Account-owned durable research investigations
+62. research_messages           — Ordered account-owned conversation messages
+63. research_personalization_profiles — Explicit account-owned research preferences
+64. benchmark_shadow_jobs       — Synthetic benchmark job head + fenced lease
+65. benchmark_shadow_transitions — Append-only hash-chained state audit
+66. benchmark_shadow_control    — Durable global kill-switch state
 
 All primary keys are UUID strings (no dependency on DB-side uuid generation
 so the same schema works for both PostgreSQL and SQLite).
@@ -105,6 +109,7 @@ from datetime import date, datetime, timedelta, timezone
 
 from sqlalchemy import (
     Boolean,
+    CheckConstraint,
     Column,
     Date,
     DateTime,
@@ -3022,3 +3027,94 @@ class ResearchPersonalizationProfile(Base):
         Index("ix_research_personalization_owner", "user_id"),
     )
 
+
+# ---------------------------------------------------------------------------
+# 64–66. Intelligence Benchmark durable shadow state (inert without scheduler)
+# ---------------------------------------------------------------------------
+
+class BenchmarkShadowJob(Base):
+    """Mutable operational head for one synthetic benchmark reservation."""
+
+    __tablename__ = "benchmark_shadow_jobs"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    request_id = Column(String(128), nullable=False, unique=True)
+    request_fingerprint = Column(String(64), nullable=False)
+    account_ref = Column(String(200), nullable=False)
+    issuer_id = Column(String(80), nullable=False)
+    capability = Column(String(80), nullable=False)
+    estimated_cost_usd = Column(Float, nullable=False)
+    actual_cost_usd = Column(Float, nullable=True)
+    status = Column(String(30), nullable=False, default="reserved")
+    holder_id = Column(String(200), nullable=True)
+    lease_expires_at = Column(DateTime(timezone=True), nullable=True)
+    fence_token = Column(Integer, nullable=False, default=0)
+    failure_code = Column(String(100), nullable=True)
+    reserved_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    started_at = Column(DateTime(timezone=True), nullable=True)
+    finished_at = Column(DateTime(timezone=True), nullable=True)
+    retention_until = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+    __table_args__ = (
+        CheckConstraint("account_ref LIKE 'synthetic:%'",
+                        name="ck_benchmark_shadow_synthetic_owner"),
+        CheckConstraint("estimated_cost_usd >= 0",
+                        name="ck_benchmark_shadow_estimated_cost"),
+        CheckConstraint("actual_cost_usd IS NULL OR actual_cost_usd >= 0",
+                        name="ck_benchmark_shadow_actual_cost"),
+        CheckConstraint(
+            "status IN ('reserved','running','succeeded','failed','timed_out','cancelled')",
+            name="ck_benchmark_shadow_status",
+        ),
+        Index("ix_benchmark_shadow_jobs_status_lease", "status", "lease_expires_at"),
+        Index("ix_benchmark_shadow_jobs_account_reserved", "account_ref", "reserved_at"),
+        Index("ix_benchmark_shadow_jobs_retention", "retention_until"),
+    )
+
+
+class BenchmarkShadowTransition(Base):
+    """Immutable, hash-chained lifecycle transition for one benchmark job."""
+
+    __tablename__ = "benchmark_shadow_transitions"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    job_id = Column(String(36), nullable=False)
+    sequence = Column(Integer, nullable=False)
+    from_status = Column(String(30), nullable=True)
+    to_status = Column(String(30), nullable=False)
+    actor_id = Column(String(200), nullable=False)
+    reason_code = Column(String(100), nullable=False)
+    occurred_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    fence_token = Column(Integer, nullable=False, default=0)
+    cost_usd = Column(Float, nullable=True)
+    previous_event_hash = Column(String(64), nullable=True)
+    event_hash = Column(String(64), nullable=False, unique=True)
+
+    __table_args__ = (
+        CheckConstraint(
+            "to_status IN ('reserved','running','succeeded','failed','timed_out','cancelled')",
+            name="ck_benchmark_shadow_transition_status",
+        ),
+        UniqueConstraint("job_id", "sequence",
+                         name="uq_benchmark_shadow_transition_sequence"),
+        Index("ix_benchmark_shadow_transition_job", "job_id", "sequence"),
+        Index("ix_benchmark_shadow_transition_time", "occurred_at"),
+    )
+
+
+class BenchmarkShadowControl(Base):
+    """Durable singleton for manual and automatic benchmark kill switches."""
+
+    __tablename__ = "benchmark_shadow_control"
+
+    id = Column(String(40), primary_key=True, default="global")
+    manual_kill = Column(Boolean, nullable=False, default=False)
+    automatic_kill = Column(Boolean, nullable=False, default=False)
+    reason_code = Column(String(100), nullable=True)
+    version = Column(Integer, nullable=False, default=0)
+    updated_by = Column(String(200), nullable=False)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
