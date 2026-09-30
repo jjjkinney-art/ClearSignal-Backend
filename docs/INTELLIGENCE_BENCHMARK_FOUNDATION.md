@@ -223,7 +223,7 @@ The central `/admin/*` boundary and explicit handler-level administrator checks 
 
 ## Provider cancellation boundary
 
-Migration `0010_benchmark_provider_cancellation` adds a content-free audit of
+Migration `0010_benchmark_cancellation` adds a content-free audit of
 external cancellation attempts. It stores the provider name, job fence,
 attempt number, bounded outcome and a SHA-256 operation-reference hash; it does
 not store the provider operation reference, prompt, evidence, answer or output.

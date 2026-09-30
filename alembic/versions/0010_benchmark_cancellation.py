@@ -1,6 +1,6 @@
 """content-free provider cancellation acknowledgements
 
-Revision ID: 0010_benchmark_provider_cancellation
+Revision ID: 0010_benchmark_cancellation
 Revises: 0009_benchmark_shadow_state
 Create Date: 2026-09-30
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "0010_benchmark_provider_cancellation"
+revision = "0010_benchmark_cancellation"
 down_revision = "0009_benchmark_shadow_state"
 branch_labels = None
 depends_on = None
