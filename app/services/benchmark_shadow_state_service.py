@@ -364,6 +364,7 @@ async def build_operator_snapshot(session, *, now: datetime) -> Dict[str, Any]:
             "effective_killed": True, "control_version": None,
             "reason_code": "database_unavailable", "status_counts": {},
             "job_count": 0, "transition_count": 0,
+            "cancellation_counts": {}, "unacknowledged_cancellations": 0,
             "estimated_cost_usd": 0.0, "actual_cost_usd": 0.0,
             "expired_active_leases": 0, "integrity_error_count": 0,
             "transition_integrity": False, "scheduler_present": False,
@@ -394,5 +395,6 @@ async def build_operator_snapshot(session, *, now: datetime) -> Dict[str, Any]:
         "safe_state": bool(
             integrity_ok
             and metrics["expired_active_leases"] == 0
+            and metrics["unacknowledged_cancellations"] == 0
         ),
     }

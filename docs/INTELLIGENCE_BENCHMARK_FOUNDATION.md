@@ -60,7 +60,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
 6. **Paraphrase, memory A/B, proactive replay, and protected subgroup scorecards implemented:** the benchmark now exposes material wording instability, isolates memory lift and safety, replays thesis-aware event detection, and prevents aggregate results from hiding under-sampled or failing issuer groups. Continue expanding frozen cases until every protected group meets its declared sample floor.
-7. **Shadow safety and durable-state foundations implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions and kill state now survive restarts with explicit retention. Neither layer owns a scheduler or executes research. Continue with authenticated operator controls before any separately reviewed dry-run scheduler integration.
+7. **Shadow safety, durable state, operator controls, and provider cancellation implemented:** the inert-default admission boundary enforces cost ceilings, quotas, concurrency, timeouts, capability allowlists, idempotency and kill switches. Synthetic reservations, fenced leases, hash-chained lifecycle transitions, kill state, aggregate administrator controls, and content-free provider cancellation acknowledgements survive restarts with explicit retention. No layer owns a scheduler or executes research. Continue only with a separately reviewed inert dry-run scheduler integration.
 
 ## Registry audit
 
@@ -204,9 +204,8 @@ The operator can validate a configuration without activating work:
 python3 scripts/benchmark_shadow_safety.py shadow-policy.json --require-inert
 ```
 
-Production scheduling remains blocked until provider cancellation, a separately
-reviewed dry-run scheduler integration, and explicit rollout approval are
-designed and verified.
+Production scheduling remains blocked until a separately reviewed dry-run
+scheduler integration and explicit rollout approval are designed and verified.
 
 ## Durable shadow state
 
@@ -221,3 +220,22 @@ Retention cleanup is the only deletion path. It removes a terminal job and its t
 The central `/admin/*` boundary and explicit handler-level administrator checks protect three benchmark endpoints: aggregate status, engage manual kill, and restore manual control. Mutations require the last observed control version; stale concurrent operators receive `409` rather than overwriting newer state. Every effective mutation appends a security audit row with the authenticated actor.
 
 `POST /admin/benchmark-shadow/restore` clears only `manual_kill`. It never clears `automatic_kill`, cannot enable execution, and cannot create or claim a job. Status responses contain aggregate counts, costs, lease health and transition-integrity state but no synthetic account references, job identifiers, prompts, evidence or outputs.
+
+## Provider cancellation boundary
+
+Migration `0010_benchmark_provider_cancellation` adds a content-free audit of
+external cancellation attempts. It stores the provider name, job fence,
+attempt number, bounded outcome and a SHA-256 operation-reference hash; it does
+not store the provider operation reference, prompt, evidence, answer or output.
+
+Cancellation is deliberately two-phase. The caller first commits a local
+`cancelled` fence and transition, which prevents a delayed worker or provider
+result from completing the job. Only after that commit may it call an injected
+provider adapter with a maximum 30-second deadline. Rejection, timeout, adapter
+error or an unverified result monotonically engages the automatic kill switch.
+Provider calls use a durable single-flight claim; a concurrent caller observes
+the in-progress state without issuing a duplicate call, while an expired claim
+can be recovered after a process restart.
+Retries append new attempts without reopening the job, and a later
+acknowledgement never clears an existing automatic stop. This boundary imports
+no live provider, scheduler, delivery or notification implementation.

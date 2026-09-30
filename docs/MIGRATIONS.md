@@ -32,6 +32,7 @@ startup** — migrations are an explicit deployment step.
 | `0007_research_conversations` | Adds account-owned research conversations and ordered messages. | Downgrade removes both conversation tables and their data. |
 | `0008_research_personalization` | Adds explicit account-owned Intelligence Mode preferences. | Downgrade removes personalization profiles. |
 | `0009_benchmark_shadow_state` | Adds synthetic benchmark job heads, hash-chained lifecycle transitions, and durable kill state. No research content is stored. | Downgrade removes the three isolated benchmark operational tables and their data. |
+| `0010_benchmark_provider_cancellation` | Adds content-free provider cancellation attempt and acknowledgement records. | Downgrade removes only the cancellation audit table. |
 
 Because the delta migrations are idempotent, `alembic upgrade head` is safe to run on
 any of the three database states below and converges them to the current schema.
@@ -120,6 +121,8 @@ If `alembic upgrade head` fails partway:
   column values are lost; user rows are not).
 - **`0009` downgrade** → drops synthetic benchmark reservations, transition
   audits, and durable kill-state metadata. It never touches account research.
+- **`0010` downgrade** → drops provider cancellation acknowledgement history.
+  It does not alter benchmark jobs or account-owned research.
 
 Any future migration that drops a column/table, narrows a type, or backfills with
 data loss **must** document it here and be preceded by a backup.
