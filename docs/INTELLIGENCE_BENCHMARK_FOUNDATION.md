@@ -59,7 +59,7 @@ Longitudinal Brier score, calibration error, thesis-event accuracy, and benchmar
 3. **Implemented in the point-in-time slice:** source-type-aware timestamp adapters and a fail-closed leakage audit now gate historical evidence. Continue by integrating the gate into the frozen historical runner when that runner is introduced.
 4. **Implemented in the factual-grading slice:** deterministic numerical-dimension scoring and explicit citation adjudication now produce the two launch-gate metrics. Continue by calibrating automated graders against a growing set of double-reviewed examples before allowing automation to supply adjudications.
 5. **Implemented in the blind-review slice:** opaque output packets, deterministic multi-reviewer assignment, fixed analytical rubrics, identity-bound submissions, and disagreement reporting now prevent model identity from influencing review and keep unresolved judgments visible. Continue by calibrating rubric anchors with double-reviewed examples and a documented adjudication workflow.
-6. **Paraphrase consistency implemented:** all-pairs comparison now detects material drift in answer behavior, thesis direction, confidence, factual/source signatures, and risk/catalyst coverage without requiring identical prose. Next add memory A/B fixtures, proactive-event replay, and protected subgroup scorecards.
+6. **Paraphrase consistency and memory A/B implemented:** all-pairs paraphrase comparison detects material drift without requiring identical prose. Matched memory control/treatment evaluation now measures personalization lift and recall while blocking cross-account, cross-ticker, stale/deleted, unsupported, and integrity-regressing behavior. Next add proactive-event replay and protected subgroup scorecards.
 7. Add production-safe shadow scheduling only after cost limits, operator visibility, quotas, and kill switches are verified.
 
 ## Registry audit
@@ -147,3 +147,19 @@ python3 scripts/benchmark_paraphrase_consistency.py paraphrases.json --require-c
 ```
 
 The scorecard reports pair- and group-level consistency plus every material finding. Empty suites remain visibly unevaluated, and any material inconsistency can fail the CLI gate. Thresholds are recorded in the input rather than inferred or silently relaxed.
+
+## Personalized research-memory A/B
+
+Memory evaluation uses matched control and treatment runs with the same case, question, source snapshot, build, model, prompt and retrieval versions. The control must have memory disabled and cannot recall or apply any record. The treatment is the only arm with memory enabled, which isolates the incremental effect of account-owned research context.
+
+Fixtures contain opaque memory IDs and labels, never transcript text. Synthetic data is the default. Explicitly consented benchmark data requires a consent reference; ordinary private user research is not admitted. Expected relevant records must be active, owned by the fixture account and scoped to the same ticker.
+
+The scorecard reports analytical-quality lift, factual- and citation-integrity deltas, relevant recall, recall precision, unsupported personalization and privacy failures. Any cross-account recall, cross-ticker recall, unregistered record, applied stale/deleted record, applied irrelevant memory, unsupported personalized claim, or integrity regression blocks `safe_to_expand`. Negative analytical lift and missed recall remain visible without being mislabeled as privacy exposure.
+
+Run the offline evaluator with:
+
+```bash
+python3 scripts/benchmark_memory_ab.py memory-ab.json --require-safe
+```
+
+An empty suite is never considered safe. Passing this structural evaluator does not authorize automatic transcript injection or broader rollout; production-equivalent owner isolation, deletion, latency, cost and limited-cohort quality gates remain required by the cross-conversation memory contract.
