@@ -1,0 +1,421 @@
+{
+  "schema_version": 1,
+  "run_id": "synthetic:smaller-company-cash-flow-product-v1",
+  "description": "Controlled product-output acceptance cohort for current/prior annual operating cash flow, including positive-to-negative sign reversals.",
+  "cases": [
+    {
+      "issuer_id": "AA",
+      "question_id": "annual-operating-cash-flow-trend",
+      "question": "Which SEC source supports AA's latest annual operating cash flow trend versus the prior year?",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [
+        {
+          "source_id": "sec:aa:0001193125-26-077167",
+          "source_type": "sec_filing",
+          "document_url": "https://www.sec.gov/Archives/edgar/data/1675149/000119312526077167/aa-20251231.htm",
+          "accepted_at": "2026-02-26T21:52:29.000Z",
+          "retrieved_at": "2026-10-01T08:00:00Z",
+          "content_sha256": "dcc32f5ca5128175492bc3b466bab78d4dbb02fd34652e0ba460d8c36dfe57e7",
+          "revision_id": "0001193125-26-077167",
+          "authoritative": true
+        }
+      ],
+      "expected_claims": [
+        {
+          "claim_id": "AA-fy2025-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "1185000000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "source_id": "sec:aa:0001193125-26-077167",
+          "materiality": "material"
+        },
+        {
+          "claim_id": "AA-fy2024-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "622000000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "source_id": "sec:aa:0001193125-26-077167",
+          "materiality": "material"
+        }
+      ],
+      "adjudications": [
+        {
+          "claim_id": "AA-fy2025-operating-cash-flow",
+          "source_id": "sec:aa:0001193125-26-077167",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."
+        },
+        {
+          "claim_id": "AA-fy2024-operating-cash-flow",
+          "source_id": "sec:aa:0001193125-26-077167",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."
+        }
+      ],
+      "comparisons": [
+        {
+          "comparison_id": "AA-operating-cash-flow-yoy",
+          "current_claim_id": "AA-fy2025-operating-cash-flow",
+          "prior_claim_id": "AA-fy2024-operating-cash-flow",
+          "absolute_change": "563000000",
+          "direction": "increase"
+        }
+      ]
+    },
+    {
+      "issuer_id": "ACHC",
+      "question_id": "annual-operating-cash-flow-trend",
+      "question": "Which SEC source supports ACHC's latest annual operating cash flow trend versus the prior year?",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [
+        {
+          "source_id": "sec:achc:0001193125-26-078266",
+          "source_type": "sec_filing",
+          "document_url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/achc-20251231.htm",
+          "accepted_at": "2026-02-27T00:52:13.000Z",
+          "retrieved_at": "2026-10-01T08:00:00Z",
+          "content_sha256": "767d8b775e769c8be7d56aa8d3db14e2dcf8a5cd67b792661f6241cc085451e7",
+          "revision_id": "0001193125-26-078266",
+          "authoritative": true
+        }
+      ],
+      "expected_claims": [
+        {
+          "claim_id": "ACHC-fy2025-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "131898000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "source_id": "sec:achc:0001193125-26-078266",
+          "materiality": "material"
+        },
+        {
+          "claim_id": "ACHC-fy2024-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "129693000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "source_id": "sec:achc:0001193125-26-078266",
+          "materiality": "material"
+        }
+      ],
+      "adjudications": [
+        {
+          "claim_id": "ACHC-fy2025-operating-cash-flow",
+          "source_id": "sec:achc:0001193125-26-078266",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."
+        },
+        {
+          "claim_id": "ACHC-fy2024-operating-cash-flow",
+          "source_id": "sec:achc:0001193125-26-078266",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."
+        }
+      ],
+      "comparisons": [
+        {
+          "comparison_id": "ACHC-operating-cash-flow-yoy",
+          "current_claim_id": "ACHC-fy2025-operating-cash-flow",
+          "prior_claim_id": "ACHC-fy2024-operating-cash-flow",
+          "absolute_change": "2205000",
+          "direction": "increase"
+        }
+      ]
+    },
+    {
+      "issuer_id": "ACMR",
+      "question_id": "annual-operating-cash-flow-trend",
+      "question": "Which SEC source supports ACMR's latest annual operating cash flow trend versus the prior year?",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [
+        {
+          "source_id": "sec:acmr:0001628280-26-013231",
+          "source_type": "sec_filing",
+          "document_url": "https://www.sec.gov/Archives/edgar/data/1680062/000162828026013231/acmr-20251231.htm",
+          "accepted_at": "2026-03-02T21:18:32.000Z",
+          "retrieved_at": "2026-10-01T08:00:00Z",
+          "content_sha256": "3a372571ecf83250153fccb45201c0c638114b98d3dd5acdde5eb01b45d9cecb",
+          "revision_id": "0001628280-26-013231",
+          "authoritative": true
+        }
+      ],
+      "expected_claims": [
+        {
+          "claim_id": "ACMR-fy2025-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "-10325000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "source_id": "sec:acmr:0001628280-26-013231",
+          "materiality": "material"
+        },
+        {
+          "claim_id": "ACMR-fy2024-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "152450000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "source_id": "sec:acmr:0001628280-26-013231",
+          "materiality": "material"
+        }
+      ],
+      "adjudications": [
+        {
+          "claim_id": "ACMR-fy2025-operating-cash-flow",
+          "source_id": "sec:acmr:0001628280-26-013231",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."
+        },
+        {
+          "claim_id": "ACMR-fy2024-operating-cash-flow",
+          "source_id": "sec:acmr:0001628280-26-013231",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."
+        }
+      ],
+      "comparisons": [
+        {
+          "comparison_id": "ACMR-operating-cash-flow-yoy",
+          "current_claim_id": "ACMR-fy2025-operating-cash-flow",
+          "prior_claim_id": "ACMR-fy2024-operating-cash-flow",
+          "absolute_change": "-162775000",
+          "direction": "decrease"
+        }
+      ]
+    },
+    {
+      "issuer_id": "DOCU",
+      "question_id": "annual-operating-cash-flow-trend",
+      "question": "Which SEC source supports DOCU's latest annual operating cash flow trend versus the prior year?",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [
+        {
+          "source_id": "sec:docu:0001261333-26-000021",
+          "source_type": "sec_filing",
+          "document_url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm",
+          "accepted_at": "2026-03-18T20:06:42.000Z",
+          "retrieved_at": "2026-10-01T08:00:00Z",
+          "content_sha256": "dce7f067e2dc83b994f54ceaf7cec45b017a65d3237874e7c6af5ee90d98ad5f",
+          "revision_id": "0001261333-26-000021",
+          "authoritative": true
+        }
+      ],
+      "expected_claims": [
+        {
+          "claim_id": "DOCU-fy2026-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "1165007000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2026",
+          "scope": "consolidated",
+          "source_id": "sec:docu:0001261333-26-000021",
+          "materiality": "material"
+        },
+        {
+          "claim_id": "DOCU-fy2025-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "1017272000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "source_id": "sec:docu:0001261333-26-000021",
+          "materiality": "material"
+        }
+      ],
+      "adjudications": [
+        {
+          "claim_id": "DOCU-fy2026-operating-cash-flow",
+          "source_id": "sec:docu:0001261333-26-000021",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."
+        },
+        {
+          "claim_id": "DOCU-fy2025-operating-cash-flow",
+          "source_id": "sec:docu:0001261333-26-000021",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."
+        }
+      ],
+      "comparisons": [
+        {
+          "comparison_id": "DOCU-operating-cash-flow-yoy",
+          "current_claim_id": "DOCU-fy2026-operating-cash-flow",
+          "prior_claim_id": "DOCU-fy2025-operating-cash-flow",
+          "absolute_change": "147735000",
+          "direction": "increase"
+        }
+      ]
+    },
+    {
+      "issuer_id": "ETSY",
+      "question_id": "annual-operating-cash-flow-trend",
+      "question": "Which SEC source supports ETSY's latest annual operating cash flow trend versus the prior year?",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [
+        {
+          "source_id": "sec:etsy:0001370637-26-000019",
+          "source_type": "sec_filing",
+          "document_url": "https://www.sec.gov/Archives/edgar/data/1370637/000137063726000019/etsy-20251231.htm",
+          "accepted_at": "2026-02-19T13:17:41.000Z",
+          "retrieved_at": "2026-10-01T08:00:00Z",
+          "content_sha256": "03c9cdb0246f665a66bfad8f835509787fa88de2358606547ed53704b49f3a58",
+          "revision_id": "0001370637-26-000019",
+          "authoritative": true
+        }
+      ],
+      "expected_claims": [
+        {
+          "claim_id": "ETSY-fy2025-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "693414000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "source_id": "sec:etsy:0001370637-26-000019",
+          "materiality": "material"
+        },
+        {
+          "claim_id": "ETSY-fy2024-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "752469000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "source_id": "sec:etsy:0001370637-26-000019",
+          "materiality": "material"
+        }
+      ],
+      "adjudications": [
+        {
+          "claim_id": "ETSY-fy2025-operating-cash-flow",
+          "source_id": "sec:etsy:0001370637-26-000019",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."
+        },
+        {
+          "claim_id": "ETSY-fy2024-operating-cash-flow",
+          "source_id": "sec:etsy:0001370637-26-000019",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."
+        }
+      ],
+      "comparisons": [
+        {
+          "comparison_id": "ETSY-operating-cash-flow-yoy",
+          "current_claim_id": "ETSY-fy2025-operating-cash-flow",
+          "prior_claim_id": "ETSY-fy2024-operating-cash-flow",
+          "absolute_change": "-59055000",
+          "direction": "decrease"
+        }
+      ]
+    },
+    {
+      "issuer_id": "MAN",
+      "question_id": "annual-operating-cash-flow-trend",
+      "question": "Which SEC source supports MAN's latest annual operating cash flow trend versus the prior year?",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [
+        {
+          "source_id": "sec:man:0001193125-26-064113",
+          "source_type": "sec_filing",
+          "document_url": "https://www.sec.gov/Archives/edgar/data/871763/000119312526064113/man-20251231.htm",
+          "accepted_at": "2026-02-23T21:31:23.000Z",
+          "retrieved_at": "2026-10-01T08:00:00Z",
+          "content_sha256": "8b58c59d8ac15e3173a27bd944bff8dbcf55934229a52caa3bcf2e352f565f0a",
+          "revision_id": "0001193125-26-064113",
+          "authoritative": true
+        }
+      ],
+      "expected_claims": [
+        {
+          "claim_id": "MAN-fy2025-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "-104100000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "source_id": "sec:man:0001193125-26-064113",
+          "materiality": "material"
+        },
+        {
+          "claim_id": "MAN-fy2024-operating-cash-flow",
+          "metric": "NetCashProvidedByUsedInOperatingActivities",
+          "value": "309200000",
+          "unit": "USD",
+          "currency": "USD",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "source_id": "sec:man:0001193125-26-064113",
+          "materiality": "material"
+        }
+      ],
+      "adjudications": [
+        {
+          "claim_id": "MAN-fy2025-operating-cash-flow",
+          "source_id": "sec:man:0001193125-26-064113",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."
+        },
+        {
+          "claim_id": "MAN-fy2024-operating-cash-flow",
+          "source_id": "sec:man:0001193125-26-064113",
+          "document_exists": true,
+          "label": "supports",
+          "reviewer": "automated:sec-inline-xbrl-accession-v1",
+          "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."
+        }
+      ],
+      "comparisons": [
+        {
+          "comparison_id": "MAN-operating-cash-flow-yoy",
+          "current_claim_id": "MAN-fy2025-operating-cash-flow",
+          "prior_claim_id": "MAN-fy2024-operating-cash-flow",
+          "absolute_change": "-413300000",
+          "direction": "decrease"
+        }
+      ]
+    }
+  ]
+}

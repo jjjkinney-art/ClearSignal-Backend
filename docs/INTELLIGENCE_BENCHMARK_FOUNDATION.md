@@ -171,6 +171,24 @@ CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED=true \
   python3 scripts/benchmark_product_output_acceptance.py --execute
 ```
 
+`validation/cash_flow_output_acceptance.v1.json` adds the second product-output
+cohort. It requires exact current and prior annual operating-cash-flow facts for
+the same six issuers, recomputes absolute change and direction, and treats the
+ACMR and MAN positive-to-negative reversals as explicit sign-integrity cases.
+Every value and both trend directions must pass; an incorrect sign, period,
+scope, citation, delta, or direction blocks the issuer, its tier, and the run.
+
+```bash
+# Inert validation only.
+python3 scripts/benchmark_product_output_acceptance.py \
+  --manifest validation/cash_flow_output_acceptance.v1.json
+
+# Controlled provider/model execution.
+CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED=true \
+  python3 scripts/benchmark_product_output_acceptance.py \
+  --manifest validation/cash_flow_output_acceptance.v1.json --execute
+```
+
 ## Blind analytical review
 
 Analytical quality is evaluated from packets that expose an opaque output ID, the case question, the analysis and a rubric version—but reject model, provider, prompt, build, treatment, variant and memory identities, including nested metadata. Every output requires at least two distinct assigned reviewers. Submissions are bound to the exact assignment, reviewer, output and rubric version.
