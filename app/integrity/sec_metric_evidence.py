@@ -8,6 +8,8 @@ from typing import Sequence
 
 from ..providers.sec_client import SecFactRecord
 from ..schemas import RetrievedEvidence
+from .provenance import Provenance, QuantitativeClaim
+from .sec_fact_binding import bind_sec_fact
 
 
 def _scaled(value: int | float, *, prefix: str = "", suffix: str = "") -> str:
@@ -43,6 +45,44 @@ def _duration(record: SecFactRecord) -> int | None:
         return (date.fromisoformat(record.end) - date.fromisoformat(record.start)).days
     except (TypeError, ValueError):
         return None
+
+
+def _verified_claim(
+    record: SecFactRecord, *, ticker: str, expected_cik: str,
+) -> dict | None:
+    amount = Decimal(str(record.value))
+    exact = format(amount, ",f")
+    if "." in exact:
+        exact = exact.rstrip("0").rstrip(".")
+    value_text = f"${exact}" if record.unit == "USD" else f"{exact} shares"
+    claim = QuantitativeClaim(
+        value_text=value_text,
+        provenance=Provenance.REPORTED,
+        raw_value=record.value,
+        unit=record.unit,
+        ticker=ticker,
+        metric=f"us-gaap:{record.concept}",
+        as_of=record.end,
+        source=record.form,
+    )
+    bound = bind_sec_fact(
+        claim, record, expected_cik=expected_cik, period_start=record.start,
+    )
+    if bound is None:
+        return None
+    output = bound.to_dict()
+    output.update({
+        "period_start": record.start,
+        "period_end": record.end,
+        "period": (
+            f"FY{record.end[:4]}" if record.form.startswith("10-K")
+            else f"quarter ended {record.end}"
+        ),
+        "scope": "consolidated",
+        "currency": "USD" if record.unit == "USD" else None,
+        "label": record.label,
+    })
+    return output
 
 
 def comparable_metric_evidence(
@@ -113,6 +153,12 @@ def comparable_metric_evidence(
         f"{_value(prior.value, unit)} in the comparable prior-year period ended "
         f"{prior.end}."
     )
+    verified_claims = [
+        claim for record in (current, prior)
+        if (claim := _verified_claim(
+            record, ticker=ticker, expected_cik=expected_cik,
+        )) is not None
+    ]
     return RetrievedEvidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
@@ -121,6 +167,7 @@ def comparable_metric_evidence(
         claim_type="reported_fact", document_type=current.form,
         reporting_period_start=current.start, reporting_period_end=current.end,
         filed_at=current.filed, extraction_method="structured_xbrl",
+        verified_claims=verified_claims,
     )
 
 
@@ -177,6 +224,12 @@ def comparable_instant_metric_evidence(
         f"{_value(prior.value, unit)} as of the comparable prior-year date "
         f"{prior.end}."
     )
+    verified_claims = [
+        claim for record in (current, prior)
+        if (claim := _verified_claim(
+            record, ticker=ticker, expected_cik=expected_cik,
+        )) is not None
+    ]
     return RetrievedEvidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
@@ -185,4 +238,5 @@ def comparable_instant_metric_evidence(
         claim_type="reported_fact", document_type=current.form,
         reporting_period_end=current.end, filed_at=current.filed,
         extraction_method="structured_xbrl",
+        verified_claims=verified_claims,
     )

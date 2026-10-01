@@ -91,6 +91,13 @@ class RetrievedEvidence(BaseModel):
         "structured_xbrl", "structured_api", "html", "pdf_text", "ocr",
         "publisher_feed", "manual", "unknown",
     ] = Field(default="unknown")
+    verified_claims: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "Exact claim records bound by the evidence producer to source "
+            "observations; never populated from generated prose."
+        ),
+    )
 
     # ── Retrieval intelligence tags (Part 1 — Retrieval Enrichment) ──────────
     # Assigned by _classify_evidence_tags() in conviction_modeler.  Each tag

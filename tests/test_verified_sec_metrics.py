@@ -42,6 +42,38 @@ def test_builds_claim_level_yoy_evidence_bound_to_current_filing():
     assert item.reporting_period_start == "2025-01-01"
     assert item.reporting_period_end == "2025-03-31"
     assert item.extraction_method == "structured_xbrl"
+    assert len(item.verified_claims) == 2
+    current_claim, prior_claim = item.verified_claims
+    assert current_claim["raw_value"] == 112
+    assert current_claim["period"] == "quarter ended 2025-03-31"
+    assert current_claim["scope"] == "consolidated"
+    assert current_claim["currency"] == "USD"
+    assert current_claim["document_ref"]["url"] == current.filing_url
+    assert prior_claim["raw_value"] == 100
+    assert prior_claim["document_ref"]["url"] == prior.filing_url
+
+
+def test_structured_claim_flattening_deduplicates_and_rejects_unbound_claims():
+    prior = _record(concept="NetCashProvidedByUsedInOperatingActivities", value=100)
+    current = _record(
+        concept=prior.concept, value=-25, start="2025-01-01",
+        end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001",
+    )
+    item = comparable_metric_evidence(
+        [prior, current], ticker="AAPL", expected_cik="320193",
+        concepts=(prior.concept,), metric_name="operating cash flow",
+    )
+    assert item is not None
+    from app.services.verified_sec_metric_service import structured_claims_from_evidence
+
+    unbound = item.model_copy(deep=True)
+    unbound.verified_claims = [{"metric": "us-gaap:Fake"}]
+    claims = structured_claims_from_evidence([item, item, unbound])
+    assert len(claims) == 2
+    assert claims[0]["raw_value"] == -25
+    assert claims[1]["raw_value"] == 100
+    assert all(claim["document_ref"]["reference_id"] for claim in claims)
 
 
 def test_prefers_quarter_over_ytd_for_same_period_end_and_filing():
