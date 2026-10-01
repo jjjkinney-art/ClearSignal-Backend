@@ -94,6 +94,97 @@ def test_prefers_quarter_over_ytd_for_same_period_end_and_filing():
     assert "$330" not in item.summary
 
 
+def test_annual_filing_prefers_full_year_over_embedded_fourth_quarter():
+    prior_annual = replace(
+        _record(), start="2023-07-01", end="2024-06-30", form="10-K",
+        value=1_000, filed="2024-08-15",
+    )
+    current_annual = replace(
+        prior_annual, start="2024-07-01", end="2025-06-30", value=1_200,
+        filed="2025-08-14", accession="0000320193-25-000001",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000001/0000320193-25-000001-index.htm"),
+    )
+    embedded_quarter = replace(
+        current_annual, start="2025-04-01", value=350,
+    )
+
+    item = comparable_metric_evidence(
+        [prior_annual, current_annual, embedded_quarter],
+        ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    )
+
+    assert item is not None
+    assert "increased 20.0%" in item.summary
+    assert "to $1,200" in item.summary
+    assert "$350" not in item.summary
+    assert item.reporting_period_start == "2024-07-01"
+    assert item.verified_claims[0]["period"] == "FY2025"
+
+
+def test_accepts_53_week_non_calendar_year_comparison():
+    prior = replace(
+        _record(), start="2023-07-02", end="2024-06-29", form="10-K",
+        value=1_000, filed="2024-08-15",
+    )
+    current = replace(
+        prior, start="2024-06-30", end="2025-07-05", value=1_100,
+        filed="2025-08-14", accession="0000320193-25-000001",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000001/0000320193-25-000001-index.htm"),
+    )
+
+    item = comparable_metric_evidence(
+        [prior, current], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    )
+
+    assert item is not None
+    assert "increased 10.0%" in item.summary
+    assert item.reporting_period_end == "2025-07-05"
+
+
+def test_rejects_duration_that_cannot_match_filing_form():
+    prior = replace(
+        _record(), start="2023-01-01", end="2023-12-31", form="10-K",
+        value=1_000, filed="2024-02-15",
+    )
+    malformed_current = replace(
+        prior, start="2025-12-01", end="2025-12-31", value=1_100,
+        filed="2026-02-15", accession="0000320193-26-000001",
+    )
+
+    assert comparable_metric_evidence(
+        [prior, malformed_current], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    ) is None
+
+
+def test_latest_amendment_replaces_original_period_observation():
+    prior = _record()
+    original = _record(
+        value=110, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    amended = replace(
+        original, value=112, filed="2025-05-15", form="10-Q/A",
+        accession="0000320193-25-000002",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000002/0000320193-25-000002-index.htm"),
+    )
+
+    item = comparable_metric_evidence(
+        [prior, original, amended], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    )
+
+    assert item is not None
+    assert "increased 12.0%" in item.summary
+    assert item.document_type == "10-Q/A"
+    assert item.url == amended.filing_url
+
+
 def test_rejects_wrong_entity_missing_comparable_and_ambiguous_concepts():
     prior = _record()
     current = _record(value=112, start="2025-01-01", end="2025-03-31",

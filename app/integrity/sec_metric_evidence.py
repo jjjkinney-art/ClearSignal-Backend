@@ -47,6 +47,19 @@ def _duration(record: SecFactRecord) -> int | None:
         return None
 
 
+def _duration_matches_form(record: SecFactRecord) -> bool:
+    """Reject duration facts that cannot represent the filing's period family."""
+    days = _duration(record)
+    if days is None:
+        return False
+    if record.form.startswith("10-K"):
+        return 330 <= days <= 385
+    if record.form.startswith("10-Q"):
+        # A 10-Q may expose a discrete quarter or a year-to-date duration.
+        return 70 <= days <= 300
+    return False
+
+
 def _verified_claim(
     record: SecFactRecord, *, ticker: str, expected_cik: str,
 ) -> dict | None:
@@ -97,7 +110,7 @@ def comparable_metric_evidence(
         record for record in records
         if record.cik.lstrip("0") == expected_cik.lstrip("0")
         and record.concept in concepts and record.unit == unit
-        and _duration(record) is not None
+        and _duration_matches_form(record)
     ]
     if not eligible:
         return None
@@ -106,14 +119,18 @@ def comparable_metric_evidence(
     latest_period = [record for record in eligible if record.end == latest_end]
     latest_filed = max(record.filed for record in latest_period)
     latest_rows = [record for record in latest_period if record.filed == latest_filed]
-    # Income-statement Company Facts commonly expose both the latest quarter
-    # and year-to-date duration with the same end date and accession. Prefer
-    # the shortest reported duration; this is an explicit XBRL distinction,
-    # not an inference between concepts or documents.
-    shortest_days = min(_duration(record) for record in latest_rows)
+    # Income-statement Company Facts commonly expose both a discrete quarter
+    # and year-to-date duration with the same end date and accession. A 10-Q
+    # comparison uses the shortest duration; a 10-K comparison must use the
+    # longest annual duration and never an embedded fourth-quarter fact.
+    annual = latest_rows[0].form.startswith("10-K")
+    selected_days = (
+        max(_duration(record) for record in latest_rows)
+        if annual else min(_duration(record) for record in latest_rows)
+    )
     latest_rows = [
         record for record in latest_rows
-        if abs(_duration(record) - shortest_days) <= 7
+        if abs(_duration(record) - selected_days) <= 7
     ]
     if len({(r.concept, r.start, r.value, r.accession) for r in latest_rows}) != 1:
         return None
