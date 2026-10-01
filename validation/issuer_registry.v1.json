@@ -14,6 +14,15 @@
   },
   "issuers": [
     {
+      "ticker": "AA",
+      "company": "Alcoa",
+      "market_cap_tier": "mid",
+      "sector": "Materials",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["commodity_cycle", "segment_reporting"]
+    },
+    {
       "ticker": "AAPL",
       "company": "Apple",
       "market_cap_tier": "mega_large",
@@ -21,6 +30,24 @@
       "domicile": "US",
       "reporting_basis": "US_GAAP",
       "complexity_tags": ["non_calendar_fiscal_year", "services_hardware_mix"]
+    },
+    {
+      "ticker": "ACHC",
+      "company": "Acadia Healthcare",
+      "market_cap_tier": "small_micro",
+      "sector": "Health Care",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["facility_utilization", "regulatory_quality"]
+    },
+    {
+      "ticker": "ACMR",
+      "company": "ACM Research",
+      "market_cap_tier": "small_micro",
+      "sector": "Information Technology",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["customer_concentration", "geographic_concentration"]
     },
     {
       "ticker": "ASML",
@@ -50,6 +77,24 @@
       "complexity_tags": ["membership_economics", "non_calendar_fiscal_year"]
     },
     {
+      "ticker": "DOCU",
+      "company": "DocuSign",
+      "market_cap_tier": "mid",
+      "sector": "Information Technology",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["adjusted_metrics", "subscription_economics"]
+    },
+    {
+      "ticker": "ETSY",
+      "company": "Etsy",
+      "market_cap_tier": "mid",
+      "sector": "Consumer Discretionary",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["marketplace_economics", "take_rate"]
+    },
+    {
       "ticker": "JPM",
       "company": "JPMorgan",
       "market_cap_tier": "mega_large",
@@ -66,6 +111,15 @@
       "domicile": "US",
       "reporting_basis": "US_GAAP",
       "complexity_tags": ["adjusted_metrics", "pipeline_and_patent"]
+    },
+    {
+      "ticker": "MAN",
+      "company": "ManpowerGroup",
+      "market_cap_tier": "small_micro",
+      "sector": "Industrials",
+      "domicile": "US",
+      "reporting_basis": "US_GAAP",
+      "complexity_tags": ["cyclical_labor_demand", "geographic_mix"]
     },
     {
       "ticker": "MSFT",

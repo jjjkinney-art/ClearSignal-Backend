@@ -77,6 +77,7 @@ async def benchmark_shadow_rehearsal(http_request: Request) -> dict:
         "registry_sha256": result["registry_sha256"],
         "issuer_count": result["issuer_count"],
         "sector_count": result["sector_count"],
+        "market_cap_counts": result["market_cap_counts"],
         "known_coverage_gaps": result["known_coverage_gaps"],
         "checks": result["checks"],
         "due_count": tick["due_count"],

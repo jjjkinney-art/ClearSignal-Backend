@@ -32,8 +32,8 @@ def test_registry_is_versioned_and_hash_is_stable():
 
 def test_existing_suite_maps_completely_to_registry():
     report = _report()
-    assert report.fixture_count == 36
-    assert report.issuer_count == 12
+    assert report.fixture_count == 54
+    assert report.issuer_count == 18
     assert report.integrity_passed is True
     assert report.integrity_errors == ()
 
@@ -41,9 +41,9 @@ def test_existing_suite_maps_completely_to_registry():
 def test_current_coverage_gaps_are_explicit_not_hidden():
     report = _report()
     assert report.launch_coverage_ready is False
-    assert "issuer target shortfall: 12/100" in report.target_deficits
-    assert "mid target shortfall: 0/30" in report.target_deficits
-    assert "small_micro target shortfall: 0/30" in report.target_deficits
+    assert "issuer target shortfall: 18/100" in report.target_deficits
+    assert "mid target shortfall: 3/30" in report.target_deficits
+    assert "small_micro target shortfall: 3/30" in report.target_deficits
 
 
 def test_all_current_issuers_have_three_core_question_categories():
@@ -60,6 +60,12 @@ def test_all_current_issuers_have_three_core_question_categories():
 def test_registry_has_no_unknown_market_cap_placeholders():
     counts = dict(_report().market_cap_counts)
     assert counts["unknown"] == 0
+
+
+def test_registry_now_has_representative_non_large_cap_cohorts():
+    counts = dict(_report().market_cap_counts)
+    assert counts["mid"] == 3
+    assert counts["small_micro"] == 3
 
 
 def test_registry_rejects_duplicate_ticker(tmp_path):
@@ -97,5 +103,4 @@ def test_default_cli_passes_structural_integrity(capsys):
 
 def test_strict_cli_fails_until_coverage_target_is_met(capsys):
     assert benchmark_registry_audit.main(["--strict-targets"]) == 1
-    assert "GAP: issuer target shortfall: 12/100" in capsys.readouterr().out
-
+    assert "GAP: issuer target shortfall: 18/100" in capsys.readouterr().out

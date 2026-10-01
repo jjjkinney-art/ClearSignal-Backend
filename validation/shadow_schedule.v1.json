@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "registry_version": 1,
-  "registry_sha256": "7babd5cd51a37da40b5ef2d66be11c4f790e641ee664c7c840088c829458b81e",
+  "registry_sha256": "f7943c3f2d70a0847ce42076435fb4cf5baa61033d92e10b58ca3c5fd4941bac",
   "frozen_at": "2026-10-01T00:00:00Z",
   "known_coverage_gaps": [
     "mid_cap",
@@ -9,15 +9,15 @@
   ],
   "schedule_policy": {
     "enabled": true,
-    "maximum_jobs_per_tick": 7,
+    "maximum_jobs_per_tick": 13,
     "maximum_catchup_slots": 1
   },
   "safety_policy": {
     "enabled": true,
     "dry_run": true,
-    "maximum_daily_cost_usd": 7.0,
+    "maximum_daily_cost_usd": 13.0,
     "maximum_job_cost_usd": 1.0,
-    "maximum_daily_jobs": 7,
+    "maximum_daily_jobs": 13,
     "maximum_account_daily_jobs": 1,
     "maximum_issuer_daily_jobs": 1,
     "maximum_concurrent_jobs": 1,
@@ -29,9 +29,36 @@
   },
   "schedules": [
     {
+      "schedule_id": "v1-aa-mid-us-gaap-materials",
+      "account_ref": "synthetic:shadow-v1-aa",
+      "issuer_id": "AA",
+      "capability": "frozen_research",
+      "estimated_cost_usd": 1.0,
+      "starts_at": "2026-09-30T00:00:00Z",
+      "interval_seconds": 86400
+    },
+    {
       "schedule_id": "v1-aapl-us-gaap-technology",
       "account_ref": "synthetic:shadow-v1-aapl",
       "issuer_id": "AAPL",
+      "capability": "frozen_research",
+      "estimated_cost_usd": 1.0,
+      "starts_at": "2026-09-30T00:00:00Z",
+      "interval_seconds": 86400
+    },
+    {
+      "schedule_id": "v1-achc-small-us-gaap-health-care",
+      "account_ref": "synthetic:shadow-v1-achc",
+      "issuer_id": "ACHC",
+      "capability": "frozen_research",
+      "estimated_cost_usd": 1.0,
+      "starts_at": "2026-09-30T00:00:00Z",
+      "interval_seconds": 86400
+    },
+    {
+      "schedule_id": "v1-acmr-small-us-gaap-technology",
+      "account_ref": "synthetic:shadow-v1-acmr",
+      "issuer_id": "ACMR",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
       "starts_at": "2026-09-30T00:00:00Z",
@@ -56,6 +83,24 @@
       "interval_seconds": 86400
     },
     {
+      "schedule_id": "v1-docu-mid-us-gaap-technology",
+      "account_ref": "synthetic:shadow-v1-docu",
+      "issuer_id": "DOCU",
+      "capability": "frozen_research",
+      "estimated_cost_usd": 1.0,
+      "starts_at": "2026-09-30T00:00:00Z",
+      "interval_seconds": 86400
+    },
+    {
+      "schedule_id": "v1-etsy-mid-us-gaap-discretionary",
+      "account_ref": "synthetic:shadow-v1-etsy",
+      "issuer_id": "ETSY",
+      "capability": "frozen_research",
+      "estimated_cost_usd": 1.0,
+      "starts_at": "2026-09-30T00:00:00Z",
+      "interval_seconds": 86400
+    },
+    {
       "schedule_id": "v1-jpm-us-gaap-financials",
       "account_ref": "synthetic:shadow-v1-jpm",
       "issuer_id": "JPM",
@@ -68,6 +113,15 @@
       "schedule_id": "v1-lly-us-gaap-health-care",
       "account_ref": "synthetic:shadow-v1-lly",
       "issuer_id": "LLY",
+      "capability": "frozen_research",
+      "estimated_cost_usd": 1.0,
+      "starts_at": "2026-09-30T00:00:00Z",
+      "interval_seconds": 86400
+    },
+    {
+      "schedule_id": "v1-man-small-us-gaap-industrials",
+      "account_ref": "synthetic:shadow-v1-man",
+      "issuer_id": "MAN",
       "capability": "frozen_research",
       "estimated_cost_usd": 1.0,
       "starts_at": "2026-09-30T00:00:00Z",
