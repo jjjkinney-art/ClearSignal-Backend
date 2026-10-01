@@ -71,5 +71,11 @@ def latest_sec_revenue_claim(
     result = bound.to_dict()
     result["period_start"] = record.start
     result["period_end"] = record.end
+    result["period"] = (
+        f"FY{record.end[:4]}" if record.form.startswith("10-K")
+        else f"quarter ended {record.end}"
+    )
+    result["scope"] = "consolidated"
+    result["currency"] = "USD" if record.unit == "USD" else None
     result["label"] = record.label
     return result
