@@ -8,6 +8,7 @@ only the returned serialized payload is retained by the caller.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+import time
 from typing import Any, Callable, Dict, Mapping, Tuple
 
 from .benchmark_registry import IssuerRegistry, load_registry
@@ -110,7 +111,9 @@ def capture_pipeline_outputs(
         active_runner = runner or _default_runner
         for case, ticker, question_id, question in validated:
             request_id = f"{run_id}:{ticker}:{question_id}"
+            started = time.monotonic()
             response = active_runner(ticker, question, request_id)
+            elapsed_ms = round((time.monotonic() - started) * 1000, 3)
             if not isinstance(response, Mapping):
                 raise BenchmarkContractError("pipeline runner must return a response object")
             # Preserve frozen grading inputs but replace any pre-existing
@@ -120,6 +123,13 @@ def capture_pipeline_outputs(
                 if key not in {"question", "response"}
             }
             output["response"] = dict(response)
+            output["capture_metadata"] = {
+                "elapsed_ms": elapsed_ms,
+                "pipeline_elapsed_s": (
+                    response.get("routing", {}).get("pipeline_elapsed_s")
+                    if isinstance(response.get("routing"), Mapping) else None
+                ),
+            }
             captured.append(output)
 
     return CaptureDecision(
