@@ -60,6 +60,34 @@ def _duration_matches_form(record: SecFactRecord) -> bool:
     return False
 
 
+def _latest_unambiguous_fact(
+    records: Sequence[SecFactRecord], *, include_start: bool,
+) -> SecFactRecord | None:
+    """Resolve duplicate filing observations without hiding real conflicts."""
+    if not records:
+        return None
+    latest_filed = max(record.filed for record in records)
+    latest = [record for record in records if record.filed == latest_filed]
+    amendments = [record for record in latest if record.form.endswith("/A")]
+    if amendments:
+        latest = amendments
+    signatures = {
+        (
+            record.concept,
+            record.start if include_start else None,
+            record.end,
+            record.unit,
+            Decimal(str(record.value)),
+        )
+        for record in latest
+    }
+    if len(signatures) != 1:
+        return None
+    # Byte-equivalent observations can be repeated under multiple accessions.
+    # Bind the deterministic newest accession after proving their semantics agree.
+    return max(latest, key=lambda record: record.accession)
+
+
 def _verified_claim(
     record: SecFactRecord, *, ticker: str, expected_cik: str,
 ) -> dict | None:
@@ -123,7 +151,13 @@ def comparable_metric_evidence(
     # and year-to-date duration with the same end date and accession. A 10-Q
     # comparison uses the shortest duration; a 10-K comparison must use the
     # longest annual duration and never an embedded fourth-quarter fact.
-    annual = latest_rows[0].form.startswith("10-K")
+    period_families = {
+        "annual" if record.form.startswith("10-K") else "quarterly"
+        for record in latest_rows
+    }
+    if len(period_families) != 1:
+        return None
+    annual = period_families == {"annual"}
     selected_days = (
         max(_duration(record) for record in latest_rows)
         if annual else min(_duration(record) for record in latest_rows)
@@ -132,9 +166,9 @@ def comparable_metric_evidence(
         record for record in latest_rows
         if abs(_duration(record) - selected_days) <= 7
     ]
-    if len({(r.concept, r.start, r.value, r.accession) for r in latest_rows}) != 1:
+    current = _latest_unambiguous_fact(latest_rows, include_start=True)
+    if current is None:
         return None
-    current = latest_rows[0]
     current_days = _duration(current)
     current_family = "annual" if current.form.startswith("10-K") else "quarterly"
 
@@ -153,11 +187,9 @@ def comparable_metric_evidence(
         return None
     prior_end = max(record.end for record in candidates)
     comparable = [record for record in candidates if record.end == prior_end]
-    prior_filed = max(record.filed for record in comparable)
-    comparable = [record for record in comparable if record.filed == prior_filed]
-    if len({(r.start, r.value, r.accession) for r in comparable}) != 1:
+    prior = _latest_unambiguous_fact(comparable, include_start=True)
+    if prior is None:
         return None
-    prior = comparable[0]
     if prior.value == 0:
         return None
 
@@ -207,11 +239,9 @@ def comparable_instant_metric_evidence(
 
     latest_end = max(record.end for record in eligible)
     latest_rows = [record for record in eligible if record.end == latest_end]
-    latest_filed = max(record.filed for record in latest_rows)
-    latest_rows = [record for record in latest_rows if record.filed == latest_filed]
-    if len({(r.concept, r.value, r.accession) for r in latest_rows}) != 1:
+    current = _latest_unambiguous_fact(latest_rows, include_start=False)
+    if current is None:
         return None
-    current = latest_rows[0]
     current_family = "annual" if current.form.startswith("10-K") else "quarterly"
     current_end = date.fromisoformat(current.end)
     candidates = [
@@ -224,11 +254,9 @@ def comparable_instant_metric_evidence(
         return None
     prior_end = max(record.end for record in candidates)
     prior_rows = [record for record in candidates if record.end == prior_end]
-    prior_filed = max(record.filed for record in prior_rows)
-    prior_rows = [record for record in prior_rows if record.filed == prior_filed]
-    if len({(r.value, r.accession) for r in prior_rows}) != 1:
+    prior = _latest_unambiguous_fact(prior_rows, include_start=False)
+    if prior is None:
         return None
-    prior = prior_rows[0]
     if prior.value == 0:
         return None
 
