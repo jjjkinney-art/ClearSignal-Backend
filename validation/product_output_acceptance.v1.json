@@ -6,7 +6,7 @@
     {
       "issuer_id": "AA",
       "question_id": "latest-annual-revenue",
-      "question": "What was AA's latest annual revenue? Cite the exact SEC filing used.",
+      "question": "What was AA's latest annual revenue?",
       "as_of": "2026-04-01T00:00:00Z",
       "sources": [
         {
@@ -47,7 +47,7 @@
     {
       "issuer_id": "ACHC",
       "question_id": "latest-annual-revenue",
-      "question": "What was ACHC's latest annual revenue? Cite the exact SEC filing used.",
+      "question": "What was ACHC's latest annual revenue?",
       "as_of": "2026-04-01T00:00:00Z",
       "sources": [
         {
@@ -88,7 +88,7 @@
     {
       "issuer_id": "ACMR",
       "question_id": "latest-annual-revenue",
-      "question": "What was ACMR's latest annual revenue? Cite the exact SEC filing used.",
+      "question": "What was ACMR's latest annual revenue?",
       "as_of": "2026-04-01T00:00:00Z",
       "sources": [
         {
@@ -129,7 +129,7 @@
     {
       "issuer_id": "DOCU",
       "question_id": "latest-annual-revenue",
-      "question": "What was DOCU's latest annual revenue? Cite the exact SEC filing used.",
+      "question": "What was DOCU's latest annual revenue?",
       "as_of": "2026-04-01T00:00:00Z",
       "sources": [
         {
@@ -170,7 +170,7 @@
     {
       "issuer_id": "ETSY",
       "question_id": "latest-annual-revenue",
-      "question": "What was ETSY's latest annual revenue? Cite the exact SEC filing used.",
+      "question": "What was ETSY's latest annual revenue?",
       "as_of": "2026-04-01T00:00:00Z",
       "sources": [
         {
@@ -211,7 +211,7 @@
     {
       "issuer_id": "MAN",
       "question_id": "latest-annual-revenue",
-      "question": "What was MAN's latest annual revenue? Cite the exact SEC filing used.",
+      "question": "What was MAN's latest annual revenue?",
       "as_of": "2026-04-01T00:00:00Z",
       "sources": [
         {

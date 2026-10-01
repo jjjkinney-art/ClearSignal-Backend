@@ -1188,6 +1188,10 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
+    from .verified_sec_metric_service import structured_claims_from_evidence
+    _verified_sec_facts.extend(
+        structured_claims_from_evidence(_sec_metric_evidence)
+    )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.

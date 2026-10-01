@@ -153,6 +153,28 @@ _METRICS = (
 )
 
 
+def structured_claims_from_evidence(items: list[RetrievedEvidence]) -> list[dict]:
+    """Flatten only producer-bound structured claims, preserving order."""
+    claims = []
+    seen = set()
+    for item in items:
+        for claim in item.verified_claims:
+            if not isinstance(claim, dict):
+                continue
+            reference = claim.get("document_ref")
+            if not isinstance(reference, dict) or not reference.get("reference_id"):
+                continue
+            identity = (
+                claim.get("ticker"), claim.get("metric"), claim.get("as_of"),
+                str(claim.get("raw_value")), reference.get("reference_id"),
+            )
+            if identity in seen:
+                continue
+            seen.add(identity)
+            claims.append(dict(claim))
+    return claims
+
+
 def _requested_metrics(question: str | None) -> tuple:
     """Narrow an explicit metric question without guessing from broad prose."""
     normalized = re.sub(r"\s+", " ", (question or "").lower()).strip()
