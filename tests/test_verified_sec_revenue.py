@@ -28,6 +28,9 @@ def test_latest_period_links_its_own_filing_and_preserves_duration():
     assert claim["period_start"] == "2025-04-01"
     assert claim["period_end"] == "2025-06-30"
     assert claim["document_ref"]["url"] == current.filing_url
+    assert claim["period"] == "quarter ended 2025-06-30"
+    assert claim["scope"] == "consolidated"
+    assert claim["currency"] == "USD"
     assert prior.filing_url != current.filing_url
 
 

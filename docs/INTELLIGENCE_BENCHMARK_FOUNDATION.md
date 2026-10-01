@@ -120,6 +120,24 @@ python3 scripts/benchmark_factual_grade.py grade-input.json --require-complete
 
 The resulting scorecard exposes `material_numerical_accuracy`, `claim_source_binding`, `fabricated_material_sources`, pending review count, per-claim dimension results, and explicit findings. Automated entailment may be introduced only after its outputs are calibrated against double-reviewed human examples and its version is recorded with the benchmark run.
 
+### Captured product-output grading
+
+`validation.generated_output_grading` connects the frozen factual grader to
+serialized responses from ClearSignal's real investment pipeline. The adapter
+admits only structured `answer.verified_sec_facts` that remain reported,
+ticker-matched, metric-matched, and bound to the exact frozen SEC accession.
+Generated prose and generic extracted numbers are never promoted into verified
+facts. Value, unit, currency, period, scope, and claim/source identity then pass
+through the same deterministic launch gate used by the curated evidence pack.
+
+The grader is deliberately offline: response capture and provider execution are
+separate operations, and grading cannot write research memory, user records,
+notifications, or benchmark scheduler state.
+
+```bash
+python3 scripts/benchmark_generated_outputs.py captured-output.json
+```
+
 ## Blind analytical review
 
 Analytical quality is evaluated from packets that expose an opaque output ID, the case question, the analysis and a rubric version—but reject model, provider, prompt, build, treatment, variant and memory identities, including nested metadata. Every output requires at least two distinct assigned reviewers. Submissions are bound to the exact assignment, reviewer, output and rubric version.
