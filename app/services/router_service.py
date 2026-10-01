@@ -955,6 +955,7 @@ def _run_investment_pipeline(
     personalization_context_data: Optional[dict] = None,
     research_memory_context_block: Optional[str] = None,
     research_memory_context_data: Optional[dict] = None,
+    side_effects_enabled: bool = True,
 ) -> AgentAnswerResponse:
     """Run the full 5-agent investment pipeline for a detected company.
 
@@ -1399,7 +1400,9 @@ def _run_investment_pipeline(
     # The legacy snapshot store is ticker-wide, not account-owned. It cannot
     # provide a signed-in participant's prior thesis or accept their new one.
     from ..config import settings as _history_settings
-    _legacy_history_enabled = not _history_settings.auth_enabled
+    _legacy_history_enabled = (
+        side_effects_enabled and not _history_settings.auth_enabled
+    )
     # Load prior snapshot for historical reasoning (fire-and-forget on failure)
     prior_snapshot = None
     if _legacy_history_enabled:
