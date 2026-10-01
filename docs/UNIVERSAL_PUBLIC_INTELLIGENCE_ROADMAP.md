@@ -161,6 +161,9 @@ Current foundation (2026-10-01): the frozen registry contains 18 issuers and
 issuers across eight sectors, including three mid-cap and three small/micro-cap
 issuers, with enforced cap-tier floors. The 100-issuer target, 30 issuers per
 principal cap tier, and additional sector/jurisdiction depth remain launch work.
+The smaller-company factual gate separately requires complete adjudication,
+at least 95% material numerical accuracy, 100% claim-to-source binding, zero
+fabricated sources, and no issuer-level stop-ship failure in either cap tier.
 
 ## 5. Full-launch gates
 
