@@ -57,7 +57,8 @@ Next work:
   amendment, malformed-duration, and duplicate-fact regression gates.
 - Continue amendment/restatement, units, and scale hardening beyond the
   implemented latest-filing precedence, same-day amendment preference,
-  equivalent-duplicate collapse, and conflicting-restatement fail-closed gates.
+  equivalent-duplicate collapse, conflicting-restatement fail-closed gates,
+  finite-value admission, and exact unscaled USD/share/per-share claim binding.
 - Preserve filing, accession, form, period, taxonomy concept, and calculation provenance through the answer layer.
 - Benchmark entity resolution across ticker changes, multiple share classes, subsidiaries, and acquisitions.
 

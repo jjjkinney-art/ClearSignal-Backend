@@ -75,13 +75,17 @@ def bind_sec_fact(
 
     # The displayed text must denote the same unscaled value. A raw_value
     # of one million paired with "$9M" must never inherit the fact's link.
-    if record.unit not in ("USD", "shares"):
+    if record.unit not in ("USD", "shares", "USD/shares"):
         return None
     displayed = format(Decimal(str(record.value)), ",f")
     if "." in displayed:
         displayed = displayed.rstrip("0").rstrip(".")
-    expected_display = (f"${displayed}" if record.unit == "USD"
-                        else f"{displayed} shares")
+    if record.unit == "USD":
+        expected_display = f"${displayed}"
+    elif record.unit == "shares":
+        expected_display = f"{displayed} shares"
+    else:
+        expected_display = f"${displayed} per share"
     if claim.value_text != expected_display:
         return None
 
