@@ -153,6 +153,24 @@ CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED=true \
   > captured-output.json
 ```
 
+### First product-output acceptance cohort
+
+`validation/product_output_acceptance.v1.json` freezes the first end-to-end
+cohort: identical annual-revenue questions for AA, DOCU, ETSY, ACHC, ACMR, and
+MAN, with exact filing versions and adjudicated reference claims. The combined
+runner captures the real pipeline response and immediately applies the factual
+gate, reporting each issuer, its market-cap tier, pass rate, and capture latency.
+One failed issuer fails its tier and the overall run.
+
+```bash
+# Validate the frozen manifest only; no provider or model calls.
+python3 scripts/benchmark_product_output_acceptance.py
+
+# Explicit controlled execution; exits non-zero on any quality failure.
+CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED=true \
+  python3 scripts/benchmark_product_output_acceptance.py --execute
+```
+
 ## Blind analytical review
 
 Analytical quality is evaluated from packets that expose an opaque output ID, the case question, the analysis and a rubric version—but reject model, provider, prompt, build, treatment, variant and memory identities, including nested metadata. Every output requires at least two distinct assigned reviewers. Submissions are bound to the exact assignment, reviewer, output and rubric version.

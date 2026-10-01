@@ -11,6 +11,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Dict, Mapping, Sequence, Tuple
 
 from .factual_citation_grading import FactualCitationScorecard, grade_payload
+from .benchmark_registry import IssuerRegistry, load_registry
 from .intelligence_benchmark import BenchmarkContractError
 
 
@@ -29,6 +30,17 @@ class GeneratedOutputCaseResult:
     pending_material_adjudications: int
     fabricated_material_sources: int
     stop_ship_count: int
+    elapsed_ms: float | None
+    passed: bool
+
+
+@dataclass(frozen=True)
+class GeneratedOutputTierResult:
+    market_cap_tier: str
+    case_count: int
+    passed_count: int
+    pass_rate: float
+    maximum_elapsed_ms: float | None
     passed: bool
 
 
@@ -38,6 +50,7 @@ class GeneratedOutputReport:
     run_id: str
     case_count: int
     cases: Tuple[GeneratedOutputCaseResult, ...]
+    tiers: Tuple[GeneratedOutputTierResult, ...]
     passed: bool
 
     def to_dict(self) -> Dict[str, Any]:
@@ -162,6 +175,13 @@ def _grade_case(case: Mapping[str, Any]) -> GeneratedOutputCaseResult:
         and scorecard.material_numerical_accuracy == 1.0
         and scorecard.claim_source_binding == 1.0
     )
+    capture_metadata = case.get("capture_metadata")
+    elapsed_ms = None
+    if isinstance(capture_metadata, Mapping):
+        try:
+            elapsed_ms = float(capture_metadata["elapsed_ms"])
+        except (KeyError, TypeError, ValueError):
+            elapsed_ms = None
     return GeneratedOutputCaseResult(
         issuer_id=issuer_id,
         question_id=question_id,
@@ -173,11 +193,14 @@ def _grade_case(case: Mapping[str, Any]) -> GeneratedOutputCaseResult:
         pending_material_adjudications=scorecard.pending_material_adjudications,
         fabricated_material_sources=scorecard.fabricated_material_sources,
         stop_ship_count=scorecard.stop_ship_count,
+        elapsed_ms=elapsed_ms,
         passed=passed,
     )
 
 
-def grade_generated_outputs(payload: Mapping[str, Any]) -> GeneratedOutputReport:
+def grade_generated_outputs(
+    payload: Mapping[str, Any], *, registry: IssuerRegistry | None = None,
+) -> GeneratedOutputReport:
     if payload.get("schema_version") != SCHEMA_VERSION:
         raise BenchmarkContractError("generated-output schema_version must be 1")
     run_id = str(payload.get("run_id", "")).strip()
@@ -191,7 +214,32 @@ def grade_generated_outputs(payload: Mapping[str, Any]) -> GeneratedOutputReport
     if len(keys) != len(cases) or len(set(keys)) != len(keys):
         raise BenchmarkContractError("generated-output issuer/question pairs must be unique")
     results = tuple(_grade_case(case) for case in cases)
+    registry = registry or load_registry()
+    tier_by_ticker = {
+        ticker: issuer.market_cap_tier.value
+        for ticker, issuer in registry.by_ticker().items()
+    }
+    unknown = sorted({item.issuer_id for item in results} - set(tier_by_ticker))
+    if unknown:
+        raise BenchmarkContractError(
+            f"generated-output issuers are unregistered: {', '.join(unknown)}"
+        )
+    tier_names = sorted({tier_by_ticker[item.issuer_id] for item in results})
+    tiers = []
+    for tier in tier_names:
+        members = [item for item in results if tier_by_ticker[item.issuer_id] == tier]
+        elapsed = [item.elapsed_ms for item in members if item.elapsed_ms is not None]
+        passed_count = sum(item.passed for item in members)
+        tiers.append(GeneratedOutputTierResult(
+            market_cap_tier=tier,
+            case_count=len(members),
+            passed_count=passed_count,
+            pass_rate=passed_count / len(members),
+            maximum_elapsed_ms=max(elapsed) if elapsed else None,
+            passed=passed_count == len(members),
+        ))
     return GeneratedOutputReport(
         schema_version=SCHEMA_VERSION, run_id=run_id, case_count=len(results),
-        cases=results, passed=all(item.passed for item in results),
+        cases=results, tiers=tuple(tiers),
+        passed=all(item.passed for item in results),
     )

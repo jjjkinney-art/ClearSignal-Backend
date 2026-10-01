@@ -66,6 +66,7 @@ def test_execute_captures_runner_response_and_discards_supplied_response():
     captured = decision.captured_cases[0]
     assert captured["response"]["company"] == "AA"
     assert "question" not in captured
+    assert captured["capture_metadata"]["elapsed_ms"] >= 0
     assert decision.persistence_enabled is False
 
 
@@ -117,4 +118,3 @@ def test_cli_is_dry_run_by_default_and_execute_requires_two_keys(tmp_path, capsy
     with pytest.raises(SystemExit) as exc:
         benchmark_pipeline_capture.main([str(path), "--execute"])
     assert exc.value.code == 2
-
