@@ -52,7 +52,9 @@ Current foundation: account-owned thesis snapshots and conversations, History an
 
 Next work:
 
-- Expand exact-period and duration disambiguation tests across fiscal-calendar edge cases.
+- Continue expanding exact-period and duration disambiguation beyond the implemented
+  10-Q quarter/YTD, 10-K annual/fourth-quarter, non-calendar 53-week year,
+  amendment, malformed-duration, and duplicate-fact regression gates.
 - Add amendment, restatement, units, scale, and duplicate-fact resolution.
 - Preserve filing, accession, form, period, taxonomy concept, and calculation provenance through the answer layer.
 - Benchmark entity resolution across ticker changes, multiple share classes, subsidiaries, and acquisitions.
