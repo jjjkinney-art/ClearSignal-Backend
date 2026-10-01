@@ -1188,9 +1188,15 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
-    from .verified_sec_metric_service import structured_claims_from_evidence
+    from .verified_sec_metric_service import (
+        structured_calculations_from_evidence,
+        structured_claims_from_evidence,
+    )
     _verified_sec_facts.extend(
         structured_claims_from_evidence(_sec_metric_evidence)
+    )
+    _calculated_sec_metrics = structured_calculations_from_evidence(
+        _sec_metric_evidence
     )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
@@ -1676,6 +1682,9 @@ def _run_investment_pipeline(
             # Separate from generated prose: these are exact XBRL observations
             # with claim-bound filing links, never inferred citations.
             "verified_sec_facts": _verified_sec_facts,
+            # Derived metrics remain separate from reported facts and retain
+            # their formula plus exact accession-bound input references.
+            "calculated_sec_metrics": _calculated_sec_metrics,
             # Retrieval metadata is deliberately separate from generated prose.
             # URLs are sanitized and never include provider request credentials.
             "evidence_references": _evidence_references,

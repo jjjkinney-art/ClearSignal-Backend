@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from datetime import date
+from decimal import Decimal, InvalidOperation
 
 from ..config import settings
 from ..integrity.sec_metric_evidence import (
@@ -175,11 +176,110 @@ def structured_claims_from_evidence(items: list[RetrievedEvidence]) -> list[dict
     return claims
 
 
+def structured_calculations_from_evidence(
+    items: list[RetrievedEvidence],
+) -> list[dict]:
+    """Flatten producer-built calculations without promoting them to facts."""
+    calculations = []
+    seen = set()
+    for item in items:
+        for claim in item.calculated_claims:
+            if not isinstance(claim, dict):
+                continue
+            calculation_id = str(claim.get("calculation_id", "")).strip()
+            inputs = claim.get("inputs")
+            if not calculation_id or calculation_id in seen or not isinstance(inputs, list):
+                continue
+            if len(inputs) < 2 or not all(
+                isinstance(value, dict) and value.get("reference_id")
+                for value in inputs
+            ):
+                continue
+            seen.add(calculation_id)
+            calculations.append(dict(claim))
+    return calculations
+
+
+def _attach_free_cash_flow_calculations(
+    items: list[RetrievedEvidence],
+) -> None:
+    """Attach exact OCF minus capex calculations for compatible periods."""
+    claims = [
+        claim for item in items for claim in item.verified_claims
+        if isinstance(claim, dict)
+    ]
+    by_metric = {
+        metric: [claim for claim in claims if claim.get("metric") == metric]
+        for metric in (
+            "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+        )
+    }
+    operating = by_metric["us-gaap:NetCashProvidedByUsedInOperatingActivities"]
+    capex = by_metric["us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"]
+    calculations = []
+    for cash_claim in operating:
+        matches = [
+            claim for claim in capex
+            if all(claim.get(field) == cash_claim.get(field)
+                   for field in ("ticker", "period", "scope", "unit", "currency"))
+            and claim.get("unit") == "USD"
+        ]
+        if len(matches) != 1:
+            continue
+        capex_claim = matches[0]
+        try:
+            value = Decimal(str(cash_claim["raw_value"])) - Decimal(
+                str(capex_claim["raw_value"])
+            )
+        except (KeyError, InvalidOperation):
+            continue
+        input_rows = []
+        for role, claim in (("operating_cash_flow", cash_claim),
+                            ("capital_expenditure", capex_claim)):
+            reference = claim.get("document_ref")
+            if not isinstance(reference, dict) or not reference.get("reference_id"):
+                input_rows = []
+                break
+            input_rows.append({
+                "role": role,
+                "metric": claim["metric"],
+                "raw_value": str(claim["raw_value"]),
+                "unit": claim["unit"],
+                "period": claim["period"],
+                "scope": claim["scope"],
+                "reference_id": reference["reference_id"],
+            })
+        if len(input_rows) != 2:
+            continue
+        exact = format(value, "f")
+        ticker = str(cash_claim["ticker"])
+        period = str(cash_claim["period"])
+        calculations.append({
+            "calculation_id": f"{ticker}-{period}-free-cash-flow",
+            "ticker": ticker,
+            "metric": "ClearSignal:FreeCashFlow",
+            "provenance": "derived",
+            "raw_value": exact,
+            "unit": "USD",
+            "currency": "USD",
+            "period": period,
+            "scope": cash_claim["scope"],
+            "formula": "operating_cash_flow - capital_expenditure",
+            "inputs": input_rows,
+        })
+    if calculations and items:
+        items[0].calculated_claims.extend(calculations)
+
+
 def _requested_metrics(question: str | None) -> tuple:
     """Narrow an explicit metric question without guessing from broad prose."""
     normalized = re.sub(r"\s+", " ", (question or "").lower()).strip()
     if not normalized:
         return _METRICS
+    if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", normalized):
+        required = {"operating cash flow", "capital expenditure"}
+        return tuple(metric for metric in _METRICS if metric[1] in required)
     matches = [
         (metric, tuple(
             term for term in metric[2]
@@ -262,4 +362,6 @@ def fetch_verified_metric_evidence(
                 item = None
         if item is not None:
             evidence.append(item)
+    if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", (question or "").lower()):
+        _attach_free_cash_flow_calculations(evidence)
     return evidence
