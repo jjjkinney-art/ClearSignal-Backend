@@ -1,5 +1,7 @@
 """A structured SEC observation must retain its own filing identity."""
 
+from copy import deepcopy
+
 from app.providers import sec_client
 
 
@@ -47,3 +49,14 @@ def test_fetch_refuses_mismatched_entity(monkeypatch):
     monkeypatch.setattr(sec_client.requests, "get", lambda *args, **kwargs: Response())
     assert sec_client.get_company_fact_records("999999", concept="Revenues", unit="USD") == []
     assert len(sec_client.get_company_fact_records("0000320193", concept="Revenues", unit="USD")) == 2
+
+
+def test_parser_rejects_non_finite_fact_values():
+    payload = deepcopy(_companyfacts())
+    observations = payload["facts"]["us-gaap"]["Revenues"]["units"]["USD"]
+    observations[0]["val"] = float("nan")
+    observations[1]["val"] = float("inf")
+
+    assert sec_client.parse_company_fact_records(
+        payload, concept="Revenues", unit="USD",
+    ) == []

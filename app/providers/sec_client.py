@@ -14,6 +14,7 @@ import logging
 import re
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import List, Optional
 from urllib.parse import urlsplit
 from xml.etree import ElementTree
@@ -79,6 +80,11 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
             continue
         value = item.get("val")
         if isinstance(value, bool) or not isinstance(value, (int, float)):
+            continue
+        try:
+            if not Decimal(str(value)).is_finite():
+                continue
+        except (InvalidOperation, ValueError):
             continue
         records.append(SecFactRecord(
             cik=cik, taxonomy="us-gaap", concept=concept,

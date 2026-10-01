@@ -378,6 +378,8 @@ def test_duration_comparison_formats_shares_and_per_share_units():
     current_eps = replace(
         prior_eps, value=1.8, start="2025-01-01", end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000001/0000320193-25-000001-index.htm"),
     )
     eps = comparable_metric_evidence(
         [prior_eps, current_eps], ticker="AAPL", expected_cik="320193",
@@ -387,6 +389,13 @@ def test_duration_comparison_formats_shares_and_per_share_units():
     assert eps is not None
     assert "$1.80 per share" in eps.summary
     assert "$1.50 per share" in eps.summary
+    assert len(eps.verified_claims) == 2
+    assert eps.verified_claims[0]["value_text"] == "$1.8 per share"
+    assert eps.verified_claims[0]["unit"] == "USD/shares"
+    assert eps.verified_claims[0]["currency"] == "USD"
+    assert eps.verified_claims[0]["document_ref"]["reference_id"].endswith(
+        ":us-gaap:EarningsPerShareDiluted"
+    )
 
     prior_shares = replace(
         _record(), concept="WeightedAverageNumberOfDilutedSharesOutstanding",
@@ -395,6 +404,8 @@ def test_duration_comparison_formats_shares_and_per_share_units():
     current_shares = replace(
         prior_shares, value=900_000_000, start="2025-01-01", end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000001/0000320193-25-000001-index.htm"),
     )
     shares = comparable_metric_evidence(
         [prior_shares, current_shares], ticker="AAPL", expected_cik="320193",

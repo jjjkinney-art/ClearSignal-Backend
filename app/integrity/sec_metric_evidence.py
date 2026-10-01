@@ -95,7 +95,14 @@ def _verified_claim(
     exact = format(amount, ",f")
     if "." in exact:
         exact = exact.rstrip("0").rstrip(".")
-    value_text = f"${exact}" if record.unit == "USD" else f"{exact} shares"
+    if record.unit == "USD":
+        value_text = f"${exact}"
+    elif record.unit == "shares":
+        value_text = f"{exact} shares"
+    elif record.unit == "USD/shares":
+        value_text = f"${exact} per share"
+    else:
+        return None
     claim = QuantitativeClaim(
         value_text=value_text,
         provenance=Provenance.REPORTED,
@@ -120,7 +127,7 @@ def _verified_claim(
             else f"quarter ended {record.end}"
         ),
         "scope": "consolidated",
-        "currency": "USD" if record.unit == "USD" else None,
+        "currency": "USD" if record.unit in {"USD", "USD/shares"} else None,
         "label": record.label,
     })
     return output

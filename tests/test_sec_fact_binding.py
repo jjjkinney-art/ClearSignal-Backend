@@ -41,6 +41,30 @@ def test_exact_record_binds_without_mutating_original_claim():
     }
 
 
+def test_per_share_fact_binds_only_to_exact_unscaled_display():
+    record = replace(
+        _record(), concept="EarningsPerShareDiluted", label="Diluted EPS",
+        unit="USD/shares", value=1.8,
+    )
+    claim = QuantitativeClaim(
+        "$1.8 per share", Provenance.REPORTED, raw_value=1.8,
+        unit="USD/shares", ticker="AAPL",
+        metric="us-gaap:EarningsPerShareDiluted", as_of="2025-03-31",
+        source="10-Q",
+    )
+
+    bound = bind_sec_fact(
+        claim, record, expected_cik="320193", period_start="2025-01-01",
+    )
+    assert bound is not None
+    assert bound.document_ref is not None
+
+    scaled = replace(claim, value_text="$1.8M per share")
+    assert bind_sec_fact(
+        scaled, record, expected_cik="320193", period_start="2025-01-01",
+    ) is None
+
+
 @pytest.mark.parametrize("claim_changes,record_changes,cik,start", [
     ({"provenance": Provenance.ESTIMATED}, {}, "320193", "2025-01-01"),
     ({"raw_value": 1000001}, {}, "320193", "2025-01-01"),
