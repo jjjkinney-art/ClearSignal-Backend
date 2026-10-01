@@ -156,6 +156,12 @@ The evidence graph should connect issuer, security, document, reporting period, 
 - Establish latency, availability, freshness, retrieval-cost, and cache-invalidation budgets.
 - Roll out by capability flag and coverage cohort; never imply universal verified coverage before the relevant source family passes acceptance.
 
+Current foundation (2026-10-01): the frozen registry contains 18 issuers and
+54 core research questions. The zero-side-effect production rehearsal spans 13
+issuers across eight sectors, including three mid-cap and three small/micro-cap
+issuers, with enforced cap-tier floors. The 100-issuer target, 30 issuers per
+principal cap tier, and additional sector/jurisdiction depth remain launch work.
+
 ## 5. Full-launch gates
 
 ClearSignal is ready for full launch when all P0 gates pass:
@@ -189,4 +195,3 @@ Foreign jurisdiction breadth and long-tail public-web connectors may continue ex
 - Private, credentialed, leaked, unlawfully obtained, or redistribution-prohibited information is out of scope.
 - Automatic backfill of older, pre-ownership analyses is deferred unless separately designed and approved.
 - Autonomous trading, personalized investment instructions, and claims of exhaustive internet access are out of scope.
-

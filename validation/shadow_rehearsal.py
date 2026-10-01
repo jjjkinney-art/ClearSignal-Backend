@@ -13,6 +13,7 @@ from .shadow_scheduler import evaluate_schedule_tick
 
 SCHEDULE_PATH = Path(__file__).with_name("shadow_schedule.v1.json")
 EXPECTED_GAPS = frozenset({"mid_cap", "small_micro"})
+MINIMUM_CAP_TIER_ISSUERS = {"mega_large": 6, "mid": 3, "small_micro": 3}
 FORBIDDEN_IMPORT_TOKENS = (
     "app", "provider", "research", "memory", "delivery", "notification",
 )
@@ -57,6 +58,15 @@ def _validate_manifest(manifest: Mapping[str, Any], registry: IssuerRegistry) ->
         raise BenchmarkContractError(
             "frozen schedule requires both US GAAP and IFRS coverage"
         )
+    tier_counts = {
+        tier: sum(item.market_cap_tier.value == tier for item in selected)
+        for tier in MINIMUM_CAP_TIER_ISSUERS
+    }
+    for tier, minimum in MINIMUM_CAP_TIER_ISSUERS.items():
+        if tier_counts[tier] < minimum:
+            raise BenchmarkContractError(
+                f"frozen schedule requires at least {minimum} {tier} issuers"
+            )
 
 
 def _side_effect_import_boundary_clear() -> bool:
@@ -109,6 +119,10 @@ def run_rehearsal(
         "zero_notifications": side_effect_boundary_clear,
     }
     passed = result["inert"] and all(checks.values())
+    selected = [
+        registry.by_ticker()[item["issuer_id"]]
+        for item in manifest["schedules"]
+    ]
     return {
         "schema_version": 1,
         "passed": passed,
@@ -116,9 +130,12 @@ def run_rehearsal(
         "registry_sha256": registry.registry_sha256,
         "issuer_count": len(manifest["schedules"]),
         "sector_count": len({
-            registry.by_ticker()[item["issuer_id"]].sector
-            for item in manifest["schedules"]
+            item.sector for item in selected
         }),
+        "market_cap_counts": {
+            tier: sum(item.market_cap_tier.value == tier for item in selected)
+            for tier in MINIMUM_CAP_TIER_ISSUERS
+        },
         "known_coverage_gaps": manifest["known_coverage_gaps"],
         "checks": checks,
         "tick": result,

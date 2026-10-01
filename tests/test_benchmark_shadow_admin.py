@@ -101,9 +101,14 @@ async def test_status_is_admin_only_and_contains_aggregate_state(tmp_path, monke
 async def test_rehearsal_is_admin_only_aggregate_and_inert():
     result = await admin.benchmark_shadow_rehearsal(_request(ADMIN_ID))
     assert result["passed"] is True
-    assert result["issuer_count"] == 7
-    assert result["sector_count"] == 6
-    assert result["decision_counts"] == {"dry_run": 7}
+    assert result["issuer_count"] == 13
+    assert result["sector_count"] == 8
+    assert result["market_cap_counts"] == {
+        "mega_large": 7,
+        "mid": 3,
+        "small_micro": 3,
+    }
+    assert result["decision_counts"] == {"dry_run": 13}
     assert result["active_jobs"] == 0
     assert result["reserved_cost_usd"] == 0
     assert result["execution_enabled"] is False

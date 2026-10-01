@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "description": "Sprint 2A production-validation benchmark. 12 companies x 3 question categories = 36 queries. Designed to expand to 100-150 by adding more companies/categories without changing the schema.",
+  "description": "Production-validation benchmark. 18 companies x 3 question categories = 54 queries, including frozen mega/large-, mid-, and small/micro-cap cohorts. Designed to expand to 100-150 companies without changing the schema.",
   "categories": {
     "core_thesis": "Core bull/bear thesis at current valuation",
     "decision_threshold": "What operating metric would break the thesis, and at what level",
@@ -89,6 +89,48 @@
     {"id": "XOM-decision_threshold", "ticker": "XOM", "company": "ExxonMobil", "category": "decision_threshold",
      "question": "What operating metric would break the ExxonMobil bull thesis, and at what level?"},
     {"id": "XOM-structural_risk", "ticker": "XOM", "company": "ExxonMobil", "category": "structural_risk",
-     "question": "What is ExxonMobil's primary structural risk, what is currently priced in, and what would force a re-rating?"}
+     "question": "What is ExxonMobil's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "AA-core_thesis", "ticker": "AA", "company": "Alcoa", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Alcoa at the current valuation?"},
+    {"id": "AA-decision_threshold", "ticker": "AA", "company": "Alcoa", "category": "decision_threshold",
+     "question": "What operating metric would break the Alcoa bull thesis, and at what level?"},
+    {"id": "AA-structural_risk", "ticker": "AA", "company": "Alcoa", "category": "structural_risk",
+     "question": "What is Alcoa's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "DOCU-core_thesis", "ticker": "DOCU", "company": "DocuSign", "category": "core_thesis",
+     "question": "What is the core bull and bear case for DocuSign at the current valuation?"},
+    {"id": "DOCU-decision_threshold", "ticker": "DOCU", "company": "DocuSign", "category": "decision_threshold",
+     "question": "What operating metric would break the DocuSign bull thesis, and at what level?"},
+    {"id": "DOCU-structural_risk", "ticker": "DOCU", "company": "DocuSign", "category": "structural_risk",
+     "question": "What is DocuSign's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "ETSY-core_thesis", "ticker": "ETSY", "company": "Etsy", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Etsy at the current valuation?"},
+    {"id": "ETSY-decision_threshold", "ticker": "ETSY", "company": "Etsy", "category": "decision_threshold",
+     "question": "What operating metric would break the Etsy bull thesis, and at what level?"},
+    {"id": "ETSY-structural_risk", "ticker": "ETSY", "company": "Etsy", "category": "structural_risk",
+     "question": "What is Etsy's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "ACHC-core_thesis", "ticker": "ACHC", "company": "Acadia Healthcare", "category": "core_thesis",
+     "question": "What is the core bull and bear case for Acadia Healthcare at the current valuation?"},
+    {"id": "ACHC-decision_threshold", "ticker": "ACHC", "company": "Acadia Healthcare", "category": "decision_threshold",
+     "question": "What operating metric would break the Acadia Healthcare bull thesis, and at what level?"},
+    {"id": "ACHC-structural_risk", "ticker": "ACHC", "company": "Acadia Healthcare", "category": "structural_risk",
+     "question": "What is Acadia Healthcare's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "ACMR-core_thesis", "ticker": "ACMR", "company": "ACM Research", "category": "core_thesis",
+     "question": "What is the core bull and bear case for ACM Research at the current valuation?"},
+    {"id": "ACMR-decision_threshold", "ticker": "ACMR", "company": "ACM Research", "category": "decision_threshold",
+     "question": "What operating metric would break the ACM Research bull thesis, and at what level?"},
+    {"id": "ACMR-structural_risk", "ticker": "ACMR", "company": "ACM Research", "category": "structural_risk",
+     "question": "What is ACM Research's primary structural risk, what is currently priced in, and what would force a re-rating?"},
+
+    {"id": "MAN-core_thesis", "ticker": "MAN", "company": "ManpowerGroup", "category": "core_thesis",
+     "question": "What is the core bull and bear case for ManpowerGroup at the current valuation?"},
+    {"id": "MAN-decision_threshold", "ticker": "MAN", "company": "ManpowerGroup", "category": "decision_threshold",
+     "question": "What operating metric would break the ManpowerGroup bull thesis, and at what level?"},
+    {"id": "MAN-structural_risk", "ticker": "MAN", "company": "ManpowerGroup", "category": "structural_risk",
+     "question": "What is ManpowerGroup's primary structural risk, what is currently priced in, and what would force a re-rating?"}
   ]
 }

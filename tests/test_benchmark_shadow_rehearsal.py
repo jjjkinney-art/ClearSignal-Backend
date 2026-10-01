@@ -23,11 +23,16 @@ def _copy_manifest(tmp_path):
 def test_frozen_schedule_rehearsal_passes_with_zero_side_effects():
     result = shadow_rehearsal.run_rehearsal(evaluated_at=NOW)
     assert result["passed"] is True
-    assert result["issuer_count"] == 7
-    assert result["sector_count"] == 6
+    assert result["issuer_count"] == 13
+    assert result["sector_count"] == 8
+    assert result["market_cap_counts"] == {
+        "mega_large": 7,
+        "mid": 3,
+        "small_micro": 3,
+    }
     assert result["known_coverage_gaps"] == ["mid_cap", "small_micro"]
     assert all(result["checks"].values())
-    assert result["tick"]["evaluated_count"] == 7
+    assert result["tick"]["evaluated_count"] == 13
     assert result["tick"]["operator_snapshot"]["active_jobs"] == 0
 
 
@@ -78,6 +83,22 @@ def test_diversity_floor_is_enforced(tmp_path):
         shadow_rehearsal.run_rehearsal(
             evaluated_at=NOW, schedule_path=path,
         )
+
+
+@pytest.mark.parametrize("tier", ["mid", "small_micro"])
+def test_cap_tier_floor_is_enforced(tmp_path, tier):
+    value, path = _copy_manifest(tmp_path)
+    registry = shadow_rehearsal.load_registry()
+    selected = [
+        item for item in value["schedules"]
+        if registry.by_ticker()[item["issuer_id"]].market_cap_tier.value != tier
+    ]
+    value["schedules"] = selected
+    value["schedule_policy"]["maximum_jobs_per_tick"] = len(selected)
+    value["safety_policy"]["maximum_daily_jobs"] = len(selected)
+    path.write_text(json.dumps(value))
+    with pytest.raises(BenchmarkContractError, match=tier):
+        shadow_rehearsal.run_rehearsal(evaluated_at=NOW, schedule_path=path)
 
 
 def test_cli_returns_success_only_for_passing_rehearsal(capsys):
