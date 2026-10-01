@@ -19,16 +19,23 @@
       "claim_payload": {
         "expected_claims": [
           {"claim_id": "AA-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "12831000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"},
-          {"claim_id": "AA-fy2025-net-income", "metric": "NetIncomeLoss", "value": "1157000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"}
+          {"claim_id": "AA-fy2025-net-income", "metric": "NetIncomeLoss", "value": "1157000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"},
+          {"claim_id": "AA-fy2025-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "1185000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"},
+          {"claim_id": "AA-fy2024-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "622000000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"}
         ],
         "observed_claims": [
           {"claim_id": "AA-fy2025-revenue", "text": "Alcoa reported FY2025 consolidated revenue of $12.831 billion.", "value": "12831000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:aa:0001193125-26-077167"},
-          {"claim_id": "AA-fy2025-net-income", "text": "Alcoa reported FY2025 net income attributable to the parent of $1.157 billion.", "value": "1157000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:aa:0001193125-26-077167"}
+          {"claim_id": "AA-fy2025-net-income", "text": "Alcoa reported FY2025 net income attributable to the parent of $1.157 billion.", "value": "1157000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:aa:0001193125-26-077167"},
+          {"claim_id": "AA-fy2025-operating-cash-flow", "text": "Alcoa generated $1.185 billion of operating cash flow in FY2025.", "value": "1185000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:aa:0001193125-26-077167"},
+          {"claim_id": "AA-fy2024-operating-cash-flow", "text": "Alcoa generated $622 million of operating cash flow in FY2024.", "value": "622000000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "cited_source_id": "sec:aa:0001193125-26-077167"}
         ],
         "adjudications": [
           {"claim_id": "AA-fy2025-revenue", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
-          {"claim_id": "AA-fy2025-net-income", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
-        ]
+          {"claim_id": "AA-fy2025-net-income", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "AA-fy2025-operating-cash-flow", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."},
+          {"claim_id": "AA-fy2024-operating-cash-flow", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."}
+        ],
+        "comparisons": [{"comparison_id": "AA-operating-cash-flow-yoy", "current_claim_id": "AA-fy2025-operating-cash-flow", "prior_claim_id": "AA-fy2024-operating-cash-flow", "absolute_change": "563000000", "direction": "increase"}]
       }
     },
     {
@@ -47,16 +54,23 @@
       "claim_payload": {
         "expected_claims": [
           {"claim_id": "ACHC-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "3312769000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"},
-          {"claim_id": "ACHC-fy2025-net-income", "metric": "NetIncomeLoss", "value": "-1102772000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"}
+          {"claim_id": "ACHC-fy2025-net-income", "metric": "NetIncomeLoss", "value": "-1102772000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"},
+          {"claim_id": "ACHC-fy2025-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "131898000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"},
+          {"claim_id": "ACHC-fy2024-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "129693000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"}
         ],
         "observed_claims": [
           {"claim_id": "ACHC-fy2025-revenue", "text": "Acadia Healthcare reported FY2025 consolidated revenue of $3.312769 billion.", "value": "3312769000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:achc:0001193125-26-078266"},
-          {"claim_id": "ACHC-fy2025-net-income", "text": "Acadia Healthcare reported an FY2025 net loss attributable to the parent of $1.102772 billion.", "value": "-1102772000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:achc:0001193125-26-078266"}
+          {"claim_id": "ACHC-fy2025-net-income", "text": "Acadia Healthcare reported an FY2025 net loss attributable to the parent of $1.102772 billion.", "value": "-1102772000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:achc:0001193125-26-078266"},
+          {"claim_id": "ACHC-fy2025-operating-cash-flow", "text": "Acadia Healthcare generated $131.898 million of operating cash flow in FY2025.", "value": "131898000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:achc:0001193125-26-078266"},
+          {"claim_id": "ACHC-fy2024-operating-cash-flow", "text": "Acadia Healthcare generated $129.693 million of operating cash flow in FY2024.", "value": "129693000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "cited_source_id": "sec:achc:0001193125-26-078266"}
         ],
         "adjudications": [
           {"claim_id": "ACHC-fy2025-revenue", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
-          {"claim_id": "ACHC-fy2025-net-income", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
-        ]
+          {"claim_id": "ACHC-fy2025-net-income", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "ACHC-fy2025-operating-cash-flow", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."},
+          {"claim_id": "ACHC-fy2024-operating-cash-flow", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."}
+        ],
+        "comparisons": [{"comparison_id": "ACHC-operating-cash-flow-yoy", "current_claim_id": "ACHC-fy2025-operating-cash-flow", "prior_claim_id": "ACHC-fy2024-operating-cash-flow", "absolute_change": "2205000", "direction": "increase"}]
       }
     },
     {
@@ -75,16 +89,23 @@
       "claim_payload": {
         "expected_claims": [
           {"claim_id": "ACMR-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "901309000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"},
-          {"claim_id": "ACMR-fy2025-net-income", "metric": "NetIncomeLoss", "value": "94078000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"}
+          {"claim_id": "ACMR-fy2025-net-income", "metric": "NetIncomeLoss", "value": "94078000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"},
+          {"claim_id": "ACMR-fy2025-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "-10325000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"},
+          {"claim_id": "ACMR-fy2024-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "152450000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"}
         ],
         "observed_claims": [
           {"claim_id": "ACMR-fy2025-revenue", "text": "ACM Research reported FY2025 consolidated revenue of $901.309 million.", "value": "901309000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:acmr:0001628280-26-013231"},
-          {"claim_id": "ACMR-fy2025-net-income", "text": "ACM Research reported FY2025 net income attributable to the parent of $94.078 million.", "value": "94078000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:acmr:0001628280-26-013231"}
+          {"claim_id": "ACMR-fy2025-net-income", "text": "ACM Research reported FY2025 net income attributable to the parent of $94.078 million.", "value": "94078000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:acmr:0001628280-26-013231"},
+          {"claim_id": "ACMR-fy2025-operating-cash-flow", "text": "ACM Research used $10.325 million of operating cash in FY2025.", "value": "-10325000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:acmr:0001628280-26-013231"},
+          {"claim_id": "ACMR-fy2024-operating-cash-flow", "text": "ACM Research generated $152.45 million of operating cash flow in FY2024.", "value": "152450000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "cited_source_id": "sec:acmr:0001628280-26-013231"}
         ],
         "adjudications": [
           {"claim_id": "ACMR-fy2025-revenue", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
-          {"claim_id": "ACMR-fy2025-net-income", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
-        ]
+          {"claim_id": "ACMR-fy2025-net-income", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "ACMR-fy2025-operating-cash-flow", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."},
+          {"claim_id": "ACMR-fy2024-operating-cash-flow", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."}
+        ],
+        "comparisons": [{"comparison_id": "ACMR-operating-cash-flow-yoy", "current_claim_id": "ACMR-fy2025-operating-cash-flow", "prior_claim_id": "ACMR-fy2024-operating-cash-flow", "absolute_change": "-162775000", "direction": "decrease"}]
       }
     },
     {
@@ -103,16 +124,23 @@
       "claim_payload": {
         "expected_claims": [
           {"claim_id": "DOCU-fy2026-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "3219500000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "consolidated", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"},
-          {"claim_id": "DOCU-fy2026-net-income", "metric": "NetIncomeLoss", "value": "309085000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "attributable to parent", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"}
+          {"claim_id": "DOCU-fy2026-net-income", "metric": "NetIncomeLoss", "value": "309085000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "attributable to parent", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"},
+          {"claim_id": "DOCU-fy2026-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "1165007000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "consolidated", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"},
+          {"claim_id": "DOCU-fy2025-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "1017272000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"}
         ],
         "observed_claims": [
           {"claim_id": "DOCU-fy2026-revenue", "text": "Docusign reported FY2026 consolidated revenue of $3.2195 billion.", "value": "3219500000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "consolidated", "cited_source_id": "sec:docu:0001261333-26-000021"},
-          {"claim_id": "DOCU-fy2026-net-income", "text": "Docusign reported FY2026 net income attributable to the parent of $309.085 million.", "value": "309085000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "attributable to parent", "cited_source_id": "sec:docu:0001261333-26-000021"}
+          {"claim_id": "DOCU-fy2026-net-income", "text": "Docusign reported FY2026 net income attributable to the parent of $309.085 million.", "value": "309085000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "attributable to parent", "cited_source_id": "sec:docu:0001261333-26-000021"},
+          {"claim_id": "DOCU-fy2026-operating-cash-flow", "text": "Docusign generated $1.165007 billion of operating cash flow in FY2026.", "value": "1165007000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "consolidated", "cited_source_id": "sec:docu:0001261333-26-000021"},
+          {"claim_id": "DOCU-fy2025-operating-cash-flow", "text": "Docusign generated $1.017272 billion of operating cash flow in FY2025.", "value": "1017272000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:docu:0001261333-26-000021"}
         ],
         "adjudications": [
           {"claim_id": "DOCU-fy2026-revenue", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2026 consolidated statement."},
-          {"claim_id": "DOCU-fy2026-net-income", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2026 consolidated statement."}
-        ]
+          {"claim_id": "DOCU-fy2026-net-income", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2026 consolidated statement."},
+          {"claim_id": "DOCU-fy2026-operating-cash-flow", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."},
+          {"claim_id": "DOCU-fy2025-operating-cash-flow", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."}
+        ],
+        "comparisons": [{"comparison_id": "DOCU-operating-cash-flow-yoy", "current_claim_id": "DOCU-fy2026-operating-cash-flow", "prior_claim_id": "DOCU-fy2025-operating-cash-flow", "absolute_change": "147735000", "direction": "increase"}]
       }
     },
     {
@@ -131,16 +159,23 @@
       "claim_payload": {
         "expected_claims": [
           {"claim_id": "ETSY-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "2883501000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"},
-          {"claim_id": "ETSY-fy2025-net-income", "metric": "NetIncomeLoss", "value": "162982000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"}
+          {"claim_id": "ETSY-fy2025-net-income", "metric": "NetIncomeLoss", "value": "162982000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"},
+          {"claim_id": "ETSY-fy2025-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "693414000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"},
+          {"claim_id": "ETSY-fy2024-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "752469000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"}
         ],
         "observed_claims": [
           {"claim_id": "ETSY-fy2025-revenue", "text": "Etsy reported FY2025 consolidated revenue of $2.883501 billion.", "value": "2883501000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:etsy:0001370637-26-000019"},
-          {"claim_id": "ETSY-fy2025-net-income", "text": "Etsy reported FY2025 net income attributable to the parent of $162.982 million.", "value": "162982000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:etsy:0001370637-26-000019"}
+          {"claim_id": "ETSY-fy2025-net-income", "text": "Etsy reported FY2025 net income attributable to the parent of $162.982 million.", "value": "162982000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:etsy:0001370637-26-000019"},
+          {"claim_id": "ETSY-fy2025-operating-cash-flow", "text": "Etsy generated $693.414 million of operating cash flow in FY2025.", "value": "693414000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:etsy:0001370637-26-000019"},
+          {"claim_id": "ETSY-fy2024-operating-cash-flow", "text": "Etsy generated $752.469 million of operating cash flow in FY2024.", "value": "752469000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "cited_source_id": "sec:etsy:0001370637-26-000019"}
         ],
         "adjudications": [
           {"claim_id": "ETSY-fy2025-revenue", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
-          {"claim_id": "ETSY-fy2025-net-income", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
-        ]
+          {"claim_id": "ETSY-fy2025-net-income", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "ETSY-fy2025-operating-cash-flow", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."},
+          {"claim_id": "ETSY-fy2024-operating-cash-flow", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."}
+        ],
+        "comparisons": [{"comparison_id": "ETSY-operating-cash-flow-yoy", "current_claim_id": "ETSY-fy2025-operating-cash-flow", "prior_claim_id": "ETSY-fy2024-operating-cash-flow", "absolute_change": "-59055000", "direction": "decrease"}]
       }
     },
     {
@@ -159,16 +194,23 @@
       "claim_payload": {
         "expected_claims": [
           {"claim_id": "MAN-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "17957100000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"},
-          {"claim_id": "MAN-fy2025-net-income", "metric": "ProfitLoss", "value": "-13300000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "including noncontrolling interest", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"}
+          {"claim_id": "MAN-fy2025-net-income", "metric": "ProfitLoss", "value": "-13300000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "including noncontrolling interest", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"},
+          {"claim_id": "MAN-fy2025-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "-104100000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"},
+          {"claim_id": "MAN-fy2024-operating-cash-flow", "metric": "NetCashProvidedByUsedInOperatingActivities", "value": "309200000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"}
         ],
         "observed_claims": [
           {"claim_id": "MAN-fy2025-revenue", "text": "ManpowerGroup reported FY2025 consolidated revenue of $17.9571 billion.", "value": "17957100000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:man:0001193125-26-064113"},
-          {"claim_id": "MAN-fy2025-net-income", "text": "ManpowerGroup reported an FY2025 net loss including noncontrolling interests of $13.3 million.", "value": "-13300000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "including noncontrolling interest", "cited_source_id": "sec:man:0001193125-26-064113"}
+          {"claim_id": "MAN-fy2025-net-income", "text": "ManpowerGroup reported an FY2025 net loss including noncontrolling interests of $13.3 million.", "value": "-13300000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "including noncontrolling interest", "cited_source_id": "sec:man:0001193125-26-064113"},
+          {"claim_id": "MAN-fy2025-operating-cash-flow", "text": "ManpowerGroup used $104.1 million of operating cash in FY2025.", "value": "-104100000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:man:0001193125-26-064113"},
+          {"claim_id": "MAN-fy2024-operating-cash-flow", "text": "ManpowerGroup generated $309.2 million of operating cash flow in FY2024.", "value": "309200000", "unit": "USD", "currency": "USD", "period": "FY2024", "scope": "consolidated", "cited_source_id": "sec:man:0001193125-26-064113"}
         ],
         "adjudications": [
           {"claim_id": "MAN-fy2025-revenue", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
-          {"claim_id": "MAN-fy2025-net-income", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
-        ]
+          {"claim_id": "MAN-fy2025-net-income", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "MAN-fy2025-operating-cash-flow", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited cash-flow statement."},
+          {"claim_id": "MAN-fy2024-operating-cash-flow", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound comparative inline XBRL fact matches the audited cash-flow statement."}
+        ],
+        "comparisons": [{"comparison_id": "MAN-operating-cash-flow-yoy", "current_claim_id": "MAN-fy2025-operating-cash-flow", "prior_claim_id": "MAN-fy2024-operating-cash-flow", "absolute_change": "-413300000", "direction": "decrease"}]
       }
     }
   ]

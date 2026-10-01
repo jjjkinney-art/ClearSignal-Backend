@@ -101,7 +101,9 @@ def test_frozen_sec_smaller_company_pack_passes_all_gates():
     report = grade_cap_tier_cohort(payload)
     assert report.passed is True
     assert report.issuer_count == 6
-    assert sum(item.material_claim_count for item in report.tier_results) == 12
+    assert sum(item.material_claim_count for item in report.tier_results) == 24
+    assert sum(item.comparison_count for item in report.issuer_results) == 6
+    assert sum(item.comparison_correct_count for item in report.issuer_results) == 6
     assert all(item.material_numerical_accuracy == 1.0 for item in report.tier_results)
     assert all(item.claim_source_binding == 1.0 for item in report.tier_results)
     assert all(item.stop_ship_count == 0 for item in report.tier_results)
@@ -128,6 +130,44 @@ def test_one_bad_issuer_cannot_hide_inside_a_passing_average():
     aa = next(item for item in report.issuer_results if item.issuer_id == "AA")
     assert aa.passed is False
     assert aa.stop_ship_count > 0
+
+
+def test_period_comparison_recomputes_change_and_direction():
+    payload = _cohort()
+    case = payload["cases"][0]
+    issuer_id = case["issuer_id"]
+    source_id = f"sec-{issuer_id.lower()}-10k"
+    case["claim_payload"]["expected_claims"].append({
+        "claim_id": f"{issuer_id}-prior-revenue", "metric": "Revenue",
+        "value": "80", "unit": "million", "currency": "USD",
+        "period": "FY2024", "scope": "consolidated",
+        "source_id": source_id, "materiality": "material",
+    })
+    case["claim_payload"]["observed_claims"].append({
+        "claim_id": f"{issuer_id}-prior-revenue", "text": "Prior revenue.",
+        "value": "80", "unit": "million", "currency": "USD",
+        "period": "FY2024", "scope": "consolidated",
+        "cited_source_id": source_id,
+    })
+    case["claim_payload"]["adjudications"].append({
+        "claim_id": f"{issuer_id}-prior-revenue", "source_id": source_id,
+        "document_exists": True, "label": "supports",
+        "reviewer": "human:benchmark-reviewer", "rationale": "verified",
+    })
+    case["claim_payload"]["comparisons"] = [{
+        "comparison_id": f"{issuer_id}-revenue-change",
+        "current_claim_id": f"{issuer_id}-revenue",
+        "prior_claim_id": f"{issuer_id}-prior-revenue",
+        "absolute_change": "20",
+        "direction": "increase",
+    }]
+    assert grade_cap_tier_cohort(payload).passed is True
+    case["claim_payload"]["comparisons"][0]["direction"] = "decrease"
+    report = grade_cap_tier_cohort(payload)
+    assert report.passed is False
+    result = next(item for item in report.issuer_results if item.issuer_id == issuer_id)
+    assert result.comparison_count == 1
+    assert result.comparison_correct_count == 0
 
 
 def test_pending_adjudication_fails_issuer_tier_and_cohort():
