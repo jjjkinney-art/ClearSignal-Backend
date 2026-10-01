@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "cohort_id": "sec-smaller-company-fy2025-v1",
+  "description": "Point-in-time primary-source facts from six exact SEC Form 10-K filing versions. Values are raw USD and are bound to the filing accession and hashed archived document.",
+  "cases": [
+    {
+      "issuer_id": "AA",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [{
+        "source_id": "sec:aa:0001193125-26-077167",
+        "source_type": "sec_filing",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/1675149/000119312526077167/aa-20251231.htm",
+        "accepted_at": "2026-02-26T21:52:29.000Z",
+        "retrieved_at": "2026-10-01T08:00:00Z",
+        "content_sha256": "dcc32f5ca5128175492bc3b466bab78d4dbb02fd34652e0ba460d8c36dfe57e7",
+        "revision_id": "0001193125-26-077167",
+        "authoritative": true
+      }],
+      "claim_payload": {
+        "expected_claims": [
+          {"claim_id": "AA-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "12831000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"},
+          {"claim_id": "AA-fy2025-net-income", "metric": "NetIncomeLoss", "value": "1157000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:aa:0001193125-26-077167", "materiality": "material"}
+        ],
+        "observed_claims": [
+          {"claim_id": "AA-fy2025-revenue", "text": "Alcoa reported FY2025 consolidated revenue of $12.831 billion.", "value": "12831000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:aa:0001193125-26-077167"},
+          {"claim_id": "AA-fy2025-net-income", "text": "Alcoa reported FY2025 net income attributable to the parent of $1.157 billion.", "value": "1157000000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:aa:0001193125-26-077167"}
+        ],
+        "adjudications": [
+          {"claim_id": "AA-fy2025-revenue", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "AA-fy2025-net-income", "source_id": "sec:aa:0001193125-26-077167", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
+        ]
+      }
+    },
+    {
+      "issuer_id": "ACHC",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [{
+        "source_id": "sec:achc:0001193125-26-078266",
+        "source_type": "sec_filing",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/achc-20251231.htm",
+        "accepted_at": "2026-02-27T00:52:13.000Z",
+        "retrieved_at": "2026-10-01T08:00:00Z",
+        "content_sha256": "767d8b775e769c8be7d56aa8d3db14e2dcf8a5cd67b792661f6241cc085451e7",
+        "revision_id": "0001193125-26-078266",
+        "authoritative": true
+      }],
+      "claim_payload": {
+        "expected_claims": [
+          {"claim_id": "ACHC-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "3312769000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"},
+          {"claim_id": "ACHC-fy2025-net-income", "metric": "NetIncomeLoss", "value": "-1102772000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:achc:0001193125-26-078266", "materiality": "material"}
+        ],
+        "observed_claims": [
+          {"claim_id": "ACHC-fy2025-revenue", "text": "Acadia Healthcare reported FY2025 consolidated revenue of $3.312769 billion.", "value": "3312769000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:achc:0001193125-26-078266"},
+          {"claim_id": "ACHC-fy2025-net-income", "text": "Acadia Healthcare reported an FY2025 net loss attributable to the parent of $1.102772 billion.", "value": "-1102772000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:achc:0001193125-26-078266"}
+        ],
+        "adjudications": [
+          {"claim_id": "ACHC-fy2025-revenue", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "ACHC-fy2025-net-income", "source_id": "sec:achc:0001193125-26-078266", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
+        ]
+      }
+    },
+    {
+      "issuer_id": "ACMR",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [{
+        "source_id": "sec:acmr:0001628280-26-013231",
+        "source_type": "sec_filing",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/1680062/000162828026013231/acmr-20251231.htm",
+        "accepted_at": "2026-03-02T21:18:32.000Z",
+        "retrieved_at": "2026-10-01T08:00:00Z",
+        "content_sha256": "3a372571ecf83250153fccb45201c0c638114b98d3dd5acdde5eb01b45d9cecb",
+        "revision_id": "0001628280-26-013231",
+        "authoritative": true
+      }],
+      "claim_payload": {
+        "expected_claims": [
+          {"claim_id": "ACMR-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "901309000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"},
+          {"claim_id": "ACMR-fy2025-net-income", "metric": "NetIncomeLoss", "value": "94078000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:acmr:0001628280-26-013231", "materiality": "material"}
+        ],
+        "observed_claims": [
+          {"claim_id": "ACMR-fy2025-revenue", "text": "ACM Research reported FY2025 consolidated revenue of $901.309 million.", "value": "901309000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:acmr:0001628280-26-013231"},
+          {"claim_id": "ACMR-fy2025-net-income", "text": "ACM Research reported FY2025 net income attributable to the parent of $94.078 million.", "value": "94078000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:acmr:0001628280-26-013231"}
+        ],
+        "adjudications": [
+          {"claim_id": "ACMR-fy2025-revenue", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "ACMR-fy2025-net-income", "source_id": "sec:acmr:0001628280-26-013231", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
+        ]
+      }
+    },
+    {
+      "issuer_id": "DOCU",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [{
+        "source_id": "sec:docu:0001261333-26-000021",
+        "source_type": "sec_filing",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm",
+        "accepted_at": "2026-03-18T20:06:42.000Z",
+        "retrieved_at": "2026-10-01T08:00:00Z",
+        "content_sha256": "dce7f067e2dc83b994f54ceaf7cec45b017a65d3237874e7c6af5ee90d98ad5f",
+        "revision_id": "0001261333-26-000021",
+        "authoritative": true
+      }],
+      "claim_payload": {
+        "expected_claims": [
+          {"claim_id": "DOCU-fy2026-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "3219500000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "consolidated", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"},
+          {"claim_id": "DOCU-fy2026-net-income", "metric": "NetIncomeLoss", "value": "309085000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "attributable to parent", "source_id": "sec:docu:0001261333-26-000021", "materiality": "material"}
+        ],
+        "observed_claims": [
+          {"claim_id": "DOCU-fy2026-revenue", "text": "Docusign reported FY2026 consolidated revenue of $3.2195 billion.", "value": "3219500000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "consolidated", "cited_source_id": "sec:docu:0001261333-26-000021"},
+          {"claim_id": "DOCU-fy2026-net-income", "text": "Docusign reported FY2026 net income attributable to the parent of $309.085 million.", "value": "309085000", "unit": "USD", "currency": "USD", "period": "FY2026", "scope": "attributable to parent", "cited_source_id": "sec:docu:0001261333-26-000021"}
+        ],
+        "adjudications": [
+          {"claim_id": "DOCU-fy2026-revenue", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2026 consolidated statement."},
+          {"claim_id": "DOCU-fy2026-net-income", "source_id": "sec:docu:0001261333-26-000021", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2026 consolidated statement."}
+        ]
+      }
+    },
+    {
+      "issuer_id": "ETSY",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [{
+        "source_id": "sec:etsy:0001370637-26-000019",
+        "source_type": "sec_filing",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/1370637/000137063726000019/etsy-20251231.htm",
+        "accepted_at": "2026-02-19T13:17:41.000Z",
+        "retrieved_at": "2026-10-01T08:00:00Z",
+        "content_sha256": "03c9cdb0246f665a66bfad8f835509787fa88de2358606547ed53704b49f3a58",
+        "revision_id": "0001370637-26-000019",
+        "authoritative": true
+      }],
+      "claim_payload": {
+        "expected_claims": [
+          {"claim_id": "ETSY-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "2883501000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"},
+          {"claim_id": "ETSY-fy2025-net-income", "metric": "NetIncomeLoss", "value": "162982000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "source_id": "sec:etsy:0001370637-26-000019", "materiality": "material"}
+        ],
+        "observed_claims": [
+          {"claim_id": "ETSY-fy2025-revenue", "text": "Etsy reported FY2025 consolidated revenue of $2.883501 billion.", "value": "2883501000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:etsy:0001370637-26-000019"},
+          {"claim_id": "ETSY-fy2025-net-income", "text": "Etsy reported FY2025 net income attributable to the parent of $162.982 million.", "value": "162982000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "attributable to parent", "cited_source_id": "sec:etsy:0001370637-26-000019"}
+        ],
+        "adjudications": [
+          {"claim_id": "ETSY-fy2025-revenue", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "ETSY-fy2025-net-income", "source_id": "sec:etsy:0001370637-26-000019", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
+        ]
+      }
+    },
+    {
+      "issuer_id": "MAN",
+      "as_of": "2026-04-01T00:00:00Z",
+      "sources": [{
+        "source_id": "sec:man:0001193125-26-064113",
+        "source_type": "sec_filing",
+        "document_url": "https://www.sec.gov/Archives/edgar/data/871763/000119312526064113/man-20251231.htm",
+        "accepted_at": "2026-02-23T21:31:23.000Z",
+        "retrieved_at": "2026-10-01T08:00:00Z",
+        "content_sha256": "8b58c59d8ac15e3173a27bd944bff8dbcf55934229a52caa3bcf2e352f565f0a",
+        "revision_id": "0001193125-26-064113",
+        "authoritative": true
+      }],
+      "claim_payload": {
+        "expected_claims": [
+          {"claim_id": "MAN-fy2025-revenue", "metric": "RevenueFromContractWithCustomerExcludingAssessedTax", "value": "17957100000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"},
+          {"claim_id": "MAN-fy2025-net-income", "metric": "ProfitLoss", "value": "-13300000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "including noncontrolling interest", "source_id": "sec:man:0001193125-26-064113", "materiality": "material"}
+        ],
+        "observed_claims": [
+          {"claim_id": "MAN-fy2025-revenue", "text": "ManpowerGroup reported FY2025 consolidated revenue of $17.9571 billion.", "value": "17957100000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "consolidated", "cited_source_id": "sec:man:0001193125-26-064113"},
+          {"claim_id": "MAN-fy2025-net-income", "text": "ManpowerGroup reported an FY2025 net loss including noncontrolling interests of $13.3 million.", "value": "-13300000", "unit": "USD", "currency": "USD", "period": "FY2025", "scope": "including noncontrolling interest", "cited_source_id": "sec:man:0001193125-26-064113"}
+        ],
+        "adjudications": [
+          {"claim_id": "MAN-fy2025-revenue", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."},
+          {"claim_id": "MAN-fy2025-net-income", "source_id": "sec:man:0001193125-26-064113", "document_exists": true, "label": "supports", "reviewer": "automated:sec-inline-xbrl-accession-v1", "rationale": "Exact accession-bound inline XBRL fact matches the audited FY2025 consolidated statement."}
+        ]
+      }
+    }
+  ]
+}

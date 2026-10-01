@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -10,6 +11,10 @@ from validation.intelligence_benchmark import BenchmarkContractError
 
 
 ISSUERS = ("AA", "DOCU", "ETSY", "ACHC", "ACMR", "MAN")
+REAL_CASES_PATH = (
+    Path(__file__).resolve().parents[1]
+    / "validation" / "cap_tier_factual_cases.v1.json"
+)
 
 
 def _claim_payload(issuer_id, *, value="100", label="supports", exists=True):
@@ -47,6 +52,20 @@ def _claim_payload(issuer_id, *, value="100", label="supports", exists=True):
     }
 
 
+def _source(issuer_id, **overrides):
+    value = {
+        "source_id": f"sec-{issuer_id.lower()}-10k",
+        "source_type": "sec_filing",
+        "document_url": f"https://www.sec.gov/{issuer_id.lower()}-10k",
+        "accepted_at": "2026-02-01T00:00:00Z",
+        "retrieved_at": "2026-04-02T00:00:00Z",
+        "content_sha256": "a" * 64,
+        "authoritative": True,
+    }
+    value.update(overrides)
+    return value
+
+
 def _cohort(**case_overrides):
     return {
         "schema_version": 1,
@@ -54,6 +73,8 @@ def _cohort(**case_overrides):
         "cases": [
             {
                 "issuer_id": issuer_id,
+                "as_of": "2026-04-01T00:00:00Z",
+                "sources": [_source(issuer_id)],
                 "claim_payload": _claim_payload(
                     issuer_id, **case_overrides.get(issuer_id, {})
                 ),
@@ -73,6 +94,17 @@ def test_complete_mid_and_small_cap_cohort_passes():
     assert all(item.issuer_count == 3 for item in report.tier_results)
     assert all(item.material_numerical_accuracy == 1.0 for item in report.tier_results)
     assert all(item.claim_source_binding == 1.0 for item in report.tier_results)
+
+
+def test_frozen_sec_smaller_company_pack_passes_all_gates():
+    payload = json.loads(REAL_CASES_PATH.read_text())
+    report = grade_cap_tier_cohort(payload)
+    assert report.passed is True
+    assert report.issuer_count == 6
+    assert sum(item.material_claim_count for item in report.tier_results) == 12
+    assert all(item.material_numerical_accuracy == 1.0 for item in report.tier_results)
+    assert all(item.claim_source_binding == 1.0 for item in report.tier_results)
+    assert all(item.stop_ship_count == 0 for item in report.tier_results)
 
 
 @pytest.mark.parametrize("missing", ["AA", "ACHC"])
@@ -132,6 +164,18 @@ def test_duplicate_unregistered_and_large_cap_issuers_fail_closed():
     large["cases"][0]["issuer_id"] = "AAPL"
     with pytest.raises(BenchmarkContractError, match="only mid and small_micro"):
         grade_cap_tier_cohort(large)
+
+
+def test_future_or_unbound_sources_fail_before_scoring():
+    future = _cohort()
+    future["cases"][0]["sources"][0]["accepted_at"] = "2026-04-01T00:00:01Z"
+    with pytest.raises(BenchmarkContractError, match="future_source_version"):
+        grade_cap_tier_cohort(future)
+
+    unbound = _cohort()
+    unbound["cases"][0]["sources"][0]["source_id"] = "different-source"
+    with pytest.raises(BenchmarkContractError, match="require admitted sources"):
+        grade_cap_tier_cohort(unbound)
 
 
 def test_cli_emits_aggregate_report_and_uses_exit_code_as_gate(tmp_path, capsys):

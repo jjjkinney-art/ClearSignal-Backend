@@ -12,6 +12,7 @@ from typing import Any, Dict, Mapping, Sequence, Tuple
 from .benchmark_registry import IssuerRegistry, load_registry
 from .factual_citation_grading import FactualCitationScorecard, grade_payload
 from .intelligence_benchmark import BenchmarkContractError
+from .point_in_time_sources import audit_point_in_time_sources
 
 
 SCHEMA_VERSION = 1
@@ -170,6 +171,31 @@ def grade_cap_tier_cohort(
         claim_payload = case.get("claim_payload")
         if not isinstance(claim_payload, Mapping):
             raise BenchmarkContractError("each case requires a claim_payload object")
+        as_of = str(case.get("as_of", "")).strip()
+        sources = case.get("sources")
+        if not as_of or not isinstance(sources, list):
+            raise BenchmarkContractError(
+                "each case requires an as_of boundary and source list"
+            )
+        source_audit = audit_point_in_time_sources(as_of=as_of, records=sources)
+        if not source_audit.passed:
+            codes = ", ".join(sorted({
+                finding.code for finding in source_audit.findings
+                if finding.severity.value == "stop_ship"
+            }))
+            raise BenchmarkContractError(
+                f"cap-tier factual source gate failed for {issuer_id}: {codes}"
+            )
+        admitted_source_ids = {item.source_id for item in source_audit.admitted}
+        expected_source_ids = {
+            str(item.get("source_id", ""))
+            for item in claim_payload.get("expected_claims", ())
+            if isinstance(item, Mapping)
+        }
+        if not expected_source_ids or not expected_source_ids <= admitted_source_ids:
+            raise BenchmarkContractError(
+                f"cap-tier factual claims for {issuer_id} require admitted sources"
+            )
         seen.add(issuer_id)
         results.append(_issuer_result(issuer_id, tier, grade_payload(claim_payload)))
 
