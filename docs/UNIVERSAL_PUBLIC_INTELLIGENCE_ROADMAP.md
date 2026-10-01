@@ -164,7 +164,8 @@ principal cap tier, and additional sector/jurisdiction depth remain launch work.
 The smaller-company factual gate separately requires complete adjudication,
 at least 95% material numerical accuracy, 100% claim-to-source binding, zero
 fabricated sources, and no issuer-level stop-ship failure in either cap tier.
-Its first primary-source pack freezes 12 material revenue/net-income facts for
+Its first primary-source pack freezes 24 material revenue, net-income, and
+current/prior operating-cash-flow facts plus six recomputed trend comparisons for
 AA, DOCU, ETSY, ACHC, ACMR, and MAN against exact SEC accession numbers,
 acceptance timestamps, archived filing URLs, and SHA-256 document identities.
 

@@ -7,6 +7,7 @@ averages are not hiding an unreviewed issuer or a weak market-cap subgroup.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
+from decimal import Decimal, InvalidOperation
 from typing import Any, Dict, Mapping, Sequence, Tuple
 
 from .benchmark_registry import IssuerRegistry, load_registry
@@ -34,6 +35,8 @@ class IssuerFactualResult:
     pending_material_adjudications: int
     stop_ship_count: int
     fully_adjudicated: bool
+    comparison_count: int
+    comparison_correct_count: int
     passed: bool
 
 
@@ -69,6 +72,7 @@ def _ratio(numerator: int, denominator: int) -> float:
 
 def _issuer_result(
     issuer_id: str, tier: str, scorecard: FactualCitationScorecard,
+    comparison_count: int, comparison_correct_count: int,
 ) -> IssuerFactualResult:
     passed = (
         scorecard.material_claim_count > 0
@@ -80,6 +84,7 @@ def _issuer_result(
         >= MINIMUM_MATERIAL_NUMERICAL_ACCURACY
         and scorecard.claim_source_binding is not None
         and scorecard.claim_source_binding >= MINIMUM_CLAIM_SOURCE_BINDING
+        and comparison_correct_count == comparison_count
     )
     return IssuerFactualResult(
         issuer_id=issuer_id,
@@ -96,8 +101,71 @@ def _issuer_result(
         ),
         stop_ship_count=scorecard.stop_ship_count,
         fully_adjudicated=scorecard.fully_adjudicated,
+        comparison_count=comparison_count,
+        comparison_correct_count=comparison_correct_count,
         passed=passed,
     )
+
+
+def _comparison_counts(claim_payload: Mapping[str, Any]) -> Tuple[int, int]:
+    comparisons = claim_payload.get("comparisons", [])
+    if not isinstance(comparisons, list):
+        raise BenchmarkContractError("comparisons must be a list")
+    expected = {
+        str(item.get("claim_id")): item
+        for item in claim_payload.get("expected_claims", ())
+        if isinstance(item, Mapping)
+    }
+    observed = {
+        str(item.get("claim_id")): item
+        for item in claim_payload.get("observed_claims", ())
+        if isinstance(item, Mapping)
+    }
+    seen = set()
+    correct = 0
+    for item in comparisons:
+        if not isinstance(item, Mapping):
+            raise BenchmarkContractError("each comparison must be an object")
+        comparison_id = str(item.get("comparison_id", "")).strip()
+        current_id = str(item.get("current_claim_id", "")).strip()
+        prior_id = str(item.get("prior_claim_id", "")).strip()
+        if not comparison_id or comparison_id in seen:
+            raise BenchmarkContractError("comparison ids must be present and unique")
+        if current_id not in expected or prior_id not in expected:
+            raise BenchmarkContractError("comparison references unknown expected claims")
+        current_expected = expected[current_id]
+        prior_expected = expected[prior_id]
+        comparable_fields = ("metric", "unit", "currency", "scope")
+        if any(
+            str(current_expected.get(field)) != str(prior_expected.get(field))
+            for field in comparable_fields
+        ) or current_expected.get("period") == prior_expected.get("period"):
+            raise BenchmarkContractError(
+                "comparison claims must share metric/unit/currency/scope and use distinct periods"
+            )
+        seen.add(comparison_id)
+        try:
+            expected_delta = Decimal(str(current_expected["value"])) - Decimal(
+                str(prior_expected["value"])
+            )
+            declared_delta = Decimal(str(item["absolute_change"]))
+            current_observed = Decimal(str(observed[current_id]["value"]))
+            prior_observed = Decimal(str(observed[prior_id]["value"]))
+        except (KeyError, InvalidOperation) as exc:
+            raise BenchmarkContractError(
+                "comparison values and referenced observed claims are required"
+            ) from exc
+        observed_delta = current_observed - prior_observed
+        direction = "increase" if observed_delta > 0 else (
+            "decrease" if observed_delta < 0 else "flat"
+        )
+        if (
+            declared_delta == expected_delta
+            and observed_delta == expected_delta
+            and str(item.get("direction")) == direction
+        ):
+            correct += 1
+    return len(comparisons), correct
 
 
 def _tier_result(
@@ -197,7 +265,11 @@ def grade_cap_tier_cohort(
                 f"cap-tier factual claims for {issuer_id} require admitted sources"
             )
         seen.add(issuer_id)
-        results.append(_issuer_result(issuer_id, tier, grade_payload(claim_payload)))
+        comparison_count, comparison_correct = _comparison_counts(claim_payload)
+        results.append(_issuer_result(
+            issuer_id, tier, grade_payload(claim_payload),
+            comparison_count, comparison_correct,
+        ))
 
     results.sort(key=lambda item: item.issuer_id)
     tier_results = tuple(
