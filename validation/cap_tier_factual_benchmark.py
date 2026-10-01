@@ -107,7 +107,7 @@ def _issuer_result(
     )
 
 
-def _comparison_counts(claim_payload: Mapping[str, Any]) -> Tuple[int, int]:
+def grade_comparison_counts(claim_payload: Mapping[str, Any]) -> Tuple[int, int]:
     comparisons = claim_payload.get("comparisons", [])
     if not isinstance(comparisons, list):
         raise BenchmarkContractError("comparisons must be a list")
@@ -265,7 +265,7 @@ def grade_cap_tier_cohort(
                 f"cap-tier factual claims for {issuer_id} require admitted sources"
             )
         seen.add(issuer_id)
-        comparison_count, comparison_correct = _comparison_counts(claim_payload)
+        comparison_count, comparison_correct = grade_comparison_counts(claim_payload)
         results.append(_issuer_result(
             issuer_id, tier, grade_payload(claim_payload),
             comparison_count, comparison_correct,

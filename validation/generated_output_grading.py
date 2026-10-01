@@ -12,6 +12,7 @@ from typing import Any, Dict, Mapping, Sequence, Tuple
 
 from .factual_citation_grading import FactualCitationScorecard, grade_payload
 from .benchmark_registry import IssuerRegistry, load_registry
+from .cap_tier_factual_benchmark import grade_comparison_counts
 from .intelligence_benchmark import BenchmarkContractError
 
 
@@ -30,6 +31,8 @@ class GeneratedOutputCaseResult:
     pending_material_adjudications: int
     fabricated_material_sources: int
     stop_ship_count: int
+    comparison_count: int
+    comparison_correct_count: int
     elapsed_ms: float | None
     passed: bool
 
@@ -148,6 +151,16 @@ def _grade_case(case: Mapping[str, Any]) -> GeneratedOutputCaseResult:
             if normalized is not None:
                 candidates.append((index, normalized))
         if len(candidates) > 1:
+            period = str(expected.get("period", ""))
+            scope = str(expected.get("scope", ""))
+            exact_context = [
+                candidate for candidate in candidates
+                if candidate[1]["period"] == period
+                and candidate[1]["scope"] == scope
+            ]
+            if exact_context:
+                candidates = exact_context
+        if len(candidates) > 1:
             raise BenchmarkContractError(
                 f"captured output has ambiguous facts for {expected.get('claim_id')}"
             )
@@ -167,6 +180,14 @@ def _grade_case(case: Mapping[str, Any]) -> GeneratedOutputCaseResult:
         "observed_claims": observed,
         "adjudications": relevant_adjudications,
     })
+    comparison_payload = {
+        "expected_claims": expected_claims,
+        "observed_claims": observed,
+        "comparisons": case.get("comparisons", []),
+    }
+    comparison_count, comparison_correct = grade_comparison_counts(
+        comparison_payload
+    )
     passed = (
         rejected == 0
         and len(observed) == len(expected_claims)
@@ -174,6 +195,7 @@ def _grade_case(case: Mapping[str, Any]) -> GeneratedOutputCaseResult:
         and scorecard.stop_ship_count == 0
         and scorecard.material_numerical_accuracy == 1.0
         and scorecard.claim_source_binding == 1.0
+        and comparison_correct == comparison_count
     )
     capture_metadata = case.get("capture_metadata")
     elapsed_ms = None
@@ -193,6 +215,8 @@ def _grade_case(case: Mapping[str, Any]) -> GeneratedOutputCaseResult:
         pending_material_adjudications=scorecard.pending_material_adjudications,
         fabricated_material_sources=scorecard.fabricated_material_sources,
         stop_ship_count=scorecard.stop_ship_count,
+        comparison_count=comparison_count,
+        comparison_correct_count=comparison_correct,
         elapsed_ms=elapsed_ms,
         passed=passed,
     )
