@@ -138,6 +138,21 @@ notifications, or benchmark scheduler state.
 python3 scripts/benchmark_generated_outputs.py captured-output.json
 ```
 
+The companion capture command is inert by default. It validates only synthetic,
+registry-listed cases and rejects account IDs, user IDs, memory, personalization,
+conversation, and delivery state. Real provider/model execution requires both
+the `--execute` switch and an explicit process-level enablement. The runner calls
+the investment pipeline with all context absent and legacy history side effects
+disabled; its JSON output can be passed directly to the grader above.
+
+```bash
+python3 scripts/benchmark_pipeline_capture.py capture-manifest.json
+
+CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED=true \
+  python3 scripts/benchmark_pipeline_capture.py capture-manifest.json --execute \
+  > captured-output.json
+```
+
 ## Blind analytical review
 
 Analytical quality is evaluated from packets that expose an opaque output ID, the case question, the analysis and a rubric version—but reject model, provider, prompt, build, treatment, variant and memory identities, including nested metadata. Every output requires at least two distinct assigned reviewers. Submissions are bound to the exact assignment, reviewer, output and rubric version.
