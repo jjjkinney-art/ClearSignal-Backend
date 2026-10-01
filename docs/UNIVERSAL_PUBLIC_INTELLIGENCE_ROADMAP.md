@@ -55,7 +55,9 @@ Next work:
 - Continue expanding exact-period and duration disambiguation beyond the implemented
   10-Q quarter/YTD, 10-K annual/fourth-quarter, non-calendar 53-week year,
   amendment, malformed-duration, and duplicate-fact regression gates.
-- Add amendment, restatement, units, scale, and duplicate-fact resolution.
+- Continue amendment/restatement, units, and scale hardening beyond the
+  implemented latest-filing precedence, same-day amendment preference,
+  equivalent-duplicate collapse, and conflicting-restatement fail-closed gates.
 - Preserve filing, accession, form, period, taxonomy concept, and calculation provenance through the answer layer.
 - Benchmark entity resolution across ticker changes, multiple share classes, subsidiaries, and acquisitions.
 

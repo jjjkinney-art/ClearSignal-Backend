@@ -185,6 +185,90 @@ def test_latest_amendment_replaces_original_period_observation():
     assert item.url == amended.filing_url
 
 
+def test_identical_duplicate_observations_choose_deterministic_accession():
+    prior = _record()
+    current = _record(
+        value=112, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    repeated = replace(
+        current, accession="0000320193-25-000002",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000002/0000320193-25-000002-index.htm"),
+    )
+
+    item = comparable_metric_evidence(
+        [prior, current, repeated], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    )
+
+    assert item is not None
+    assert item.url == repeated.filing_url
+    assert item.verified_claims[0]["document_ref"]["url"] == repeated.filing_url
+
+
+def test_same_day_amendment_supersedes_conflicting_original():
+    prior = _record()
+    original = _record(
+        value=110, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    amended = replace(
+        original, value=112, form="10-Q/A",
+        accession="0000320193-25-000002",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000002/0000320193-25-000002-index.htm"),
+    )
+
+    item = comparable_metric_evidence(
+        [prior, original, amended], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    )
+
+    assert item is not None
+    assert "increased 12.0%" in item.summary
+    assert item.document_type == "10-Q/A"
+    assert item.url == amended.filing_url
+
+
+def test_conflicting_amendments_for_same_period_fail_closed():
+    prior = _record()
+    amendment = _record(
+        value=110, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-15", accession="0000320193-25-000002",
+    )
+    amendment = replace(amendment, form="10-Q/A")
+    conflict = replace(
+        amendment, value=112, accession="0000320193-25-000003",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000003/0000320193-25-000003-index.htm"),
+    )
+
+    assert comparable_metric_evidence(
+        [prior, amendment, conflict], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    ) is None
+
+
+def test_mixed_annual_and_quarterly_filing_families_fail_closed():
+    prior = _record()
+    current_quarter = _record(
+        value=112, start="2025-01-01", end="2025-03-31",
+        filed="2025-05-01", accession="0000320193-25-000001",
+    )
+    annual = replace(
+        current_quarter, form="10-K", start="2024-04-01", value=450,
+        accession="0000320193-25-000002",
+        filing_url=("https://www.sec.gov/Archives/edgar/data/320193/"
+                    "000032019325000002/0000320193-25-000002-index.htm"),
+    )
+
+    assert comparable_metric_evidence(
+        [prior, current_quarter, annual], ticker="AAPL", expected_cik="320193",
+        concepts=("Revenues",), metric_name="revenue",
+    ) is None
+
+
 def test_rejects_wrong_entity_missing_comparable_and_ambiguous_concepts():
     prior = _record()
     current = _record(value=112, start="2025-01-01", end="2025-03-31",
