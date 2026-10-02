@@ -1,6 +1,6 @@
 # Account-owned thesis memory artifact contract
 
-**Status:** persisted, owner-filtered, newer-evidence-gated, and evidence-bound at result validation  
+**Status:** connected to selected historical comparison with owner filtering, newer-evidence gating, and claim-level result binding  
 **Schema:** `1`
 
 ## Purpose
@@ -94,8 +94,15 @@ Missing claims, unsupported directions, or unadmitted evidence references
 collapse the entire result to `unverified`; partially supported conclusions
 are not emitted.
 
-1. Connect the owner-filtered loader, newer-evidence gate, and result validator
-   to the selected historical-comparison execution path.
-2. Expose the historical artifact, eligible new evidence, change classification,
+The selected historical-comparison execution path now runs one audited
+orchestrator. It adapts only the post-admission evidence list, applies the
+newer-evidence gate, validates every material change claim against eligible
+evidence IDs, corrects unsupported model direction to `unverified`, and returns
+both the gate and result audit in the existing research-memory comparison
+metadata.
+
+1. Expose the historical artifact, eligible new evidence, change classification,
    and uncertainty in Intelligence Mode.
-3. Add end-to-end acceptance tests before enabling proactive notices.
+2. Add signed-in end-to-end acceptance tests before enabling proactive notices.
+3. Keep proactive notices disabled until event relevance and delivery controls
+   pass their own authorization, deduplication, and cost gates.
