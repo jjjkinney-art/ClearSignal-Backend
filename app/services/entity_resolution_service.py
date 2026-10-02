@@ -92,6 +92,18 @@ _ACQUISITION_RELATIONSHIPS = {
     ("MSFT", "github"): ("2018-10-26", ""),
     ("MSFT", "activision blizzard"): ("2023-10-13", "ATVI"),
 }
+_SEPARATION_RELATIONSHIPS = {
+    # First day as a legally separate public company, plus the former parent.
+    ("PYPL", "paypal"): ("2015-07-17", "EBAY", "spin_off"),
+    ("KD", "kyndryl"): ("2021-11-03", "IBM", "spin_off"),
+    ("GEHC", "ge healthcare"): ("2023-01-04", "GE", "spin_off"),
+    ("GEHC", "ge healthcare technologies"): ("2023-01-04", "GE", "spin_off"),
+    ("GEV", "ge vernova"): ("2024-04-02", "GE", "spin_off"),
+}
+_SAME_ISSUER_ALIAS_WINDOWS = {
+    # Last trading day under the former symbol. The issuer/CIK did not change.
+    ("META", "fb"): ("", "2022-06-08"),
+}
 _SHARE_CLASS_TICKERS = {"BRK.A", "BRK.B", "BF.B", "GOOG", "GOOGL"}
 
 # ---------------------------------------------------------------------------
@@ -194,7 +206,10 @@ class EntityResolutionResult:
     requested_entity:     str = ""
     relationship_status:  str = "current"
     relationship_effective_from: str = ""
+    relationship_effective_to: str = ""
     historical_ticker:    str = ""
+    predecessor_ticker:   str = ""
+    relationship_event:   str = ""
     identity_as_of:       str = ""
 
 
@@ -291,8 +306,13 @@ def _identity_metadata(
     normalized = (alias or "").strip().lower()
     relation = _ALIAS_RELATIONSHIPS.get((ticker, normalized))
     acquisition = _ACQUISITION_RELATIONSHIPS.get((ticker, normalized))
+    separation = _SEPARATION_RELATIONSHIPS.get((ticker, normalized))
+    alias_window = _SAME_ISSUER_ALIAS_WINDOWS.get((ticker, normalized))
     effective_from = ""
+    effective_to = ""
     historical_ticker = ""
+    predecessor_ticker = ""
+    relationship_event = ""
     status = "current"
     identity_date = _coerce_as_of(as_of)
     if acquisition is not None:
@@ -300,6 +320,19 @@ def _identity_metadata(
         relation = "acquired_subsidiary"
         if identity_date is not None and identity_date < date.fromisoformat(effective_from):
             status = "not_yet_owned"
+        relationship_event = "acquisition"
+    elif separation is not None:
+        effective_from, predecessor_ticker, relationship_event = separation
+        relation = "separated_company"
+        if identity_date is not None and identity_date < date.fromisoformat(effective_from):
+            status = "pre_separation"
+    elif alias_window is not None:
+        effective_from, effective_to = alias_window
+        relationship_event = "ticker_change"
+        if identity_date is not None and identity_date <= date.fromisoformat(effective_to):
+            status = "historical_alias_active"
+        else:
+            status = "former_alias"
     if relation is None and ticker in _SHARE_CLASS_TICKERS:
         relation = "share_class"
     return {
@@ -307,15 +340,41 @@ def _identity_metadata(
         "requested_entity": alias,
         "relationship_status": status,
         "relationship_effective_from": effective_from,
+        "relationship_effective_to": effective_to,
         "historical_ticker": historical_ticker,
+        "predecessor_ticker": predecessor_ticker,
+        "relationship_event": relationship_event,
         "identity_as_of": identity_date.isoformat() if identity_date else "",
     }
 
 
 def _guard_temporal_identity(result: EntityResolutionResult) -> EntityResolutionResult:
     """Fail closed when an acquisition alias predates the buyer's ownership."""
-    if result.relationship_status != "not_yet_owned":
+    if result.relationship_status not in {"not_yet_owned", "pre_separation"}:
         return result
+    if result.relationship_status == "pre_separation":
+        return EntityResolutionResult(
+            matched_alias=result.matched_alias,
+            resolution_method="temporal_identity_mismatch",
+            ambiguity_reason=(
+                f"{result.requested_entity} was not yet a separate public issuer "
+                f"on {result.identity_as_of}; separation from "
+                f"{result.predecessor_ticker} became effective "
+                f"{result.relationship_effective_from}."
+            ),
+            needs_clarification=True,
+            clarification_prompt=(
+                f"Research predecessor {result.predecessor_ticker} as of "
+                f"{result.identity_as_of}, or analyze the current standalone company?"
+            ),
+            identity_relation=result.identity_relation,
+            requested_entity=result.requested_entity,
+            relationship_status=result.relationship_status,
+            relationship_effective_from=result.relationship_effective_from,
+            predecessor_ticker=result.predecessor_ticker,
+            relationship_event=result.relationship_event,
+            identity_as_of=result.identity_as_of,
+        )
     historical = (
         f" Its historical ticker was {result.historical_ticker}."
         if result.historical_ticker else ""
@@ -337,7 +396,10 @@ def _guard_temporal_identity(result: EntityResolutionResult) -> EntityResolution
         requested_entity=result.requested_entity,
         relationship_status=result.relationship_status,
         relationship_effective_from=result.relationship_effective_from,
+        relationship_effective_to=result.relationship_effective_to,
         historical_ticker=result.historical_ticker,
+        predecessor_ticker=result.predecessor_ticker,
+        relationship_event=result.relationship_event,
         identity_as_of=result.identity_as_of,
     )
 

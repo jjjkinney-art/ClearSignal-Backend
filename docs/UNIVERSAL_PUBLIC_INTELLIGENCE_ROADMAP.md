@@ -65,8 +65,10 @@ Next work:
 - Continue entity-resolution benchmarking beyond the implemented SEC dotted/hyphenated
   share-class normalization; explicit former-ticker, former-name, subsidiary, and
   business-unit metadata; and close-date-bounded acquisition aliases that fail closed
-  before the current parent's ownership began. Merger chains, spin-offs, divestitures,
-  and broader historical security-master coverage remain before universal coverage.
+  before the current parent's ownership began. The first spin-off/predecessor cohort
+  now covers PayPal/eBay, Kyndryl/IBM, GE HealthCare/GE, and GE Vernova/GE, while
+  same-issuer former-ticker windows preserve historical FB/META resolution. Merger
+  chains, divestitures, and broader historical security-master coverage remain.
 
 ### Phase B — General-company metric families (P0)
 

@@ -230,6 +230,49 @@ class TestEntityIdentityMetadata:
         assert result.needs_clarification is True
         assert result.historical_ticker == "WFM"
 
+    @pytest.mark.parametrize("query,ticker,from_date,predecessor", [
+        ("PayPal revenue", "PYPL", "2015-07-17", "EBAY"),
+        ("Kyndryl revenue", "KD", "2021-11-03", "IBM"),
+        ("GE HealthCare revenue", "GEHC", "2023-01-04", "GE"),
+        ("GE Vernova revenue", "GEV", "2024-04-02", "GE"),
+    ])
+    def test_current_spin_off_identity_retains_predecessor(
+        self, query: str, ticker: str, from_date: str, predecessor: str,
+    ):
+        result = resolve_query(query)
+
+        assert result.canonical_ticker == ticker
+        assert result.identity_relation == "separated_company"
+        assert result.relationship_event == "spin_off"
+        assert result.relationship_effective_from == from_date
+        assert result.predecessor_ticker == predecessor
+
+    def test_pre_spin_off_date_fails_closed_to_predecessor_choice(self):
+        result = resolve_query("PayPal revenue", as_of="2014-12-31")
+
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification is True
+        assert result.relationship_status == "pre_separation"
+        assert result.predecessor_ticker == "EBAY"
+        assert "not yet a separate public issuer" in result.ambiguity_reason
+
+    def test_spin_off_effective_date_resolves_standalone_company(self):
+        result = resolve_query("GE Vernova revenue", as_of="2024-04-02")
+
+        assert result.canonical_ticker == "GEV"
+        assert result.needs_clarification is False
+        assert result.identity_as_of == "2024-04-02"
+
+    def test_same_issuer_former_ticker_remains_safe_historically(self):
+        historical = resolve_query("FB earnings", as_of="2021-12-31")
+        current = resolve_query("FB earnings", as_of="2024-12-31")
+
+        assert historical.canonical_ticker == current.canonical_ticker == "META"
+        assert historical.relationship_status == "historical_alias_active"
+        assert current.relationship_status == "former_alias"
+        assert historical.relationship_effective_to == "2022-06-08"
+        assert historical.relationship_event == "ticker_change"
+
 
 # ===========================================================================
 # Fix B prerequisite — detect_company resolves pilot tickers correctly

@@ -152,6 +152,7 @@ _COMPANY_DB: dict[str, dict] = {
     "V":     {"company_name": "Visa Inc.",                               "sector": "Financials",                "industry": "Payment Processing"},
     "MA":    {"company_name": "Mastercard Inc.",                         "sector": "Financials",                "industry": "Payment Processing"},
     "PYPL":  {"company_name": "PayPal Holdings Inc.",                    "sector": "Financials",                "industry": "Digital Payments"},
+    "EBAY":  {"company_name": "eBay Inc.",                               "sector": "Consumer Discretionary",    "industry": "E-Commerce"},
     "NFLX":  {"company_name": "Netflix Inc.",                            "sector": "Communication Services",    "industry": "Streaming"},
     "DIS":   {"company_name": "The Walt Disney Company",                 "sector": "Communication Services",    "industry": "Entertainment"},
     "BA":    {"company_name": "The Boeing Company",                      "sector": "Industrials",               "industry": "Aerospace & Defense"},
@@ -200,6 +201,10 @@ _COMPANY_DB: dict[str, dict] = {
     "MMM":   {"company_name": "3M Company",                              "sector": "Industrials",               "industry": "Diversified Industrials"},
     "HON":   {"company_name": "Honeywell International Inc.",            "sector": "Industrials",               "industry": "Diversified Industrials"},
     "GE":    {"company_name": "GE Aerospace",                            "sector": "Industrials",               "industry": "Aerospace & Defense"},
+    "GEHC":  {"company_name": "GE HealthCare Technologies Inc.",         "sector": "Health Care",               "industry": "Medical Technology"},
+    "GEV":   {"company_name": "GE Vernova Inc.",                         "sector": "Industrials",               "industry": "Energy Technology"},
+    "IBM":   {"company_name": "International Business Machines Corp.",   "sector": "Technology",                "industry": "IT Services"},
+    "KD":    {"company_name": "Kyndryl Holdings Inc.",                   "sector": "Technology",                "industry": "IT Services"},
     "RTX":   {"company_name": "RTX Corporation",                         "sector": "Industrials",               "industry": "Aerospace & Defense"},
     "LMT":   {"company_name": "Lockheed Martin Corporation",             "sector": "Industrials",               "industry": "Aerospace & Defense"},
     "NOC":   {"company_name": "Northrop Grumman Corporation",            "sector": "Industrials",               "industry": "Aerospace & Defense"},
@@ -532,6 +537,7 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── PayPal ────────────────────────────────────────────────────────────────
     "paypal":                  "PYPL",
+    "ebay":                    "EBAY",
 
     # ── Netflix ───────────────────────────────────────────────────────────────
     "netflix":                 "NFLX",
@@ -718,6 +724,12 @@ _ALIAS_MAP: dict[str, str] = {
     # ── GE ────────────────────────────────────────────────────────────────────
     "general electric":        "GE",
     "ge aerospace":            "GE",
+    "ge healthcare":           "GEHC",
+    "ge healthcare technologies": "GEHC",
+    "ge vernova":              "GEV",
+    "ibm":                     "IBM",
+    "international business machines": "IBM",
+    "kyndryl":                 "KD",
 
     # ── Raytheon / RTX ────────────────────────────────────────────────────────
     "raytheon":                "RTX",
