@@ -100,6 +100,23 @@ _SEPARATION_RELATIONSHIPS = {
     ("GEHC", "ge healthcare technologies"): ("2023-01-04", "GE", "spin_off"),
     ("GEV", "ge vernova"): ("2024-04-02", "GE", "spin_off"),
 }
+_MERGER_RELATIONSHIPS = {
+    # Successor effective date, predecessor securities/parents, event type.
+    ("WBD", "warner bros discovery"): (
+        "2022-04-08", ("T", "DISCA"), "divestiture_merger",
+    ),
+    ("WBD", "warner brothers discovery"): (
+        "2022-04-08", ("T", "DISCA"), "divestiture_merger",
+    ),
+    ("WBD", "warnermedia"): ("2022-04-08", ("T",), "divestiture_merger"),
+    ("WBD", "warner media"): ("2022-04-08", ("T",), "divestiture_merger"),
+    ("WBD", "discovery communications"): (
+        "2022-04-08", ("DISCA",), "merger_successor",
+    ),
+    ("VTRS", "viatris"): ("2020-11-16", ("MYL", "PFE"), "merger_successor"),
+    ("VTRS", "mylan"): ("2020-11-16", ("MYL",), "merger_successor"),
+    ("VTRS", "upjohn"): ("2020-11-16", ("PFE",), "merger_successor"),
+}
 _SAME_ISSUER_ALIAS_WINDOWS = {
     # Last trading day under the former symbol. The issuer/CIK did not change.
     ("META", "fb"): ("", "2022-06-08"),
@@ -209,6 +226,7 @@ class EntityResolutionResult:
     relationship_effective_to: str = ""
     historical_ticker:    str = ""
     predecessor_ticker:   str = ""
+    predecessor_tickers:  Tuple[str, ...] = field(default_factory=tuple)
     relationship_event:   str = ""
     identity_as_of:       str = ""
 
@@ -307,11 +325,13 @@ def _identity_metadata(
     relation = _ALIAS_RELATIONSHIPS.get((ticker, normalized))
     acquisition = _ACQUISITION_RELATIONSHIPS.get((ticker, normalized))
     separation = _SEPARATION_RELATIONSHIPS.get((ticker, normalized))
+    merger = _MERGER_RELATIONSHIPS.get((ticker, normalized))
     alias_window = _SAME_ISSUER_ALIAS_WINDOWS.get((ticker, normalized))
     effective_from = ""
     effective_to = ""
     historical_ticker = ""
     predecessor_ticker = ""
+    predecessor_tickers: Tuple[str, ...] = ()
     relationship_event = ""
     status = "current"
     identity_date = _coerce_as_of(as_of)
@@ -323,9 +343,16 @@ def _identity_metadata(
         relationship_event = "acquisition"
     elif separation is not None:
         effective_from, predecessor_ticker, relationship_event = separation
+        predecessor_tickers = (predecessor_ticker,)
         relation = "separated_company"
         if identity_date is not None and identity_date < date.fromisoformat(effective_from):
             status = "pre_separation"
+    elif merger is not None:
+        effective_from, predecessor_tickers, relationship_event = merger
+        predecessor_ticker = predecessor_tickers[0] if len(predecessor_tickers) == 1 else ""
+        relation = "merger_successor"
+        if identity_date is not None and identity_date < date.fromisoformat(effective_from):
+            status = "pre_merger"
     elif alias_window is not None:
         effective_from, effective_to = alias_window
         relationship_event = "ticker_change"
@@ -343,6 +370,7 @@ def _identity_metadata(
         "relationship_effective_to": effective_to,
         "historical_ticker": historical_ticker,
         "predecessor_ticker": predecessor_ticker,
+        "predecessor_tickers": predecessor_tickers,
         "relationship_event": relationship_event,
         "identity_as_of": identity_date.isoformat() if identity_date else "",
     }
@@ -350,8 +378,34 @@ def _identity_metadata(
 
 def _guard_temporal_identity(result: EntityResolutionResult) -> EntityResolutionResult:
     """Fail closed when an acquisition alias predates the buyer's ownership."""
-    if result.relationship_status not in {"not_yet_owned", "pre_separation"}:
+    if result.relationship_status not in {
+        "not_yet_owned", "pre_separation", "pre_merger",
+    }:
         return result
+    if result.relationship_status == "pre_merger":
+        predecessors = ", ".join(result.predecessor_tickers)
+        return EntityResolutionResult(
+            matched_alias=result.matched_alias,
+            resolution_method="temporal_identity_mismatch",
+            ambiguity_reason=(
+                f"{result.requested_entity} was not yet the current successor issuer "
+                f"on {result.identity_as_of}; the transaction involving "
+                f"{predecessors} closed {result.relationship_effective_from}."
+            ),
+            needs_clarification=True,
+            clarification_prompt=(
+                f"Which predecessor should be researched as of {result.identity_as_of}: "
+                f"{predecessors}?"
+            ),
+            identity_relation=result.identity_relation,
+            requested_entity=result.requested_entity,
+            relationship_status=result.relationship_status,
+            relationship_effective_from=result.relationship_effective_from,
+            predecessor_ticker=result.predecessor_ticker,
+            predecessor_tickers=result.predecessor_tickers,
+            relationship_event=result.relationship_event,
+            identity_as_of=result.identity_as_of,
+        )
     if result.relationship_status == "pre_separation":
         return EntityResolutionResult(
             matched_alias=result.matched_alias,
@@ -372,6 +426,7 @@ def _guard_temporal_identity(result: EntityResolutionResult) -> EntityResolution
             relationship_status=result.relationship_status,
             relationship_effective_from=result.relationship_effective_from,
             predecessor_ticker=result.predecessor_ticker,
+            predecessor_tickers=result.predecessor_tickers,
             relationship_event=result.relationship_event,
             identity_as_of=result.identity_as_of,
         )
@@ -399,6 +454,7 @@ def _guard_temporal_identity(result: EntityResolutionResult) -> EntityResolution
         relationship_effective_to=result.relationship_effective_to,
         historical_ticker=result.historical_ticker,
         predecessor_ticker=result.predecessor_ticker,
+        predecessor_tickers=result.predecessor_tickers,
         relationship_event=result.relationship_event,
         identity_as_of=result.identity_as_of,
     )

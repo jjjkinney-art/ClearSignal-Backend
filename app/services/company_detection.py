@@ -154,10 +154,12 @@ _COMPANY_DB: dict[str, dict] = {
     "PYPL":  {"company_name": "PayPal Holdings Inc.",                    "sector": "Financials",                "industry": "Digital Payments"},
     "EBAY":  {"company_name": "eBay Inc.",                               "sector": "Consumer Discretionary",    "industry": "E-Commerce"},
     "NFLX":  {"company_name": "Netflix Inc.",                            "sector": "Communication Services",    "industry": "Streaming"},
+    "WBD":   {"company_name": "Warner Bros. Discovery Inc.",             "sector": "Communication Services",    "industry": "Entertainment"},
     "DIS":   {"company_name": "The Walt Disney Company",                 "sector": "Communication Services",    "industry": "Entertainment"},
     "BA":    {"company_name": "The Boeing Company",                      "sector": "Industrials",               "industry": "Aerospace & Defense"},
     "JNJ":   {"company_name": "Johnson & Johnson",                       "sector": "Health Care",               "industry": "Pharmaceuticals"},
     "PFE":   {"company_name": "Pfizer Inc.",                             "sector": "Health Care",               "industry": "Pharmaceuticals"},
+    "VTRS":  {"company_name": "Viatris Inc.",                            "sector": "Health Care",               "industry": "Pharmaceuticals"},
     "MRNA":  {"company_name": "Moderna Inc.",                            "sector": "Health Care",               "industry": "Biotechnology"},
     "UNH":   {"company_name": "UnitedHealth Group Inc.",                 "sector": "Health Care",               "industry": "Managed Care"},
     "XOM":   {"company_name": "ExxonMobil Corporation",                  "sector": "Energy",                    "industry": "Oil & Gas"},
@@ -541,6 +543,16 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── Netflix ───────────────────────────────────────────────────────────────
     "netflix":                 "NFLX",
+
+    # ── Merger successors ────────────────────────────────────────────────────
+    "warner bros discovery":   "WBD",
+    "warner brothers discovery": "WBD",
+    "warnermedia":             "WBD",
+    "warner media":            "WBD",
+    "discovery communications": "WBD",
+    "viatris":                 "VTRS",
+    "mylan":                   "VTRS",
+    "upjohn":                  "VTRS",
 
     # ── Disney ────────────────────────────────────────────────────────────────
     "disney":                  "DIS",

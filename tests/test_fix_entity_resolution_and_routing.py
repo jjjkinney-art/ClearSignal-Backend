@@ -273,6 +273,60 @@ class TestEntityIdentityMetadata:
         assert historical.relationship_effective_to == "2022-06-08"
         assert historical.relationship_event == "ticker_change"
 
+    @pytest.mark.parametrize("query,ticker,effective,predecessors,event", [
+        (
+            "Warner Bros Discovery revenue", "WBD", "2022-04-08",
+            ("T", "DISCA"), "divestiture_merger",
+        ),
+        (
+            "WarnerMedia revenue", "WBD", "2022-04-08",
+            ("T",), "divestiture_merger",
+        ),
+        (
+            "Viatris revenue", "VTRS", "2020-11-16",
+            ("MYL", "PFE"), "merger_successor",
+        ),
+        (
+            "Mylan revenue", "VTRS", "2020-11-16",
+            ("MYL",), "merger_successor",
+        ),
+    ])
+    def test_current_merger_successor_retains_predecessor_chain(
+        self, query: str, ticker: str, effective: str,
+        predecessors: tuple[str, ...], event: str,
+    ):
+        result = resolve_query(query)
+
+        assert result.canonical_ticker == ticker
+        assert result.identity_relation == "merger_successor"
+        assert result.relationship_effective_from == effective
+        assert result.predecessor_tickers == predecessors
+        assert result.relationship_event == event
+
+    def test_pre_merger_successor_date_requires_predecessor_choice(self):
+        result = resolve_query("Viatris revenue", as_of="2019-12-31")
+
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification is True
+        assert result.relationship_status == "pre_merger"
+        assert result.predecessor_tickers == ("MYL", "PFE")
+        assert "MYL, PFE" in result.clarification_prompt
+
+    def test_pre_divestiture_merger_does_not_route_to_successor(self):
+        result = resolve_query("WarnerMedia revenue", as_of="2021-12-31")
+
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification is True
+        assert result.predecessor_tickers == ("T",)
+        assert result.relationship_event == "divestiture_merger"
+
+    def test_merger_close_date_resolves_successor(self):
+        result = resolve_query("Viatris revenue", as_of="2020-11-16")
+
+        assert result.canonical_ticker == "VTRS"
+        assert result.needs_clarification is False
+        assert result.identity_as_of == "2020-11-16"
+
 
 # ===========================================================================
 # Fix B prerequisite — detect_company resolves pilot tickers correctly
