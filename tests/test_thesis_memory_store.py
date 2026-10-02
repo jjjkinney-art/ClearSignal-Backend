@@ -106,12 +106,13 @@ def test_loader_is_owner_scoped_ticker_scoped_and_deletion_aware():
                     conversation_id=conversation["id"],
                 )
                 await session.commit()
-                assert await load_owned_thesis_memory_artifact(
+                after_delete = await load_owned_thesis_memory_artifact(
                     session,
                     user_id="owner-a",
                     conversation_id=conversation["id"],
                     target_ticker="AAPL",
-                )["status"] == "unavailable"
+                )
+                assert after_delete["status"] == "unavailable"
         finally:
             await engine.dispose()
 
