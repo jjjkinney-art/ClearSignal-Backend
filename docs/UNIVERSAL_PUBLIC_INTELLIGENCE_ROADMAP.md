@@ -63,9 +63,10 @@ Next work:
   contract, which preserves its formula, exact period/unit/scope compatibility,
   and both accession-bound input references separately from reported facts.
 - Continue entity-resolution benchmarking beyond the implemented SEC dotted/hyphenated
-  share-class normalization and explicit former-ticker, former-name, subsidiary, and
-  business-unit relationship metadata. Acquisition aliases and temporal ownership
-  changes remain to be modeled and benchmarked before universal coverage.
+  share-class normalization; explicit former-ticker, former-name, subsidiary, and
+  business-unit metadata; and close-date-bounded acquisition aliases that fail closed
+  before the current parent's ownership began. Merger chains, spin-offs, divestitures,
+  and broader historical security-master coverage remain before universal coverage.
 
 ### Phase B — General-company metric families (P0)
 

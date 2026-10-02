@@ -184,6 +184,52 @@ class TestEntityIdentityMetadata:
         assert result.canonical_ticker == "META"
         assert result.identity_relation == "canonical_issuer"
 
+    @pytest.mark.parametrize("query,parent,effective_from,historical_ticker", [
+        ("LinkedIn revenue", "MSFT", "2016-12-08", "LNKD"),
+        ("Whole Foods margins", "AMZN", "2017-08-28", "WFM"),
+        ("GitHub growth", "MSFT", "2018-10-26", ""),
+        ("Activision Blizzard bookings", "MSFT", "2023-10-13", "ATVI"),
+        ("YouTube advertising revenue", "GOOGL", "2006-11-13", ""),
+    ])
+    def test_current_acquisition_alias_retains_temporal_identity(
+        self, query: str, parent: str, effective_from: str, historical_ticker: str,
+    ):
+        result = resolve_query(query)
+
+        assert result.canonical_ticker == parent
+        assert result.identity_relation == "acquired_subsidiary"
+        assert result.relationship_status == "current"
+        assert result.relationship_effective_from == effective_from
+        assert result.historical_ticker == historical_ticker
+
+    def test_pre_acquisition_date_fails_closed(self):
+        result = resolve_query("LinkedIn revenue", as_of="2015-12-31")
+
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification is True
+        assert result.resolution_method == "temporal_identity_mismatch"
+        assert result.relationship_status == "not_yet_owned"
+        assert result.historical_ticker == "LNKD"
+        assert "not owned by Microsoft" in result.ambiguity_reason
+
+    def test_acquisition_close_date_resolves_to_parent(self):
+        result = resolve_query("LinkedIn revenue", as_of="2016-12-08")
+
+        assert result.canonical_ticker == "MSFT"
+        assert result.needs_clarification is False
+        assert result.identity_as_of == "2016-12-08"
+
+    def test_company_hint_obeys_temporal_guard(self):
+        result = resolve_query(
+            "How fast was it growing?",
+            company_hint="Whole Foods",
+            as_of="2016-12-31",
+        )
+
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification is True
+        assert result.historical_ticker == "WFM"
+
 
 # ===========================================================================
 # Fix B prerequisite — detect_company resolves pilot tickers correctly

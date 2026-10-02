@@ -406,6 +406,9 @@ _ALIAS_MAP: dict[str, str] = {
     # ── Microsoft ─────────────────────────────────────────────────────────────
     "microsoft":               "MSFT",
     "msft":                    "MSFT",
+    "linkedin":                "MSFT",
+    "github":                  "MSFT",
+    "activision blizzard":     "MSFT",
     # typos
     "microsfot":               "MSFT",
     "microsft":                "MSFT",
@@ -420,6 +423,7 @@ _ALIAS_MAP: dict[str, str] = {
     "goog":                    "GOOG",
     "google cloud":            "GOOGL",
     "google search":           "GOOGL",
+    "youtube":                 "GOOGL",
     # typos
     "goggle":                  "GOOGL",
     "gogle":                   "GOOGL",
@@ -432,6 +436,7 @@ _ALIAS_MAP: dict[str, str] = {
     "amzn":                    "AMZN",
     "amazon web services":     "AMZN",
     "aws":                     "AMZN",
+    "whole foods":             "AMZN",
 
     # ── Meta ──────────────────────────────────────────────────────────────────
     "meta":                    "META",

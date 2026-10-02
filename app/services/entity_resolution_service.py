@@ -56,6 +56,7 @@ from __future__ import annotations
 import logging
 import re
 from dataclasses import dataclass, field
+from datetime import date, datetime
 from typing import List, Optional, Tuple
 
 from .company_detection import (
@@ -81,6 +82,15 @@ _ALIAS_RELATIONSHIPS = {
     ("AMZN", "aws"): "business_unit",
     ("SHEL", "royal dutch shell"): "former_name",
     ("SHEL", "royal dutch"): "former_name",
+}
+_ACQUISITION_RELATIONSHIPS = {
+    # Legal close dates, not announcement dates. Historical tickers are kept
+    # so pre-close research is never silently attributed to the buyer.
+    ("GOOGL", "youtube"): ("2006-11-13", ""),
+    ("MSFT", "linkedin"): ("2016-12-08", "LNKD"),
+    ("AMZN", "whole foods"): ("2017-08-28", "WFM"),
+    ("MSFT", "github"): ("2018-10-26", ""),
+    ("MSFT", "activision blizzard"): ("2023-10-13", "ATVI"),
 }
 _SHARE_CLASS_TICKERS = {"BRK.A", "BRK.B", "BF.B", "GOOG", "GOOGL"}
 
@@ -182,6 +192,10 @@ class EntityResolutionResult:
     candidates:           List[Tuple[str, str, float]] = field(default_factory=list)
     identity_relation:    str = "canonical_issuer"
     requested_entity:     str = ""
+    relationship_status:  str = "current"
+    relationship_effective_from: str = ""
+    historical_ticker:    str = ""
+    identity_as_of:       str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -256,15 +270,76 @@ def _make_result_for_ticker(ticker: str, method: str, alias: str,
     )
 
 
-def _identity_metadata(ticker: str, alias: str) -> dict:
+def _coerce_as_of(as_of: Optional[date | datetime | str]) -> Optional[date]:
+    if as_of is None or as_of == "":
+        return None
+    if isinstance(as_of, datetime):
+        return as_of.date()
+    if isinstance(as_of, date):
+        return as_of
+    try:
+        return date.fromisoformat(str(as_of).strip()[:10])
+    except (TypeError, ValueError):
+        return None
+
+
+def _identity_metadata(
+    ticker: str,
+    alias: str,
+    as_of: Optional[date | datetime | str] = None,
+) -> dict:
     normalized = (alias or "").strip().lower()
     relation = _ALIAS_RELATIONSHIPS.get((ticker, normalized))
+    acquisition = _ACQUISITION_RELATIONSHIPS.get((ticker, normalized))
+    effective_from = ""
+    historical_ticker = ""
+    status = "current"
+    identity_date = _coerce_as_of(as_of)
+    if acquisition is not None:
+        effective_from, historical_ticker = acquisition
+        relation = "acquired_subsidiary"
+        if identity_date is not None and identity_date < date.fromisoformat(effective_from):
+            status = "not_yet_owned"
     if relation is None and ticker in _SHARE_CLASS_TICKERS:
         relation = "share_class"
     return {
         "identity_relation": relation or "canonical_issuer",
         "requested_entity": alias,
+        "relationship_status": status,
+        "relationship_effective_from": effective_from,
+        "historical_ticker": historical_ticker,
+        "identity_as_of": identity_date.isoformat() if identity_date else "",
     }
+
+
+def _guard_temporal_identity(result: EntityResolutionResult) -> EntityResolutionResult:
+    """Fail closed when an acquisition alias predates the buyer's ownership."""
+    if result.relationship_status != "not_yet_owned":
+        return result
+    historical = (
+        f" Its historical ticker was {result.historical_ticker}."
+        if result.historical_ticker else ""
+    )
+    return EntityResolutionResult(
+        matched_alias=result.matched_alias,
+        resolution_method="temporal_identity_mismatch",
+        ambiguity_reason=(
+            f"{result.requested_entity} was not owned by {result.company_name} "
+            f"on {result.identity_as_of}; ownership began "
+            f"{result.relationship_effective_from}.{historical}"
+        ),
+        needs_clarification=True,
+        clarification_prompt=(
+            f"Research {result.requested_entity} as a historical standalone entity "
+            f"as of {result.identity_as_of}, or analyze its current parent?"
+        ),
+        identity_relation=result.identity_relation,
+        requested_entity=result.requested_entity,
+        relationship_status=result.relationship_status,
+        relationship_effective_from=result.relationship_effective_from,
+        historical_ticker=result.historical_ticker,
+        identity_as_of=result.identity_as_of,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -274,6 +349,7 @@ def _identity_metadata(ticker: str, alias: str) -> dict:
 def resolve_query(
     query: str,
     company_hint: str = "",
+    as_of: Optional[date | datetime | str] = None,
 ) -> EntityResolutionResult:
     """Resolve a natural-language query to a canonical (ticker, company_name).
 
@@ -337,7 +413,7 @@ def resolve_query(
             "[entity_resolution] alias_exact → %s via '%s' (query=%r)",
             alias_ctx.ticker, alias, primary_text[:80],
         )
-        return EntityResolutionResult(
+        return _guard_temporal_identity(EntityResolutionResult(
             canonical_ticker=alias_ctx.ticker,
             company_name=alias_ctx.company_name,
             confidence_score=0.95,
@@ -345,8 +421,8 @@ def resolve_query(
             resolution_method="alias_exact",
             sector=info.get("sector", ""),
             industry=info.get("industry", ""),
-            **_identity_metadata(alias_ctx.ticker, alias),
-        )
+            **_identity_metadata(alias_ctx.ticker, alias, as_of),
+        ))
 
     # ── Step 3: non-protected exact uppercase ticker ──────────────────────────
     # Protected generic-word tickers (AI, APP, NET, SNOW, …) are already in
@@ -366,7 +442,7 @@ def resolve_query(
             resolution_method="exact_ticker",
             sector=info.get("sector", ""),
             industry=info.get("industry", ""),
-            **_identity_metadata(ticker_ctx.ticker, ticker_ctx.ticker),
+            **_identity_metadata(ticker_ctx.ticker, ticker_ctx.ticker, as_of),
         )
 
     # ── Step 4: fuzzy token match on full query ───────────────────────────────
@@ -380,7 +456,7 @@ def resolve_query(
                 "[entity_resolution] fuzzy_token → %s via '%s' (conf=%.2f) (query=%r)",
                 ctx.ticker, matched_alias, confidence, primary_text[:80],
             )
-            return EntityResolutionResult(
+            return _guard_temporal_identity(EntityResolutionResult(
                 canonical_ticker=ctx.ticker,
                 company_name=ctx.company_name,
                 confidence_score=confidence,
@@ -392,8 +468,8 @@ def resolve_query(
                 ) if confidence < 0.90 else "",
                 sector=info.get("sector", ""),
                 industry=info.get("industry", ""),
-                **_identity_metadata(ctx.ticker, matched_alias),
-            )
+                **_identity_metadata(ctx.ticker, matched_alias, as_of),
+            ))
 
     # ── Step 5: retry steps 2-4 on company_hint if different from query ───────
     if hint_text and hint_text.lower() != primary_text.lower():
@@ -407,7 +483,7 @@ def resolve_query(
         if alias_ctx is not None:
             info = _COMPANY_DB.get(alias_ctx.ticker, {})
             alias = alias_ctx.aliases[0] if alias_ctx.aliases else ""
-            return EntityResolutionResult(
+            return _guard_temporal_identity(EntityResolutionResult(
                 canonical_ticker=alias_ctx.ticker,
                 company_name=alias_ctx.company_name,
                 confidence_score=0.95,
@@ -415,8 +491,8 @@ def resolve_query(
                 resolution_method="alias_exact",
                 sector=info.get("sector", ""),
                 industry=info.get("industry", ""),
-                **_identity_metadata(alias_ctx.ticker, alias),
-            )
+                **_identity_metadata(alias_ctx.ticker, alias, as_of),
+            ))
         # Exact ticker
         ticker_ctx = _extract_explicit_ticker(hint_text)
         if ticker_ctx is not None:
@@ -429,7 +505,7 @@ def resolve_query(
                 resolution_method="exact_ticker",
                 sector=info.get("sector", ""),
                 industry=info.get("industry", ""),
-                **_identity_metadata(ticker_ctx.ticker, ticker_ctx.ticker),
+                **_identity_metadata(ticker_ctx.ticker, ticker_ctx.ticker, as_of),
             )
         # Fuzzy
         fuzzy_result = _fuzzy_token_match(hint_text, cutoff=0.72)
@@ -438,7 +514,7 @@ def resolve_query(
             confidence = round(0.50 + score * 0.47, 3)
             if confidence >= MINIMUM_ROUTE_CONFIDENCE:
                 info = _COMPANY_DB.get(ctx.ticker, {})
-                return EntityResolutionResult(
+                return _guard_temporal_identity(EntityResolutionResult(
                     canonical_ticker=ctx.ticker,
                     company_name=ctx.company_name,
                     confidence_score=confidence,
@@ -446,8 +522,8 @@ def resolve_query(
                     resolution_method="fuzzy_token",
                     sector=info.get("sector", ""),
                     industry=info.get("industry", ""),
-                    **_identity_metadata(ctx.ticker, matched_alias),
-                )
+                    **_identity_metadata(ctx.ticker, matched_alias, as_of),
+                ))
 
     # ── Step 6: protected generic ticker → needs_clarification ───────────────
     protected_found = _detect_protected_tokens(primary_text)
