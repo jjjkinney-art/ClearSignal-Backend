@@ -62,7 +62,10 @@ Next work:
 - Continue calculation-provenance expansion beyond the implemented free-cash-flow
   contract, which preserves its formula, exact period/unit/scope compatibility,
   and both accession-bound input references separately from reported facts.
-- Benchmark entity resolution across ticker changes, multiple share classes, subsidiaries, and acquisitions.
+- Continue entity-resolution benchmarking beyond the implemented SEC dotted/hyphenated
+  share-class normalization and explicit former-ticker, former-name, subsidiary, and
+  business-unit relationship metadata. Acquisition aliases and temporal ownership
+  changes remain to be modeled and benchmarked before universal coverage.
 
 ### Phase B — General-company metric families (P0)
 

@@ -145,7 +145,13 @@ def _load_ticker_cik_map() -> Dict[str, str]:
             ticker  = str(entry.get("ticker", "")).upper().strip()
             cik_int = entry.get("cik_str", 0)
             if ticker and cik_int:
-                mapping[ticker] = str(int(cik_int)).zfill(10)
+                cik = str(int(cik_int)).zfill(10)
+                mapping[ticker] = cik
+                # ClearSignal uses exchange-style dotted class symbols while
+                # SEC's ticker file commonly publishes the same class with a
+                # hyphen (BRK-B/BF-B). Preserve both without merging issuers.
+                if "-" in ticker:
+                    mapping[ticker.replace("-", ".")] = cik
         _ticker_cik_cache = mapping
         print(f"[DIAG] SEC EDGAR: ticker→CIK map loaded — {len(mapping)} entries")
         return mapping
