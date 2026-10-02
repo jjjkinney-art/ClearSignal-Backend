@@ -956,7 +956,14 @@ def analyze_company(
 
     with (start_span(trace, "context_enrichment") if trace else _null_span()) as sp:
         try:
-            context = enrich_grounding_context(company, request.user_question, _base_ctx)
+            if request.as_of:
+                context = enrich_grounding_context(
+                    company, request.user_question, _base_ctx, as_of=request.as_of,
+                )
+            else:
+                context = enrich_grounding_context(
+                    company, request.user_question, _base_ctx,
+                )
             # Propagate request_id and scope into grounding context
             try:
                 object.__setattr__(context, "request_id", request_id)

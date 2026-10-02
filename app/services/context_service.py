@@ -34,7 +34,12 @@ from . import data_providers
 from ..schemas import GroundingContext
 
 
-def enrich_grounding_context(company: str, user_question: Optional[str], context: Optional[GroundingContext]) -> GroundingContext:
+def enrich_grounding_context(
+    company: str,
+    user_question: Optional[str],
+    context: Optional[GroundingContext],
+    as_of: Optional[str] = None,
+) -> GroundingContext:
     """Return a fully populated grounding context.
 
     This function ensures that a ``GroundingContext`` always has values for
@@ -83,7 +88,7 @@ def enrich_grounding_context(company: str, user_question: Optional[str], context
             # Derive a ticker symbol for lookup; fall back to company name.
             ticker = ctx.ticker or ctx.company
             fmp_metrics: Dict[str, float] = {}
-            if ticker:
+            if ticker and not as_of:
                 fmp_metrics = data_providers.fetch_fmp_financials(ticker, getattr(settings, "fmp_api_key", "")) or {}
                 if fmp_metrics:
                     # Merge numeric metrics into the financials dict
@@ -93,7 +98,19 @@ def enrich_grounding_context(company: str, user_question: Optional[str], context
                         except Exception:
                             pass
             # Fetch recent filings and known facts from SEC EDGAR
-            sec_data = data_providers.fetch_sec_filings(ctx.company, ctx.ticker, getattr(settings, "sec_user_agent", "")) or {}
+            if as_of:
+                sec_data = data_providers.fetch_sec_filings(
+                    ctx.company,
+                    ctx.ticker,
+                    getattr(settings, "sec_user_agent", ""),
+                    as_of=as_of,
+                ) or {}
+            else:
+                sec_data = data_providers.fetch_sec_filings(
+                    ctx.company,
+                    ctx.ticker,
+                    getattr(settings, "sec_user_agent", ""),
+                ) or {}
             # Append events, facts, and notes if available
             if sec_data:
                 events = sec_data.get("recent_events", []) or []

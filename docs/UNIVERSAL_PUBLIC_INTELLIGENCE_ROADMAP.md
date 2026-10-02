@@ -74,6 +74,9 @@ Next work:
   Analysis requests now propagate an explicit point-in-time boundary into resolution,
   with an eight-case frozen acceptance cohort spanning acquisition, separation,
   former-ticker, merger-successor, and divestiture-successor behavior.
+  SEC retrieval now anchors its lookback and end date to that same boundary, while
+  latest-only providers are suppressed for historical requests rather than leaking
+  future information into point-in-time analysis.
 
 ### Phase B — General-company metric families (P0)
 
