@@ -1,6 +1,6 @@
 # Account-owned thesis memory artifact contract
 
-**Status:** implementation foundation  
+**Status:** persisted for newly completed account-owned research turns  
 **Schema:** `1`
 
 ## Purpose
@@ -75,13 +75,11 @@ and the existing fresh-evidence admission boundary.
 
 ## Next reviewed integration
 
-1. Save this projection alongside each newly completed account-owned assistant
-   response.
-2. Load artifacts only through an owner- and deletion-filtered service.
-3. Compare a selected historical artifact with newly admitted evidence.
-4. Emit a thesis-impact result only when attributable evidence is newer and
+1. Load artifacts only through an owner- and deletion-filtered service.
+2. Compare a selected historical artifact with newly admitted evidence.
+3. Emit a thesis-impact result only when attributable evidence is newer and
    materially related.
-5. Expose the historical artifact, new evidence, change classification, and
+4. Expose the historical artifact, new evidence, change classification, and
    uncertainty in Intelligence Mode.
-6. Add cross-account, deletion, stale-evidence, conflict, supersession, and
+5. Add cross-account, deletion, stale-evidence, conflict, supersession, and
    no-new-evidence acceptance tests before enabling proactive notices.
