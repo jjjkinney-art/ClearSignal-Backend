@@ -135,6 +135,7 @@ _COMPANY_DB: dict[str, dict] = {
     "AAPL":  {"company_name": "Apple Inc.",                              "sector": "Technology",                "industry": "Consumer Electronics"},
     "MSFT":  {"company_name": "Microsoft Corporation",                   "sector": "Technology",                "industry": "Software"},
     "GOOGL": {"company_name": "Alphabet Inc.",                           "sector": "Technology",                "industry": "Internet Services"},
+    "GOOG":  {"company_name": "Alphabet Inc.",                           "sector": "Technology",                "industry": "Internet Services"},
     "AMZN":  {"company_name": "Amazon.com Inc.",                         "sector": "Consumer Discretionary",    "industry": "E-Commerce"},
     "META":  {"company_name": "Meta Platforms Inc.",                     "sector": "Technology",                "industry": "Social Media"},
     "NVDA":  {"company_name": "NVIDIA Corporation",                      "sector": "Technology",                "industry": "Semiconductors"},
@@ -416,6 +417,7 @@ _ALIAS_MAP: dict[str, str] = {
     "google":                  "GOOGL",
     "alphabet":                "GOOGL",
     "googl":                   "GOOGL",
+    "goog":                    "GOOG",
     "google cloud":            "GOOGL",
     "google search":           "GOOGL",
     # typos
@@ -476,7 +478,10 @@ _ALIAS_MAP: dict[str, str] = {
     # ── Berkshire ─────────────────────────────────────────────────────────────
     "berkshire":               "BRK.B",
     "berkshire hathaway":      "BRK.B",
+    "brk.a":                   "BRK.A",
+    "brk.b":                   "BRK.B",
     "brk":                     "BRK.B",
+    "bf.b":                    "BF.B",
 
     # ── Brown-Forman ─────────────────────────────────────────────────────────
     "brown-forman":            "BF.B",

@@ -152,6 +152,34 @@ class TestFormFiltering:
 
 class TestResultsPrioritization:
 
+    def test_ticker_map_adds_dotted_share_class_aliases(self, monkeypatch):
+        sec_provider._ticker_cik_cache = None
+        _patch_fetch(monkeypatch, {
+            "0": {"ticker": "BRK-B", "cik_str": 1067983},
+            "1": {"ticker": "BF-B", "cik_str": 14693},
+            "2": {"ticker": "GOOG", "cik_str": 1652044},
+            "3": {"ticker": "GOOGL", "cik_str": 1652044},
+        })
+
+        mapping = sec_provider._load_ticker_cik_map()
+
+        assert mapping["BRK-B"] == mapping["BRK.B"] == "0001067983"
+        assert mapping["BF-B"] == mapping["BF.B"] == "0000014693"
+        assert mapping["GOOG"] == mapping["GOOGL"] == "0001652044"
+
+    def test_share_class_normalization_does_not_merge_unrelated_issuers(
+        self, monkeypatch,
+    ):
+        sec_provider._ticker_cik_cache = None
+        _patch_fetch(monkeypatch, {
+            "0": {"ticker": "BRK-B", "cik_str": 1067983},
+            "1": {"ticker": "BF-B", "cik_str": 14693},
+        })
+
+        mapping = sec_provider._load_ticker_cik_map()
+
+        assert mapping["BRK.B"] != mapping["BF.B"]
+
     def test_cik_lookup_prioritizes_results_items_before_newer_unrelated_8k(
         self, monkeypatch,
     ):

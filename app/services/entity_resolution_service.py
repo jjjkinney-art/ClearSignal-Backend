@@ -70,6 +70,20 @@ from .company_detection import (
 
 logger = logging.getLogger(__name__)
 
+_ALIAS_RELATIONSHIPS = {
+    ("META", "fb"): "former_ticker",
+    ("META", "facebook"): "former_name_or_brand",
+    ("META", "instagram"): "subsidiary",
+    ("META", "whatsapp"): "subsidiary",
+    ("GOOGL", "google"): "subsidiary",
+    ("GOOGL", "google cloud"): "business_unit",
+    ("GOOGL", "google search"): "business_unit",
+    ("AMZN", "aws"): "business_unit",
+    ("SHEL", "royal dutch shell"): "former_name",
+    ("SHEL", "royal dutch"): "former_name",
+}
+_SHARE_CLASS_TICKERS = {"BRK.A", "BRK.B", "BF.B", "GOOG", "GOOGL"}
+
 # ---------------------------------------------------------------------------
 # Explicit-intent patterns — override protected ticker stop-word suppression
 # ---------------------------------------------------------------------------
@@ -166,6 +180,8 @@ class EntityResolutionResult:
     sector:               str   = ""
     industry:             str   = ""
     candidates:           List[Tuple[str, str, float]] = field(default_factory=list)
+    identity_relation:    str = "canonical_issuer"
+    requested_entity:     str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -232,7 +248,23 @@ def _make_result_for_ticker(ticker: str, method: str, alias: str,
         resolution_warning=warning,
         sector=info.get("sector", ""),
         industry=info.get("industry", ""),
+        identity_relation=(
+            "share_class" if ticker in _SHARE_CLASS_TICKERS
+            else "canonical_issuer"
+        ),
+        requested_entity=alias,
     )
+
+
+def _identity_metadata(ticker: str, alias: str) -> dict:
+    normalized = (alias or "").strip().lower()
+    relation = _ALIAS_RELATIONSHIPS.get((ticker, normalized))
+    if relation is None and ticker in _SHARE_CLASS_TICKERS:
+        relation = "share_class"
+    return {
+        "identity_relation": relation or "canonical_issuer",
+        "requested_entity": alias,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -313,6 +345,7 @@ def resolve_query(
             resolution_method="alias_exact",
             sector=info.get("sector", ""),
             industry=info.get("industry", ""),
+            **_identity_metadata(alias_ctx.ticker, alias),
         )
 
     # ── Step 3: non-protected exact uppercase ticker ──────────────────────────
@@ -333,6 +366,7 @@ def resolve_query(
             resolution_method="exact_ticker",
             sector=info.get("sector", ""),
             industry=info.get("industry", ""),
+            **_identity_metadata(ticker_ctx.ticker, ticker_ctx.ticker),
         )
 
     # ── Step 4: fuzzy token match on full query ───────────────────────────────
@@ -358,6 +392,7 @@ def resolve_query(
                 ) if confidence < 0.90 else "",
                 sector=info.get("sector", ""),
                 industry=info.get("industry", ""),
+                **_identity_metadata(ctx.ticker, matched_alias),
             )
 
     # ── Step 5: retry steps 2-4 on company_hint if different from query ───────
@@ -380,6 +415,7 @@ def resolve_query(
                 resolution_method="alias_exact",
                 sector=info.get("sector", ""),
                 industry=info.get("industry", ""),
+                **_identity_metadata(alias_ctx.ticker, alias),
             )
         # Exact ticker
         ticker_ctx = _extract_explicit_ticker(hint_text)
@@ -393,6 +429,7 @@ def resolve_query(
                 resolution_method="exact_ticker",
                 sector=info.get("sector", ""),
                 industry=info.get("industry", ""),
+                **_identity_metadata(ticker_ctx.ticker, ticker_ctx.ticker),
             )
         # Fuzzy
         fuzzy_result = _fuzzy_token_match(hint_text, cutoff=0.72)
@@ -409,6 +446,7 @@ def resolve_query(
                     resolution_method="fuzzy_token",
                     sector=info.get("sector", ""),
                     industry=info.get("industry", ""),
+                    **_identity_metadata(ctx.ticker, matched_alias),
                 )
 
     # ── Step 6: protected generic ticker → needs_clarification ───────────────

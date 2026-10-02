@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import pytest
 from unittest.mock import patch, MagicMock
-from app.services.entity_resolution_service import resolve_for_analysis
+from app.services.entity_resolution_service import resolve_for_analysis, resolve_query
 from app.services.company_detection import detect_company
 
 
@@ -151,6 +151,38 @@ class TestResolveForAnalysisFixA:
             f"Expected confidence >= 0.85 for explicit ticker hint, "
             f"got {result.confidence_score}"
         )
+
+
+class TestEntityIdentityMetadata:
+    """Resolution retains how the requested entity relates to the SEC issuer."""
+
+    @pytest.mark.parametrize("query,expected_ticker,expected_relation", [
+        ("Instagram growth", "META", "subsidiary"),
+        ("What happened to FB?", "META", "former_ticker"),
+        ("Royal Dutch Shell earnings", "SHEL", "former_name"),
+        ("AWS operating margin", "AMZN", "business_unit"),
+    ])
+    def test_alias_relationship_is_explicit(
+        self, query: str, expected_ticker: str, expected_relation: str,
+    ):
+        result = resolve_query(query)
+
+        assert result.canonical_ticker == expected_ticker
+        assert result.identity_relation == expected_relation
+        assert result.requested_entity
+
+    @pytest.mark.parametrize("ticker", ["BRK.A", "BRK.B", "BF.B", "GOOG", "GOOGL"])
+    def test_share_class_ticker_remains_distinct(self, ticker: str):
+        result = resolve_query(ticker)
+
+        assert result.canonical_ticker == ticker
+        assert result.identity_relation == "share_class"
+
+    def test_canonical_issuer_is_not_mislabeled_as_alias(self):
+        result = resolve_query("META")
+
+        assert result.canonical_ticker == "META"
+        assert result.identity_relation == "canonical_issuer"
 
 
 # ===========================================================================
