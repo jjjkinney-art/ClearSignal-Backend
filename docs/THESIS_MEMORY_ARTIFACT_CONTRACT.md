@@ -1,6 +1,6 @@
 # Account-owned thesis memory artifact contract
 
-**Status:** persisted and owner-filtered for newly completed account-owned research turns  
+**Status:** persisted, owner-filtered, and protected by a newer-evidence comparison gate  
 **Schema:** `1`
 
 ## Purpose
@@ -80,10 +80,15 @@ authenticated owner, deletion state, assistant role, and same-ticker scope, and
 re-projects the artifact from the saved structured response before returning it.
 It never reads raw message text.
 
-1. Compare a selected historical artifact with newly admitted evidence.
-2. Emit a thesis-impact result only when attributable evidence is newer and
-   materially related.
-3. Expose the historical artifact, new evidence, change classification, and
-   uncertainty in Intelligence Mode.
-4. Add stale-evidence, conflict, supersession, and no-new-evidence acceptance
-   tests before enabling proactive notices.
+The comparison gate now admits only attributable, same-ticker evidence whose
+published, filed, or observed timestamp is newer than the selected thesis and
+which the caller has explicitly marked admitted and materially related. Retrieval
+time never makes an old document new. Conflict, supersession, unavailability,
+future evidence, missing attribution, and missing source time all fail closed.
+The gate never decides thesis direction by itself.
+
+1. Produce an evidence-bound stronger, weaker, unchanged, or unverified
+   classification only after the gate is ready.
+2. Expose the historical artifact, eligible new evidence, change classification,
+   and uncertainty in Intelligence Mode.
+3. Add end-to-end acceptance tests before enabling proactive notices.
