@@ -71,6 +71,9 @@ Next work:
   merger/divestiture-successor cohort now preserves WBD's AT&T/Discovery chain and
   Viatris's Mylan/Upjohn chain, failing closed before each successor existed. Broader
   merger chains, asset divestitures, and historical security-master coverage remain.
+  Analysis requests now propagate an explicit point-in-time boundary into resolution,
+  with an eight-case frozen acceptance cohort spanning acquisition, separation,
+  former-ticker, merger-successor, and divestiture-successor behavior.
 
 ### Phase B — General-company metric families (P0)
 

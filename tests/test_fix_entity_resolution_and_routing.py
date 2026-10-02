@@ -327,6 +327,28 @@ class TestEntityIdentityMetadata:
         assert result.needs_clarification is False
         assert result.identity_as_of == "2020-11-16"
 
+    def test_analysis_wrapper_propagates_as_of_boundary(self):
+        result = resolve_for_analysis(
+            company_hint="Viatris",
+            user_question="How was revenue trending?",
+            as_of="2019-12-31T23:59:59Z",
+        )
+
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification is True
+        assert result.relationship_status == "pre_merger"
+
+    def test_analysis_request_accepts_explicit_as_of_boundary(self):
+        from app.schemas import AnalysisRequest
+
+        request = AnalysisRequest(
+            company_name="LinkedIn",
+            user_question="How fast was revenue growing?",
+            as_of="2015-12-31T23:59:59Z",
+        )
+
+        assert request.as_of == "2015-12-31T23:59:59Z"
+
 
 # ===========================================================================
 # Fix B prerequisite — detect_company resolves pilot tickers correctly

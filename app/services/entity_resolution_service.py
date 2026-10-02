@@ -691,6 +691,7 @@ def resolve_query(
 def resolve_for_analysis(
     user_question: str = "",
     company_hint: str = "",
+    as_of: Optional[date | datetime | str] = None,
 ) -> EntityResolutionResult:
     """Resolve entity for the analysis pipeline.
 
@@ -715,10 +716,10 @@ def resolve_for_analysis(
     # routinely mention competitors and sector peers whose names would otherwise
     # override the caller's intended company.
     if company_hint.strip():
-        result = resolve_query(company_hint.strip(), "")
-        if result.canonical_ticker:
+        result = resolve_query(company_hint.strip(), "", as_of=as_of)
+        if result.canonical_ticker or result.needs_clarification:
             return result
     # company_hint absent or unresolvable — fall back to question text as primary.
     if user_question:
-        return resolve_query(user_question, company_hint)
+        return resolve_query(user_question, company_hint, as_of=as_of)
     return EntityResolutionResult(resolution_method="not_found")

@@ -222,6 +222,13 @@ class AnalysisRequest(BaseModel):
 
     company_name: str = Field(..., description="Company name or ticker to analyze")
     user_question: Optional[str] = Field(None, description="Optional user question")
+    as_of: Optional[str] = Field(
+        None,
+        description=(
+            "Optional ISO-8601 research boundary used for point-in-time entity "
+            "identity and evidence selection"
+        ),
+    )
     analysis_depth: Optional[str] = Field(
         "standard", description="Depth of analysis (e.g. standard, deep)")
     output_style: Optional[str] = Field(
