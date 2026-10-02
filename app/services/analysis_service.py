@@ -876,6 +876,7 @@ def analyze_company(
         _entity_result = resolve_for_analysis(
             user_question=request.user_question or "",
             company_hint=request.company_name,
+            as_of=request.as_of,
         )
         if _entity_result.canonical_ticker:
             # Successful resolution — override company_name with canonical form
@@ -892,6 +893,9 @@ def analyze_company(
                     "method": _entity_result.resolution_method,
                     "confidence": _entity_conf,
                     "matched_alias": _entity_result.matched_alias,
+                    "identity_as_of": _entity_result.identity_as_of,
+                    "identity_relation": _entity_result.identity_relation,
+                    "relationship_status": _entity_result.relationship_status,
                     "request_id": request_id,
                 })
             )
@@ -902,6 +906,9 @@ def analyze_company(
                     "event": "entity_needs_clarification",
                     "prompt": _entity_result.clarification_prompt,
                     "company_hint": request.company_name[:60],
+                    "identity_as_of": _entity_result.identity_as_of,
+                    "relationship_status": _entity_result.relationship_status,
+                    "predecessor_tickers": _entity_result.predecessor_tickers,
                     "request_id": request_id,
                 })
             )
