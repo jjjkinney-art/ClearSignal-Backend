@@ -15,6 +15,7 @@ from typing import Iterable, Optional
 from sqlalchemy import String, cast, delete, func, or_, select
 
 from ..db.models import ResearchConversation, ResearchMessage
+from .thesis_memory_artifacts import build_thesis_memory_artifact
 
 
 ALLOWED_ROLES = {"user", "assistant", "system"}
@@ -261,6 +262,7 @@ async def append_completed_turn(session, *, user_id: str, conversation_id: str,
         displayed_snapshot={
             "response_version": RESPONSE_SNAPSHOT_VERSION,
             "response": response,
+            "thesis_memory_artifact": build_thesis_memory_artifact(response),
         },
         snapshot_version=RESPONSE_SNAPSHOT_VERSION,
     )
