@@ -177,6 +177,19 @@ def test_completed_turn_uses_exact_emitted_response_and_is_idempotent():
                 assert loaded["messages"][1]["displayed_snapshot"] == {
                     "response_version": 1,
                     "response": response,
+                    "thesis_memory_artifact": {
+                        "artifact_version": 1,
+                        "status": "available",
+                        "historical_only": True,
+                        "requires_fresh_evidence": True,
+                        "ticker": "AAPL",
+                        "thesis": {
+                            "direct_answer": (
+                                "Services regulation remains the central concern."
+                            ),
+                        },
+                        "evidence_references": [],
+                    },
                 }
                 assert not await append_completed_turn(
                     session, user_id="owner-b", conversation_id=conversation["id"],
