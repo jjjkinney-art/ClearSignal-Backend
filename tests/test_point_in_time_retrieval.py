@@ -1,5 +1,12 @@
-from app.schemas import GroundingContext
-from app.services import context_service, data_providers
+from app.providers.sec_client import SecFactRecord
+from app.schemas import AgentAnswerResponse, GroundingContext, QuestionRequest
+from app.services import (
+    context_service,
+    data_providers,
+    router_service,
+    verified_sec_fact_service,
+    verified_sec_metric_service,
+)
 from app.services.providers import sec_provider
 
 
@@ -101,3 +108,207 @@ def test_legacy_sec_feed_uses_dateb_and_filters_future_rows():
     assert "dateb=20201231" in url
     assert "count=100" in url
     assert events == ["Boundary filing on 2020-12-31"]
+
+
+def _fact(*, value, end, filed, accession, start="2024-04-01"):
+    return SecFactRecord(
+        cik="320193", taxonomy="us-gaap", concept="Revenues",
+        label="Revenue", unit="USD", value=value, start=start, end=end,
+        filed=filed, form="10-Q", accession=accession,
+        filing_url=(
+            "https://www.sec.gov/Archives/edgar/data/320193/"
+            f"{accession.replace('-', '')}/{accession}-index.htm"
+        ),
+    )
+
+
+def test_structured_revenue_rejects_facts_filed_after_boundary(monkeypatch):
+    prior = _fact(
+        value=90, start="2023-04-01", end="2023-06-30",
+        filed="2023-08-01", accession="0000320193-23-000001",
+    )
+    available = _fact(
+        value=100, end="2024-06-30", filed="2024-08-01",
+        accession="0000320193-24-000001",
+    )
+    future = _fact(
+        value=999, end="2024-09-30", filed="2024-11-01",
+        accession="0000320193-24-000002", start="2024-07-01",
+    )
+    monkeypatch.setattr(
+        verified_sec_fact_service, "_load_ticker_cik_map",
+        lambda: {"AAPL": "320193"},
+    )
+    monkeypatch.setattr(
+        verified_sec_fact_service, "get_company_fact_records_for_concepts",
+        lambda *args, **kwargs: [prior, available, future],
+    )
+
+    claim = verified_sec_fact_service.fetch_verified_revenue_claim(
+        "AAPL", as_of="2024-08-15T23:59:59Z",
+    )
+
+    assert claim["raw_value"] == 100
+    assert claim["document_ref"]["published_at"] == "2024-08-01"
+
+
+def test_structured_metric_selection_rejects_late_filing(monkeypatch):
+    prior = _fact(
+        value=90, start="2023-04-01", end="2023-06-30",
+        filed="2023-08-01", accession="0000320193-23-000001",
+    )
+    available = _fact(
+        value=100, end="2024-06-30", filed="2024-08-01",
+        accession="0000320193-24-000001",
+    )
+    late_amendment = _fact(
+        value=110, end="2024-06-30", filed="2024-09-01",
+        accession="0000320193-24-000002",
+    )
+    monkeypatch.setattr(
+        verified_sec_metric_service, "_load_ticker_cik_map",
+        lambda: {"AAPL": "320193"},
+    )
+    monkeypatch.setattr(
+        verified_sec_metric_service,
+        "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [prior, available, late_amendment],
+    )
+
+    evidence = verified_sec_metric_service.fetch_verified_metric_evidence(
+        "AAPL", question="revenue", as_of="2024-08-15",
+    )
+
+    assert len(evidence) == 1
+    assert evidence[0].verified_claims[0]["raw_value"] == 100
+    assert evidence[0].filed_at == "2024-08-01"
+
+
+def test_invalid_structured_fact_boundary_fails_closed(monkeypatch):
+    monkeypatch.setattr(
+        verified_sec_fact_service, "_load_ticker_cik_map",
+        lambda: {"AAPL": "320193"},
+    )
+    monkeypatch.setattr(
+        verified_sec_fact_service, "get_company_fact_records_for_concepts",
+        lambda *args, **kwargs: [],
+    )
+    monkeypatch.setattr(
+        verified_sec_metric_service, "_load_ticker_cik_map",
+        lambda: {"AAPL": "320193"},
+    )
+    monkeypatch.setattr(
+        verified_sec_metric_service,
+        "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [],
+    )
+
+    assert verified_sec_fact_service.fetch_verified_revenue_claim(
+        "AAPL", as_of="not-a-date",
+    ) is None
+    assert verified_sec_metric_service.fetch_verified_metric_evidence(
+        "AAPL", question="revenue", as_of="not-a-date",
+    ) == []
+
+
+def test_question_route_propagates_point_in_time_boundary(monkeypatch):
+    captured = {}
+
+    def run_pipeline(**kwargs):
+        captured.update(kwargs)
+        return AgentAnswerResponse(
+            company="Apple", request_id="point-in-time", agents_used=[],
+            answer={}, routing={"pipeline": "investment_thesis"},
+        )
+
+    monkeypatch.setattr(router_service, "_run_investment_pipeline", run_pipeline)
+    request = QuestionRequest(
+        company_name="AAPL", question="Analyze Apple's revenue",
+        intent="company_analysis", as_of="2024-08-15T23:59:59Z",
+    )
+
+    response = router_service.route_question(request)
+
+    assert response.request_id == "point-in-time"
+    assert captured["as_of"] == "2024-08-15T23:59:59Z"
+
+
+def test_historical_question_pipeline_suppresses_latest_only_sources(monkeypatch):
+    from app.schemas import (
+        CompanyContext, InvestmentThesis, MacroSensitivity, MarketContext,
+        QualityAssessment, RiskProfile, ValuationView,
+    )
+    from app.services.evidence_partitioner import EvidencePartition
+
+    boundary = "2024-08-15T23:59:59Z"
+    captured = {"sec": None, "revenue": None, "metrics": None}
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("latest-only provider must not run historically")
+
+    def sec(*args, **kwargs):
+        captured["sec"] = kwargs.get("as_of")
+        return []
+
+    def revenue(*args, **kwargs):
+        captured["revenue"] = kwargs.get("as_of")
+        return None
+
+    def metrics(*args, **kwargs):
+        captured["metrics"] = kwargs.get("as_of")
+        return []
+
+    monkeypatch.setattr(router_service._fmp_provider, "fetch_company_evidence", forbidden)
+    monkeypatch.setattr(router_service._sec_provider, "fetch_recent_filings", sec)
+    monkeypatch.setattr(router_service._news_provider, "fetch_company_news", forbidden)
+    monkeypatch.setattr(router_service._news_provider, "fetch_macro_news", forbidden)
+    monkeypatch.setattr(router_service, "retrieve_general_finance_evidence", forbidden)
+    monkeypatch.setattr(router_service, "fetch_valuation_ratios", forbidden)
+    monkeypatch.setattr(router_service, "fetch_analyst_estimates", forbidden)
+    monkeypatch.setattr(verified_sec_fact_service, "fetch_verified_revenue_claim", revenue)
+    monkeypatch.setattr(verified_sec_metric_service, "fetch_verified_metric_evidence", metrics)
+    monkeypatch.setattr(router_service, "get_profile_for_company", lambda *a, **k: None)
+    monkeypatch.setattr(
+        router_service, "partition_evidence",
+        lambda *a, **k: EvidencePartition(
+            valuation=[], macro=[], risk=[], market=[], quality=[],
+        ),
+    )
+    monkeypatch.setattr(
+        router_service, "run_valuation_agent",
+        lambda *a, **k: ValuationView(overall="."),
+    )
+    monkeypatch.setattr(
+        router_service, "run_investment_macro_agent",
+        lambda *a, **k: MacroSensitivity(overall="."),
+    )
+    monkeypatch.setattr(
+        router_service, "run_risk_agent",
+        lambda *a, **k: RiskProfile(overall="."),
+    )
+    monkeypatch.setattr(
+        router_service, "run_market_agent",
+        lambda *a, **k: MarketContext(overall="."),
+    )
+    monkeypatch.setattr(
+        router_service, "run_quality_agent",
+        lambda *a, **k: QualityAssessment(overall="."),
+    )
+    monkeypatch.setattr(
+        "app.investment_agents.question_answerer_agent.run_question_answerer",
+        lambda *a, **k: "",
+    )
+    monkeypatch.setattr(
+        router_service, "synthesize_thesis",
+        lambda *a, **k: InvestmentThesis(
+            ticker="AAPL", company_name="Apple", bull_thesis="Historical",
+        ),
+    )
+
+    router_service._run_investment_pipeline(
+        CompanyContext(ticker="AAPL", company_name="Apple"),
+        "What source supports Apple's revenue?", "historical",
+        as_of=boundary, side_effects_enabled=False,
+    )
+
+    assert captured == {"sec": boundary, "revenue": boundary, "metrics": boundary}

@@ -453,6 +453,13 @@ class QuestionRequest(BaseModel):
 
     company_name: str = Field(..., description="Company name or ticker relevant to the question")
     question: str = Field(..., description="User question to route to the appropriate agent")
+    as_of: Optional[str] = Field(
+        None,
+        description=(
+            "Optional ISO-8601 research boundary used for point-in-time identity "
+            "and evidence selection"
+        ),
+    )
     intent: Optional[str] = Field(
         None,
         description="Optional intent hint from the frontend classifier: "

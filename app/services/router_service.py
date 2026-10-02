@@ -956,6 +956,7 @@ def _run_investment_pipeline(
     research_memory_context_block: Optional[str] = None,
     research_memory_context_data: Optional[dict] = None,
     side_effects_enabled: bool = True,
+    as_of: Optional[str] = None,
 ) -> AgentAnswerResponse:
     """Run the full 5-agent investment pipeline for a detected company.
 
@@ -1003,6 +1004,8 @@ def _run_investment_pipeline(
     detected_topics = _detect_topics(question)
 
     def _fetch_fmp():
+        if as_of:
+            return []
         try:
             return _fmp_provider.fetch_company_evidence(ticker) or []
         except Exception as _e:
@@ -1011,6 +1014,8 @@ def _run_investment_pipeline(
 
     def _fetch_sec():
         try:
+            if as_of:
+                return _sec_provider.fetch_recent_filings(ticker, as_of=as_of) or []
             return _sec_provider.fetch_recent_filings(ticker) or []
         except Exception as _e:
             logger.warning("[router] sec evidence failed for %s: %r", ticker, _e)
@@ -1019,7 +1024,7 @@ def _run_investment_pipeline(
     def _fetch_sec_revenue():
         try:
             from .verified_sec_fact_service import fetch_verified_revenue_claim
-            claim = fetch_verified_revenue_claim(ticker)
+            claim = fetch_verified_revenue_claim(ticker, as_of=as_of)
             return [claim] if claim else []
         except Exception as _e:
             logger.warning("[router] verified SEC revenue unavailable for %s: %r", ticker, _e)
@@ -1028,12 +1033,16 @@ def _run_investment_pipeline(
     def _fetch_sec_metrics():
         try:
             from .verified_sec_metric_service import fetch_verified_metric_evidence
-            return fetch_verified_metric_evidence(ticker, question=question)
+            return fetch_verified_metric_evidence(
+                ticker, question=question, as_of=as_of,
+            )
         except Exception as _e:
             logger.warning("[router] verified SEC metrics unavailable for %s: %r", ticker, _e)
             return []
 
     def _fetch_issuer_kpis():
+        if as_of:
+            return []
         try:
             from .live_issuer_kpi_service import fetch_live_issuer_kpi_evidence
             from ..config import settings
@@ -1045,6 +1054,8 @@ def _run_investment_pipeline(
             return []
 
     def _fetch_news_company():
+        if as_of:
+            return []
         try:
             return _news_provider.fetch_company_news(ticker) or []
         except Exception as _e:
@@ -1052,6 +1063,8 @@ def _run_investment_pipeline(
             return []
 
     def _fetch_news_macro():
+        if as_of:
+            return []
         try:
             return _news_provider.fetch_macro_news(detected_topics) or []
         except Exception as _e:
@@ -1059,9 +1072,13 @@ def _run_investment_pipeline(
             return []
 
     def _fetch_fred_evidence():
+        if as_of:
+            return []
         return retrieve_general_finance_evidence(question)
 
     def _fetch_valuation_ratios():
+        if as_of:
+            return []
         try:
             return fetch_valuation_ratios(ticker) or []
         except Exception as _e:
@@ -1069,6 +1086,8 @@ def _run_investment_pipeline(
             return []
 
     def _fetch_analyst_estimates():
+        if as_of:
+            return []
         try:
             return fetch_analyst_estimates(ticker) or []
         except Exception as _e:
@@ -1948,6 +1967,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                             research_memory_context_data=getattr(
                                 request, "research_memory_context_data", None
                             ),
+                            as_of=request.as_of,
                         )
         except Exception as _scn_exc:
             logger.warning("[router] scenario routing failed: %r", _scn_exc)
@@ -2094,6 +2114,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 research_memory_context_data=getattr(
                     request, "research_memory_context_data", None
                 ),
+                as_of=request.as_of,
             )
 
     # Route to full investment pipeline when a company is detected from question
@@ -2136,6 +2157,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
             research_memory_context_data=getattr(
                 request, "research_memory_context_data", None
             ),
+            as_of=request.as_of,
         )
 
     # ── Graceful "Did you mean?" fallback ────────────────────────────────────

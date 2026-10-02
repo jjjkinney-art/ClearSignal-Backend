@@ -76,7 +76,9 @@ Next work:
   former-ticker, merger-successor, and divestiture-successor behavior.
   SEC retrieval now anchors its lookback and end date to that same boundary, while
   latest-only providers are suppressed for historical requests rather than leaking
-  future information into point-in-time analysis.
+  future information into point-in-time analysis. The main question pipeline also
+  propagates the boundary into structured SEC revenue and metric selection, which
+  rejects facts whose period end or filing date falls after the requested date.
 
 ### Phase B — General-company metric families (P0)
 

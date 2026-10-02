@@ -313,11 +313,17 @@ def _requested_metrics(question: str | None) -> tuple:
 
 
 def fetch_verified_metric_evidence(
-    ticker: str, *, question: str | None = None,
+    ticker: str, *, question: str | None = None, as_of: str | None = None,
 ) -> list[RetrievedEvidence]:
     """Return only facts with an exact prior-year comparable observation."""
     if not isinstance(ticker, str) or not _TICKER.fullmatch(ticker):
         return []
+    boundary = None
+    if as_of:
+        try:
+            boundary = date.fromisoformat(as_of.strip()[:10])
+        except (AttributeError, TypeError, ValueError):
+            return []
     cik = _load_ticker_cik_map().get(ticker)
     if not cik or not cik.isdigit():
         return []
@@ -330,6 +336,12 @@ def fetch_verified_metric_evidence(
         cik, concept_units=concept_units,
         user_agent=getattr(settings, "sec_user_agent", "") or "",
     )
+    if boundary is not None:
+        records = [
+            record for record in records
+            if date.fromisoformat(record.filed) <= boundary
+            and date.fromisoformat(record.end) <= boundary
+        ]
     anchor_ends = [
         record.end for record in records
         if record.concept == _LATEST_PERIOD_ANCHOR[0]
