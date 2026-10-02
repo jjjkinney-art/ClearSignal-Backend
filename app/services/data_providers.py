@@ -21,6 +21,32 @@ import requests  # type: ignore
 logger = logging.getLogger(__name__)
 
 
+def _sec_feed_url(ticker: str, count: int, boundary: str = "") -> str:
+    query_count = max(count, 100) if boundary else count
+    url = (
+        "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany"
+        f"&CIK={ticker}&type=10-K&count={query_count}&output=atom"
+    )
+    if boundary:
+        url += f"&dateb={boundary.replace('-', '')}"
+    return url
+
+
+def _parse_sec_feed_events(text: str, count: int, boundary: str = "") -> List[str]:
+    import re
+
+    titles = re.findall(r"<title>(.*?)</title>", text)
+    dates = re.findall(r"<updated>(\d{4}-\d{2}-\d{2})", text)
+    events: List[str] = []
+    for title, filing_date in zip(titles[1:], dates):
+        if boundary and filing_date > boundary:
+            continue
+        events.append(f"{title} on {filing_date}")
+        if len(events) >= count:
+            break
+    return events
+
+
 def fetch_fmp_financials(ticker: str, api_key: str = "", limit: int = 1) -> Dict[str, float]:
     """Fetch basic financial metrics from Financial Modeling Prep.
 
@@ -71,7 +97,13 @@ def fetch_fmp_financials(ticker: str, api_key: str = "", limit: int = 1) -> Dict
         return {}
 
 
-def fetch_sec_filings(company: str, ticker: Optional[str] = None, user_agent: str = "", count: int = 1) -> Dict[str, List[str]]:
+def fetch_sec_filings(
+    company: str,
+    ticker: Optional[str] = None,
+    user_agent: str = "",
+    count: int = 1,
+    as_of: Optional[str] = None,
+) -> Dict[str, List[str]]:
     """Fetch recent filing events and basic facts from SEC EDGAR.
 
     Attempts to retrieve the most recent 10‑K or 10‑Q filings via the SEC
@@ -107,20 +139,20 @@ def fetch_sec_filings(company: str, ticker: Optional[str] = None, user_agent: st
     # to return the most recent filings of type 10-K or 10-Q.  We set
     # output=atom to receive an XML feed which we parse with a simple
     # regular expression.  The SEC requires a descriptive User-Agent.
-    url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={ticker}&type=10-K&count={count}&output=atom"
+    boundary = ""
+    if as_of:
+        try:
+            from datetime import date
+            boundary = date.fromisoformat(str(as_of)[:10]).isoformat()
+        except (TypeError, ValueError):
+            boundary = ""
+    url = _sec_feed_url(ticker, count, boundary)
     headers = {"User-Agent": user_agent or "ai-analyst-bot/0.1"}
     try:
         resp = requests.get(url, headers=headers, timeout=10)
         resp.raise_for_status()
         text = resp.text
-        # Extract filing dates and titles using naive pattern matching
-        import re
-
-        titles = re.findall(r"<title>(.*?)</title>", text)
-        dates = re.findall(r"<updated>(\d{4}-\d{2}-\d{2})", text)
-        # Skip the first title (feed title) and pair the rest with dates
-        for title, date in zip(titles[1:], dates):
-            events.append(f"{title} on {date}")
+        events.extend(_parse_sec_feed_events(text, count, boundary))
         # Source note
         notes.append("SEC EDGAR recent filings")
         # We cannot easily extract known facts from EDGAR atom feed; return empty facts

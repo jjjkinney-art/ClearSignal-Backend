@@ -89,6 +89,25 @@ def _years_ago(n: int) -> str:
     return (datetime.date.today() - datetime.timedelta(days=365 * n)).isoformat()
 
 
+def _as_of_date(value: str | datetime.date | datetime.datetime | None) -> str:
+    """Return a validated YYYY-MM-DD boundary or an empty string."""
+    if value is None or value == "":
+        return ""
+    if isinstance(value, datetime.datetime):
+        return value.date().isoformat()
+    if isinstance(value, datetime.date):
+        return value.isoformat()
+    try:
+        return datetime.date.fromisoformat(str(value).strip()[:10]).isoformat()
+    except (TypeError, ValueError):
+        return ""
+
+
+def _lookback_start(years_back: int, as_of: str = "") -> str:
+    anchor = datetime.date.fromisoformat(as_of) if as_of else datetime.date.today()
+    return (anchor - datetime.timedelta(days=365 * years_back)).isoformat()
+
+
 def _form_label(form_type: str) -> str:
     return _FORM_LABELS.get(form_type, form_type)
 
@@ -168,6 +187,7 @@ def _fetch_by_cik(
     limit: int,
     years_back: int,
     prefer_results: bool = False,
+    as_of: str = "",
 ) -> List[RetrievedEvidence]:
     """Look up *ticker* → CIK, then fetch filings via the submissions API.
 
@@ -208,7 +228,7 @@ def _fetch_by_cik(
     }
 
     # Filings are newest-first.
-    cutoff   = _years_ago(years_back)
+    cutoff   = _lookback_start(years_back, as_of)
     evidence: List[RetrievedEvidence] = []
     ranked_evidence: list[tuple[int, int, RetrievedEvidence]] = []
     seen_keys: set = set()
@@ -223,6 +243,8 @@ def _fetch_by_cik(
         if file_date < cutoff:
             # All subsequent filings are older — stop scanning.
             break
+        if as_of and file_date > as_of:
+            continue
         if form_type not in forms:
             continue
 
@@ -285,6 +307,7 @@ def _fetch_by_entity_name(
     forms: List[str],
     limit: int,
     years_back: int,
+    as_of: str = "",
 ) -> List[RetrievedEvidence]:
     """Search EDGAR EFTS by entity/company name (not full-text body).
 
@@ -292,7 +315,7 @@ def _fetch_by_entity_name(
     name, which avoids the false positives that the ``q=`` body search produces
     when a ticker is used as the query term.
     """
-    start_date = _years_ago(years_back)
+    start_date = _lookback_start(years_back, as_of)
     params = {
         "q":         "",
         "entity":    company,
@@ -300,6 +323,8 @@ def _fetch_by_entity_name(
         "dateRange":  "custom",
         "startdt":    start_date,
     }
+    if as_of:
+        params["enddt"] = as_of
     url = f"{_EDGAR_EFTS_BASE}?{urlencode(params)}"
     print(
         f"[DIAG] SEC EDGAR (entity=): searching entity='{company}' "
@@ -321,6 +346,8 @@ def _fetch_by_entity_name(
         file_date   = src.get("file_date",         "")
         period      = src.get("period_of_report", "")
         entity_name = src.get("entity_name",       company)
+        if as_of and file_date > as_of:
+            continue
 
         key = f"{entity_name}|{form_type}|{period}"
         if key in seen_keys:
@@ -343,15 +370,18 @@ def _fetch_by_fulltext(
     forms: List[str],
     limit: int,
     years_back: int,
+    as_of: str = "",
 ) -> List[RetrievedEvidence]:
     """Original EFTS full-text search — ``q="company"``."""
-    start_date = _years_ago(years_back)
+    start_date = _lookback_start(years_back, as_of)
     params = {
         "q":         f'"{company}"',
         "forms":     ",".join(forms),
         "dateRange":  "custom",
         "startdt":    start_date,
     }
+    if as_of:
+        params["enddt"] = as_of
     url = f"{_EDGAR_EFTS_BASE}?{urlencode(params)}"
     print(
         f"[DIAG] SEC EDGAR (q=): full-text search q='\"{company}\"' "
@@ -373,6 +403,8 @@ def _fetch_by_fulltext(
         file_date   = src.get("file_date",         "")
         period      = src.get("period_of_report", "")
         entity_name = src.get("entity_name",       company)
+        if as_of and file_date > as_of:
+            continue
 
         # Sanity-check: reject hits from clearly unrelated entities.
         # If the entity name contains none of the company tokens it is almost
@@ -409,6 +441,7 @@ def fetch_recent_filings(
     limit: int = 5,
     years_back: int = 2,
     prefer_results: bool = False,
+    as_of: str | datetime.date | datetime.datetime | None = None,
 ) -> List[RetrievedEvidence]:
     """Search EDGAR for recent filings by *company* and return evidence objects.
 
@@ -447,6 +480,7 @@ def fetch_recent_filings(
         forms = ["10-K", "10-Q"]
 
     company = company.strip()
+    as_of_date = _as_of_date(as_of)
 
     print(
         f"[DIAG] SEC EDGAR: fetch_recent_filings("
@@ -458,7 +492,8 @@ def fetch_recent_filings(
     if looks_like_ticker:
         try:
             result = _fetch_by_cik(
-                company, forms, limit, years_back, prefer_results=prefer_results,
+                company, forms, limit, years_back,
+                prefer_results=prefer_results, as_of=as_of_date,
             )
             if result:
                 return result
@@ -471,7 +506,9 @@ def fetch_recent_filings(
 
     # ── Strategy 2: entity= EFTS search ─────────────────────────────────────
     try:
-        result = _fetch_by_entity_name(company, forms, limit, years_back)
+        result = _fetch_by_entity_name(
+            company, forms, limit, years_back, as_of=as_of_date,
+        )
         if result:
             return result
     except HTTPError as exc:
@@ -483,7 +520,9 @@ def fetch_recent_filings(
 
     # ── Strategy 3: q= full-text EFTS (original fallback) ───────────────────
     try:
-        result = _fetch_by_fulltext(company, forms, limit, years_back)
+        result = _fetch_by_fulltext(
+            company, forms, limit, years_back, as_of=as_of_date,
+        )
         return result
     except HTTPError as exc:
         logger.warning("SEC EDGAR HTTP %d for '%s': %s", exc.code, company, exc.reason)
