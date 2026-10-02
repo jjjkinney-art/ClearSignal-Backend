@@ -1592,6 +1592,30 @@ def _run_investment_pipeline(
                 },
             }
 
+    # ── Zero-delivery proactive thesis notice preview ────────────────────────
+    # This is evaluated only for an explicitly selected, owner-authorized
+    # research record and only against evidence that survived admission.
+    # It is response metadata, not a persisted alert or notification.
+    _thesis_notice_preview = None
+    if research_memory_context_data and research_memory_context_data.get("applied") is True:
+        try:
+            from .thesis_notice_preview import build_selected_thesis_notice_preview
+            _thesis_notice_preview = build_selected_thesis_notice_preview(
+                context=research_memory_context_data,
+                evidence_items=evidence,
+            )
+        except Exception as exc:
+            logger.warning(
+                "[router] thesis notice preview failed for %s: %r", ticker, exc
+            )
+            _thesis_notice_preview = {
+                "preview_version": 1,
+                "available": False,
+                "delivery_enabled": False,
+                "status": "unavailable",
+                "candidates": [],
+            }
+
     from .source_answer import apply_source_answer_gate
     _source_answer = apply_source_answer_gate(thesis, question, evidence)
 
@@ -1707,6 +1731,8 @@ def _run_investment_pipeline(
     )
     if _selected_research_comparison is not None:
         _selected_research_metadata["comparison"] = _selected_research_comparison
+    if _thesis_notice_preview is not None:
+        _selected_research_metadata["thesis_notice_preview"] = _thesis_notice_preview
 
     return AgentAnswerResponse(
         company=ticker,
