@@ -338,6 +338,15 @@ class TestEntityIdentityMetadata:
         assert result.needs_clarification is True
         assert result.relationship_status == "pre_merger"
 
+    def test_generic_ambiguous_hint_still_defers_to_context_rich_question(self):
+        result = resolve_for_analysis(
+            company_hint="AI",
+            user_question="Can Meta continue despite AI infrastructure spending?",
+        )
+
+        assert result.canonical_ticker == "META"
+        assert result.needs_clarification is False
+
     def test_analysis_request_accepts_explicit_as_of_boundary(self):
         from app.schemas import AnalysisRequest
 

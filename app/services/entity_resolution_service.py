@@ -717,7 +717,10 @@ def resolve_for_analysis(
     # override the caller's intended company.
     if company_hint.strip():
         result = resolve_query(company_hint.strip(), "", as_of=as_of)
-        if result.canonical_ticker or result.needs_clarification:
+        if result.canonical_ticker or (
+            result.needs_clarification
+            and result.resolution_method == "temporal_identity_mismatch"
+        ):
             return result
     # company_hint absent or unresolvable — fall back to question text as primary.
     if user_question:
