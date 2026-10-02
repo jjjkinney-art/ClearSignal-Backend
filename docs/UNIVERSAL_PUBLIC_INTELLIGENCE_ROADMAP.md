@@ -79,6 +79,9 @@ Next work:
   future information into point-in-time analysis. The main question pipeline also
   propagates the boundary into structured SEC revenue and metric selection, which
   rejects facts whose period end or filing date falls after the requested date.
+  Historical questions now use the same temporal identity resolver before the
+  main `/ask` route, returning an explicit clarification instead of attributing
+  pre-acquisition, pre-separation, or pre-merger evidence to today's issuer.
 
 ### Phase B — General-company metric families (P0)
 

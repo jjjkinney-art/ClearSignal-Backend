@@ -1757,6 +1757,63 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     except Exception as _norm_exc:
         logger.debug("[router] ticker normalization failed: %r", _norm_exc)
 
+    # A historical request must resolve the entity under the same boundary as
+    # its evidence. Otherwise a pre-acquisition subsidiary or pre-separation
+    # business can be silently attributed to today's parent/successor before
+    # point-in-time retrieval even begins.
+    _temporal_company: Optional[CompanyContext] = None
+    _temporal_resolution = None
+    if request.as_of:
+        try:
+            from .entity_resolution_service import resolve_for_analysis
+            _temporal_resolution = resolve_for_analysis(
+                user_question=request.question,
+                company_hint=request.company_name,
+                as_of=request.as_of,
+            )
+            if (
+                _temporal_resolution.needs_clarification
+                and _temporal_resolution.resolution_method
+                == "temporal_identity_mismatch"
+            ):
+                request_id = str(uuid.uuid4())
+                return AgentAnswerResponse(
+                    company="",
+                    request_id=request_id,
+                    agents_used=["entity_resolution"],
+                    answer={"general": {
+                        "answer": _temporal_resolution.clarification_prompt,
+                        "bullets": [],
+                        "caveats": [_temporal_resolution.ambiguity_reason],
+                    }},
+                    routing={
+                        "pipeline": "temporal_identity_clarification",
+                        "as_of": request.as_of,
+                        "requested_entity": _temporal_resolution.requested_entity,
+                        "relationship_status": (
+                            _temporal_resolution.relationship_status
+                        ),
+                        "relationship_effective_from": (
+                            _temporal_resolution.relationship_effective_from
+                        ),
+                        "predecessor_tickers": list(
+                            _temporal_resolution.predecessor_tickers
+                        ),
+                        "historical_ticker": (
+                            _temporal_resolution.historical_ticker
+                        ),
+                    },
+                )
+            if _temporal_resolution.canonical_ticker:
+                _temporal_company = detect_company(
+                    _temporal_resolution.canonical_ticker
+                )
+        except Exception as _temporal_exc:
+            logger.warning(
+                "[router] temporal entity resolution failed: %r",
+                _temporal_exc,
+            )
+
     # ── Sprint 5I: first-class comparative / ranking route ───────────────────
     # The legacy single-entity resolver necessarily returns one company, which
     # made "NVDA vs AMD" silently analyze only NVDA.  Explicit comparative
@@ -1989,7 +2046,17 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     ):
         # Only run text detection when the frontend did not supply a company.
         try:
-            _entity_resolution = resolve_entity(request.question)
+            if _temporal_company is not None:
+                from .company_detection import EntityResolution
+                _entity_resolution = EntityResolution(
+                    context=_temporal_company,
+                    confidence=_temporal_resolution.confidence_score,
+                    method=_temporal_resolution.resolution_method,
+                    matched_text=_temporal_resolution.matched_alias,
+                    candidates=_temporal_resolution.candidates,
+                )
+            else:
+                _entity_resolution = resolve_entity(request.question)
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
@@ -2086,7 +2153,9 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         and (request.intent == "company_analysis" or _has_intent)
         and request.intent not in _NON_COMPANY_INTENTS
     ):
-        _explicit_company = detect_company(request.company_name.strip())
+        _explicit_company = _temporal_company or detect_company(
+            request.company_name.strip()
+        )
         if _explicit_company is not None:
             request_id = str(uuid.uuid4())
             logger.info(
