@@ -765,9 +765,14 @@ def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> s
     lines = []
     for i, ev in enumerate(scored):
         ev_type = _classify_evidence_type(ev)
+        warning = ""
+        if getattr(ev, "freshness_status", None) == "stale":
+            reason = getattr(ev, "status_reason", None) or "freshness threshold exceeded"
+            warning = f"    Integrity warning: STALE — {reason}\n"
         lines.append(
             f"[{i + 1}] [{ev_type.upper()}] {ev.title}\n"
             f"    Source: {ev.source} ({ev.timestamp[:7] if ev.timestamp else 'n/a'})\n"
+            f"{warning}"
             f"    {ev.summary}"
         )
     return "\n".join(lines)

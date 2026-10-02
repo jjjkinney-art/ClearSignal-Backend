@@ -176,6 +176,17 @@ def apply_evidence_integrity(
 
     for reference in references:
         counts[reference["freshness_status"]] += 1
+        item_index = int(reference.get("_item_index", -1))
+        if 0 <= item_index < len(material):
+            item = material[item_index]
+            try:
+                setattr(item, "freshness_status", reference["freshness_status"])
+                setattr(item, "status_reason", reference.get("status_reason"))
+            except (AttributeError, TypeError, ValueError):
+                # Immutable provider records still receive the status through
+                # their audit reference; mutable RetrievedEvidence records also
+                # carry it into every downstream prompt.
+                pass
     active_states = {state for state, count in counts.items() if count}
     if not references:
         overall = "unavailable"

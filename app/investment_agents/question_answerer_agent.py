@@ -123,10 +123,16 @@ def _profile_block(profile: Optional[CompanyKnowledgeProfile], company: CompanyC
 def _evidence_block(evidence: List[RetrievedEvidence]) -> str:
     if not evidence:
         return "No external evidence available."
-    return "\n".join(
-        f"[{i + 1}] {ev.title}\n    Source: {ev.source}\n    {ev.summary}"
-        for i, ev in enumerate(evidence)
-    )
+    lines = []
+    for i, ev in enumerate(evidence):
+        warning = ""
+        if getattr(ev, "freshness_status", None) == "stale":
+            reason = getattr(ev, "status_reason", None) or "freshness threshold exceeded"
+            warning = f"\n    Integrity warning: STALE — {reason}"
+        lines.append(
+            f"[{i + 1}] {ev.title}\n    Source: {ev.source}{warning}\n    {ev.summary}"
+        )
+    return "\n".join(lines)
 
 
 # ── Per-intent prompt templates ───────────────────────────────────────────────

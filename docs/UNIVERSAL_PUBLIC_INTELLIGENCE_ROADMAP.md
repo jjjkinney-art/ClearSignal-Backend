@@ -147,6 +147,10 @@ The shared evidence response contract now exposes per-reference freshness,
 availability, supersession, and material-conflict states; preserves published,
 filed, observed, and retrieved timestamps; and carries a fail-closed integrity
 summary into account-owned research-memory metadata.
+The production question pipeline now applies that contract before any agent,
+question-answer, synthesis, comparison, or source-answer step: conflicting,
+superseded, unavailable, and post-boundary evidence is retained for audit but
+blocked from prompting, while stale evidence remains admitted with its warning.
 
 Build a query planner that can:
 
