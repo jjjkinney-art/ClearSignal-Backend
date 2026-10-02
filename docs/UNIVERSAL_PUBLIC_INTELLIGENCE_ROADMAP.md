@@ -143,6 +143,11 @@ Required platform capabilities include HTML/PDF parsing, OCR, table extraction, 
 
 ### Phase G — Universal research planner and evidence graph (P0)
 
+The shared evidence response contract now exposes per-reference freshness,
+availability, supersession, and material-conflict states; preserves published,
+filed, observed, and retrieved timestamps; and carries a fail-closed integrity
+summary into account-owned research-memory metadata.
+
 Build a query planner that can:
 
 1. resolve the company, security, jurisdiction, time period, metric, and user intent;

@@ -168,6 +168,29 @@ def test_selected_memory_prompt_is_visible_historical_context_not_evidence():
     assert response_metadata(context, evidence_count=0)["current_evidence_checked"] is False
 
 
+def test_selected_memory_metadata_exposes_current_evidence_integrity():
+    context = {
+        "applied": True,
+        "conversation_id": "conversation-1",
+        "message_id": "message-1",
+        "created_at": "2026-08-01T12:00:00+00:00",
+        "ticker": "TEST",
+        "snapshot_version": 1,
+    }
+    metadata = response_metadata(
+        context,
+        evidence_count=2,
+        evidence_integrity={
+            "overall_status": "conflicting",
+            "has_material_conflict": True,
+        },
+    )
+
+    assert metadata["current_evidence_checked"] is True
+    assert metadata["current_evidence_status"] == "conflicting"
+    assert metadata["current_evidence_has_conflict"] is True
+
+
 def test_memory_loader_never_reads_raw_message_text():
     source = inspect.getsource(load_selected_research_context)
     assert ".text" not in source

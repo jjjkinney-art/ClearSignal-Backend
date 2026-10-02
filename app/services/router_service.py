@@ -1682,14 +1682,16 @@ def _run_investment_pipeline(
         personalization_context_data
     )
     from .research_memory_context import response_metadata as _research_memory_metadata
+    from .evidence_references import build_evidence_contract
+    _evidence_references, _evidence_integrity = build_evidence_contract(
+        evidence, as_of=as_of,
+    )
     _selected_research_metadata = _research_memory_metadata(
-        research_memory_context_data, evidence_count=len(evidence)
+        research_memory_context_data, evidence_count=len(evidence),
+        evidence_integrity=_evidence_integrity,
     )
     if _selected_research_comparison is not None:
         _selected_research_metadata["comparison"] = _selected_research_comparison
-
-    from .evidence_references import build_evidence_references
-    _evidence_references = build_evidence_references(evidence)
 
     return AgentAnswerResponse(
         company=ticker,
@@ -1707,6 +1709,7 @@ def _run_investment_pipeline(
             # Retrieval metadata is deliberately separate from generated prose.
             # URLs are sanitized and never include provider request credentials.
             "evidence_references": _evidence_references,
+            "evidence_integrity": _evidence_integrity,
             "source_answer": _source_answer,
         },
         routing={

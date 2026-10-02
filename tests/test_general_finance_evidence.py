@@ -105,6 +105,8 @@ class TestRetrievedEvidenceSchema:
             "url", "retrieval_tags", "retrieval_weight",
             "source_type", "source_tier", "claim_type", "document_type",
             "reporting_period_start", "reporting_period_end", "filed_at",
+            "retrieved_at", "observed_at", "freshness_status",
+            "status_reason", "availability_status",
             "section", "page", "extraction_method", "verified_claims",
             "calculated_claims",
         }

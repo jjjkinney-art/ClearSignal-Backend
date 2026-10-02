@@ -131,7 +131,10 @@ async def load_selected_research_context(
     return {"applied": False, "status": "no_structured_snapshot"}
 
 
-def response_metadata(context: Mapping[str, Any] | None, *, evidence_count: int) -> dict:
+def response_metadata(
+    context: Mapping[str, Any] | None, *, evidence_count: int,
+    evidence_integrity: Mapping[str, Any] | None = None,
+) -> dict:
     """Expose application and freshness state without echoing thesis prose."""
     required = ("conversation_id", "message_id", "ticker", "created_at", "snapshot_version")
     if (
@@ -141,7 +144,7 @@ def response_metadata(context: Mapping[str, Any] | None, *, evidence_count: int)
     ):
         status = context.get("status") if isinstance(context, Mapping) else "not_selected"
         return {"applied": False, "status": status or "not_selected"}
-    return {
+    metadata = {
         "applied": True,
         "status": "applied",
         "context_version": RESEARCH_MEMORY_CONTEXT_VERSION,
@@ -155,3 +158,11 @@ def response_metadata(context: Mapping[str, Any] | None, *, evidence_count: int)
         "fresh_analysis_run": True,
         "current_evidence_checked": evidence_count > 0,
     }
+    if isinstance(evidence_integrity, Mapping):
+        metadata["current_evidence_status"] = evidence_integrity.get(
+            "overall_status", "unknown"
+        )
+        metadata["current_evidence_has_conflict"] = bool(
+            evidence_integrity.get("has_material_conflict")
+        )
+    return metadata

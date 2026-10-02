@@ -85,6 +85,13 @@ class RetrievedEvidence(BaseModel):
     reporting_period_start: Optional[str] = Field(default=None)
     reporting_period_end: Optional[str] = Field(default=None)
     filed_at: Optional[str] = Field(default=None)
+    retrieved_at: Optional[str] = Field(default=None)
+    observed_at: Optional[str] = Field(default=None)
+    freshness_status: Literal[
+        "current", "stale", "superseded", "conflicting", "unavailable", "unknown",
+    ] = Field(default="unknown")
+    status_reason: Optional[str] = Field(default=None)
+    availability_status: Literal["available", "unavailable"] = Field(default="available")
     section: Optional[str] = Field(default=None)
     page: Optional[int] = Field(default=None, ge=1)
     extraction_method: Literal[
