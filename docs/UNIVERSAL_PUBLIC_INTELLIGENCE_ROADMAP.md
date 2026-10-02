@@ -59,7 +59,9 @@ Next work:
   implemented latest-filing precedence, same-day amendment preference,
   equivalent-duplicate collapse, conflicting-restatement fail-closed gates,
   finite-value admission, and exact unscaled USD/share/per-share claim binding.
-- Preserve filing, accession, form, period, taxonomy concept, and calculation provenance through the answer layer.
+- Continue calculation-provenance expansion beyond the implemented free-cash-flow
+  contract, which preserves its formula, exact period/unit/scope compatibility,
+  and both accession-bound input references separately from reported facts.
 - Benchmark entity resolution across ticker changes, multiple share classes, subsidiaries, and acquisitions.
 
 ### Phase B — General-company metric families (P0)

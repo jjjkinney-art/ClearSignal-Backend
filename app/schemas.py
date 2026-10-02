@@ -98,6 +98,13 @@ class RetrievedEvidence(BaseModel):
             "observations; never populated from generated prose."
         ),
     )
+    calculated_claims: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description=(
+            "Deterministic calculations whose formula and exact source-bound "
+            "input claims are preserved; never represented as reported facts."
+        ),
+    )
 
     # ── Retrieval intelligence tags (Part 1 — Retrieval Enrichment) ──────────
     # Assigned by _classify_evidence_tags() in conviction_modeler.  Each tag

@@ -342,6 +342,85 @@ def test_service_supports_general_company_metric_family(monkeypatch):
     assert {(concept, "USD") for concept in concepts}.issubset(set(requested[0]))
 
 
+def test_free_cash_flow_preserves_formula_and_exact_input_references(monkeypatch):
+    prior_ocf = _record(
+        concept="NetCashProvidedByUsedInOperatingActivities", value=500,
+    )
+    current_ocf = _record(
+        concept=prior_ocf.concept, value=620, start="2025-01-01",
+        end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001",
+    )
+    prior_capex = _record(
+        concept="PaymentsToAcquirePropertyPlantAndEquipment", value=120,
+    )
+    current_capex = _record(
+        concept=prior_capex.concept, value=150, start="2025-01-01",
+        end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001",
+    )
+    records = [prior_ocf, current_ocf, prior_capex, current_capex]
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: records,
+    )
+
+    evidence = service.fetch_verified_metric_evidence(
+        "AAPL", question="What is Apple's latest free cash flow trend?",
+    )
+    calculations = service.structured_calculations_from_evidence(evidence)
+
+    assert len(evidence) == 2
+    assert len(calculations) == 2
+    current = next(item for item in calculations if item["period"] == "quarter ended 2025-03-31")
+    assert current["provenance"] == "derived"
+    assert current["raw_value"] == "470"
+    assert current["formula"] == "operating_cash_flow - capital_expenditure"
+    assert [item["role"] for item in current["inputs"]] == [
+        "operating_cash_flow", "capital_expenditure",
+    ]
+    assert all(item["unit"] == "USD" for item in current["inputs"])
+    assert all(item["reference_id"].startswith("sec:320193:") for item in current["inputs"])
+    assert all("document_ref" not in item for item in calculations)
+
+
+def test_free_cash_flow_calculates_only_exactly_compatible_periods(monkeypatch):
+    prior_ocf = _record(
+        concept="NetCashProvidedByUsedInOperatingActivities", value=500,
+    )
+    current_ocf = _record(
+        concept=prior_ocf.concept, value=620, start="2025-01-01",
+        end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001",
+    )
+    prior_capex = _record(
+        concept="PaymentsToAcquirePropertyPlantAndEquipment", value=120,
+        start="2023-01-01", end="2023-03-31", filed="2023-05-01",
+        accession="0000320193-23-000001",
+    )
+    current_capex = _record(
+        concept=prior_capex.concept, value=150, start="2024-01-01",
+        end="2024-03-31", filed="2024-05-01",
+        accession="0000320193-24-000001",
+    )
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(
+        service, "get_company_fact_records_for_concept_units",
+        lambda *args, **kwargs: [prior_ocf, current_ocf, prior_capex, current_capex],
+    )
+
+    evidence = service.fetch_verified_metric_evidence(
+        "AAPL", question="What is Apple's free cash flow?",
+    )
+
+    calculations = service.structured_calculations_from_evidence(evidence)
+    assert [item["period"] for item in calculations] == [
+        "quarter ended 2024-03-31",
+    ]
+    assert all(item["period"] != "quarter ended 2025-03-31" for item in calculations)
+
+
 def test_service_narrows_explicit_metric_question_before_sec_fetch(monkeypatch):
     prior = replace(_record(), concept="ResearchAndDevelopmentExpense", value=20)
     current = replace(
