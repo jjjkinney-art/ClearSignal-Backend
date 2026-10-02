@@ -312,3 +312,86 @@ def test_historical_question_pipeline_suppresses_latest_only_sources(monkeypatch
     )
 
     assert captured == {"sec": boundary, "revenue": boundary, "metrics": boundary}
+
+
+def test_historical_question_route_preserves_former_ticker_identity(monkeypatch):
+    captured = {}
+
+    def run_pipeline(**kwargs):
+        captured.update(kwargs)
+        return AgentAnswerResponse(
+            company=kwargs["company"].company_name,
+            request_id="historical-fb", agents_used=[], answer={},
+            routing={"pipeline": "investment_thesis"},
+        )
+
+    monkeypatch.setattr(router_service, "_run_investment_pipeline", run_pipeline)
+
+    response = router_service.route_question(QuestionRequest(
+        company_name="", question="FB", as_of="2021-12-31T23:59:59Z",
+    ))
+
+    assert response.request_id == "historical-fb"
+    assert captured["company"].ticker == "META"
+    assert captured["as_of"] == "2021-12-31T23:59:59Z"
+
+
+def test_pre_acquisition_question_fails_closed_before_pipeline(monkeypatch):
+    monkeypatch.setattr(
+        router_service, "_run_investment_pipeline",
+        lambda **kwargs: (_ for _ in ()).throw(
+            AssertionError("pipeline must not run for temporal mismatch")
+        ),
+    )
+
+    response = router_service.route_question(QuestionRequest(
+        company_name="LinkedIn", question="Analyze LinkedIn revenue",
+        intent="company_analysis", as_of="2015-12-31T23:59:59Z",
+    ))
+
+    assert response.routing["pipeline"] == "temporal_identity_clarification"
+    assert response.routing["relationship_status"] == "not_yet_owned"
+    assert response.routing["historical_ticker"] == "LNKD"
+    assert "LNKD" in response.answer["general"]["caveats"][0]
+
+
+def test_pre_separation_question_names_predecessor_and_does_not_route(monkeypatch):
+    monkeypatch.setattr(
+        router_service, "_run_investment_pipeline",
+        lambda **kwargs: (_ for _ in ()).throw(
+            AssertionError("pipeline must not run for pre-separation entity")
+        ),
+    )
+
+    response = router_service.route_question(QuestionRequest(
+        company_name="PayPal", question="Analyze PayPal revenue",
+        intent="company_analysis", as_of="2014-12-31",
+    ))
+
+    assert response.routing["pipeline"] == "temporal_identity_clarification"
+    assert response.routing["relationship_status"] == "pre_separation"
+    assert response.routing["predecessor_tickers"] == ["EBAY"]
+    assert "EBAY" in response.answer["general"]["answer"]
+
+
+def test_post_separation_question_routes_current_standalone_issuer(monkeypatch):
+    captured = {}
+
+    def run_pipeline(**kwargs):
+        captured.update(kwargs)
+        return AgentAnswerResponse(
+            company=kwargs["company"].company_name,
+            request_id="paypal-after-separation", agents_used=[], answer={},
+            routing={"pipeline": "investment_thesis"},
+        )
+
+    monkeypatch.setattr(router_service, "_run_investment_pipeline", run_pipeline)
+
+    response = router_service.route_question(QuestionRequest(
+        company_name="PayPal", question="Analyze PayPal revenue",
+        intent="company_analysis", as_of="2016-12-31",
+    ))
+
+    assert response.request_id == "paypal-after-separation"
+    assert captured["company"].ticker == "PYPL"
+    assert captured["as_of"] == "2016-12-31"
