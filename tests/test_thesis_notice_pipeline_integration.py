@@ -33,9 +33,9 @@ def test_notice_preview_is_bounded_response_metadata_only():
         "_thesis_notice_preview"
     ) in source
     assert '"delivery_enabled": False' in source
-    assert "thesis_notice_preview" not in source.split("answer={", 1)[1].split(
-        "routing={", 1
-    )[0]
+    final_response = source.rsplit("return AgentAnswerResponse(", 1)[1]
+    answer_block = final_response.split("answer={", 1)[1].split("routing={", 1)[0]
+    assert "thesis_notice_preview" not in answer_block
 
 
 def test_notice_preview_failure_is_explicit_and_fail_closed():
