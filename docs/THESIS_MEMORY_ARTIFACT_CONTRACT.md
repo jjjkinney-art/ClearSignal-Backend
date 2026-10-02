@@ -1,6 +1,6 @@
 # Account-owned thesis memory artifact contract
 
-**Status:** persisted, owner-filtered, and protected by a newer-evidence comparison gate  
+**Status:** persisted, owner-filtered, newer-evidence-gated, and evidence-bound at result validation  
 **Schema:** `1`
 
 ## Purpose
@@ -87,8 +87,15 @@ time never makes an old document new. Conflict, supersession, unavailability,
 future evidence, missing attribution, and missing source time all fail closed.
 The gate never decides thesis direction by itself.
 
-1. Produce an evidence-bound stronger, weaker, unchanged, or unverified
-   classification only after the gate is ready.
+The result validator accepts only `stronger`, `weaker`, or `unchanged`
+when the comparison gate is ready, a bounded rationale is present, and every
+material change claim cites one or more evidence IDs admitted by that gate.
+Missing claims, unsupported directions, or unadmitted evidence references
+collapse the entire result to `unverified`; partially supported conclusions
+are not emitted.
+
+1. Connect the owner-filtered loader, newer-evidence gate, and result validator
+   to the selected historical-comparison execution path.
 2. Expose the historical artifact, eligible new evidence, change classification,
    and uncertainty in Intelligence Mode.
 3. Add end-to-end acceptance tests before enabling proactive notices.
