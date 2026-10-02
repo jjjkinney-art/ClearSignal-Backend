@@ -67,8 +67,10 @@ Next work:
   business-unit metadata; and close-date-bounded acquisition aliases that fail closed
   before the current parent's ownership began. The first spin-off/predecessor cohort
   now covers PayPal/eBay, Kyndryl/IBM, GE HealthCare/GE, and GE Vernova/GE, while
-  same-issuer former-ticker windows preserve historical FB/META resolution. Merger
-  chains, divestitures, and broader historical security-master coverage remain.
+  same-issuer former-ticker windows preserve historical FB/META resolution. The first
+  merger/divestiture-successor cohort now preserves WBD's AT&T/Discovery chain and
+  Viatris's Mylan/Upjohn chain, failing closed before each successor existed. Broader
+  merger chains, asset divestitures, and historical security-master coverage remain.
 
 ### Phase B — General-company metric families (P0)
 
