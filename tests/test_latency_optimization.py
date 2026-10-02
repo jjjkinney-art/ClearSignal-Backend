@@ -86,6 +86,16 @@ class TestEvidenceDeduplication:
     def test_no_evidence_message_unchanged(self):
         assert _evidence_block([]) == "No evidence available."
 
+    def test_stale_evidence_has_visible_integrity_warning(self):
+        stale = _ev("Old filing", "Historical result.")
+        stale.freshness_status = "stale"
+        stale.status_reason = "evidence is 600 days old"
+
+        block = _evidence_block([stale])
+
+        assert "Integrity warning: STALE" in block
+        assert "evidence is 600 days old" in block
+
     def test_unique_evidence_block_is_byte_identical(self):
         """With no duplicates present, compaction must change nothing."""
         items = [_ev(f"T{i}", f"Fact number {i}.") for i in range(6)]

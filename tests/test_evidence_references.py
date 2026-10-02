@@ -1,5 +1,6 @@
 from app.schemas import RetrievedEvidence
 from app.services.evidence_references import (
+    admit_evidence,
     build_evidence_contract,
     build_evidence_references,
 )
@@ -173,3 +174,76 @@ def test_source_after_historical_boundary_is_not_admitted_as_current():
     assert refs[0]["status_reason"] == "evidence timestamp is after analysis boundary"
     assert integrity["as_of"] == "2026-08-31T23:59:59Z"
     assert integrity["evaluated_at"] == "2026-10-02T00:00:00+00:00"
+
+
+def test_admission_blocks_conflicts_but_preserves_audit_references():
+    safe = _item(title="Safe", timestamp="2026-09-28")
+    conflict_a = _item(
+        title="Conflict A", source="SEC EDGAR — structured XBRL fact",
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="reported_fact", document_type="10-Q",
+        filed_at="2026-08-01", verified_claims=[_claim(100, accession="a")],
+    )
+    conflict_b = _item(
+        title="Conflict B", source="SEC EDGAR — structured XBRL fact",
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="reported_fact", document_type="10-Q",
+        filed_at="2026-08-02", verified_claims=[_claim(110, accession="b")],
+    )
+
+    admitted, refs, integrity = admit_evidence(
+        [safe, conflict_a, conflict_b], evaluated_at="2026-10-02T00:00:00Z",
+    )
+
+    assert admitted == [safe]
+    assert len(refs) == 3
+    assert integrity["admission"] == {
+        "input_count": 3,
+        "admitted_count": 1,
+        "blocked_count": 2,
+        "blocked_reference_ids": ["E2", "E3"],
+        "stale_admitted": 0,
+    }
+
+
+def test_admission_keeps_stale_evidence_with_visible_warning():
+    stale = _item(title="Old news", timestamp="2026-08-01")
+
+    admitted, refs, integrity = admit_evidence(
+        [stale], evaluated_at="2026-10-02T00:00:00Z",
+    )
+
+    assert admitted == [stale]
+    assert refs[0]["freshness_status"] == "stale"
+    assert stale.freshness_status == "stale"
+    assert stale.status_reason == "evidence is 62 days old"
+    assert integrity["admission"]["stale_admitted"] == 1
+
+
+def test_admission_blocks_superseded_and_future_evidence():
+    original = _item(
+        title="Original", source="SEC EDGAR — structured XBRL fact",
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="reported_fact", document_type="10-Q",
+        filed_at="2026-08-01", timestamp="2026-08-01",
+        verified_claims=[_claim(100, accession="a")],
+    )
+    amendment = _item(
+        title="Amendment", source="SEC EDGAR — structured XBRL fact",
+        source_type="regulatory_filing", source_tier="primary",
+        claim_type="reported_fact", document_type="10-Q/A",
+        filed_at="2026-08-15", timestamp="2026-08-15",
+        verified_claims=[_claim(110, accession="b")],
+    )
+    future = _item(title="Future", timestamp="2026-09-28")
+
+    admitted, refs, integrity = admit_evidence(
+        [original, amendment, future], as_of="2026-08-31T23:59:59Z",
+        evaluated_at="2026-10-02T00:00:00Z",
+    )
+
+    assert admitted == [amendment]
+    assert [ref["freshness_status"] for ref in refs] == [
+        "superseded", "current", "unavailable",
+    ]
+    assert integrity["admission"]["blocked_reference_ids"] == ["E1", "E3"]

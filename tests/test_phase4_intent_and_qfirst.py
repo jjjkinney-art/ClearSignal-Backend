@@ -261,6 +261,18 @@ class TestQuestionAnswererAgentStructure:
         assert len(selected) <= _MAX_EVIDENCE_ITEMS
         assert len(selected) > 0
 
+    def test_stale_evidence_has_visible_integrity_warning(self):
+        from app.investment_agents.question_answerer_agent import _evidence_block
+
+        stale = self._make_evidence("Old filing", "SEC", "Historical result.")
+        stale.freshness_status = "stale"
+        stale.status_reason = "evidence is 600 days old"
+
+        block = _evidence_block([stale])
+
+        assert "Integrity warning: STALE" in block
+        assert "evidence is 600 days old" in block
+
     def test_evidence_selection_prioritizes_financial_data(self):
         from app.investment_agents.question_answerer_agent import _select_evidence
 

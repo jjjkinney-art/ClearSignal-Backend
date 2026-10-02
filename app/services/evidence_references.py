@@ -135,3 +135,34 @@ def build_evidence_contract(
     for reference in references:
         reference.pop("_item_index", None)
     return references, integrity
+
+
+def admit_evidence(
+    items: Iterable[object], *, as_of: str | None = None,
+    evaluated_at: str | None = None,
+) -> tuple[list[object], list[dict], dict]:
+    """Block unsafe evidence before prompting while preserving audit metadata."""
+    material = list(items)
+    references = _build_references(material)
+    from .evidence_integrity import apply_evidence_integrity
+    integrity = apply_evidence_integrity(
+        material, references, as_of=as_of, evaluated_at=evaluated_at,
+    )
+    blocked_states = {"conflicting", "superseded", "unavailable"}
+    admitted: list[object] = []
+    blocked_reference_ids: list[str] = []
+    for reference in references:
+        item_index = int(reference.get("_item_index", -1))
+        if reference.get("freshness_status") in blocked_states:
+            blocked_reference_ids.append(reference["id"])
+        elif 0 <= item_index < len(material):
+            admitted.append(material[item_index])
+        reference.pop("_item_index", None)
+    integrity["admission"] = {
+        "input_count": len(material),
+        "admitted_count": len(admitted),
+        "blocked_count": len(blocked_reference_ids),
+        "blocked_reference_ids": blocked_reference_ids,
+        "stale_admitted": integrity["counts"]["stale"],
+    }
+    return admitted, references, integrity

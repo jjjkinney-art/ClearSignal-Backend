@@ -1205,23 +1205,31 @@ def _run_investment_pipeline(
     fred_evidence:   list = _ev_results.get("fred",      [])
     _val_ratios:     list = _ev_results.get("valuation", [])
     _analyst_ests:   list = _ev_results.get("estimates", [])
-    _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
-    from .verified_sec_metric_service import (
-        structured_calculations_from_evidence,
-        structured_claims_from_evidence,
-    )
-    _verified_sec_facts.extend(
-        structured_claims_from_evidence(_sec_metric_evidence)
-    )
-    _calculated_sec_metrics = structured_calculations_from_evidence(
-        _sec_metric_evidence
-    )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.
     evidence = (_issuer_kpi_evidence + _sec_metric_evidence + market_evidence
                 + fred_evidence + _val_ratios + _analyst_ests)
+    from .evidence_references import admit_evidence
+    evidence, _evidence_references, _evidence_integrity = admit_evidence(
+        evidence, as_of=as_of,
+    )
+    admitted_ids = {id(item) for item in evidence}
+    _admitted_sec_metric_evidence = [
+        item for item in _sec_metric_evidence if id(item) in admitted_ids
+    ]
+    from .verified_sec_metric_service import (
+        structured_calculations_from_evidence,
+        structured_claims_from_evidence,
+    )
+    _verified_sec_facts: list = _ev_results.get("sec_revenue", [])
+    _verified_sec_facts.extend(
+        structured_claims_from_evidence(_admitted_sec_metric_evidence)
+    )
+    _calculated_sec_metrics = structured_calculations_from_evidence(
+        _admitted_sec_metric_evidence
+    )
 
     print(
         f"[TIMING] [{ticker}] evidence_retrieval(parallel)={time.time()-_t_evidence:.2f}s "
@@ -1682,10 +1690,6 @@ def _run_investment_pipeline(
         personalization_context_data
     )
     from .research_memory_context import response_metadata as _research_memory_metadata
-    from .evidence_references import build_evidence_contract
-    _evidence_references, _evidence_integrity = build_evidence_contract(
-        evidence, as_of=as_of,
-    )
     _selected_research_metadata = _research_memory_metadata(
         research_memory_context_data, evidence_count=len(evidence),
         evidence_integrity=_evidence_integrity,
@@ -1717,6 +1721,7 @@ def _run_investment_pipeline(
             "detected_ticker": ticker,
             "detected_company": company.company_name,
             "evidence_count": len(evidence),
+            "evidence_blocked_count": _evidence_integrity["admission"]["blocked_count"],
             "pipeline_elapsed_s": round(time.time() - _pipeline_t0, 2),
             "personalization": _personalization_metadata,
             "research_memory": _selected_research_metadata,
