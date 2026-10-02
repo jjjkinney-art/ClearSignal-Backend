@@ -77,17 +77,18 @@ def _metadata(item: object) -> dict:
         "reporting_period_start": getattr(item, "reporting_period_start", None),
         "reporting_period_end": getattr(item, "reporting_period_end", None),
         "filed_at": getattr(item, "filed_at", None),
+        "retrieved_at": getattr(item, "retrieved_at", None),
+        "observed_at": getattr(item, "observed_at", None),
         "section": getattr(item, "section", None),
         "page": getattr(item, "page", None),
         "extraction_method": extraction_method,
     }
 
 
-def build_evidence_references(items: Iterable[object]) -> list[dict]:
-    """Return bounded, non-secret evidence metadata in retrieval order."""
+def _build_references(material: list[object]) -> list[dict]:
     references: list[dict] = []
     seen: set[tuple[str, str, str, str | None]] = set()
-    for item in items:
+    for item_index, item in enumerate(material):
         title = str(getattr(item, "title", "") or "Untitled evidence").strip()
         source = str(getattr(item, "source", "") or "Unknown source").strip()
         published_at = str(getattr(item, "timestamp", "") or "").strip()
@@ -97,6 +98,7 @@ def build_evidence_references(items: Iterable[object]) -> list[dict]:
             continue
         seen.add(identity)
         references.append({
+            "_item_index": item_index,
             "id": f"E{len(references) + 1}",
             "title": title[:300],
             "source": source[:120],
@@ -106,3 +108,30 @@ def build_evidence_references(items: Iterable[object]) -> list[dict]:
             **_metadata(item),
         })
     return references
+
+
+def build_evidence_references(items: Iterable[object]) -> list[dict]:
+    """Return bounded, non-secret evidence metadata in retrieval order."""
+    material = list(items)
+    references = _build_references(material)
+    from .evidence_integrity import apply_evidence_integrity
+    apply_evidence_integrity(material, references)
+    for reference in references:
+        reference.pop("_item_index", None)
+    return references
+
+
+def build_evidence_contract(
+    items: Iterable[object], *, as_of: str | None = None,
+    evaluated_at: str | None = None,
+) -> tuple[list[dict], dict]:
+    """Return presentation references plus their shared integrity summary."""
+    material = list(items)
+    references = _build_references(material)
+    from .evidence_integrity import apply_evidence_integrity
+    integrity = apply_evidence_integrity(
+        material, references, as_of=as_of, evaluated_at=evaluated_at,
+    )
+    for reference in references:
+        reference.pop("_item_index", None)
+    return references, integrity
