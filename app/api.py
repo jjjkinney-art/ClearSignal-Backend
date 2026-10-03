@@ -82,6 +82,13 @@ try:
 except Exception as _bsa_err:
     logger.warning("[api] benchmark_shadow_admin router unavailable: %r", _bsa_err)
 
+# Cross-conversation memory — authenticated, synthetic positive-path rehearsal
+try:
+    from .routers.research_memory_admin import router as _research_memory_admin_router
+    router.include_router(_research_memory_admin_router)
+except Exception as _rma_err:
+    logger.warning("[api] research_memory_admin router unavailable: %r", _rma_err)
+
 # Phase 17 · Slice 3 — billing routes (POST /billing/checkout)
 try:
     from .routers.billing import router as _billing_router
