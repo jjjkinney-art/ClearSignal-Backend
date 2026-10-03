@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0010_benchmark_cancellation"
+_HEAD = "0011_research_notice_inbox"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -448,6 +448,36 @@ class TestResearchPersonalizationMigration:
         command.downgrade(cfg, self._PREVIOUS)
         tables = set(_insp(p).get_table_names())
         assert "research_personalization_profiles" not in tables
+        assert {"research_conversations", "research_messages"} <= tables
+        assert _rev(p) == self._PREVIOUS
+
+
+class TestResearchNoticeInboxMigration:
+    _PREVIOUS = "0010_benchmark_cancellation"
+
+    def test_upgrade_creates_account_owned_notice_table(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        insp = _insp(p)
+        assert "research_thesis_notices" in insp.get_table_names()
+        columns = {item["name"]: item for item in insp.get_columns(
+            "research_thesis_notices"
+        )}
+        assert columns["user_id"]["nullable"] is False
+        assert columns["delivery_enabled"]["nullable"] is False
+        unique_sets = {
+            tuple(item["column_names"])
+            for item in insp.get_unique_constraints("research_thesis_notices")
+        }
+        assert ("user_id", "fingerprint") in unique_sets
+
+    def test_downgrade_removes_only_notice_table(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+        tables = set(_insp(p).get_table_names())
+        assert "research_thesis_notices" not in tables
         assert {"research_conversations", "research_messages"} <= tables
         assert _rev(p) == self._PREVIOUS
 
