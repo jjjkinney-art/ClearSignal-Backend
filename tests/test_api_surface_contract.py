@@ -110,6 +110,7 @@ def test_added_routes_are_reported_but_do_not_fail(capsys):
         ("POST", "/admin/benchmark-shadow/rehearsal"),
         ("POST", "/admin/benchmark-shadow/kill"),
         ("POST", "/admin/benchmark-shadow/restore"),
+        ("POST", "/admin/research-memory/thesis-notice-rehearsal"),
     ],
 )
 def test_launch_critical_endpoints_exist(method, path):
