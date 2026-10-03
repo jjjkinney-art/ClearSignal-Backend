@@ -240,8 +240,8 @@ class TestRouterHasRetryLogic:
         assert "retrying synthesis" in content.lower(), (
             "Router must contain synthesis retry logic"
         )
-        assert "for _syn_attempt in range(2)" in content, (
-            "Router must have retry loop for synthesis"
+        assert "enumerate(_synthesis_plan)" in content, (
+            "Router must execute the bounded synthesis retry plan"
         )
 
 
