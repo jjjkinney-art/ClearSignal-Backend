@@ -25,7 +25,7 @@ from sqlalchemy import create_engine, inspect, text
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Deliberately pinned rather than derived: adding a revision must be an
 # explicit, acknowledged change here, not something a test silently absorbs.
-_HEAD = "0011_research_notice_inbox"
+_HEAD = "0012_notice_evidence_snapshot"
 _BASELINE = "0001_baseline"
 _PRE_BILLING_COLUMNS = "0002_delivery_ledger_severity"
 _PRE_PORTFOLIO_ORG_ID = "0003_users_billing_columns"
@@ -479,6 +479,32 @@ class TestResearchNoticeInboxMigration:
         tables = set(_insp(p).get_table_names())
         assert "research_thesis_notices" not in tables
         assert {"research_conversations", "research_messages"} <= tables
+        assert _rev(p) == self._PREVIOUS
+
+
+class TestResearchNoticeEvidenceSnapshotMigration:
+    _PREVIOUS = "0011_research_notice_inbox"
+
+    def test_upgrade_adds_bounded_evidence_snapshot(self):
+        p = _new_db_path()
+        command.upgrade(_cfg(p), "head")
+        columns = {
+            item["name"]: item
+            for item in _insp(p).get_columns("research_thesis_notices")
+        }
+        assert columns["evidence_snapshot"]["nullable"] is False
+
+    def test_downgrade_removes_only_evidence_snapshot(self):
+        p = _new_db_path()
+        cfg = _cfg(p)
+        command.upgrade(cfg, "head")
+        command.downgrade(cfg, self._PREVIOUS)
+        insp = _insp(p)
+        assert "research_thesis_notices" in insp.get_table_names()
+        columns = {
+            item["name"] for item in insp.get_columns("research_thesis_notices")
+        }
+        assert "evidence_snapshot" not in columns
         assert _rev(p) == self._PREVIOUS
 
 

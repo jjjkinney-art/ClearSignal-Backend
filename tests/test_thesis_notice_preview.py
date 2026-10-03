@@ -33,6 +33,8 @@ def _evidence(**changes):
         "summary": "Services retention across the installed base improved.",
         "published_at": "2026-10-01",
         "freshness_status": "current",
+        "source": "SEC EDGAR",
+        "url": "https://www.sec.gov/Archives/example.htm",
     }
     value.update(changes)
     return value
@@ -53,6 +55,15 @@ def test_preview_projects_selection_and_keeps_delivery_disabled():
         "historical_only": True,
     }
     assert [item["evidence_id"] for item in result["candidates"]] == ["E1"]
+    assert result["candidates"][0]["evidence"] == {
+        "title": "Quarterly services update",
+        "source": "SEC EDGAR",
+        "published_at": "2026-10-01",
+        "url": "https://www.sec.gov/Archives/example.htm",
+        "document_type": None,
+        "section": None,
+        "page": None,
+    }
     assert "historical_thesis" not in result
 
 
@@ -64,6 +75,15 @@ def test_preview_returns_explicit_empty_state_for_non_material_evidence():
     assert result["status"] == "no_material_change_candidate"
     assert result["candidates"] == []
     assert result["delivery_enabled"] is False
+
+
+def test_preview_strips_unsafe_evidence_urls():
+    result = build_selected_thesis_notice_preview(
+        context=_context(),
+        evidence_items=[_evidence(url="https://example.com/data?token=secret")],
+    )
+    assert result["status"] == "candidate_found"
+    assert result["candidates"][0]["evidence"]["url"] is None
 
 
 def test_unapplied_deleted_or_malformed_context_fails_closed():

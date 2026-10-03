@@ -43,6 +43,18 @@ async def list_research_thesis_notices(
         )
 
 
+@router.get("/{notice_id}", summary="Get one owned thesis notice with provenance")
+async def get_research_thesis_notice(notice_id: str, request: Request) -> dict:
+    from app.services.research_thesis_notices import get_notice
+    async with _factory()() as session:
+        notice = await get_notice(
+            session, user_id=_owner(request), notice_id=notice_id,
+        )
+    if notice is None:
+        raise HTTPException(status_code=404, detail="Research notice not found.")
+    return notice
+
+
 @router.patch("/{notice_id}", summary="Update one owned thesis notice")
 async def update_research_thesis_notice(
     notice_id: str, body: NoticeStatusRequest, request: Request,

@@ -3046,6 +3046,7 @@ class ResearchThesisNotice(Base):
     message_id = Column(String(36), nullable=False)
     ticker = Column(String(20), nullable=False)
     evidence_id = Column(String(200), nullable=False)
+    evidence_snapshot = _json_col(nullable=False, default=dict)
     fingerprint = Column(String(64), nullable=False)
     matched_terms = _json_col(nullable=False, default=list)
     status = Column(String(20), nullable=False, default="unread")

@@ -10,10 +10,39 @@ from __future__ import annotations
 
 from typing import Any, Iterable, Mapping
 
+from .evidence_references import _safe_public_url
 from .thesis_notice_candidates import build_thesis_notice_candidates
 
 
 THESIS_NOTICE_PREVIEW_VERSION = 1
+
+
+def _value(item: object, field: str, default: object = "") -> object:
+    if isinstance(item, Mapping):
+        return item.get(field, default)
+    return getattr(item, field, default)
+
+
+def _evidence_id(item: object) -> str:
+    return str(_value(item, "id") or _value(item, "evidence_id") or "").strip()
+
+
+def _bounded_evidence_snapshot(item: object) -> dict[str, Any]:
+    """Keep only presentation-safe trigger metadata from admitted evidence."""
+    return {
+        "title": str(_value(item, "title") or "Untitled evidence")[:300],
+        "source": str(_value(item, "source") or "Unknown source")[:120],
+        "published_at": str(
+            _value(item, "published_at")
+            or _value(item, "filed_at")
+            or _value(item, "timestamp")
+            or ""
+        )[:40] or None,
+        "url": _safe_public_url(_value(item, "url", None)),
+        "document_type": str(_value(item, "document_type") or "")[:80] or None,
+        "section": str(_value(item, "section") or "")[:160] or None,
+        "page": _value(item, "page", None),
+    }
 
 
 def build_selected_thesis_notice_preview(
@@ -50,12 +79,20 @@ def build_selected_thesis_notice_preview(
         "ticker": str(context["ticker"]).upper(),
         "thesis": dict(thesis),
     }
+    material = list(evidence_items)
     candidates = build_thesis_notice_candidates(
         artifact=artifact,
         artifact_recorded_at=str(context["created_at"]),
-        evidence_items=evidence_items,
+        evidence_items=material,
         owner_selected=True,
     )
+    evidence_by_id = {
+        _evidence_id(item): item for item in material if _evidence_id(item)
+    }
+    for candidate in candidates:
+        item = evidence_by_id.get(str(candidate.get("evidence_id") or ""))
+        if item is not None:
+            candidate["evidence"] = _bounded_evidence_snapshot(item)
     return {
         "preview_version": THESIS_NOTICE_PREVIEW_VERSION,
         "available": True,
