@@ -19,7 +19,7 @@ def test_notice_routes_are_registered_and_do_not_expose_a_create_endpoint():
         if route.path.startswith("/research/notices"):
             methods.setdefault(route.path, set()).update(route.methods)
     assert methods["/research/notices"] == {"GET"}
-    assert methods["/research/notices/{notice_id}"] == {"PATCH", "DELETE"}
+    assert methods["/research/notices/{notice_id}"] == {"GET", "PATCH", "DELETE"}
 
 
 def test_notice_routes_enforce_owner_lifecycle():
@@ -29,6 +29,7 @@ def test_notice_routes_enforce_owner_lifecycle():
         from app.routers.research_thesis_notices import (
             NoticeStatusRequest,
             delete_research_thesis_notice,
+            get_research_thesis_notice,
             list_research_thesis_notices,
             update_research_thesis_notice,
         )
@@ -61,10 +62,15 @@ def test_notice_routes_enforce_owner_lifecycle():
                     "preview_version": 1, "available": True,
                     "delivery_enabled": False, "status": "candidate_found",
                     "selection": {"conversation_id": "conversation-a",
-                                  "message_id": "message-a", "ticker": "AAPL"},
+                                  "message_id": "message-a", "ticker": "AAPL",
+                                  "recorded_at": "2026-09-27T00:00:00Z"},
                     "candidates": [{"candidate_version": 1, "eligible": True,
                                     "delivery_enabled": False, "ticker": "AAPL",
-                                    "evidence_id": "E1", "matched_terms": ["margin"]}],
+                                    "reason": "new_admitted_related_evidence",
+                                    "evidence_id": "E1", "matched_terms": ["margin"],
+                                    "evidence": {"title": "Margin filing",
+                                                 "source": "SEC EDGAR",
+                                                 "published_at": "2026-10-01"}}],
                 })
                 await session.commit()
 
@@ -74,6 +80,11 @@ def test_notice_routes_enforce_owner_lifecycle():
                 owner, status=None, ticker=None, limit=50,
             )
             assert [item["id"] for item in listed] == [saved[0]["id"]]
+            detail = await get_research_thesis_notice(saved[0]["id"], owner)
+            assert detail["trigger"]["title"] == "Margin filing"
+            with pytest.raises(HTTPException) as hidden_detail:
+                await get_research_thesis_notice(saved[0]["id"], stranger)
+            assert hidden_detail.value.status_code == 404
             assert await list_research_thesis_notices(
                 stranger, status=None, ticker=None, limit=50,
             ) == []

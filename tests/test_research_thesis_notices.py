@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.db.models import Base, ResearchConversation, ResearchMessage
 from app.services.research_thesis_notices import (
     delete_notice,
+    get_notice,
     list_notices,
     persist_notice_preview,
     set_notice_status,
@@ -35,6 +36,12 @@ def _preview(conversation_id: str, message_id: str, **changes):
             "ticker": "AAPL",
             "evidence_id": "E1",
             "matched_terms": ["services", "retention"],
+            "evidence": {
+                "title": "Quarterly services update",
+                "source": "SEC EDGAR",
+                "published_at": "2026-10-01",
+                "url": "https://www.sec.gov/Archives/example.htm",
+            },
         }],
     }
     value.update(changes)
@@ -74,8 +81,26 @@ def test_notice_lifecycle_is_owner_scoped_deduplicated_and_zero_delivery():
             assert first[0]["id"] == second[0]["id"]
             assert first[0]["delivery_enabled"] is False
             assert first[0]["status"] == "unread"
+            assert first[0]["trigger"] == {
+                "reason": "new_admitted_related_evidence",
+                "prior_recorded_at": "2026-09-27T00:00:00Z",
+                "title": "Quarterly services update",
+                "source": "SEC EDGAR",
+                "published_at": "2026-10-01",
+                "url": "https://www.sec.gov/Archives/example.htm",
+                "document_type": None,
+                "section": None,
+                "page": None,
+                "matched_terms": ["services", "retention"],
+            }
             assert len(await list_notices(session, user_id="owner-a")) == 1
             assert await list_notices(session, user_id="owner-b") == []
+            assert (await get_notice(
+                session, user_id="owner-a", notice_id=first[0]["id"]
+            ))["id"] == first[0]["id"]
+            assert await get_notice(
+                session, user_id="owner-b", notice_id=first[0]["id"]
+            ) is None
 
             assert await set_notice_status(
                 session, user_id="owner-b", notice_id=first[0]["id"], status="read"
@@ -129,6 +154,20 @@ def test_notice_persistence_fails_closed_for_unsafe_or_foreign_inputs():
             assert await persist_notice_preview(
                 session, user_id="owner-a", preview=invalid_candidate
             ) == []
+
+            unsafe_url = _preview("conversation-a", "message-a")
+            unsafe_url["candidates"][0]["evidence_id"] = "E-unsafe"
+            unsafe_url["candidates"][0]["evidence"] = {
+                "title": "Bounded title",
+                "source": "Provider",
+                "url": "https://example.com/data?access_token=secret",
+                "page": "not-an-integer",
+            }
+            stored = await persist_notice_preview(
+                session, user_id="owner-a", preview=unsafe_url,
+            )
+            assert stored[0]["trigger"]["url"] is None
+            assert stored[0]["trigger"]["page"] is None
 
             conversation = await session.get(ResearchConversation, "conversation-a")
             conversation.deleted_at = now

@@ -9,6 +9,7 @@ from typing import Any, Mapping
 from sqlalchemy import select
 
 from ..db.models import ResearchConversation, ResearchMessage, ResearchThesisNotice
+from .evidence_references import _safe_public_url
 
 _STATUSES = {"unread", "read", "dismissed"}
 _MAX_TERMS = 8
@@ -28,6 +29,10 @@ def _serialize(row: ResearchThesisNotice) -> dict[str, Any]:
             "message_id": row.message_id,
             "evidence_id": row.evidence_id,
         },
+        "trigger": {
+            **dict(row.evidence_snapshot or {}),
+            "matched_terms": list(row.matched_terms or []),
+        },
         "matched_terms": list(row.matched_terms or []),
         "candidate_version": row.candidate_version,
         "preview_version": row.preview_version,
@@ -41,6 +46,24 @@ def _fingerprint(*, conversation_id: str, message_id: str,
                  ticker: str, evidence_id: str) -> str:
     canonical = "\x1f".join((conversation_id, message_id, ticker, evidence_id))
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _bounded_snapshot(candidate: Mapping[str, Any],
+                      selection: Mapping[str, Any]) -> dict[str, Any]:
+    evidence = candidate.get("evidence")
+    evidence = evidence if isinstance(evidence, Mapping) else {}
+    page = evidence.get("page")
+    return {
+        "reason": str(candidate.get("reason") or "")[:100] or None,
+        "prior_recorded_at": str(selection.get("recorded_at") or "")[:40] or None,
+        "title": str(evidence.get("title") or "Untitled evidence")[:300],
+        "source": str(evidence.get("source") or "Unknown source")[:120],
+        "published_at": str(evidence.get("published_at") or "")[:40] or None,
+        "url": _safe_public_url(evidence.get("url")),
+        "document_type": str(evidence.get("document_type") or "")[:80] or None,
+        "section": str(evidence.get("section") or "")[:160] or None,
+        "page": page if isinstance(page, int) and page >= 1 else None,
+    }
 
 
 async def persist_notice_preview(session, *, user_id: str,
@@ -109,6 +132,7 @@ async def persist_notice_preview(session, *, user_id: str,
                 message_id=message_id,
                 ticker=ticker,
                 evidence_id=evidence_id[:200],
+                evidence_snapshot=_bounded_snapshot(candidate, selection),
                 fingerprint=fingerprint,
                 matched_terms=bounded_terms,
                 candidate_version=int(candidate.get("candidate_version") or 1),
@@ -148,6 +172,26 @@ async def list_notices(session, *, user_id: str, status: str | None = None,
                       ResearchThesisNotice.id.desc()).limit(max(1, min(limit, 100)))
     )).scalars().all()
     return [_serialize(row) for row in rows]
+
+
+async def get_notice(session, *, user_id: str,
+                     notice_id: str) -> dict[str, Any] | None:
+    """Return one notice only when both its row and conversation are owned."""
+    owner = (user_id or "").strip()
+    if not owner:
+        return None
+    row = (await session.execute(
+        select(ResearchThesisNotice)
+        .join(ResearchConversation,
+              ResearchConversation.id == ResearchThesisNotice.conversation_id)
+        .where(
+            ResearchThesisNotice.id == notice_id,
+            ResearchThesisNotice.user_id == owner,
+            ResearchConversation.user_id == owner,
+            ResearchConversation.deleted_at.is_(None),
+        )
+    )).scalar_one_or_none()
+    return _serialize(row) if row is not None else None
 
 
 async def set_notice_status(session, *, user_id: str, notice_id: str,
