@@ -3029,6 +3029,44 @@ class ResearchPersonalizationProfile(Base):
     )
 
 
+class ResearchThesisNotice(Base):
+    """Account-owned, zero-delivery record of a thesis-relevant preview.
+
+    Rows are created only from server-produced eligible preview candidates.
+    They are an in-product research inbox, not an outbound notification queue.
+    ``delivery_enabled`` is retained as an explicit safety invariant and is
+    always false in this lifecycle.
+    """
+
+    __tablename__ = "research_thesis_notices"
+
+    id = Column(String(36), primary_key=True, default=_uuid)
+    user_id = Column(String(255), nullable=False)
+    conversation_id = Column(String(36), nullable=False)
+    message_id = Column(String(36), nullable=False)
+    ticker = Column(String(20), nullable=False)
+    evidence_id = Column(String(200), nullable=False)
+    fingerprint = Column(String(64), nullable=False)
+    matched_terms = _json_col(nullable=False, default=list)
+    status = Column(String(20), nullable=False, default="unread")
+    candidate_version = Column(Integer, nullable=False, default=1)
+    preview_version = Column(Integer, nullable=False, default=1)
+    delivery_enabled = Column(Boolean, nullable=False, default=False)
+    detected_at = Column(DateTime(timezone=True), nullable=False, default=_now)
+    updated_at = Column(DateTime(timezone=True), nullable=False, default=_now,
+                        onupdate=_now)
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "fingerprint",
+                         name="uq_research_notice_owner_fingerprint"),
+        CheckConstraint("status IN ('unread','read','dismissed')",
+                        name="ck_research_notice_status"),
+        Index("ix_research_notice_owner_detected", "user_id", "detected_at"),
+        Index("ix_research_notice_owner_status", "user_id", "status"),
+        Index("ix_research_notice_owner_ticker", "user_id", "ticker"),
+    )
+
+
 # ---------------------------------------------------------------------------
 # 64–66. Intelligence Benchmark durable shadow state (inert without scheduler)
 # ---------------------------------------------------------------------------

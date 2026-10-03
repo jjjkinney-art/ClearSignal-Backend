@@ -123,6 +123,15 @@ try:
 except Exception as _recall_err:
     logger.warning("[api] research_recall router unavailable: %r", _recall_err)
 
+try:
+    from .routers.research_thesis_notices import router as _research_notices_router
+    router.include_router(_research_notices_router)
+except Exception as _research_notices_err:
+    logger.warning(
+        "[api] research_thesis_notices router unavailable: %r",
+        _research_notices_err,
+    )
+
 
 try:
     from .routers.research_personalization import router as _research_personalization_router
@@ -2327,6 +2336,34 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                                 await _research_session.commit()
                 except Exception:
                     logger.warning("[ask] account-owned research turn could not be saved")
+
+            # Persist only server-produced eligible thesis notice previews.
+            # This is an owner-scoped in-product inbox record. No outbound
+            # delivery path is invoked here.
+            if _history_settings.auth_enabled:
+                try:
+                    _notice_preview = (
+                        _result_dict.get("routing", {})
+                        .get("selected_research", {})
+                        .get("thesis_notice_preview")
+                    )
+                    if isinstance(_notice_preview, dict):
+                        from .db.connection import get_session_factory as _notice_factory
+                        from .services.research_thesis_notices import (
+                            persist_notice_preview as _persist_notice_preview,
+                        )
+                        _notices_factory = _notice_factory()
+                        if _notices_factory is not None:
+                            async with _notices_factory() as _notice_session:
+                                _saved_notices = await _persist_notice_preview(
+                                    _notice_session,
+                                    user_id=_acting_user_id,
+                                    preview=_notice_preview,
+                                )
+                                if _saved_notices:
+                                    await _notice_session.commit()
+                except Exception:
+                    logger.warning("[ask] account-owned thesis notices could not be saved")
 
             # Sprint 3C.1A — the SAME _result_dict is serialized on both paths.
             # Progressive only wraps it in a terminal frame, so the payload a
