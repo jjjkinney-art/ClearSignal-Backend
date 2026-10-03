@@ -13,7 +13,7 @@ import re
 import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed, wait as _cf_wait, ALL_COMPLETED
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 
 # Import schema types explicitly so that type hints in this module are resolvable
 from ..schemas import (
@@ -85,6 +85,32 @@ from .watchlist_service import watchlist_service
 # emit JSON-formatted messages about routing decisions.  The FastAPI
 # application or calling code can configure logging handlers as needed.
 logger = logging.getLogger(__name__)
+
+
+# An explicitly selected research comparison is an interactive, user-visible
+# operation. Keep its worst-case server budget below the frontend's 90-second
+# request ceiling: retrieval (10s) + agents (16s) + synthesis (34s + 18s)
+# leaves roughly 12 seconds for routing, persistence and network overhead.
+# The retry deliberately receives a smaller admitted-evidence prompt; repeating
+# the same oversized prompt was both slower and contrary to the old comment.
+_SELECTED_COMPARISON_SYNTHESIS_PLAN = ((34.0, 24), (18.0, 12))
+_DEFAULT_SYNTHESIS_PLAN = ((56.0, None), (42.0, 12))
+
+
+def _synthesis_attempt_plan(
+    *, selected_comparison: bool,
+) -> Tuple[Tuple[float, Optional[int]], ...]:
+    """Return hard wall caps and prompt evidence limits for synthesis."""
+    if selected_comparison:
+        return _SELECTED_COMPARISON_SYNTHESIS_PLAN
+    return _DEFAULT_SYNTHESIS_PLAN
+
+
+def _limit_synthesis_evidence(evidence: list, limit: Optional[int]) -> list:
+    """Bound only the model prompt; deterministic gates retain all evidence."""
+    if limit is None or len(evidence) <= limit:
+        return evidence
+    return evidence[:limit]
 
 
 # Define simple keyword patterns for routing.  Each key corresponds to an
@@ -1433,7 +1459,13 @@ def _run_investment_pipeline(
     #   evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = ≤82.5s
     _t_synthesis = time.time()
     _t_synthesis_m = time.monotonic()
-    _SYNTHESIS_WALL_CAP_S = 56.0
+    _selected_comparison = bool(
+        research_memory_context_data
+        and research_memory_context_data.get("applied") is True
+    )
+    _synthesis_plan = _synthesis_attempt_plan(
+        selected_comparison=_selected_comparison,
+    )
     # The legacy snapshot store is ticker-wide, not account-owned. It cannot
     # provide a signed-in participant's prior thesis or accept their new one.
     from ..config import settings as _history_settings
@@ -1448,7 +1480,7 @@ def _run_investment_pipeline(
         except Exception as exc:
             logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
 
-    def _run_synthesis():
+    def _run_synthesis(_prompt_evidence):
         return synthesize_thesis(
             company=company,
             valuation=valuation,
@@ -1456,7 +1488,7 @@ def _run_investment_pipeline(
             risk=risk,
             market=market,
             quality=quality,
-            evidence=evidence,
+            evidence=_prompt_evidence,
             profile=profile,
             original_user_question=question,
             question_intent=question_intent,
@@ -1489,11 +1521,11 @@ def _run_investment_pipeline(
     # reduced evidence to improve the chance of success.  The user never sees
     # "Could not synthesize — wall cap exceeded" if a retry succeeds.
     thesis = None
-    for _syn_attempt in range(2):
+    for _syn_attempt, (_syn_timeout, _evidence_limit) in enumerate(_synthesis_plan):
         _syn_pool = ThreadPoolExecutor(max_workers=1)
         try:
-            _syn_fut = _syn_pool.submit(_run_synthesis)
-            _syn_timeout = _SYNTHESIS_WALL_CAP_S if _syn_attempt == 0 else _SYNTHESIS_WALL_CAP_S * 0.75
+            _prompt_evidence = _limit_synthesis_evidence(evidence, _evidence_limit)
+            _syn_fut = _syn_pool.submit(_run_synthesis, _prompt_evidence)
             _cf_wait([_syn_fut], timeout=_syn_timeout, return_when=ALL_COMPLETED)
             if _syn_fut.done():
                 try:
@@ -1517,8 +1549,12 @@ def _run_investment_pipeline(
         finally:
             _syn_pool.shutdown(wait=False)
 
-        if _syn_attempt == 0:
-            logger.info("[router] retrying synthesis for %s with reduced context", ticker)
+        if _syn_attempt + 1 < len(_synthesis_plan):
+            logger.info(
+                "[router] retrying synthesis for %s with reduced context "
+                "(selected_comparison=%s, evidence_limit=%s)",
+                ticker, _selected_comparison, _synthesis_plan[_syn_attempt + 1][1],
+            )
     if thesis is None:
         thesis = _thesis_fallback
 
