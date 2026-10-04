@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from app.services.account_deletion_policy import evaluate_account_deletion_policy
+from app.services.account_deletion_policy import (
+    evaluate_account_deletion_policy,
+    get_provisional_beta_policy,
+)
 
 
 async def run_account_deletion_policy_rehearsal() -> dict:
@@ -27,6 +30,7 @@ async def run_account_deletion_policy_rehearsal() -> dict:
         access_grant_disposition="retain_revoked",
         access_grant_retention_days=365,
     )
+    provisional = get_provisional_beta_policy()
 
     cases = (unresolved, invalid, delete_candidate, retention_candidate)
     checks = {
@@ -44,12 +48,24 @@ async def run_account_deletion_policy_rehearsal() -> dict:
         "explicit_retention_candidate_validates": (
             retention_candidate["policy_resolved"] is True
         ),
-        "all_cases_fail_closed": all(case["fail_closed"] for case in cases),
-        "zero_preview_authority": all(
-            case["authorizes_production_preview"] is False for case in cases
+        "provisional_beta_policy_validates": (
+            provisional["validation"]["policy_resolved"] is True
         ),
-        "zero_deletion_authority": all(
-            case["authorizes_production_deletion"] is False for case in cases
+        "provisional_policy_requires_legal_review": (
+            provisional["legal_review_required"] is True
+            and provisional["approved_for_public_launch"] is False
+        ),
+        "provisional_policy_has_no_owner_approval": (
+            provisional["owner_approval_recorded"] is False
+        ),
+        "all_cases_fail_closed": all(case["fail_closed"] for case in cases),
+        "zero_preview_authority": (
+            all(case["authorizes_production_preview"] is False for case in cases)
+            and provisional["validation"]["authorizes_production_preview"] is False
+        ),
+        "zero_deletion_authority": (
+            all(case["authorizes_production_deletion"] is False for case in cases)
+            and provisional["validation"]["authorizes_production_deletion"] is False
         ),
         "identity_verification_always_required": all(
             case["requires_identity_verification"] is True for case in cases
@@ -69,7 +85,11 @@ async def run_account_deletion_policy_rehearsal() -> dict:
         "synthetic": True,
         "policy_only": True,
         "checks": checks,
-        "candidate_policy_count": 2,
+        "candidate_policy_count": 3,
+        "provisional_policy_id": provisional["policy_id"],
+        "provisional_policy_status": provisional["status"],
+        "legal_review_required": provisional["legal_review_required"],
+        "approved_for_public_launch": provisional["approved_for_public_launch"],
         "authorizes_production_preview": False,
         "authorizes_production_deletion": False,
         "production_database_untouched": True,

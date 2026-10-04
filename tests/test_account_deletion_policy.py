@@ -8,7 +8,10 @@ from starlette.requests import Request
 
 from app.config import settings
 from app.routers import research_memory_admin as admin
-from app.services.account_deletion_policy import evaluate_account_deletion_policy
+from app.services.account_deletion_policy import (
+    evaluate_account_deletion_policy,
+    get_provisional_beta_policy,
+)
 from app.services.account_deletion_policy_rehearsal import (
     run_account_deletion_policy_rehearsal,
 )
@@ -67,6 +70,29 @@ def test_policy_gate_validates_candidates_without_authorizing_operations():
     assert result["requires_identity_verification"] is True
     assert result["requires_separate_preview_approval"] is True
     assert result["requires_separate_deletion_approval"] is True
+
+
+def test_provisional_beta_policy_is_structurally_valid_but_not_launch_approved():
+    result = get_provisional_beta_policy()
+    assert result["policy_id"] == "account-retention-v1-beta"
+    assert result["status"] == "provisional_pending_legal_review"
+    assert result["validation"]["policy_resolved"] is True
+    assert result["validation"]["policy"]["audit_log"] == {
+        "disposition": "anonymize",
+        "retention_days": 365,
+    }
+    assert result["validation"]["policy"]["access_grants"] == {
+        "disposition": "delete",
+        "retention_days": 0,
+        "revoke_before_handling": True,
+    }
+    assert result["deletion_request_target_days"] == 30
+    assert result["review_interval_days"] == 180
+    assert result["legal_review_required"] is True
+    assert result["owner_approval_recorded"] is False
+    assert result["approved_for_public_launch"] is False
+    assert result["validation"]["authorizes_production_preview"] is False
+    assert result["validation"]["authorizes_production_deletion"] is False
 
 
 @pytest.mark.asyncio

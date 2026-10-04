@@ -6,12 +6,27 @@ data, authorize deletion, or expose a live-account route.
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 
 POLICY_SCHEMA_VERSION = 1
 AUDIT_LOG_DISPOSITIONS = ("delete", "anonymize", "retain")
 ACCESS_GRANT_DISPOSITIONS = ("delete", "retain_revoked")
+
+# Conservative beta proposal. It remains provisional until legal review and an
+# explicit owner approval are recorded; importing it grants no operational
+# authority.
+PROVISIONAL_BETA_POLICY = {
+    "policy_id": "account-retention-v1-beta",
+    "status": "provisional_pending_legal_review",
+    "audit_log_disposition": "anonymize",
+    "audit_log_retention_days": 365,
+    "access_grant_disposition": "delete",
+    "access_grant_retention_days": 0,
+    "deletion_request_target_days": 30,
+    "review_interval_days": 180,
+}
 
 
 def _normalized_choice(value: Any) -> str | None:
@@ -90,4 +105,27 @@ def evaluate_account_deletion_policy(
                 "revoke_before_handling": True,
             },
         },
+    }
+
+
+def get_provisional_beta_policy() -> dict:
+    """Return the reviewed proposal plus its permanently non-authorizing gate."""
+
+    proposal = deepcopy(PROVISIONAL_BETA_POLICY)
+    validation = evaluate_account_deletion_policy(
+        audit_log_disposition=proposal["audit_log_disposition"],
+        audit_log_retention_days=proposal["audit_log_retention_days"],
+        access_grant_disposition=proposal["access_grant_disposition"],
+        access_grant_retention_days=proposal["access_grant_retention_days"],
+    )
+    return {
+        "schema_version": POLICY_SCHEMA_VERSION,
+        "policy_id": proposal["policy_id"],
+        "status": proposal["status"],
+        "legal_review_required": True,
+        "owner_approval_recorded": False,
+        "approved_for_public_launch": False,
+        "deletion_request_target_days": proposal["deletion_request_target_days"],
+        "review_interval_days": proposal["review_interval_days"],
+        "validation": validation,
     }
