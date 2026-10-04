@@ -9,6 +9,7 @@ operational controls are approved.
 from __future__ import annotations
 
 import re
+from collections import Counter
 from datetime import datetime, timezone
 from typing import Any, Iterable, Mapping
 
@@ -151,3 +152,35 @@ def build_thesis_notice_candidates(
         for item in evidence_items
     ]
     return [candidate for candidate in candidates if candidate["eligible"]]
+
+
+def evaluate_thesis_notice_candidates(
+    *, artifact: Mapping[str, Any], artifact_recorded_at: str,
+    evidence_items: Iterable[object], owner_selected: bool = False,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Return eligible candidates plus bounded aggregate decision telemetry.
+
+    The summary contains only fixed reason codes and counts. It intentionally
+    excludes thesis text, evidence text, owner identifiers, and evidence IDs so
+    it is safe to attach to account-owned response metadata.
+    """
+    decisions = [
+        evaluate_thesis_notice_candidate(
+            artifact=artifact,
+            artifact_recorded_at=artifact_recorded_at,
+            evidence=item,
+            owner_selected=owner_selected,
+        )
+        for item in evidence_items
+    ]
+    eligible = [decision for decision in decisions if decision["eligible"]]
+    rejection_counts = Counter(
+        str(decision.get("reason") or "unavailable")
+        for decision in decisions
+        if not decision["eligible"]
+    )
+    return eligible, {
+        "evaluated_count": len(decisions),
+        "eligible_count": len(eligible),
+        "rejection_counts": dict(sorted(rejection_counts.items())),
+    }

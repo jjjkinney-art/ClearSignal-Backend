@@ -55,6 +55,11 @@ def test_preview_projects_selection_and_keeps_delivery_disabled():
         "historical_only": True,
     }
     assert [item["evidence_id"] for item in result["candidates"]] == ["E1"]
+    assert result["evaluation_summary"] == {
+        "evaluated_count": 1,
+        "eligible_count": 1,
+        "rejection_counts": {},
+    }
     assert result["candidates"][0]["evidence"] == {
         "title": "Quarterly services update",
         "source": "SEC EDGAR",
@@ -74,7 +79,36 @@ def test_preview_returns_explicit_empty_state_for_non_material_evidence():
     )
     assert result["status"] == "no_material_change_candidate"
     assert result["candidates"] == []
+    assert result["evaluation_summary"] == {
+        "evaluated_count": 1,
+        "eligible_count": 0,
+        "rejection_counts": {"not_materially_related": 1},
+    }
     assert result["delivery_enabled"] is False
+
+
+def test_preview_summarizes_mixed_rejections_without_private_payloads():
+    result = build_selected_thesis_notice_preview(
+        context=_context(),
+        evidence_items=[
+            _evidence(id="old", published_at="2026-09-01"),
+            _evidence(id="other", ticker="MSFT"),
+            _evidence(id="conflict", material_conflict=True),
+        ],
+    )
+    assert result["evaluation_summary"] == {
+        "evaluated_count": 3,
+        "eligible_count": 0,
+        "rejection_counts": {
+            "evidence_not_admitted": 1,
+            "not_newer_than_thesis": 1,
+            "ticker_mismatch": 1,
+        },
+    }
+    serialized = str(result["evaluation_summary"])
+    assert "old" not in serialized
+    assert "other" not in serialized
+    assert "conflict" not in serialized
 
 
 def test_preview_strips_unsafe_evidence_urls():
