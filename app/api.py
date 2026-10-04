@@ -150,6 +150,16 @@ except Exception as _personalization_err:
     )
 
 
+try:
+    from .routers.research_export import router as _research_export_router
+    router.include_router(_research_export_router)
+except Exception as _research_export_err:
+    logger.warning(
+        "[api] research_export router unavailable: %r",
+        _research_export_err,
+    )
+
+
 def _extract_scope(request: Request) -> "ScopeContext | None":
     """Extract tenant/user scope from standard enterprise HTTP headers.
 
