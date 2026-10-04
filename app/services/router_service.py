@@ -1760,13 +1760,20 @@ def _run_investment_pipeline(
     _personalization_metadata = _personalization_response_metadata(
         personalization_context_data
     )
-    from .research_memory_context import response_metadata as _research_memory_metadata
+    from .research_memory_context import (
+        attach_historical_freshness as _attach_historical_freshness,
+        response_metadata as _research_memory_metadata,
+    )
     _selected_research_metadata = _research_memory_metadata(
         research_memory_context_data, evidence_count=len(evidence),
         evidence_integrity=_evidence_integrity,
     )
     if _selected_research_comparison is not None:
         _selected_research_metadata["comparison"] = _selected_research_comparison
+    _selected_research_metadata = _attach_historical_freshness(
+        _selected_research_metadata,
+        _selected_research_comparison,
+    )
     if _thesis_notice_preview is not None:
         _selected_research_metadata["thesis_notice_preview"] = _thesis_notice_preview
 
