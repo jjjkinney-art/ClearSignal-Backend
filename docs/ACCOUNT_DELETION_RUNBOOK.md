@@ -129,8 +129,9 @@ user list.
 
 `ACCOUNT_DATA_RETENTION_POLICY.md` records a conservative beta proposal:
 
-* anonymize account linkage in the security audit trail and retain only the
-  non-identifying record for 365 days;
+* anonymize account linkage in the security audit trail by clearing
+  `user_id`, `resource_id`, `ip_address` and `user_agent`; retain only
+  `id`, `resource`, `action` and `created_at` for 365 days;
 * revoke the account's access grant first, then delete it after the application
   deletion succeeds;
 * retain only the opaque deletion reference, date and aggregate outcome for
@@ -142,3 +143,16 @@ and explicit owner approval. It grants no production-preview or deletion
 authority. Do not publish the timing or retention promises, and do not build a
 production mutation path, until both approvals are recorded and the audit-log
 anonymization semantics have their own implementation and rehearsal.
+
+
+## 9. Audit-log anonymization exception
+
+The normal audit-log contract is append-only. Verified account deletion is the
+single narrowly defined exception: the four account-linkable fields may be set
+to NULL inside the same approved deletion transaction. The event category,
+action, timestamp and opaque audit row ID remain unchanged.
+
+The anonymization primitive does not commit and has no live-account route. Its
+admin rehearsal uses synthetic rows in an ephemeral database and proves full
+linkage removal, repeat idempotency and foreign-owner preservation. This
+exception does not authorize production use.
