@@ -5,6 +5,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 
 from app.security.authz import require_admin
+from app.services.account_audit_anonymization_rehearsal import (
+    run_account_audit_anonymization_rehearsal,
+)
 from app.services.account_deletion_policy_rehearsal import (
     run_account_deletion_policy_rehearsal,
 )
@@ -76,6 +79,22 @@ async def account_deletion_policy_rehearsal(http_request: Request) -> dict:
             status_code=503,
             detail=(
                 "Account deletion policy rehearsal unavailable: "
+                f"{type(exc).__name__}"
+            ),
+        ) from exc
+
+
+@router.post("/account-audit-anonymization-rehearsal")
+async def account_audit_anonymization_rehearsal(http_request: Request) -> dict:
+    """Prove audit linkage removal only in an ephemeral in-memory database."""
+    require_admin(http_request)
+    try:
+        return await run_account_audit_anonymization_rehearsal()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Account audit anonymization rehearsal unavailable: "
                 f"{type(exc).__name__}"
             ),
         ) from exc
