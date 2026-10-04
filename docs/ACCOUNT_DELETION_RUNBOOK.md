@@ -156,3 +156,19 @@ The anonymization primitive does not commit and has no live-account route. Its
 admin rehearsal uses synthetic rows in an ephemeral database and proves full
 linkage removal, repeat idempotency and foreign-owner preservation. This
 exception does not authorize production use.
+
+
+## 10. Atomic transaction rehearsal
+
+The synthetic transaction rehearsal combines the aggregate preview,
+child-before-parent deletion, research-memory purge, audit-linkage
+anonymization, access-grant removal and final application-user removal inside
+one caller-owned transaction. A separate synthetic account deliberately fails
+after mutation begins; every change must roll back and its preview counts must
+exactly match the original preview. A third account proves foreign-owner
+isolation throughout.
+
+Supabase identity deletion is deliberately excluded and remains the final
+manual step only after the application transaction succeeds. The rehearsal has
+no live-account input, touches no production database, and grants no production
+deletion authority.
