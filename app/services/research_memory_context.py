@@ -16,6 +16,7 @@ from ..db.models import ResearchConversation, ResearchMessage
 
 
 RESEARCH_MEMORY_CONTEXT_VERSION = 1
+RESEARCH_MEMORY_FRESHNESS_VERSION = 1
 MAX_QUOTED_FIELD_CHARS = 1_500
 MAX_LIST_ITEMS = 6
 _TEXT_FIELDS = (
@@ -166,3 +167,72 @@ def response_metadata(
             evidence_integrity.get("has_material_conflict")
         )
     return metadata
+
+
+def attach_historical_freshness(
+    metadata: Mapping[str, Any] | None,
+    comparison: Mapping[str, Any] | None,
+) -> dict:
+    """Describe whether newer evidence makes the selected record stale.
+
+    This is deliberately derived from the audited comparison evidence gate. A
+    successful retrieval by itself does not make an old record current, and a
+    newly retrieved old document does not make it stale. The historical
+    snapshot is never mutated or silently replaced.
+    """
+    result = dict(metadata) if isinstance(metadata, Mapping) else {}
+    if result.get("applied") is not True:
+        return result
+
+    freshness = {
+        "freshness_version": RESEARCH_MEMORY_FRESHNESS_VERSION,
+        "status": "unknown",
+        "reason_code": "comparison_unavailable",
+        "newer_evidence_count": 0,
+    }
+    if not isinstance(comparison, Mapping):
+        result["historical_record_freshness"] = freshness
+        return result
+
+    gate = comparison.get("evidence_gate")
+    if not isinstance(gate, Mapping):
+        result["historical_record_freshness"] = freshness
+        return result
+
+    gate_status = str(gate.get("status") or "").strip().lower()
+    eligible = gate.get("eligible_evidence")
+    eligible_count = len(eligible) if isinstance(eligible, list) else 0
+    blocked = gate.get("blocked_counts")
+    conflict_count = (
+        int(blocked.get("material_conflict") or 0)
+        if isinstance(blocked, Mapping)
+        else 0
+    )
+
+    if gate_status == "ready" and eligible_count:
+        freshness.update({
+            "status": "stale",
+            "reason_code": "newer_material_evidence",
+            "newer_evidence_count": eligible_count,
+        })
+    elif gate_status == "conflicting_evidence" and conflict_count:
+        freshness.update({
+            "status": "stale",
+            "reason_code": "newer_conflicting_evidence",
+            "newer_evidence_count": conflict_count,
+        })
+    elif gate_status == "conflicting_evidence":
+        freshness.update({
+            "status": "unknown",
+            "reason_code": "current_evidence_conflict",
+        })
+    elif gate_status == "insufficient_new_evidence":
+        freshness.update({
+            "status": "not_proven_stale",
+            "reason_code": "no_qualifying_newer_evidence",
+        })
+    elif gate_status == "invalid_prior_record":
+        freshness["reason_code"] = "invalid_prior_record"
+
+    result["historical_record_freshness"] = freshness
+    return result
