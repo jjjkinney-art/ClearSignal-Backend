@@ -11,7 +11,7 @@ from __future__ import annotations
 from typing import Any, Iterable, Mapping
 
 from .evidence_references import _safe_public_url
-from .thesis_notice_candidates import build_thesis_notice_candidates
+from .thesis_notice_candidates import evaluate_thesis_notice_candidates
 
 
 THESIS_NOTICE_PREVIEW_VERSION = 1
@@ -80,7 +80,7 @@ def build_selected_thesis_notice_preview(
         "thesis": dict(thesis),
     }
     material = list(evidence_items)
-    candidates = build_thesis_notice_candidates(
+    candidates, evaluation_summary = evaluate_thesis_notice_candidates(
         artifact=artifact,
         artifact_recorded_at=str(context["created_at"]),
         evidence_items=material,
@@ -105,6 +105,7 @@ def build_selected_thesis_notice_preview(
             "recorded_at": context["created_at"],
             "historical_only": True,
         },
+        "evaluation_summary": evaluation_summary,
         "candidates": candidates,
     }
 
