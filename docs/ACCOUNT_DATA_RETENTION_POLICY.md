@@ -39,7 +39,7 @@ This direction follows:
 | Canonical user row | Delete | 0 days after approved transaction | Remove the application identity after children are handled |
 | Supabase authentication identity | Delete last | 0 days after successful application deletion | Preserve recovery ability until the application transaction succeeds |
 | Access grant | Revoke first, then delete after successful account deletion | 0 days | Prevent new writes during processing; retain no account-linked grant afterward |
-| Security audit trail | Remove or irreversibly anonymize account linkage during the deletion transaction; retain only the non-identifying security record | 365 days | Limited incident investigation and control verification; never retain content, email, token, ticker, portfolio value, or reversible account identifier |
+| Security audit trail | Set `user_id`, `resource_id`, `ip_address` and `user_agent` to NULL during the deletion transaction; retain only `id`, `resource`, `action` and `created_at` | 365 days | Limited incident investigation and control verification; never retain content, email, token, ticker, portfolio value, network identifier, device signature, or reversible account identifier |
 | Opaque deletion completion record | Retain `DEL-###`, date and aggregate outcome only | 365 days | Demonstrate that the request was handled without retaining the requester’s identity |
 | Render/Vercel infrastructure logs and Gmail support correspondence | Governed by provider/mailbox controls, not the application deletion transaction | Provider/mailbox policy | Must be accurately disclosed; ClearSignal must not promise per-account deletion it cannot technically perform |
 | Shared ticker-wide research and operational benchmark records | Excluded from account deletion | Not account-linked | Must contain no private account identifier and remain behind existing route guards |
@@ -66,8 +66,9 @@ No current ClearSignal workflow implements legal holds.
 - Review interval: every 180 days and before entering a new jurisdiction.
 - Required before public launch: independent privacy/legal review.
 - Required before production tooling: explicit owner approval recorded outside
-  source code, followed by a separate engineering change that implements and
-  rehearses anonymization semantics.
+  source code. The anonymization primitive and synthetic rehearsal exist, but
+  no live-account route or deletion orchestrator may call them until a separate
+  production-readiness approval and transaction rehearsal are complete.
 - Any changed period or disposition requires a new policy version and tests.
 
 Until those steps are complete, the policy remains provisional and the
