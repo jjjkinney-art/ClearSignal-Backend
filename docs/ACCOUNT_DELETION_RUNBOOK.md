@@ -6,11 +6,12 @@ operator, after identity verification and a separate approval, and it is **not
 instantaneous**.
 
 An internal owner-scoped research-memory deletion primitive now covers research
-conversations, messages, explicit personalization, and thesis notices. It is
-not connected to a production deletion route. Its admin rehearsal runs only
-against synthetic rows in an ephemeral in-memory database; it cannot target a
-live account. The broader account inventory and separate approval requirements
-below remain mandatory.
+conversations, messages, explicit personalization, and thesis notices. A
+separate full-account preview rehearsal dynamically inventories directly owned,
+identity-bound, and child-table records. Both admin rehearsals run only against
+synthetic rows in an ephemeral in-memory database. Neither can target a live
+account or authorizes production deletion. The broader account inventory and
+separate approval requirements below remain mandatory.
 
 This document contains no live identifier and no SQL containing a real
 identifier. It must stay that way.
@@ -86,10 +87,13 @@ Records that need a policy decision before deletion (see §8):
 1. **Revoke access first** so the account cannot create new data meanwhile:
    `python3 scripts/beta_admission.py revoke` (masked, entered twice).
 2. **Read-only preview.** Produce per-table **row counts only** for the
-   account, inside a read-only transaction. The research-memory rehearsal is
-   synthetic and is not a live-account preview tool. Any production preview
-   query or tool needs its own separate approval, and it must print counts only
-   — never rows, ids, tickers, quantities, cost bases or values.
+   account, inside a read-only transaction. The synthetic full-account preview
+   rehearsal verifies dynamic direct-owner discovery, identity scopes and
+   known child scopes while explicitly excluding shared or operational
+   ticker-wide tables. It returns aggregate counts only and is not a
+   live-account preview tool. Any production preview query or tool needs its
+   own separate approval, and it must print counts only — never rows, ids,
+   tickers, quantities, cost bases or values.
 3. **Separate operator approval** of the preview counts before any deletion.
 4. **Delete in one transaction** where the database supports it, children
    before parents, with the per-table deleted counts asserted against the
