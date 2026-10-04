@@ -14,6 +14,9 @@ from app.services.account_deletion_policy_rehearsal import (
 from app.services.account_deletion_preview_rehearsal import (
     run_account_deletion_preview_rehearsal,
 )
+from app.services.account_deletion_transaction_rehearsal import (
+    run_account_deletion_transaction_rehearsal,
+)
 from app.services.research_memory_deletion_rehearsal import (
     run_research_memory_deletion_rehearsal,
 )
@@ -95,6 +98,22 @@ async def account_audit_anonymization_rehearsal(http_request: Request) -> dict:
             status_code=503,
             detail=(
                 "Account audit anonymization rehearsal unavailable: "
+                f"{type(exc).__name__}"
+            ),
+        ) from exc
+
+
+@router.post("/account-deletion-transaction-rehearsal")
+async def account_deletion_transaction_rehearsal(http_request: Request) -> dict:
+    """Prove atomic deletion and rollback only in an ephemeral database."""
+    require_admin(http_request)
+    try:
+        return await run_account_deletion_transaction_rehearsal()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Account deletion transaction rehearsal unavailable: "
                 f"{type(exc).__name__}"
             ),
         ) from exc
