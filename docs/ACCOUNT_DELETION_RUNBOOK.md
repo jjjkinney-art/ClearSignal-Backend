@@ -125,15 +125,20 @@ user list.
   per-account operation.
 * Hosting logs and the support mailbox are outside this procedure.
 
-## 8. Open policy decisions (owner review)
+## 8. Provisional beta policy — not launch approved
 
-These are decided by the owner, not by this runbook. Until they are recorded
-as explicit, internally consistent choices, the policy gate remains unresolved
-and future production tooling must refuse to proceed:
+`ACCOUNT_DATA_RETENTION_POLICY.md` records a conservative beta proposal:
 
-* whether `audit_log` rows for the account are deleted, retained, or
-  anonymised, and for how long;
-* whether the revoked `access_grants` row is deleted or retained;
-* any retention period for records that must be kept for technical, security
-  or legal reasons — **none is stated or promised anywhere yet**;
-* a response or completion timeframe to publish — **none is promised yet**.
+* anonymize account linkage in the security audit trail and retain only the
+  non-identifying record for 365 days;
+* revoke the account's access grant first, then delete it after the application
+  deletion succeeds;
+* retain only the opaque deletion reference, date and aggregate outcome for
+  365 days;
+* target completion of a verified request within 30 calendar days.
+
+The proposal is structurally valid but remains pending independent legal review
+and explicit owner approval. It grants no production-preview or deletion
+authority. Do not publish the timing or retention promises, and do not build a
+production mutation path, until both approvals are recorded and the audit-log
+anonymization semantics have their own implementation and rehearsal.
