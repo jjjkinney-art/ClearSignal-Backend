@@ -207,6 +207,45 @@ def test_assistant_text_falls_back_to_exact_structured_answer():
     )
 
 
+def test_assistant_text_uses_gated_comparison_conclusion_for_memory():
+    response = {
+        "routing": {"research_memory": {"comparison": {
+            "status": "insufficient_new_evidence",
+            "direction": "unclear",
+            "current_conclusion": (
+                "The selected thesis remains historical; the current direction "
+                "is unverified."
+            ),
+            "evidence_gate": {
+                "status": "insufficient_new_evidence",
+                "ready_for_comparison": False,
+            },
+        }}},
+        "answer": {"investment_thesis": {
+            "direct_answer": "The investment case strengthened.",
+        }},
+    }
+    assert assistant_text_from_response(response) == (
+        "The selected thesis remains historical; the current direction is unverified."
+    )
+
+
+def test_assistant_text_keeps_normal_answer_when_comparison_gate_is_ready():
+    response = {
+        "routing": {"research_memory": {"comparison": {
+            "status": "verified_change",
+            "current_conclusion": "The thesis strengthened.",
+            "evidence_gate": {"ready_for_comparison": True},
+        }}},
+        "answer": {"investment_thesis": {
+            "direct_answer": "Evidence-bound details with citations.",
+        }},
+    }
+    assert assistant_text_from_response(response) == (
+        "Evidence-bound details with citations."
+    )
+
+
 def test_recall_is_owner_scoped_transparent_and_handles_ambiguity():
     async def scenario():
         engine = create_async_engine("sqlite+aiosqlite:///:memory:")

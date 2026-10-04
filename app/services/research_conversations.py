@@ -218,6 +218,22 @@ def assistant_text_from_response(response: dict) -> str:
     When a response has only a structured shape, serialize that shape instead
     of manufacturing a summary or conclusion.
     """
+    # Keep searchable transcript text aligned with the conclusion the product
+    # actually displayed. A selected-thesis comparison that fails its evidence
+    # gate must not persist the model's pre-gate directional prose as memory.
+    routing = response.get("routing")
+    if isinstance(routing, dict):
+        memory = routing.get("research_memory")
+        comparison = memory.get("comparison") if isinstance(memory, dict) else None
+        if isinstance(comparison, dict):
+            gate = comparison.get("evidence_gate")
+            gate_ready = gate.get("ready_for_comparison") if isinstance(gate, dict) else None
+            status = comparison.get("status")
+            if gate_ready is False or status == "insufficient_new_evidence":
+                current = comparison.get("current_conclusion")
+                if isinstance(current, str) and current.strip():
+                    return current.strip()
+
     answer = response.get("answer")
     candidates: list[object] = []
     if isinstance(answer, dict):
