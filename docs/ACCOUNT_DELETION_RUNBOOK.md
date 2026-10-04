@@ -82,6 +82,13 @@ Records that need a policy decision before deletion (see §8):
 * `access_grants` holds the operator's approval for the account. Revoke the
   grant (§5, step 1) before deleting it or retaining it.
 
+The retention-policy gate treats both decisions as unresolved by default and
+fails closed on missing, unsupported or internally inconsistent values. A
+synthetic policy rehearsal proves this behavior without accessing production
+data. Even a structurally valid policy candidate authorizes neither a
+production preview nor deletion; identity verification and both separate
+approvals remain mandatory.
+
 ## 5. Application-data deletion
 
 1. **Revoke access first** so the account cannot create new data meanwhile:
@@ -120,7 +127,9 @@ user list.
 
 ## 8. Open policy decisions (owner review)
 
-These are decided by the owner, not by this runbook:
+These are decided by the owner, not by this runbook. Until they are recorded
+as explicit, internally consistent choices, the policy gate remains unresolved
+and future production tooling must refuse to proceed:
 
 * whether `audit_log` rows for the account are deleted, retained, or
   anonymised, and for how long;

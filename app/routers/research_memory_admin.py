@@ -5,6 +5,9 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Request
 
 from app.security.authz import require_admin
+from app.services.account_deletion_policy_rehearsal import (
+    run_account_deletion_policy_rehearsal,
+)
 from app.services.account_deletion_preview_rehearsal import (
     run_account_deletion_preview_rehearsal,
 )
@@ -57,6 +60,22 @@ async def account_deletion_preview_rehearsal(http_request: Request) -> dict:
             status_code=503,
             detail=(
                 "Account deletion preview rehearsal unavailable: "
+                f"{type(exc).__name__}"
+            ),
+        ) from exc
+
+
+@router.post("/account-deletion-policy-rehearsal")
+async def account_deletion_policy_rehearsal(http_request: Request) -> dict:
+    """Prove unresolved retention policy fails closed without live data access."""
+    require_admin(http_request)
+    try:
+        return await run_account_deletion_policy_rehearsal()
+    except Exception as exc:
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Account deletion policy rehearsal unavailable: "
                 f"{type(exc).__name__}"
             ),
         ) from exc
