@@ -1145,7 +1145,9 @@ def _run_investment_pipeline(
     if is_source_answer_request(question):
         _ev_tasks["sec_metrics"] = _fetch_sec_metrics
     from .live_issuer_kpi_service import requested_issuer_kpi_aliases
-    if requested_issuer_kpi_aliases(question):
+    from .services_revenue_evidence import requests_services_revenue
+    if (requested_issuer_kpi_aliases(question)
+            or (ticker == "AAPL" and requests_services_revenue(question))):
         _ev_tasks["issuer_kpis"] = _fetch_issuer_kpis
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
@@ -1253,6 +1255,10 @@ def _run_investment_pipeline(
     _verified_sec_facts.extend(
         structured_claims_from_evidence(_admitted_sec_metric_evidence)
     )
+    _verified_sec_facts.extend(structured_claims_from_evidence([
+        item for item in _issuer_kpi_evidence if id(item) in admitted_ids
+        and item.source_type == "regulatory_filing" and item.source == "SEC EDGAR"
+    ]))
     _calculated_sec_metrics = structured_calculations_from_evidence(
         _admitted_sec_metric_evidence
     )

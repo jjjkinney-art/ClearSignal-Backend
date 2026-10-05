@@ -60,6 +60,13 @@ class DocumentLink:
 
 
 @dataclass(frozen=True)
+class DocumentTable:
+    table_number: int
+    context: str
+    rows: tuple[tuple[str, ...], ...]
+
+
+@dataclass(frozen=True)
 class PublicDocument:
     requested_url: str
     final_url: str
@@ -80,6 +87,101 @@ class PublicDocument:
     source_type: str = "unknown"
     source_tier: str = "unverified"
     trusted_for_instructions: bool = False
+    tables: tuple[DocumentTable, ...] = ()
+
+
+class _HTMLTableExtractor(HTMLParser):
+    """Keep bounded visible rows; nested or incomplete tables are excluded.
+
+    Cell spans are deliberately not expanded. Consumers must recognize exact
+    header/value layouts before assigning a cell to a reporting period.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self._blocked = 0
+        self._depth = 0
+        self._number = 0
+        self._context = ""
+        self._table_context = ""
+        self._rows: list[tuple[str, ...]] = []
+        self._row: list[str] | None = None
+        self._cell: list[str] | None = None
+        self._invalid = False
+        self._tables: list[DocumentTable] = []
+        self._chars = 0
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        tag = tag.lower()
+        if tag in _HTMLTextExtractor._BLOCKED:
+            self._blocked += 1
+        if self._blocked:
+            return
+        if tag == "table":
+            self._depth += 1
+            if self._depth == 1:
+                self._number += 1
+                self._table_context = _clean_text(self._context)[-1000:]
+                self._rows, self._row, self._cell = [], None, None
+                self._invalid = False
+            else:
+                self._invalid = True
+        elif self._depth == 1 and tag == "tr":
+            if self._row is not None:
+                self._invalid = True
+            self._row = []
+        elif self._depth == 1 and tag in {"td", "th"}:
+            if self._cell is not None or self._row is None:
+                self._invalid = True
+            # Multi-row cells can change the apparent row identity.
+            if any(key == "rowspan" and value not in {None, "1"} for key, value in attrs):
+                self._invalid = True
+            self._cell = []
+
+    def handle_data(self, data: str) -> None:
+        if self._blocked:
+            return
+        if not self._depth:
+            self._context = (self._context + " " + data)[-2000:]
+        elif self._depth == 1 and self._cell is not None:
+            if sum(map(len, self._cell)) + len(data) > 500:
+                self._invalid = True
+            else:
+                self._cell.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        if tag in _HTMLTextExtractor._BLOCKED and self._blocked:
+            self._blocked -= 1
+            return
+        if self._blocked:
+            return
+        if self._depth == 1 and tag in {"td", "th"} and self._cell is not None:
+            if self._row is not None and len(self._row) < 64:
+                self._row.append(_clean_text(" ".join(self._cell)))
+            else:
+                self._invalid = True
+            self._cell = None
+        elif self._depth == 1 and tag == "tr" and self._row is not None:
+            if self._cell is not None or len(self._rows) >= 250:
+                self._invalid = True
+            else:
+                self._rows.append(tuple(self._row))
+            self._row = None
+        elif tag == "table" and self._depth:
+            self._depth -= 1
+            if not self._depth:
+                size = sum(len(cell) for row in self._rows for cell in row)
+                if (not self._invalid and self._row is None and self._cell is None
+                        and self._rows and len(self._tables) < 200
+                        and self._chars + size <= MAX_EXTRACTED_CHARS):
+                    self._tables.append(DocumentTable(
+                        self._number, self._table_context, tuple(self._rows),
+                    ))
+                    self._chars += size
+
+    def result(self) -> tuple[DocumentTable, ...]:
+        return tuple(self._tables)
 
 
 class _HTMLTextExtractor(HTMLParser):
@@ -350,12 +452,16 @@ def fetch_public_document(
             source_type=source_type, source_tier=source_tier,
         )
     decoded = body.decode(encoding, errors="replace")
+    tables: tuple[DocumentTable, ...] = ()
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
         title, text, sections, raw_links = parser.result()
         links = _normalize_links(current_url, raw_links)
         method = "html"
+        table_parser = _HTMLTableExtractor()
+        table_parser.feed(decoded)
+        tables = table_parser.result()
     else:
         title, text, sections, links, method = (
             None, _clean_text(decoded)[:MAX_EXTRACTED_CHARS], (), (), "manual"
@@ -371,6 +477,7 @@ def fetch_public_document(
         accessed_at=accessed_at, publisher=publisher,
         published_at=published_at, document_type=document_type,
         source_type=source_type, source_tier=source_tier,
+        tables=tables,
     )
 
 

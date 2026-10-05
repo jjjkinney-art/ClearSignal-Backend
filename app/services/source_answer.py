@@ -52,9 +52,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     if not is_source_answer_request(question):
         return None
 
+    material = list(items)
     claims: list[dict] = []
     services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
-    for index, item in enumerate(items, start=1):
+    for index, item in enumerate(material, start=1):
         claim = _claim_text(item)
         if not claim:
             continue
@@ -90,6 +91,16 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         f"{number}. {row['claim']} [{row['reference_id']}]"
         for number, row in enumerate(claims, start=1)
     )
+    if services_requested and any(
+        str(claim.get("metric", "")).startswith("issuer:Services net sales")
+        for item in material for claim in getattr(item, "verified_claims", [])
+        if isinstance(claim, dict)
+    ):
+        answer += (
+            " These dated observations do not, by themselves, verify future "
+            "Services growth, Services gross margin, or which operating risk "
+            "would invalidate the thesis."
+        )
     setattr(thesis, "direct_answer", answer)
     return {
         "status": "attributed",

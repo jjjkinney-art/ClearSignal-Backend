@@ -10,6 +10,9 @@ from .issuer_kpi_evidence import extract_source_bound_kpis, kpi_as_evidence
 from .official_document_discovery import discover_official_documents
 from .providers import sec_provider
 from .public_document_ingestion import PublicDocumentError, fetch_public_document
+from .services_revenue_evidence import (
+    extract_services_revenue_evidence, requests_services_revenue,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -60,14 +63,19 @@ def fetch_live_issuer_kpi_evidence(
     user_agent: str = "",
     max_documents: int = 2,
 ) -> list[RetrievedEvidence]:
-    """Fetch recent official current reports and return anchored KPI evidence."""
-    aliases = requested_issuer_kpi_aliases(question)
-    if not aliases or not ticker or not ticker.strip() or max_documents not in (1, 2, 3):
+    """Fetch bounded SEC documents and return only source-bound evidence."""
+    if not isinstance(ticker, str) or not ticker.strip():
         return []
+    aliases = requested_issuer_kpi_aliases(question)
+    services_requested = ticker.upper().strip() == "AAPL" and requests_services_revenue(question)
+    if (not aliases and not services_requested) or not ticker.strip() or max_documents not in (1, 2, 3):
+        return []
+    forms = (["10-Q", "10-Q/A", "10-K", "10-K/A"] if services_requested
+             else ["8-K", "8-K/A", "6-K", "6-K/A"])
     try:
         filings = sec_provider.fetch_recent_filings(
-            ticker.upper().strip(), forms=["8-K", "8-K/A", "6-K", "6-K/A"],
-            limit=max_documents, years_back=2, prefer_results=True,
+            ticker.upper().strip(), forms=forms,
+            limit=max_documents, years_back=2, prefer_results=not services_requested,
         ) or []
     except Exception as exc:
         logger.warning("issuer KPI filing discovery failed for %s: %r", ticker, exc)
@@ -82,10 +90,10 @@ def fetch_live_issuer_kpi_evidence(
         url = getattr(filing, "url", None)
         published_at = getattr(filing, "timestamp", None)
         document_type = getattr(filing, "document_type", None)
-        if document_type not in {"8-K", "8-K/A", "6-K", "6-K/A"}:
+        if document_type not in set(forms):
             title = str(getattr(filing, "title", "") or "")
             document_type = next(
-                (form for form in ("8-K/A", "6-K/A", "8-K", "6-K") if form in title), None,
+                (form for form in sorted(forms, key=len, reverse=True) if form in title), None,
             )
         if not isinstance(url, str) or not published_at or not document_type:
             continue
@@ -98,6 +106,13 @@ def fetch_live_issuer_kpi_evidence(
             fetched_documents += 1
         except PublicDocumentError as exc:
             logger.info("issuer KPI document skipped for %s: %s", ticker, exc)
+            continue
+        if services_requested:
+            # Services tables are period-aware. Do not run the generic prose
+            # extractor: it could promote a company-wide gross-margin figure.
+            service_evidence = extract_services_revenue_evidence(document, ticker=ticker)
+            if service_evidence:
+                return service_evidence
             continue
         remaining = {key: value for key, value in aliases.items() if key not in resolved_metrics}
         for kpi in extract_source_bound_kpis(
