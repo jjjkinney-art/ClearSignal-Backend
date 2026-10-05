@@ -10,12 +10,27 @@ _SOURCE_REQUEST_RE = re.compile(
     r"\b(which source|what source|sources? supports?|cite|citation|pieces? of .*evidence)\b",
     re.IGNORECASE,
 )
+_NATURAL_EVIDENCE_REQUEST_RE = re.compile(
+    r"\b(?:what|which|show|give|provide|identify)\s+"
+    r"(?:(?:is|are|me|the|strongest|best|current|public|available|latest|recent|"
+    r"verified|supporting)\s+){0,8}evidence\b",
+    re.IGNORECASE,
+)
+_SERVICES_SCOPE_RE = re.compile(
+    r"\b(?:services|app store|icloud|apple music)\b", re.IGNORECASE,
+)
+_SERVICES_CLAIM_RE = re.compile(
+    r"\b(?:services?|app store|icloud|apple music)\b", re.IGNORECASE,
+)
 _LEGACY_SOURCE_RE = re.compile(r"\s*\[Source:\s*https?://[^\]]+\]\s*", re.IGNORECASE)
 
 
 def is_source_answer_request(question: str) -> bool:
     """Return whether the user explicitly requested evidence attribution."""
-    return bool(_SOURCE_REQUEST_RE.search(question or ""))
+    return bool(
+        _SOURCE_REQUEST_RE.search(question or "")
+        or _NATURAL_EVIDENCE_REQUEST_RE.search(question or "")
+    )
 
 
 def _claim_text(item: object) -> str | None:
@@ -38,9 +53,15 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         return None
 
     claims: list[dict] = []
+    services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
     for index, item in enumerate(items, start=1):
         claim = _claim_text(item)
         if not claim:
+            continue
+        # Consolidated revenue/profit observations do not answer an explicit
+        # Services question. Require the extracted claim itself to mention
+        # that scope; a filing title alone cannot establish segment support.
+        if services_requested and not _SERVICES_CLAIM_RE.search(claim):
             continue
         claims.append({
             "claim": claim,
@@ -61,7 +82,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         setattr(thesis, "direct_answer", answer)
         return {
             "status": "insufficient_claim_evidence",
-            "reason": "Retrieved filing metadata is not claim-level support.",
+            "reason": "Not enough relevant claim-level support was retrieved for this question.",
             "claims": [],
         }
 
