@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import delete, or_, select
 
 from ..db.models import ThesisVersion
 
@@ -75,3 +75,29 @@ async def get_thesis(session, *, user_id: str, record_id: str) -> Optional[dict]
         ThesisVersion.user_id == user_id, ThesisVersion.id == record_id,
     ))).scalar_one_or_none()
     return _present(row) if row else None
+
+
+async def delete_thesis(session, *, user_id: str, record_id: str) -> bool:
+    """Delete exactly one account-owned thesis and its derived deltas.
+
+    Ownership is resolved before mutation. A missing or foreign id returns the
+    same false result, and legacy anonymous or another owner's rows are never
+    touched. The caller owns the transaction boundary.
+    """
+    owner = _owner(user_id)
+    row = (await session.execute(select(ThesisVersion).where(
+        ThesisVersion.user_id == owner,
+        ThesisVersion.id == record_id,
+    ).with_for_update())).scalar_one_or_none()
+    if row is None:
+        return False
+
+    from ..db.models import ThesisDelta
+
+    await session.execute(delete(ThesisDelta).where(or_(
+        ThesisDelta.from_version_id == record_id,
+        ThesisDelta.to_version_id == record_id,
+    )))
+    await session.delete(row)
+    await session.flush()
+    return True
