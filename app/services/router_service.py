@@ -1587,6 +1587,11 @@ def _run_investment_pipeline(
     if question_intent == "valuation_stance" and getattr(valuation, "valuation_stance", ""):
         thesis.valuation_stance = valuation.valuation_stance
 
+    # Apply the source boundary before any thesis can enter legacy snapshots,
+    # comparison evaluation or the final account-owned response snapshot.
+    from .source_answer import apply_source_answer_gate
+    _source_answer = apply_source_answer_gate(thesis, question, evidence)
+
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
     # Backfill diff results onto thesis so the API response carries thesis_trend,
@@ -1658,7 +1663,9 @@ def _run_investment_pipeline(
                 "candidates": [],
             }
 
-    from .source_answer import apply_source_answer_gate
+    # Comparison/legacy processing can mutate narrative fields. Reapply the
+    # same boundary at serialization so those changes cannot reintroduce an
+    # unsupported Services assertion into the emitted or saved response.
     _source_answer = apply_source_answer_gate(thesis, question, evidence)
 
     try:

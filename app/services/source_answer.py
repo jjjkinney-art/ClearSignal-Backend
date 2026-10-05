@@ -24,6 +24,67 @@ _SERVICES_CLAIM_RE = re.compile(
 )
 _LEGACY_SOURCE_RE = re.compile(r"\s*\[Source:\s*https?://[^\]]+\]\s*", re.IGNORECASE)
 
+# Services source questions are a bounded evidence view, not permission to
+# publish the synthesizer's wider investment case. Keep identity and numeric
+# pipeline diagnostics; reset every other schema field before persistence.
+# An allowlist makes new generated fields default to withheld as well.
+_SERVICES_RETAINED_FIELDS = frozenset({
+    "ticker", "company_name", "generated_at", "evidence_count", "question_intent",
+    "thesis_version_id", "previous_thesis_version_id", "runtime_version",
+    "confidence_score", "score_source", "conviction_dimensions",
+    "fragility_multiplier_applied", "asymmetry_multiplier_applied",
+})
+
+
+def _restrict_services_thesis(thesis: object, answer: str, claims: list[dict],
+                              selected_items: list[object], *, enough: bool) -> None:
+    from ..schemas import InvestmentThesis
+
+    defaults = InvestmentThesis(ticker="", company_name="")
+    for name in InvestmentThesis.model_fields:
+        if name not in _SERVICES_RETAINED_FIELDS and hasattr(thesis, name):
+            setattr(thesis, name, getattr(defaults, name))
+
+    headline = (
+        "Dated Services evidence was retrieved; its implications for the thesis remain unverified."
+        if enough else "Services evidence is insufficient; the thesis remains unverified."
+    )
+    limitation = (
+        "Future Services growth, Services gross margin, and thesis-invalidating "
+        "operating risks were not verified by this evidence view."
+    )
+    fields = {
+        "direct_answer": answer,
+        "one_sentence_thesis": headline,
+        "conclusion": answer,
+        "core_takeaway": headline,
+        "verdict_rationale": headline,
+        "directional_stance": "",
+        "setup_label": "monitoring required" if enough else "insufficient conviction",
+        "expectation_regime": "",
+        "analysis_foundation_evidence": [row["claim"] for row in claims] if enough else [],
+        "analysis_foundation_constraints": [limitation],
+        "analysis_foundation_sources": list(dict.fromkeys(
+            str(getattr(item, "source", "")) for item in selected_items
+        )) if enough else [],
+    }
+    # Retain only producer-bound Services amounts/growth from the selected
+    # admitted items, never numbers extracted from the generated thesis.
+    verified = [dict(claim) for item in selected_items if enough
+                for claim in (getattr(item, "verified_claims", []) or [])
+                if isinstance(claim, dict)
+                and str(claim.get("metric", "")).startswith("issuer:Services net sales")
+                and claim.get("document_ref")]
+    fields["quantitative_claims"] = verified
+    fields["claim_provenance_summary"] = {
+        provenance: sum(claim.get("provenance") == provenance for claim in verified)
+        for provenance in {claim.get("provenance") for claim in verified}
+        if provenance
+    }
+    for name, value in fields.items():
+        if name == "direct_answer" or hasattr(thesis, name):
+            setattr(thesis, name, value)
+
 
 def is_source_answer_request(question: str) -> bool:
     """Return whether the user explicitly requested evidence attribution."""
@@ -54,6 +115,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
 
     material = list(items)
     claims: list[dict] = []
+    selected_items: list[object] = []
     services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
     for index, item in enumerate(material, start=1):
         claim = _claim_text(item)
@@ -68,6 +130,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "claim": claim,
             "reference_id": f"E{index}",
         })
+        selected_items.append(item)
         if len(claims) == 3:
             break
 
@@ -81,6 +144,8 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "run the analysis again when structured facts are available."
         )
         setattr(thesis, "direct_answer", answer)
+        if services_requested:
+            _restrict_services_thesis(thesis, answer, [], [], enough=False)
         return {
             "status": "insufficient_claim_evidence",
             "reason": "Not enough relevant claim-level support was retrieved for this question.",
@@ -102,6 +167,8 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "would invalidate the thesis."
         )
     setattr(thesis, "direct_answer", answer)
+    if services_requested:
+        _restrict_services_thesis(thesis, answer, claims, selected_items, enough=True)
     return {
         "status": "attributed",
         "reason": "Each claim is bound to a retrieved evidence reference.",

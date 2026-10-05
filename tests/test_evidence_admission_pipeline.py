@@ -1,3 +1,7 @@
+import json
+
+import pytest
+
 from app.schemas import (
     CompanyContext,
     InvestmentThesis,
@@ -99,3 +103,60 @@ def test_conflicting_evidence_is_blocked_before_agents_and_source_answer(monkeyp
     assert {ref["freshness_status"] for ref in response.answer["evidence_references"]} == {
         "conflicting"
     }
+
+
+@pytest.mark.parametrize("authenticated", [False, True])
+def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authenticated):
+    from app.config import settings
+    from app.services import live_issuer_kpi_service, session_context_service
+
+    for target, names in (
+        (router_service._fmp_provider, ["fetch_company_evidence"]),
+        (router_service._sec_provider, ["fetch_recent_filings"]),
+        (router_service._news_provider, ["fetch_company_news", "fetch_macro_news"]),
+        (router_service, ["retrieve_general_finance_evidence", "fetch_valuation_ratios", "fetch_analyst_estimates"]),
+        (verified_sec_metric_service, ["fetch_verified_metric_evidence"]),
+        (live_issuer_kpi_service, ["fetch_live_issuer_kpi_evidence"]),
+    ):
+        for name in names:
+            monkeypatch.setattr(target, name, lambda *a, **k: [])
+    monkeypatch.setattr(router_service, "get_profile_for_company", lambda *a, **k: None)
+    monkeypatch.setattr(router_service, "partition_evidence", lambda *a, **k:
+                        EvidencePartition(valuation=[], macro=[], risk=[], market=[], quality=[]))
+    for name, model in (
+        ("run_valuation_agent", ValuationView), ("run_investment_macro_agent", MacroSensitivity),
+        ("run_risk_agent", RiskProfile), ("run_market_agent", MarketContext),
+        ("run_quality_agent", QualityAssessment),
+    ):
+        monkeypatch.setattr(router_service, name, lambda *a, _model=model, **k: _model())
+    monkeypatch.setattr("app.investment_agents.question_answerer_agent.run_question_answerer",
+                        lambda *a, **k: "Services margin is 72%.")
+    monkeypatch.setattr(router_service, "synthesize_thesis", lambda *a, **k:
+                        InvestmentThesis(ticker="AAPL", company_name="Apple",
+                                         direct_answer="Services margin is 72%.",
+                                         one_sentence_thesis="Services margin is 72%.",
+                                         bull_thesis="Services margin is 72%."))
+    monkeypatch.setattr(settings, "auth_enabled", authenticated)
+    monkeypatch.setattr(session_context_service, "record_active_ticker", lambda *a, **k: None)
+    monkeypatch.setattr(router_service.watchlist_service, "get_latest_snapshot", lambda *a: None)
+    captured = []
+
+    def persist(thesis):
+        captured.append(thesis.model_dump(mode="json"))
+        # A downstream legacy processor must not restore an unbound headline.
+        thesis.one_sentence_thesis = "Services margin is 72%."
+        return None, None
+
+    monkeypatch.setattr(router_service.watchlist_service, "process_new_thesis", persist)
+    response = router_service._run_investment_pipeline(
+        CompanyContext(ticker="AAPL", company_name="Apple"),
+        "What evidence supports Apple's Services growth?", "services-boundary-test",
+    )
+    assert response.answer["source_answer"]["status"] == "insufficient_claim_evidence"
+    assert "72%" not in json.dumps(response.answer["investment_thesis"])
+    if authenticated:
+        assert captured == []  # Shared ticker memory remains guarded.
+    else:
+        assert len(captured) == 1
+        assert "72%" not in json.dumps(captured[0])
+        assert captured[0]["conclusion"] == response.answer["investment_thesis"]["conclusion"]
