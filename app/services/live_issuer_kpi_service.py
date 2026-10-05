@@ -105,7 +105,12 @@ def fetch_live_issuer_kpi_evidence(
             )
             fetched_documents += 1
         except PublicDocumentError as exc:
-            logger.info("issuer KPI document skipped for %s: %s", ticker, exc)
+            logger.info(
+                "issuer KPI document skipped for %s: %s; failure_kind=%s "
+                "http_status=%s error_class=%s user_agent_configured=%s",
+                ticker, exc, exc.failure_kind, exc.http_status, exc.error_class,
+                bool(user_agent.strip()),
+            )
             continue
         if services_requested:
             # Services tables are period-aware. Do not run the generic prose
@@ -140,7 +145,12 @@ def fetch_live_issuer_kpi_evidence(
                 )
                 fetched_documents += 1
             except PublicDocumentError as exc:
-                logger.info("issuer KPI exhibit skipped for %s: %s", ticker, exc)
+                logger.info(
+                    "issuer KPI exhibit skipped for %s: %s; failure_kind=%s "
+                    "http_status=%s error_class=%s user_agent_configured=%s",
+                    ticker, exc, exc.failure_kind, exc.http_status, exc.error_class,
+                    bool(user_agent.strip()),
+                )
                 continue
             remaining = {
                 key: value for key, value in aliases.items() if key not in resolved_metrics
