@@ -161,6 +161,29 @@ def test_services_path_respects_document_budget_and_does_not_follow_exhibits(mon
     assert len(calls) == 2
 
 
+def test_document_failure_log_exposes_status_without_user_agent_or_url(monkeypatch, caplog):
+    import logging
+    from app.services.public_document_ingestion import PublicDocumentError
+    filing = _filing("https://www.sec.gov/Archives/edgar/data/320193/1/private-path.htm").model_copy(
+        update={"document_type": "10-Q"},
+    )
+    monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *a, **k: [filing])
+    def fail(*a, **k):
+        raise PublicDocumentError("public document request failed", failure_kind="http_error",
+                                  http_status=403, error_class="HTTPError")
+    monkeypatch.setattr(service, "fetch_public_document", fail)
+    with caplog.at_level(logging.INFO, logger=service.__name__):
+        assert service.fetch_live_issuer_kpi_evidence(
+            "AAPL", question="What evidence supports Services growth?",
+            user_agent="ClearSignal confidential-contact@example.com",
+        ) == []
+    assert "failure_kind=http_error" in caplog.text
+    assert "http_status=403" in caplog.text
+    assert "user_agent_configured=True" in caplog.text
+    assert "confidential-contact" not in caplog.text
+    assert "private-path" not in caplog.text
+
+
 def test_services_fetch_failure_fails_closed(monkeypatch):
     from app.services.public_document_ingestion import PublicDocumentError
     monkeypatch.setattr(service.sec_provider, "fetch_recent_filings",

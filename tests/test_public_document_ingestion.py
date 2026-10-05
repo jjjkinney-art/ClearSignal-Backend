@@ -101,6 +101,49 @@ def test_extracts_visible_html_title_sections_and_hash(monkeypatch):
     assert response.closed is True
 
 
+@pytest.mark.parametrize("status", [403, 404, 429, 503])
+def test_http_failure_preserves_status_without_sensitive_exception_text(monkeypatch, status):
+    response = _Response(status=status)
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: response)
+    with pytest.raises(PublicDocumentError, match="public document request failed") as caught:
+        fetch_public_document("https://example.com/report")
+    error = caught.value
+    assert error.failure_kind == "http_error"
+    assert error.http_status == status
+    assert error.error_class == "HTTPError"
+    assert response.closed is True
+
+
+@pytest.mark.parametrize("exc,kind,error_class", [
+    (requests.Timeout("secret URL and credential"), "timeout", "Timeout"),
+    (requests.exceptions.SSLError("secret URL and credential"), "tls_error", "SSLError"),
+    (requests.ConnectionError("secret URL and credential"), "connection_error", "ConnectionError"),
+    (requests.RequestException("secret URL and credential"), "request_error", "RequestException"),
+])
+def test_transport_failure_is_classified_without_logging_secret_details(monkeypatch, exc, kind, error_class):
+    def fail(*args, **kwargs):
+        raise exc
+    monkeypatch.setattr(requests, "get", fail)
+    with pytest.raises(PublicDocumentError) as caught:
+        fetch_public_document("https://example.com/report")
+    error = caught.value
+    assert error.failure_kind == kind
+    assert error.error_class == error_class
+    assert error.http_status is None
+    assert "secret" not in str(error)
+
+
+def test_dns_failure_keeps_safe_classification(monkeypatch):
+    def fail(*args, **kwargs):
+        raise socket.gaierror("secret resolver detail")
+    monkeypatch.setattr(socket, "getaddrinfo", fail)
+    with pytest.raises(PublicDocumentError) as caught:
+        fetch_public_document("https://example.com/report")
+    assert caught.value.failure_kind == "dns_error"
+    assert caught.value.error_class == "DNSLookupError"
+    assert "secret" not in str(caught.value)
+
+
 def test_extracts_bounded_safe_html_links(monkeypatch):
     response = _Response(b"""
         <a href="/results/q2.pdf#page=2">Q2 earnings presentation</a>

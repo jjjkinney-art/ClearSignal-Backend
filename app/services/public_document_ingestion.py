@@ -38,6 +38,34 @@ _SENSITIVE_QUERY_KEYS = {
 class PublicDocumentError(ValueError):
     """A public document could not be retrieved safely."""
 
+    def __init__(self, message: str, *, failure_kind: str = "document_rejected",
+                 http_status: int | None = None, error_class: str | None = None):
+        super().__init__(message)
+        self.failure_kind = failure_kind
+        self.http_status = http_status
+        self.error_class = error_class
+
+
+def _request_failure(exc: requests.RequestException, response) -> PublicDocumentError:
+    """Expose bounded failure metadata without exception URLs, bodies or headers."""
+    if isinstance(exc, requests.exceptions.SSLError):
+        kind, error_class = "tls_error", "SSLError"
+    elif isinstance(exc, requests.Timeout):
+        kind, error_class = "timeout", "Timeout"
+    elif isinstance(exc, requests.HTTPError):
+        kind, error_class = "http_error", "HTTPError"
+    elif isinstance(exc, requests.ConnectionError):
+        kind, error_class = "connection_error", "ConnectionError"
+    else:
+        kind, error_class = "request_error", "RequestException"
+    status = getattr(response, "status_code", None) if kind == "http_error" else None
+    if not isinstance(status, int) or isinstance(status, bool) or not 100 <= status <= 599:
+        status = None
+    return PublicDocumentError(
+        "public document request failed", failure_kind=kind,
+        http_status=status, error_class=error_class,
+    )
+
 
 @dataclass(frozen=True)
 class DocumentSection:
@@ -355,9 +383,12 @@ def _validate_public_url(url: str) -> str:
             for item in socket.getaddrinfo(hostname, 443, type=socket.SOCK_STREAM)
         }
     except OSError as exc:
-        raise PublicDocumentError("document host could not be resolved") from exc
+        raise PublicDocumentError(
+            "document host could not be resolved", failure_kind="dns_error",
+            error_class="DNSLookupError",
+        ) from exc
     if not addresses:
-        raise PublicDocumentError("document host did not resolve")
+        raise PublicDocumentError("document host did not resolve", failure_kind="dns_error")
     for address in addresses:
         try:
             ip = ipaddress.ip_address(address)
@@ -432,7 +463,7 @@ def fetch_public_document(
     except PublicDocumentError:
         raise
     except requests.RequestException as exc:
-        raise PublicDocumentError("public document request failed") from exc
+        raise _request_failure(exc, response) from exc
     finally:
         if response is not None:
             response.close()
