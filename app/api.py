@@ -3097,6 +3097,27 @@ async def get_owned_research_record(record_id: str, request: Request) -> dict:
         raise HTTPException(status_code=404, detail="Research record not found.")
     return record
 
+
+@router.delete("/research/history/{record_id}", tags=["history"])
+async def delete_owned_research_record(record_id: str, request: Request) -> dict:
+    """Delete one thesis snapshot owned by the current account only."""
+    from .dependencies.auth import require_user_id
+    from .db.connection import get_session_factory
+    from .services.owned_research import delete_thesis
+
+    owner = require_user_id(request)
+    factory = get_session_factory()
+    if factory is None:
+        raise HTTPException(status_code=503, detail="Research history is unavailable.")
+    async with factory() as session:
+        deleted = await delete_thesis(session, user_id=owner, record_id=record_id)
+        if deleted:
+            await session.commit()
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Research record not found.")
+    return {"deleted": True, "record_id": record_id}
+
+
 @router.get("/history", tags=["history"])
 async def get_history(
     ticker: Optional[str] = None,
