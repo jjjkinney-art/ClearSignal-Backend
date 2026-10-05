@@ -74,7 +74,8 @@ def test_delete_owned_research_record_isolated_and_fail_closed():
                 ) is not None
                 anonymous_row = await session.get(ThesisVersion, anonymous_id)
                 assert anonymous_row is not None
-                deltas = (await session.execute(select(ThesisDelta))).scalars().all()\n                assert deltas == []
+                deltas = (await session.execute(select(ThesisDelta))).scalars().all()
+                assert deltas == []
 
             with pytest.raises(HTTPException) as missing:
                 await api.delete_owned_research_record(owned_id, request_a)
