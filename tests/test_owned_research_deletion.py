@@ -11,7 +11,7 @@ import pytest
 def test_delete_owned_research_record_isolated_and_fail_closed():
     async def scenario():
         from fastapi import HTTPException
-        from sqlalchemy.ext.asyncio import create_async_engine
+        from sqlalchemy import select\n        from sqlalchemy.ext.asyncio import create_async_engine
 
         from app import api
         from app.db.connection import close_db, get_session_factory, init_db
@@ -73,7 +73,7 @@ def test_delete_owned_research_record_isolated_and_fail_closed():
                 ) is not None
                 anonymous_row = await session.get(ThesisVersion, anonymous_id)
                 assert anonymous_row is not None
-                assert await session.get(ThesisDelta, None) is None
+                deltas = (await session.execute(select(ThesisDelta))).scalars().all()\n                assert deltas == []
 
             with pytest.raises(HTTPException) as missing:
                 await api.delete_owned_research_record(owned_id, request_a)
