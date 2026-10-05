@@ -121,3 +121,50 @@ def test_follows_only_official_sec_exhibit_within_document_budget(monkeypatch):
         ("https://www.sec.gov/Archives/edgar/data/1/2/report.htm", "8-K"),
         (exhibit_url, "sec_exhibit"),
     ]
+
+
+def test_apple_services_growth_uses_periodic_filing_and_real_table_extraction(monkeypatch):
+    from pathlib import Path
+    from app.services.public_document_ingestion import _HTMLTableExtractor
+    from dataclasses import replace
+
+    url = "https://www.sec.gov/Archives/edgar/data/320193/000032019325000073/aapl-20250628.htm"
+    filing = _filing(url).model_copy(update={"document_type": "10-Q", "timestamp": "2025-08-01"})
+    parser = _HTMLTableExtractor()
+    parser.feed((Path(__file__).parent / "fixtures/apple_services_q3_2025.html").read_text())
+    document = replace(_document(url=url), document_type="10-Q", published_at="2025-08-01",
+                       extraction_method="html", tables=parser.result())
+    calls = []
+    monkeypatch.setattr(service.sec_provider, "fetch_recent_filings",
+                        lambda *args, **kwargs: calls.append(kwargs) or [filing])
+    monkeypatch.setattr(service, "fetch_public_document", lambda *args, **kwargs: document)
+    monkeypatch.setattr(service, "extract_source_bound_kpis",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("no generic metrics")))
+    evidence = service.fetch_live_issuer_kpi_evidence(
+        "aapl", question="What is the strongest current public evidence for Apple's services-growth thesis?",
+    )
+    assert len(evidence) == 2
+    assert evidence[0].verified_claims[0]["raw_value"] == 27_423_000_000
+    assert calls == [{"forms": ["10-Q", "10-Q/A", "10-K", "10-K/A"],
+                     "limit": 2, "years_back": 2, "prefer_results": False}]
+
+
+def test_services_path_respects_document_budget_and_does_not_follow_exhibits(monkeypatch):
+    filings = [_filing().model_copy(update={"document_type": "10-Q"})] * 3
+    monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *args, **kwargs: filings)
+    calls = []
+    monkeypatch.setattr(service, "fetch_public_document",
+                        lambda url, **kwargs: calls.append(url) or _document("No tables here."))
+    monkeypatch.setattr(service, "discover_official_documents",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("no exhibit discovery")))
+    assert service.fetch_live_issuer_kpi_evidence("AAPL", question="Services growth?", max_documents=2) == []
+    assert len(calls) == 2
+
+
+def test_services_fetch_failure_fails_closed(monkeypatch):
+    from app.services.public_document_ingestion import PublicDocumentError
+    monkeypatch.setattr(service.sec_provider, "fetch_recent_filings",
+                        lambda *args, **kwargs: [_filing().model_copy(update={"document_type": "10-Q"})])
+    monkeypatch.setattr(service, "fetch_public_document",
+                        lambda *args, **kwargs: (_ for _ in ()).throw(PublicDocumentError("unavailable")))
+    assert service.fetch_live_issuer_kpi_evidence("AAPL", question="Services revenue?") == []

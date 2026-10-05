@@ -83,9 +83,15 @@ _REQUIRED_STEP_KEYS = {"step", "cause", "effect", "channel"}
 # DB fixtures
 # ---------------------------------------------------------------------------
 
-@pytest.fixture()
-def engine():
-    return create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+@pytest_asyncio.fixture()
+async def engine():
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:", future=True)
+    try:
+        yield engine
+    finally:
+        # Close aiosqlite workers while this fixture's event loop is alive.
+        # Leaving the pool open can crash Python during interpreter shutdown.
+        await engine.dispose()
 
 
 @pytest_asyncio.fixture()

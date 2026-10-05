@@ -1,3 +1,4 @@
+import hashlib
 import socket
 from io import BytesIO
 
@@ -237,3 +238,29 @@ def test_deduplicates_byte_identical_documents(monkeypatch):
     first = fetch_public_document("https://example.com/a")
     second = fetch_public_document("https://example.com/b")
     assert len(deduplicate_documents([first, second])) == 1
+
+
+def test_preserves_visible_table_cells_context_and_source_hash(monkeypatch):
+    body = b'''<p>Net sales (dollars in millions):</p>
+        <table><tr><th>Three Months Ended</th></tr>
+        <tr><td>Services</td><td>27,423</td><td><script>99</script>24,213</td></tr></table>'''
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: _Response(body))
+    document = fetch_public_document("https://example.com/report")
+    assert len(document.tables) == 1
+    table = document.tables[0]
+    assert table.context == "Net sales (dollars in millions):"
+    assert table.rows == (("Three Months Ended",), ("Services", "27,423", "24,213"))
+    assert table.table_number == 1
+    assert document.content_hash == hashlib.sha256(body).hexdigest()
+
+
+@pytest.mark.parametrize("body", [
+    b'<table><tr><td>Services</td><td>27,423</td></tr>',
+    b'<table><tr><td><table><tr><td>Services</td></tr></table></td></tr></table>',
+    b'<table><tr><td rowspan="2">Services</td><td>27,423</td></tr></table>',
+    b'<table><tr><td>' + b'x' * 501 + b'</td></tr></table>',
+])
+def test_ambiguous_or_incomplete_table_structure_is_not_preserved(monkeypatch, body):
+    monkeypatch.setattr(requests, "get", lambda *args, **kwargs: _Response(body))
+    document = fetch_public_document("https://example.com/report")
+    assert document.tables == ()
