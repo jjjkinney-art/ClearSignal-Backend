@@ -11,7 +11,8 @@ import pytest
 def test_delete_owned_research_record_isolated_and_fail_closed():
     async def scenario():
         from fastapi import HTTPException
-        from sqlalchemy import select\n        from sqlalchemy.ext.asyncio import create_async_engine
+        from sqlalchemy import select
+        from sqlalchemy.ext.asyncio import create_async_engine
 
         from app import api
         from app.db.connection import close_db, get_session_factory, init_db
