@@ -15,6 +15,7 @@ import io
 import json
 from pathlib import Path
 import sys
+import time
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +35,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
     row = {"ticker": case["ticker"], "topic": case["topic"], "passed": False,
            "status": "gap", "stage": "identity", "documents_attempted": 0,
            "documents_retrieved": 0, "admitted_risk_count": 0,
-           "disclosures": [], "retrieval_failures": []}
+           "disclosures": [], "retrieval_failures": [], "document_diagnostics": []}
     profile = requested_risk_profile(case["ticker"], case["question"])
     if not profile:
         row["reason"] = "identity_or_topic_unavailable"
@@ -43,29 +44,49 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
         row.update(status="error", reason="issuer_identity_mismatch")
         return row
     documents = {}
+    download_times = {}
     real_fetch = live.fetch_public_document
+    real_extract = live.extract_issuer_risk_evidence
 
     def observe_fetch(url, **kwargs):
+        started = time.monotonic()
         row["documents_attempted"] += 1
         try:
             document = real_fetch(url, **kwargs)
         except live.PublicDocumentError as exc:
             row["retrieval_failures"].append({"kind": exc.failure_kind,
-                                               "http_status": exc.http_status})
+                "http_status": exc.http_status, "form": kwargs.get("document_type"),
+                "elapsed_ms": round((time.monotonic() - started) * 1000)})
             raise
         row["documents_retrieved"] += 1
         documents[document.content_hash] = document
+        download_times[document.content_hash] = round((time.monotonic() - started) * 1000)
         return document
 
+    def observe_extract(document, **kwargs):
+        started = time.monotonic()
+        stats = {}
+        result = real_extract(document, **kwargs, diagnostics=stats)
+        row["document_diagnostics"].append({
+            "form": document.document_type, "filed_at": document.published_at,
+            "normalized_text_chars": len(document.text),
+            "download_elapsed_ms": download_times.get(document.content_hash),
+            "extraction_elapsed_ms": round((time.monotonic() - started) * 1000), **stats,
+        })
+        return result
+
     row["stage"] = "bounded_retrieval"
+    retrieval_started = time.monotonic()
     try:
         if fetcher is None:
-            with patch.object(live, "fetch_public_document", observe_fetch):
+            with patch.object(live, "fetch_public_document", observe_fetch), \
+                    patch.object(live, "extract_issuer_risk_evidence", observe_extract):
                 items = live.fetch_live_issuer_kpi_evidence(
                     case["ticker"], question=case["question"], user_agent=user_agent, max_documents=2)
         else:
             # Injectable for deterministic harness tests; not a CLI live path.
             items, documents = fetcher(case)
+        row["retrieval_elapsed_ms"] = round((time.monotonic() - retrieval_started) * 1000)
         admitted, refs, _ = admit_evidence(items, evaluated_at=evaluated_at)
         thesis = InvestmentThesis(ticker=case["ticker"], company_name=case["company"])
         result = apply_source_answer_gate(thesis, case["question"], admitted, references=refs)
@@ -99,6 +120,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
             row.update(status="error", reason="source_span_mismatch")
         return row
     except Exception as exc:
+        row["retrieval_elapsed_ms"] = round((time.monotonic() - retrieval_started) * 1000)
         row.update(status="error", reason=type(exc).__name__)
         return row
 

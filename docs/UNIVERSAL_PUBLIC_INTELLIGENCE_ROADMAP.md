@@ -233,6 +233,13 @@ filings pass replay, while the expanded live retrieval and signed-in matrix rema
 open. Foreign filing layouts and multi-topic risk completeness remain explicit
 gaps. See [broader company evidence acceptance](BROAD_COMPANY_EVIDENCE_ACCEPTANCE_20261007.md).
 
+Signed-in post-deployment acceptance (7 October NZ / 6 October UTC) sampled fifteen
+companies across all eleven sectors: four returned attributed risk disclosures
+and eleven returned explicit gaps. This is a failing useful-evidence sample;
+the broad-company launch gate remains open. Annual fallback after a failed first
+quarterly download is being repaired, with extraction/timing diagnostics added
+to isolate the actual gap causes. See [live results and required follow-up](COMPANY_EVIDENCE_LIVE_20261007.md).
+
 Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
 attribute qualitative operating-risk disclosures with exact quotes, filing dates
 and document identities. This is initial issuer coverage, not a verified risk

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 
 from ..schemas import RetrievedEvidence
 from .issuer_kpi_evidence import extract_source_bound_kpis, kpi_as_evidence
@@ -89,6 +90,27 @@ def fetch_live_issuer_kpi_evidence(
     candidates_filings = list(filings[:max_documents])
     service_found = False
     risk_found = False
+
+    def queue_annual_fallback(filing_index: int, document_type: str) -> None:
+        # A failed quarterly download is also missing risk support. Prefer the
+        # annual Risk Factors over another quarterly cross-reference, without
+        # adding a download slot or retrying the failed URL.
+        if (not risk_requested or risk_found or filing_index != 0
+                or fetched_documents >= max_documents
+                or document_type in {"10-K", "10-K/A"}):
+            return
+        try:
+            annual = sec_provider.fetch_recent_filings(
+                ticker.upper().strip(), forms=["10-K", "10-K/A"], limit=1,
+                years_back=2, prefer_results=False,
+            ) or []
+        except Exception as exc:
+            logger.warning("Issuer risk annual discovery unavailable for %s: %s",
+                           ticker, type(exc).__name__)
+            annual = []
+        if annual:
+            candidates_filings[filing_index + 1:] = annual[:1]
+
     for filing_index, filing in enumerate(candidates_filings):
         if fetched_documents >= max_documents:
             break
@@ -105,6 +127,7 @@ def fetch_live_issuer_kpi_evidence(
         attempted_urls.add(url)
         # Failed downloads also consume the bounded attempt budget.
         fetched_documents += 1
+        fetch_started = time.monotonic()
         try:
             document = fetch_public_document(
                 url, user_agent=user_agent, publisher="SEC EDGAR",
@@ -119,6 +142,7 @@ def fetch_live_issuer_kpi_evidence(
                 ticker, exc, exc.failure_kind, exc.http_status, exc.error_class,
                 bool(user_agent.strip()),
             )
+            queue_annual_fallback(filing_index, document_type)
             continue
         if services_requested or risk_requested:
             # Services tables are period-aware. Do not run the generic prose
@@ -131,23 +155,18 @@ def fetch_live_issuer_kpi_evidence(
                 risk_evidence = extract_issuer_risk_evidence(document, ticker=ticker, question=question)
                 evidence.extend(risk_evidence)
                 risk_found = bool(risk_evidence)
+                logger.info(
+                    "issuer risk extraction for %s: form=%s text_chars=%s "
+                    "disclosures=%s document_elapsed_ms=%s",
+                    ticker, document_type, len(document.text), len(risk_evidence),
+                    round((time.monotonic() - fetch_started) * 1000),
+                )
             if (not services_requested or service_found) and (not risk_requested or risk_found):
                 break
             # A quarterly report can refer back to annual Risk Factors. Only
             # discover the annual fallback after the newest document had no
             # qualifying risk; keep it within the remaining document budget.
-            if (risk_requested and not risk_found and filing_index == 0
-                    and max_documents > 1 and document_type not in {"10-K", "10-K/A"}):
-                try:
-                    annual = sec_provider.fetch_recent_filings(
-                        ticker.upper().strip(), forms=["10-K", "10-K/A"], limit=1,
-                        years_back=2, prefer_results=False,
-                    ) or []
-                except Exception as exc:
-                    logger.warning("Issuer risk annual discovery unavailable for %s: %r", ticker, exc)
-                    annual = []
-                if annual:
-                    candidates_filings[filing_index + 1:] = annual[:1]
+            queue_annual_fallback(filing_index, document_type)
             continue
         remaining = {key: value for key, value in aliases.items() if key not in resolved_metrics}
         for kpi in extract_source_bound_kpis(
