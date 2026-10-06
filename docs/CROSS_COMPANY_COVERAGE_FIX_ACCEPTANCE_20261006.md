@@ -1,6 +1,8 @@
 # Cross-company coverage fix acceptance — 6 October 2026
 
-**Status: local remediation passed; production acceptance pending.**
+**Status: local remediation and required CI passed; production sample found a history-indexing defect.**
+See the [live acceptance report](CROSS_COMPANY_PRODUCTION_ACCEPTANCE_20261006.md)
+for verified behavior, the Alcoa follow-up, and remaining gates.
 The [original failing audit](CROSS_COMPANY_COVERAGE_AUDIT_20261006.md) remains
 unchanged. This [post-fix report](CROSS_COMPANY_COVERAGE_FIX_ACCEPTANCE_20261006.json)
 records the repaired code fingerprints and reproducible local checks. It does not
@@ -64,7 +66,8 @@ exact-ticker EFTS fallback. That expectation is replaced with a regression that
 requires withholding when the issuer map is unavailable; the legacy name-based
 false-positive test now verifies that it actually reaches the intended filter.
 The Tesla, SEC-provider and exact-identity suites pass together: **76 tests**.
-Required CI is rerunning on the subsequent test/documentation-only update.
+Required CI passed on final PR head `7f625e1` (run `37455539765`).
+PR #192 was squash merged as `de51491`.
 
 The 32 public-router/pipeline admission cases include authenticated and unsigned
 variants of four reviewed risk slices plus four unsupported slices. For AA,
