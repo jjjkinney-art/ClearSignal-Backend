@@ -214,13 +214,49 @@ def test_attributed_services_evidence_does_not_restore_unbound_thesis_fields():
     assert "72%" not in thesis.model_dump_json()
 
 
-def test_non_services_source_request_preserves_wider_thesis():
+def test_non_services_source_request_withholds_unbound_wider_thesis():
     thesis = _unsupported_services_thesis()
-    original_headline = thesis.one_sentence_thesis
     apply_source_answer_gate(
         thesis, "Which source supports Apple's consolidated revenue growth?",
         [_evidence("Revenue", "SEC EDGAR — structured XBRL fact",
                    "Apple consolidated revenue increased 12% in the latest reported quarter.")],
     )
-    assert thesis.one_sentence_thesis == original_headline
-    assert thesis.quantitative_claims[0]["raw_value"] == 72
+    assert thesis.bull_thesis == thesis.bear_thesis == ""
+    assert thesis.quantitative_claims == []
+    assert "72%" not in thesis.model_dump_json()
+
+
+@pytest.mark.parametrize("ticker,topic", [("ETSY", "seller retention"), ("AA", "smelter energy supply"),
+                                           ("ACHC", "facility safety"), ("MAN", "staffing demand")])
+def test_unreviewed_risk_topic_cannot_substitute_consolidated_metrics(ticker, topic):
+    thesis = InvestmentThesis(ticker=ticker, company_name=ticker, bull_thesis="Unsupported investment case.")
+    result = apply_source_answer_gate(thesis, f"What evidence identifies operating risks to {ticker} {topic}?",
+        [_evidence("Revenue", "SEC EDGAR — structured XBRL fact", "Consolidated revenue rose in the latest reported quarter.")])
+    assert result["status"] == "insufficient_claim_evidence"
+    assert result["claims"] == []
+    assert result["unanswered_parts"] == ["operating risk"]
+    assert not thesis.bull_thesis and not thesis.bear_thesis
+    assert "No source-bound operating-risk disclosure" in thesis.direct_answer
+
+
+def test_verified_requested_metric_can_answer_one_part_without_filling_risk_slot():
+    item = _evidence("ETSY revenue", "SEC EDGAR — structured XBRL fact",
+                     "ETSY consolidated revenue rose in the latest reported quarter.")
+    item.verified_claims = [{"ticker": "ETSY", "metric": "us-gaap:Revenues",
+                            "document_ref": {"reference_id": "reported:revenue"}}]
+    thesis = InvestmentThesis(ticker="ETSY", company_name="Etsy", bull_thesis="Unsupported investment case.")
+    result = apply_source_answer_gate(thesis,
+        "What evidence supports Etsy consolidated revenue, and what operating risk affects seller retention?", [item])
+    assert result["status"] == "partial"
+    assert result["unanswered_parts"] == ["operating risk"]
+    assert len(result["claims"]) == 1
+    assert "answer only the requested financial metric" in thesis.direct_answer
+    assert not thesis.bull_thesis
+
+
+def test_operating_risk_question_does_not_require_user_to_say_evidence():
+    thesis = InvestmentThesis(ticker="ETSY", company_name="Etsy", bull_thesis="Unsupported case.")
+    result = apply_source_answer_gate(thesis, "What are the operating risks to Etsy seller retention?",
+        [_evidence("Revenue", "SEC EDGAR", "Consolidated revenue rose in the latest reported quarter.")])
+    assert result["status"] == "insufficient_claim_evidence"
+    assert not thesis.bull_thesis

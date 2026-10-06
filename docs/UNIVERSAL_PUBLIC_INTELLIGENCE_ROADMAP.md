@@ -206,6 +206,22 @@ acceptance timestamps, archived filing URLs, and SHA-256 document identities.
 
 ## 5. Full-launch gates
 
+**Open P0 launch blocker — cross-company coverage (2026-10-06):** a public-router
+audit of the complete 18-company benchmark, including the proposed DocuSign
+fix, correctly handed off only 14 issuers in all three input forms. All three
+small/micro entries failed; `MAN` incorrectly handed off Viatris. Isolated
+negative controls also exposed unrelated consolidated revenue being accepted
+for unsupported operating-risk topics. Unrestricted public-company coverage
+must not launch until exact issuer routing, question-part relevance, readable
+saved responses and a signed-in cross-sector/size matrix pass. See the
+[cross-company audit and release criteria](CROSS_COMPANY_COVERAGE_AUDIT_20261006.md).
+Local remediation (6 October): exact structured issuer selection, official SEC
+long-tail discovery, readable saved gap answers and unsupported-risk gating pass
+[post-fix acceptance](CROSS_COMPANY_COVERAGE_FIX_ACCEPTANCE_20261006.md).
+The original audit is preserved as the failing baseline. This launch gate remains
+open until required CI, deployment and signed-in issuer/topic acceptance pass;
+local routing success does not complete universal risk extraction.
+
 Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
 attribute qualitative operating-risk disclosures with exact quotes, filing dates
 and document identities. This is initial issuer coverage, not a verified risk

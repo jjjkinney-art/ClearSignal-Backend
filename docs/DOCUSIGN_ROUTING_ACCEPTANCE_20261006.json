@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "evaluated_at": "2026-10-06T09:44:33.086905+00:00",
+  "scope": "local company resolution plus bounded retrieval using downloaded full filings, admission, and source-answer gate",
+  "passed": true,
+  "signed_in_production_retest_pending": true,
+  "issuer": {
+    "ticker": "DOCU",
+    "cik": "1261333",
+    "submissions_url": "https://data.sec.gov/submissions/CIK0001261333.json"
+  },
+  "document_attempts": 2,
+  "disclosure_count": 2,
+  "source_answer_status": "attributed",
+  "checks": {
+    "ticker_and_company_name_resolve": true,
+    "annual_fallback_used_within_two_document_budget": true,
+    "exact_annual_quote_spans_preserved": true,
+    "correct_issuer_source_dates_preserved": true,
+    "source_answer_attributed": true,
+    "unsupported_generated_answer_removed": true,
+    "zero_llm_calls": true,
+    "zero_production_writes": true
+  },
+  "documents": [
+    {
+      "url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000099/docu-20260731.htm",
+      "filed_at": "2026-09-04",
+      "form": "10-Q",
+      "content_sha256": "13d4fd00376d9b635c3f9997fba5658c599cdfb83b5672919ee9061f25ce4420",
+      "byte_count": 1425575,
+      "normalized_character_count": 240000,
+      "normalized_text_capped": true
+    },
+    {
+      "url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm",
+      "filed_at": "2026-03-18",
+      "form": "10-K",
+      "content_sha256": "ee6c52cfc3ef43285611dc3a64deafad45d04f3a5edc4a6968d7a2a6e844aa5c",
+      "byte_count": 2059567,
+      "normalized_character_count": 240000,
+      "normalized_text_capped": true
+    }
+  ],
+  "disclosures": [
+    {
+      "source_date": "2026-03-18",
+      "start_offset": 82320,
+      "end_offset": 82520,
+      "quote_sha256": "9c64e02f35bc8d9db3cb1642c61da3cfd4a119971dc26a9ef64a9717eeb74a88"
+    },
+    {
+      "source_date": "2026-03-18",
+      "start_offset": 84725,
+      "end_offset": 84824,
+      "quote_sha256": "2ad212926b0f2c5eba7543163464cb73511a963d168632b60808c246e9662f6f"
+    }
+  ]
+}

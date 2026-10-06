@@ -876,7 +876,7 @@ def analyze_company(
         _entity_result = resolve_for_analysis(
             user_question=request.user_question or "",
             company_hint=request.company_name,
-            as_of=request.as_of,
+            as_of=getattr(request, "as_of", None),
         )
         if _entity_result.canonical_ticker:
             # Successful resolution — override company_name with canonical form
@@ -926,7 +926,12 @@ def analyze_company(
             "request_id": request_id,
         }))
 
-    # Use resolved canonical company name if available; fall back to raw input
+    # Abort before grounding, agents, or memory if identity is unverified.
+    if not _resolved_ticker:
+        from .issuer_identity import CompanyIdentityError
+        raise CompanyIdentityError(
+            "Company identity could not be verified. Enter an exact ticker or legal name; no analysis was run."
+        )
     company = (
         _resolved_company_name
         if _resolved_ticker and "_resolved_company_name" in dir()

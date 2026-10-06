@@ -8,6 +8,7 @@ from app.schemas import (
     MacroSensitivity,
     MarketContext,
     QualityAssessment,
+    QuestionRequest,
     RetrievedEvidence,
     RiskProfile,
     ValuationView,
@@ -112,11 +113,17 @@ def test_conflicting_evidence_is_blocked_before_agents_and_source_answer(monkeyp
     ("MSFT", "Cloud", "789019", "Cloud capacity constraints could adversely affect our revenue growth."),
     ("NVDA", "Data Center", "1045810", "Data center capacity constraints could adversely affect our revenue growth."),
     ("DOCU", "Subscription renewals", "1261333", "Subscription renewals may decline and adversely affect revenue growth."),
+    ("AA", "smelter energy supply", "1675149", "Smelter energy shortages may harm production."),
+    ("ACHC", "facility safety", "1520697", "Facility safety failures may adversely affect operations."),
+    ("ACMR", "customer concentration", "1680062", "Customer concentration may adversely affect revenue growth."),
+    ("MAN", "staffing demand", "871763", "Staffing demand declines may adversely affect revenue growth."),
 ])
 def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authenticated, with_disclosed_risk,
                                                                ticker, scope, cik, quote):
     from app.config import settings
     from app.services import live_issuer_kpi_service, session_context_service
+    from app.services.issuer_risk_evidence import RISK_PROFILES
+    reviewed = ticker in RISK_PROFILES
 
     for target, names in (
         (router_service._fmp_provider, ["fetch_company_evidence"]),
@@ -128,6 +135,20 @@ def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, au
     ):
         for name in names:
             monkeypatch.setattr(target, name, lambda *a, **k: [])
+    if not reviewed:
+        # A real producer-built, accession-bound financial observation is
+        # admissible context, but cannot answer this unrelated operating risk.
+        from app.providers.sec_client import SecFactRecord
+        from app.integrity.sec_metric_evidence import comparable_metric_evidence
+        def observation(year, value):
+            accession = f"{int(cik):010d}-{str(year)[2:]}-000001"
+            return SecFactRecord(cik, "us-gaap", "Revenues", "Revenue", "USD", value,
+                f"{year}-01-01", f"{year}-03-31", f"{year}-05-01", "10-Q", accession,
+                f"https://www.sec.gov/Archives/edgar/data/{cik}/{accession.replace('-', '')}/{accession}-index.htm")
+        metric = comparable_metric_evidence([observation(2025, 100), observation(2026, 112)],
+            ticker=ticker, expected_cik=cik, concepts=("Revenues",), metric_name="revenue")
+        assert metric is not None
+        monkeypatch.setattr(verified_sec_metric_service, "fetch_verified_metric_evidence", lambda *a, **k: [metric])
     if with_disclosed_risk:
         from hashlib import sha256
         from app.services.public_document_ingestion import PublicDocument
@@ -169,14 +190,21 @@ def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, au
         return None, None
 
     monkeypatch.setattr(router_service.watchlist_service, "process_new_thesis", persist)
-    response = router_service._run_investment_pipeline(
-        CompanyContext(ticker=ticker, company_name=ticker),
-        f"What evidence supports {ticker}'s {scope} growth, and what operating risk could invalidate it?",
-        "services-boundary-test",
-    )
+    # Enter through the public router so an extractor profile without upstream
+    # company registration cannot silently pass this integration regression.
+    response = router_service.route_question(QuestionRequest(
+        company_name=ticker, intent="company_analysis",
+        question=f"What evidence supports {ticker}'s {scope} growth, and what operating risk could invalidate it?",
+    ))
     assert response.answer["source_answer"]["status"] == (
-        "attributed" if with_disclosed_risk else "insufficient_claim_evidence")
-    if with_disclosed_risk:
+        "attributed" if with_disclosed_risk and reviewed else "insufficient_claim_evidence")
+    if not reviewed:
+        assert len(response.answer["verified_sec_facts"]) == 2
+        assert response.answer["evidence_integrity"]["admission"]["admitted_count"] >= 1
+        assert response.answer["source_answer"]["claims"] == []
+        assert response.answer["source_answer"]["unanswered_parts"] == ["operating risk"]
+        assert response.answer["investment_thesis"]["bull_thesis"] == ""
+    if with_disclosed_risk and reviewed:
         assert response.answer["source_answer"]["claims"][0]["claim_kind"] == "issuer_disclosed_risk"
         assert "does not independently verify" in response.answer["investment_thesis"]["direct_answer"]
     assert "72%" not in json.dumps(response.answer["investment_thesis"])

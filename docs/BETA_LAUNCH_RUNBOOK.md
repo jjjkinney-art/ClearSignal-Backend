@@ -43,6 +43,12 @@ the commit, UTC timestamp, selected mode, check names, and pass/fail outcome.
 
 ## Stop-ship conditions
 
+- Any silent wrong-company research handoff or unsupported topic presented as
+  source-backed analysis. The open
+  [cross-company coverage audit](CROSS_COMPANY_COVERAGE_AUDIT_20261006.md) must be
+  resolved within the beta's explicitly declared coverage before expanding access.
+  [Local remediation acceptance](CROSS_COMPANY_COVERAGE_FIX_ACCEPTANCE_20261006.md)
+  is available; deployment and signed-in issuer/topic quality checks remain required.
 - Any cross-account read, write, notification, preference, portfolio, or
   billing visibility.
 - Any failed required CI check or mismatch between the deployed and expected

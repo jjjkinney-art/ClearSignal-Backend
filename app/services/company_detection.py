@@ -132,6 +132,10 @@ _TICKER_STOP_WORDS: frozenset[str] = frozenset({
 # ---------------------------------------------------------------------------
 
 _COMPANY_DB: dict[str, dict] = {
+    "AA": {"company_name": "Alcoa Corp", "sector": "Materials", "industry": "Aluminum"},
+    "ACHC": {"company_name": "Acadia Healthcare Company, Inc.", "sector": "Health Care", "industry": "Healthcare Facilities"},
+    "ACMR": {"company_name": "ACM Research, Inc.", "sector": "Technology", "industry": "Semiconductor Equipment"},
+    "MAN": {"company_name": "ManpowerGroup Inc.", "sector": "Industrials", "industry": "Staffing"},
     "AAPL":  {"company_name": "Apple Inc.",                              "sector": "Technology",                "industry": "Consumer Electronics"},
     "MSFT":  {"company_name": "Microsoft Corporation",                   "sector": "Technology",                "industry": "Software"},
     "GOOGL": {"company_name": "Alphabet Inc.",                           "sector": "Technology",                "industry": "Internet Services"},
@@ -178,6 +182,7 @@ _COMPANY_DB: dict[str, dict] = {
     "AVGO":  {"company_name": "Broadcom Inc.",                           "sector": "Technology",                "industry": "Semiconductors"},
     "TSM":   {"company_name": "Taiwan Semiconductor Manufacturing Co.",  "sector": "Technology",                "industry": "Semiconductors"},
     "CRM":   {"company_name": "Salesforce Inc.",                         "sector": "Technology",                "industry": "Software"},
+    "DOCU":  {"company_name": "DocuSign Inc.",                           "sector": "Technology",                "industry": "Software"},
     "ORCL":  {"company_name": "Oracle Corporation",                      "sector": "Technology",                "industry": "Software"},
     "NOW":   {"company_name": "ServiceNow Inc.",                         "sector": "Technology",                "industry": "Software"},
     "SNOW":  {"company_name": "Snowflake Inc.",                          "sector": "Technology",                "industry": "Cloud Computing"},
@@ -401,6 +406,11 @@ _COMPANY_DB: dict[str, dict] = {
 # ---------------------------------------------------------------------------
 
 _ALIAS_MAP: dict[str, str] = {
+    "alcoa": "AA",
+    "acadia healthcare": "ACHC",
+    "acm research": "ACMR",
+    "manpowergroup": "MAN",
+    "manpower group": "MAN",
     # ── Apple ─────────────────────────────────────────────────────────────────
     "apple":                   "AAPL",
     "apple inc":               "AAPL",
@@ -647,6 +657,11 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── Salesforce ────────────────────────────────────────────────────────────
     "salesforce":              "CRM",
+
+    # DocuSign's reviewed subscription-risk profile must also resolve upstream.
+    "docusign":                "DOCU",
+    "docu sign":               "DOCU",
+    "docu":                    "DOCU",
 
     # ── Oracle ────────────────────────────────────────────────────────────────
     "oracle":                  "ORCL",
@@ -1627,6 +1642,13 @@ def resolve_entity(text: str) -> EntityResolution:
 
     normalized = _normalize_query(text)
 
+    # An isolated security selection must never be guessed as a different
+    # issuer. Name typos in prose remain eligible for suggestion handling.
+    selected = text.strip().lstrip("$").upper().replace("-", ".")
+    if selected in _COMPANY_DB:
+        return EntityResolution(_make_context(selected, text.strip()), 1.0,
+                                "exact_ticker", text.strip())
+
     # ── Step 1: explicit uppercase ticker ────────────────────────────────────
     ctx = _extract_explicit_ticker(text)
     if ctx is not None:
@@ -1667,6 +1689,9 @@ def resolve_entity(text: str) -> EntityResolution:
         )
 
     # ── Step 3: token-window fuzzy match ─────────────────────────────────────
+    if re.fullmatch(r"\$?[A-Z]{1,8}(?:[.-][A-Z]{1,3})?", text.strip()):
+        return EntityResolution(None, 0.0, "not_found", "",
+                                rejection_reason="unknown_explicit_ticker", fallback_reason="no_candidates")
     fuzzy_result = _fuzzy_token_match(text, cutoff=0.72)
     if fuzzy_result is not None:
         ctx, score, matched_alias = fuzzy_result
@@ -1749,6 +1774,26 @@ def detect_company(text: str) -> Optional[CompanyContext]:
         )
     else:
         logger.debug("[company_detection] not_found for text=%r", text[:80])
+    return None
+
+
+def resolve_selected_company(text: str) -> Optional[CompanyContext]:
+    """Structured company scope permits only exact symbols/names/aliases."""
+    selected = text.strip().lstrip("$").upper().replace("-", ".")
+    if selected in _COMPANY_DB:
+        return _make_context(selected, text.strip())
+    alias = _alias_lookup(text)
+    # The alias must cover the whole selection, rather than a substring such
+    # as 'Research' accidentally borrowing another issuer's identity.
+    if alias and alias.aliases and (
+        re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+        == re.sub(r"[^a-z0-9]+", " ", alias.aliases[0].lower()).strip()
+    ):
+        return alias
+    normalized = re.sub(r"[^a-z0-9]+", " ", text.lower()).strip()
+    for ticker, info in _COMPANY_DB.items():
+        if normalized == re.sub(r"[^a-z0-9]+", " ", info["company_name"].lower()).strip():
+            return _make_context(ticker, text.strip())
     return None
 
 

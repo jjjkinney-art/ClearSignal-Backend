@@ -337,14 +337,13 @@ class TestAliasResolution:
 class TestResolveForAnalysis:
     """Tests for the resolve_for_analysis() wrapper used by analysis_service."""
 
-    def test_prefers_longer_user_question(self):
-        """Full question has more context — should be primary."""
+    def test_explicit_company_selection_is_authoritative(self):
+        """A structured ticker selection must not be replaced by a peer in prose."""
         result = resolve_for_analysis(
             user_question="Can Meta continue compounding despite AI infrastructure spending?",
             company_hint="AI",
         )
-        # Even with company_hint="AI", full question should resolve META
-        assert result.canonical_ticker == "META"
+        assert result.canonical_ticker == "AI"
 
     def test_falls_back_to_hint_when_question_empty(self):
         result = resolve_for_analysis(user_question="", company_hint="Nvidia")

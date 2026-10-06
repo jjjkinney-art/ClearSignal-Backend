@@ -1,0 +1,1090 @@
+{
+  "audited_source_sha256": {
+    "app/services/company_detection.py": "4efcd7ea9b97ed1cd094493463b694105c97c3cf52b3600fbe9eeb04d04615bc",
+    "app/services/entity_resolution_service.py": "83c51f650ee6d084400f6b678fc03dbae8f421aa00d2f1a88258fb28cd89ca1c",
+    "app/services/issuer_identity.py": "622b9811b4839a8690523757fcec32d2d1e160ce5b238b5806fef48bd305d39c",
+    "app/services/issuer_kpi_evidence.py": "ff9115bfbc9045ac28a31619915a57e49f3c62dbb617d6d3258a4207b22e11cc",
+    "app/services/providers/sec_provider.py": "abaf06f8f7d0554fa171157e820f9c0a92cf9949662eb554c59be1cccc6648af",
+    "app/services/research_conversations.py": "ba6e0fa834a53659533461a74daa902c190d2684432c3d35523774c0d16c8ef2",
+    "app/services/router_service.py": "a500e307ff05697a8883f2ab3f7cb8202993d10c8a117a8d1781c5e29a98939b",
+    "app/services/source_answer.py": "c311a088135a5c7f848383d08f634a61f26b005abe883bedeef63ecda6a7e718"
+  },
+  "classification_as_of": "2026-09-29",
+  "classification_note": "Frozen benchmark tiers, not current market capitalizations.",
+  "cohort_count": 18,
+  "coverage_checks_complete": true,
+  "evaluated_at": "2026-10-06T10:44:12.039443+00:00",
+  "identity_checks": [
+    {
+      "confidence": 1.0,
+      "input": "AA",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "AA",
+      "ticker": "AA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Alcoa",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "AA",
+      "ticker": "AA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "AAPL",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "AAPL",
+      "ticker": "AAPL",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Apple",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "AAPL",
+      "ticker": "AAPL",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "ACHC",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "ACHC",
+      "ticker": "ACHC",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Acadia Healthcare",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "ACHC",
+      "ticker": "ACHC",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "ACMR",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "ACMR",
+      "ticker": "ACMR",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "ACM Research",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "ACMR",
+      "ticker": "ACMR",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "ASML",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "ASML",
+      "ticker": "ASML",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "ASML",
+      "input_kind": "name",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "ASML",
+      "ticker": "ASML",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "BA",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "BA",
+      "ticker": "BA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Boeing",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "BA",
+      "ticker": "BA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "COST",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "COST",
+      "ticker": "COST",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Costco",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "COST",
+      "ticker": "COST",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "DOCU",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "DOCU",
+      "ticker": "DOCU",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "DocuSign",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "DOCU",
+      "ticker": "DOCU",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "ETSY",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "ETSY",
+      "ticker": "ETSY",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "Etsy",
+      "input_kind": "name",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "ETSY",
+      "ticker": "ETSY",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "JPM",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "JPM",
+      "ticker": "JPM",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "JPMorgan",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "JPM",
+      "ticker": "JPM",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "LLY",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "LLY",
+      "ticker": "LLY",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Eli Lilly",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "LLY",
+      "ticker": "LLY",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "MAN",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "MAN",
+      "ticker": "MAN",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "ManpowerGroup",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "MAN",
+      "ticker": "MAN",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "MSFT",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "MSFT",
+      "ticker": "MSFT",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Microsoft",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "MSFT",
+      "ticker": "MSFT",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "NVDA",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "NVDA",
+      "ticker": "NVDA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "NVIDIA",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "NVDA",
+      "ticker": "NVDA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "PLTR",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "PLTR",
+      "ticker": "PLTR",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Palantir",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "PLTR",
+      "ticker": "PLTR",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "TSLA",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "TSLA",
+      "ticker": "TSLA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Tesla",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "TSLA",
+      "ticker": "TSLA",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "V",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "V",
+      "ticker": "V",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "Visa",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "V",
+      "ticker": "V",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 1.0,
+      "input": "XOM",
+      "input_kind": "ticker",
+      "method": "exact_ticker",
+      "passed": true,
+      "resolved_ticker": "XOM",
+      "ticker": "XOM",
+      "wrong_issuer": false
+    },
+    {
+      "confidence": 0.95,
+      "input": "ExxonMobil",
+      "input_kind": "name",
+      "method": "alias_exact",
+      "passed": true,
+      "resolved_ticker": "XOM",
+      "ticker": "XOM",
+      "wrong_issuer": false
+    }
+  ],
+  "identity_passed": 36,
+  "independent_live_sec_checks": [],
+  "launch_blocked_for_unrestricted_company_coverage": true,
+  "launch_clearance_note": "Local audit success does not authorize unrestricted launch. Authenticated production analysis, issuer/topic quality and persistence acceptance remain separate gates.",
+  "llm_calls": 0,
+  "official_directory_routing_checks": [
+    {
+      "handoff_ticker": "WDFC",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "WDFC",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "WDFC",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "WDFC",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "WDFC",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "WDFC",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MOD",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MOD",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MOD",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MOD",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MOD",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MOD",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "LQDT",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "LQDT",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "LQDT",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "LQDT",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "LQDT",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "LQDT",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "NWE",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "NWE",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "NWE",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "NWE",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "NWE",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "NWE",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AZZ",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AZZ",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AZZ",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AZZ",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AZZ",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AZZ",
+      "wrong_issuer": false
+    }
+  ],
+  "official_identity_snapshot": {
+    "exact_symbol_checks": 10434,
+    "exact_symbol_passed": 10433,
+    "exact_tickers_in_static_registry": 231,
+    "note": "SEC ticker rows include share classes and foreign issuers; this is not an analysis-quality score.",
+    "parsed_symbol_count": 10433,
+    "routing_canary_count": 5,
+    "sha256": "eb943bdc3d233f54644ba916f261651460a0b94f6fbf29dbf3c1788271b17bf9",
+    "source_url": "https://www.sec.gov/files/company_tickers.json",
+    "ticker_row_count": 10434,
+    "withheld_or_conflicting_row_count": 1
+  },
+  "passed": true,
+  "production_authenticated_ask_tested": false,
+  "production_writes": false,
+  "registry_sha256": "c8c38be97a62328fe3e5d15a21569bfb02e03419b39619d843ae071158437ea7",
+  "reviewed_risk_topics": {
+    "AAPL": "Services",
+    "DOCU": "Subscription renewals",
+    "MSFT": "Cloud",
+    "NVDA": "Data Center"
+  },
+  "routing_by_tier": {
+    "mega_large": {
+      "correct_all_routes": 12,
+      "issuers": 12
+    },
+    "mid": {
+      "correct_all_routes": 3,
+      "issuers": 3
+    },
+    "small_micro": {
+      "correct_all_routes": 3,
+      "issuers": 3
+    }
+  },
+  "routing_checks": [
+    {
+      "handoff_ticker": "AA",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AA",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AA",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AAPL",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AAPL",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AAPL",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AAPL",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "AAPL",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "AAPL",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ACHC",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ACHC",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ACHC",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ACHC",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ACHC",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ACHC",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ACMR",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ACMR",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ACMR",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ACMR",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ACMR",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ACMR",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ASML",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ASML",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ASML",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ASML",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ASML",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ASML",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "BA",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "BA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "BA",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "BA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "BA",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "BA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "COST",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "COST",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "COST",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "COST",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "COST",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "COST",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "DOCU",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "DOCU",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "DOCU",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "DOCU",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "DOCU",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "DOCU",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ETSY",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ETSY",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ETSY",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ETSY",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "ETSY",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "ETSY",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "JPM",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "JPM",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "JPM",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "JPM",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "JPM",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "JPM",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "LLY",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "LLY",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "LLY",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "LLY",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "LLY",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "LLY",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MAN",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MAN",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MAN",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MAN",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MAN",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MAN",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MSFT",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MSFT",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MSFT",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MSFT",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "MSFT",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "MSFT",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "NVDA",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "NVDA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "NVDA",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "NVDA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "NVDA",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "NVDA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "PLTR",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "PLTR",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "PLTR",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "PLTR",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "PLTR",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "PLTR",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "TSLA",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "TSLA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "TSLA",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "TSLA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "TSLA",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "TSLA",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "V",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "V",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "V",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "V",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "V",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "V",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "XOM",
+      "input_kind": "explicit_ticker",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "XOM",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "XOM",
+      "input_kind": "explicit_name",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "XOM",
+      "wrong_issuer": false
+    },
+    {
+      "handoff_ticker": "XOM",
+      "input_kind": "question_only",
+      "passed": true,
+      "pipeline": "investment_thesis",
+      "saved_text_raw_json": false,
+      "ticker": "XOM",
+      "wrong_issuer": false
+    }
+  ],
+  "routing_passed": 54,
+  "schema_version": 1,
+  "scope": "local public router handoff, identity and synthetic topic relevance",
+  "sector_count": 8,
+  "static_company_count": 240,
+  "topic_checks": [
+    {
+      "fixture": "consolidated_revenue_decoy",
+      "generated_bull_case_retained": false,
+      "passed": true,
+      "source_answer_status": "insufficient_claim_evidence",
+      "ticker": "DOCU",
+      "topic": "subscription renewals",
+      "unrelated_claim_accepted": false
+    },
+    {
+      "fixture": "consolidated_revenue_decoy",
+      "generated_bull_case_retained": false,
+      "passed": true,
+      "source_answer_status": "insufficient_claim_evidence",
+      "ticker": "ETSY",
+      "topic": "seller retention",
+      "unrelated_claim_accepted": false
+    },
+    {
+      "fixture": "consolidated_revenue_decoy",
+      "generated_bull_case_retained": false,
+      "passed": true,
+      "source_answer_status": "insufficient_claim_evidence",
+      "ticker": "AA",
+      "topic": "smelter energy supply",
+      "unrelated_claim_accepted": false
+    },
+    {
+      "fixture": "consolidated_revenue_decoy",
+      "generated_bull_case_retained": false,
+      "passed": true,
+      "source_answer_status": "insufficient_claim_evidence",
+      "ticker": "ACHC",
+      "topic": "facility safety",
+      "unrelated_claim_accepted": false
+    }
+  ],
+  "topic_passed": 4,
+  "wrong_issuer_routes": 0
+}

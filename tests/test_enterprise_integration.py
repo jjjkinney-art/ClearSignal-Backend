@@ -213,7 +213,7 @@ NS = types.SimpleNamespace
 
 class TestAnalysisLifecycle:
 
-    def _make_request(self, company="TestCo", question="What are the risks?"):
+    def _make_request(self, company="Apple", question="What are the risks?"):
         req = _schema_mod.AnalysisRequest(company_name=company, user_question=question)
         req.context    = None
         req.user_focus = None
@@ -303,7 +303,7 @@ class TestGovernanceInRealPath:
 
         provider_registry.check_access = spy_check
         try:
-            req = _schema_mod.AnalysisRequest(company_name="TestCo",
+            req = _schema_mod.AnalysisRequest(company_name="Apple",
                                                user_question="earnings report")
             req.context = None; req.user_focus = None
             analyze_company(req)
@@ -345,7 +345,7 @@ class TestGovernanceInRealPath:
         scope  = ScopeContext(user_id="u-test", tenant_id="restricted_tenant",
                               tenant_scope=tenant)
 
-        req = _schema_mod.AnalysisRequest(company_name="TestCo",
+        req = _schema_mod.AnalysisRequest(company_name="Apple",
                                            user_question="financial statement")
         req.context = None; req.user_focus = None
 
@@ -749,7 +749,7 @@ class TestRequestIdPropagation:
         from app.enterprise.audit import audit_store
         from app.services.analysis_service import analyze_company
 
-        req = _schema_mod.AnalysisRequest(company_name="PropCo",
+        req = _schema_mod.AnalysisRequest(company_name="Apple",
                                            user_question="revenue growth?")
         req.context = None; req.user_focus = None
 
@@ -767,7 +767,7 @@ class TestRequestIdPropagation:
         if not _ENTERPRISE:
             return  # skip if enterprise disabled
 
-        req = _schema_mod.AnalysisRequest(company_name="TraceCo",
+        req = _schema_mod.AnalysisRequest(company_name="Apple",
                                            user_question="macro risks")
         req.context = None; req.user_focus = None
 

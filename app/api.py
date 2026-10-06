@@ -1440,9 +1440,12 @@ async def analyze(request: AnalysisRequest, http_request: Request) -> AnalysisRe
         - The full analysis flow (evidence, agents, synthesis, monitoring, alerts)
           runs under enterprise governance with the resolved scope.
     """
+    from .services.issuer_identity import CompanyIdentityError
     try:
         scope = _extract_scope(http_request)
         return analyze_company(request, scope=scope)
+    except CompanyIdentityError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Analysis failed to complete") from exc
 

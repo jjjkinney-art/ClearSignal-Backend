@@ -43,6 +43,34 @@ the power-constraint disclosure retains its exact normalized span through
 admission and the source-answer gate. Signed-in production retesting remains
 pending deployment.
 
+## Company routing acceptance
+
+The signed-in DocuSign query exposed an integration gap: the risk extractor
+recognized `DOCU`, while the upstream company resolver did not. It therefore
+fell into the legacy company response shape, bypassing the source-answer gate
+and leaving the private transcript with serialized generic research.
+
+DocuSign's ticker and exact name aliases are now registered upstream. Explicit
+source requests enter the investment pipeline when the supplied company
+resolves, including requests without older investment keywords. An unresolved
+explicit company source request returns a plain clarification with no claims,
+references, provider retrieval, legacy analysis, or substituted issuer.
+
+Admission integration tests now start at `route_question` for every reviewed
+issuer/topic pair; extractor-only tests cannot establish live route coverage.
+The [DocuSign acceptance report](DOCUSIGN_ROUTING_ACCEPTANCE_20261006.json)
+records local resolution and retrieval checks against downloaded full filings:
+the quarterly document supplied no qualifying risk, the annual fallback
+supplied two disclosures within the existing two-document budget, and exact
+quotes remained bound through admission and the source-answer gate. Both
+normalized documents reached the existing character cap, so this is bounded
+extraction rather than exhaustive filing analysis.
+
+Signed-in DocuSign acceptance remains pending deployment and a new query.
+These fixes establish reviewed route coverage, not universal support for
+arbitrary companies or all public information. Company identity and source
+coverage must be validated together before expanding that claim.
+
 ## Retrieval and output boundaries
 
 The existing default budget remains two document attempts, including failed
