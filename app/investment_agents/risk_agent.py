@@ -178,15 +178,18 @@ Based on the SEC filing and balance-sheet evidence above, assess the following:
 - What are the top 3-5 specific risks an investor should monitor?
 
 Produce a JSON object matching the RiskProfile schema with these fields:
-- debt_risk: Leverage, interest coverage, and refinancing risk assessment
-- competitive_risk: Competitive moat erosion and market-share threats
-- regulatory_risk: Regulatory exposure and compliance burden
-- concentration_risk: Customer, supplier, or geography concentration
+- debt_risk: string — Leverage, interest coverage, and refinancing risk assessment
+- competitive_risk: string — Competitive moat erosion and market-share threats
+- regulatory_risk: string — Regulatory exposure and compliance burden
+- concentration_risk: string — Customer, supplier, or geography concentration
+These four fields MUST be plain JSON strings, never nested objects or arrays.
+Use only supported observations from the supplied evidence; state what remains
+unverified when a risk or numeric estimate lacks support. Do not invent figures.
 - key_risks: Array of top 3-5 risks in concise bullet form (each a string)
 - overall: One concise paragraph summarising the risk profile
 - confidence: 0.0-1.0 based on evidence completeness
 - signals: array of 2-3 risk signals. Each signal object must have:
-    - signal: string — specific risk with transmission mechanism (e.g. "China revenue ~19% of AAPL total faces $10B+ tariff exposure")
+    - signal: string — specific risk with transmission mechanism supported by the supplied evidence
     - direction: "bearish" (risks are bearish by default)
     - signal_type: "risk" | "cyclical" | "structural"
     - impact_score: 0.0-1.0 (severity)

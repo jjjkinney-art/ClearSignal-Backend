@@ -46,6 +46,8 @@ def test_three_claims_are_bound_to_reference_ids():
     assert result["status"] == "attributed"
     assert [row["reference_id"] for row in result["claims"]] == ["E1", "E2", "E3"]
     assert "[E1]" in thesis.direct_answer and "[E3]" in thesis.direct_answer
+    assert "[E1]\n\n2." in thesis.direct_answer
+    assert "[E2]\n\n3." in thesis.direct_answer
 
 
 def test_non_source_question_is_unchanged():
@@ -198,6 +200,8 @@ def test_attributed_services_evidence_does_not_restore_unbound_thesis_fields():
     assert result["status"] == "attributed"
     assert "[E1]" in thesis.direct_answer
     assert "72%" not in thesis.model_dump_json()
+    assert "[E1]\n\nThese dated observations" in thesis.direct_answer
+    assert thesis.direct_answer == thesis.conclusion
     assert thesis.bull_thesis == thesis.bear_thesis == ""
     assert thesis.quantitative_claims == item.verified_claims
     assert thesis.claim_provenance_summary == {"reported": 1}

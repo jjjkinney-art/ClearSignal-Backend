@@ -152,7 +152,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "claims": [],
         }
 
-    answer = " ".join(
+    answer = "\n\n".join(
         f"{number}. {row['claim']} [{row['reference_id']}]"
         for number, row in enumerate(claims, start=1)
     )
@@ -162,7 +162,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         if isinstance(claim, dict)
     ):
         answer += (
-            " These dated observations do not, by themselves, verify future "
+            "\n\nThese dated observations do not, by themselves, verify future "
             "Services growth, Services gross margin, or which operating risk "
             "would invalidate the thesis."
         )
