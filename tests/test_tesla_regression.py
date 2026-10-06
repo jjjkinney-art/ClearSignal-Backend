@@ -29,8 +29,8 @@ or evidence available." message for the query
 Fix
 ---
 * ``sec_provider.py``: CIK-based lookup (ticker → EDGAR company_tickers.json
-  → submissions API) is now the primary strategy, with entity= EFTS and q=
-  EFTS as progressive fallbacks.
+  → submissions API) is the only strategy for exact tickers. Failed ticker
+  lookups withhold filings; legacy company-name calls retain EFTS fallbacks.
 * ``thesis_synthesizer.py``: guard now only fires for completely unknown
   companies (no ticker AND no name).  For known tickers, LLM synthesis is
   attempted even when evidence is sparse.
@@ -184,52 +184,25 @@ class TestSecProviderTslaLookup:
         result = sec_provider.fetch_recent_filings("TSLA", years_back=3)
         assert all(ev.source == "SEC EDGAR" for ev in result)
 
-    def test_tsla_cik_fallback_to_entity_search_when_cik_map_empty(self, monkeypatch):
-        """If CIK map returns empty, fall back to entity= search."""
-        sec_provider._ticker_cik_cache = None
-
-        call_log: list = []
+    def test_tsla_withholds_filings_when_cik_identity_is_unavailable(self, monkeypatch):
+        """Unavailable exact identity must not trigger an unbound name/body search."""
+        monkeypatch.setattr(sec_provider, "_ticker_cik_cache", None)
+        call_log = []
 
         def _fake_fetch(url, timeout=10):
             call_log.append(url)
             if "company_tickers" in url:
-                return {}  # Empty map — no TSLA entry
-            if "search-index" in url and "entity=" in url:
-                # entity= EFTS search returns a real Tesla hit
-                return {
-                    "hits": {
-                        "hits": [{
-                            "_source": {
-                                "entity_name": "Tesla, Inc.",
-                                "form_type":   "10-K",
-                                "file_date":   "2024-01-29",
-                                "period_of_report": "2023-12-31",
-                            }
-                        }]
-                    }
-                }
-            return {"hits": {"hits": []}}
+                return {}
+            pytest.fail("Exact TSLA lookup must stop before submissions or EFTS fallback")
 
-        monkeypatch.setattr(
-            "app.services.providers.sec_provider._fetch_json",
-            _fake_fetch,
-        )
-
+        monkeypatch.setattr(sec_provider, "_fetch_json", _fake_fetch)
         result = sec_provider.fetch_recent_filings("TSLA", years_back=3)
-        assert len(result) >= 1
-        assert "Tesla" in result[0].title
+        assert result == []
+        assert len(call_log) == 1
+        assert "company_tickers" in call_log[0]
 
     def test_false_positive_filtering_in_fulltext_fallback(self, monkeypatch):
-        """q= fallback must reject filings where entity name doesn't match query.
-
-        Simulates the scenario where:
-          - CIK map is empty (force skip CIK strategy)
-          - entity= search returns no results (force skip entity strategy)
-          - q= full-text search returns a filing from Rivian (false positive)
-
-        The q= strategy's entity-name sanity check should filter out the Rivian
-        hit because "RIVIAN" has no token overlap with the query "TSLA".
-        """
+        """Legacy name-based search still rejects an unrelated issuer's filing."""
         sec_provider._ticker_cik_cache = None
 
         rivian_hit = {
@@ -241,7 +214,10 @@ class TestSecProviderTslaLookup:
             }
         }
 
+        call_log = []
+
         def _fake_fetch(url, timeout=10):
+            call_log.append(url)
             if "company_tickers" in url:
                 return {}   # force CIK miss (empty map)
             if "search-index" in url and "entity=" in url:
@@ -257,8 +233,9 @@ class TestSecProviderTslaLookup:
             _fake_fetch,
         )
 
-        # "TSLA" has no token overlap with "Rivian Automotive Inc."
-        result = sec_provider.fetch_recent_filings("TSLA", years_back=3)
+        # Name-based callers still reach the legacy full-text identity filter.
+        result = sec_provider.fetch_recent_filings("Tesla", years_back=3)
+        assert any("search-index" in url and "entity=" not in url for url in call_log)
         assert result == [], (
             "False-positive filing from Rivian should have been filtered out by "
             "the entity-name sanity check in _fetch_by_fulltext. "

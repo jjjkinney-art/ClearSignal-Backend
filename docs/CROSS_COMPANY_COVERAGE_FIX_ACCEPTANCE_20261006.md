@@ -51,13 +51,20 @@ SEC's legal name `WD 40 CO` from selecting ticker `WD` inside that name. The
 recorded in the JSON report. These are identity tests, not 10,433 company analyses;
 SEC rows include security classes and foreign issuers.
 
-Validation: **1,466 tests passed** across the boundary and targeted regression
+Validation: **1,478 tests passed** across the boundary and targeted regression
 suites; **16 skipped** (obsolete module and separate frontend checks). The 38
 broader regression modules ran in fresh interpreters, as required by repository
 CI. Collection completed with **14,785 tests and zero collection errors**.
 Warnings in broader runs concerned legacy test-worker cleanup and a dependency
 alias deprecation; the final boundary suite passed without warnings. Full required
 GitHub CI remains a separate gate for the uploaded head.
+
+The first full CI run on `2c12f00` found one obsolete Tesla test expecting
+exact-ticker EFTS fallback. That expectation is replaced with a regression that
+requires withholding when the issuer map is unavailable; the legacy name-based
+false-positive test now verifies that it actually reaches the intended filter.
+The Tesla, SEC-provider and exact-identity suites pass together: **76 tests**.
+Required CI is rerunning on the subsequent test/documentation-only update.
 
 The 32 public-router/pipeline admission cases include authenticated and unsigned
 variants of four reviewed risk slices plus four unsupported slices. For AA,
