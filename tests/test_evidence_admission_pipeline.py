@@ -178,7 +178,7 @@ def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, au
         "attributed" if with_disclosed_risk else "insufficient_claim_evidence")
     if with_disclosed_risk:
         assert response.answer["source_answer"]["claims"][0]["claim_kind"] == "issuer_disclosed_risk"
-        assert "not proof that it has occurred" in response.answer["investment_thesis"]["direct_answer"]
+        assert "does not independently verify" in response.answer["investment_thesis"]["direct_answer"]
     assert "72%" not in json.dumps(response.answer["investment_thesis"])
     if authenticated:
         assert captured == []  # Shared ticker memory remains guarded.
