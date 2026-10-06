@@ -13,7 +13,9 @@ from .public_document_ingestion import PublicDocumentError, fetch_public_documen
 from .services_revenue_evidence import (
     extract_services_revenue_evidence, requests_services_revenue,
 )
-
+from .services_risk_evidence import (
+    extract_services_risk_evidence, requests_services_operating_risk,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,14 +70,15 @@ def fetch_live_issuer_kpi_evidence(
         return []
     aliases = requested_issuer_kpi_aliases(question)
     services_requested = ticker.upper().strip() == "AAPL" and requests_services_revenue(question)
-    if (not aliases and not services_requested) or not ticker.strip() or max_documents not in (1, 2, 3):
+    risk_requested = ticker.upper().strip() == "AAPL" and requests_services_operating_risk(question)
+    if (not aliases and not services_requested and not risk_requested) or not ticker.strip() or max_documents not in (1, 2, 3):
         return []
-    forms = (["10-Q", "10-Q/A", "10-K", "10-K/A"] if services_requested
+    forms = (["10-Q", "10-Q/A", "10-K", "10-K/A"] if services_requested or risk_requested
              else ["8-K", "8-K/A", "6-K", "6-K/A"])
     try:
         filings = sec_provider.fetch_recent_filings(
             ticker.upper().strip(), forms=forms,
-            limit=max_documents, years_back=2, prefer_results=not services_requested,
+            limit=max_documents, years_back=2, prefer_results=not (services_requested or risk_requested),
         ) or []
     except Exception as exc:
         logger.warning("issuer KPI filing discovery failed for %s: %r", ticker, exc)
@@ -84,7 +87,10 @@ def fetch_live_issuer_kpi_evidence(
     evidence: list[RetrievedEvidence] = []
     resolved_metrics: set[str] = set()
     fetched_documents = 0
-    for filing in filings[:max_documents]:
+    candidates_filings = list(filings[:max_documents])
+    service_found = False
+    risk_found = False
+    for filing_index, filing in enumerate(candidates_filings):
         if fetched_documents >= max_documents:
             break
         url = getattr(filing, "url", None)
@@ -112,12 +118,34 @@ def fetch_live_issuer_kpi_evidence(
                 bool(user_agent.strip()),
             )
             continue
-        if services_requested:
+        if services_requested or risk_requested:
             # Services tables are period-aware. Do not run the generic prose
             # extractor: it could promote a company-wide gross-margin figure.
-            service_evidence = extract_services_revenue_evidence(document, ticker=ticker)
-            if service_evidence:
-                return service_evidence
+            if services_requested and not service_found:
+                service_evidence = extract_services_revenue_evidence(document, ticker=ticker)
+                evidence.extend(service_evidence)
+                service_found = bool(service_evidence)
+            if risk_requested and not risk_found:
+                risk_evidence = extract_services_risk_evidence(document, ticker=ticker)
+                evidence.extend(risk_evidence)
+                risk_found = bool(risk_evidence)
+            if (not services_requested or service_found) and (not risk_requested or risk_found):
+                break
+            # A quarterly report can refer back to annual Risk Factors. Only
+            # discover the annual fallback after the newest document had no
+            # qualifying risk; keep it within the remaining document budget.
+            if (risk_requested and not risk_found and filing_index == 0
+                    and max_documents > 1 and document_type not in {"10-K", "10-K/A"}):
+                try:
+                    annual = sec_provider.fetch_recent_filings(
+                        ticker.upper().strip(), forms=["10-K", "10-K/A"], limit=1,
+                        years_back=2, prefer_results=False,
+                    ) or []
+                except Exception as exc:
+                    logger.warning("Services risk annual discovery unavailable for %s: %r", ticker, exc)
+                    annual = []
+                if annual:
+                    candidates_filings[filing_index + 1:] = annual[:1]
             continue
         remaining = {key: value for key, value in aliases.items() if key not in resolved_metrics}
         for kpi in extract_source_bound_kpis(

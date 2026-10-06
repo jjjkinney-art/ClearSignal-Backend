@@ -17,10 +17,10 @@ _NATURAL_EVIDENCE_REQUEST_RE = re.compile(
     re.IGNORECASE,
 )
 _SERVICES_SCOPE_RE = re.compile(
-    r"\b(?:services|app store|icloud|apple music)\b", re.IGNORECASE,
+    r"\b(?:services|app store|icloud|apple music|digital content)\b", re.IGNORECASE,
 )
 _SERVICES_CLAIM_RE = re.compile(
-    r"\b(?:services?|app store|icloud|apple music)\b", re.IGNORECASE,
+    r"\b(?:services?|app store|icloud|apple music|digital content)\b", re.IGNORECASE,
 )
 _LEGACY_SOURCE_RE = re.compile(r"\s*\[Source:\s*https?://[^\]]+\]\s*", re.IGNORECASE)
 
@@ -108,15 +108,21 @@ def _claim_text(item: object) -> str | None:
     return summary[:500] if len(summary) >= 30 else None
 
 
-def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object]) -> dict | None:
+def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
+                             *, references: list[dict] | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""
     if not is_source_answer_request(question):
         return None
+
+    from .services_risk_evidence import bound_services_risk, requests_services_operating_risk
+    from .services_revenue_evidence import requests_services_revenue
+    from .evidence_references import _evidence_url
 
     material = list(items)
     claims: list[dict] = []
     selected_items: list[object] = []
     services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
+    risk_requested = services_requested and requests_services_operating_risk(question)
     for index, item in enumerate(material, start=1):
         claim = _claim_text(item)
         if not claim:
@@ -126,12 +132,39 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         # that scope; a filing title alone cannot establish segment support.
         if services_requested and not _SERVICES_CLAIM_RE.search(claim):
             continue
-        claims.append({
-            "claim": claim,
-            "reference_id": f"E{index}",
-        })
-        selected_items.append(item)
+        disclosure = bound_services_risk(item, ticker=str(getattr(thesis, "ticker", "")))
+        if getattr(item, "risk_disclosures", []) and not disclosure:
+            continue
+        # Only producer-bound quotes can answer the requested operating-risk
+        # part. Conditional/generated summaries cannot substitute for them.
+        if risk_requested and re.search(r"\b(?:risk|may|might|could)\b", claim, re.I) and not disclosure:
+            continue
+        reference_id = f"E{index}"
+        if references is not None:
+            matching = next((ref for ref in references
+                if ref.get("title") == str(getattr(item, "title", "") or "Untitled evidence").strip()[:300]
+                and ref.get("source") == str(getattr(item, "source", "") or "Unknown source").strip()[:120]
+                and ref.get("published_at") == (str(getattr(item, "timestamp", "") or "").strip()[:40] or None)
+                and ref.get("url") == _evidence_url(item)), None)
+            if not matching or not re.fullmatch(r"E[1-9]\d*", str(matching.get("id", ""))):
+                continue
+            reference_id = matching["id"]
+        row = {"claim": claim, "reference_id": reference_id}
+        if disclosure:
+            row.update(claim_kind="issuer_disclosed_risk", document_ref=disclosure["document_ref"])
         if len(claims) == 3:
+            # Preserve one requested risk slot even when earlier Services
+            # context filled the three-claim presentation limit.
+            if disclosure:
+                claims[-1] = row
+                selected_items[-1] = item
+                break
+            continue
+        claims.append(row)
+        selected_items.append(item)
+        if len(claims) == 3 and (not risk_requested or any(
+            candidate.get("claim_kind") == "issuer_disclosed_risk" for candidate in claims
+        )):
             break
 
     requested_three = bool(re.search(r"\b(?:three|3)\b", question, re.IGNORECASE))
@@ -156,9 +189,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         f"{number}. {row['claim']} [{row['reference_id']}]"
         for number, row in enumerate(claims, start=1)
     )
+    has_disclosed_risk = any(row.get("claim_kind") == "issuer_disclosed_risk" for row in claims)
     if services_requested and any(
         str(claim.get("metric", "")).startswith("issuer:Services net sales")
-        for item in material for claim in getattr(item, "verified_claims", [])
+        for item in selected_items for claim in getattr(item, "verified_claims", [])
         if isinstance(claim, dict)
     ):
         answer += (
@@ -166,6 +200,16 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "Services growth, Services gross margin, or which operating risk "
             "would invalidate the thesis."
         )
+    elif risk_requested and requests_services_revenue(question):
+        answer += "\n\nNo source-bound Services revenue observation qualified in this answer."
+    if has_disclosed_risk:
+        answer += (
+            "\n\nThe cited risk is an issuer disclosure, not proof that it has occurred "
+            "or invalidated the thesis. Its likelihood, quantified effect on Services "
+            "growth or margins, and any directional thesis change remain unverified."
+        )
+    elif risk_requested:
+        answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
     setattr(thesis, "direct_answer", answer)
     if services_requested:
         _restrict_services_thesis(thesis, answer, claims, selected_items, enough=True)

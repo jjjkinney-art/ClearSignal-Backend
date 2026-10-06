@@ -206,6 +206,13 @@ acceptance timestamps, archived filing URLs, and SHA-256 document identities.
 
 ## 5. Full-launch gates
 
+Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
+attribute qualitative operating-risk disclosures with exact quotes, filing dates
+and document identities. This is initial issuer coverage, not a verified risk
+outcome or universal risk-completeness claim. Production acceptance and broader
+issuer, section, version and jurisdiction coverage remain tracked in
+[Source-backed Services risks](SOURCE_BACKED_SERVICES_RISKS.md).
+
 ClearSignal is ready for full launch when all P0 gates pass:
 
 - Every material factual statement in benchmark answers has evidence, or is visibly labeled as calculation/inference.
