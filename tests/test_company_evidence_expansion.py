@@ -310,6 +310,71 @@ def test_annual_risk_fallback_runs_for_new_issuer_with_two_document_ceiling(monk
     assert evidence[0].risk_disclosures[0]["scope"] == "Energy supply"
 
 
+@pytest.mark.parametrize("max_documents", [1, 2])
+def test_failed_quarter_uses_annual_in_remaining_slot_without_retry(monkeypatch, max_documents):
+    case = next(c for c in CASES if c["ticker"] == "AA")
+    annual = document(case)
+    quarter_url = annual.final_url.replace('test.htm', 'unavailable-quarter.htm')
+    older_url = annual.final_url.replace('test.htm', 'older-quarter.htm')
+    def filing(url, form):
+        return RetrievedEvidence(title='Filing', source='SEC EDGAR', summary='Filed.',
+            timestamp=annual.published_at, url=url, document_type=form)
+    discoveries = []
+    def discover(*a, **k):
+        discoveries.append(k['forms'])
+        return ([filing(annual.final_url, '10-K')] if k['forms'] == ['10-K', '10-K/A']
+                else [filing(quarter_url, '10-Q'), filing(older_url, '10-Q')])
+    monkeypatch.setattr(live.sec_provider, 'fetch_recent_filings', discover)
+    fetched = []
+    def fetch(url, **k):
+        fetched.append(url)
+        if url == quarter_url:
+            raise live.PublicDocumentError('size limit')
+        assert url == annual.final_url
+        return annual
+    monkeypatch.setattr(live, 'fetch_public_document', fetch)
+    items = live.fetch_live_issuer_kpi_evidence('AA', question=case['question'],
+                                               max_documents=max_documents)
+    assert len(fetched) == max_documents
+    assert len(discoveries) == max_documents
+    assert len(items) == max_documents - 1
+    assert older_url not in fetched
+
+
+def test_risk_diagnostics_distinguish_truncated_sections_from_no_matching_topic():
+    case = next(c for c in CASES if c['ticker'] == 'MAN')
+    stats = {}
+    doc = document(case, text='Item 1A. Risk Factors Staffing demand may decline.')
+    assert extract_issuer_risk_evidence(doc, ticker='MAN', question=case['question'], diagnostics=stats) == []
+    assert stats['missing_closing_sections'] == 1 and stats['complete_sections'] == 0
+    doc = document(case, quote='Quantum entanglement failures could harm our operating results.')
+    stats = {}
+    assert extract_issuer_risk_evidence(doc, ticker='MAN', question=case['question'], diagnostics=stats) == []
+    assert stats['complete_sections'] == 1 and stats['topic_sentences'] == 0
+    assert stats['status'] == 'no_qualifying_risk'
+    stats = {}
+    items = extract_issuer_risk_evidence(document(case), ticker='MAN', question=case['question'], diagnostics=stats)
+    assert items and stats['status'] == 'risk_extracted'
+    assert stats['extracted_disclosures'] == len(items)
+    assert 'Staffing demand' not in json.dumps(stats)
+
+
+def test_acceptance_real_retriever_records_extraction_counts_without_prose(monkeypatch):
+    case = next(c for c in CASES if c['ticker'] == 'AA')
+    doc = document(case)
+    filing = RetrievedEvidence(title='Filing', source='SEC EDGAR', summary='Filed.',
+        timestamp=doc.published_at, url=doc.final_url, document_type='10-K')
+    monkeypatch.setattr(live.sec_provider, 'fetch_recent_filings', lambda *a, **k: [filing])
+    monkeypatch.setattr(live, 'fetch_public_document', lambda *a, **k: doc)
+    row = acceptance.run_case(case, user_agent='private-contact', evaluated_at='2026-10-06')
+    assert row['passed'] and row['documents_attempted'] == 1
+    stats = row['document_diagnostics'][0]
+    assert stats['extracted_disclosures'] == 1 and stats['complete_sections'] == 1
+    assert stats['normalized_text_chars'] == len(doc.text)
+    assert 'private-contact' not in json.dumps(row)
+    assert 'Energy supply disruptions' not in json.dumps(row)
+
+
 def test_entire_cohort_routes_all_three_input_forms_without_wrong_issuer_or_model_calls():
     from scripts.company_coverage_audit import routing_probe
     rows = routing_probe(CASES)

@@ -179,7 +179,7 @@ def _issuer_url(url: str, profile: IssuerRiskProfile) -> bool:
 
 
 def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
-                                 question: str) -> list[RetrievedEvidence]:
+                                 question: str, diagnostics: dict | None = None) -> list[RetrievedEvidence]:
     """Extract at most two complete, nonnumeric risk sentences; no model calls.
 
     Coverage is limited to explicit supported topics and 10-K/10-Q sections.
@@ -188,6 +188,13 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
     """
     ticker = str(ticker).strip().upper()
     profile = requested_risk_profile(ticker, question)
+    # Counts only: never export source prose, questions, headers or credentials.
+    stats = diagnostics if diagnostics is not None else {}
+    stats.update(status="document_ineligible", risk_headings=0, complete_sections=0,
+                 rejected_heading_prefixes=0, missing_closing_sections=0,
+                 oversized_sections=0, sentences=0, topic_sentences=0,
+                 qualifying_sentences=0, extracted_disclosures=0,
+                 scan_stopped_at_limit=False)
     if (not profile or not _issuer_url(document.final_url, profile)
             or not document.text_ready or document.extraction_method != "html"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
@@ -202,24 +209,35 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
         return []
     if filed > date.today():
         return []
+    stats["status"] = "no_qualifying_risk"
     results: list[RetrievedEvidence] = []
     seen: set[str] = set()
     text = document.text
     for heading in _START.finditer(text):
+        stats["risk_headings"] += 1
         # Exclude TOC page numbers and quoted/cross-referenced headings. A
         # reference to Risk Factors is not the start of that section.
         if re.match(r'[\d"”\u2013\u2014-]', text[heading.end():].lstrip()):
+            stats["rejected_heading_prefixes"] += 1
             continue
         end = _END.search(text, heading.end())
         # An explicit closing section is required; truncated text fails closed.
         section_limit = 80_000 if ticker == "AAPL" else 160_000
-        if end is None or end.start() - heading.end() > section_limit:
+        if end is None:
+            stats["missing_closing_sections"] += 1
             continue
+        if end.start() - heading.end() > section_limit:
+            stats["oversized_sections"] += 1
+            continue
+        stats["complete_sections"] += 1
         section = text[heading.end():end.start()]
         for sentence in re.finditer(r"(?:^|(?<=[.!?])\s+)([^.!?]+[.!?])", section):
             quote = sentence.group(1).strip()
+            stats["sentences"] += 1
+            stats["topic_sentences"] += int(_has_topic_scope(quote, profile))
             if not _qualifying_quote(quote, profile) or quote in seen:
                 continue
+            stats["qualifying_sentences"] += 1
             offset = heading.end() + sentence.start(1)
             # Retain the exact normalized-document span, not a generated paraphrase.
             offset += len(sentence.group(1)) - len(sentence.group(1).lstrip())
@@ -242,7 +260,9 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                 risk_disclosures=[disclosure],
             ))
             seen.add(quote)
+            stats.update(status="risk_extracted", extracted_disclosures=len(results))
             if len(results) == 2:
+                stats["scan_stopped_at_limit"] = True
                 return results
     return results
 
