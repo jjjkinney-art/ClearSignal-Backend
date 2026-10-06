@@ -62,7 +62,7 @@ def test_real_disclosures_retain_exact_span_date_hash_and_non_outcome_status():
         assert ref['published_at'] == '2025-10-31'
         assert ref['section'] == 'Item 1A. Risk Factors'
         assert item.verified_claims == []
-        assert 'not a verified occurrence or quantified impact' in item.summary
+        assert 'not an independent assessment' in item.summary
 
 
 @pytest.mark.parametrize('changes', [
@@ -162,8 +162,8 @@ def test_admission_preserves_original_citation_ids_and_dated_risk_limits():
     assert result['claims'][0]['reference_id'] == 'E2'
     assert '[E2]' in thesis.direct_answer and '[E1]' not in thesis.direct_answer
     assert '2025-10-31' in thesis.direct_answer
-    assert 'not proof that it has occurred' in thesis.direct_answer
-    assert 'remain unverified' in thesis.direct_answer
+    assert 'reported events and potential risks' in thesis.direct_answer
+    assert 'does not independently verify' in thesis.direct_answer
     assert 'No source-bound Services revenue observation qualified' in thesis.direct_answer
     assert '72%' not in str(thesis.model_dump())
     assert thesis.quantitative_claims == [] and thesis.directional_stance == ''

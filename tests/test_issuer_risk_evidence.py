@@ -9,7 +9,7 @@ from app.schemas import InvestmentThesis, RetrievedEvidence
 from app.services import live_issuer_kpi_service as live
 from app.services.evidence_references import admit_evidence
 from app.services.issuer_risk_evidence import (
-    RISK_PROFILES, bound_issuer_risk, extract_issuer_risk_evidence, requested_risk_profile,
+    RISK_PROFILES, bound_issuer_risk, extract_issuer_risk_evidence, requested_risk_profile, risk_summary,
 )
 from app.services.public_document_ingestion import PublicDocument, PublicDocumentError
 from app.services.source_answer import apply_source_answer_gate
@@ -63,11 +63,96 @@ def test_reviewed_topics_preserve_issuer_span_date_and_citation_after_admission(
     assert result['claims'][0]['reference_id'] == 'E2'
     assert CASES[ticker][1] in thesis.direct_answer and '[E2]' in thesis.direct_answer
     assert CASES[ticker][2] in thesis.direct_answer
-    assert 'not proof that it has occurred' in thesis.direct_answer
+    assert 'does not independently verify' in thesis.direct_answer
     assert 'does not, by itself, verify revenue growth' in thesis.direct_answer
     assert '72%' not in thesis.model_dump_json()
     assert thesis.quantitative_claims == [] and thesis.directional_stance == ''
     assert thesis.direct_answer == thesis.conclusion
+
+
+# Verbatim sentences from NVIDIA's 2026-08-26 10-Q. Surrounding markup below
+# remains synthetic; the full filing is checked separately during acceptance.
+NVDA_POWER_RISK = (
+    'Power constraints, government actions or regulations, permitting delays, or '
+    'community opposition may delay, restrict or prevent the development or '
+    'operation of data centers.'
+)
+NVDA_NON_TOPIC_RISK = (
+    'Export controls have and could in the future disrupt our supply chain and '
+    'distribution channels, negatively impacting our ability to serve demand, '
+    'including in markets outside China and for our non-data center products.'
+)
+
+
+@pytest.mark.parametrize('non_topic', [
+    'non-data center', 'non-data-center', 'non data center', 'non–data center',
+    'non‑data‑center', 'non-data centers', 'non-AI infrastructure',
+])
+def test_non_topic_mentions_do_not_establish_nvidia_scope(non_topic):
+    quote = NVDA_NON_TOPIC_RISK.replace('non-data center', non_topic)
+    assert extract('NVDA', document('NVDA', text=(
+        f'Item 1A. Risk Factors {quote} Item 1B. Unresolved Staff Comments'
+    ))) == []
+    assert requested_risk_profile('NVDA', f'What operating risks affect {non_topic} products?') is None
+
+
+def test_nvidia_live_regression_keeps_power_risk_and_drops_non_topic_quote():
+    doc = document('NVDA', text=(
+        f'Item 1A. Risk Factors {NVDA_POWER_RISK} {NVDA_NON_TOPIC_RISK} '
+        'Item 1B. Unresolved Staff Comments'
+    ), published_at='2026-08-26', document_type='10-Q',
+        final_url='https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm')
+    items = extract('NVDA', doc)
+    assert len(items) == 1
+    assert items[0].risk_disclosures[0]['quote'] == NVDA_POWER_RISK
+    value = bound_issuer_risk(items[0], ticker='NVDA', question=question('NVDA'))
+    assert doc.text[value['start_offset']:value['end_offset']] == NVDA_POWER_RISK
+    assert value['document_ref']['url'] == doc.final_url
+
+
+def test_positive_data_center_scope_remains_valid_alongside_non_topic_scope():
+    quote = 'Data-center power shortages could disrupt our revenue while non-data-center products face other risks.'
+    item = extract('NVDA', document('NVDA', text=(
+        f'Item 1A. Risk Factors {quote} Item 1B. Unresolved Staff Comments'
+    )))[0]
+    assert item.risk_disclosures[0]['quote'] == quote
+
+
+def test_non_topic_scope_is_rechecked_before_emission_and_original_ids_survive():
+    item = extract('NVDA')[0]
+    value = deepcopy(item.risk_disclosures[0])
+    value['quote'] = value['document_ref']['quote'] = NVDA_NON_TOPIC_RISK
+    value['end_offset'] = value['start_offset'] + len(NVDA_NON_TOPIC_RISK)
+    non_topic = item.model_copy(update={'risk_disclosures': [value],
+                                       'summary': risk_summary(value, item.document_type),
+                                       'title': 'Rejected non-topic risk'})
+    assert bound_issuer_risk(non_topic, ticker='NVDA', question=question('NVDA')) is None
+    admitted, refs, _ = admit_evidence([non_topic, item], evaluated_at='2026-10-06')
+    thesis = InvestmentThesis(ticker='NVDA', company_name='NVIDIA')
+    result = apply_source_answer_gate(thesis, question('NVDA'), admitted, references=refs)
+    assert [row['reference_id'] for row in result['claims']] == ['E2']
+    assert '[E1]' not in thesis.direct_answer and '[E2]' in thesis.direct_answer
+    assert NVDA_NON_TOPIC_RISK not in thesis.direct_answer
+
+
+@pytest.mark.parametrize('quote', [
+    'Cloud capacity constraints have and could again disrupt our operations.',
+    'Cloud capacity constraints may disrupt our operations.',
+])
+def test_disclosure_wording_preserves_reported_and_potential_effects(quote):
+    item = extract('MSFT', document('MSFT', text=(
+        f'Item 1A. Risk Factors {quote} Item 1B. Unresolved Staff Comments'
+    )))[0]
+    admitted, refs, _ = admit_evidence([item], evaluated_at='2026-10-06')
+    thesis = InvestmentThesis(ticker='MSFT', company_name='Microsoft')
+    result = apply_source_answer_gate(thesis, question('MSFT'), admitted, references=refs)
+    assert result['status'] == 'attributed'
+    assert quote in thesis.direct_answer
+    assert 'reported events and potential risks' in thesis.direct_answer
+    assert 'does not independently verify' in thesis.direct_answer
+    assert 'issuer-disclosed possibility' not in thesis.direct_answer
+    assert 'not proof that it has occurred' not in thesis.direct_answer
+    assert 'described effects occurred or will occur' in item.summary
 
 
 @pytest.mark.parametrize('ticker', CASES)

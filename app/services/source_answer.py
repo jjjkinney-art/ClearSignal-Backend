@@ -219,9 +219,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         answer += "\n\nNo source-bound Services revenue observation qualified in this answer."
     if has_disclosed_risk:
         answer += (
-            "\n\nThe cited risk is an issuer disclosure, not proof that it has occurred "
-            "or invalidated the thesis. Its likelihood, quantified financial effect, "
-            "and any directional thesis change remain unverified."
+            "\n\nThe quoted disclosures preserve the issuer's distinction between reported "
+            "events and potential risks. This evidence view does not independently verify "
+            "occurrence, current conditions, risk likelihood, quantified financial effects, "
+            "or a directional thesis change."
         )
         if scoped_risk:
             answer += (f"\n\nThis {scoped_risk.scope} risk disclosure does not, by itself, "

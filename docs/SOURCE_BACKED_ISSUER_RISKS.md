@@ -26,6 +26,23 @@ cannot fill a risk slot. Microsoft split-word headings are recognized without
 rewriting the quoted text. Missing support produces an insufficient-evidence
 answer; unavailable or later-than-boundary records remain blocked by admission.
 
+Topic matching excludes a `non-` prefixed mention as the sole scope support,
+including whitespace and typographic-hyphen variants. NVIDIA's Data Center
+profile accepts positive hyphenated mentions. The same check runs during
+extraction and before admitting a disclosure to the source answer. A quote that
+also names a positive supported topic may still qualify.
+
+Disclosures preserve the issuer's exact wording about reported events and
+potential risks. The response does not label every quote as purely hypothetical
+or independently establish occurrence, likelihood, impact, or thesis direction.
+
+The [2026-10-06 scope acceptance report](ISSUER_RISK_SCOPE_ACCEPTANCE_20261006.json)
+records a local check against NVIDIA's full 2026-08-26 10-Q. The prior
+`non-data center` false positive is reproduced and excluded after this change;
+the power-constraint disclosure retains its exact normalized span through
+admission and the source-answer gate. Signed-in production retesting remains
+pending deployment.
+
 ## Retrieval and output boundaries
 
 The existing default budget remains two document attempts, including failed

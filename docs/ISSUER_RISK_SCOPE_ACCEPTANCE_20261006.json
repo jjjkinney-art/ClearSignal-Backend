@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "evaluated_at": "2026-10-06T07:16:37.648670+00:00",
+  "scope": "local full SEC filing extraction, admission, and source-answer gate",
+  "production_retest_pending": true,
+  "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+  "filed_at": "2026-08-26",
+  "content_sha256": "d39dd1a5cbe5131de85a8b64444d0c5fc0c0092bb95a12311e5202da1dfd941f",
+  "byte_count": 1517155,
+  "normalized_character_count": 174497,
+  "base_commit": "de4fb796e44466d03f393795ae71076f9895beac",
+  "before_disclosure_count": 2,
+  "after_disclosure_count": 1,
+  "passed": true,
+  "checks": {
+    "prior_false_positive_reproduced": true,
+    "non_topic_quote_rejected": true,
+    "power_risk_preserved": true,
+    "all_normalized_spans_exact": true,
+    "source_hash_url_date_preserved": true,
+    "source_answer_attributed": true,
+    "exact_quotes_preserved_in_answer": true,
+    "reported_and_potential_effects_not_reclassified": true,
+    "unsupported_generated_claims_removed": true,
+    "zero_production_writes": true,
+    "zero_llm_calls": true
+  },
+  "disclosures": [
+    {
+      "start_offset": 134205,
+      "end_offset": 134378,
+      "quote_sha256": "2d07d95d3deba99fdff3269abb46b89da0a86e110314230288e91919c3fe3b33"
+    }
+  ]
+}

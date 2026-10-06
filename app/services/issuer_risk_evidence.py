@@ -1,7 +1,7 @@
 """Bounded, topic-specific issuer disclosures from SEC Risk Factors.
 
-A quoted disclosure establishes that the issuer stated a possibility. It does
-not establish its likelihood, current impact or a directional thesis change.
+A quoted disclosure preserves the issuer's reported events and potential risks.
+It does not independently establish occurrence, impact or a thesis change.
 """
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ _END = re.compile(r"\bItem\s+(?:1B|1C|2)\s*[.:—–-]?\s+(?:Unresolve\s*d|Cy\s*
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
 _ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt|unable|cease|fail|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient)\b", re.I)
+_NON_TOPIC_PREFIX = re.compile(r"\bnon[\s\-‐‑‒–—]*$", re.I)
 
 
 @dataclass(frozen=True)
@@ -33,14 +34,20 @@ class RiskProfile:
 RISK_PROFILES = {
     "AAPL": RiskProfile("320193", "Services", _SCOPE),
     "MSFT": RiskProfile("789019", "Cloud", re.compile(r"\b(?:azure|cloud(?:-based)?)\b", re.I)),
-    "NVDA": RiskProfile("1045810", "Data Center", re.compile(r"\b(?:data\s*centers?|AI infrastructure)\b", re.I)),
+    "NVDA": RiskProfile("1045810", "Data Center", re.compile(r"\b(?:data[\s\-‐‑‒–—]*centers?|AI[\s\-‐‑‒–—]+infrastructure)\b", re.I)),
     "DOCU": RiskProfile("1261333", "Subscription renewals", re.compile(r"\b(?:subscriptions?|renew(?:al|als|s)?|retention)\b", re.I)),
 }
 
 
+def _has_topic_scope(text: str, profile: RiskProfile) -> bool:
+    """A non-topic mention alone cannot establish the requested business scope."""
+    return any(not _NON_TOPIC_PREFIX.search(text[:match.start()])
+               for match in profile.terms.finditer(text))
+
+
 def requested_risk_profile(ticker: str, question: str) -> RiskProfile | None:
     profile = RISK_PROFILES.get(str(ticker).strip().upper())
-    if (profile and profile.terms.search(question or "")
+    if (profile and _has_topic_scope(question or "", profile)
             and re.search(r"\b(?:risks?|invalidate|invalidating)\b", question or "", re.I)):
         return profile
     return None
@@ -49,7 +56,7 @@ def requested_risk_profile(ticker: str, question: str) -> RiskProfile | None:
 def _qualifying_quote(quote: str, profile: RiskProfile) -> bool:
     return bool(40 <= len(quote) <= 300 and re.match(r"[A-Z]", quote)
                 and quote[-1] in ".!?" and not re.search(r"\d|[$%]", quote)
-                and profile.terms.search(quote) and _POSSIBILITY.search(quote)
+                and _has_topic_scope(quote, profile) and _POSSIBILITY.search(quote)
                 and _ADVERSE.search(quote)
                 # Generic company-wide product/service warnings do not establish
                 # a topic-specific operating mechanism for this evidence view.
@@ -143,7 +150,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
 def risk_summary(disclosure: dict, form: str) -> str:
     filed = disclosure["document_ref"]["published_at"]
     return (f'{disclosure["ticker"]} disclosed in its {form} filed {filed}: “{disclosure["quote"]}” '
-            "This is an issuer-disclosed possibility, not a verified occurrence or quantified impact.")
+            "This is an issuer disclosure, not an independent assessment of whether the "
+            "described effects occurred or will occur, or of their financial impact.")
 
 
 def bound_issuer_risk(item: object, *, ticker: str, question: str) -> dict | None:
