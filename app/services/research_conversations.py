@@ -240,6 +240,9 @@ def assistant_text_from_response(response: dict) -> str:
         thesis = answer.get("investment_thesis")
         if isinstance(thesis, dict):
             candidates.extend((thesis.get("direct_answer"), thesis.get("conclusion")))
+        general = answer.get("general")
+        if isinstance(general, dict):
+            candidates.append(general.get("answer"))
         candidates.extend((answer.get("answer"), answer.get("direct_answer")))
     candidates.append(answer)
     for candidate in candidates:

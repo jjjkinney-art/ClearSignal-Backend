@@ -88,6 +88,11 @@ if not os.environ.get("ANTHROPIC_TEST_ALLOW_NETWORK"):
     def _empty_dict(*a, **kw): return {}
     def _empty_list(*a, **kw): return []
 
+    # Issuer-discovery tests inject directory fixtures explicitly; ordinary
+    # router tests must never fetch the live SEC directory for an unknown hint.
+    from app.services import issuer_identity as _issuer_identity
+    _issuer_identity._fetch_directory_json = _empty_dict
+
     try:
         from app.providers import fmp_client as _fmp
         _fmp.get_company_profile   = _empty_dict

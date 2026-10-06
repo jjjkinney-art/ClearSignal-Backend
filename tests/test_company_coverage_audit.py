@@ -116,3 +116,14 @@ def test_empty_cohort_never_claims_launch_coverage_passed(monkeypatch):
     report = audit.build_report({"classification_as_of": "2026-09-29", "issuers": []})
     assert not report["coverage_checks_complete"]
     assert not report["passed"]
+
+
+def test_local_audit_pass_does_not_certify_production_launch(monkeypatch):
+    monkeypatch.setattr(audit, "identity_probe", lambda issuers: [{"passed": True}] * 2)
+    monkeypatch.setattr(audit, "routing_probe", lambda issuers: [
+        {"passed": True, "wrong_issuer": False, "ticker": "TEST"}] * 3)
+    monkeypatch.setattr(audit, "topic_probe", lambda: [{"passed": True}] * 4)
+    report = audit.build_report({"classification_as_of": "2026-09-29", "issuers": [issuer()]})
+    assert report["passed"]
+    assert report["launch_blocked_for_unrestricted_company_coverage"]
+    assert not report["production_authenticated_ask_tested"]

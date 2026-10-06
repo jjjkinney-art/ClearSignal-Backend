@@ -23,8 +23,12 @@ _SERVICES_CLAIM_RE = re.compile(
     r"\b(?:services?|app store|icloud|apple music|digital content)\b", re.IGNORECASE,
 )
 _LEGACY_SOURCE_RE = re.compile(r"\s*\[Source:\s*https?://[^\]]+\]\s*", re.IGNORECASE)
+_RISK_REQUEST_RE = re.compile(
+    r"\b(?:operating risks?|risks? to|invalidate(?:s|d)?|invalidating)\b"
+    r"|\b(?:what|which|identify|describe|show)\b.{0,80}\brisks?\b", re.I,
+)
 
-# Scoped source questions are a bounded evidence view, not permission to
+# Source and operating-risk questions are a bounded evidence view, not permission to
 # publish the synthesizer's wider investment case. Keep identity and numeric
 # pipeline diagnostics; reset every other schema field before persistence.
 # An allowlist makes new generated fields default to withheld as well.
@@ -55,8 +59,8 @@ def _restrict_evidence_thesis(thesis: object, answer: str, claims: list[dict],
         "operating risks were not verified by this evidence view."
     )
     if scope != "Services":
-        limitation = (f"The {scope} disclosure does not verify revenue growth, risk likelihood, "
-                      "quantified financial impact, or a directional thesis change.")
+        limitation = ("Only the cited observations are supported. Future growth, risk likelihood, "
+                      "quantified financial impact, and a directional thesis change remain unverified.")
     fields = {
         "direct_answer": answer,
         "one_sentence_thesis": headline,
@@ -72,12 +76,12 @@ def _restrict_evidence_thesis(thesis: object, answer: str, claims: list[dict],
             str(getattr(item, "source", "")) for item in selected_items
         )) if enough else [],
     }
-    # Retain only producer-bound Services amounts/growth from the selected
-    # admitted items, never numbers extracted from the generated thesis.
+    # Retain producer-bound quantities from selected admitted items; the
+    # Services view permits only its segment amounts/growth.
     verified = [dict(claim) for item in selected_items if enough
                 for claim in (getattr(item, "verified_claims", []) or [])
                 if isinstance(claim, dict)
-                and str(claim.get("metric", "")).startswith("issuer:Services net sales")
+                and (scope != "Services" or str(claim.get("metric", "")).startswith("issuer:Services net sales"))
                 and claim.get("document_ref")]
     fields["quantitative_claims"] = verified
     fields["claim_provenance_summary"] = {
@@ -91,10 +95,11 @@ def _restrict_evidence_thesis(thesis: object, answer: str, claims: list[dict],
 
 
 def is_source_answer_request(question: str) -> bool:
-    """Return whether the user explicitly requested evidence attribution."""
+    """Detect explicit attribution requests and operating-risk evidence views."""
     return bool(
         _SOURCE_REQUEST_RE.search(question or "")
         or _NATURAL_EVIDENCE_REQUEST_RE.search(question or "")
+        or _RISK_REQUEST_RE.search(question or "")
     )
 
 
@@ -112,13 +117,26 @@ def _claim_text(item: object) -> str | None:
     return summary[:500] if len(summary) >= 30 else None
 
 
+def _requested_bound_metric(item: object, ticker: str, question: str) -> bool:
+    """A requested numeric fact may answer a separate part, never the risk slot."""
+    from .verified_sec_metric_service import _METRICS
+    from .live_issuer_kpi_service import requested_issuer_kpi_aliases
+    concepts = {f"us-gaap:{concept}" for metric in _METRICS
+                if any(re.search(rf"(?<!\w){re.escape(term)}(?!\w)", question, re.I) for term in metric[2])
+                for concept in metric[0]}
+    concepts.update(f"issuer:{metric}" for metric in requested_issuer_kpi_aliases(question))
+    return any(isinstance(claim, dict) and claim.get("ticker") == ticker
+               and claim.get("metric") in concepts and claim.get("document_ref")
+               for claim in getattr(item, "verified_claims", []) or [])
+
+
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
                              *, references: list[dict] | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""
     if not is_source_answer_request(question):
         return None
 
-    from .services_risk_evidence import bound_services_risk, requests_services_operating_risk
+    from .services_risk_evidence import bound_services_risk
     from .issuer_risk_evidence import bound_issuer_risk, requested_risk_profile
     from .services_revenue_evidence import requests_services_revenue
     from .evidence_references import _evidence_url
@@ -130,7 +148,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     ticker = str(getattr(thesis, "ticker", ""))
     risk_profile = requested_risk_profile(ticker, question)
     scoped_risk = risk_profile if ticker != "AAPL" else None
-    risk_requested = bool(risk_profile) or (services_requested and requests_services_operating_risk(question))
+    risk_requested = bool(_RISK_REQUEST_RE.search(question or "")
+                          or re.search(r"\brisks?\b", question or "", re.I))
+    unsupported_risk = risk_requested and not risk_profile
+    view_scope = scoped_risk.scope if scoped_risk else ("Services" if services_requested else "Requested topic")
     for index, item in enumerate(material, start=1):
         claim = _claim_text(item)
         if not claim:
@@ -142,6 +163,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             continue
         disclosure = (bound_issuer_risk(item, ticker=ticker, question=question) if risk_profile
                       else bound_services_risk(item, ticker=ticker))
+        if unsupported_risk:
+            disclosure = None
+            if not _requested_bound_metric(item, ticker, question):
+                continue
         if getattr(item, "risk_disclosures", []) and not disclosure:
             continue
         # The new issuer/topic slices support qualitative risk disclosures.
@@ -191,13 +216,20 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "run the analysis again when structured facts are available."
         )
         setattr(thesis, "direct_answer", answer)
-        if services_requested or scoped_risk:
-            _restrict_evidence_thesis(thesis, answer, [], [], enough=False,
-                                    scope=scoped_risk.scope if scoped_risk else "Services")
+        if unsupported_risk:
+            answer = (
+                "No source-bound operating-risk disclosure qualified for the requested company "
+                "and topic. The retrieved sources and consolidated metrics do not establish "
+                "that risk, its likelihood, or its effect on the thesis. Review the linked "
+                "primary documents; this part of the question remains unverified."
+            )
+        _restrict_evidence_thesis(thesis, answer, [], [], enough=False, scope=view_scope)
         return {
             "status": "insufficient_claim_evidence",
-            "reason": "Not enough relevant claim-level support was retrieved for this question.",
+            "reason": "No relevant source-bound operating-risk disclosure qualified." if unsupported_risk
+                      else "Not enough relevant claim-level support was retrieved for this question.",
             "claims": [],
+            "unanswered_parts": ["operating risk"] if unsupported_risk else [],
         }
 
     answer = "\n\n".join(
@@ -227,14 +259,17 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         if scoped_risk:
             answer += (f"\n\nThis {scoped_risk.scope} risk disclosure does not, by itself, "
                        "verify revenue growth or its sustainability.")
+    elif unsupported_risk:
+        answer += ("\n\nThese observations answer only the requested financial metric. No source-bound "
+                   "operating-risk disclosure qualified for the requested company and topic; "
+                   "risk likelihood, financial effects, and thesis implications remain unverified.")
     elif risk_requested:
         answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
     setattr(thesis, "direct_answer", answer)
-    if services_requested or scoped_risk:
-        _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True,
-                                scope=scoped_risk.scope if scoped_risk else "Services")
+    _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True, scope=view_scope)
     return {
-        "status": "attributed",
+        "status": "partial" if unsupported_risk else "attributed",
         "reason": "Each claim is bound to a retrieved evidence reference.",
         "claims": claims,
+        "unanswered_parts": ["operating risk"] if unsupported_risk else [],
     }

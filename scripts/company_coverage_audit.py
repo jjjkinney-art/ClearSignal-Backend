@@ -76,6 +76,7 @@ def routing_probe(issuers):
                                  "run_equity_agent", "run_synthesizer_agent"):
                         stack.enter_context(patch.object(router_service, name, forbidden))
                     stack.enter_context(patch("requests.sessions.Session.request", forbidden))
+                    stack.enter_context(patch("app.services.issuer_identity._fetch_directory_json", forbidden))
                     response = router_service.route_question(QuestionRequest(
                         company_name=company, question=question, intent="company_analysis"))
                     pipeline = response.routing.get("pipeline") if response.routing else None
@@ -194,7 +195,9 @@ def build_report(registry, sec_snapshot=None, live_tickers=(), live_transport="r
     report["audited_source_sha256"] = {
         path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest()
         for path in ("app/services/company_detection.py", "app/services/router_service.py",
-                     "app/services/source_answer.py", "app/services/research_conversations.py")}
+                     "app/services/source_answer.py", "app/services/research_conversations.py",
+                     "app/services/issuer_identity.py", "app/services/entity_resolution_service.py",
+                     "app/services/providers/sec_provider.py", "app/services/issuer_kpi_evidence.py")}
     if sec_snapshot:
         data = json.loads(sec_snapshot.read_text())
         report["official_identity_snapshot"] = {
@@ -203,14 +206,41 @@ def build_report(registry, sec_snapshot=None, live_tickers=(), live_transport="r
             "ticker_row_count": len(data),
             "exact_tickers_in_static_registry": sum(r["ticker"] in _COMPANY_DB for r in data.values()),
             "note": "SEC ticker rows include share classes and foreign issuers; this is not an analysis-quality score."}
+        from app.services.issuer_identity import parse_directory, exact_issuer, symbol
+        from unittest.mock import patch
+        directory = parse_directory(data)
+        valid_rows = [row for row in data.values() if isinstance(row, dict)
+                      and isinstance(row.get("ticker"), str) and row.get("cik_str")]
+        exact_passed = sum(
+            bool((item := exact_issuer(row["ticker"], directory))
+                 and item.ticker == symbol(row["ticker"])
+                 and item.cik == str(int(row["cik_str"])).zfill(10))
+            for row in valid_rows
+        )
+        # Exercise the runtime discovery path beyond the local reviewed registry.
+        canaries = [dict(ticker=item.ticker, company=item.name)
+                    for ticker in ("WDFC", "MOD", "LQDT", "NWE", "AZZ")
+                    if (item := directory.symbols.get(ticker)) and ticker not in _COMPANY_DB]
+        with patch("app.services.issuer_identity._load_directory", return_value=directory):
+            report["official_directory_routing_checks"] = routing_probe(canaries)
+        report["official_identity_snapshot"].update(
+            parsed_symbol_count=len(directory.symbols),
+            withheld_or_conflicting_row_count=len(valid_rows) - exact_passed,
+            exact_symbol_checks=len(valid_rows), exact_symbol_passed=exact_passed,
+            routing_canary_count=len(canaries),
+        )
         report["independent_live_sec_checks"] = live_sec_probe(data, live_tickers, live_transport) if live_tickers else []
     report["coverage_checks_complete"] = bool(issuers) and (
         len(identities) == 2 * len(issuers) and len(routing) == 3 * len(issuers)
         and len(topics) == 4)
     report["passed"] = report["coverage_checks_complete"] and all(
         r["passed"] for r in identities + routing + topics
-        + report.get("independent_live_sec_checks", []))
-    report["launch_blocked_for_unrestricted_company_coverage"] = not report["passed"]
+        + report.get("independent_live_sec_checks", [])
+        + report.get("official_directory_routing_checks", []))
+    report["launch_blocked_for_unrestricted_company_coverage"] = True
+    report["launch_clearance_note"] = (
+        "Local audit success does not authorize unrestricted launch. Authenticated production "
+        "analysis, issuer/topic quality and persistence acceptance remain separate gates.")
     return report
 
 

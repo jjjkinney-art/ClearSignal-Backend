@@ -227,4 +227,5 @@ def kpi_as_evidence(kpi: SourceBoundKpi, document: PublicDocument) -> RetrievedE
         page=kpi.page,
         section=kpi.section,
         extraction_method=document.extraction_method,
+        verified_claims=[kpi.claim.to_dict()],
     )

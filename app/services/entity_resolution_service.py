@@ -698,7 +698,7 @@ def resolve_for_analysis(
     When company_hint (the AnalysisRequest.company_name field) is explicitly
     provided and resolves successfully, it is treated as authoritative.  The
     user_question is only used as primary resolution text when company_hint is
-    absent or fails to match any known entity.
+    absent. An unresolved selection requires clarification.
 
     This prevents questions that mention competitor names (e.g. "Costco trades
     at a premium vs Walmart") from resolving to the wrong company.
@@ -716,13 +716,28 @@ def resolve_for_analysis(
     # routinely mention competitors and sector peers whose names would otherwise
     # override the caller's intended company.
     if company_hint.strip():
+        from .company_detection import resolve_selected_company
+        from .issuer_identity import discover_company
+        selected = resolve_selected_company(company_hint)
+        if selected is None:
+            selected = discover_company(company_hint, as_of=as_of)
+            if selected is not None:
+                return EntityResolutionResult(canonical_ticker=selected.ticker,
+                    company_name=selected.company_name, confidence_score=1.0,
+                    matched_alias=company_hint, resolution_method="sec_directory_exact")
+        if selected is None:
+            return EntityResolutionResult(needs_clarification=True,
+                resolution_method="unresolved_explicit_identity", requested_entity=company_hint,
+                clarification_prompt="Company identity could not be verified. Enter an exact ticker or legal name.")
         result = resolve_query(company_hint.strip(), "", as_of=as_of)
-        if result.canonical_ticker or (
-            result.needs_clarification
-            and result.resolution_method == "temporal_identity_mismatch"
-        ):
+        if (result.canonical_ticker != selected.ticker
+                and result.resolution_method != "temporal_identity_mismatch"):
+            result = EntityResolutionResult(canonical_ticker=selected.ticker,
+                company_name=selected.company_name, confidence_score=1.0,
+                matched_alias=company_hint, resolution_method="exact_ticker")
+        if result.canonical_ticker or result.needs_clarification:
             return result
-    # company_hint absent or unresolvable — fall back to question text as primary.
+    # With no structured selection, resolve the question as before.
     if user_question:
         return resolve_query(user_question, company_hint, as_of=as_of)
     return EntityResolutionResult(resolution_method="not_found")

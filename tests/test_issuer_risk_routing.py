@@ -52,7 +52,7 @@ def test_unresolved_source_request_never_calls_legacy_agents_or_substitutes_issu
     assert response.answer['evidence_references'] == []
     text = assistant_text_from_response(response.model_dump(mode='json'))
     assert text == response.answer['answer']
-    assert 'coverage may be incomplete' in text
+    assert 'coverage may be incomplete' in text.lower()
     assert '{' not in text
 
 

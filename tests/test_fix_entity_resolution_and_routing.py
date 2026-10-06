@@ -127,19 +127,15 @@ class TestResolveForAnalysisFixA:
         )
         assert result.canonical_ticker == "JPM"
 
-    # ── Unresolvable hint falls back to question ──────────────────────────
-
-    def test_unresolvable_hint_falls_back_to_question(self):
-        """When company_hint does not resolve, question text is used."""
+    # An unresolved structured scope must not borrow a different company.
+    def test_unresolvable_hint_requires_clarification(self):
         result = resolve_for_analysis(
             company_hint="ZZZNOTTICKER",
             user_question="What is the investment thesis for Apple?",
         )
-        # Should resolve AAPL from the question, not fail silently
-        assert result.canonical_ticker == "AAPL", (
-            f"Unresolvable hint should fall back to question-text resolution; "
-            f"got {result.canonical_ticker!r}"
-        )
+        assert result.canonical_ticker == ""
+        assert result.needs_clarification
+        assert result.resolution_method == "unresolved_explicit_identity"
 
     # ── Confidence must remain high ───────────────────────────────────────
 
@@ -338,13 +334,13 @@ class TestEntityIdentityMetadata:
         assert result.needs_clarification is True
         assert result.relationship_status == "pre_merger"
 
-    def test_generic_ambiguous_hint_still_defers_to_context_rich_question(self):
+    def test_explicit_ticker_remains_authoritative_over_question_peer(self):
         result = resolve_for_analysis(
             company_hint="AI",
             user_question="Can Meta continue despite AI infrastructure spending?",
         )
 
-        assert result.canonical_ticker == "META"
+        assert result.canonical_ticker == "AI"
         assert result.needs_clarification is False
 
     def test_analysis_request_accepts_explicit_as_of_boundary(self):

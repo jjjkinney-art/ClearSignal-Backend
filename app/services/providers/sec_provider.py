@@ -70,9 +70,8 @@ _FORM_LABELS: dict = {
 # Module-level cache for ticker → zero-padded CIK (loaded once per process).
 _ticker_cik_cache: Optional[Dict[str, str]] = None
 
-# Pattern that looks like a US stock ticker: 1-5 uppercase ASCII letters,
-# optionally a dot-class suffix (e.g. BRK.B).
-_TICKER_RE = re.compile(r"^[A-Z]{1,5}(\.[A-Z])?$")
+# Canonical ticker symbols, including class suffixes (e.g. BRK.B).
+_TICKER_RE = re.compile(r"^[A-Z][A-Z0-9]{0,11}(?:[.-][A-Z0-9]{1,4})?$")
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
@@ -150,7 +149,7 @@ def _load_ticker_cik_map() -> Dict[str, str]:
     """Return ticker → zero-padded CIK mapping, fetching from EDGAR once per process.
 
     Result is cached globally so repeated calls within the same process cost nothing.
-    Returns ``{}`` on any error (caller falls back to other strategies).
+    Returns ``{}`` on error; exact-ticker calls withhold filings.
     """
     global _ticker_cik_cache
     if _ticker_cik_cache is not None:
@@ -176,7 +175,7 @@ def _load_ticker_cik_map() -> Dict[str, str]:
         return mapping
     except Exception as exc:
         logger.warning("SEC EDGAR: failed to load ticker→CIK map: %r", exc)
-        print(f"[DIAG] SEC EDGAR: ticker→CIK map load failed: {exc!r} — will use EFTS fallback")
+        print(f"[DIAG] SEC EDGAR: ticker→CIK map load failed: {exc!r} — exact-ticker filings withheld")
         _ticker_cik_cache = {}
         return {}
 
@@ -467,11 +466,8 @@ def fetch_recent_filings(
         Evidence objects sorted by recency (newest first), capped at *limit*.
         Returns ``[]`` on any error.
 
-    Lookup strategy (first success wins)
-    -------------------------------------
-    1. CIK lookup  — ticker → CIK → submissions API (most accurate)
-    2. entity= EFTS — matches registered company name in EDGAR
-    3. q= EFTS      — full-text body search (original fallback)
+    Exact ticker calls use CIK lookup only and withhold filings on failure.
+    Name-based legacy calls try entity= EFTS and then full-text EFTS.
     """
     if not company or not company.strip():
         return []
@@ -498,11 +494,15 @@ def fetch_recent_filings(
             if result:
                 return result
         except HTTPError as exc:
-            print(f"[DIAG] SEC EDGAR (CIK): HTTP {exc.code} — falling back")
+            print(f"[DIAG] SEC EDGAR (CIK): HTTP {exc.code} — filings withheld")
         except URLError as exc:
-            print(f"[DIAG] SEC EDGAR (CIK): network error {exc.reason!r} — falling back")
+            print(f"[DIAG] SEC EDGAR (CIK): network error {exc.reason!r} — filings withheld")
         except Exception as exc:
-            print(f"[DIAG] SEC EDGAR (CIK): unexpected error {exc!r} — falling back")
+            print(f"[DIAG] SEC EDGAR (CIK): unexpected error {exc!r} — filings withheld")
+
+        # An exact security symbol must never fall into a full-text search
+        # that returns another company's filing merely mentioning that symbol.
+        return []
 
     # ── Strategy 2: entity= EFTS search ─────────────────────────────────────
     try:

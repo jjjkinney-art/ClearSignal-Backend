@@ -53,6 +53,22 @@ class TestGuardEmptyCompany:
     def test_whitespace_string_returns_empty(self, monkeypatch):
         assert sec_provider.fetch_recent_filings("   ") == []
 
+    def test_exact_ticker_failure_cannot_search_other_issuer_bodies(self, monkeypatch):
+        monkeypatch.setattr(sec_provider, "_fetch_by_cik", lambda *a, **k: [])
+        def forbidden(*a, **k):
+            pytest.fail("Ticker lookup must not fall into entity/body search")
+        monkeypatch.setattr(sec_provider, "_fetch_by_entity_name", forbidden)
+        monkeypatch.setattr(sec_provider, "_fetch_by_fulltext", forbidden)
+        assert sec_provider.fetch_recent_filings("MAN") == []
+
+    def test_exact_ticker_network_error_stays_empty(self, monkeypatch):
+        def unavailable(*a, **k):
+            raise TimeoutError()
+        monkeypatch.setattr(sec_provider, "_fetch_by_cik", unavailable)
+        monkeypatch.setattr(sec_provider, "_fetch_by_fulltext", lambda *a, **k:
+                            pytest.fail("No cross-issuer full-text fallback"))
+        assert sec_provider.fetch_recent_filings("WDFC") == []
+
 
 # ── Happy path ────────────────────────────────────────────────────────────────
 

@@ -1827,16 +1827,11 @@ def _run_investment_pipeline(
 
 
 def route_question(request: QuestionRequest) -> AgentAnswerResponse:
-    """Classify a question and route it to appropriate agent(s) with metadata.
+    """Route verified company scope to the modern evidence-backed pipeline.
 
-    Non-company queries (empty company_name, or intent != company_analysis)
-    are handled by the general finance agent — a single focused LLM call
-    that returns a direct answer, elaboration bullets, and caveats.  The
-    full company-analysis pipeline (equity/macro/synthesizer) is NOT
-    invoked for these queries.
-
-    Company queries flow through the existing keyword-based classifier and
-    specialist agent pipeline unchanged.
+    Structured company selections are authoritative and require exact identity.
+    Explicit general-finance intents remain on their focused general route.
+    Unresolved company research returns a readable clarification before agents.
     """
     # ── Phase 20A P3: Ticker normalization ────────────────────────────────────
     # Normalize ticker variants (BRK-B → BRK.B, BRKB → BRK.B) BEFORE any
@@ -1861,6 +1856,32 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 request.company_name = _norm_company
     except Exception as _norm_exc:
         logger.debug("[router] ticker normalization failed: %r", _norm_exc)
+
+    from .company_detection import resolve_selected_company
+    from .issuer_identity import discover_company
+    from .source_answer import is_source_answer_request
+
+    def identity_gap():
+        return AgentAnswerResponse(
+            company=request.company_name, request_id=str(uuid.uuid4()),
+            agents_used=["company_identity_gate"],
+            answer={"answer": (
+                "ClearSignal could not verify the requested company identity. "
+                "No company analysis was run. Enter its exact ticker or legal name. "
+                "Coverage may be incomplete, ambiguous, or temporarily unavailable."
+            ), "source_answer": {"status": "unresolved_company_identity", "claims": []},
+            "evidence_references": []},
+            routing={"intent": "company_analysis", "pipeline": "company_identity_clarification"})
+
+    # The structured selection is authoritative for every company question,
+    # before competitor/comparison/scenario heuristics can substitute an issuer.
+    _selected_company = None
+    if request.company_name.strip() and intent_allows_company_detection(request.intent):
+        _selected_company = resolve_selected_company(request.company_name)
+        if _selected_company is None:
+            _selected_company = discover_company(request.company_name, as_of=request.as_of)
+        if _selected_company is None:
+            return identity_gap()
 
     # A historical request must resolve the entity under the same boundary as
     # its evidence. Otherwise a pre-acquisition subsidiary or pre-separation
@@ -2162,6 +2183,13 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 )
             else:
                 _entity_resolution = resolve_entity(request.question)
+                # Exact official names and symbols outrank fuzzy suggestions.
+                # General-answer intents are excluded by the surrounding gate.
+                if _entity_resolution.method not in ("exact_ticker", "alias_exact"):
+                    _official = discover_company(request.question, question_text=True, as_of=request.as_of)
+                    if _official is not None:
+                        from .company_detection import EntityResolution
+                        _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
@@ -2184,6 +2212,8 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     _entity_resolution.method in ("exact_ticker", "alias_exact")
                     or _entity_resolution.confidence >= MINIMUM_ROUTE_CONFIDENCE
                 )
+                if is_source_answer_request(request.question) and _entity_resolution.method == "fuzzy_token":
+                    _meets_threshold = False
                 if _meets_threshold:
                     _text_detected_company = _entity_resolution.context
                     if _entity_resolution.confidence < 0.90:
@@ -2230,39 +2260,17 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         _has_intent,
     )
 
-    # ── Fast path: explicit company analysis scope ────────────────────────────
-    # When the caller explicitly supplies both a company and company_analysis
-    # intent, that structured scope is authoritative. Natural research prompts
-    # such as "What is Tesla doing to win in 2030?" do not necessarily contain
-    # one of the legacy investment-keyword patterns, but they still require the
-    # full investment pipeline and its stable investment_thesis response shape.
-    #
-    # Callers that omit intent retain the keyword heuristic for backward
-    # compatibility. Explicit non-company intents remain excluded below.
-    #
-    # Why this is needed: the text-detection block above (lines 1118-1175) is
-    # intentionally skipped when company_name is non-empty, so _text_detected_company
-    # stays None and the investment pipeline is never reached via the existing
-    # gate at line 1201.  Questions containing competitor names would therefore
-    # fall through to the old keyword-routing path and receive a template equity
-    # analysis that ignores the specific question asked.
-    #
-    # This block only fires for company_analysis intent.  market_question,
-    # investing_education, portfolio_question, and general_fallback intents are
-    # excluded so they continue to reach the general-finance agent as expected.
+    # Every verified structured company selection uses the modern pipeline,
+    # including natural research prompts without investment-keyword patterns.
+    # Explicit general-finance intents remain excluded.
     _NON_COMPANY_INTENTS = frozenset({
         "market_question", "investing_education", "portfolio_question", "general_fallback"
     })
-    from .source_answer import is_source_answer_request
     if (
         request.company_name.strip()
-        and (request.intent == "company_analysis" or _has_intent
-             or is_source_answer_request(request.question))
         and request.intent not in _NON_COMPANY_INTENTS
     ):
-        _explicit_company = _temporal_company or detect_company(
-            request.company_name.strip()
-        )
+        _explicit_company = _temporal_company or _selected_company
         if _explicit_company is not None:
             request_id = str(uuid.uuid4())
             logger.info(
@@ -2305,7 +2313,8 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         and _entity_resolution.method in ("exact_ticker", "alias_exact")
         and _is_bare_company_reference(request.question, _entity_resolution)
     )
-    if _text_detected_company is not None and (_has_intent or _is_high_conf_entity):
+    if _text_detected_company is not None and (_has_intent or _is_high_conf_entity
+            or is_source_answer_request(request.question) or request.intent == "company_analysis"):
         request_id = str(uuid.uuid4())
         logger.info(
             json.dumps({
@@ -2418,6 +2427,12 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 "candidates": [(t, n) for t, n, _ in candidates],
             },
         )
+
+    # Explicit company/evidence requests with no verified identity must not
+    # turn into general market prose merely because the ticker field is empty.
+    if intent_allows_company_detection(request.intent) and (
+            request.intent == "company_analysis" or is_source_answer_request(request.question)):
+        return identity_gap()
 
     # ── General finance fast-path ─────────────────────────────────────────────
     # Triggered when the frontend sends an empty company_name (market questions,
@@ -2620,27 +2635,6 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         )
 
         return final_response
-
-    # A source request with an explicit but unresolved company must not bypass
-    # the evidence-backed pipeline by falling into the legacy agent schemas.
-    # Keep the requested identity visible and ask for clarification; do not
-    # silently substitute another issuer or publish uncited generated research.
-    if is_source_answer_request(request.question):
-        return AgentAnswerResponse(
-            company=request.company_name,
-            request_id=str(uuid.uuid4()),
-            agents_used=["company_identity_gate"],
-            answer={
-                "answer": (
-                    "ClearSignal could not verify the requested company identity for "
-                    "this evidence question. No source-backed analysis was run. "
-                    "Check the exact company name or ticker; coverage may be incomplete."
-                ),
-                "source_answer": {"status": "unresolved_company_identity", "claims": []},
-                "evidence_references": [],
-            },
-            routing={"intent": "company_analysis", "pipeline": "company_identity_clarification"},
-        )
 
     # ── Company analysis pipeline ─────────────────────────────────────────────
     # Enrich context so that prompts always receive operational grounding

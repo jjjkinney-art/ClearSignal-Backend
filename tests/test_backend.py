@@ -442,7 +442,7 @@ def test_enrich_retrieval_error(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_route_question_evidence_integration(monkeypatch: pytest.MonkeyPatch) -> None:
-    """route_question should invoke evidence selection and building before agent execution."""
+    """A selected company uses the modern evidence pipeline even without intent keywords."""
     import app.services.router_service as rsvc
     # Counters for evidence functions
     calls: Dict[str, int] = {"select": 0, "build": 0}
@@ -457,7 +457,7 @@ def test_route_question_evidence_integration(monkeypatch: pytest.MonkeyPatch) ->
         calls["build"] += 1
         return context
 
-    # Patch evidence selection/building on the router service
+    # Legacy evidence helpers must be bypassed for a resolved company selection.
     monkeypatch.setattr(rsvc, "select_evidence_sources", fake_select)
     monkeypatch.setattr(rsvc, "build_evidence", fake_build)
     # Patch context enrichment to return a bare context without hitting providers
@@ -472,10 +472,17 @@ def test_route_question_evidence_integration(monkeypatch: pytest.MonkeyPatch) ->
     monkeypatch.setattr(rsvc, "run_accounting_agent", lambda *args, **kwargs: AccountingAnalysis())
     # Patch synthesizer to return empty synthesis
     monkeypatch.setattr(rsvc, "run_synthesizer_agent", lambda *args, **kwargs: SynthesisOutput())
+    captured = []
+    from app.schemas import AgentAnswerResponse
+    def pipeline(**kwargs):
+        captured.append(kwargs)
+        return AgentAnswerResponse(company=kwargs["company"].ticker,
+            request_id="modern-handoff", agents_used=[], answer={"investment_thesis": {"direct_answer": "Test answer"}})
+    monkeypatch.setattr(rsvc, "_run_investment_pipeline", pipeline)
     # Compose a question request
     from app.schemas import QuestionRequest
     req = QuestionRequest(company_name="Tesla", question="General question about Tesla")
-    _ = rsvc.route_question(req)
-    # Evidence selector and builder should each be called exactly once
-    assert calls["select"] == 1
-    assert calls["build"] == 1
+    response = rsvc.route_question(req)
+    assert len(captured) == 1 and captured[0]["company"].ticker == "TSLA"
+    assert response.answer["investment_thesis"]["direct_answer"] == "Test answer"
+    assert calls == {"select": 0, "build": 0}
