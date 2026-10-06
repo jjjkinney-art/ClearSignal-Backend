@@ -69,7 +69,34 @@ _TOPICS = {scope: re.compile(terms, re.I) for scope, terms in RISK_TOPICS.items(
 _RISK_QUESTION = re.compile(r"\b(?:risks?|invalidate(?:s|d)?|invalidating)\b", re.I)
 
 
-def requested_risk_topic(ticker: str, question: str) -> tuple[str, re.Pattern] | None:
+def _without_issuer_name(ticker: str, question: str, issuer_name: str | None) -> str:
+    """Remove only a verified possessive name span; retain earlier topics.
+
+    Passive cache access keeps topic selection free of network I/O. This does
+    not authorize identity: extraction/binding still requires the current CIK.
+    """
+    from . import issuer_identity
+    if not issuer_name:
+        cache = issuer_identity._cache
+        issuer = cache.symbols.get(issuer_identity.symbol(ticker)) if cache else None
+        issuer_name = issuer.name if issuer else None
+    if not issuer_name:
+        return question
+    expected = issuer_identity.name_key(issuer_name)
+    spans = []
+    for possessive in re.finditer(r"['’](?:s)?(?=\s)", question):
+        prefix = question[:possessive.start()]
+        words = list(re.finditer(r"[A-Za-z0-9]+", prefix))[-12:]
+        for word in words:
+            if issuer_identity.name_key(prefix[word.start():]) == expected:
+                spans.append((word.start(), possessive.end()))
+                break
+    for start, end in reversed(spans):
+        question = question[:start] + " " + question[end:]
+    return question
+
+
+def requested_risk_topic(ticker: str, question: str, *, issuer_name: str | None = None) -> tuple[str, re.Pattern] | None:
     """Select an explicit topic without network I/O or guessing an issuer.
 
     Multiple requested topics are withheld until per-topic completeness can be
@@ -79,7 +106,7 @@ def requested_risk_topic(ticker: str, question: str) -> tuple[str, re.Pattern] |
         return None
     # Topic words inside a possessive company name (e.g. Liquidity Services,
     # Inc.'s marketplace sellers) are identity, not another requested topic.
-    topic_text = re.split(r"['’]s\s+", question or "", maxsplit=1)[-1]
+    topic_text = _without_issuer_name(ticker, question or "", issuer_name)
     legacy = RISK_PROFILES.get(str(ticker).strip().upper())
     matches = [(scope, terms) for scope, terms in _TOPICS.items()
                if _has_topic_scope(topic_text, IssuerRiskProfile("", scope, terms))]
@@ -103,20 +130,26 @@ def _has_topic_scope(text: str, profile: IssuerRiskProfile) -> bool:
 
 
 def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | None:
-    topic = requested_risk_topic(ticker, question)
-    if not topic:
+    if not _RISK_QUESTION.search(question or ""):
         return None
     ticker = str(ticker).strip().upper()
     legacy = RISK_PROFILES.get(ticker)
+    issuer_name = None
     if legacy:
         cik = legacy.cik
     else:
+        # Do not load identity for questions without any recognized topic.
+        if not any(_has_topic_scope(question or "", IssuerRiskProfile("", scope, terms))
+                   for scope, terms in _TOPICS.items()):
+            return None
         from .issuer_identity import _load_directory, symbol
         issuer = _load_directory().symbols.get(symbol(ticker))
         if issuer is None:
             return None
         cik = str(int(issuer.cik))
-    return IssuerRiskProfile(cik, *topic)
+        issuer_name = issuer.name
+    topic = requested_risk_topic(ticker, question, issuer_name=issuer_name)
+    return IssuerRiskProfile(cik, *topic) if topic else None
 
 
 def _qualifying_quote(quote: str, profile: IssuerRiskProfile) -> bool:

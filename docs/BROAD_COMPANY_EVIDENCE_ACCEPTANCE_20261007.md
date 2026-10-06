@@ -25,6 +25,9 @@ it does not establish support for every question, document layout or jurisdictio
 Multiple requested risk topics are withheld until per-topic completeness is
 represented. Foreign 20-F/40-F layouts, risk ranking, quantified effects, forecasts
 and complete segment-growth coverage are outside this expansion.
+Possessive company names are removed only as exact verified name spans. A topic
+before that name remains part of the question; a plural possessive such as
+Liquidity Services' does not accidentally request the separate liquidity topic.
 
 Evidence still requires primary SEC periodic HTML, a matching issuer accession
 URL, a dated and complete Item 1A section, explicit topic relevance and an exact
@@ -42,8 +45,8 @@ introduced; the existing two-document default and router deadline remain.
 | --- | --- | --- |
 | Frozen cohort | 33 issuers, 11 sectors, 24 question-topic labels | Not a complete market sample or current market-cap classification |
 | Public routing handoff | 99 checks pass: ticker, official name and question-only input for every cohort issuer | Providers/models blocked at handoff; not live analysis execution |
-| Expanded regression module | 143 tests pass | Positive documents are authored fixtures except one reviewed WD-40 sentence with synthetic section markup |
-| Relevant regressions | 578 tests pass across 19 isolated files | Local Python 3.12; required pinned Python 3.11 CI is separate |
+| Expanded regression module | 146 tests pass | Positive documents are authored fixtures except one reviewed WD-40 sentence with synthetic section markup |
+| Relevant regressions | 581 tests pass across 19 isolated files | Local Python 3.12; required pinned Python 3.11 CI is separate |
 | Cached full SEC HTML replay | Four issuers pass parser, extraction, admission, exact-span and answer-citation checks | Previously downloaded files; not a fresh download or signed-in request |
 | Expanded live retrieval | Pending | Direct SEC request from this execution environment timed out; no 33-issuer live pass is claimed |
 | Signed-in expanded issuer/topic matrix | Pending after deployment | Earlier routing/persistence acceptance does not establish new risk extraction coverage |

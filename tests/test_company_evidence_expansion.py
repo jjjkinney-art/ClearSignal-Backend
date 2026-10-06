@@ -44,6 +44,7 @@ def official_directory(monkeypatch):
         "ticker": c["ticker"], "title": c["company"], "cik_str": int(c["cik"])
     } for i, c in enumerate(CASES)})
     monkeypatch.setattr(issuer_identity, "_load_directory", lambda: directory)
+    monkeypatch.setattr(issuer_identity, "_cache", directory)
     return directory
 
 
@@ -132,6 +133,24 @@ def test_unknown_and_multiple_topics_do_not_silently_select_one_answer_slot():
     assert requested_risk_topic("AA", "What risk affects energy supply and liquidity?") is None
     assert requested_risk_topic("COST", "What risk affects membership renewals?")[0] == "Membership renewals"
     assert requested_risk_topic("NVDA", "What risks affect non-data-center products?") is None
+
+
+def test_topics_before_company_possessives_remain_multiple_and_withheld():
+    assert requested_risk_profile("AA", "What risks affect energy supply compared with Alcoa's liquidity?") is None
+    assert requested_risk_profile("MSFT", "What risks affect Cloud's liquidity?") is None
+
+
+def test_plural_company_possessive_is_identity_not_a_liquidity_topic():
+    profile = requested_risk_profile("LQDT", "What risks affect Liquidity Services’ marketplace sellers?")
+    assert profile and profile.scope == "Marketplace sellers"
+
+
+def test_cold_identity_lookup_strips_only_verified_name_and_topic_probe_makes_no_network_call(monkeypatch):
+    monkeypatch.setattr(issuer_identity, "_cache", None)
+    question = "What risks affect Liquidity Services’ marketplace sellers?"
+    assert requested_risk_profile("LQDT", question).scope == "Marketplace sellers"
+    monkeypatch.setattr(issuer_identity, "_load_directory", lambda: pytest.fail("topic probe must not fetch identity"))
+    assert requested_risk_topic("AA", "What risks affect energy supply?")[0] == "Energy supply"
 
 
 def test_long_disclosure_is_complete_in_answer_and_overlong_or_numeric_text_is_withheld():
