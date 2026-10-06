@@ -1,0 +1,148 @@
+{
+  "cached_issuer_count": 4,
+  "launch_cleared": false,
+  "live_33_issuer_cohort_passed": false,
+  "method": "Previously downloaded full primary SEC HTML, replayed through production bounded parser, extractor, admission and source-answer gate. No new network fetch or signed-in /ask execution.",
+  "passed": true,
+  "results": [
+    {
+      "admitted_risk_count": 2,
+      "byte_count": 1520316,
+      "disclosures": [
+        {
+          "cited_in_answer": true,
+          "content_hash": "ab5efa246eb89e5c7604415c95cba73d6b6e4a838323e07f7facb7fbe1745b03",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2025-10-31",
+          "quote_sha256": "73726c0934896c769f12c6139a9b548ac247b8323b7f2e2461c8163d894ad50f",
+          "scope": "Services",
+          "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+        },
+        {
+          "cited_in_answer": true,
+          "content_hash": "ab5efa246eb89e5c7604415c95cba73d6b6e4a838323e07f7facb7fbe1745b03",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2025-10-31",
+          "quote_sha256": "935a22fa68bc2aae82ce4f24fff42fc9f8b813551dd5d61735e004633fa54bb8",
+          "scope": "Services",
+          "url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+        }
+      ],
+      "documents_attempted": 0,
+      "documents_retrieved": 0,
+      "normalized_character_count": 120000,
+      "passed": true,
+      "reason": "exact_source_spans_and_answer_citations",
+      "retrieval_failures": [],
+      "source_answer_status": "attributed",
+      "stage": "source_binding",
+      "status": "pass",
+      "ticker": "AAPL",
+      "topic": "Services"
+    },
+    {
+      "admitted_risk_count": 1,
+      "byte_count": 8585609,
+      "disclosures": [
+        {
+          "cited_in_answer": true,
+          "content_hash": "cf381a240b802d0126d7116a1dcfd01375df7fcfafcff65cf37e58d7ff934819",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2026-07-29",
+          "quote_sha256": "67fad9c84a601a1dc7e7819162d7d4fd22d25357225fa5f621acae8547eefe00",
+          "scope": "Cloud",
+          "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm"
+        }
+      ],
+      "documents_attempted": 0,
+      "documents_retrieved": 0,
+      "normalized_character_count": 240000,
+      "passed": true,
+      "reason": "exact_source_spans_and_answer_citations",
+      "retrieval_failures": [],
+      "source_answer_status": "attributed",
+      "stage": "source_binding",
+      "status": "pass",
+      "ticker": "MSFT",
+      "topic": "Cloud"
+    },
+    {
+      "admitted_risk_count": 2,
+      "byte_count": 1967924,
+      "disclosures": [
+        {
+          "cited_in_answer": true,
+          "content_hash": "8f5cb26bfe1ab39b4321feebfc3bf021733e4e5680a9dee6325964d08a15c6ab",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2026-02-25",
+          "quote_sha256": "b0eef43635297cbadf390bb703085cb75c2d66c2eed41fab810466fca4db7a5f",
+          "scope": "Data Center",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm"
+        },
+        {
+          "cited_in_answer": true,
+          "content_hash": "8f5cb26bfe1ab39b4321feebfc3bf021733e4e5680a9dee6325964d08a15c6ab",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2026-02-25",
+          "quote_sha256": "206abfd94e9293ff6d8f279f78b84e5a58027d79a4bfe1554677fc580b73ca39",
+          "scope": "Data Center",
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm"
+        }
+      ],
+      "documents_attempted": 0,
+      "documents_retrieved": 0,
+      "normalized_character_count": 240000,
+      "passed": true,
+      "reason": "exact_source_spans_and_answer_citations",
+      "retrieval_failures": [],
+      "source_answer_status": "attributed",
+      "stage": "source_binding",
+      "status": "pass",
+      "ticker": "NVDA",
+      "topic": "Data Center"
+    },
+    {
+      "admitted_risk_count": 2,
+      "byte_count": 2059567,
+      "disclosures": [
+        {
+          "cited_in_answer": true,
+          "content_hash": "ee6c52cfc3ef43285611dc3a64deafad45d04f3a5edc4a6968d7a2a6e844aa5c",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2026-03-18",
+          "quote_sha256": "9c64e02f35bc8d9db3cb1642c61da3cfd4a119971dc26a9ef64a9717eeb74a88",
+          "scope": "Subscription renewals",
+          "url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm"
+        },
+        {
+          "cited_in_answer": true,
+          "content_hash": "ee6c52cfc3ef43285611dc3a64deafad45d04f3a5edc4a6968d7a2a6e844aa5c",
+          "document_type": "10-K",
+          "exact_span": true,
+          "filed_at": "2026-03-18",
+          "quote_sha256": "383f6c64257c525bbd2aa80f2a2dd458ad2cce3b58ed12eb5b57246844d16f5b",
+          "scope": "Subscription renewals",
+          "url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm"
+        }
+      ],
+      "documents_attempted": 0,
+      "documents_retrieved": 0,
+      "normalized_character_count": 240000,
+      "passed": true,
+      "reason": "exact_source_spans_and_answer_citations",
+      "retrieval_failures": [],
+      "source_answer_status": "attributed",
+      "stage": "source_binding",
+      "status": "pass",
+      "ticker": "DOCU",
+      "topic": "subscription renewals"
+    }
+  ],
+  "schema_version": 1
+}

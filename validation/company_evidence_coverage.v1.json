@@ -1,0 +1,305 @@
+{
+  "schema_version": 1,
+  "cohort_version": 1,
+  "scope": "SEC periodic risk evidence; sample coverage is not universal launch clearance",
+  "identity_snapshot_date": "2026-10-06",
+  "cases": [
+    {
+      "ticker": "AAPL",
+      "company": "Apple Inc.",
+      "cik": "320193",
+      "sector": "Technology",
+      "topic": "Services",
+      "question": "What current public evidence identifies an operating risk to Apple Inc.'s Services, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "MSFT",
+      "company": "MICROSOFT CORP",
+      "cik": "789019",
+      "sector": "Technology",
+      "topic": "Cloud",
+      "question": "What current public evidence identifies an operating risk to MICROSOFT CORP's Cloud, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "NVDA",
+      "company": "NVIDIA CORP",
+      "cik": "1045810",
+      "sector": "Technology",
+      "topic": "Data Center",
+      "question": "What current public evidence identifies an operating risk to NVIDIA CORP's Data Center, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "DOCU",
+      "company": "DOCUSIGN, INC.",
+      "cik": "1261333",
+      "sector": "Technology",
+      "topic": "subscription renewals",
+      "question": "What current public evidence identifies an operating risk to DOCUSIGN, INC.'s subscription renewals, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "MAN",
+      "company": "ManpowerGroup Inc.",
+      "cik": "871763",
+      "sector": "Industrials",
+      "topic": "staffing demand",
+      "question": "What current public evidence identifies an operating risk to ManpowerGroup Inc.'s staffing demand, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "AA",
+      "company": "Alcoa Corp",
+      "cik": "1675149",
+      "sector": "Materials",
+      "topic": "smelter energy supply",
+      "question": "What current public evidence identifies an operating risk to Alcoa Corp's smelter energy supply, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "ACHC",
+      "company": "Acadia Healthcare Company, Inc.",
+      "cik": "1520697",
+      "sector": "Health Care",
+      "topic": "facility safety",
+      "question": "What current public evidence identifies an operating risk to Acadia Healthcare Company, Inc.'s facility safety, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "ACMR",
+      "company": "ACM Research, Inc.",
+      "cik": "1680062",
+      "sector": "Technology",
+      "topic": "customer concentration",
+      "question": "What current public evidence identifies an operating risk to ACM Research, Inc.'s customer concentration, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "WDFC",
+      "company": "WD 40 CO",
+      "cik": "105132",
+      "sector": "Consumer Staples",
+      "topic": "distribution network",
+      "question": "What current public evidence identifies an operating risk to WD 40 CO's distribution network, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "ETSY",
+      "company": "ETSY INC",
+      "cik": "1370637",
+      "sector": "Consumer Discretionary",
+      "topic": "marketplace sellers",
+      "question": "What current public evidence identifies an operating risk to ETSY INC's marketplace sellers, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "COST",
+      "company": "COSTCO WHOLESALE CORP /NEW",
+      "cik": "909832",
+      "sector": "Consumer Staples",
+      "topic": "membership renewals",
+      "question": "What current public evidence identifies an operating risk to COSTCO WHOLESALE CORP /NEW's membership renewals, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "JPM",
+      "company": "JPMORGAN CHASE & CO",
+      "cik": "19617",
+      "sector": "Financials",
+      "topic": "credit losses",
+      "question": "What current public evidence identifies an operating risk to JPMORGAN CHASE & CO's credit losses, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "LLY",
+      "company": "ELI LILLY & Co",
+      "cik": "59478",
+      "sector": "Health Care",
+      "topic": "drug development",
+      "question": "What current public evidence identifies an operating risk to ELI LILLY & Co's drug development, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "BA",
+      "company": "BOEING CO",
+      "cik": "12927",
+      "sector": "Industrials",
+      "topic": "production quality",
+      "question": "What current public evidence identifies an operating risk to BOEING CO's production quality, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "XOM",
+      "company": "ExxonMobil Holdings Corp",
+      "cik": "2115436",
+      "sector": "Energy",
+      "topic": "commodity prices",
+      "question": "What current public evidence identifies an operating risk to ExxonMobil Holdings Corp's commodity prices, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "V",
+      "company": "VISA INC.",
+      "cik": "1403161",
+      "sector": "Financials",
+      "topic": "cybersecurity",
+      "question": "What current public evidence identifies an operating risk to VISA INC.'s cybersecurity, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "PLTR",
+      "company": "Palantir Technologies Inc.",
+      "cik": "1321655",
+      "sector": "Technology",
+      "topic": "government contracts",
+      "question": "What current public evidence identifies an operating risk to Palantir Technologies Inc.'s government contracts, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "TSLA",
+      "company": "Tesla, Inc.",
+      "cik": "1318605",
+      "sector": "Consumer Discretionary",
+      "topic": "supply chain",
+      "question": "What current public evidence identifies an operating risk to Tesla, Inc.'s supply chain, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "NWE",
+      "company": "NorthWestern Energy Group, Inc.",
+      "cik": "1993004",
+      "sector": "Utilities",
+      "topic": "energy supply",
+      "question": "What current public evidence identifies an operating risk to NorthWestern Energy Group, Inc.'s energy supply, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "LQDT",
+      "company": "LIQUIDITY SERVICES INC",
+      "cik": "1235468",
+      "sector": "Consumer Discretionary",
+      "topic": "marketplace sellers",
+      "question": "What current public evidence identifies an operating risk to LIQUIDITY SERVICES INC's marketplace sellers, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "AZZ",
+      "company": "AZZ INC",
+      "cik": "8947",
+      "sector": "Industrials",
+      "topic": "energy supply",
+      "question": "What current public evidence identifies an operating risk to AZZ INC's energy supply, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "MOD",
+      "company": "MODINE MANUFACTURING CO",
+      "cik": "67347",
+      "sector": "Industrials",
+      "topic": "supply chain",
+      "question": "What current public evidence identifies an operating risk to MODINE MANUFACTURING CO's supply chain, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "H",
+      "company": "Hyatt Hotels Corp",
+      "cik": "1468174",
+      "sector": "Consumer Discretionary",
+      "topic": "occupancy",
+      "question": "What current public evidence identifies an operating risk to Hyatt Hotels Corp's occupancy, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "F",
+      "company": "FORD MOTOR CO",
+      "cik": "37996",
+      "sector": "Consumer Discretionary",
+      "topic": "product quality",
+      "question": "What current public evidence identifies an operating risk to FORD MOTOR CO's product quality, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "SLG",
+      "company": "SL GREEN REALTY CORP",
+      "cik": "1040971",
+      "sector": "Real Estate",
+      "topic": "liquidity",
+      "question": "What current public evidence identifies an operating risk to SL GREEN REALTY CORP's liquidity, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "SPOT",
+      "company": "Spotify Technology S.A.",
+      "cik": "1639920",
+      "sector": "Communication Services",
+      "topic": "subscription renewals",
+      "question": "What current public evidence identifies an operating risk to Spotify Technology S.A.'s subscription renewals, and what remains unverified?",
+      "reporting_scope": "foreign_periodic_gap"
+    },
+    {
+      "ticker": "NFLX",
+      "company": "NETFLIX INC",
+      "cik": "1065280",
+      "sector": "Communication Services",
+      "topic": "subscription renewals",
+      "question": "What current public evidence identifies an operating risk to NETFLIX INC's subscription renewals, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "CRM",
+      "company": "Salesforce, Inc.",
+      "cik": "1108524",
+      "sector": "Technology",
+      "topic": "Cloud",
+      "question": "What current public evidence identifies an operating risk to Salesforce, Inc.'s Cloud, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "KHC",
+      "company": "Kraft Heinz Co",
+      "cik": "1637459",
+      "sector": "Consumer Staples",
+      "topic": "distribution network",
+      "question": "What current public evidence identifies an operating risk to Kraft Heinz Co's distribution network, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "A",
+      "company": "AGILENT TECHNOLOGIES, INC.",
+      "cik": "1090872",
+      "sector": "Health Care",
+      "topic": "patents",
+      "question": "What current public evidence identifies an operating risk to AGILENT TECHNOLOGIES, INC.'s patents, and what remains unverified?",
+      "reporting_scope": "us_periodic"
+    },
+    {
+      "ticker": "ASML",
+      "company": "ASML HOLDING NV",
+      "cik": "937966",
+      "sector": "Technology",
+      "topic": "export controls",
+      "question": "What current public evidence identifies an operating risk to ASML HOLDING NV's export controls, and what remains unverified?",
+      "reporting_scope": "foreign_periodic_gap"
+    },
+    {
+      "ticker": "TSM",
+      "company": "TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD",
+      "cik": "1046179",
+      "sector": "Technology",
+      "topic": "export controls",
+      "question": "What current public evidence identifies an operating risk to TAIWAN SEMICONDUCTOR MANUFACTURING CO LTD's export controls, and what remains unverified?",
+      "reporting_scope": "foreign_periodic_gap"
+    },
+    {
+      "ticker": "NVO",
+      "company": "NOVO NORDISK A S",
+      "cik": "353278",
+      "sector": "Health Care",
+      "topic": "drug development",
+      "question": "What current public evidence identifies an operating risk to NOVO NORDISK A S's drug development, and what remains unverified?",
+      "reporting_scope": "foreign_periodic_gap"
+    }
+  ]
+}

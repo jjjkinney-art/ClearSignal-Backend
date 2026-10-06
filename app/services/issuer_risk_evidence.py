@@ -18,43 +18,110 @@ _START = re.compile(r"\bItem\s+1A\s*[.:—–-]?\s*Ris\s*k\s+Factors\b", re.I)
 _END = re.compile(r"\bItem\s+(?:1B|1C|2)\s*[.:—–-]?\s+(?:Unresolve\s*d|Cy\s*bersecurity|Properties|Legal|Unregistered)\b", re.I)
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
-_ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt|unable|cease|fail|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient)\b", re.I)
+_ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt(?:ion|ions|ed|s|ing)?|unable|cease|fail|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient)\b", re.I)
 _NON_TOPIC_PREFIX = re.compile(r"\bnon[\s\-‐‑‒–—]*$", re.I)
 
 
 @dataclass(frozen=True)
-class RiskProfile:
+class IssuerRiskProfile:
     cik: str
     scope: str
     terms: re.Pattern
 
 
-# Reviewed issuer identities and explicit business topics. This registry is
-# coverage, not a claim of universal risk extraction or impact assessment.
+# Compatibility profiles for the previously reviewed issuer/topic slices.
 RISK_PROFILES = {
-    "AAPL": RiskProfile("320193", "Services", _SCOPE),
-    "MSFT": RiskProfile("789019", "Cloud", re.compile(r"\b(?:azure|cloud(?:-based)?)\b", re.I)),
-    "NVDA": RiskProfile("1045810", "Data Center", re.compile(r"\b(?:data[\s\-‐‑‒–—]*centers?|AI[\s\-‐‑‒–—]+infrastructure)\b", re.I)),
-    "DOCU": RiskProfile("1261333", "Subscription renewals", re.compile(r"\b(?:subscriptions?|renew(?:al|als|s)?|retention)\b", re.I)),
+    "AAPL": IssuerRiskProfile("320193", "Services", _SCOPE),
+    "MSFT": IssuerRiskProfile("789019", "Cloud", re.compile(r"\b(?:azure|cloud(?:-based)?)\b", re.I)),
+    "NVDA": IssuerRiskProfile("1045810", "Data Center", re.compile(r"\b(?:data[\s\-‐‑‒–—]*centers?|AI[\s\-‐‑‒–—]+infrastructure)\b", re.I)),
+    "DOCU": IssuerRiskProfile("1261333", "Subscription renewals", re.compile(r"\b(?:subscriptions?|renew(?:al|als|s)?|retention)\b", re.I)),
 }
 
+# Topic rules are shared across issuers. Identity must still come from an exact
+# SEC directory entry; adding a security no longer requires a code change.
+# Narrow phrases avoid treating every mention of customers, demand, facilities
+# or products as support for a specific mechanism in the question.
+RISK_TOPICS = {
+    "Cloud": r"\b(?:azure|cloud(?:-based)?)\b",
+    "Data Center": r"\b(?:data[\s\-‐‑‒–—]*centers?|AI[\s\-‐‑‒–—]+infrastructure)\b",
+    "Subscription renewals": r"\b(?:subscriptions?|renew(?:al|als|s)?|customer retention|retention rates?)\b",
+    "Staffing demand": r"\b(?:staffing|recruit(?:ing|ment)|temporary (?:workers|employment)|contingent work(?:ers|force))\b",
+    "Energy supply": r"\b(?:energy|electricity|power (?:supply|supplies|costs?|prices?|contracts?|outages?))\b",
+    "Patient safety": r"\b(?:patient safety|facility safety|quality of care|patient care|medical malpractice|patient injuries)\b",
+    "Customer concentration": r"\b(?:customer concentration|concentrat\w*[^.!?]{0,50}customers?|(?:single|largest|major|significant|limited number of|small number of) customers?)\b",
+    "Distribution": r"\b(?:distribution|distributors?|resellers?|channel partners?)\b",
+    "Supply chain": r"\b(?:supply[ -]chain|suppliers?|raw materials?|components? supply)\b",
+    "Cybersecurity": r"\b(?:cyber\w*|data breaches?|security breaches?|ransomware)\b",
+    "Credit losses": r"\b(?:credit losses?|loan losses?|defaults?|nonperforming loans?|borrower\w*)\b",
+    "Liquidity": r"\b(?:liquidity|refinancing|debt maturit\w*|funding access)\b",
+    "Interest rates": r"\b(?:interest rates?|net interest (?:income|margin))\b",
+    "Drug development": r"\b(?:clinical trials?|drug development|regulatory approval|FDA approval)\b",
+    "Patents": r"\b(?:patents?|patent expir\w*|intellectual property)\b",
+    "Membership renewals": r"\b(?:memberships?|member renewal\w*)\b",
+    "Marketplace sellers": r"\b(?:sellers?|merchants?|marketplace)\b",
+    "Commodity prices": r"\b(?:commodity prices?|oil prices?|gas prices?|aluminum prices?|alumina prices?)\b",
+    "Occupancy": r"\b(?:occupancy|hotel demand|room demand|RevPAR)\b",
+    "Production quality": r"\b(?:production quality|product defects?|product quality|aircraft safety|quality control)\b",
+    "Export controls": r"\b(?:export controls?|export restrictions?|export licens\w*|sanctions?)\b",
+    "Government contracts": r"\b(?:government contracts?|government customers?|government spending|defen[cs]e spending)\b",
+}
+_TOPICS = {scope: re.compile(terms, re.I) for scope, terms in RISK_TOPICS.items()}
+_RISK_QUESTION = re.compile(r"\b(?:risks?|invalidate(?:s|d)?|invalidating)\b", re.I)
 
-def _has_topic_scope(text: str, profile: RiskProfile) -> bool:
+
+def requested_risk_topic(ticker: str, question: str) -> tuple[str, re.Pattern] | None:
+    """Select an explicit topic without network I/O or guessing an issuer.
+
+    Multiple requested topics are withheld until per-topic completeness can be
+    represented. The legacy reviewed topics retain their original wording.
+    """
+    if not _RISK_QUESTION.search(question or ""):
+        return None
+    # Topic words inside a possessive company name (e.g. Liquidity Services,
+    # Inc.'s marketplace sellers) are identity, not another requested topic.
+    topic_text = re.split(r"['’]s\s+", question or "", maxsplit=1)[-1]
+    legacy = RISK_PROFILES.get(str(ticker).strip().upper())
+    matches = [(scope, terms) for scope, terms in _TOPICS.items()
+               if _has_topic_scope(topic_text, IssuerRiskProfile("", scope, terms))]
+    if legacy and _has_topic_scope(topic_text, legacy):
+        matches = [(scope, terms) for scope, terms in matches if scope != legacy.scope]
+        # Membership renewals must not be mistaken for software subscriptions.
+        if legacy.scope == "Subscription renewals" and any(s == "Membership renewals" for s, _ in matches):
+            return None
+        matches.insert(0, (legacy.scope, legacy.terms))
+    # Explicit membership renewal wording overlaps with the subscription rule;
+    # prefer the more specific membership topic.
+    if any(scope == "Membership renewals" for scope, _ in matches):
+        matches = [(scope, terms) for scope, terms in matches if scope != "Subscription renewals"]
+    return matches[0] if len(matches) == 1 else None
+
+
+def _has_topic_scope(text: str, profile: IssuerRiskProfile) -> bool:
     """A non-topic mention alone cannot establish the requested business scope."""
     return any(not _NON_TOPIC_PREFIX.search(text[:match.start()])
                for match in profile.terms.finditer(text))
 
 
-def requested_risk_profile(ticker: str, question: str) -> RiskProfile | None:
-    profile = RISK_PROFILES.get(str(ticker).strip().upper())
-    if (profile and _has_topic_scope(question or "", profile)
-            and re.search(r"\b(?:risks?|invalidate|invalidating)\b", question or "", re.I)):
-        return profile
-    return None
+def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | None:
+    topic = requested_risk_topic(ticker, question)
+    if not topic:
+        return None
+    ticker = str(ticker).strip().upper()
+    legacy = RISK_PROFILES.get(ticker)
+    if legacy:
+        cik = legacy.cik
+    else:
+        from .issuer_identity import _load_directory, symbol
+        issuer = _load_directory().symbols.get(symbol(ticker))
+        if issuer is None:
+            return None
+        cik = str(int(issuer.cik))
+    return IssuerRiskProfile(cik, *topic)
 
 
-def _qualifying_quote(quote: str, profile: RiskProfile) -> bool:
-    return bool(40 <= len(quote) <= 300 and re.match(r"[A-Z]", quote)
+def _qualifying_quote(quote: str, profile: IssuerRiskProfile) -> bool:
+    max_chars = 300 if profile.scope == "Services" else 900
+    return bool(40 <= len(quote) <= max_chars and re.match(r"[A-Z]", quote)
                 and quote[-1] in ".!?" and not re.search(r"\d|[$%]", quote)
                 and _has_topic_scope(quote, profile) and _POSSIBILITY.search(quote)
                 and _ADVERSE.search(quote)
@@ -65,7 +132,7 @@ def _qualifying_quote(quote: str, profile: RiskProfile) -> bool:
                 and not re.search(r"\b(?:see|refer to|no material changes|ignore|instructions?|system prompt)\b", quote, re.I))
 
 
-def _issuer_url(url: str, profile: RiskProfile) -> bool:
+def _issuer_url(url: str, profile: IssuerRiskProfile) -> bool:
     if not isinstance(url, str):
         return False
     try:
@@ -82,7 +149,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                                  question: str) -> list[RetrievedEvidence]:
     """Extract at most two complete, nonnumeric risk sentences; no model calls.
 
-    Coverage is limited to reviewed issuer/topic pairs and 10-K/10-Q sections.
+    Coverage is limited to explicit supported topics and 10-K/10-Q sections.
     TOCs, cross-references, other sections, unsupported issuers and ambiguous
     or overlong sentences produce no claim. Never truncate a risk sentence.
     """

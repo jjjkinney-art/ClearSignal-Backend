@@ -13,10 +13,7 @@ from .public_document_ingestion import PublicDocumentError, fetch_public_documen
 from .services_revenue_evidence import (
     extract_services_revenue_evidence, requests_services_revenue,
 )
-from .services_risk_evidence import (
-    extract_services_risk_evidence,
-)
-from .issuer_risk_evidence import extract_issuer_risk_evidence, requested_risk_profile
+from .issuer_risk_evidence import extract_issuer_risk_evidence, requested_risk_topic
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +68,7 @@ def fetch_live_issuer_kpi_evidence(
         return []
     aliases = requested_issuer_kpi_aliases(question)
     services_requested = ticker.upper().strip() == "AAPL" and requests_services_revenue(question)
-    risk_requested = requested_risk_profile(ticker, question) is not None
+    risk_requested = requested_risk_topic(ticker, question) is not None
     if (not aliases and not services_requested and not risk_requested) or not ticker.strip() or max_documents not in (1, 2, 3):
         return []
     forms = (["10-Q", "10-Q/A", "10-K", "10-K/A"] if services_requested or risk_requested
@@ -131,9 +128,7 @@ def fetch_live_issuer_kpi_evidence(
                 evidence.extend(service_evidence)
                 service_found = bool(service_evidence)
             if risk_requested and not risk_found:
-                risk_evidence = (extract_services_risk_evidence(document, ticker=ticker)
-                                 if ticker.upper().strip() == "AAPL" else
-                                 extract_issuer_risk_evidence(document, ticker=ticker, question=question))
+                risk_evidence = extract_issuer_risk_evidence(document, ticker=ticker, question=question)
                 evidence.extend(risk_evidence)
                 risk_found = bool(risk_evidence)
             if (not services_requested or service_found) and (not risk_requested or risk_found):
