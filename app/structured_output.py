@@ -67,6 +67,33 @@ def extract_json_candidate(text: str) -> str:
     return text.strip()
 
 
+_RISK_NARRATIVE_KEYS = {
+    "debt_risk": ("leverage", "interest_coverage", "refinancing_risk"),
+    "competitive_risk": ("competitive_threats",),
+    "regulatory_risk": ("regulatory_exposure",),
+    "concentration_risk": ("customer_supplier_geography",),
+}
+
+
+def _repair_risk_narrative(key: str, value: Any) -> Any:
+    """Flatten only known, flat RiskProfile narrative objects; preserve content.
+
+    This repairs formatting, not factual support or provenance. Unknown keys,
+    nested structures and oversized values remain invalid for schema validation.
+    """
+    allowed = _RISK_NARRATIVE_KEYS.get(key, ())
+    if not isinstance(value, dict) or not value or not set(value).issubset(allowed):
+        return value
+    if any(not isinstance(text, str) or not text.strip() or len(text) > 4000
+           for text in value.values()):
+        return value
+    narrative = " ".join(
+        f"{name.replace('_', ' ').capitalize()}: {value[name].strip()}"
+        for name in allowed if name in value
+    )
+    return narrative if len(narrative) <= 8000 else value
+
+
 def repair_data(parsed: Dict[str, Any], schema: Type[BaseModel]) -> Dict[str, Any]:
     """Attempt to repair common issues in the parsed JSON data.
 
@@ -93,6 +120,8 @@ def repair_data(parsed: Dict[str, Any], schema: Type[BaseModel]) -> Dict[str, An
     fix lets the JSON-decoded dicts be coerced to ``Signal`` objects by
     Pydantic, recovering signals that would otherwise have been lost.
     """
+    from .schemas import RiskProfile
+
     repaired: Dict[str, Any] = {}
     # Pydantic v2 exposes ``model_fields`` as the public interface to
     # model fields.  Accessing ``__fields__`` in pydantic v2 emits a
@@ -154,7 +183,9 @@ def repair_data(parsed: Dict[str, Any], schema: Type[BaseModel]) -> Dict[str, An
                 else:
                     repaired[key] = []
             else:
-                repaired[key] = value
+                repaired[key] = (
+                    _repair_risk_narrative(key, value) if schema is RiskProfile else value
+                )
         else:
             # Use default value from field when key is missing.  Prefer
             # default_factory for list fields to ensure new list instances.
