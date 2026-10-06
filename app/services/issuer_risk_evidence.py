@@ -13,9 +13,8 @@ from urllib.parse import urlsplit
 from ..integrity.provenance import ClaimDocumentReference
 from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
+from .sec_risk_sections import RISK_START as _START, RISK_END as _END, rejected_risk_heading
 
-_START = re.compile(r"\bItem\s+1A\s*[.:—–-]?\s*Ris\s*k\s+Factors\b", re.I)
-_END = re.compile(r"\bItem\s+(?:1B|1C|2)\s*[.:—–-]?\s+(?:Unresolve\s*d|Cy\s*bersecurity|Properties|Legal|Unregistered)\b", re.I)
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
 _ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt(?:ion|ions|ed|s|ing)?|unable|cease|fail|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient)\b", re.I)
@@ -217,7 +216,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
         stats["risk_headings"] += 1
         # Exclude TOC page numbers and quoted/cross-referenced headings. A
         # reference to Risk Factors is not the start of that section.
-        if re.match(r'[\d"”\u2013\u2014-]', text[heading.end():].lstrip()):
+        if rejected_risk_heading(text, heading.end(), start=heading.start()):
             stats["rejected_heading_prefixes"] += 1
             continue
         end = _END.search(text, heading.end())

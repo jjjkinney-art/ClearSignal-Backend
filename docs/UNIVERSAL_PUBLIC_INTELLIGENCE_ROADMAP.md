@@ -240,6 +240,13 @@ the broad-company launch gate remains open. Annual fallback after a failed first
 quarterly download is being repaired, with extraction/timing diagnostics added
 to isolate the actual gap causes. See [live results and required follow-up](COMPANY_EVIDENCE_LIVE_20261007.md).
 
+The PR #195 live retest still returned gaps for AA, MAN, ACHC and ACMR, while
+DOCU retained cited disclosures. Read-only Render diagnostics confirmed all
+downloads succeeded but the four annual texts hit the retained-text cap without
+a complete Risk Factors section. A follow-up preserves bounded complete later
+sections and excludes explicit hidden HTML/XBRL metadata. This requires fresh
+deployed acceptance and does not clear the broader launch gate.
+
 Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
 attribute qualitative operating-risk disclosures with exact quotes, filing dates
 and document identities. This is initial issuer coverage, not a verified risk

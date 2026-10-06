@@ -83,3 +83,56 @@ not backfilled, and foreign forms/multiple requested topics remain open gaps.
 Local validation: 294 relevant tests across seven isolated modules pass on Python
 3.12; clean collection finds 14,951 tests. Required pinned CI and a fresh live
 retest of this follow-up change remain separate release checks.
+
+## PR #195 deployment retest and Render diagnostics
+
+After the owner confirmed PR #195 deployed, fresh signed-in runs repeated AA,
+MAN, ACHC and ACMR. All four still returned evidence gaps. DOCU remained a
+positive control with two cited risk disclosures. All five records appeared
+in History and Research Trail, and the exact AA investigation reopened with
+its two saved messages and unchanged gap answer. This is a targeted five-case
+retest, not the full cohort or a production cross-owner test.
+
+The owner's read-only Render report evaluated at `2026-10-06T23:23:50.824460+00:00`
+independently reproduced those outcomes: all ten attempted filings downloaded,
+with no retrieval failures. DOCU's two annual disclosures matched original
+normalized-document spans and answer citations. The four failing annual texts
+each reached the 240,000-character retained-text cap.
+
+| Issuer | Retrieval duration | Annual heading outcome | Disclosures |
+| --- | --- | --- | --- |
+| DOCU | 2,393 ms | One complete section | 2 |
+| MAN | 4,990 ms | One heading, rejected as a prefix/reference | 0 |
+| AA | 5,376 ms | One heading, rejected as a prefix/reference | 0 |
+| ACHC | 3,308 ms | Three headings, all rejected as prefixes/references | 0 |
+| ACMR | 2,190 ms | Twelve headings; eleven rejected, one lacking a closing section | 0 |
+
+These isolated timings do not establish `/ask` timing under concurrent load.
+MAN's quarterly text had seventeen topic sentences but none met the quote
+contract; this change does not relax that contract or claim to resolve that
+additional gap. The report does not identify the exact hidden markup or full
+visible length of these annual files, so the cutoff is a confirmed symptom,
+not proof of a single cause for every company.
+
+The follow-up excludes explicit hidden HTML and Inline XBRL headers/hidden
+facts from both narrative and table extraction. Visible Inline XBRL values
+remain. For strictly eligible SEC periodic HTML only, a complete, bounded
+Risk Factors section may be selected from later in the normalized visible
+filing instead of losing it to the beginning-of-document cap. The full-file
+byte hash remains unchanged and disclosure offsets refer to the selected
+normalized text. The selection uses the same TOC/reference exclusions,
+explicit closing heading and 160,000-character section ceiling as before.
+No missing boundary is synthesized and no quote, identity or admission gate
+is weakened. Other document modes keep their existing text limits.
+
+The report now includes total normalized visible length, selected-window offset
+and selection mode, allowing a deployed rerun to distinguish a prefix cutoff
+from a retained complete section. External stylesheet visibility is not
+evaluated. Required pinned CI and fresh Render/live acceptance are still
+necessary; broad-company launch acceptance remains blocked.
+
+Follow-up local validation: 396 relevant tests pass across nine isolated modules;
+clean collection finds 14,962 tests. The bounded selector considers at most
+64 candidate headings and searches only within the existing section ceiling.
+Authored regression documents establish the parser repair; they are not a live
+coverage pass for the four failing issuers.
