@@ -108,12 +108,13 @@ class TestRetrievedEvidenceSchema:
             "retrieved_at", "observed_at", "freshness_status",
             "status_reason", "availability_status",
             "section", "page", "extraction_method", "verified_claims",
-            "calculated_claims",
+            "calculated_claims", "risk_disclosures",
         }
         assert d["source_type"] == "unknown"
         assert d["source_tier"] == "unverified"
         assert d["verified_claims"] == []
         assert d["calculated_claims"] == []
+        assert d["risk_disclosures"] == []
 
 
 # ── retrieve_general_finance_evidence (production stub) ──────────────────────
