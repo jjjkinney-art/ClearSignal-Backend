@@ -1,0 +1,90 @@
+{
+  "schema_version": 1,
+  "evaluated_at": "2026-10-06T05:58:44.887469+00:00",
+  "passed": true,
+  "method": "Full SEC HTML downloaded directly; bounded existing HTML parser, risk extractor, admission and answer gate exercised locally. Network download latency and signed-in production persistence were not measured.",
+  "base_commit": "1f67ecde13effe7deca78c3baa4618aea8dfac34",
+  "cases": [
+    {
+      "ticker": "MSFT",
+      "scope": "Cloud",
+      "url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm",
+      "filed_at": "2026-07-29",
+      "byte_count": 8585609,
+      "document_sha256": "cf381a240b802d0126d7116a1dcfd01375df7fcfafcff65cf37e58d7ff934819",
+      "normalized_char_count": 240000,
+      "qualifying_disclosures": 1,
+      "admitted_disclosures": 1,
+      "quote_spans": [
+        {
+          "start": 90222,
+          "end": 90496,
+          "quote_sha256": "67fad9c84a601a1dc7e7819162d7d4fd22d25357225fa5f621acae8547eefe00",
+          "span_matches": true
+        }
+      ],
+      "answer_status": "attributed",
+      "unverified_impact_qualifier_present": true,
+      "unsupported_headline_removed": true,
+      "local_parse_extract_gate_seconds": 0.3937
+    },
+    {
+      "ticker": "NVDA",
+      "scope": "Data Center",
+      "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000021/nvda-20260125.htm",
+      "filed_at": "2026-02-25",
+      "byte_count": 1967924,
+      "document_sha256": "8f5cb26bfe1ab39b4321feebfc3bf021733e4e5680a9dee6325964d08a15c6ab",
+      "normalized_char_count": 240000,
+      "qualifying_disclosures": 2,
+      "admitted_disclosures": 2,
+      "quote_spans": [
+        {
+          "start": 90753,
+          "end": 90961,
+          "quote_sha256": "b0eef43635297cbadf390bb703085cb75c2d66c2eed41fab810466fca4db7a5f",
+          "span_matches": true
+        },
+        {
+          "start": 93799,
+          "end": 94061,
+          "quote_sha256": "206abfd94e9293ff6d8f279f78b84e5a58027d79a4bfe1554677fc580b73ca39",
+          "span_matches": true
+        }
+      ],
+      "answer_status": "attributed",
+      "unverified_impact_qualifier_present": true,
+      "unsupported_headline_removed": true,
+      "local_parse_extract_gate_seconds": 0.1115
+    },
+    {
+      "ticker": "DOCU",
+      "scope": "Subscription renewals",
+      "url": "https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm",
+      "filed_at": "2026-03-18",
+      "byte_count": 2059567,
+      "document_sha256": "ee6c52cfc3ef43285611dc3a64deafad45d04f3a5edc4a6968d7a2a6e844aa5c",
+      "normalized_char_count": 240000,
+      "qualifying_disclosures": 2,
+      "admitted_disclosures": 2,
+      "quote_spans": [
+        {
+          "start": 82320,
+          "end": 82520,
+          "quote_sha256": "9c64e02f35bc8d9db3cb1642c61da3cfd4a119971dc26a9ef64a9717eeb74a88",
+          "span_matches": true
+        },
+        {
+          "start": 84725,
+          "end": 84824,
+          "quote_sha256": "2ad212926b0f2c5eba7543163464cb73511a963d168632b60808c246e9662f6f",
+          "span_matches": true
+        }
+      ],
+      "answer_status": "attributed",
+      "unverified_impact_qualifier_present": true,
+      "unsupported_headline_removed": true,
+      "local_parse_extract_gate_seconds": 0.1218
+    }
+  ]
+}

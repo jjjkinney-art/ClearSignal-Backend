@@ -150,7 +150,8 @@ def test_apple_services_growth_uses_periodic_filing_and_real_table_extraction(mo
 
 
 def test_services_path_respects_document_budget_and_does_not_follow_exhibits(monkeypatch):
-    filings = [_filing().model_copy(update={"document_type": "10-Q"})] * 3
+    filings = [_filing(f"https://www.sec.gov/Archives/edgar/data/1/{i}/report.htm").model_copy(
+        update={"document_type": "10-Q"}) for i in range(3)]
     monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *args, **kwargs: filings)
     calls = []
     monkeypatch.setattr(service, "fetch_public_document",

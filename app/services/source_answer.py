@@ -24,11 +24,11 @@ _SERVICES_CLAIM_RE = re.compile(
 )
 _LEGACY_SOURCE_RE = re.compile(r"\s*\[Source:\s*https?://[^\]]+\]\s*", re.IGNORECASE)
 
-# Services source questions are a bounded evidence view, not permission to
+# Scoped source questions are a bounded evidence view, not permission to
 # publish the synthesizer's wider investment case. Keep identity and numeric
 # pipeline diagnostics; reset every other schema field before persistence.
 # An allowlist makes new generated fields default to withheld as well.
-_SERVICES_RETAINED_FIELDS = frozenset({
+_EVIDENCE_VIEW_RETAINED_FIELDS = frozenset({
     "ticker", "company_name", "generated_at", "evidence_count", "question_intent",
     "thesis_version_id", "previous_thesis_version_id", "runtime_version",
     "confidence_score", "score_source", "conviction_dimensions",
@@ -36,23 +36,27 @@ _SERVICES_RETAINED_FIELDS = frozenset({
 })
 
 
-def _restrict_services_thesis(thesis: object, answer: str, claims: list[dict],
-                              selected_items: list[object], *, enough: bool) -> None:
+def _restrict_evidence_thesis(thesis: object, answer: str, claims: list[dict],
+                              selected_items: list[object], *, enough: bool,
+                              scope: str = "Services") -> None:
     from ..schemas import InvestmentThesis
 
     defaults = InvestmentThesis(ticker="", company_name="")
     for name in InvestmentThesis.model_fields:
-        if name not in _SERVICES_RETAINED_FIELDS and hasattr(thesis, name):
+        if name not in _EVIDENCE_VIEW_RETAINED_FIELDS and hasattr(thesis, name):
             setattr(thesis, name, getattr(defaults, name))
 
     headline = (
-        "Dated Services evidence was retrieved; its implications for the thesis remain unverified."
-        if enough else "Services evidence is insufficient; the thesis remains unverified."
+        f"Dated {scope} evidence was retrieved; its implications for the thesis remain unverified."
+        if enough else f"{scope} evidence is insufficient; the thesis remains unverified."
     )
     limitation = (
         "Future Services growth, Services gross margin, and thesis-invalidating "
         "operating risks were not verified by this evidence view."
     )
+    if scope != "Services":
+        limitation = (f"The {scope} disclosure does not verify revenue growth, risk likelihood, "
+                      "quantified financial impact, or a directional thesis change.")
     fields = {
         "direct_answer": answer,
         "one_sentence_thesis": headline,
@@ -115,6 +119,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         return None
 
     from .services_risk_evidence import bound_services_risk, requests_services_operating_risk
+    from .issuer_risk_evidence import bound_issuer_risk, requested_risk_profile
     from .services_revenue_evidence import requests_services_revenue
     from .evidence_references import _evidence_url
 
@@ -122,7 +127,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     claims: list[dict] = []
     selected_items: list[object] = []
     services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
-    risk_requested = services_requested and requests_services_operating_risk(question)
+    ticker = str(getattr(thesis, "ticker", ""))
+    risk_profile = requested_risk_profile(ticker, question)
+    scoped_risk = risk_profile if ticker != "AAPL" else None
+    risk_requested = bool(risk_profile) or (services_requested and requests_services_operating_risk(question))
     for index, item in enumerate(material, start=1):
         claim = _claim_text(item)
         if not claim:
@@ -130,10 +138,16 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         # Consolidated revenue/profit observations do not answer an explicit
         # Services question. Require the extracted claim itself to mention
         # that scope; a filing title alone cannot establish segment support.
-        if services_requested and not _SERVICES_CLAIM_RE.search(claim):
+        if services_requested and not scoped_risk and not _SERVICES_CLAIM_RE.search(claim):
             continue
-        disclosure = bound_services_risk(item, ticker=str(getattr(thesis, "ticker", "")))
+        disclosure = (bound_issuer_risk(item, ticker=ticker, question=question) if risk_profile
+                      else bound_services_risk(item, ticker=ticker))
         if getattr(item, "risk_disclosures", []) and not disclosure:
+            continue
+        # The new issuer/topic slices support qualitative risk disclosures.
+        # Consolidated metrics and generated summaries cannot establish a
+        # segment's growth or fill its risk slot without their own binding.
+        if scoped_risk and not disclosure:
             continue
         # Only producer-bound quotes can answer the requested operating-risk
         # part. Conditional/generated summaries cannot substitute for them.
@@ -177,8 +191,9 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "run the analysis again when structured facts are available."
         )
         setattr(thesis, "direct_answer", answer)
-        if services_requested:
-            _restrict_services_thesis(thesis, answer, [], [], enough=False)
+        if services_requested or scoped_risk:
+            _restrict_evidence_thesis(thesis, answer, [], [], enough=False,
+                                    scope=scoped_risk.scope if scoped_risk else "Services")
         return {
             "status": "insufficient_claim_evidence",
             "reason": "Not enough relevant claim-level support was retrieved for this question.",
@@ -205,14 +220,18 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     if has_disclosed_risk:
         answer += (
             "\n\nThe cited risk is an issuer disclosure, not proof that it has occurred "
-            "or invalidated the thesis. Its likelihood, quantified effect on Services "
-            "growth or margins, and any directional thesis change remain unverified."
+            "or invalidated the thesis. Its likelihood, quantified financial effect, "
+            "and any directional thesis change remain unverified."
         )
+        if scoped_risk:
+            answer += (f"\n\nThis {scoped_risk.scope} risk disclosure does not, by itself, "
+                       "verify revenue growth or its sustainability.")
     elif risk_requested:
         answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
     setattr(thesis, "direct_answer", answer)
-    if services_requested:
-        _restrict_services_thesis(thesis, answer, claims, selected_items, enough=True)
+    if services_requested or scoped_risk:
+        _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True,
+                                scope=scoped_risk.scope if scoped_risk else "Services")
     return {
         "status": "attributed",
         "reason": "Each claim is bound to a retrieved evidence reference.",

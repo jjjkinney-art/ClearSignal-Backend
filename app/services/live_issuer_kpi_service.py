@@ -14,8 +14,9 @@ from .services_revenue_evidence import (
     extract_services_revenue_evidence, requests_services_revenue,
 )
 from .services_risk_evidence import (
-    extract_services_risk_evidence, requests_services_operating_risk,
+    extract_services_risk_evidence,
 )
+from .issuer_risk_evidence import extract_issuer_risk_evidence, requested_risk_profile
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ def fetch_live_issuer_kpi_evidence(
         return []
     aliases = requested_issuer_kpi_aliases(question)
     services_requested = ticker.upper().strip() == "AAPL" and requests_services_revenue(question)
-    risk_requested = ticker.upper().strip() == "AAPL" and requests_services_operating_risk(question)
+    risk_requested = requested_risk_profile(ticker, question) is not None
     if (not aliases and not services_requested and not risk_requested) or not ticker.strip() or max_documents not in (1, 2, 3):
         return []
     forms = (["10-Q", "10-Q/A", "10-K", "10-K/A"] if services_requested or risk_requested
@@ -87,6 +88,7 @@ def fetch_live_issuer_kpi_evidence(
     evidence: list[RetrievedEvidence] = []
     resolved_metrics: set[str] = set()
     fetched_documents = 0
+    attempted_urls: set[str] = set()
     candidates_filings = list(filings[:max_documents])
     service_found = False
     risk_found = False
@@ -101,15 +103,18 @@ def fetch_live_issuer_kpi_evidence(
             document_type = next(
                 (form for form in sorted(forms, key=len, reverse=True) if form in title), None,
             )
-        if not isinstance(url, str) or not published_at or not document_type:
+        if not isinstance(url, str) or not published_at or not document_type or url in attempted_urls:
             continue
+        attempted_urls.add(url)
+        # Failed downloads also consume the bounded attempt budget.
+        fetched_documents += 1
         try:
             document = fetch_public_document(
                 url, user_agent=user_agent, publisher="SEC EDGAR",
                 published_at=str(published_at), document_type=document_type,
                 source_type="regulatory_filing", source_tier="primary",
+                **({"sec_periodic_limits": True} if risk_requested and ticker.upper().strip() != "AAPL" else {}),
             )
-            fetched_documents += 1
         except PublicDocumentError as exc:
             logger.info(
                 "issuer KPI document skipped for %s: %s; failure_kind=%s "
@@ -126,7 +131,9 @@ def fetch_live_issuer_kpi_evidence(
                 evidence.extend(service_evidence)
                 service_found = bool(service_evidence)
             if risk_requested and not risk_found:
-                risk_evidence = extract_services_risk_evidence(document, ticker=ticker)
+                risk_evidence = (extract_services_risk_evidence(document, ticker=ticker)
+                                 if ticker.upper().strip() == "AAPL" else
+                                 extract_issuer_risk_evidence(document, ticker=ticker, question=question))
                 evidence.extend(risk_evidence)
                 risk_found = bool(risk_evidence)
             if (not services_requested or service_found) and (not risk_requested or risk_found):
@@ -142,7 +149,7 @@ def fetch_live_issuer_kpi_evidence(
                         years_back=2, prefer_results=False,
                     ) or []
                 except Exception as exc:
-                    logger.warning("Services risk annual discovery unavailable for %s: %r", ticker, exc)
+                    logger.warning("Issuer risk annual discovery unavailable for %s: %r", ticker, exc)
                     annual = []
                 if annual:
                     candidates_filings[filing_index + 1:] = annual[:1]
@@ -162,6 +169,10 @@ def fetch_live_issuer_kpi_evidence(
         for candidate in candidates:
             if fetched_documents >= max_documents:
                 break
+            if candidate.url in attempted_urls:
+                continue
+            attempted_urls.add(candidate.url)
+            fetched_documents += 1
             try:
                 exhibit = fetch_public_document(
                     candidate.url, user_agent=user_agent,
@@ -171,7 +182,6 @@ def fetch_live_issuer_kpi_evidence(
                     source_type=candidate.source_type,
                     source_tier=candidate.source_tier,
                 )
-                fetched_documents += 1
             except PublicDocumentError as exc:
                 logger.info(
                     "issuer KPI exhibit skipped for %s: %s; failure_kind=%s "
