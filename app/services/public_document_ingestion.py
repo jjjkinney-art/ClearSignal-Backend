@@ -20,6 +20,7 @@ from urllib.parse import parse_qsl, urldefrag, urljoin, urlsplit
 import requests
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
+from .sec_risk_sections import complete_risk_window
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
@@ -118,9 +119,53 @@ class PublicDocument:
     source_tier: str = "unverified"
     trusted_for_instructions: bool = False
     tables: tuple[DocumentTable, ...] = ()
+    normalized_text_chars_total: int | None = None
+    text_window_start: int = 0
+    text_selection: str = "prefix"
 
 
-class _HTMLTableExtractor(HTMLParser):
+class _VisibleHTMLParser(HTMLParser):
+    """Exclude explicit hidden markup, including SEC Inline XBRL metadata.
+
+    This is not a CSS renderer. External stylesheets are not evaluated; only
+    hidden elements, inline display/visibility declarations and metadata tags
+    are excluded. Visible ix:nonNumeric/nonFraction values remain intact.
+    """
+    _BLOCKED = {"script", "style", "noscript", "template", "svg", "ix:header", "ix:hidden"}
+    _VOID = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"}
+    _HIDDEN_STYLE = re.compile(r"(?:^|;)\s*(?:display\s*:\s*none|visibility\s*:\s*hidden)\s*(?:!important\s*)?(?:;|$)", re.I)
+
+    def __init__(self):
+        super().__init__(convert_charrefs=True)
+        self._visibility_stack: list[tuple[str, bool]] = []
+        self._hidden_depth = 0
+
+    def _visible_start(self, tag, attrs):
+        hidden = tag in self._BLOCKED or any(
+            key.lower() == "hidden" or (key.lower() == "style" and self._HIDDEN_STYLE.search(value or ""))
+            for key, value in attrs)
+        visible = not self._hidden_depth and not hidden
+        if tag not in self._VOID:
+            self._visibility_stack.append((tag, bool(hidden)))
+            self._hidden_depth += bool(hidden)
+        return visible
+
+    def _visible_end(self, tag):
+        visible = not self._hidden_depth
+        for index in range(len(self._visibility_stack) - 1, -1, -1):
+            if self._visibility_stack[index][0] == tag:
+                self._hidden_depth -= sum(hidden for _, hidden in self._visibility_stack[index:])
+                del self._visibility_stack[index:]
+                break
+        return visible
+
+    def handle_startendtag(self, tag, attrs):
+        self.handle_starttag(tag, attrs)
+        if tag.lower() not in self._VOID:
+            self.handle_endtag(tag)
+
+
+class _HTMLTableExtractor(_VisibleHTMLParser):
     """Keep bounded visible rows; nested or incomplete tables are excluded.
 
     Cell spans are deliberately not expanded. Consumers must recognize exact
@@ -128,8 +173,7 @@ class _HTMLTableExtractor(HTMLParser):
     """
 
     def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self._blocked = 0
+        super().__init__()
         self._depth = 0
         self._number = 0
         self._context = ""
@@ -143,9 +187,7 @@ class _HTMLTableExtractor(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         tag = tag.lower()
-        if tag in _HTMLTextExtractor._BLOCKED:
-            self._blocked += 1
-        if self._blocked:
+        if not self._visible_start(tag, attrs):
             return
         if tag == "table":
             self._depth += 1
@@ -169,7 +211,7 @@ class _HTMLTableExtractor(HTMLParser):
             self._cell = []
 
     def handle_data(self, data: str) -> None:
-        if self._blocked:
+        if self._hidden_depth:
             return
         if not self._depth:
             self._context = (self._context + " " + data)[-2000:]
@@ -181,10 +223,7 @@ class _HTMLTableExtractor(HTMLParser):
 
     def handle_endtag(self, tag: str) -> None:
         tag = tag.lower()
-        if tag in _HTMLTextExtractor._BLOCKED and self._blocked:
-            self._blocked -= 1
-            return
-        if self._blocked:
+        if not self._visible_end(tag):
             return
         if self._depth == 1 and tag in {"td", "th"} and self._cell is not None:
             if self._row is not None and len(self._row) < 64:
@@ -214,59 +253,63 @@ class _HTMLTableExtractor(HTMLParser):
         return tuple(self._tables)
 
 
-class _HTMLTextExtractor(HTMLParser):
-    _BLOCKED = {"script", "style", "noscript", "template", "svg"}
+class _HTMLTextExtractor(_VisibleHTMLParser):
     _HEADINGS = {"h1", "h2", "h3", "h4", "h5", "h6"}
 
     def __init__(self) -> None:
-        super().__init__(convert_charrefs=True)
-        self._blocked_depth = 0
+        super().__init__()
+        self.normalized_text_chars_total = 0
+        self.text_window_start = 0
+        self.text_selection = "prefix"
         self._in_title = False
         self._heading_depth = 0
         self._title_parts: list[str] = []
         self._parts: list[str] = []
+        self._text_chars = 0
         self._headings: list[tuple[str, int]] = []
         self._heading_parts: list[str] = []
+        self._heading_start = 0
         self._active_link: str | None = None
         self._link_parts: list[str] = []
         self._links: list[tuple[str, str]] = []
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         tag = tag.lower()
-        if tag in self._BLOCKED:
-            self._blocked_depth += 1
-        elif not self._blocked_depth and tag == "title":
+        if not self._visible_start(tag, attrs):
+            return
+        if tag == "title":
             self._in_title = True
-        elif not self._blocked_depth and tag in self._HEADINGS:
+        elif tag in self._HEADINGS:
             self._heading_depth += 1
             self._heading_parts = []
-        elif not self._blocked_depth and tag == "a":
+            self._heading_start = self._text_chars + bool(self._parts)
+        elif tag == "a":
             href = next((value for key, value in attrs if key.lower() == "href"), None)
             self._active_link = href.strip() if href else None
             self._link_parts = []
 
     def handle_endtag(self, tag: str) -> None:
         tag = tag.lower()
-        if tag in self._BLOCKED and self._blocked_depth:
-            self._blocked_depth -= 1
-        elif not self._blocked_depth and tag == "title":
+        if not self._visible_end(tag):
+            return
+        if tag == "title":
             self._in_title = False
-        elif not self._blocked_depth and tag in self._HEADINGS and self._heading_depth:
+        elif tag in self._HEADINGS and self._heading_depth:
             heading = _clean_text(" ".join(self._heading_parts))
             if heading:
-                self._headings.append((heading[:300], len(" ".join(self._parts))))
+                self._headings.append((heading[:300], self._heading_start))
             self._heading_depth -= 1
             self._heading_parts = []
-        elif not self._blocked_depth and tag == "a" and self._active_link:
+        elif tag == "a" and self._active_link:
             label = _clean_text(" ".join(self._link_parts))[:300]
             self._links.append((self._active_link, label))
             self._active_link = None
             self._link_parts = []
 
     def handle_data(self, data: str) -> None:
-        if self._blocked_depth:
+        if self._hidden_depth:
             return
-        value = data.strip()
+        value = _clean_text(data)
         if not value:
             return
         if self._in_title:
@@ -275,16 +318,27 @@ class _HTMLTextExtractor(HTMLParser):
             self._heading_parts.append(value)
         if self._active_link:
             self._link_parts.append(value)
+        self._text_chars += len(value) + bool(self._parts)
         self._parts.append(value)
 
-    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS) -> tuple[
+    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False) -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
-        text = _clean_text(" ".join(self._parts))[:max_chars]
+        full_text = _clean_text(" ".join(self._parts))
+        self.normalized_text_chars_total = len(full_text)
+        start, end = 0, max_chars
+        if preserve_sec_risk and len(full_text) > max_chars:
+            window = complete_risk_window(full_text)
+            if window and window[1] > max_chars and window[1] - window[0] <= max_chars:
+                start, end = window
+                self.text_selection = "complete_sec_risk_section"
+        self.text_window_start = start
+        text = full_text[start:end]
         sections = tuple(
-            DocumentSection(heading=heading, start_offset=min(offset, len(text)))
+            DocumentSection(heading=heading, start_offset=min(offset - start, len(text)))
             for heading, offset in self._headings[:200]
+            if start <= offset and offset + len(heading) <= min(end, len(full_text))
         )
         return title, text, sections, tuple(self._links[:500])
 
@@ -498,11 +552,16 @@ def fetch_public_document(
         )
     decoded = body.decode(encoding, errors="replace")
     tables: tuple[DocumentTable, ...] = ()
+    text_metadata = {}
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
-        title, text, sections, raw_links = parser.result(max_chars=(MAX_SEC_PERIODIC_CHARS
-                                                                  if sec_periodic_limits else MAX_EXTRACTED_CHARS))
+        title, text, sections, raw_links = parser.result(
+            max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
+            preserve_sec_risk=sec_periodic_limits)
+        text_metadata = {"normalized_text_chars_total": parser.normalized_text_chars_total,
+                         "text_window_start": parser.text_window_start,
+                         "text_selection": parser.text_selection}
         links = _normalize_links(current_url, raw_links)
         method = "html"
         table_parser = _HTMLTableExtractor()
@@ -524,6 +583,7 @@ def fetch_public_document(
         published_at=published_at, document_type=document_type,
         source_type=source_type, source_tier=source_tier,
         tables=tables,
+        **text_metadata,
     )
 
 

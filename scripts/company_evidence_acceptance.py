@@ -70,6 +70,9 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
         row["document_diagnostics"].append({
             "form": document.document_type, "filed_at": document.published_at,
             "normalized_text_chars": len(document.text),
+            "normalized_text_chars_total": document.normalized_text_chars_total,
+            "text_window_start": document.text_window_start,
+            "text_selection": document.text_selection,
             "download_elapsed_ms": download_times.get(document.content_hash),
             "extraction_elapsed_ms": round((time.monotonic() - started) * 1000), **stats,
         })

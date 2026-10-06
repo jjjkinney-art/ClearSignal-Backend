@@ -222,6 +222,88 @@ def test_sec_periodic_allowance_keeps_closing_section_and_full_byte_hash(monkeyp
     assert response.closed
 
 
+@pytest.mark.parametrize('wrapper', [
+    '<ix:header><ix:hidden>{}</ix:hidden></ix:header>',
+    '<div hidden><div>{}</div></div>',
+    '<div style="display: none !important"><span>{}</span></div>',
+    '<div style="color: red; visibility: hidden;">{}</div>',
+])
+def test_hidden_xbrl_metadata_never_consumes_visible_text_or_tables(monkeypatch, wrapper):
+    hidden = '<table><tr><td>Fabricated</td><td>999</td></tr></table>' + 'hidden metadata ' * 18000
+    body = ('<html><body>' + wrapper.format(hidden) +
+            '<h1>Visible results</h1><ix:nonNumeric>Visible narrative.</ix:nonNumeric>'
+            '<table><tr><td>Revenue</td><td><ix:nonFraction>12</ix:nonFraction></td></tr></table>'
+            '</body></html>').encode()
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: _Response(body))
+    doc = fetch_public_document('https://example.com/report.htm')
+    assert 'Visible narrative.' in doc.text and 'Revenue 12' in doc.text
+    assert 'metadata' not in doc.text and 'Fabricated' not in doc.text
+    assert len(doc.tables) == 1 and doc.tables[0].rows == (('Revenue', '12'),)
+    assert doc.content_hash == hashlib.sha256(body).hexdigest()
+
+
+def _periodic_document(monkeypatch, markup):
+    body = ('<html><body>' + markup + '</body></html>').encode()
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: _Response(body))
+    return fetch_public_document(
+        'https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm',
+        publisher='SEC EDGAR', published_at='2026-07-29', document_type='10-K',
+        source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True), body
+
+
+def test_late_complete_risk_section_survives_prefix_limit_and_exact_binding(monkeypatch):
+    from app.services.issuer_risk_evidence import extract_issuer_risk_evidence, bound_issuer_risk
+    from app.services.evidence_references import admit_evidence
+    quote = 'Cloud capacity constraints could adversely affect our revenue growth.'
+    # TOC and business narrative precede the true section, as in long filings.
+    markup = ('<p>Item 1A. Risk Factors 18 Item 1B. Unresolved Staff Comments 40</p>' +
+              '<p>' + 'business narrative ' * 15000 + '</p>' +
+              '<h2>Item 1A. Risk Factors</h2><p>' + quote + '</p>' +
+              '<h2>Item 1B. Unresolved Staff Comments</h2>')
+    doc, body = _periodic_document(monkeypatch, markup)
+    assert doc.text_selection == 'complete_sec_risk_section'
+    assert doc.text_window_start > 240000 and len(doc.text) < 240000
+    assert doc.normalized_text_chars_total > 240000
+    assert doc.content_hash == hashlib.sha256(body).hexdigest()
+    question = 'What operating risk affects Microsoft cloud growth?'
+    items = extract_issuer_risk_evidence(doc, ticker='MSFT', question=question)
+    admitted, _, _ = admit_evidence(items, evaluated_at='2026-10-06')
+    assert len(admitted) == 1
+    value = bound_issuer_risk(admitted[0], ticker='MSFT', question=question)
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    assert all(0 <= section.start_offset <= len(doc.text) for section in doc.sections)
+    assert doc.sections
+    assert all(doc.text[s.start_offset:s.start_offset + len(s.heading)] == s.heading
+               for s in doc.sections)
+
+
+@pytest.mark.parametrize('tail', [
+    'Item 1A. Risk Factors Cloud capacity constraints could harm revenue.',
+    'Item 1A. Risk Factors ' + 'risk context ' * 14000 + 'Item 1B. Unresolved Staff Comments',
+    'See “Item 1A. Risk Factors” Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments',
+    'See Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments',
+])
+def test_incomplete_oversized_or_quoted_late_section_is_not_selected(monkeypatch, tail):
+    doc, _ = _periodic_document(monkeypatch, '<p>' + 'business narrative ' * 15000 + tail + '</p>')
+    assert doc.text_selection == 'prefix' and doc.text_window_start == 0
+    assert len(doc.text) == 240000
+
+
+def test_periodic_window_is_not_selected_for_other_public_documents(monkeypatch):
+    body = ('<p>' + 'business narrative ' * 15000 +
+            'Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments</p>').encode()
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: _Response(body))
+    doc = fetch_public_document('https://example.com/report.htm')
+    assert doc.text_selection == 'prefix' and len(doc.text) == 120000
+
+
+def test_repeated_reference_headings_cannot_trigger_unbounded_risk_window_scan():
+    from app.services.sec_risk_sections import complete_risk_window
+    text = 'Item 1A. Risk Factors 18 ' * 64
+    text += 'Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments'
+    assert complete_risk_window(text) is None
+
+
 @pytest.mark.parametrize('url,form', [
     ('https://example.com/report.htm', '10-K'),
     ('https://www.sec.gov/Archives/edgar/data/1/2/report.htm', '10-K'),
