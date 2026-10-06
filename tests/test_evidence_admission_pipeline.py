@@ -8,6 +8,7 @@ from app.schemas import (
     MacroSensitivity,
     MarketContext,
     QualityAssessment,
+    QuestionRequest,
     RetrievedEvidence,
     RiskProfile,
     ValuationView,
@@ -169,11 +170,12 @@ def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, au
         return None, None
 
     monkeypatch.setattr(router_service.watchlist_service, "process_new_thesis", persist)
-    response = router_service._run_investment_pipeline(
-        CompanyContext(ticker=ticker, company_name=ticker),
-        f"What evidence supports {ticker}'s {scope} growth, and what operating risk could invalidate it?",
-        "services-boundary-test",
-    )
+    # Enter through the public router so an extractor profile without upstream
+    # company registration cannot silently pass this integration regression.
+    response = router_service.route_question(QuestionRequest(
+        company_name=ticker, intent="company_analysis",
+        question=f"What evidence supports {ticker}'s {scope} growth, and what operating risk could invalidate it?",
+    ))
     assert response.answer["source_answer"]["status"] == (
         "attributed" if with_disclosed_risk else "insufficient_claim_evidence")
     if with_disclosed_risk:

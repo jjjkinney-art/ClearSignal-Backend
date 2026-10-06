@@ -178,6 +178,7 @@ _COMPANY_DB: dict[str, dict] = {
     "AVGO":  {"company_name": "Broadcom Inc.",                           "sector": "Technology",                "industry": "Semiconductors"},
     "TSM":   {"company_name": "Taiwan Semiconductor Manufacturing Co.",  "sector": "Technology",                "industry": "Semiconductors"},
     "CRM":   {"company_name": "Salesforce Inc.",                         "sector": "Technology",                "industry": "Software"},
+    "DOCU":  {"company_name": "DocuSign Inc.",                           "sector": "Technology",                "industry": "Software"},
     "ORCL":  {"company_name": "Oracle Corporation",                      "sector": "Technology",                "industry": "Software"},
     "NOW":   {"company_name": "ServiceNow Inc.",                         "sector": "Technology",                "industry": "Software"},
     "SNOW":  {"company_name": "Snowflake Inc.",                          "sector": "Technology",                "industry": "Cloud Computing"},
@@ -647,6 +648,11 @@ _ALIAS_MAP: dict[str, str] = {
 
     # ── Salesforce ────────────────────────────────────────────────────────────
     "salesforce":              "CRM",
+
+    # DocuSign's reviewed subscription-risk profile must also resolve upstream.
+    "docusign":                "DOCU",
+    "docu sign":               "DOCU",
+    "docu":                    "DOCU",
 
     # ── Oracle ────────────────────────────────────────────────────────────────
     "oracle":                  "ORCL",

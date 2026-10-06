@@ -2253,9 +2253,11 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     _NON_COMPANY_INTENTS = frozenset({
         "market_question", "investing_education", "portfolio_question", "general_fallback"
     })
+    from .source_answer import is_source_answer_request
     if (
         request.company_name.strip()
-        and (request.intent == "company_analysis" or _has_intent)
+        and (request.intent == "company_analysis" or _has_intent
+             or is_source_answer_request(request.question))
         and request.intent not in _NON_COMPANY_INTENTS
     ):
         _explicit_company = _temporal_company or detect_company(
@@ -2618,6 +2620,27 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         )
 
         return final_response
+
+    # A source request with an explicit but unresolved company must not bypass
+    # the evidence-backed pipeline by falling into the legacy agent schemas.
+    # Keep the requested identity visible and ask for clarification; do not
+    # silently substitute another issuer or publish uncited generated research.
+    if is_source_answer_request(request.question):
+        return AgentAnswerResponse(
+            company=request.company_name,
+            request_id=str(uuid.uuid4()),
+            agents_used=["company_identity_gate"],
+            answer={
+                "answer": (
+                    "ClearSignal could not verify the requested company identity for "
+                    "this evidence question. No source-backed analysis was run. "
+                    "Check the exact company name or ticker; coverage may be incomplete."
+                ),
+                "source_answer": {"status": "unresolved_company_identity", "claims": []},
+                "evidence_references": [],
+            },
+            routing={"intent": "company_analysis", "pipeline": "company_identity_clarification"},
+        )
 
     # ── Company analysis pipeline ─────────────────────────────────────────────
     # Enrich context so that prompts always receive operational grounding
