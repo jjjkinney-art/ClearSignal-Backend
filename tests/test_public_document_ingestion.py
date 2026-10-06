@@ -205,6 +205,59 @@ def test_enforces_declared_and_streamed_size_limits(monkeypatch):
         fetch_public_document("https://example.com/report")
 
 
+def test_sec_periodic_allowance_keeps_closing_section_and_full_byte_hash(monkeypatch):
+    from app.services.public_document_ingestion import MAX_SEC_PERIODIC_CHARS
+    body = (b'<html><body>' + b' ' * MAX_DOCUMENT_BYTES + b'<p>' +
+            b'context ' * 16000 +
+            b'Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments</p></body></html>')
+    response = _Response(body, headers={'Content-Length': str(len(body))})
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: response)
+    doc = fetch_public_document(
+        'https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630.htm',
+        publisher='SEC EDGAR', document_type='10-K', source_type='regulatory_filing',
+        source_tier='primary', sec_periodic_limits=True)
+    assert 'Item 1B. Unresolved Staff Comments' in doc.text
+    assert 120000 < len(doc.text) <= MAX_SEC_PERIODIC_CHARS
+    assert doc.content_hash == hashlib.sha256(body).hexdigest()
+    assert response.closed
+
+
+@pytest.mark.parametrize('url,form', [
+    ('https://example.com/report.htm', '10-K'),
+    ('https://www.sec.gov/Archives/edgar/data/1/2/report.htm', '10-K'),
+    ('https://www.sec.gov/Archives/edgar/data/1/000119312526323660/report.htm', '8-K'),
+])
+def test_expanded_limits_reject_nonperiodic_or_nonsec_sources_before_network(monkeypatch, url, form):
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: pytest.fail('rejected before fetch'))
+    with pytest.raises(PublicDocumentError):
+        fetch_public_document(url, publisher='SEC EDGAR', document_type=form,
+                              source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True)
+
+
+def test_expanded_limit_cannot_follow_redirect_to_other_host(monkeypatch):
+    response = _Response(status=302, headers={'Location': 'https://example.com/report.htm'})
+    calls = []
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: calls.append(a[0]) or response)
+    with pytest.raises(PublicDocumentError):
+        fetch_public_document('https://www.sec.gov/Archives/edgar/data/1/000119312526323660/report.htm',
+                              publisher='SEC EDGAR', document_type='10-K', source_type='regulatory_filing',
+                              source_tier='primary', sec_periodic_limits=True)
+    assert len(calls) == 1 and response.closed
+
+
+@pytest.mark.parametrize('declared', [False, True])
+def test_sec_periodic_bytes_still_have_hard_limit(monkeypatch, declared):
+    from app.services.public_document_ingestion import MAX_SEC_PERIODIC_BYTES
+    response = _Response(b'x' * (MAX_SEC_PERIODIC_BYTES + 1),
+                         headers={'Content-Length': str(MAX_SEC_PERIODIC_BYTES + 1)} if declared else {})
+    monkeypatch.setattr(requests, 'get', lambda *a, **k: response)
+    with pytest.raises(PublicDocumentError):
+        fetch_public_document('https://www.sec.gov/Archives/edgar/data/1/000119312526323660/report.htm',
+                              publisher='SEC EDGAR', document_type='10-K', source_type='regulatory_filing',
+                              source_tier='primary', sec_periodic_limits=True)
+    assert response.closed
+
+
 def test_rejects_unsupported_content_and_marks_pdf_not_text_ready(monkeypatch):
     unsupported = _Response(b"data", content_type="application/octet-stream")
     monkeypatch.setattr(requests, "get", lambda *args, **kwargs: unsupported)

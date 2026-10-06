@@ -107,7 +107,14 @@ def test_conflicting_evidence_is_blocked_before_agents_and_source_answer(monkeyp
 
 @pytest.mark.parametrize("authenticated", [False, True])
 @pytest.mark.parametrize("with_disclosed_risk", [False, True])
-def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authenticated, with_disclosed_risk):
+@pytest.mark.parametrize("ticker,scope,cik,quote", [
+    ("AAPL", "Services", "320193", "Competition for digital content may adversely affect the Company's Services business."),
+    ("MSFT", "Cloud", "789019", "Cloud capacity constraints could adversely affect our revenue growth."),
+    ("NVDA", "Data Center", "1045810", "Data center capacity constraints could adversely affect our revenue growth."),
+    ("DOCU", "Subscription renewals", "1261333", "Subscription renewals may decline and adversely affect revenue growth."),
+])
+def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authenticated, with_disclosed_risk,
+                                                               ticker, scope, cik, quote):
     from app.config import settings
     from app.services import live_issuer_kpi_service, session_context_service
 
@@ -124,15 +131,14 @@ def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authe
     if with_disclosed_risk:
         from hashlib import sha256
         from app.services.public_document_ingestion import PublicDocument
-        from app.services.services_risk_evidence import extract_services_risk_evidence
-        url = "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
-        text = ("Item 1A. Risk Factors Competition for digital content may adversely affect "
-                "the Company's Services business. Item 1B. Unresolved Staff Comments")
+        from app.services.issuer_risk_evidence import extract_issuer_risk_evidence
+        url = f"https://www.sec.gov/Archives/edgar/data/{cik}/000032019325000079/report.htm"
+        text = f"Item 1A. Risk Factors {quote} Item 1B. Unresolved Staff Comments"
         doc = PublicDocument(url, url, "text/html", sha256(text.encode()).hexdigest(), len(text),
                              "Synthetic risk fixture", text, (), (), (), "html", True, "2026-10-06",
                              publisher="SEC EDGAR", published_at="2025-10-31", document_type="10-K",
                              source_type="regulatory_filing", source_tier="primary")
-        risk_evidence = extract_services_risk_evidence(doc, ticker="AAPL")
+        risk_evidence = extract_issuer_risk_evidence(doc, ticker=ticker, question=f"{scope} operating risks")
         monkeypatch.setattr(live_issuer_kpi_service, "fetch_live_issuer_kpi_evidence",
                             lambda *a, **k: risk_evidence)
     monkeypatch.setattr(router_service, "get_profile_for_company", lambda *a, **k: None)
@@ -147,7 +153,7 @@ def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authe
     monkeypatch.setattr("app.investment_agents.question_answerer_agent.run_question_answerer",
                         lambda *a, **k: "Services margin is 72%.")
     monkeypatch.setattr(router_service, "synthesize_thesis", lambda *a, **k:
-                        InvestmentThesis(ticker="AAPL", company_name="Apple",
+                        InvestmentThesis(ticker=ticker, company_name=ticker,
                                          direct_answer="Services margin is 72%.",
                                          one_sentence_thesis="Services margin is 72%.",
                                          bull_thesis="Services margin is 72%."))
@@ -164,8 +170,8 @@ def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authe
 
     monkeypatch.setattr(router_service.watchlist_service, "process_new_thesis", persist)
     response = router_service._run_investment_pipeline(
-        CompanyContext(ticker="AAPL", company_name="Apple"),
-        "What evidence supports Apple's Services growth, and what operating risk could invalidate it?",
+        CompanyContext(ticker=ticker, company_name=ticker),
+        f"What evidence supports {ticker}'s {scope} growth, and what operating risk could invalidate it?",
         "services-boundary-test",
     )
     assert response.answer["source_answer"]["status"] == (

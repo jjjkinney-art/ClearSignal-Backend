@@ -23,6 +23,8 @@ from pypdf.errors import PdfReadError
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
+MAX_SEC_PERIODIC_BYTES = 10_000_000
+MAX_SEC_PERIODIC_CHARS = 240_000
 MAX_EXTRACTED_CHARS = 120_000
 MAX_REDIRECTS = 3
 MAX_PDF_PAGES = 250
@@ -275,11 +277,11 @@ class _HTMLTextExtractor(HTMLParser):
             self._link_parts.append(value)
         self._parts.append(value)
 
-    def result(self) -> tuple[
+    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS) -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
-        text = _clean_text(" ".join(self._parts))[:MAX_EXTRACTED_CHARS]
+        text = _clean_text(" ".join(self._parts))[:max_chars]
         sections = tuple(
             DocumentSection(heading=heading, start_offset=min(offset, len(text)))
             for heading, offset in self._headings[:200]
@@ -399,7 +401,7 @@ def _validate_public_url(url: str) -> str:
     return candidate
 
 
-def _read_bounded(response: requests.Response) -> bytes:
+def _read_bounded(response: requests.Response, *, max_bytes: int = MAX_DOCUMENT_BYTES) -> bytes:
     declared = response.headers.get("Content-Length")
     if declared:
         try:
@@ -408,7 +410,7 @@ def _read_bounded(response: requests.Response) -> bytes:
             raise PublicDocumentError("invalid document content length") from exc
         if declared_size < 0:
             raise PublicDocumentError("invalid document content length")
-        if declared_size > MAX_DOCUMENT_BYTES:
+        if declared_size > max_bytes:
             raise PublicDocumentError("document exceeds the size limit")
     chunks: list[bytes] = []
     total = 0
@@ -416,7 +418,7 @@ def _read_bounded(response: requests.Response) -> bytes:
         if not chunk:
             continue
         total += len(chunk)
-        if total > MAX_DOCUMENT_BYTES:
+        if total > max_bytes:
             raise PublicDocumentError("document exceeds the size limit")
         chunks.append(chunk)
     return b"".join(chunks)
@@ -431,6 +433,7 @@ def fetch_public_document(
     document_type: str | None = None,
     source_type: str = "unknown",
     source_tier: str = "unverified",
+    sec_periodic_limits: bool = False,
 ) -> PublicDocument:
     """Fetch one public document with bounded redirects and content."""
     requested_url = _validate_public_url(url)
@@ -439,6 +442,14 @@ def fetch_public_document(
     try:
         for redirect_count in range(MAX_REDIRECTS + 1):
             current_url = _validate_public_url(current_url)
+            if sec_periodic_limits:
+                parsed = urlsplit(current_url)
+                if (publisher != "SEC EDGAR" or source_type != "regulatory_filing"
+                        or source_tier != "primary"
+                        or document_type not in {"10-K", "10-K/A", "10-Q", "10-Q/A"}
+                        or parsed.hostname != "www.sec.gov" or parsed.query or parsed.fragment
+                        or not re.fullmatch(r"/Archives/edgar/data/\d+/\d{18}/[^/]+\.html?", parsed.path)):
+                    raise PublicDocumentError("expanded limits require a SEC periodic HTML filing")
             response = requests.get(
                 current_url,
                 headers={"User-Agent": user_agent or "ClearSignal/1.0 public-document-research"},
@@ -458,7 +469,10 @@ def fetch_public_document(
         media_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
         if media_type not in _ALLOWED_TYPES:
             raise PublicDocumentError("unsupported document content type")
-        body = _read_bounded(response)
+        if sec_periodic_limits and media_type not in {"text/html", "application/xhtml+xml"}:
+            raise PublicDocumentError("expanded limits require HTML content")
+        body = _read_bounded(response, max_bytes=(MAX_SEC_PERIODIC_BYTES
+                                                if sec_periodic_limits else MAX_DOCUMENT_BYTES))
         encoding = response.encoding or "utf-8"
     except PublicDocumentError:
         raise
@@ -487,7 +501,8 @@ def fetch_public_document(
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
-        title, text, sections, raw_links = parser.result()
+        title, text, sections, raw_links = parser.result(max_chars=(MAX_SEC_PERIODIC_CHARS
+                                                                  if sec_periodic_limits else MAX_EXTRACTED_CHARS))
         links = _normalize_links(current_url, raw_links)
         method = "html"
         table_parser = _HTMLTableExtractor()

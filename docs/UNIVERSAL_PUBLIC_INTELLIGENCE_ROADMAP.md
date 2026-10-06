@@ -209,9 +209,17 @@ acceptance timestamps, archived filing URLs, and SHA-256 document identities.
 Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
 attribute qualitative operating-risk disclosures with exact quotes, filing dates
 and document identities. This is initial issuer coverage, not a verified risk
-outcome or universal risk-completeness claim. Production acceptance and broader
-issuer, section, version and jurisdiction coverage remain tracked in
+outcome or universal risk-completeness claim. Apple signed-in production acceptance
+passed on 6 October; broader issuer, section, version and jurisdiction work is tracked in
 [Source-backed Services risks](SOURCE_BACKED_SERVICES_RISKS.md).
+
+Issuer-risk expansion (2026-10-06): Microsoft Cloud, NVIDIA Data Center and
+DocuSign subscription-renewal disclosures now have explicit issuer/topic matching,
+bounded periodic-SEC retrieval, exact quote spans and gated saved answers. Three
+full annual HTML filings passed local extraction/admission checks. Signed-in
+production acceptance remains pending after deployment; this does not complete
+universal risk ranking, segment-growth extraction or quantified risk assessment.
+See [Source-backed issuer risks](SOURCE_BACKED_ISSUER_RISKS.md).
 
 ClearSignal is ready for full launch when all P0 gates pass:
 

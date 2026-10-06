@@ -1147,7 +1147,9 @@ def _run_investment_pipeline(
     from .live_issuer_kpi_service import requested_issuer_kpi_aliases
     from .services_revenue_evidence import requests_services_revenue
     from .services_risk_evidence import requests_services_operating_risk
+    from .issuer_risk_evidence import requested_risk_profile
     if (requested_issuer_kpi_aliases(question)
+            or requested_risk_profile(ticker, question)
             or (ticker == "AAPL" and (requests_services_revenue(question)
                                      or requests_services_operating_risk(question)))):
         _ev_tasks["issuer_kpis"] = _fetch_issuer_kpis

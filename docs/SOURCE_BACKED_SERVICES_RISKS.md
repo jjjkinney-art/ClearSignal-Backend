@@ -1,6 +1,9 @@
 # Source-backed Services operating-risk disclosures
 
-Status: initial AAPL coverage; production acceptance pending.
+Status: initial AAPL coverage verified in a signed-in live investigation on
+6 October 2026, including saved-answer persistence and inspection of the risk
+quote in the linked quarterly SEC filing. Broader issuer work is documented in
+`SOURCE_BACKED_ISSUER_RISKS.md`; its production acceptance remains separate.
 
 An explicit Apple Services evidence question that also asks about operating risk
 now requests bounded SEC periodic filings. If the newest quarterly report has no
