@@ -114,7 +114,13 @@ def _claim_text(item: object) -> str | None:
         return None
     summary = _LEGACY_SOURCE_RE.sub(" ", summary)
     summary = re.sub(r"\s+", " ", summary).strip()
-    return summary[:500] if len(summary) >= 30 else None
+    # Producer-bound disclosures are complete quotations. Never truncate one
+    # mid-sentence while rendering the evidence answer.
+    if len(summary) < 30:
+        return None
+    if getattr(item, "risk_disclosures", []):
+        return summary if len(summary) <= 1400 else None
+    return summary[:500]
 
 
 def _requested_bound_metric(item: object, ticker: str, question: str) -> bool:
@@ -144,10 +150,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     material = list(items)
     claims: list[dict] = []
     selected_items: list[object] = []
-    services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
     ticker = str(getattr(thesis, "ticker", ""))
+    services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
     risk_profile = requested_risk_profile(ticker, question)
-    scoped_risk = risk_profile if ticker != "AAPL" else None
+    scoped_risk = risk_profile if not (ticker == "AAPL" and risk_profile and risk_profile.scope == "Services") else None
     risk_requested = bool(_RISK_REQUEST_RE.search(question or "")
                           or re.search(r"\brisks?\b", question or "", re.I))
     unsupported_risk = risk_requested and not risk_profile
@@ -172,7 +178,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         # The new issuer/topic slices support qualitative risk disclosures.
         # Consolidated metrics and generated summaries cannot establish a
         # segment's growth or fill its risk slot without their own binding.
-        if scoped_risk and not disclosure:
+        if scoped_risk and not disclosure and not _requested_bound_metric(item, ticker, question):
             continue
         # Only producer-bound quotes can answer the requested operating-risk
         # part. Conditional/generated summaries cannot substitute for them.
@@ -216,7 +222,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "run the analysis again when structured facts are available."
         )
         setattr(thesis, "direct_answer", answer)
-        if unsupported_risk:
+        if risk_requested:
             answer = (
                 "No source-bound operating-risk disclosure qualified for the requested company "
                 "and topic. The retrieved sources and consolidated metrics do not establish "
@@ -226,10 +232,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         _restrict_evidence_thesis(thesis, answer, [], [], enough=False, scope=view_scope)
         return {
             "status": "insufficient_claim_evidence",
-            "reason": "No relevant source-bound operating-risk disclosure qualified." if unsupported_risk
+            "reason": "No relevant source-bound operating-risk disclosure qualified." if risk_requested
                       else "Not enough relevant claim-level support was retrieved for this question.",
             "claims": [],
-            "unanswered_parts": ["operating risk"] if unsupported_risk else [],
+            "unanswered_parts": ["operating risk"] if risk_requested else [],
         }
 
     answer = "\n\n".join(
@@ -259,7 +265,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         if scoped_risk:
             answer += (f"\n\nThis {scoped_risk.scope} risk disclosure does not, by itself, "
                        "verify revenue growth or its sustainability.")
-    elif unsupported_risk:
+    elif risk_requested and not (ticker == "AAPL" and services_requested):
         answer += ("\n\nThese observations answer only the requested financial metric. No source-bound "
                    "operating-risk disclosure qualified for the requested company and topic; "
                    "risk likelihood, financial effects, and thesis implications remain unverified.")
@@ -268,8 +274,8 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     setattr(thesis, "direct_answer", answer)
     _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True, scope=view_scope)
     return {
-        "status": "partial" if unsupported_risk else "attributed",
+        "status": "partial" if risk_requested and not has_disclosed_risk else "attributed",
         "reason": "Each claim is bound to a retrieved evidence reference.",
         "claims": claims,
-        "unanswered_parts": ["operating risk"] if unsupported_risk else [],
+        "unanswered_parts": ["operating risk"] if risk_requested and not has_disclosed_risk else [],
     }

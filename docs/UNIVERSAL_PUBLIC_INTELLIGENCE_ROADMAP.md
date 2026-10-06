@@ -222,6 +222,17 @@ The original audit is preserved as the failing baseline. This launch gate remain
 open until required CI, deployment and signed-in issuer/topic acceptance pass;
 local routing success does not complete universal risk extraction.
 
+Broader evidence testing (7 October NZ / 6 October UTC): a new 33-issuer,
+11-sector cohort checks ticker, official-name and question-only routing, exact
+source spans, risk-topic relevance, separate numeric/risk question parts, saved
+answers and owner isolation. Shared risk-topic selection now removes the
+four-issuer extraction whitelist for additional exact SEC-directory identities.
+The read-only live SEC acceptance CLI distinguishes useful cited answers from
+safe gaps and retrieval errors; it cannot authorize launch. Four cached full
+filings pass replay, while the expanded live retrieval and signed-in matrix remain
+open. Foreign filing layouts and multi-topic risk completeness remain explicit
+gaps. See [broader company evidence acceptance](BROAD_COMPANY_EVIDENCE_ACCEPTANCE_20261007.md).
+
 Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
 attribute qualitative operating-risk disclosures with exact quotes, filing dates
 and document identities. This is initial issuer coverage, not a verified risk
