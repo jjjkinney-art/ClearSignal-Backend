@@ -201,10 +201,10 @@ def normalize_ticker(raw: str) -> str:
     if key in _LOOKUP:
         return _LOOKUP[key]
 
-    # Partial prefix match — handles "NVIDIA Corporation (NVDA)" style strings
-    # produced by some model outputs
+    # A full alias followed by a name suffix or parenthetical ticker is safe.
+    # Never complete a short symbol into an alias: AA is Alcoa, not AAPL.
     for alias, canonical in _LOOKUP.items():
-        if key.startswith(alias) or alias.startswith(key):
+        if key.startswith(alias + " ") or key.startswith(alias + "("):
             return canonical
 
     # No match — passthrough, uppercased and truncated

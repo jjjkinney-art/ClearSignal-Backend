@@ -10,6 +10,16 @@ from app.db.ticker_normalizer import normalize_ticker, canonical_ticker_for_thes
 
 class TestNormalizeTicker:
 
+    @pytest.mark.parametrize("ticker", ["AA", "A", "F", "H", "K", "MAN", "MOD", "WDFC", "ACMR", "ACHC", "AM", "AMZ", "ME", "GO"])
+    def test_short_symbols_are_not_completed_into_other_issuers(self, ticker):
+        assert normalize_ticker(ticker) == ticker
+        assert normalize_ticker(ticker.lower()) == ticker
+        assert canonical_ticker_for_thesis({"ticker": ticker}, "Apple") == ticker
+
+    def test_complete_alias_with_suffix_remains_supported(self):
+        assert normalize_ticker("NVIDIA Corporation (NVDA)") == "NVDA"
+        assert normalize_ticker("Metals") == "METALS"
+
     def test_exact_ticker_passthrough(self):
         assert normalize_ticker("NVDA") == "NVDA"
 

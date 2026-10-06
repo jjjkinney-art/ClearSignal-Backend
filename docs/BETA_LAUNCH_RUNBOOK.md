@@ -49,6 +49,10 @@ the commit, UTC timestamp, selected mode, check names, and pass/fail outcome.
   resolved within the beta's explicitly declared coverage before expanding access.
   [Local remediation acceptance](CROSS_COMPANY_COVERAGE_FIX_ACCEPTANCE_20261006.md)
   is available; deployment and signed-in issuer/topic quality checks remain required.
+  The [production sample](CROSS_COMPANY_PRODUCTION_ACCEPTANCE_20261006.md) passed
+  issuer/evidence boundaries but found AA saved under AAPL in History/Research
+  Trail. Confirm the normalizer follow-up on newly saved production records
+  before clearing that persistence gate.
 - Any cross-account read, write, notification, preference, portfolio, or
   billing visibility.
 - Any failed required CI check or mismatch between the deployed and expected

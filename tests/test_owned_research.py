@@ -65,3 +65,33 @@ def test_owned_research_isolated_and_authorized():
             os.unlink(path)
 
     asyncio.run(scenario())
+
+
+def test_alcoa_history_preserves_symbol_and_owner_filter():
+    async def scenario():
+        from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+        from app.db.models import Base
+        from app.services.owned_research import save_thesis, list_theses
+
+        engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+        try:
+            async with engine.begin() as connection:
+                await connection.run_sync(Base.metadata.create_all)
+            factory = async_sessionmaker(engine, expire_on_commit=False)
+            result = SimpleNamespace(company="Alcoa Corp", answer={"investment_thesis": {
+                "ticker": "AA", "company_name": "Alcoa Corp", "direct_answer": "AA revenue observation [E1]",
+            }})
+            async with factory() as session:
+                assert await save_thesis(session, user_id="owner-a", question="Alcoa revenue?",
+                                         company_name="AA", session_id="alcoa", result=result)
+                await session.commit()
+            async with factory() as session:
+                rows = await list_theses(session, user_id="owner-a", ticker="AA")
+                assert len(rows) == 1
+                assert rows[0]["ticker"] == "AA"
+                assert rows[0]["direct_answer"] == "AA revenue observation [E1]"
+                assert await list_theses(session, user_id="owner-a", ticker="AAPL") == []
+                assert await list_theses(session, user_id="owner-b", ticker="AA") == []
+        finally:
+            await engine.dispose()
+    asyncio.run(scenario())
