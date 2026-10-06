@@ -1146,8 +1146,10 @@ def _run_investment_pipeline(
         _ev_tasks["sec_metrics"] = _fetch_sec_metrics
     from .live_issuer_kpi_service import requested_issuer_kpi_aliases
     from .services_revenue_evidence import requests_services_revenue
+    from .services_risk_evidence import requests_services_operating_risk
     if (requested_issuer_kpi_aliases(question)
-            or (ticker == "AAPL" and requests_services_revenue(question))):
+            or (ticker == "AAPL" and (requests_services_revenue(question)
+                                     or requests_services_operating_risk(question)))):
         _ev_tasks["issuer_kpis"] = _fetch_issuer_kpis
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
@@ -1590,7 +1592,7 @@ def _run_investment_pipeline(
     # Apply the source boundary before any thesis can enter legacy snapshots,
     # comparison evaluation or the final account-owned response snapshot.
     from .source_answer import apply_source_answer_gate
-    _source_answer = apply_source_answer_gate(thesis, question, evidence)
+    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
 
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
@@ -1666,7 +1668,7 @@ def _run_investment_pipeline(
     # Comparison/legacy processing can mutate narrative fields. Reapply the
     # same boundary at serialization so those changes cannot reintroduce an
     # unsupported Services assertion into the emitted or saved response.
-    _source_answer = apply_source_answer_gate(thesis, question, evidence)
+    _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
 
     try:
         thesis_dict = thesis.model_dump()

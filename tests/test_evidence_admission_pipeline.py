@@ -106,7 +106,8 @@ def test_conflicting_evidence_is_blocked_before_agents_and_source_answer(monkeyp
 
 
 @pytest.mark.parametrize("authenticated", [False, True])
-def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authenticated):
+@pytest.mark.parametrize("with_disclosed_risk", [False, True])
+def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authenticated, with_disclosed_risk):
     from app.config import settings
     from app.services import live_issuer_kpi_service, session_context_service
 
@@ -120,6 +121,20 @@ def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authe
     ):
         for name in names:
             monkeypatch.setattr(target, name, lambda *a, **k: [])
+    if with_disclosed_risk:
+        from hashlib import sha256
+        from app.services.public_document_ingestion import PublicDocument
+        from app.services.services_risk_evidence import extract_services_risk_evidence
+        url = "https://www.sec.gov/Archives/edgar/data/320193/000032019325000079/aapl-20250927.htm"
+        text = ("Item 1A. Risk Factors Competition for digital content may adversely affect "
+                "the Company's Services business. Item 1B. Unresolved Staff Comments")
+        doc = PublicDocument(url, url, "text/html", sha256(text.encode()).hexdigest(), len(text),
+                             "Synthetic risk fixture", text, (), (), (), "html", True, "2026-10-06",
+                             publisher="SEC EDGAR", published_at="2025-10-31", document_type="10-K",
+                             source_type="regulatory_filing", source_tier="primary")
+        risk_evidence = extract_services_risk_evidence(doc, ticker="AAPL")
+        monkeypatch.setattr(live_issuer_kpi_service, "fetch_live_issuer_kpi_evidence",
+                            lambda *a, **k: risk_evidence)
     monkeypatch.setattr(router_service, "get_profile_for_company", lambda *a, **k: None)
     monkeypatch.setattr(router_service, "partition_evidence", lambda *a, **k:
                         EvidencePartition(valuation=[], macro=[], risk=[], market=[], quality=[]))
@@ -150,9 +165,14 @@ def test_services_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, authe
     monkeypatch.setattr(router_service.watchlist_service, "process_new_thesis", persist)
     response = router_service._run_investment_pipeline(
         CompanyContext(ticker="AAPL", company_name="Apple"),
-        "What evidence supports Apple's Services growth?", "services-boundary-test",
+        "What evidence supports Apple's Services growth, and what operating risk could invalidate it?",
+        "services-boundary-test",
     )
-    assert response.answer["source_answer"]["status"] == "insufficient_claim_evidence"
+    assert response.answer["source_answer"]["status"] == (
+        "attributed" if with_disclosed_risk else "insufficient_claim_evidence")
+    if with_disclosed_risk:
+        assert response.answer["source_answer"]["claims"][0]["claim_kind"] == "issuer_disclosed_risk"
+        assert "not proof that it has occurred" in response.answer["investment_thesis"]["direct_answer"]
     assert "72%" not in json.dumps(response.answer["investment_thesis"])
     if authenticated:
         assert captured == []  # Shared ticker memory remains guarded.
