@@ -11,6 +11,7 @@ from app.services.issuer_risk_evidence import (
 from app.services.sec_risk_sections import (
     _ITEM, RISK_START, find_risk_closing, rejected_risk_heading,
     MAX_ISSUER_RISK_SECTION_CHARS,
+    risk_section_spans, risk_sentence_spans,
 )
 
 
@@ -66,21 +67,19 @@ def topic_inspection(document, *, ticker: str, question: str) -> dict:
     if not profile:
         return {"topic_sentence_samples": samples}
     section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
-    for index, opening in enumerate(RISK_START.finditer(document.text)):
-        if index == 64 or len(samples) == 8:
+    seen = set()
+    for section_start, section_end in risk_section_spans(document.text, max_section_chars=section_limit):
+        if len(samples) == 8:
             break
-        if rejected_risk_heading(document.text, opening.end(), start=opening.start()):
-            continue
-        closing = find_risk_closing(document.text, opening.end())
-        if not closing or closing.start() - opening.end() > section_limit:
-            continue
-        section = document.text[opening.end():closing.start()]
-        for sentence in re.finditer(r"(?:^|(?<=[.!?])\s+)([^.!?]+[.!?])", section):
-            quote = sentence.group(1).strip()
-            if not _has_topic_scope(quote, profile):
+        section = document.text[section_start:section_end]
+        for sentence_start, sentence_end in risk_sentence_spans(section):
+            quote = section[sentence_start:sentence_end]
+            if not _has_topic_scope(quote, profile, disclosure=True):
                 continue
-            offset = (opening.end() + sentence.start(1)
-                      + len(sentence.group(1)) - len(sentence.group(1).lstrip()))
+            offset = section_start + sentence_start
+            if offset in seen:
+                continue
+            seen.add(offset)
             samples.append({"start_offset": offset, "end_offset": offset + len(quote),
                 "quote_chars": len(quote), "excerpt": quote[:900],
                 "excerpt_truncated": len(quote) > 900,

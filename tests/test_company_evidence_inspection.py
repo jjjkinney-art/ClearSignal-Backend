@@ -58,7 +58,7 @@ def prepare(monkeypatch, text, *, headers=None):
 
 
 def test_inspection_preserves_real_fetch_and_binding_with_late_compact_heading(monkeypatch):
-    prepare(monkeypatch, 'Visible preface. ' * 16000 + 'Item 1A. Risk Factors ' + QUOTE + ' Item 1B.Unresolved Staff Comments')
+    prepare(monkeypatch, 'Visible preface. ' * 22000 + 'Item 1A. Risk Factors ' + QUOTE + ' Item 1B.Unresolved Staff Comments')
     baseline = acceptance.run_case(CASE, user_agent='contact-canary', evaluated_at='2026-10-07')
     inspected = acceptance.run_case(CASE, user_agent='contact-canary', evaluated_at='2026-10-07', inspect_source=True)
     assert baseline['passed'] and inspected['passed']

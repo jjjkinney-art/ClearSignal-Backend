@@ -257,13 +257,13 @@ def test_late_complete_risk_section_survives_prefix_limit_and_exact_binding(monk
     quote = 'Cloud capacity constraints could adversely affect our revenue growth.'
     # TOC and business narrative precede the true section, as in long filings.
     markup = ('<p>Item 1A. Risk Factors 18 Item 1B. Unresolved Staff Comments 40</p>' +
-              '<p>' + 'business narrative ' * 15000 + '</p>' +
+              '<p>' + 'business narrative ' * 20000 + '</p>' +
               '<h2>Item 1A. Risk Factors</h2><p>' + quote + '</p>' +
               '<h2>Item 1B. Unresolved Staff Comments</h2>')
     doc, body = _periodic_document(monkeypatch, markup)
     assert doc.text_selection == 'complete_sec_risk_section'
-    assert doc.text_window_start > 240000 and len(doc.text) < 240000
-    assert doc.normalized_text_chars_total > 240000
+    assert doc.text_window_start > 360000 and len(doc.text) < 360000
+    assert doc.normalized_text_chars_total > 360000
     assert doc.content_hash == hashlib.sha256(body).hexdigest()
     question = 'What operating risk affects Microsoft cloud growth?'
     items = extract_issuer_risk_evidence(doc, ticker='MSFT', question=question)
@@ -279,14 +279,14 @@ def test_late_complete_risk_section_survives_prefix_limit_and_exact_binding(monk
 
 @pytest.mark.parametrize('tail', [
     'Item 1A. Risk Factors Cloud capacity constraints could harm revenue.',
-    'Item 1A. Risk Factors ' + 'risk context ' * 18000 + 'Item 1B. Unresolved Staff Comments',
+    'Item 1A. Risk Factors ' + 'risk context ' * 26000 + 'Item 1B. Unresolved Staff Comments',
     'See “Item 1A. Risk Factors” Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments',
     'See Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments',
-])
+], ids=['missing-closing', 'oversized', 'quoted-reference', 'unquoted-reference'])
 def test_incomplete_oversized_or_quoted_late_section_is_not_selected(monkeypatch, tail):
-    doc, _ = _periodic_document(monkeypatch, '<p>' + 'business narrative ' * 15000 + tail + '</p>')
+    doc, _ = _periodic_document(monkeypatch, '<p>' + 'business narrative ' * 20000 + tail + '</p>')
     assert doc.text_selection == 'prefix' and doc.text_window_start == 0
-    assert len(doc.text) == 240000
+    assert len(doc.text) == 360000
 
 
 def test_periodic_window_is_not_selected_for_other_public_documents(monkeypatch):

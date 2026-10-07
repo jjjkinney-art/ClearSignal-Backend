@@ -25,7 +25,7 @@ from .sec_risk_sections import complete_risk_window
 
 MAX_DOCUMENT_BYTES = 2_000_000
 MAX_SEC_PERIODIC_BYTES = 10_000_000
-MAX_SEC_PERIODIC_CHARS = 240_000
+MAX_SEC_PERIODIC_CHARS = 360_000
 MAX_EXTRACTED_CHARS = 120_000
 MAX_REDIRECTS = 3
 MAX_PDF_PAGES = 250
@@ -321,11 +321,21 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         self._text_chars += len(value) + bool(self._parts)
         self._parts.append(value)
 
+    def normalized_visible_text(self, *, preserve_sec_risk: bool = False) -> str:
+        text = _clean_text(" ".join(self._parts))
+        if preserve_sec_risk:
+            # Remove only the observed SEC pagination token, never substantive
+            # numbers, bare page numbers or arbitrary numeric sentence content.
+            text = _SEC_PAGE_FOOTER.sub('', text)
+        return text
+
     def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False) -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
-        full_text = _clean_text(" ".join(self._parts))
+        original_text = _clean_text(" ".join(self._parts))
+        removed = list(_SEC_PAGE_FOOTER.finditer(original_text)) if preserve_sec_risk else []
+        full_text = self.normalized_visible_text(preserve_sec_risk=preserve_sec_risk)
         self.normalized_text_chars_total = len(full_text)
         start, end = 0, max_chars
         if preserve_sec_risk and len(full_text) > max_chars:
@@ -335,9 +345,12 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
                 self.text_selection = "complete_sec_risk_section"
         self.text_window_start = start
         text = full_text[start:end]
+        headings = [(heading, offset - sum(m.end() - m.start() for m in removed if m.end() <= offset))
+                    for heading, offset in self._headings[:200]
+                    if not any(m.start() <= offset < m.end() for m in removed)]
         sections = tuple(
             DocumentSection(heading=heading, start_offset=min(offset - start, len(text)))
-            for heading, offset in self._headings[:200]
+            for heading, offset in headings
             if start <= offset and offset + len(heading) <= min(end, len(full_text))
         )
         return title, text, sections, tuple(self._links[:500])
@@ -370,6 +383,9 @@ def _normalize_links(
 def _clean_text(value: str) -> str:
     value = value.replace("\x00", " ")
     return re.sub(r"\s+", " ", value).strip()
+
+
+_SEC_PAGE_FOOTER = re.compile(r'\b\d{1,4} Table of Contents(?: |$)')
 
 
 def _extract_pdf(
