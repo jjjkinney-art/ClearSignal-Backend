@@ -136,3 +136,54 @@ clean collection finds 14,962 tests. The bounded selector considers at most
 64 candidate headings and searches only within the existing section ceiling.
 Authored regression documents establish the parser repair; they are not a live
 coverage pass for the four failing issuers.
+
+## PR #196 deployment retest: split-word headings and section ceiling
+
+The owner confirmed deployment of merged main
+`6268b4a8fadfad4bce558d740aadd20ad7c792a1`. Five fresh signed-in runs used
+`Visible SEC section deployment retest October 7.`. AA, MAN, ACHC and ACMR
+still returned evidence gaps; DOCU now cited two disclosures from its quarterly
+filing dated 2026-09-04 instead of the prior annual filing. All five records
+appeared in History and Research Trail. Reopening the fresh AA record restored
+its two saved messages and gap answer. These are one-account UI checks, not
+production foreign-owner isolation or complete cohort certification.
+
+The owner's read-only Render report evaluated at `2026-10-07T00:07:12.163004+00:00`
+confirmed the newer DOCU quotes matched original source spans and answer
+citations. Its selected complete risk section retained 139,508 characters,
+starting at offset 101,422 in 247,237 visible characters. All four other issuers'
+downloads succeeded and produced no admitted risks. The follow-up full-visible
+heading diagnostic identified these actual opening layouts:
+
+| Issuer | Annual visible characters | Actual risk heading offset | Observed issue |
+| --- | --- | --- | --- |
+| MAN | 353,326 | 39,426 | `Item 1A. Ri sk Factors`; strict closing matcher found none |
+| AA | 587,884 | 69,065 | `Item 1A. Ri sk Factors.`; next strict closing at 153,758 |
+| ACHC | 419,805 | 75,464 | `Item 1A. Ri sk Factors`; strict closing matcher found none |
+| ACMR | 458,092 | 57,394 | Canonical heading; marker-to-closing distance 163,277, above old ceiling |
+
+MAN's actual quarterly heading also splits `Item` as `Ite m`. The diagnostic
+does not include the actual closing-heading text for MAN or ACHC; allowing
+split letters in recognized closing titles is a covered parser repair, not
+proof that those live files now close or contain qualifying topic sentences.
+The preceding document cutoffs were symptoms, not a complete diagnosis. AA's
+actual annual risk section was inside the retained prefix but missed because
+of the split opening word. No issuer identity, risk quote or impact assessment
+was inferred from these headings.
+
+The next repair matches whitespace inside the fixed known heading words without
+rewriting normalized source text or changing quote offsets. TOC entries and
+quoted or explicit cross-references cannot establish opening or closing section
+boundaries. Candidate scans stay bounded at 64. The general issuer risk-section
+ceiling becomes 200,000 characters to accommodate the observed ACMR section;
+Apple's stricter 80,000-character extraction ceiling stays unchanged. SEC file
+bytes remain limited to 10 MB and retained text to 240,000 characters. Quote
+length, numeric exclusions, topic/issuer/admission checks, two-disclosure and
+two-document ceilings, and the production router deadline stay unchanged.
+
+Local validation: 427 relevant tests pass across ten isolated modules, including
+authored split-span HTML, the longer bounded section, original span and answer
+citation checks, false closing references, oversized sections and the unchanged
+Apple ceiling. Clean collection finds 14,993 tests. Required pinned CI and fresh
+Render/signed-in acceptance remain necessary. This repair does not establish
+live useful-answer coverage for the four failing issuers or clear launch.

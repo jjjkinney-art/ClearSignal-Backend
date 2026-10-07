@@ -247,6 +247,15 @@ a complete Risk Factors section. A follow-up preserves bounded complete later
 sections and excludes explicit hidden HTML/XBRL metadata. This requires fresh
 deployed acceptance and does not clear the broader launch gate.
 
+PR #196 deployed acceptance improved DOCU to source-bound September quarterly
+disclosures, but AA, MAN, ACHC and ACMR still returned gaps. Full-visible Render
+diagnostics exposed split words in actual SEC section headings (`Ri sk`, `Ite m`)
+and an ACMR section just above the former size ceiling. The next repair supports
+split fixed heading words and a bounded 200,000-character general issuer section,
+with Apple's stricter ceiling and claim/identity gates retained. Authored
+regressions pass; fresh deployed acceptance and the broader live cohort remain
+required. This work remains an open launch blocker.
+
 Bounded Services risk slice (2026-10-06): AAPL periodic-filing extraction can
 attribute qualitative operating-risk disclosures with exact quotes, filing dates
 and document identities. This is initial issuer coverage, not a verified risk
