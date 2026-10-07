@@ -35,7 +35,8 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
     row = {"ticker": case["ticker"], "topic": case["topic"], "passed": False,
            "status": "gap", "stage": "identity", "documents_attempted": 0,
            "documents_retrieved": 0, "admitted_risk_count": 0,
-           "disclosures": [], "retrieval_failures": [], "document_diagnostics": []}
+           "disclosures": [], "retrieval_failures": [], "document_diagnostics": [],
+           "filing_discovery": []}
     profile = requested_risk_profile(case["ticker"], case["question"])
     if not profile:
         row["reason"] = "identity_or_topic_unavailable"
@@ -47,6 +48,26 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
     download_times = {}
     real_fetch = live.fetch_public_document
     real_extract = live.extract_issuer_risk_evidence
+    real_discover = live.sec_provider.fetch_recent_filings
+
+    def observe_discover(company, **kwargs):
+        started = time.monotonic()
+        diagnostic = {"forms": list(kwargs.get("forms") or []),
+                      "limit": kwargs.get("limit"), "filings_returned": []}
+        row["filing_discovery"].append(diagnostic)
+        try:
+            filings = real_discover(company, **kwargs) or []
+            diagnostic["status"] = "found" if filings else "empty_or_unavailable"
+            diagnostic["filings_returned"] = [
+                {"form": getattr(filing, "document_type", None),
+                 "filed_at": getattr(filing, "timestamp", None)} for filing in filings
+            ]
+            return filings
+        except Exception as exc:
+            diagnostic.update(status="error", error_class=type(exc).__name__)
+            raise
+        finally:
+            diagnostic["elapsed_ms"] = round((time.monotonic() - started) * 1000)
 
     def observe_fetch(url, **kwargs):
         started = time.monotonic()
@@ -83,7 +104,8 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
     try:
         if fetcher is None:
             with patch.object(live, "fetch_public_document", observe_fetch), \
-                    patch.object(live, "extract_issuer_risk_evidence", observe_extract):
+                    patch.object(live, "extract_issuer_risk_evidence", observe_extract), \
+                    patch.object(live.sec_provider, "fetch_recent_filings", observe_discover):
                 items = live.fetch_live_issuer_kpi_evidence(
                     case["ticker"], question=case["question"], user_agent=user_agent, max_documents=2)
         else:

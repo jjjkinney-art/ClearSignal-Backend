@@ -92,23 +92,31 @@ def fetch_live_issuer_kpi_evidence(
     risk_found = False
 
     def queue_annual_fallback(filing_index: int, document_type: str) -> None:
-        # A failed quarterly download is also missing risk support. Prefer the
-        # annual Risk Factors over another quarterly cross-reference, without
-        # adding a download slot or retrying the failed URL.
+        # Quarterly reports and amendments can omit the annual Risk Factors.
+        # Spend the remaining slot on a full 10-K before a newer 10-K/A, which
+        # may only update governance or signatures. Filing dates still describe
+        # the document actually used; no amendment is treated as a full report.
         if (not risk_requested or risk_found or filing_index != 0
                 or fetched_documents >= max_documents
-                or document_type in {"10-K", "10-K/A"}):
+                or document_type == "10-K"):
             return
         try:
             annual = sec_provider.fetch_recent_filings(
-                ticker.upper().strip(), forms=["10-K", "10-K/A"], limit=1,
+                ticker.upper().strip(), forms=["10-K"], limit=1,
                 years_back=2, prefer_results=False,
             ) or []
+            # Preserve amendment-only coverage when no full annual was found.
+            # Do not rediscover an amendment already consuming the first slot.
+            if not annual and document_type != "10-K/A":
+                annual = sec_provider.fetch_recent_filings(
+                    ticker.upper().strip(), forms=["10-K/A"], limit=1,
+                    years_back=2, prefer_results=False,
+                ) or []
         except Exception as exc:
             logger.warning("Issuer risk annual discovery unavailable for %s: %s",
                            ticker, type(exc).__name__)
             annual = []
-        if annual:
+        if annual and getattr(annual[0], "url", None) not in attempted_urls:
             candidates_filings[filing_index + 1:] = annual[:1]
 
     for filing_index, filing in enumerate(candidates_filings):
