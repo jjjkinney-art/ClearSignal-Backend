@@ -24,7 +24,9 @@ from .sec_risk_sections import complete_risk_window
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
-MAX_SEC_PERIODIC_BYTES = 10_000_000
+# Observed SEC primary JPM annual/quarterly HTML files are 12.93/11.51 MB.
+# Only eligible periodic HTML uses this finite ceiling; ordinary files use 2 MB.
+MAX_SEC_PERIODIC_BYTES = 15_000_000
 MAX_SEC_PERIODIC_CHARS = 360_000
 MAX_EXTRACTED_CHARS = 120_000
 MAX_REDIRECTS = 3
@@ -42,11 +44,16 @@ class PublicDocumentError(ValueError):
     """A public document could not be retrieved safely."""
 
     def __init__(self, message: str, *, failure_kind: str = "document_rejected",
-                 http_status: int | None = None, error_class: str | None = None):
+                 http_status: int | None = None, error_class: str | None = None,
+                 size_limit_bytes: int | None = None, declared_bytes: int | None = None,
+                 observed_bytes: int | None = None):
         super().__init__(message)
         self.failure_kind = failure_kind
         self.http_status = http_status
         self.error_class = error_class
+        self.size_limit_bytes = size_limit_bytes
+        self.declared_bytes = declared_bytes
+        self.observed_bytes = observed_bytes
 
 
 def _request_failure(exc: requests.RequestException, response) -> PublicDocumentError:
@@ -481,7 +488,8 @@ def _read_bounded(response: requests.Response, *, max_bytes: int = MAX_DOCUMENT_
         if declared_size < 0:
             raise PublicDocumentError("invalid document content length")
         if declared_size > max_bytes:
-            raise PublicDocumentError("document exceeds the size limit")
+            raise PublicDocumentError("document exceeds the size limit",
+                                      size_limit_bytes=max_bytes, declared_bytes=declared_size)
     chunks: list[bytes] = []
     total = 0
     for chunk in response.iter_content(chunk_size=64 * 1024):
@@ -489,7 +497,8 @@ def _read_bounded(response: requests.Response, *, max_bytes: int = MAX_DOCUMENT_
             continue
         total += len(chunk)
         if total > max_bytes:
-            raise PublicDocumentError("document exceeds the size limit")
+            raise PublicDocumentError("document exceeds the size limit",
+                                      size_limit_bytes=max_bytes, observed_bytes=total)
         chunks.append(chunk)
     return b"".join(chunks)
 

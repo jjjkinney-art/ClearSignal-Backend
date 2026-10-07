@@ -294,6 +294,17 @@ filing discovery for JPM/XOM. Foreign-form breadth remains a separate expansion.
 These figures measure selected issuer/topic coverage, not overall roadmap
 completion. See [live coverage record](COMPANY_EVIDENCE_LIVE_20261007.md).
 
+Post-PR #200: the complete eight-case domestic subset now has five passes
+(COST/BA/PLTR/H/F) and three gaps (JPM/XOM/NFLX). JPM needs bounded retrieval
+of the observed larger primary files; Netflix needs explicit customer/member
+retention wording. XOM is a newly reorganized holdings issuer (CIK 2115436),
+with prior annuals under predecessor CIK 34088. Add verified, dated issuer
+succession and source-document provenance before reusing predecessor research;
+the current identity guard must not be relaxed or the cohort identity changed
+to manufacture a pass. Exact current-CIK annual discovery alone is insufficient.
+Retest these cases, signed-in storage and the complete supported cohort before
+clearing broad-company launch acceptance. No overall percentage is inferred.
+
 Follow-up after PR #198: TSLA now passes a fresh signed-in supply-chain test and
 the separate read-only source-span/citation check. The complete nine-case
 domestic-gap subset still has eight gaps (COST/JPM/BA/XOM/PLTR/H/F/NFLX). Do not

@@ -296,7 +296,76 @@ def _fetch_by_cik(
         f"[DIAG] SEC EDGAR (CIK): {len(evidence)} filing(s) for "
         f"ticker={ticker} entity='{entity_name}'"
     )
+    # Only an empty annual-only request gets one exact-CIK search. Never use
+    # company-name or ticker body searches to fill an exact-security gap.
+    if not evidence and forms and set(forms) <= {"10-K", "10-K/A"}:
+        return _fetch_missing_annual_by_cik(
+            cik, entity_name, forms, limit, cutoff=cutoff, as_of=as_of)
     return evidence
+
+
+def _fetch_missing_annual_by_cik(
+    cik: str, entity_name: str, forms: List[str], limit: int,
+    *, cutoff: str, as_of: str = "",
+) -> List[RetrievedEvidence]:
+    """One official search, admitting only exact-issuer primary annual files.
+
+    The CIK search filter is a discovery hint, not identity proof. Every hit
+    must bind issuer, root/primary form, accession, file, sequence and dates.
+    """
+    end = as_of or datetime.date.today().isoformat()
+    params = {"ciks": cik, "forms": ",".join(forms), "dateRange": "custom",
+              "startdt": cutoff, "enddt": end, "from": "0"}
+    try:
+        data = _fetch_json(f"{_EDGAR_EFTS_BASE}?{urlencode(params)}", timeout=5)
+        if (not isinstance(data, dict) or data.get("timed_out") is not False
+                or data.get("_shards", {}).get("failed") != 0):
+            return []
+        hits = data.get("hits", {}).get("hits", [])
+        if not isinstance(hits, list):
+            return []
+        candidates = []
+        for hit in hits[:100]:
+            if not isinstance(hit, dict) or not isinstance(hit.get("_source"), dict):
+                continue
+            src = hit["_source"]
+            ciks = src.get("ciks")
+            if (not isinstance(ciks, list) or len(ciks) != 1
+                    or not isinstance(ciks[0], str)
+                    or not re.fullmatch(r"\d{1,10}", ciks[0])
+                    or int(ciks[0]) != int(cik)):
+                continue
+            form = src.get("form")
+            if (form not in forms or src.get("file_type") != form
+                    or src.get("root_forms") != [form]
+                    or type(src.get("sequence")) is not int or src["sequence"] != 1):
+                continue
+            accession = src.get("adsh")
+            identifier = hit.get("_id")
+            if (not isinstance(accession, str)
+                    or not re.fullmatch(r"\d{10}-\d{2}-\d{6}", accession)
+                    or not isinstance(identifier, str)
+                    or not identifier.startswith(accession + ":")):
+                continue
+            filename = identifier[len(accession) + 1:]
+            if (not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,200}\.html?", filename)
+                    or ".." in filename):
+                continue
+            filed, period = src.get("file_date"), src.get("period_ending")
+            if not all(isinstance(d, str) and re.fullmatch(r"\d{4}-\d{2}-\d{2}", d)
+                       and _as_of_date(d) == d for d in (filed, period)):
+                continue
+            if not (cutoff <= filed <= end and period <= filed):
+                continue
+            url = (f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/"
+                   f"{accession.replace('-', '')}/{filename}")
+            candidates.append(_make_evidence(entity_name, form, filed, period, url))
+        candidates.sort(key=lambda item: (item.timestamp, item.url), reverse=True)
+        unique = {item.url: item for item in candidates}
+        return list(unique.values())[:max(0, min(limit, 5))]
+    except Exception as exc:
+        logger.info("SEC exact-CIK annual fallback unavailable: %s", type(exc).__name__)
+        return []
 
 
 # ── Strategy 2: EFTS entity= search ──────────────────────────────────────────
