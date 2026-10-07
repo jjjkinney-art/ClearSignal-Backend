@@ -1,7 +1,7 @@
 """Shared conservative boundaries for normalized SEC Risk Factors text."""
 import re
 
-MAX_ISSUER_RISK_SECTION_CHARS = 200_000
+MAX_ISSUER_RISK_SECTION_CHARS = 320_000
 
 
 def _word(value: str) -> str:
@@ -24,9 +24,9 @@ RISK_END = re.compile(
 def rejected_risk_heading(text: str, end: int, *, start: int | None = None) -> bool:
     # TOC page numbers, quoted cross-references and dash-led references are not
     # independently established section boundaries.
-    return bool(re.match(r'[\d"”\u2013\u2014-]', text[end:].lstrip())
+    return bool(re.match(r'[\d"”\u2013\u2014-]|\(Continued\)', text[end:].lstrip(), re.I)
                 or (start is not None and re.search(
-                    r'(?:["“]\s*|\b(?:see|refer\s+to|discussed\s+in)\s*)$',
+                    r'(?:["“]\s*|\b(?:see|refer\s+to|discussed\s+in|in|under|within)\s*)$',
                     text[max(0, start - 60):start], re.I)))
 
 
@@ -54,3 +54,45 @@ def complete_risk_window(text: str, *, max_section_chars: int = MAX_ISSUER_RISK_
         if closing and closing.start() - heading.end() <= max_section_chars:
             return heading.start(), closing.end()
     return None
+
+
+def risk_section_spans(text: str, *, max_section_chars: int, diagnostics: dict | None = None):
+    """Bounded, nonoverlapping bodies; references cannot open a section."""
+    stats = diagnostics if diagnostics is not None else {}
+    covered_until = 0
+    for index, heading in enumerate(RISK_START.finditer(text)):
+        if index == 64:
+            break
+        stats['risk_headings'] = stats.get('risk_headings', 0) + 1
+        if rejected_risk_heading(text, heading.end(), start=heading.start()):
+            stats['rejected_heading_prefixes'] = stats.get('rejected_heading_prefixes', 0) + 1
+            continue
+        if heading.start() < covered_until:
+            continue
+        closing = find_risk_closing(text, heading.end())
+        if closing is None:
+            stats['missing_closing_sections'] = stats.get('missing_closing_sections', 0) + 1
+            continue
+        if closing.start() - heading.end() > max_section_chars:
+            stats['oversized_sections'] = stats.get('oversized_sections', 0) + 1
+            continue
+        covered_until = closing.end()
+        stats['complete_sections'] = stats.get('complete_sections', 0) + 1
+        yield heading.end(), closing.start()
+
+
+_ABBREVIATION = re.compile(r'(?:\be\.g\.|\bi\.e\.|\bU\.S\.|\bU\.K\.|\bInc\.|\bLtd\.|\bvs\.|\bMr\.|\bDr\.)$', re.I)
+
+
+def risk_sentence_spans(text: str):
+    """Exact complete spans; common abbreviations are not sentence endings."""
+    start = 0
+    for punctuation in re.finditer(r'[.!?](?=\s|$)', text):
+        end = punctuation.end()
+        if _ABBREVIATION.search(text[max(start, end - 12):end]):
+            continue
+        while start < end and text[start].isspace():
+            start += 1
+        if start < end:
+            yield start, end
+        start = end

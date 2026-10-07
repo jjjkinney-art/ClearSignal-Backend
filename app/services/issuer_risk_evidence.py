@@ -14,13 +14,14 @@ from ..integrity.provenance import ClaimDocumentReference
 from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
 from .sec_risk_sections import (
-    RISK_START as _START, MAX_ISSUER_RISK_SECTION_CHARS,
-    rejected_risk_heading, find_risk_closing,
+    MAX_ISSUER_RISK_SECTION_CHARS,
+    risk_section_spans, risk_sentence_spans,
 )
 
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
-_ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt(?:ion|ions|ed|s|ing)?|unable|cease|fail|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient)\b", re.I)
+_REPORTED_EVENT = re.compile(r"\b(?:are|is|were|was|have been|has been) experiencing\b", re.I)
+_ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt(?:ion|ions|ed|s|ing)?|unable|cease|fail(?:ure|ures|ed|ing|s)?|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient|negatively (?:affect|impact)|incur (?:additional|higher|increased) costs|close\b[^.!?]{0,80}\b(?:rooms|hotels|facilities))\b", re.I)
 _NON_TOPIC_PREFIX = re.compile(r"\bnon[\s\-‐‑‒–—]*$", re.I)
 
 
@@ -125,10 +126,16 @@ def requested_risk_topic(ticker: str, question: str, *, issuer_name: str | None 
     return matches[0] if len(matches) == 1 else None
 
 
-def _has_topic_scope(text: str, profile: IssuerRiskProfile) -> bool:
+_SUBSCRIPTION_DISCLOSURE_SCOPE = re.compile(
+    r"\b(?:subscriptions?|(?:customer|subscriber) renewals?|renewal rates?|customer retention|retention rates?)\b", re.I)
+
+
+def _has_topic_scope(text: str, profile: IssuerRiskProfile, *, disclosure: bool = False) -> bool:
     """A non-topic mention alone cannot establish the requested business scope."""
+    terms = (_SUBSCRIPTION_DISCLOSURE_SCOPE
+             if disclosure and profile.scope == 'Subscription renewals' else profile.terms)
     return any(not _NON_TOPIC_PREFIX.search(text[:match.start()])
-               for match in profile.terms.finditer(text))
+               for match in terms.finditer(text))
 
 
 def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | None:
@@ -162,8 +169,10 @@ def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, 
         ("sentence_start", bool(re.match(r"[A-Z]", quote))),
         ("sentence_end", bool(quote) and quote[-1] in ".!?"),
         ("numeric_content", not re.search(r"\d|[$%]", quote)),
-        ("topic_scope", _has_topic_scope(quote, profile)),
-        ("possibility_language", bool(_POSSIBILITY.search(quote))),
+        ("topic_scope", _has_topic_scope(quote, profile, disclosure=True)),
+        # Retain the stable diagnostic code; explicit reported risk events can
+        # also qualify. Emission still says the event is issuer-reported only.
+        ("possibility_language", bool(_POSSIBILITY.search(quote) or _REPORTED_EVENT.search(quote))),
         ("adverse_mechanism", bool(_ADVERSE.search(quote))),
         ("generic_products_and_services", not re.search(r"\bproducts and services\b", quote, re.I)),
         ("unresolved_reference", not re.match(r"(?:this|these|that|those|it|they|such)\b", quote, re.I)),
@@ -225,28 +234,13 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
     results: list[RetrievedEvidence] = []
     seen: set[str] = set()
     text = document.text
-    for heading in _START.finditer(text):
-        stats["risk_headings"] += 1
-        # Exclude TOC page numbers and quoted/cross-referenced headings. A
-        # reference to Risk Factors is not the start of that section.
-        if rejected_risk_heading(text, heading.end(), start=heading.start()):
-            stats["rejected_heading_prefixes"] += 1
-            continue
-        end = find_risk_closing(text, heading.end())
-        # An explicit closing section is required; truncated text fails closed.
-        section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
-        if end is None:
-            stats["missing_closing_sections"] += 1
-            continue
-        if end.start() - heading.end() > section_limit:
-            stats["oversized_sections"] += 1
-            continue
-        stats["complete_sections"] += 1
-        section = text[heading.end():end.start()]
-        for sentence in re.finditer(r"(?:^|(?<=[.!?])\s+)([^.!?]+[.!?])", section):
-            quote = sentence.group(1).strip()
+    section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
+    for section_start, section_end in risk_section_spans(text, max_section_chars=section_limit, diagnostics=stats):
+        section = text[section_start:section_end]
+        for sentence_start, sentence_end in risk_sentence_spans(section):
+            quote = section[sentence_start:sentence_end]
             stats["sentences"] += 1
-            is_topic = _has_topic_scope(quote, profile)
+            is_topic = _has_topic_scope(quote, profile, disclosure=True)
             stats["topic_sentences"] += int(is_topic)
             reasons = risk_quote_rejections(quote, profile)
             if is_topic:
@@ -256,9 +250,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             if reasons or quote in seen:
                 continue
             stats["qualifying_sentences"] += 1
-            offset = heading.end() + sentence.start(1)
             # Retain the exact normalized-document span, not a generated paraphrase.
-            offset += len(sentence.group(1)) - len(sentence.group(1).lstrip())
+            offset = section_start + sentence_start
             reference = ClaimDocumentReference(
                 reference_id=f"document:{document.content_hash}:risk:{offset}",
                 title=document.title or f"{ticker} {document.document_type}", provider="SEC EDGAR",

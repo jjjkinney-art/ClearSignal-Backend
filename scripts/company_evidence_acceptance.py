@@ -63,7 +63,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
         nonlocal html_inspection
         result = real_html_result(parser, *args, **kwargs)
         if inspect_source and kwargs.get("preserve_sec_risk"):
-            full_text = ingestion._clean_text(" ".join(parser._parts))
+            full_text = parser.normalized_visible_text(preserve_sec_risk=True)
             html_inspection = boundary_inspection(full_text)
         return result
 

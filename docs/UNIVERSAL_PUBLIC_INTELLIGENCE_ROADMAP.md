@@ -304,6 +304,15 @@ restored useful answers and complete source binding.
 
 ## 6. Immediate implementation sequence
 
+Post-PR #199 targeted inspection: COST now passes; the complete eight-company
+domestic subset still has seven gaps (JPM/BA/XOM/PLTR/H/F/NFLX). Apply the observed
+passage/section normalization repairs, then retest their actual source spans and
+signed-in answers. Separately address JPM's confirmed download-size rejection
+and XOM's missing annual metadata without weakening issuer identity or bounded
+retrieval. NFLX needs customer-subscription evidence; labor/content renewal risks
+must not be substituted. This subset does not revise the full-cohort coverage
+percentage or clear the full-launch gate.
+
 1. Finish the general-company SEC metric family and period/identity hardening.
 2. Add the universal evidence schema and source-quality model before adding many new connectors.
 3. Deliver the first sector packs: banks, insurers, SaaS, and REITs.

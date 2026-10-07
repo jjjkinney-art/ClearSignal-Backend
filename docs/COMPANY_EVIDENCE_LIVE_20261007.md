@@ -1,5 +1,10 @@
 # Signed-in broad-company evidence acceptance
 
+Latest status: the complete post-PR #199 domestic subset reports COST passing
+and JPM/BA/XOM/PLTR/H/F/NFLX still gaps. The remaining sections below preserve
+the chronological acceptance record; earlier counts are not current full-cohort
+results.
+
 Recorded 7 October 2026 NZ / 6 October UTC after the owner confirmed deployment
 of PR #194 (merged main `7e97e529fcbc4a2b42690b450c06a1339331dca9`).
 The runtime SHA could not be independently retrieved from this environment;
@@ -307,3 +312,54 @@ existing Starlette/AnyIO alias deprecation warning remains. These local results
 do not substitute for pinned CI or a deployed coverage report. Opt-in inspection
 adds parsing work to diagnostic timings, so compare uninstrumented request
 timing separately when evaluating production latency.
+
+## Post-PR #199 inspection and passage repair
+
+The owner confirmed deployment of merged main `11dcf6a1c8c2ef4dfcf2e53d72821d93c430dbe1`.
+The supplied compact extraction reports `complete: true` for eight cases: COST
+passes; JPM, BA, XOM, PLTR, H, F and NFLX remain gaps. This is a targeted domestic
+subset, not a new 33-company run or signed-in `/ask` acceptance.
+
+Observed causes and limitations:
+
+- COST's annual section now closes correctly and produces two bound disclosures.
+- Both JPM downloads are rejected by the 10,000,000-byte ceiling. Their actual
+  sizes are not recorded, so this repair does not guess a larger download limit.
+- XOM's submissions response has 34 aligned recent rows, one requested 10-Q,
+  no requested annual filing, and no archive listed within the two-year lookback.
+  Array truncation is not the observed cause. Annual discovery remains open.
+- PLTR's explicit annual Risk Factors body spans 298,623 characters, exceeding
+  the prior 200,000-character section limit and 240,000-character retained text.
+- BA has a narrative reference ending `in Item 1A. Risk Factors` incorrectly
+  treated as a section opening. The real section also contains an explicit
+  issuer-reported supplier disruption sentence, rejected for lacking a modal.
+- H's occupancy/room-closure sentence contains an inserted page-number/contents
+  footer and a room-closure mechanism absent from the adverse-language rule.
+- F scans overlapping continuation headings repeatedly, and splits an observed
+  topic sentence at `e.g.`. Its complete sentence is not in the bounded sample.
+- NFLX's generic renewal wording includes entertainment labor agreements and
+  content-license renewals, which cannot support customer subscription renewals.
+  This repair narrows source qualification while preserving question routing.
+
+The follow-up parser rejects narrative references and continuation headings,
+scans each eligible section once, and shares exact sentence offsets between
+extraction and inspection. Common abbreviations do not authorize sentence
+fragments. SEC periodic normalization removes only the observed numeric
+`Table of Contents` footer token and remaps heading offsets; substantive numbers
+remain subject to the numeric claim guard. The raw-body content hash is unchanged.
+The section bound is 320,000 characters and retained periodic text is 360,000,
+enough for the observed PLTR section with explicit closing. Larger or incomplete
+sections still fail closed; the Apple-specific 80,000-character bound remains.
+
+Explicit adverse mechanisms include additional costs and closure of rooms or
+facilities. An explicit `are/is experiencing` reported event can qualify alongside
+the same adverse/scope checks. Every emission remains an attributed issuer
+disclosure, not independent verification of occurrence, financial impact, or
+thesis change. No numeric guard, issuer identity, ownership, document-download
+count, shared route, or delivery boundary is removed.
+
+Local validation: 529 unique relevant tests across thirteen modules pass, including
+31 passage regressions. Hyatt and Boeing observed excerpts are replayed within
+synthetic layouts; the Ford completion is authored. These tests do not establish
+live recovery. Pinned CI, fresh deployed retrieval, signed-in persistence, and a
+new full supported cohort remain required. The broad-company launch gate is open.
