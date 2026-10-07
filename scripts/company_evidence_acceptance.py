@@ -26,11 +26,16 @@ from app.services import live_issuer_kpi_service as live
 from app.services.evidence_references import admit_evidence
 from app.services.issuer_risk_evidence import bound_issuer_risk, requested_risk_profile
 from app.services.source_answer import apply_source_answer_gate
+from app.services import public_document_ingestion as ingestion
+from scripts.company_evidence_inspection import (
+    boundary_inspection, rejection_reason, submission_inventory, topic_inspection,
+)
 
 COHORT_PATH = ROOT / "validation/company_evidence_coverage.v1.json"
 
 
-def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) -> dict:
+def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
+             inspect_source: bool = False) -> dict:
     """One independent issuer/topic probe; preserve exact document spans."""
     row = {"ticker": case["ticker"], "topic": case["topic"], "passed": False,
            "status": "gap", "stage": "identity", "documents_attempted": 0,
@@ -49,14 +54,41 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
     real_fetch = live.fetch_public_document
     real_extract = live.extract_issuer_risk_evidence
     real_discover = live.sec_provider.fetch_recent_filings
+    real_json = live.sec_provider._fetch_json
+    real_html_result = ingestion._HTMLTextExtractor.result
+    html_inspection = None
+    inspections = {}
+
+    def observe_html(parser, *args, **kwargs):
+        nonlocal html_inspection
+        result = real_html_result(parser, *args, **kwargs)
+        if inspect_source and kwargs.get("preserve_sec_risk"):
+            full_text = ingestion._clean_text(" ".join(parser._parts))
+            html_inspection = boundary_inspection(full_text)
+        return result
 
     def observe_discover(company, **kwargs):
         started = time.monotonic()
         diagnostic = {"forms": list(kwargs.get("forms") or []),
                       "limit": kwargs.get("limit"), "filings_returned": []}
         row["filing_discovery"].append(diagnostic)
+        def observe_json(url, *args, **json_kwargs):
+            data = real_json(url, *args, **json_kwargs)
+            # Observe only this issuer's submissions response, never the ticker
+            # directory, an unrelated issuer, credentials or arbitrary URLs.
+            if (inspect_source and isinstance(data, dict) and url ==
+                    f"https://data.sec.gov/submissions/CIK{str(int(case['cik'])).zfill(10)}.json"):
+                cutoff = live.sec_provider._lookback_start(kwargs.get("years_back", 2))
+                try:
+                    diagnostic["submission_inventory"] = submission_inventory(
+                        data, forms=diagnostic["forms"], cutoff=cutoff)
+                except (TypeError, ValueError, AttributeError):
+                    # Optional inspection must not alter discovery behavior.
+                    diagnostic["submission_inventory"] = {"status": "invalid_metadata_shape"}
+            return data
         try:
-            filings = real_discover(company, **kwargs) or []
+            with patch.object(live.sec_provider, "_fetch_json", observe_json):
+                filings = real_discover(company, **kwargs) or []
             diagnostic["status"] = "found" if filings else "empty_or_unavailable"
             diagnostic["filings_returned"] = [
                 {"form": getattr(filing, "document_type", None),
@@ -70,6 +102,8 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
             diagnostic["elapsed_ms"] = round((time.monotonic() - started) * 1000)
 
     def observe_fetch(url, **kwargs):
+        nonlocal html_inspection
+        html_inspection = None
         started = time.monotonic()
         row["documents_attempted"] += 1
         try:
@@ -77,10 +111,19 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
         except live.PublicDocumentError as exc:
             row["retrieval_failures"].append({"kind": exc.failure_kind,
                 "http_status": exc.http_status, "form": kwargs.get("document_type"),
+                "rejection_reason": rejection_reason(exc),
                 "elapsed_ms": round((time.monotonic() - started) * 1000)})
             raise
         row["documents_retrieved"] += 1
         documents[document.content_hash] = document
+        if inspect_source:
+            inspections[document.content_hash] = {
+                "public_source_url": document.final_url, "content_hash": document.content_hash,
+                "full_visible_text_observed": html_inspection is not None,
+                "boundaries": html_inspection or boundary_inspection(document.text),
+                "topic_candidates": topic_inspection(document, ticker=case["ticker"], question=case["question"]),
+                "admission_authority": False,
+            }
         download_times[document.content_hash] = round((time.monotonic() - started) * 1000)
         return document
 
@@ -88,7 +131,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
         started = time.monotonic()
         stats = {}
         result = real_extract(document, **kwargs, diagnostics=stats)
-        row["document_diagnostics"].append({
+        diagnostic = {
             "form": document.document_type, "filed_at": document.published_at,
             "normalized_text_chars": len(document.text),
             "normalized_text_chars_total": document.normalized_text_chars_total,
@@ -96,7 +139,10 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
             "text_selection": document.text_selection,
             "download_elapsed_ms": download_times.get(document.content_hash),
             "extraction_elapsed_ms": round((time.monotonic() - started) * 1000), **stats,
-        })
+        }
+        if inspect_source:
+            diagnostic["source_inspection"] = inspections.get(document.content_hash)
+        row["document_diagnostics"].append(diagnostic)
         return result
 
     row["stage"] = "bounded_retrieval"
@@ -105,6 +151,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None) ->
         if fetcher is None:
             with patch.object(live, "fetch_public_document", observe_fetch), \
                     patch.object(live, "extract_issuer_risk_evidence", observe_extract), \
+                    patch.object(ingestion._HTMLTextExtractor, "result", observe_html), \
                     patch.object(live.sec_provider, "fetch_recent_filings", observe_discover):
                 items = live.fetch_live_issuer_kpi_evidence(
                     case["ticker"], question=case["question"], user_agent=user_agent, max_documents=2)
@@ -171,6 +218,8 @@ def main(argv=None):
     parser.add_argument("--cohort", type=Path, default=COHORT_PATH)
     parser.add_argument("--case", action="append", help="Exact ticker; repeat to select a subset")
     parser.add_argument("--output", type=Path)
+    parser.add_argument("--inspect-source", action="store_true",
+        help="Include bounded public SEC heading/sentence excerpts; diagnostics cannot authorize claims")
     args = parser.parse_args(argv)
     from app.config import settings
     user_agent = (getattr(settings, "sec_user_agent", "") or "").strip()
@@ -186,13 +235,14 @@ def main(argv=None):
     rows = []
     for index, case in enumerate(cases, 1):
         with redirect_stdout(io.StringIO()):
-            rows.append(run_case(case, user_agent=user_agent))
+            rows.append(run_case(case, user_agent=user_agent, inspect_source=args.inspect_source))
         print(f'{index}/{len(cases)} {case["ticker"]}: {rows[-1]["status"]}',
               file=sys.stderr, flush=True)
         # Preserve a visibly incomplete report if a long cohort is interrupted.
         if args.output:
             args.output.write_text(json.dumps(build_report(cases, rows), indent=2, sort_keys=True) + "\n")
     report = build_report(cases, rows)
+    report["source_inspection_requested"] = args.inspect_source
     report["cohort_sha256"] = hashlib.sha256(args.cohort.read_bytes()).hexdigest()
     text = json.dumps(report, indent=2, sort_keys=True) + "\n"
     if args.output:

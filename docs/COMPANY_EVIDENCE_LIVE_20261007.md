@@ -259,3 +259,51 @@ Local validation of this follow-up: 451 tests pass across ten isolated modules
 on Python 3.12 with the pinned top-level dependencies. Clean collection finds
 15,009 tests; the existing Starlette/AnyIO alias deprecation warning remains.
 Required pinned Python 3.11 CI and post-deployment live acceptance are separate.
+
+## PR #198 live confirmation and remaining domestic gaps
+
+The owner supplied a Render deployment screenshot for main `9cd0eab` on 7
+October 2026 NZ. A fresh signed-in TSLA supply-chain investigation returned two
+cited disclosures from the full 10-K filed 2026-01-29. Both messages persisted;
+History and Research Trail showed the same answer, and reopening the saved
+investigation restored its citations. The browser displayed its own timezone
+(6 October, 9:52 PM); this does not change the filing date. No account identifier
+or token is retained here.
+
+The complete subsequent nine-case Render report recorded TSLA as a pass with
+`exact_source_spans_and_answer_citations`, and eight gaps: COST, JPM, BA, XOM,
+PLTR, H, F and NFLX. This was a subset rerun; do not present it as a fresh
+33-company result or as an overall roadmap-completion percentage.
+
+JPM discovered quarterly and annual filings, but both downloads were rejected
+as `document_rejected`; the precise ingestion reason was not yet reported. XOM
+discovered a quarter while full annual and amendment discovery returned
+`empty_or_unavailable`. COST and PLTR downloaded filings but did not establish
+complete risk boundaries. BA/H/F/NFLX reached topic sentences but accepted none.
+These observations do not establish whether the missing evidence is caused by
+size ceilings, metadata alignment, unsupported heading layout, sentence
+fragmentation or a correctly rejected quote.
+
+The next repair supports explicit compact closing labels such as
+`Item 1B.Unresolved Staff Comments`, preserving TOC/cross-reference rejection and
+section ceilings. Its actual effect on COST/PLTR must be measured after deploy.
+Quote checks retain their previous acceptance predicates and now expose stable
+rejection counts. The CLI's optional `--inspect-source` adds bounded public
+heading and topic-sentence excerpts, full-visible-text boundary coordinates,
+retained-text quote offsets, and submission-array/lookback inventory. Excerpts
+are diagnostic candidates, not admitted evidence. Ordinary reports remain
+prose-free; neither mode exports contact headers, arbitrary exception text,
+tokens or account data. No download ceiling or shared research route is changed.
+
+After deploying this repair, rerun the eight domestic gaps with
+`--inspect-source --output company-evidence-inspection.json`, and inspect the
+reported rejection reasons and original source layout before further changes.
+Repeat the complete frozen cohort and signed-in restored cases before clearing
+the broader launch gate. Foreign periodic-form expansion remains separate.
+
+Local validation for this repair: 498 tests passed across twelve relevant
+modules; full collection found 15,036 tests with no collection errors. The
+existing Starlette/AnyIO alias deprecation warning remains. These local results
+do not substitute for pinned CI or a deployed coverage report. Opt-in inspection
+adds parsing work to diagnostic timings, so compare uninstrumented request
+timing separately when evaluating production latency.

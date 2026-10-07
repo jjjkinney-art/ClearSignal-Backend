@@ -14,7 +14,7 @@ _ITEM = _word("Item")
 RISK_START = re.compile(
     rf"\b{_ITEM}\s+1\s*A\s*[.:—–-]?\s*{_word('Risk')}\s+{_word('Factors')}\b", re.I)
 RISK_END = re.compile(
-    rf"\b{_ITEM}\s+(?:1\s*B|1\s*C|2)\s*[.:—–-]?\s+(?:"
+    rf"\b{_ITEM}\s+(?:1\s*B|1\s*C|2)(?:\s*[.:—–-]\s*|\s+)(?:"
     rf"{_word('Unresolved')}(?:\s+{_word('Staff')}\s+{_word('Comments')})?|"
     rf"{_word('Cybersecurity')}|{_word('Properties')}|"
     rf"{_word('Legal')}(?:\s+{_word('Proceedings')})?|"
