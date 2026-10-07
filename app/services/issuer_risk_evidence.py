@@ -127,7 +127,8 @@ def requested_risk_topic(ticker: str, question: str, *, issuer_name: str | None 
 
 
 _SUBSCRIPTION_DISCLOSURE_SCOPE = re.compile(
-    r"\b(?:subscriptions?|(?:customer|subscriber) renewals?|renewal rates?|customer retention|retention rates?)\b", re.I)
+    r"\b(?:subscriptions?|(?:customer|subscriber) renewals?|renewal rates?|customer retention|retention rates?"
+    r"|retain(?:ing)? (?:our |existing |our existing )?(?:members(?!\s+of\b)|subscribers))\b", re.I)
 
 
 def _has_topic_scope(text: str, profile: IssuerRiskProfile, *, disclosure: bool = False) -> bool:

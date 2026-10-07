@@ -1,7 +1,7 @@
 # Signed-in broad-company evidence acceptance
 
-Latest status: the complete post-PR #199 domestic subset reports COST passing
-and JPM/BA/XOM/PLTR/H/F/NFLX still gaps. The remaining sections below preserve
+Latest status: the complete post-PR #200 domestic subset reports
+COST/BA/PLTR/H/F passing and JPM/XOM/NFLX still gaps. The remaining sections below preserve
 the chronological acceptance record; earlier counts are not current full-cohort
 results.
 
@@ -363,3 +363,65 @@ Local validation: 529 unique relevant tests across thirteen modules pass, includ
 synthetic layouts; the Ford completion is authored. These tests do not establish
 live recovery. Pinned CI, fresh deployed retrieval, signed-in persistence, and a
 new full supported cohort remain required. The broad-company launch gate is open.
+
+## PR #200 deployed: five passes and three distinct remaining gaps
+
+The owner supplied a complete eight-case Render rerun after deployment of
+main `5e19ff7b6a7b5120e2114fee954cb957d0ec3f04`. COST, BA, PLTR, H and F
+pass exact original-span and answer-citation checks. JPM, XOM and NFLX remain
+gaps. No new full 33-case or signed-in retest was supplied. Five of eight is
+a targeted sample result, not a roadmap or full-cohort completion percentage.
+
+| Issuer | Observed cause | Follow-up |
+| --- | --- | --- |
+| JPM | Quarterly and annual HTML both rejected at the 10 MB download ceiling | Eligible SEC periodic HTML now has a finite 15 MB ceiling; ordinary documents remain 2 MB |
+| NFLX | Complete quarterly/annual sections found, but zero admitted subscription-risk sentences | Recognize explicit member/subscriber retention; keep non-adverse and labor/content renewal language withheld |
+| XOM | No annual under the current holdings company's CIK | Separate successor/predecessor source-link work is required; never replace the current issuer with the former CIK |
+
+SEC's [JPM annual directory](https://www.sec.gov/Archives/edgar/data/19617/000162828026008131)
+lists the primary HTML at 12,927,325 bytes; its
+[quarterly index](https://www.sec.gov/Archives/edgar/data/19617/000162828026054343/0001628280-26-054343-index.htm)
+lists 11,513,874 bytes. The expanded bound is based on those observed files,
+not unlimited downloads. Declared and streamed oversized bodies still reject,
+including on absent or misleading content-length headers. Size rejection
+diagnostics now include numeric limit/measurement fields without response
+headers, request credentials or document bodies. The retained-text, section,
+quote, Apple-specific, two-document and production router bounds are unchanged.
+Larger files may increase memory and parsing time; fresh `/ask` timing remains
+a separate requirement.
+
+Netflix's [2025 annual filing](https://www.sec.gov/Archives/edgar/data/1065280/000106528026000034/nflx-20251231.htm)
+contains explicit adverse member-retention mechanisms. The shared source rule
+recognizes retaining members/subscribers, rather than substituting labor or
+content renewals. Membership alone, member acquisition alone, employees,
+members of a guild and non-adverse retention statements remain insufficient.
+These are attributed issuer risk disclosures, not verified financial outcomes.
+
+The integration test caught a crucial XOM distinction. The frozen cohort uses
+**ExxonMobil Holdings Corp, CIK 2115436**, not predecessor CIK 34088. SEC's
+[successor registration](https://www.sec.gov/Archives/edgar/data/2115436/000119312526291990/d71068d8k12b.htm)
+and the current quarterly filing's
+[basis note](https://www.sec.gov/Archives/edgar/data/2115436/000003408826000093/R9.htm)
+establish the July 2026 reorganization. An exact current-CIK annual search
+returned zero hits; a predecessor search returned annual metadata. This is
+not proof of an array-alignment defect or permission to silently reuse a
+different registrant's filing. The newly bounded annual discovery fallback
+admits only independently matching current-CIK primary annual metadata. It
+uses one five-second search per empty annual-only request, inspects at most
+100 hits, returns at most five deduplicated results, and rejects exhibits,
+other CIKs, co-registrants, invalid dates, partial responses and escaped paths.
+It cannot itself repair XOM's succession gap.
+
+Next: build an explicitly source-bound, dated succession relationship; retain
+both current and source issuers and the predecessor document's actual date in
+answer and memory provenance. Require negative tests for mere name/ticker
+similarity, subsidiaries, unrelated transactions, date mismatch and expired
+relationships. Repeat the XOM case before counting recovery. Broader foreign
+forms remain a separate supported-coverage expansion.
+
+Local validation: 591 unique relevant tests across fifteen modules pass,
+including 59 new size, retention, annual-discovery and wrong-issuer cases.
+The integration fixture is an authored issuer, not a current-XOM coverage pass.
+Collection is clean apart from the existing Starlette/AnyIO deprecation warning
+and intentionally retired test module. Pinned CI and fresh deployed retrieval,
+signed-in answers/persistence and full-cohort acceptance remain required.

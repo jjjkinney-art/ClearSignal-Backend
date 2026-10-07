@@ -109,10 +109,15 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
         try:
             document = real_fetch(url, **kwargs)
         except live.PublicDocumentError as exc:
-            row["retrieval_failures"].append({"kind": exc.failure_kind,
+            failure = {"kind": exc.failure_kind,
                 "http_status": exc.http_status, "form": kwargs.get("document_type"),
                 "rejection_reason": rejection_reason(exc),
-                "elapsed_ms": round((time.monotonic() - started) * 1000)})
+                "elapsed_ms": round((time.monotonic() - started) * 1000)}
+            for field in ("size_limit_bytes", "declared_bytes", "observed_bytes"):
+                value = getattr(exc, field, None)
+                if type(value) is int and 0 <= value <= 2**63 - 1:
+                    failure[field] = value
+            row["retrieval_failures"].append(failure)
             raise
         row["documents_retrieved"] += 1
         documents[document.content_hash] = document
