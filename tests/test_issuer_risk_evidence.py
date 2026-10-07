@@ -240,7 +240,7 @@ def test_live_lookup_uses_latest_annual_fallback_and_expanded_limits_within_budg
     calls, fetched = [], []
     def discover(*a, **k):
         calls.append(k)
-        return [filing(annual)] if k['forms'] == ['10-K', '10-K/A'] else [filing(quarter)]
+        return [filing(annual)] if k['forms'] == ['10-K'] else [filing(quarter)]
     monkeypatch.setattr(live.sec_provider, 'fetch_recent_filings', discover)
     def fetch(url, **k):
         fetched.append((url, k)); return annual if url == annual.final_url else quarter

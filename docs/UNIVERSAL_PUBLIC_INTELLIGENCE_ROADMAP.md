@@ -285,6 +285,15 @@ ClearSignal is ready for full launch when all P0 gates pass:
 
 Foreign jurisdiction breadth and long-tail public-web connectors may continue expanding after launch, but the product must already accept those questions and respond with an honest coverage state. A question being accepted must never be confused with its answer being verified.
 
+Broad-company acceptance update (2026-10-07): the deployed split-heading repair
+restored all five signed-in retest cases, and the complete 33-company read-only
+cohort reports 20 source-binding passes and 13 gaps. Full launch coverage remains
+blocked. Prioritize the demonstrated TSLA full-annual/amendment selection defect,
+COST/PLTR section boundaries, topic-level review for BA/H/F/NFLX, and observed
+filing discovery for JPM/XOM. Foreign-form breadth remains a separate expansion.
+These figures measure selected issuer/topic coverage, not overall roadmap
+completion. See [live coverage record](COMPANY_EVIDENCE_LIVE_20261007.md).
+
 ## 6. Immediate implementation sequence
 
 1. Finish the general-company SEC metric family and period/identity hardening.

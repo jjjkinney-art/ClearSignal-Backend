@@ -187,3 +187,75 @@ citation checks, false closing references, oversized sections and the unchanged
 Apple ceiling. Clean collection finds 14,993 tests. Required pinned CI and fresh
 Render/signed-in acceptance remain necessary. This repair does not establish
 live useful-answer coverage for the four failing issuers or clear launch.
+
+
+## PR #197 deployment: five signed-in cases and complete CLI cohort
+
+After the owner confirmed deployment of main
+`bc01432c9af9032d689132d1fc607168c0d31783`, five independent signed-in
+investigations used `Split-heading coverage retest October 7.`. All returned
+issuer disclosures with answer citations: AA two, MAN one, ACHC one, ACMR two,
+and DOCU two. The four earlier gaps now cite annual filings; DOCU retains its
+2026-09-04 quarterly disclosures. All five appeared in History and Research
+Trail. Reopening the exact fresh AA investigation restored both messages and
+the same answer. Runtime SHA was not independently retrieved.
+
+These UI checks establish restored retrieval and private persistence for the
+five requested cases, not all-company coverage or complete analysis quality.
+MAN's admitted disclosure concerns reputational harm causing lost client
+engagements and recruitment/retention difficulties; its narrower relevance to
+staffing demand needs review. AA's first quote refers to preceding events that
+are not reproduced in the answer. Source inspection remains important.
+
+The owner's complete compact Render report confirms `complete: true` and
+20 passes / 13 gaps across the frozen 33-company cohort. Each reported pass
+has reason `exact_source_spans_and_answer_citations`, including all five
+signed-in retest issuers. The original pasted terminal excerpt began midway
+through Visa's row; the subsequent compact output supplied every case and all
+remaining gap diagnostics. No full-cohort signed-in `/ask` run was performed.
+
+Passing symbols: AAPL, MSFT, NVDA, DOCU, MAN, AA, ACHC, ACMR, WDFC, ETSY, LLY,
+V, NWE, LQDT, AZZ, MOD, SLG, CRM, KHC and A. This is evidence-binding coverage
+for one selected topic per issuer, not a roadmap-completion percentage or a
+certification of risk rankings, forecasts, financial impact or all topics.
+
+| Remaining symbols | Observed diagnostic | Required follow-up |
+| --- | --- | --- |
+| COST | Both quarterly and annual risk sections lack a recognized closing boundary; annual text is fully retained | Inspect actual closing headings before changing boundaries |
+| PLTR | Both filings lack a recognized closing boundary; retained prefix is shorter than total visible text | Distinguish closing layout, section size and cutoff using actual headings |
+| TSLA | Quarterly section has no qualifying risk; fallback selected a 10-K/A with no risk headings | Prefer the full annual filing within the same download budget |
+| BA, H, F, NFLX | Complete sections and topic sentences exist, but no sentence qualifies | Inspect topic matching and original context; do not simply relax admission |
+| JPM | No document diagnostics supplied | Inspect filing discovery and retrieval failures; cause is not established |
+| XOM | Only one quarterly document diagnostic supplied | Inspect annual discovery and any remaining download failure |
+| SPOT, ASML, TSM, NVO | No document diagnostics; frozen foreign-reporting cohorts remain unsupported by the periodic risk extractor | Add explicit foreign-form parsing and validation separately |
+
+## Full-annual fallback repair and diagnostic follow-up
+
+When the newest quarter or amendment has no qualifying risk, the remaining
+slot now prefers an unamended 10-K. A 10-K/A can update governance or signatures
+without repeating annual Risk Factors, as demonstrated by the TSLA report.
+If no full annual is discovered, a quarter can still fall back to an amendment.
+A newest amendment that already supplies qualifying risk is retained. An
+amendment without risk can now fall back to the full annual if a slot remains.
+Failed downloads consume the budget, duplicate URLs are not retried, and the
+normal two-download ceiling and two-year discovery window remain unchanged.
+The selected source keeps its actual form, filing date, hash and quote offsets.
+
+The read-only acceptance report now records requested forms, result forms and
+filing dates, discovery duration, and whether the provider returned filings,
+an empty/unavailable result, or raised an exception. An empty result is not
+classified as an unsupported company or a network failure: the provider can
+withhold filings for several reasons. No contact, question, document prose or
+exception message is added to these diagnostics.
+
+Required next evidence is pinned CI, a deployed TSLA retest, and renewed gap
+reports including filing discovery and retrieval failures. The full cohort
+still fails; no launch gate is cleared by this repair. Shared ticker routes,
+account ownership, existing historical records and external delivery are not
+changed. The actual TSLA full annual has not yet been retrieved by this repair;
+authored fixtures verify selection and source binding, not live recovery.
+
+Local validation of this follow-up: 451 tests pass across ten isolated modules
+on Python 3.12 with the pinned top-level dependencies. Clean collection finds
+15,009 tests; the existing Starlette/AnyIO alias deprecation warning remains.
+Required pinned Python 3.11 CI and post-deployment live acceptance are separate.

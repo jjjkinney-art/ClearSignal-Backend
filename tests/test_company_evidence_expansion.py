@@ -332,7 +332,7 @@ def test_annual_risk_fallback_runs_for_new_issuer_with_two_document_ceiling(monk
         return RetrievedEvidence(title='Filing', source='SEC EDGAR', summary='Filed.', timestamp=doc.published_at,
                                  url=doc.final_url, document_type=doc.document_type)
     monkeypatch.setattr(live.sec_provider, "fetch_recent_filings", lambda *a, **k:
-                        [filing(annual if k["forms"] == ["10-K", "10-K/A"] else quarter)])
+                        [filing(annual if k["forms"] == ["10-K"] else quarter)])
     fetched = []
     monkeypatch.setattr(live, 'fetch_public_document', lambda url, **k:
                         fetched.append((url, k)) or (quarter if url == quarter.final_url else annual))
@@ -354,7 +354,7 @@ def test_failed_quarter_uses_annual_in_remaining_slot_without_retry(monkeypatch,
     discoveries = []
     def discover(*a, **k):
         discoveries.append(k['forms'])
-        return ([filing(annual.final_url, '10-K')] if k['forms'] == ['10-K', '10-K/A']
+        return ([filing(annual.final_url, '10-K')] if k['forms'] == ['10-K']
                 else [filing(quarter_url, '10-Q'), filing(older_url, '10-Q')])
     monkeypatch.setattr(live.sec_provider, 'fetch_recent_filings', discover)
     fetched = []
@@ -371,6 +371,136 @@ def test_failed_quarter_uses_annual_in_remaining_slot_without_retry(monkeypatch,
     assert len(discoveries) == max_documents
     assert len(items) == max_documents - 1
     assert older_url not in fetched
+
+
+def _annual_fallback_probe(monkeypatch, *, first_form="10-Q", full_available=True,
+                           amendment_has_risk=False, first_download_fails=False):
+    case = next(c for c in CASES if c["ticker"] == "TSLA")
+    full = document(case)
+    empty = "Governance update and signatures only."
+    amendment = replace(full, document_type="10-K/A", published_at="2026-04-30",
+                        final_url=full.final_url.replace("test.htm", "amendment.htm"),
+                        text=full.text if amendment_has_risk else empty,
+                        content_hash=sha256((full.text if amendment_has_risk else empty).encode()).hexdigest())
+    first = amendment if first_form == "10-K/A" else replace(
+        full, document_type=first_form, published_at="2026-07-23",
+        final_url=full.final_url.replace("test.htm", "quarter.htm"), text=empty,
+        content_hash=sha256(empty.encode()).hexdigest())
+    def filing(doc):
+        return RetrievedEvidence(title="Authored filing", source="SEC EDGAR", summary="Filed.",
+            timestamp=doc.published_at, url=doc.final_url, document_type=doc.document_type)
+    discoveries, downloads = [], []
+    def discover(*args, **kwargs):
+        discoveries.append(kwargs)
+        if kwargs["forms"] == ["10-K"]:
+            return [filing(full)] if full_available else []
+        if kwargs["forms"] in (["10-K/A"], ["10-K", "10-K/A"]):
+            return [filing(amendment)]
+        return [filing(first), filing(amendment)]
+    def fetch(url, **kwargs):
+        downloads.append(url)
+        if first_download_fails and url == first.final_url:
+            raise live.PublicDocumentError("authored download failure")
+        return next(doc for doc in (first, full, amendment) if doc.final_url == url)
+    monkeypatch.setattr(live.sec_provider, "fetch_recent_filings", discover)
+    monkeypatch.setattr(live, "fetch_public_document", fetch)
+    return case, full, first, amendment, discoveries, downloads
+
+
+@pytest.mark.parametrize("first_form", ["10-Q", "10-Q/A", "10-K/A"])
+@pytest.mark.parametrize("first_download_fails", [False, True])
+def test_risk_fallback_prefers_full_annual_over_newer_sparse_amendment(
+        monkeypatch, first_form, first_download_fails):
+    case, full, first, amendment, discoveries, downloads = _annual_fallback_probe(
+        monkeypatch, first_form=first_form, first_download_fails=first_download_fails)
+    row = acceptance.run_case(case, user_agent="test", evaluated_at="2026-10-07")
+    assert row["passed"] and row["documents_attempted"] == 2
+    assert downloads == [first.final_url, full.final_url]
+    assert [c["forms"] for c in discoveries][1:] == [["10-K"]]
+    assert row["disclosures"][0]["document_type"] == "10-K"
+    assert row["disclosures"][0]["filed_at"] == full.published_at
+    assert row["disclosures"][0]["url"] == full.final_url
+    assert row["disclosures"][0]["exact_span"] and row["disclosures"][0]["cited_in_answer"]
+    assert all(c["limit"] in (1, 2) and c["years_back"] == 2 for c in discoveries)
+
+
+@pytest.mark.parametrize("first_form", ["10-Q", "10-Q/A", "10-K/A"])
+def test_full_annual_fallback_does_not_expand_single_document_budget(monkeypatch, first_form):
+    case, full, first, amendment, discoveries, downloads = _annual_fallback_probe(
+        monkeypatch, first_form=first_form)
+    assert live.fetch_live_issuer_kpi_evidence(case["ticker"], question=case["question"],
+                                               max_documents=1) == []
+    assert downloads == [first.final_url] and len(discoveries) == 1
+
+
+@pytest.mark.parametrize("first_form", ["10-Q", "10-Q/A"])
+def test_amendment_only_fallback_keeps_its_actual_form_date_and_exact_quotes(monkeypatch, first_form):
+    case, full, first, amendment, discoveries, downloads = _annual_fallback_probe(
+        monkeypatch, first_form=first_form, full_available=False, amendment_has_risk=True)
+    row = acceptance.run_case(case, user_agent="test", evaluated_at="2026-10-07")
+    assert row["passed"] and downloads == [first.final_url, amendment.final_url]
+    assert [c["forms"] for c in discoveries][1:] == [["10-K"], ["10-K/A"]]
+    assert row["disclosures"][0]["document_type"] == "10-K/A"
+    assert row["disclosures"][0]["filed_at"] == amendment.published_at
+    assert row["disclosures"][0]["exact_span"] and row["disclosures"][0]["cited_in_answer"]
+    assert row["filing_discovery"][1]["status"] == "empty_or_unavailable"
+    assert row["filing_discovery"][2]["filings_returned"] == [
+        {"form": "10-K/A", "filed_at": amendment.published_at}]
+
+
+def test_amendment_without_full_annual_is_not_retried_or_promoted(monkeypatch):
+    case, full, first, amendment, discoveries, downloads = _annual_fallback_probe(
+        monkeypatch, first_form="10-K/A", full_available=False)
+    row = acceptance.run_case(case, user_agent="test", evaluated_at="2026-10-07")
+    assert not row["passed"] and row["admitted_risk_count"] == 0
+    assert downloads == [amendment.final_url]
+    assert [c["forms"] for c in discoveries][1:] == [["10-K"]]
+
+
+def test_newest_amendment_with_qualifying_risk_is_kept_without_annual_fallback(monkeypatch):
+    case, full, first, amendment, discoveries, downloads = _annual_fallback_probe(
+        monkeypatch, first_form="10-K/A", amendment_has_risk=True)
+    row = acceptance.run_case(case, user_agent="test", evaluated_at="2026-10-07")
+    assert row["passed"] and downloads == [amendment.final_url]
+    assert len(discoveries) == 1
+    assert row["disclosures"][0]["document_type"] == "10-K/A"
+    assert row["disclosures"][0]["filed_at"] == amendment.published_at
+
+
+def test_failed_full_annual_discovery_does_not_retry_the_first_url(monkeypatch):
+    case, full, first, amendment, discoveries, downloads = _annual_fallback_probe(monkeypatch)
+    discover = live.sec_provider.fetch_recent_filings
+    def fail(*args, **kwargs):
+        if kwargs["forms"] == ["10-K"]:
+            raise RuntimeError("authored discovery failure")
+        return discover(*args, **kwargs)
+    monkeypatch.setattr(live.sec_provider, "fetch_recent_filings", fail)
+    row = acceptance.run_case(case, user_agent="test", evaluated_at="2026-10-07")
+    assert not row["passed"] and row["admitted_risk_count"] == 0
+    assert downloads == [first.final_url, amendment.final_url]
+    assert row["documents_attempted"] == 2
+    assert row["filing_discovery"][1]["status"] == "error"
+    assert row["filing_discovery"][1]["error_class"] == "RuntimeError"
+
+
+@pytest.mark.parametrize("discovery_error", [False, True])
+def test_acceptance_distinguishes_empty_discovery_from_raised_errors_without_secrets(
+        monkeypatch, discovery_error):
+    case = next(c for c in CASES if c["ticker"] == "JPM")
+    def discover(*args, **kwargs):
+        if discovery_error:
+            raise RuntimeError("private-contact@example.test private question text")
+        return []
+    monkeypatch.setattr(live.sec_provider, "fetch_recent_filings", discover)
+    monkeypatch.setattr(live, "fetch_public_document", lambda *a, **k: pytest.fail("no filing to download"))
+    row = acceptance.run_case(case, user_agent="private-contact@example.test")
+    assert not row["passed"] and row["documents_attempted"] == 0
+    assert row["filing_discovery"][0]["status"] == (
+        "error" if discovery_error else "empty_or_unavailable")
+    assert row["filing_discovery"][0]["filings_returned"] == []
+    assert "private-contact" not in json.dumps(row)
+    assert "private question text" not in json.dumps(row)
+    assert case["question"] not in json.dumps(row)
 
 
 def test_risk_diagnostics_distinguish_truncated_sections_from_no_matching_topic():

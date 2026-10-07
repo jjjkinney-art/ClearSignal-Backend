@@ -243,7 +243,7 @@ def test_mixed_request_falls_back_to_annual_within_budget_and_keeps_newest_reven
     discoveries, fetched = [], []
     def discover(*args, **kwargs):
         discoveries.append(kwargs['forms'])
-        return [_filing(annual)] if kwargs['forms'] == ['10-K', '10-K/A'] else [_filing(quarter)]
+        return [_filing(annual)] if kwargs['forms'] == ['10-K'] else [_filing(quarter)]
     def fetch(url, **kwargs):
         fetched.append(url)
         return quarter if url == quarter.final_url else annual
@@ -278,7 +278,7 @@ def test_latest_quarter_risk_does_not_trigger_annual_discovery(monkeypatch):
 def test_annual_discovery_failure_retains_revenue_without_inventing_risk(monkeypatch):
     quarter = _quarter()
     def discover(*args, **kwargs):
-        if kwargs['forms'] == ['10-K', '10-K/A']:
+        if kwargs['forms'] == ['10-K']:
             raise RuntimeError('unavailable')
         return [_filing(quarter)]
     monkeypatch.setattr(live.sec_provider, 'fetch_recent_filings', discover)
