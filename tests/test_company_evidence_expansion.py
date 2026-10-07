@@ -23,6 +23,38 @@ from scripts import company_evidence_acceptance as acceptance
 
 CASES = json.loads(acceptance.COHORT_PATH.read_text())["cases"]
 US_CASES = [c for c in CASES if c["reporting_scope"] == "us_periodic"]
+
+
+@pytest.mark.parametrize('ticker,heading', [
+    ('MAN', 'Item 1A. Ri sk Factors'),
+    ('AA', 'Item 1A. Ri sk Factors.'),
+    ('ACHC', 'Item 1A. Ri sk Factors'),
+    ('ACMR', 'Item 1A. Risk Factors'),
+])
+def test_observed_issuer_heading_layouts_bind_authored_risks(ticker, heading):
+    case = next(c for c in CASES if c['ticker'] == ticker)
+    profile = requested_risk_profile(ticker, case['question'])
+    quote = f'{TERMS[profile.scope]} disruptions could adversely affect our operating results.'
+    # ACMR's observed section is just over the previous 160k ceiling. All prose
+    # here is authored: the test does not assert live issuer disclosure coverage.
+    padding = 'Historical context. ' * 8500 if ticker == 'ACMR' else ''
+    doc = document(case, text=f'{heading} {padding}{quote} Ite m 1B. Unres olved Staff Comments')
+    row = acceptance.run_case(case, user_agent='test', evaluated_at='2026-10-07',
+        fetcher=lambda c: (extract(c, doc), {doc.content_hash: doc}))
+    assert row['passed'] and row['admitted_risk_count'] == 1
+    assert row['disclosures'][0]['exact_span'] and row['disclosures'][0]['cited_in_answer']
+
+
+@pytest.mark.parametrize('ticker', ['ACMR', 'AAPL'])
+def test_section_ceiling_still_rejects_oversized_risks(ticker):
+    from app.services.sec_risk_sections import MAX_ISSUER_RISK_SECTION_CHARS
+    case = next(c for c in CASES if c['ticker'] == ticker)
+    profile = requested_risk_profile(ticker, case['question'])
+    quote = f'{TERMS[profile.scope]} disruptions could adversely affect our operating results.'
+    limit = 80000 if ticker == 'AAPL' else MAX_ISSUER_RISK_SECTION_CHARS
+    padding = 'Historical context. ' * (limit // 20 + 1)
+    doc = document(case, text=f'Item 1A. Ri sk Factors {padding}{quote} Item 1B. Unresolved Staff Comments')
+    assert extract(case, doc) == []
 TERMS = {
     "Services": "Services", "Cloud": "Cloud", "Data Center": "Data center",
     "Subscription renewals": "Subscription renewal", "Staffing demand": "Staffing demand",

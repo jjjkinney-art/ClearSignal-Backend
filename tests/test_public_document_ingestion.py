@@ -279,7 +279,7 @@ def test_late_complete_risk_section_survives_prefix_limit_and_exact_binding(monk
 
 @pytest.mark.parametrize('tail', [
     'Item 1A. Risk Factors Cloud capacity constraints could harm revenue.',
-    'Item 1A. Risk Factors ' + 'risk context ' * 14000 + 'Item 1B. Unresolved Staff Comments',
+    'Item 1A. Risk Factors ' + 'risk context ' * 18000 + 'Item 1B. Unresolved Staff Comments',
     'See “Item 1A. Risk Factors” Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments',
     'See Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments',
 ])
@@ -302,6 +302,41 @@ def test_repeated_reference_headings_cannot_trigger_unbounded_risk_window_scan()
     text = 'Item 1A. Risk Factors 18 ' * 64
     text += 'Item 1A. Risk Factors Cloud capacity could harm revenue. Item 1B. Unresolved Staff Comments'
     assert complete_risk_window(text) is None
+
+
+def test_split_heading_and_longer_complete_section_keep_exact_visible_source(monkeypatch):
+    from app.services.issuer_risk_evidence import extract_issuer_risk_evidence, bound_issuer_risk
+    from app.services.evidence_references import admit_evidence
+    quote = 'Cloud capacity constraints could adversely affect our revenue growth.'
+    # Authored HTML using the observed split-word layout; not a live filing.
+    markup = ('<p>' + 'business narrative ' * 15000 + '</p>' +
+              '<h2>Ite<span>m 1A. Ri</span><span>sk Factors</span></h2>' +
+              '<p>' + 'Historical context. ' * 8500 + quote + '</p>' +
+              '<h2>Ite<span>m 1B. Unres</span><span>olved Staff Comments</span></h2>')
+    doc, body = _periodic_document(monkeypatch, markup)
+    assert doc.text_selection == 'complete_sec_risk_section'
+    assert 160000 < len(doc.text) < 200000
+    assert doc.content_hash == hashlib.sha256(body).hexdigest()
+    question = 'What operating risk affects Microsoft cloud growth?'
+    items, _, _ = admit_evidence(extract_issuer_risk_evidence(doc, ticker='MSFT', question=question),
+                                evaluated_at='2026-10-07')
+    assert len(items) == 1
+    risk = bound_issuer_risk(items[0], ticker='MSFT', question=question)
+    assert doc.text[risk['start_offset']:risk['end_offset']] == quote
+    assert all(doc.text[s.start_offset:s.start_offset + len(s.heading)] == s.heading
+               for s in doc.sections)
+
+
+@pytest.mark.parametrize('heading', [
+    'Item 1A. Ri sk Factors 17',
+    'See Ite m 1A. Ri sk Factors',
+    'factors discussed in Ite m 1A. Ri sk Factors',
+    '“Ite m 1A. Ri sk Factors',
+])
+def test_split_heading_toc_and_references_do_not_select_late_source(monkeypatch, heading):
+    doc, _ = _periodic_document(monkeypatch, '<p>' + 'business narrative ' * 15000 +
+        heading + ' Cloud capacity could harm revenue. Ite m 1B. Unres olved Staff Comments</p>')
+    assert doc.text_selection == 'prefix' and doc.text_window_start == 0
 
 
 @pytest.mark.parametrize('url,form', [

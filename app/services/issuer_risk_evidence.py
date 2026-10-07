@@ -13,7 +13,10 @@ from urllib.parse import urlsplit
 from ..integrity.provenance import ClaimDocumentReference
 from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
-from .sec_risk_sections import RISK_START as _START, RISK_END as _END, rejected_risk_heading
+from .sec_risk_sections import (
+    RISK_START as _START, MAX_ISSUER_RISK_SECTION_CHARS,
+    rejected_risk_heading, find_risk_closing,
+)
 
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
@@ -219,9 +222,9 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
         if rejected_risk_heading(text, heading.end(), start=heading.start()):
             stats["rejected_heading_prefixes"] += 1
             continue
-        end = _END.search(text, heading.end())
+        end = find_risk_closing(text, heading.end())
         # An explicit closing section is required; truncated text fails closed.
-        section_limit = 80_000 if ticker == "AAPL" else 160_000
+        section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
         if end is None:
             stats["missing_closing_sections"] += 1
             continue
