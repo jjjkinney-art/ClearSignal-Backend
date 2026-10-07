@@ -106,6 +106,18 @@ def apply_evidence_integrity(
         explicit = str(getattr(item, "freshness_status", "") or "").lower()
         status = explicit if explicit in _EXPLICIT_STATES else "unknown"
         reason = str(getattr(item, "status_reason", "") or "").strip()
+        # Relationship proof cannot be used before it was public, and must
+        # never replace the historical source's actual filing/freshness date.
+        from .issuer_succession import item_predecessor_provenance
+        disclosures = getattr(item, "risk_disclosures", []) or []
+        has_relationship = any(isinstance(value, dict) and "issuer_relationship" in value
+                               for value in disclosures)
+        if has_relationship:
+            predecessor = item_predecessor_provenance(item)
+            if predecessor is None:
+                status, reason = "unavailable", "predecessor relationship is not authorized for this source"
+            elif _instant(predecessor["available_at"]) > boundary:
+                status, reason = "unavailable", "predecessor relationship proof is after analysis boundary"
         if status == "unknown":
             available = getattr(item, "availability_status", "available")
             timestamp = _instant(

@@ -69,7 +69,7 @@ def _metadata(item: object) -> dict:
             source_type, source_tier = "news", "reputable_secondary"
         elif "fmp" in source or "financial modeling prep" in source:
             source_type, source_tier = "market_data", "authoritative_secondary"
-    return {
+    metadata = {
         "source_type": source_type,
         "source_tier": source_tier,
         "claim_type": claim_type,
@@ -83,6 +83,11 @@ def _metadata(item: object) -> dict:
         "page": getattr(item, "page", None),
         "extraction_method": extraction_method,
     }
+    from .issuer_succession import item_predecessor_provenance
+    predecessor = item_predecessor_provenance(item)
+    if predecessor:
+        metadata["issuer_relationship"] = predecessor
+    return metadata
 
 
 def _build_references(material: list[object]) -> list[dict]:

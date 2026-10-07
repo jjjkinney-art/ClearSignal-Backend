@@ -15,6 +15,7 @@ from .services_revenue_evidence import (
     extract_services_revenue_evidence, requests_services_revenue,
 )
 from .issuer_risk_evidence import extract_issuer_risk_evidence, requested_risk_topic
+from .issuer_succession import reviewed_predecessor_annual
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,7 @@ def fetch_live_issuer_kpi_evidence(
     candidates_filings = list(filings[:max_documents])
     service_found = False
     risk_found = False
+    predecessor_authorizations: dict[str, dict] = {}
 
     def queue_annual_fallback(filing_index: int, document_type: str) -> None:
         # Quarterly reports and amendments can omit the annual Risk Factors.
@@ -105,6 +107,15 @@ def fetch_live_issuer_kpi_evidence(
                 ticker.upper().strip(), forms=["10-K"], limit=1,
                 years_back=2, prefer_results=False,
             ) or []
+            # A reviewed successor may lack its own full annual report. Use
+            # only the explicit historical document, never a broad search
+            # under another CIK. Keep the same remaining document slot.
+            if not annual:
+                predecessor = reviewed_predecessor_annual(ticker.upper().strip())
+                if predecessor:
+                    candidate, provenance = predecessor
+                    annual = [candidate]
+                    predecessor_authorizations[candidate.url] = provenance
             # Preserve amendment-only coverage when no full annual was found.
             # Do not rediscover an amendment already consuming the first slot.
             if not annual and document_type != "10-K/A":
@@ -164,7 +175,9 @@ def fetch_live_issuer_kpi_evidence(
                 evidence.extend(service_evidence)
                 service_found = bool(service_evidence)
             if risk_requested and not risk_found:
-                risk_evidence = extract_issuer_risk_evidence(document, ticker=ticker, question=question)
+                risk_evidence = extract_issuer_risk_evidence(document, ticker=ticker, question=question,
+                    **({"issuer_relationship": predecessor_authorizations[url]}
+                       if url in predecessor_authorizations else {}))
                 evidence.extend(risk_evidence)
                 risk_found = bool(risk_evidence)
                 logger.info(
