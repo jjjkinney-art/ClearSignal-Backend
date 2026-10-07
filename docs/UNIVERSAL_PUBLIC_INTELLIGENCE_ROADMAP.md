@@ -324,6 +324,15 @@ retrieval. NFLX needs customer-subscription evidence; labor/content renewal risk
 must not be substituted. This subset does not revise the full-cohort coverage
 percentage or clear the full-launch gate.
 
+Successor-context implementation update (2026-10-08): PR #202's fresh signed-in
+JPM retest delivered two cited credit-loss disclosures and passed saved-thread,
+History and Research Trail checks for that run. The next implementation adds
+an explicit, document-specific XOM predecessor context link, preserving both
+issuer identities, relationship proof and the original annual filing date.
+Ordinary SEC discovery remains exact-CIK. Exxon source/live acceptance and a
+fresh complete cohort remain required; this does not revise the last complete
+20-pass/13-gap result. See [reviewed successor context and retest plan](XOM_REVIEWED_PREDECESSOR_CONTEXT_20261008.md).
+
 1. Finish the general-company SEC metric family and period/identity hardening.
 2. Add the universal evidence schema and source-quality model before adding many new connectors.
 3. Deliver the first sector packs: banks, insurers, SaaS, and REITs.

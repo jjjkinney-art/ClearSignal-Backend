@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 from ..integrity.provenance import ClaimDocumentReference
 from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
+from .issuer_succession import authorized_predecessor, item_predecessor_provenance
 from .sec_risk_sections import (
     MAX_ISSUER_RISK_SECTION_CHARS,
     risk_section_spans, risk_sentence_spans,
@@ -201,7 +202,8 @@ def _issuer_url(url: str, profile: IssuerRiskProfile) -> bool:
 
 
 def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
-                                 question: str, diagnostics: dict | None = None) -> list[RetrievedEvidence]:
+                                 question: str, diagnostics: dict | None = None,
+                                 issuer_relationship: dict | None = None) -> list[RetrievedEvidence]:
     """Extract at most two complete, nonnumeric risk sentences; no model calls.
 
     Coverage is limited to explicit supported topics and 10-K/10-Q sections.
@@ -210,6 +212,10 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
     """
     ticker = str(ticker).strip().upper()
     profile = requested_risk_profile(ticker, question)
+    predecessor = (authorized_predecessor(ticker, current_cik=profile.cik,
+        url=document.final_url, form=document.document_type,
+        filed_at=document.published_at, provenance=issuer_relationship)
+        if profile and issuer_relationship is not None else None)
     # Counts only: never export source prose, questions, headers or credentials.
     stats = diagnostics if diagnostics is not None else {}
     stats.update(status="document_ineligible", risk_headings=0, complete_sections=0,
@@ -217,7 +223,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                  oversized_sections=0, sentences=0, topic_sentences=0,
                  qualifying_sentences=0, extracted_disclosures=0,
                  topic_rejection_counts={}, scan_stopped_at_limit=False)
-    if (not profile or not _issuer_url(document.final_url, profile)
+    if (not profile or not (_issuer_url(document.final_url, profile) or predecessor)
+            or (issuer_relationship is not None and predecessor is None)
             or not document.text_ready or document.extraction_method != "html"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
             or document.publisher != "SEC EDGAR"
@@ -262,8 +269,11 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             disclosure = {"claim_kind": "issuer_disclosed_risk", "ticker": ticker, "scope": profile.scope,
                           "quote": quote, "start_offset": offset, "end_offset": offset + len(quote),
                           "document_ref": reference}
+            if predecessor:
+                disclosure["issuer_relationship"] = predecessor
             results.append(RetrievedEvidence(
-                title=f"{ticker} {profile.scope} risk disclosure · {filed} · {len(results) + 1}",
+                title=(f"{ticker} {profile.scope} risk disclosure · {filed} · {len(results) + 1}"
+                       + (f" · predecessor: {predecessor['source_issuer']['name']}" if predecessor else "")),
                 source="SEC EDGAR", summary=risk_summary(disclosure, document.document_type),
                 timestamp=document.published_at, url=document.final_url, relevance_score=0.97,
                 source_type="regulatory_filing", source_tier="primary", claim_type="reported_fact",
@@ -281,7 +291,17 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
 
 def risk_summary(disclosure: dict, form: str) -> str:
     filed = disclosure["document_ref"]["published_at"]
-    return (f'{disclosure["ticker"]} disclosed in its {form} filed {filed}: “{disclosure["quote"]}” '
+    predecessor = disclosure.get("issuer_relationship")
+    attribution = f'{disclosure["ticker"]} disclosed in its {form} filed {filed}'
+    historical_context = ""
+    if predecessor:
+        attribution = f"{predecessor['source_issuer']['name']} (predecessor) disclosed in its {form} filed {filed}"
+        historical_context = (
+            f"This is historical risk context for {predecessor['subject_issuer']['name']} "
+            f"({disclosure['ticker']}) after the documented succession effective "
+            f"{predecessor['effective_at']}; it is not a new successor disclosure. "
+        )
+    return (f'{attribution}: “{disclosure["quote"]}” {historical_context}'
             "This is an issuer disclosure, not an independent assessment of whether the "
             "described effects occurred or will occur, or of their financial impact.")
 
@@ -313,11 +333,15 @@ def bound_issuer_risk(item: object, *, ticker: str, question: str) -> dict | Non
         return None
     quote = value.get("quote")
     start, end = value.get("start_offset"), value.get("end_offset")
+    predecessor = item_predecessor_provenance(item)
+    if "issuer_relationship" in value and (predecessor is None
+            or predecessor["subject_issuer"]["cik"] != profile.cik):
+        return None
     if (value.get("claim_kind") != "issuer_disclosed_risk" or value.get("ticker") != ticker
             or value.get("scope") != profile.scope or not isinstance(quote, str)
             or not _qualifying_quote(quote, profile) or quote != ref.get("quote")
             or ref.get("section") != "Item 1A. Risk Factors" or not ref.get("content_hash")
-            or ref.get("provider") != "SEC EDGAR" or not _issuer_url(ref["url"], profile)
+            or ref.get("provider") != "SEC EDGAR" or not (_issuer_url(ref["url"], profile) or predecessor)
             or ref["url"] != getattr(item, "url", None)
             or ref["published_at"] != getattr(item, "timestamp", None)
             or type(start) is not int or type(end) is not int or start < 0 or end - start != len(quote)

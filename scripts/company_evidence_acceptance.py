@@ -181,11 +181,14 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
             cited = any(c["document_ref"] == value["document_ref"]
                         and value["quote"] in c["claim"]
                         and f'[{c["reference_id"]}]' in thesis.direct_answer for c in risk_claims)
-            row["disclosures"].append({"url": item.url, "filed_at": item.timestamp,
+            disclosure = {"url": item.url, "filed_at": item.timestamp,
                 "document_type": item.document_type, "scope": value["scope"],
                 "content_hash": value["document_ref"]["content_hash"],
                 "quote_sha256": hashlib.sha256(value["quote"].encode()).hexdigest(),
-                "exact_span": exact, "cited_in_answer": cited})
+                "exact_span": exact, "cited_in_answer": cited}
+            if value.get("issuer_relationship"):
+                disclosure["issuer_relationship"] = value["issuer_relationship"]
+            row["disclosures"].append(disclosure)
         row["admitted_risk_count"] = len(row["disclosures"])
         row["passed"] = bool(row["disclosures"] and risk_claims
                               and result["status"] == "attributed"
