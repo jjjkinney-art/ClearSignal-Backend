@@ -294,6 +294,14 @@ filing discovery for JPM/XOM. Foreign-form breadth remains a separate expansion.
 These figures measure selected issuer/topic coverage, not overall roadmap
 completion. See [live coverage record](COMPANY_EVIDENCE_LIVE_20261007.md).
 
+Follow-up after PR #198: TSLA now passes a fresh signed-in supply-chain test and
+the separate read-only source-span/citation check. The complete nine-case
+domestic-gap subset still has eight gaps (COST/JPM/BA/XOM/PLTR/H/F/NFLX). Do not
+replace the earlier full-cohort result with an extrapolated coverage percentage.
+Compact closing-heading support and opt-in bounded source inspection are the
+next repair; keep the launch gate open until fresh production reports establish
+restored useful answers and complete source binding.
+
 ## 6. Immediate implementation sequence
 
 1. Finish the general-company SEC metric family and period/identity hardening.

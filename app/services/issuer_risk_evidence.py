@@ -154,17 +154,27 @@ def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | No
     return IssuerRiskProfile(cik, *topic) if topic else None
 
 
-def _qualifying_quote(quote: str, profile: IssuerRiskProfile) -> bool:
+def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, ...]:
+    """Stable reason codes for the existing admission rules; never source prose."""
     max_chars = 300 if profile.scope == "Services" else 900
-    return bool(40 <= len(quote) <= max_chars and re.match(r"[A-Z]", quote)
-                and quote[-1] in ".!?" and not re.search(r"\d|[$%]", quote)
-                and _has_topic_scope(quote, profile) and _POSSIBILITY.search(quote)
-                and _ADVERSE.search(quote)
-                # Generic company-wide product/service warnings do not establish
-                # a topic-specific operating mechanism for this evidence view.
-                and not re.search(r"\bproducts and services\b", quote, re.I)
-                and not re.match(r"(?:this|these|that|those|it|they|such)\b", quote, re.I)
-                and not re.search(r"\b(?:see|refer to|no material changes|ignore|instructions?|system prompt)\b", quote, re.I))
+    checks = (
+        ("length", 40 <= len(quote) <= max_chars),
+        ("sentence_start", bool(re.match(r"[A-Z]", quote))),
+        ("sentence_end", bool(quote) and quote[-1] in ".!?"),
+        ("numeric_content", not re.search(r"\d|[$%]", quote)),
+        ("topic_scope", _has_topic_scope(quote, profile)),
+        ("possibility_language", bool(_POSSIBILITY.search(quote))),
+        ("adverse_mechanism", bool(_ADVERSE.search(quote))),
+        ("generic_products_and_services", not re.search(r"\bproducts and services\b", quote, re.I)),
+        ("unresolved_reference", not re.match(r"(?:this|these|that|those|it|they|such)\b", quote, re.I)),
+        ("cross_reference_or_instruction", not re.search(
+            r"\b(?:see|refer to|no material changes|ignore|instructions?|system prompt)\b", quote, re.I)),
+    )
+    return tuple(reason for reason, passed in checks if not passed)
+
+
+def _qualifying_quote(quote: str, profile: IssuerRiskProfile) -> bool:
+    return not risk_quote_rejections(quote, profile)
 
 
 def _issuer_url(url: str, profile: IssuerRiskProfile) -> bool:
@@ -196,7 +206,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                  rejected_heading_prefixes=0, missing_closing_sections=0,
                  oversized_sections=0, sentences=0, topic_sentences=0,
                  qualifying_sentences=0, extracted_disclosures=0,
-                 scan_stopped_at_limit=False)
+                 topic_rejection_counts={}, scan_stopped_at_limit=False)
     if (not profile or not _issuer_url(document.final_url, profile)
             or not document.text_ready or document.extraction_method != "html"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
@@ -236,8 +246,14 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
         for sentence in re.finditer(r"(?:^|(?<=[.!?])\s+)([^.!?]+[.!?])", section):
             quote = sentence.group(1).strip()
             stats["sentences"] += 1
-            stats["topic_sentences"] += int(_has_topic_scope(quote, profile))
-            if not _qualifying_quote(quote, profile) or quote in seen:
+            is_topic = _has_topic_scope(quote, profile)
+            stats["topic_sentences"] += int(is_topic)
+            reasons = risk_quote_rejections(quote, profile)
+            if is_topic:
+                for reason in reasons:
+                    counts = stats["topic_rejection_counts"]
+                    counts[reason] = counts.get(reason, 0) + 1
+            if reasons or quote in seen:
                 continue
             stats["qualifying_sentences"] += 1
             offset = heading.end() + sentence.start(1)
