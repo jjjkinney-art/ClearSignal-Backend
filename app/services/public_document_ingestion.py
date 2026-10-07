@@ -342,7 +342,9 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         title = _clean_text(" ".join(self._title_parts))[:300] or None
         original_text = _clean_text(" ".join(self._parts))
         removed = list(_SEC_PAGE_FOOTER.finditer(original_text)) if preserve_sec_risk else []
-        full_text = self.normalized_visible_text(preserve_sec_risk=preserve_sec_risk)
+        # Reuse the normalized full text: joining and normalizing a large filing
+        # a second time adds work without changing text or source offsets.
+        full_text = _SEC_PAGE_FOOTER.sub('', original_text) if preserve_sec_risk else original_text
         self.normalized_text_chars_total = len(full_text)
         start, end = 0, max_chars
         if preserve_sec_risk and len(full_text) > max_chars:
@@ -513,6 +515,7 @@ def fetch_public_document(
     source_type: str = "unknown",
     source_tier: str = "unverified",
     sec_periodic_limits: bool = False,
+    extract_tables: bool = True,
 ) -> PublicDocument:
     """Fetch one public document with bounded redirects and content."""
     requested_url = _validate_public_url(url)
@@ -589,9 +592,10 @@ def fetch_public_document(
                          "text_selection": parser.text_selection}
         links = _normalize_links(current_url, raw_links)
         method = "html"
-        table_parser = _HTMLTableExtractor()
-        table_parser.feed(decoded)
-        tables = table_parser.result()
+        if extract_tables:
+            table_parser = _HTMLTableExtractor()
+            table_parser.feed(decoded)
+            tables = table_parser.result()
     else:
         title, text, sections, links, method = (
             None, _clean_text(decoded)[:MAX_EXTRACTED_CHARS], (), (), "manual"

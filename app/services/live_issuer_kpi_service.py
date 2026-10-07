@@ -141,7 +141,11 @@ def fetch_live_issuer_kpi_evidence(
                 url, user_agent=user_agent, publisher="SEC EDGAR",
                 published_at=str(published_at), document_type=document_type,
                 source_type="regulatory_filing", source_tier="primary",
-                **({"sec_periodic_limits": True} if risk_requested and ticker.upper().strip() != "AAPL" else {}),
+                # Risk quotes use visible text and exact offsets, not cell grids.
+                # Avoid parsing a large periodic filing twice. Apple Services
+                # and ordinary KPI paths still need their structured tables.
+                **({"sec_periodic_limits": True, "extract_tables": False}
+                   if risk_requested and ticker.upper().strip() != "AAPL" else {}),
             )
         except PublicDocumentError as exc:
             logger.info(
