@@ -15,7 +15,7 @@ from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
 from .issuer_succession import authorized_predecessor, item_predecessor_provenance
 from .sec_risk_sections import (
-    MAX_ISSUER_RISK_SECTION_CHARS,
+    MAX_ISSUER_RISK_SECTION_CHARS, RISK_FORMS, risk_section_label,
     risk_section_spans, risk_sentence_spans,
 )
 
@@ -206,7 +206,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                                  issuer_relationship: dict | None = None) -> list[RetrievedEvidence]:
     """Extract at most two complete, nonnumeric risk sentences; no model calls.
 
-    Coverage is limited to explicit supported topics and 10-K/10-Q sections.
+    Coverage is limited to explicit supported topics and 10-K/10-Q and explicit 20-F Item 3 sections.
     TOCs, cross-references, other sections, unsupported issuers and ambiguous
     or overlong sentences produce no claim. Never truncate a risk sentence.
     """
@@ -228,7 +228,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             or not document.text_ready or document.extraction_method != "html"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
             or document.publisher != "SEC EDGAR"
-            or document.document_type not in {"10-K", "10-K/A", "10-Q", "10-Q/A"}
+            or document.document_type not in RISK_FORMS
             or not isinstance(document.content_hash, str)
             or not re.fullmatch(r"[0-9a-f]{64}", document.content_hash)):
         return []
@@ -243,7 +243,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
     seen: set[str] = set()
     text = document.text
     section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
-    for section_start, section_end in risk_section_spans(text, max_section_chars=section_limit, diagnostics=stats):
+    for section_start, section_end in risk_section_spans(text, max_section_chars=section_limit, diagnostics=stats, form=document.document_type):
         section = text[section_start:section_end]
         for sentence_start, sentence_end in risk_sentence_spans(section):
             quote = section[sentence_start:sentence_end]
@@ -264,7 +264,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                 reference_id=f"document:{document.content_hash}:risk:{offset}",
                 title=document.title or f"{ticker} {document.document_type}", provider="SEC EDGAR",
                 url=document.final_url, published_at=document.published_at,
-                section="Item 1A. Risk Factors", content_hash=document.content_hash, quote=quote,
+                section=risk_section_label(document.document_type), content_hash=document.content_hash, quote=quote,
             ).to_dict()
             disclosure = {"claim_kind": "issuer_disclosed_risk", "ticker": ticker, "scope": profile.scope,
                           "quote": quote, "start_offset": offset, "end_offset": offset + len(quote),
@@ -278,7 +278,7 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                 timestamp=document.published_at, url=document.final_url, relevance_score=0.97,
                 source_type="regulatory_filing", source_tier="primary", claim_type="reported_fact",
                 document_type=document.document_type, filed_at=document.published_at,
-                section="Item 1A. Risk Factors", extraction_method="html",
+                section=risk_section_label(document.document_type), extraction_method="html",
                 risk_disclosures=[disclosure],
             ))
             seen.add(quote)
@@ -315,7 +315,7 @@ def bound_issuer_risk(item: object, *, ticker: str, question: str) -> dict | Non
             or getattr(item, "source_tier", None) != "primary"
             or getattr(item, "source_type", None) != "regulatory_filing"
             or getattr(item, "claim_type", None) != "reported_fact"
-            or getattr(item, "section", None) != "Item 1A. Risk Factors"
+            or getattr(item, "section", None) != risk_section_label(getattr(item, "document_type", ""))
             or getattr(item, "extraction_method", None) != "html"
             or getattr(item, "freshness_status", None) in {"unavailable", "conflicting", "superseded"}):
         return None
@@ -340,13 +340,13 @@ def bound_issuer_risk(item: object, *, ticker: str, question: str) -> dict | Non
     if (value.get("claim_kind") != "issuer_disclosed_risk" or value.get("ticker") != ticker
             or value.get("scope") != profile.scope or not isinstance(quote, str)
             or not _qualifying_quote(quote, profile) or quote != ref.get("quote")
-            or ref.get("section") != "Item 1A. Risk Factors" or not ref.get("content_hash")
+            or ref.get("section") != risk_section_label(getattr(item, "document_type", "")) or not ref.get("content_hash")
             or ref.get("provider") != "SEC EDGAR" or not (_issuer_url(ref["url"], profile) or predecessor)
             or ref["url"] != getattr(item, "url", None)
             or ref["published_at"] != getattr(item, "timestamp", None)
             or type(start) is not int or type(end) is not int or start < 0 or end - start != len(quote)
             or ref["reference_id"] != f'document:{ref["content_hash"]}:risk:{start}'
-            or getattr(item, "document_type", None) not in {"10-K", "10-K/A", "10-Q", "10-Q/A"}
+            or getattr(item, "document_type", None) not in RISK_FORMS
             or getattr(item, "summary", None) != risk_summary(value, getattr(item, "document_type"))):
         return None
     return value

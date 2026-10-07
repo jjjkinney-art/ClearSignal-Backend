@@ -20,7 +20,7 @@ from urllib.parse import parse_qsl, urldefrag, urljoin, urlsplit
 import requests
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
-from .sec_risk_sections import complete_risk_window
+from .sec_risk_sections import complete_risk_window, RISK_FORMS
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
@@ -336,7 +336,7 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
             text = _SEC_PAGE_FOOTER.sub('', text)
         return text
 
-    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False) -> tuple[
+    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, risk_form: str = "10-K") -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
@@ -348,7 +348,7 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         self.normalized_text_chars_total = len(full_text)
         start, end = 0, max_chars
         if preserve_sec_risk and len(full_text) > max_chars:
-            window = complete_risk_window(full_text)
+            window = complete_risk_window(full_text, form=risk_form)
             if window and window[1] > max_chars and window[1] - window[0] <= max_chars:
                 start, end = window
                 self.text_selection = "complete_sec_risk_section"
@@ -528,7 +528,7 @@ def fetch_public_document(
                 parsed = urlsplit(current_url)
                 if (publisher != "SEC EDGAR" or source_type != "regulatory_filing"
                         or source_tier != "primary"
-                        or document_type not in {"10-K", "10-K/A", "10-Q", "10-Q/A"}
+                        or document_type not in RISK_FORMS
                         or parsed.hostname != "www.sec.gov" or parsed.query or parsed.fragment
                         or not re.fullmatch(r"/Archives/edgar/data/\d+/\d{18}/[^/]+\.html?", parsed.path)):
                     raise PublicDocumentError("expanded limits require a SEC periodic HTML filing")
@@ -586,7 +586,7 @@ def fetch_public_document(
         parser.feed(decoded)
         title, text, sections, raw_links = parser.result(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
-            preserve_sec_risk=sec_periodic_limits)
+            preserve_sec_risk=sec_periodic_limits, risk_form=document_type or "10-K")
         text_metadata = {"normalized_text_chars_total": parser.normalized_text_chars_total,
                          "text_window_start": parser.text_window_start,
                          "text_selection": parser.text_selection}

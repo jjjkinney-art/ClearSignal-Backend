@@ -315,6 +315,16 @@ restored useful answers and complete source binding.
 
 ## 6. Immediate implementation sequence
 
+8 October 2026 owner-reported complete post-PR #203 run: all 29 domestic cases
+pass; SPOT, ASML, TSM and NVO remain gaps. This is source-binding acceptance for
+the frozen question sample, not signed-in acceptance or full launch clearance.
+The next slice adds bounded 20-F Item 3 risk extraction. Actual downloaded
+Spotify and TSM filings pass local citation replay; required CI, deployment and
+live/saved acceptance remain pending. ASML integrated-report and Novo Nordisk
+incorporated-report paths remain separate gaps. See
+[foreign annual section work](FOREIGN_20F_RISK_SECTIONS_20261008.md).
+
+
 Post-PR #199 targeted inspection: COST now passes; the complete eight-company
 domestic subset still has seven gaps (JPM/BA/XOM/PLTR/H/F/NFLX). Apply the observed
 passage/section normalization repairs, then retest their actual source spans and
