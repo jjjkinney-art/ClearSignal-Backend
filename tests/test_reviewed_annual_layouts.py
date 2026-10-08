@@ -4,7 +4,7 @@ from hashlib import sha256
 import socket
 import pytest
 import requests
-from app.services.reviewed_annual_layouts import REVIEWED_ANNUAL_LAYOUTS, reviewed_annual_layout
+from app.services.reviewed_annual_layouts import REVIEWED_ANNUAL_LAYOUTS, reviewed_annual_layout, reviewed_body_hash
 from app.services.public_document_ingestion import fetch_public_document, PublicDocumentError
 from app.services.sec_risk_sections import risk_section_spans
 from app.services.issuer_risk_evidence import bound_issuer_risk
@@ -117,11 +117,66 @@ def test_explicit_legal_liabilities_are_adverse_but_bare_liabilities_are_not():
 def test_reviewed_ingestion_requires_visible_crosswalk(monkeypatch, public_dns):
     from app.services import reviewed_annual_layouts as registry
     body = f"<h2>{OPEN}</h2><p>{QUOTE}</p><h2>{CLOSE}</h2>".encode()
-    fixture_layout = {**LAYOUT, "content_hash": sha256(body).hexdigest()}
+    fixture_layout = {**LAYOUT, "content_hash": sha256(body).hexdigest(), "canonical_content_hash": reviewed_body_hash(body)}
     monkeypatch.setattr(registry, "REVIEWED_ANNUAL_LAYOUTS", (fixture_layout,))
     monkeypatch.setattr(requests, "get", lambda *a, **k: _Response(body))
     with pytest.raises(PublicDocumentError, match="mapping unavailable"):
         fetch()
     body += f"<p>{LAYOUT['mapping']}</p>".encode()
     fixture_layout["content_hash"] = sha256(body).hexdigest()
+    fixture_layout["canonical_content_hash"] = reviewed_body_hash(body)
     assert fetch().text_ready
+
+
+@pytest.mark.parametrize("tail", [
+    b'<script type="text/javascript"  src="/First/transport/Path"></script>',
+    b'<script type="text/javascript"  src="/Different/path_123-ABC"></script>',
+    b'',
+])
+def test_only_reviewed_empty_transport_tail_is_ignored(tail):
+    core = b'<html><body><p>Visible filing text.</p>'
+    assert reviewed_body_hash(core + tail + b'</body></html>\n') == sha256(core + b'</body></html>\n').hexdigest()
+
+
+@pytest.mark.parametrize("changed", [
+    b'<html><body><p>Changed filing text.</p></body></html>\n',
+    b'<html><body><p>Visible filing text.</p><script type="text/javascript"  src="/path">alert(1)</script></body></html>\n',
+    b'<html><body><p>Visible filing text.</p><script type="text/javascript"  src="https://other.example/path"></script></body></html>\n',
+    b'<html><body><script type="text/javascript"  src="/path"></script><p>Visible filing text.</p></body></html>\n',
+    b'<html><body><p hidden>extra metadata</p><p>Visible filing text.</p></body></html>\n',
+])
+def test_visible_and_other_hidden_changes_still_change_fingerprint(changed):
+    assert reviewed_body_hash(changed) != sha256(b'<html><body><p>Visible filing text.</p></body></html>\n').hexdigest()
+
+
+def test_transport_variants_ingest_and_bind_their_actual_raw_hash(monkeypatch, public_dns):
+    from app.services import reviewed_annual_layouts as registry
+    core = f"<html><body><p>{LAYOUT['mapping']}</p><h2>{OPEN}</h2><p>{QUOTE}</p><h2>{CLOSE}</h2>".encode()
+    base = core + b'</body></html>\n'
+    fixture_layout = {**LAYOUT, "content_hash": sha256(base).hexdigest(), "canonical_content_hash": reviewed_body_hash(base)}
+    monkeypatch.setattr(registry, "REVIEWED_ANNUAL_LAYOUTS", (fixture_layout,))
+    for path in ("/transport/One", "/transport/Two_123"):
+        body = core + f'<script type="text/javascript"  src="{path}"></script>'.encode() + b'</body></html>\n'
+        monkeypatch.setattr(requests, "get", lambda *a, **k: _Response(body))
+        doc = fetch()
+        assert doc.content_hash == sha256(body).hexdigest()
+        assert doc.canonical_content_hash == fixture_layout["canonical_content_hash"]
+        item = extract(CASE, doc)[0]
+        admitted, refs, _ = admit_evidence([item], evaluated_at="2026-10-08")
+        thesis = InvestmentThesis(ticker="ASML", company_name=CASE["company"])
+        assert apply_source_answer_gate(thesis, CASE["question"], admitted, references=refs)["status"] == "attributed"
+        value = item.risk_disclosures[0]
+        assert value["document_ref"]["content_hash"] == doc.content_hash
+        assert doc.text[value["start_offset"]:value["end_offset"]] == QUOTE
+        assert bound_issuer_risk(item, ticker="ASML", question=CASE["question"])
+        for binding in (None, [], {}, {**value["reviewed_layout"], "raw_content_hash": "a" * 64},
+            {**value["reviewed_layout"], "canonical_content_hash": "a" * 64},
+            {**value["reviewed_layout"], "registry_id": "other"}):
+            forged = item.model_copy(update={"risk_disclosures": [{**value, "reviewed_layout": binding}]})
+            assert bound_issuer_risk(forged, ticker="ASML", question=CASE["question"]) is None
+        restored = type(item).model_validate_json(item.model_dump_json())
+        assert bound_issuer_risk(restored, ticker="ASML", question=CASE["question"])
+    changed = core.replace(QUOTE.encode(), b"Export controls could cause a different adverse outcome.") + b'</body></html>\n'
+    monkeypatch.setattr(requests, "get", lambda *a, **k: _Response(changed))
+    with pytest.raises(PublicDocumentError, match="hash mismatch"):
+        fetch()

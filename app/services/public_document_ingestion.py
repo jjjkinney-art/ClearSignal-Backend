@@ -21,7 +21,7 @@ import requests
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from .sec_risk_sections import complete_risk_window, RISK_FORMS
-from .reviewed_annual_layouts import reviewed_annual_layout
+from .reviewed_annual_layouts import reviewed_annual_layout, reviewed_body_hash
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
@@ -130,6 +130,7 @@ class PublicDocument:
     normalized_text_chars_total: int | None = None
     text_window_start: int = 0
     text_selection: str = "prefix"
+    canonical_content_hash: str | None = None
 
 
 class _VisibleHTMLParser(HTMLParser):
@@ -569,7 +570,8 @@ def fetch_public_document(
             response.close()
 
     digest = hashlib.sha256(body).hexdigest()
-    if layout and digest != layout["content_hash"]:
+    canonical_digest = reviewed_body_hash(body) if layout else None
+    if layout and canonical_digest != layout["canonical_content_hash"]:
         raise PublicDocumentError("reviewed annual document hash mismatch")
     accessed_at = datetime.now(timezone.utc).isoformat()
     if media_type == "application/pdf":
@@ -595,7 +597,8 @@ def fetch_public_document(
         title, text, sections, raw_links = parser.result(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
             preserve_sec_risk=sec_periodic_limits, risk_form=document_type or "10-K", risk_layout=layout)
-        text_metadata = {"normalized_text_chars_total": parser.normalized_text_chars_total,
+        text_metadata = {"canonical_content_hash": canonical_digest,
+                         "normalized_text_chars_total": parser.normalized_text_chars_total,
                          "text_window_start": parser.text_window_start,
                          "text_selection": parser.text_selection}
         links = _normalize_links(current_url, raw_links)

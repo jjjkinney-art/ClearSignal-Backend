@@ -13,7 +13,7 @@ from urllib.parse import urlsplit
 from ..integrity.provenance import ClaimDocumentReference
 from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
-from .reviewed_annual_layouts import reviewed_annual_layout
+from .reviewed_annual_layouts import reviewed_annual_layout, layout_binding
 from .issuer_succession import authorized_predecessor, item_predecessor_provenance
 from .sec_risk_sections import (
     MAX_ISSUER_RISK_SECTION_CHARS, RISK_FORMS, risk_section_label,
@@ -214,7 +214,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
     ticker = str(ticker).strip().upper()
     profile = requested_risk_profile(ticker, question)
     layout = reviewed_annual_layout(document.final_url, document.document_type, document.published_at,
-        content_hash=document.content_hash, cik=profile.cik) if profile else None
+        content_hash=document.content_hash, canonical_content_hash=document.canonical_content_hash,
+        cik=profile.cik) if profile else None
     section_label = layout["section"] if layout else risk_section_label(document.document_type)
     predecessor = (authorized_predecessor(ticker, current_cik=profile.cik,
         url=document.final_url, form=document.document_type,
@@ -273,6 +274,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             disclosure = {"claim_kind": "issuer_disclosed_risk", "ticker": ticker, "scope": profile.scope,
                           "quote": quote, "start_offset": offset, "end_offset": offset + len(quote),
                           "document_ref": reference}
+            if layout and document.canonical_content_hash:
+                disclosure["reviewed_layout"] = layout_binding(layout, document.content_hash)
             if predecessor:
                 disclosure["issuer_relationship"] = predecessor
             results.append(RetrievedEvidence(
@@ -316,8 +319,15 @@ def bound_issuer_risk(item: object, *, ticker: str, question: str) -> dict | Non
     first_ref = disclosures[0].get("document_ref", {}) if isinstance(disclosures, list) and len(disclosures) == 1 and isinstance(disclosures[0], dict) else {}
     if not isinstance(first_ref, dict):
         return None
+    binding = disclosures[0].get("reviewed_layout") if isinstance(disclosures, list) and len(disclosures) == 1 and isinstance(disclosures[0], dict) else None
+    if binding is not None and (not isinstance(binding, dict)
+            or binding.get("raw_content_hash") != first_ref.get("content_hash")):
+        return None
     layout = reviewed_annual_layout(getattr(item, "url", None), getattr(item, "document_type", None),
-        getattr(item, "timestamp", None), content_hash=first_ref.get("content_hash"))
+        getattr(item, "timestamp", None), content_hash=first_ref.get("content_hash"),
+        canonical_content_hash=binding.get("canonical_content_hash") if binding else None)
+    if binding is not None and (not layout or binding != layout_binding(layout, first_ref.get("content_hash"))):
+        return None
     section_label = layout["section"] if layout else risk_section_label(getattr(item, "document_type", ""))
     profile = requested_risk_profile(ticker, question)
     if (not profile or not isinstance(disclosures, list) or len(disclosures) != 1
