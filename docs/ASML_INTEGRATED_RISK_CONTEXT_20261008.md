@@ -18,10 +18,10 @@ Risk Factors to the Risk and security section, page 66. The reviewed body is:
 - SHA-256: `c7f397cd04b206b5b93a2ee338626885b1dab3b310243b02f78ffa7fd849f1f3`.
 
 Only that exact URL/form/date registration receives a 30 MB download ceiling.
-Its raw-body hash and visible Item 3.D mapping must match before extraction.
+Its reviewed canonical-body hash and visible Item 3.D mapping must match before extraction.
 Redirect destinations are checked independently. Every other periodic filing
 retains the 15 MB ceiling; unreviewed integrated reports cannot borrow this path.
-A changed body at the same URL fails closed and requires review.
+Changes outside the exact reviewed transport-tail exception fail closed and require review.
 
 The registered opening requires Risk and security, Risk factors and the section's
 introductory wording. The closing requires Risk and security, Information security
@@ -34,7 +34,7 @@ supported topic and possibility language.
 
 ## Validation
 
-744 tests pass across 17 isolated modules, including 18 reviewed-layout cases.
+753 tests pass across 17 isolated modules, including 27 reviewed-layout cases.
 They cover exact registration, wrong hash/date/form/issuer, altered bodies,
 visible crosswalk requirements, bounded declared and streamed downloads,
 unsupported headings, incomplete/oversized sections, repeated headings,
@@ -65,3 +65,39 @@ flattening them into a synthetic risk sentence is insufficient. NVO remains open
 Fresh signed-in answers and saved-thread/History/Research Trail evidence checks
 also remain outstanding. Continue the broader roadmap after those launch gates
 are verified, rather than inferring clearance from local replay.
+
+## Post-PR #205 production diagnosis and transport correction
+
+The owner-reported Render run at deployed commit
+`f4a9f54463293f3f458927866839c94782ce4871` still passes SPOT/TSM and reports
+ASML/NVO gaps. ASML's current filing was rejected with
+`reviewed_annual_hash_mismatch`; the prior-year fallback exceeded 15 MB.
+This is an ingestion failure, not a citation or missing-boundary failure.
+
+A fresh direct download of the same SEC URL has 24,864,724 bytes and raw SHA-256
+`f43ce97211c2c4b0801cb760e011e26c78450f43d1a9f0118617420f87b95f99`.
+It differs from the first reviewed download only in the generated relative URL
+of the final empty JavaScript tag. Both normalize to the same 1,336,777 visible
+characters and visible-text hash
+`e6cceeceff484b9d3e5bbfc761221a75ccbb129eb13f9cba39b90bf546455ece`.
+
+The correction fingerprints the entire raw body after removing at most the
+exact empty `<script type="text/javascript"  src="/…"></script>` transport tag
+immediately before the closing body/html tags. The relative path must contain
+only the reviewed ASCII path characters and at most 200 characters. Inline
+script content, remote URLs, differently placed tags, other hidden markup and
+visible filing changes are not ignored. The remaining bytes must match SHA-256
+`865382553cf9871c78bcf144818b6e2d425af3bdc3013ab6c1bf83c85d8ed358`.
+This exception is checked only for the exact registered ASML document.
+
+The original downloaded-byte SHA remains the document and citation content hash.
+The separately verified canonical fingerprint is bound to the raw hash and
+registry id in each disclosure, retained through serialization and rechecked
+before answer admission. A canonical fingerprint alone is not a replacement
+for issuer, form, date, URL, section, quote or reference binding.
+
+Both actual downloaded variants pass full ingestion/extraction/admission and
+exact-offset/citation replay. New tests cover transport variations, changed
+filing text, other hidden changes, malformed transport tags, forged canonical
+or raw bindings, and serialize/reopen binding. This is local replay; deployed
+acceptance, signed-in answers and saved-thread checks still remain separate.

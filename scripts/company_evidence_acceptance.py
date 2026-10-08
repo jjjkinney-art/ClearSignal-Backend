@@ -126,7 +126,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
             inspections[document.content_hash] = {
                 "public_source_url": document.final_url, "content_hash": document.content_hash,
                 "full_visible_text_observed": html_inspection is not None,
-                "boundaries": html_inspection or boundary_inspection(document.text, form=document.document_type, layout=reviewed_annual_layout(document.final_url, document.document_type, document.published_at, content_hash=document.content_hash)),
+                "boundaries": html_inspection or boundary_inspection(document.text, form=document.document_type, layout=reviewed_annual_layout(document.final_url, document.document_type, document.published_at, content_hash=document.content_hash, canonical_content_hash=document.canonical_content_hash)),
                 "topic_candidates": topic_inspection(document, ticker=case["ticker"], question=case["question"]),
                 "admission_authority": False,
             }

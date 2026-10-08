@@ -321,9 +321,14 @@ the frozen question sample, not signed-in acceptance or full launch clearance.
 PR #204 is merged; the owner-reported deployed four-case subset passes SPOT
 and TSM and still reports ASML and NVO gaps. This does not establish a new full
 cohort count. The next repair adds a document-specific, hash-pinned ASML integrated
-Risk Factors mapping. Its actual filing passes local extraction, exact-span
-binding and citation replay; pinned CI, deployment and signed-in/live/saved
-acceptance remain separate gates. NVO still requires an incorporation-verified
+Risk Factors mapping. PR #205 is merged and deployed, but the owner's Render
+report still rejects ASML's current body with a reviewed-hash mismatch. Fresh
+source inspection found an otherwise identical body with a changing empty
+transport-script URL at the tail. The follow-up pins every remaining byte,
+preserves the raw hash and binds the separately verified canonical fingerprint.
+Both downloaded variants pass local extraction, exact-span binding and citation
+replay; follow-up CI, deployment and signed-in/live/saved acceptance remain
+separate gates. NVO still requires an incorporation-verified
 annual-report table path that separates risk descriptions, impacts and mitigations.
 See [foreign annual section work](FOREIGN_20F_RISK_SECTIONS_20261008.md) and
 [ASML integrated-report work](ASML_INTEGRATED_RISK_CONTEXT_20261008.md).

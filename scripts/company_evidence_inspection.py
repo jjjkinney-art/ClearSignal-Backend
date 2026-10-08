@@ -71,7 +71,7 @@ def topic_inspection(document, *, ticker: str, question: str) -> dict:
         return {"topic_sentence_samples": samples}
     section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
     seen = set()
-    layout = reviewed_annual_layout(document.final_url, document.document_type, document.published_at, content_hash=document.content_hash)
+    layout = reviewed_annual_layout(document.final_url, document.document_type, document.published_at, content_hash=document.content_hash, canonical_content_hash=document.canonical_content_hash)
     for section_start, section_end in risk_section_spans(document.text, max_section_chars=section_limit, form=document.document_type, layout=layout):
         if len(samples) == 8:
             break
