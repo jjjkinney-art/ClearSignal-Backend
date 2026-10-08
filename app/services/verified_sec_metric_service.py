@@ -277,6 +277,9 @@ def _requested_metrics(question: str | None, *, include_defaults: bool = True) -
     normalized = re.sub(r"\s+", " ", (question or "").lower()).strip()
     if not normalized:
         return _METRICS if include_defaults else ()
+    from .financial_thesis_foundation import is_broad_thesis_request, CORE_METRICS
+    if include_defaults and is_broad_thesis_request(normalized):
+        return tuple(metric for metric in _METRICS if metric[1] in CORE_METRICS)
     if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", normalized):
         required = {"operating cash flow", "capital expenditure"}
         return tuple(metric for metric in _METRICS if metric[1] in required)

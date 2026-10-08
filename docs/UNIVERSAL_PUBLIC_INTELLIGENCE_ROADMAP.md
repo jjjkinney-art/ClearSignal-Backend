@@ -86,6 +86,15 @@ adds profitability retrieval, complete metric-slot reporting and explicit date
 ranges. Broad source-supported thesis composition remains P0 across company
 sizes; a successful capture or an attributed subset is not a full useful answer.
 
+Post218 deployed answer inspection confirmed profitability retrieval and
+explicit gaps for missing operating income, plus complete date ranges. AAPL
+and TSLA have complete financial metric slots; AA and ACHC remain partial.
+The next source-supported thesis increment adds a conditional financial
+foundation from producer-bound comparisons, documented in
+`SOURCE_SUPPORTED_THESIS_FOUNDATION_20261009.md`. Business-specific mechanisms,
+valuation, disclosed risks, personalization and unseen-company usefulness must
+still pass acceptance before a complete thesis or quality-parity claim.
+
 Backend PR215 is deployed at `7c69214096c7128a98d62124a7aba1b8d0c131a5`.
 Its live September 26 Tesla comparison retrieved the October 2 SEC delivery
 release, admitted one newer evidence item and survived save/reopen. Frontend

@@ -148,13 +148,31 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     from .evidence_references import _evidence_url
 
     material = list(items)
+    from .financial_thesis_foundation import is_broad_thesis_request, build_financial_foundation
+    requested_thesis = is_broad_thesis_request(question)
+    from .issuer_risk_evidence import requested_risk_topic, RISK_TOPICS
+    from .live_issuer_kpi_service import requested_issuer_kpi_aliases
+    # A company-wide financial foundation cannot substitute for a requested
+    # segment, issuer KPI or named operating-risk mechanism.
+    foundation_scope = (requested_thesis and not _SERVICES_SCOPE_RE.search(question or "")
+                        and not any(re.search(pattern, question or "", re.I) for pattern in RISK_TOPICS.values())
+                        and not requested_risk_topic(str(getattr(thesis, "ticker", "")), question)
+                        and not requested_issuer_kpi_aliases(question))
+    if foundation_scope:
+        foundation = build_financial_foundation(ticker=str(getattr(thesis, "ticker", "")),
+                                               items=material, references=references)
+        if foundation:
+            _restrict_evidence_thesis(thesis, foundation["answer"], foundation["claims"],
+                                     foundation["selected_items"], enough=True,
+                                     scope="Financial thesis foundation")
+            return {"status": "partial", "reason": "Producer-bound financial foundation; broader investment case remains unverified.",
+                    "claims": foundation["claims"], "inferences": foundation["inferences"],
+                    "unanswered_parts": foundation["unanswered_parts"],
+                    "common_reporting_period": foundation["common_reporting_period"]}
     from .verified_sec_metric_service import _requested_metrics
     requested_metrics = _requested_metrics(question, include_defaults=False)
     # A multipart metric question must retain all requested metric slots.
     # Broader prose is still not permission to generate an investment case.
-    requested_thesis = bool(re.search(
-        r"\bwhat\s+is\s+(?:the\s+)?investment thesis\b", question or "", re.I,
-    ))
     requested_three = bool(re.search(r"\b(?:three|3)\b", question, re.IGNORECASE))
     claim_limit = 3 if requested_three else max(3, len(requested_metrics))
     claims: list[dict] = []
