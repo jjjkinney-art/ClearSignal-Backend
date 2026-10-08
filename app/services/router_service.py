@@ -12,6 +12,7 @@ import logging
 import re
 import time
 import uuid
+from datetime import datetime, timezone
 from concurrent.futures import ThreadPoolExecutor, Future, as_completed, wait as _cf_wait, ALL_COMPLETED
 from typing import Dict, List, Any, Optional, Tuple
 
@@ -1299,280 +1300,295 @@ def _run_investment_pipeline(
     # marginal value (the synthesis mandates are already adequate) — but it runs
     # in the same thread pool as the 5 agents so there is no wall-time cost.
     # On failure it returns "" and synthesis falls back to mandate-only mode.
-    from ..investment_agents.question_answerer_agent import run_question_answerer
-
-    # ── Specialist agents + Q-First (parallel execution) ─────────────────────
-    # The five investment agents are stateless and mutually independent — each
-    # reads from its own evidence partition and calls the OpenAI API separately.
-    # Running them in a thread pool cuts the agent-pipeline wall time from
-    # ~20-25 s (sequential × 5) to ~5-8 s (parallel, bound by the slowest call).
-    # Q-First runs as a 6th task in the same pool; it adds no additional latency
-    # since the bottleneck is the slowest of the 5 agents.
-    #
-    # Fallback: if the thread pool itself raises, we re-run sequentially so no
-    # request ever fails purely because of the parallelism mechanism.
-    _t_agents = time.time()
-    _t_agents_m = time.monotonic()
-    print(f"[TIMING] [{ticker}] starting 6 parallel agents (agent_model used by model_client)")
-
-    from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
-
-    def _run_valuation():
-        return run_valuation_agent(
-            company, partition.valuation,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_macro():
-        return run_investment_macro_agent(
-            company, partition.macro,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_risk():
-        return run_risk_agent(
-            company, partition.risk,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_market():
-        return run_market_agent(
-            company, partition.market,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_quality():
-        return run_quality_agent(
-            company, partition.quality,
-            request_id=request_id, profile=profile,
-            question_intent=question_intent,
-            question=question,
-        )
-
-    def _run_question_answerer():
-        return run_question_answerer(
-            question=question,
-            intent=question_intent,
-            company=company,
-            profile=profile,
-            evidence=evidence,
-        )
-
-    _agent_tasks = {
-        "valuation":          _run_valuation,
-        "macro":              _run_macro,
-        "risk":               _run_risk,
-        "market":             _run_market,
-        "quality":            _run_quality,
-        "question_answerer":  _run_question_answerer,  # Phase 4 Q-First
-    }
-    _agent_defaults = {
-        "valuation":         ValuationView(summary="Valuation analysis unavailable.", confidence=0.0),
-        "macro":             MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0),
-        "risk":              RiskProfile(overall="Risk analysis unavailable.", confidence=0.0),
-        "market":            MarketContext(overall="Market context unavailable.", confidence=0.0),
-        "quality":           QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0),
-        "question_answerer": "",  # Q-First default: empty string (fallback to mandate-only)
-    }
-
-    # ── Agent pool with hard wall-clock cap ──────────────────────────────────
-    # Use the same wait(timeout) pattern as the evidence pool — do NOT use
-    # `with ThreadPoolExecutor` (its __exit__ calls shutdown(wait=True) which
-    # blocks until all 6 agents complete, which could be up to 15.5s each,
-    # but we want a hard Python-side wall cap in addition to the httpx timeout).
-    # Wall cap = 16s  (agent_timeout=15s + 1s margin for httpx exception propagation).
-    # On Render Starter: budget evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = 82.5s
-    _AGENT_WALL_CAP_S = 16.0
-    _agent_pool = ThreadPoolExecutor(max_workers=6)
-    _agent_results: dict = {}
-    try:
-        # Sprint 3A — per-agent wall time. Same wrapper shape as the evidence
-        # pool: re-binds the trace inside the worker thread, records duration
-        # and failure class, returns the agent's own value untouched. The 16s
-        # wall cap and abandon-on-timeout behavior are unchanged; an abandoned
-        # agent is recorded as a timeout below rather than silently omitted.
-        def _observed_agent(name: str, fn):
-            def _run():
-                _t0 = time.monotonic()
-                try:
-                    result = fn()
-                except Exception as _exc:
-                    _obs_stage_record(
-                        f"agent.{name}", (time.monotonic() - _t0) * 1000.0,
-                        status="error", error_class=type(_exc).__name__,
-                    )
-                    raise
-                _obs_stage_record(
-                    f"agent.{name}", (time.monotonic() - _t0) * 1000.0, status="ok",
-                )
-                return result
-
-            return _obs_bind(_run)
-
-        _agent_futures: dict[str, Future] = {
-            name: _agent_pool.submit(_observed_agent(name, fn))
-            for name, fn in _agent_tasks.items()
-        }
-        _cf_wait(list(_agent_futures.values()), timeout=_AGENT_WALL_CAP_S, return_when=ALL_COMPLETED)
-        for name, fut in _agent_futures.items():
-            if fut.done():
-                try:
-                    _agent_results[name] = fut.result()
-                except Exception as exc:
-                    logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
-                    _agent_results[name] = _agent_defaults[name]
-            else:
-                logger.warning("[router] %s_agent abandoned (>%.0fs wall cap) for %s", name, _AGENT_WALL_CAP_S, ticker)
-                # The worker never returned, so it could not record itself.
-                _obs_stage_record(
-                    f"agent.{name}", _AGENT_WALL_CAP_S * 1000.0,
-                    status="timeout", error_class="WallCapExceeded",
-                )
-                _agent_results[name] = _agent_defaults[name]
-    except Exception as _pool_exc:
-        logger.warning("[router] agent pool error for %s (%r)", ticker, _pool_exc)
-        _agent_results = {name: _agent_defaults[name] for name in _agent_tasks}
-    finally:
-        _agent_pool.shutdown(wait=False)
-
-    valuation            = _agent_results["valuation"]
-    macro                = _agent_results["macro"]
-    risk                 = _agent_results["risk"]
-    market               = _agent_results["market"]
-    quality              = _agent_results["quality"]
-    pre_synthesized_answer = _agent_results.get("question_answerer", "") or ""
-
-    _agents_elapsed = time.time() - _t_agents
-    print(
-        f"[TIMING] [{ticker}] parallel_agents={_agents_elapsed:.2f}s "
-        f"pre_synthesized_answer={'set' if pre_synthesized_answer else 'empty'} "
-        f"({len(pre_synthesized_answer)} chars) "
-        f"elapsed_so_far={time.time()-_pipeline_t0:.2f}s"
-    )
-    _obs_stage_record("agent_total", (time.monotonic()-_t_agents_m)*1000.0)
-    agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
-
-    # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
-    # Wall cap = 56s  (synthesis_timeout=55s + 1s margin).
-    # This is a second line of defence after the httpx synthesis_timeout:
-    # if httpx doesn't fire (e.g. OpenAI streaming partial chunks), the
-    # concurrent.futures.wait(timeout=56) ensures synthesis never exceeds 56s.
-    # On Render Starter (120s proxy_read_timeout):
-    #   evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = ≤82.5s
-    _t_synthesis = time.time()
-    _t_synthesis_m = time.monotonic()
-    _selected_comparison = bool(
-        research_memory_context_data
-        and research_memory_context_data.get("applied") is True
-    )
-    _synthesis_plan = _synthesis_attempt_plan(
-        selected_comparison=_selected_comparison,
-    )
-    # The legacy snapshot store is ticker-wide, not account-owned. It cannot
-    # provide a signed-in participant's prior thesis or accept their new one.
+    # Source questions already replace generated narrative with the deterministic
+    # evidence view. Do not run model stages whose output that boundary discards.
+    # Retrieval, admission, comparison and persistence continue on the same path.
+    _source_evidence_view = is_source_answer_request(question)
     from ..config import settings as _history_settings
     _legacy_history_enabled = (
         side_effects_enabled and not _history_settings.auth_enabled
     )
-    # Load prior snapshot for historical reasoning (fire-and-forget on failure)
-    prior_snapshot = None
-    if _legacy_history_enabled:
-        try:
-            prior_snapshot = watchlist_service.get_latest_snapshot(ticker)
-        except Exception as exc:
-            logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
-
-    def _run_synthesis(_prompt_evidence):
-        return synthesize_thesis(
-            company=company,
-            valuation=valuation,
-            macro=macro,
-            risk=risk,
-            market=market,
-            quality=quality,
-            evidence=_prompt_evidence,
-            profile=profile,
-            original_user_question=question,
-            question_intent=question_intent,
-            prior_snapshot=prior_snapshot,
-            pre_synthesized_answer=pre_synthesized_answer,
-            # Phase 9C: investment memory block for prompt injection
-            memory_context_block=memory_context_block,
-            # Slice 5C/5D: prior-dossier context block (None when not in canary)
-            dossier_context_block=dossier_context_block,
-            # Explicit account-owned presentation preferences. This structured
-            # enum-only context is rendered through a fixed allowlist downstream.
-            personalization_context_data=personalization_context_data,
-            research_memory_context_block=research_memory_context_block,
+    if _source_evidence_view:
+        from ..schemas import InvestmentThesis
+        thesis = InvestmentThesis(
+            ticker=ticker, company_name=company.company_name,
+            evidence_count=len(evidence),
+            generated_at=datetime.now(timezone.utc).isoformat(),
+            score_source="not_assessed_evidence_view",
         )
+        valuation = None
+        agents_run = ["source_answer"]
+    else:
+        from ..investment_agents.question_answerer_agent import run_question_answerer
 
-    from ..schemas import InvestmentThesis as _InvestmentThesis
-    _thesis_fallback = _InvestmentThesis(
-        ticker=ticker,
-        company_name=company.company_name,
-        bull_thesis="Synthesis unavailable (wall cap exceeded).",
-        bear_thesis="Synthesis unavailable (wall cap exceeded).",
-        conclusion="Could not synthesize — wall cap exceeded.",
-        confidence_score=0.0,
-        key_drivers=[],
-        key_risks=[],
-    )
-    # Phase 20A P4: synthesis with automatic retry on failure.
-    # First attempt uses the full evidence set and wall cap.
-    # If it fails (exception or wall-cap exceeded), a single retry runs with
-    # reduced evidence to improve the chance of success.  The user never sees
-    # "Could not synthesize — wall cap exceeded" if a retry succeeds.
-    thesis = None
-    for _syn_attempt, (_syn_timeout, _evidence_limit) in enumerate(_synthesis_plan):
-        _syn_pool = ThreadPoolExecutor(max_workers=1)
+        # ── Specialist agents + Q-First (parallel execution) ─────────────────────
+        # The five investment agents are stateless and mutually independent — each
+        # reads from its own evidence partition and calls the OpenAI API separately.
+        # Running them in a thread pool cuts the agent-pipeline wall time from
+        # ~20-25 s (sequential × 5) to ~5-8 s (parallel, bound by the slowest call).
+        # Q-First runs as a 6th task in the same pool; it adds no additional latency
+        # since the bottleneck is the slowest of the 5 agents.
+        #
+        # Fallback: if the thread pool itself raises, we re-run sequentially so no
+        # request ever fails purely because of the parallelism mechanism.
+        _t_agents = time.time()
+        _t_agents_m = time.monotonic()
+        print(f"[TIMING] [{ticker}] starting 6 parallel agents (agent_model used by model_client)")
+
+        from ..schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
+
+        def _run_valuation():
+            return run_valuation_agent(
+                company, partition.valuation,
+                request_id=request_id, profile=profile,
+                question_intent=question_intent,
+                question=question,
+            )
+
+        def _run_macro():
+            return run_investment_macro_agent(
+                company, partition.macro,
+                request_id=request_id, profile=profile,
+                question_intent=question_intent,
+                question=question,
+            )
+
+        def _run_risk():
+            return run_risk_agent(
+                company, partition.risk,
+                request_id=request_id, profile=profile,
+                question_intent=question_intent,
+                question=question,
+            )
+
+        def _run_market():
+            return run_market_agent(
+                company, partition.market,
+                request_id=request_id, profile=profile,
+                question_intent=question_intent,
+                question=question,
+            )
+
+        def _run_quality():
+            return run_quality_agent(
+                company, partition.quality,
+                request_id=request_id, profile=profile,
+                question_intent=question_intent,
+                question=question,
+            )
+
+        def _run_question_answerer():
+            return run_question_answerer(
+                question=question,
+                intent=question_intent,
+                company=company,
+                profile=profile,
+                evidence=evidence,
+            )
+
+        _agent_tasks = {
+            "valuation":          _run_valuation,
+            "macro":              _run_macro,
+            "risk":               _run_risk,
+            "market":             _run_market,
+            "quality":            _run_quality,
+            "question_answerer":  _run_question_answerer,  # Phase 4 Q-First
+        }
+        _agent_defaults = {
+            "valuation":         ValuationView(summary="Valuation analysis unavailable.", confidence=0.0),
+            "macro":             MacroSensitivity(overall="Macro analysis unavailable.", confidence=0.0),
+            "risk":              RiskProfile(overall="Risk analysis unavailable.", confidence=0.0),
+            "market":            MarketContext(overall="Market context unavailable.", confidence=0.0),
+            "quality":           QualityAssessment(overall="Quality assessment unavailable.", confidence=0.0),
+            "question_answerer": "",  # Q-First default: empty string (fallback to mandate-only)
+        }
+
+        # ── Agent pool with hard wall-clock cap ──────────────────────────────────
+        # Use the same wait(timeout) pattern as the evidence pool — do NOT use
+        # `with ThreadPoolExecutor` (its __exit__ calls shutdown(wait=True) which
+        # blocks until all 6 agents complete, which could be up to 15.5s each,
+        # but we want a hard Python-side wall cap in addition to the httpx timeout).
+        # Wall cap = 16s  (agent_timeout=15s + 1s margin for httpx exception propagation).
+        # On Render Starter: budget evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = 82.5s
+        _AGENT_WALL_CAP_S = 16.0
+        _agent_pool = ThreadPoolExecutor(max_workers=6)
+        _agent_results: dict = {}
         try:
-            _prompt_evidence = _limit_synthesis_evidence(evidence, _evidence_limit)
-            _syn_fut = _syn_pool.submit(_run_synthesis, _prompt_evidence)
-            _cf_wait([_syn_fut], timeout=_syn_timeout, return_when=ALL_COMPLETED)
-            if _syn_fut.done():
-                try:
-                    thesis = _syn_fut.result()
-                    break
-                except Exception as exc:
-                    logger.warning(
-                        "[router] synthesize_thesis raised for %s (attempt %d): %r",
-                        ticker, _syn_attempt + 1, exc,
+            # Sprint 3A — per-agent wall time. Same wrapper shape as the evidence
+            # pool: re-binds the trace inside the worker thread, records duration
+            # and failure class, returns the agent's own value untouched. The 16s
+            # wall cap and abandon-on-timeout behavior are unchanged; an abandoned
+            # agent is recorded as a timeout below rather than silently omitted.
+            def _observed_agent(name: str, fn):
+                def _run():
+                    _t0 = time.monotonic()
+                    try:
+                        result = fn()
+                    except Exception as _exc:
+                        _obs_stage_record(
+                            f"agent.{name}", (time.monotonic() - _t0) * 1000.0,
+                            status="error", error_class=type(_exc).__name__,
+                        )
+                        raise
+                    _obs_stage_record(
+                        f"agent.{name}", (time.monotonic() - _t0) * 1000.0, status="ok",
                     )
-            else:
-                logger.warning(
-                    "[router] synthesis wall cap exceeded (%.0fs, attempt %d) for %s",
-                    _syn_timeout, _syn_attempt + 1, ticker,
-                )
-        except Exception as _syn_exc:
-            logger.warning(
-                "[router] synthesis pool error for %s (attempt %d): %r",
-                ticker, _syn_attempt + 1, _syn_exc,
-            )
+                    return result
+
+                return _obs_bind(_run)
+
+            _agent_futures: dict[str, Future] = {
+                name: _agent_pool.submit(_observed_agent(name, fn))
+                for name, fn in _agent_tasks.items()
+            }
+            _cf_wait(list(_agent_futures.values()), timeout=_AGENT_WALL_CAP_S, return_when=ALL_COMPLETED)
+            for name, fut in _agent_futures.items():
+                if fut.done():
+                    try:
+                        _agent_results[name] = fut.result()
+                    except Exception as exc:
+                        logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
+                        _agent_results[name] = _agent_defaults[name]
+                else:
+                    logger.warning("[router] %s_agent abandoned (>%.0fs wall cap) for %s", name, _AGENT_WALL_CAP_S, ticker)
+                    # The worker never returned, so it could not record itself.
+                    _obs_stage_record(
+                        f"agent.{name}", _AGENT_WALL_CAP_S * 1000.0,
+                        status="timeout", error_class="WallCapExceeded",
+                    )
+                    _agent_results[name] = _agent_defaults[name]
+        except Exception as _pool_exc:
+            logger.warning("[router] agent pool error for %s (%r)", ticker, _pool_exc)
+            _agent_results = {name: _agent_defaults[name] for name in _agent_tasks}
         finally:
-            _syn_pool.shutdown(wait=False)
+            _agent_pool.shutdown(wait=False)
 
-        if _syn_attempt + 1 < len(_synthesis_plan):
-            logger.info(
-                "[router] retrying synthesis for %s with reduced context "
-                "(selected_comparison=%s, evidence_limit=%s)",
-                ticker, _selected_comparison, _synthesis_plan[_syn_attempt + 1][1],
+        valuation            = _agent_results["valuation"]
+        macro                = _agent_results["macro"]
+        risk                 = _agent_results["risk"]
+        market               = _agent_results["market"]
+        quality              = _agent_results["quality"]
+        pre_synthesized_answer = _agent_results.get("question_answerer", "") or ""
+
+        _agents_elapsed = time.time() - _t_agents
+        print(
+            f"[TIMING] [{ticker}] parallel_agents={_agents_elapsed:.2f}s "
+            f"pre_synthesized_answer={'set' if pre_synthesized_answer else 'empty'} "
+            f"({len(pre_synthesized_answer)} chars) "
+            f"elapsed_so_far={time.time()-_pipeline_t0:.2f}s"
+        )
+        _obs_stage_record("agent_total", (time.monotonic()-_t_agents_m)*1000.0)
+        agents_run = ["valuation", "macro", "risk", "market", "quality", "question_answerer"]
+
+        # ── Thesis synthesis (with hard Python-side wall-clock cap) ──────────────
+        # Wall cap = 56s  (synthesis_timeout=55s + 1s margin).
+        # This is a second line of defence after the httpx synthesis_timeout:
+        # if httpx doesn't fire (e.g. OpenAI streaming partial chunks), the
+        # concurrent.futures.wait(timeout=56) ensures synthesis never exceeds 56s.
+        # On Render Starter (120s proxy_read_timeout):
+        #   evidence(≤10) + agents(≤16) + synthesis(≤56) + post(≤0.5) = ≤82.5s
+        _t_synthesis = time.time()
+        _t_synthesis_m = time.monotonic()
+        _selected_comparison = bool(
+            research_memory_context_data
+            and research_memory_context_data.get("applied") is True
+        )
+        _synthesis_plan = _synthesis_attempt_plan(
+            selected_comparison=_selected_comparison,
+        )
+        # The legacy snapshot store is ticker-wide, not account-owned. It cannot
+        # provide a signed-in participant's prior thesis or accept their new one.
+        # Load prior snapshot for historical reasoning (fire-and-forget on failure)
+        prior_snapshot = None
+        if _legacy_history_enabled:
+            try:
+                prior_snapshot = watchlist_service.get_latest_snapshot(ticker)
+            except Exception as exc:
+                logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
+
+        def _run_synthesis(_prompt_evidence):
+            return synthesize_thesis(
+                company=company,
+                valuation=valuation,
+                macro=macro,
+                risk=risk,
+                market=market,
+                quality=quality,
+                evidence=_prompt_evidence,
+                profile=profile,
+                original_user_question=question,
+                question_intent=question_intent,
+                prior_snapshot=prior_snapshot,
+                pre_synthesized_answer=pre_synthesized_answer,
+                # Phase 9C: investment memory block for prompt injection
+                memory_context_block=memory_context_block,
+                # Slice 5C/5D: prior-dossier context block (None when not in canary)
+                dossier_context_block=dossier_context_block,
+                # Explicit account-owned presentation preferences. This structured
+                # enum-only context is rendered through a fixed allowlist downstream.
+                personalization_context_data=personalization_context_data,
+                research_memory_context_block=research_memory_context_block,
             )
-    if thesis is None:
-        thesis = _thesis_fallback
 
-    print(
-        f"[TIMING] [{ticker}] synthesis={time.time()-_t_synthesis:.2f}s "
-        f"total_pipeline={time.time()-_pipeline_t0:.2f}s"
-    )
-    _obs_stage_record("synthesis", (time.monotonic()-_t_synthesis_m)*1000.0)
+        from ..schemas import InvestmentThesis as _InvestmentThesis
+        _thesis_fallback = _InvestmentThesis(
+            ticker=ticker,
+            company_name=company.company_name,
+            bull_thesis="Synthesis unavailable (wall cap exceeded).",
+            bear_thesis="Synthesis unavailable (wall cap exceeded).",
+            conclusion="Could not synthesize — wall cap exceeded.",
+            confidence_score=0.0,
+            key_drivers=[],
+            key_risks=[],
+        )
+        # Phase 20A P4: synthesis with automatic retry on failure.
+        # First attempt uses the full evidence set and wall cap.
+        # If it fails (exception or wall-cap exceeded), a single retry runs with
+        # reduced evidence to improve the chance of success.  The user never sees
+        # "Could not synthesize — wall cap exceeded" if a retry succeeds.
+        thesis = None
+        for _syn_attempt, (_syn_timeout, _evidence_limit) in enumerate(_synthesis_plan):
+            _syn_pool = ThreadPoolExecutor(max_workers=1)
+            try:
+                _prompt_evidence = _limit_synthesis_evidence(evidence, _evidence_limit)
+                _syn_fut = _syn_pool.submit(_run_synthesis, _prompt_evidence)
+                _cf_wait([_syn_fut], timeout=_syn_timeout, return_when=ALL_COMPLETED)
+                if _syn_fut.done():
+                    try:
+                        thesis = _syn_fut.result()
+                        break
+                    except Exception as exc:
+                        logger.warning(
+                            "[router] synthesize_thesis raised for %s (attempt %d): %r",
+                            ticker, _syn_attempt + 1, exc,
+                        )
+                else:
+                    logger.warning(
+                        "[router] synthesis wall cap exceeded (%.0fs, attempt %d) for %s",
+                        _syn_timeout, _syn_attempt + 1, ticker,
+                    )
+            except Exception as _syn_exc:
+                logger.warning(
+                    "[router] synthesis pool error for %s (attempt %d): %r",
+                    ticker, _syn_attempt + 1, _syn_exc,
+                )
+            finally:
+                _syn_pool.shutdown(wait=False)
+
+            if _syn_attempt + 1 < len(_synthesis_plan):
+                logger.info(
+                    "[router] retrying synthesis for %s with reduced context "
+                    "(selected_comparison=%s, evidence_limit=%s)",
+                    ticker, _selected_comparison, _synthesis_plan[_syn_attempt + 1][1],
+                )
+        if thesis is None:
+            thesis = _thesis_fallback
+
+        print(
+            f"[TIMING] [{ticker}] synthesis={time.time()-_t_synthesis:.2f}s "
+            f"total_pipeline={time.time()-_pipeline_t0:.2f}s"
+        )
+        _obs_stage_record("synthesis", (time.monotonic()-_t_synthesis_m)*1000.0)
 
     # ── Phase 9C: Stamp investment memory context onto thesis ────────────────
     if memory_context_data:
@@ -1797,7 +1813,7 @@ def _run_investment_pipeline(
     return AgentAnswerResponse(
         company=ticker,
         request_id=request_id,
-        agents_used=agents_run + ["thesis_synthesizer"],
+        agents_used=agents_run + ([] if _source_evidence_view else ["thesis_synthesizer"]),
         answer={
             "investment_thesis": thesis_dict,
             "backend_version":   _backend_version,   # [DEPLOYMENT PROOF]
@@ -1820,6 +1836,7 @@ def _run_investment_pipeline(
             "evidence_count": len(evidence),
             "evidence_blocked_count": _evidence_integrity["admission"]["blocked_count"],
             "pipeline_elapsed_s": round(time.time() - _pipeline_t0, 2),
+            "response_mode": "source_evidence" if _source_evidence_view else "generated_analysis",
             "personalization": _personalization_metadata,
             "research_memory": _selected_research_metadata,
         },

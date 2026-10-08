@@ -95,8 +95,9 @@ def test_conflicting_evidence_is_blocked_before_agents_and_source_answer(monkeyp
     )
 
     assert captured["partition_evidence"] == []
-    assert captured["question_evidence"] == []
-    assert captured["synthesis_evidence"] == []
+    assert "question_evidence" not in captured
+    assert "synthesis_evidence" not in captured
+    assert response.agents_used == ["source_answer"]
     assert response.answer["verified_sec_facts"] == []
     assert response.answer["source_answer"]["status"] == "insufficient_claim_evidence"
     assert response.answer["evidence_integrity"]["overall_status"] == "conflicting"
@@ -165,19 +166,18 @@ def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, au
     monkeypatch.setattr(router_service, "get_profile_for_company", lambda *a, **k: None)
     monkeypatch.setattr(router_service, "partition_evidence", lambda *a, **k:
                         EvidencePartition(valuation=[], macro=[], risk=[], market=[], quality=[]))
+    def discarded_model_stage(*args, **kwargs):
+        pytest.fail("Source-evidence requests must not invoke model stages")
+
     for name, model in (
         ("run_valuation_agent", ValuationView), ("run_investment_macro_agent", MacroSensitivity),
         ("run_risk_agent", RiskProfile), ("run_market_agent", MarketContext),
         ("run_quality_agent", QualityAssessment),
     ):
-        monkeypatch.setattr(router_service, name, lambda *a, _model=model, **k: _model())
+        monkeypatch.setattr(router_service, name, discarded_model_stage)
     monkeypatch.setattr("app.investment_agents.question_answerer_agent.run_question_answerer",
-                        lambda *a, **k: "Services margin is 72%.")
-    monkeypatch.setattr(router_service, "synthesize_thesis", lambda *a, **k:
-                        InvestmentThesis(ticker=ticker, company_name=ticker,
-                                         direct_answer="Services margin is 72%.",
-                                         one_sentence_thesis="Services margin is 72%.",
-                                         bull_thesis="Services margin is 72%."))
+                        discarded_model_stage)
+    monkeypatch.setattr(router_service, "synthesize_thesis", discarded_model_stage)
     monkeypatch.setattr(settings, "auth_enabled", authenticated)
     monkeypatch.setattr(session_context_service, "record_active_ticker", lambda *a, **k: None)
     monkeypatch.setattr(router_service.watchlist_service, "get_latest_snapshot", lambda *a: None)
@@ -208,6 +208,11 @@ def test_scoped_risk_boundary_covers_snapshot_and_emitted_thesis(monkeypatch, au
         assert response.answer["source_answer"]["claims"][0]["claim_kind"] == "issuer_disclosed_risk"
         assert "does not independently verify" in response.answer["investment_thesis"]["direct_answer"]
     assert "72%" not in json.dumps(response.answer["investment_thesis"])
+    assert response.agents_used == ["source_answer"]
+    assert response.routing["response_mode"] == "source_evidence"
+    assert response.answer["investment_thesis"]["confidence_score"] == 0
+    assert response.answer["investment_thesis"]["score_source"] == "not_assessed_evidence_view"
+    assert response.answer["investment_thesis"]["generated_at"]
     if authenticated:
         assert captured == []  # Shared ticker memory remains guarded.
     else:
