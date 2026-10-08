@@ -11,7 +11,7 @@ from app.services.issuer_risk_evidence import (
 from app.services.sec_risk_sections import (
     _ITEM, RISK_START, find_risk_closing, rejected_risk_heading,
     MAX_ISSUER_RISK_SECTION_CHARS,
-    risk_section_spans, risk_sentence_spans,
+    risk_section_spans, risk_sentence_spans, risk_openings,
 )
 
 
@@ -32,13 +32,13 @@ def rejection_reason(error) -> str:
     return REJECTION_REASONS.get(str(error), "unclassified_rejection")
 
 
-def boundary_inspection(text: str) -> dict:
+def boundary_inspection(text: str, *, form: str = "10-K") -> dict:
     """Full visible text only; sample caps are independent of evidence limits."""
     samples = []
-    for index, opening in enumerate(RISK_START.finditer(text)):
+    for index, opening in enumerate(risk_openings(text, form=form)):
         if index == 8:
             break
-        closing = find_risk_closing(text, opening.end())
+        closing = find_risk_closing(text, opening.end(), form=form)
         samples.append({
             "offset": opening.start(),
             "context": text[max(0, opening.start() - 60):opening.end() + 160],
@@ -47,7 +47,7 @@ def boundary_inspection(text: str) -> dict:
             "recognized_section_chars": closing.start() - opening.end() if closing else None,
         })
     # Include numbered labels even when their title fails the production regex.
-    numbered = re.compile(rf"\b{_ITEM}\s+(?:1\s*[ABC]|2)(?=\s|[.:—–-])", re.I)
+    numbered = re.compile(rf"\b{_ITEM}\s+(?:1\s*[ABC]|2|3\s*(?:[.]?\s*D)?|4)(?=\s|[.:—–-])", re.I)
     headings = []
     for index, match in enumerate(numbered.finditer(text)):
         if index == 24:
@@ -68,7 +68,7 @@ def topic_inspection(document, *, ticker: str, question: str) -> dict:
         return {"topic_sentence_samples": samples}
     section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
     seen = set()
-    for section_start, section_end in risk_section_spans(document.text, max_section_chars=section_limit):
+    for section_start, section_end in risk_section_spans(document.text, max_section_chars=section_limit, form=document.document_type):
         if len(samples) == 8:
             break
         section = document.text[section_start:section_end]

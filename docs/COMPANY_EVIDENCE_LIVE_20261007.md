@@ -1,9 +1,10 @@
 # Signed-in broad-company evidence acceptance
 
-Latest status: the complete post-PR #200 domestic subset reports
-COST/BA/PLTR/H/F passing and JPM/XOM/NFLX still gaps. The remaining sections below preserve
-the chronological acceptance record; earlier counts are not current full-cohort
-results.
+Latest status (8 October, owner-reported complete post-PR #203 run): all 29
+domestic cases pass; SPOT/ASML/TSM/NVO remain foreign gaps. This source-binding
+result does not establish signed-in foreign acceptance or full launch clearance.
+The remaining sections preserve the chronological acceptance record; earlier
+counts are not current full-cohort results.
 
 Recorded 7 October 2026 NZ / 6 October UTC after the owner confirmed deployment
 of PR #194 (merged main `7e97e529fcbc4a2b42690b450c06a1339331dca9`).

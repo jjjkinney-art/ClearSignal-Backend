@@ -64,7 +64,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
         result = real_html_result(parser, *args, **kwargs)
         if inspect_source and kwargs.get("preserve_sec_risk"):
             full_text = parser.normalized_visible_text(preserve_sec_risk=True)
-            html_inspection = boundary_inspection(full_text)
+            html_inspection = boundary_inspection(full_text, form=kwargs.get("risk_form", "10-K"))
         return result
 
     def observe_discover(company, **kwargs):
@@ -125,7 +125,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
             inspections[document.content_hash] = {
                 "public_source_url": document.final_url, "content_hash": document.content_hash,
                 "full_visible_text_observed": html_inspection is not None,
-                "boundaries": html_inspection or boundary_inspection(document.text),
+                "boundaries": html_inspection or boundary_inspection(document.text, form=document.document_type),
                 "topic_candidates": topic_inspection(document, ticker=case["ticker"], question=case["question"]),
                 "admission_authority": False,
             }

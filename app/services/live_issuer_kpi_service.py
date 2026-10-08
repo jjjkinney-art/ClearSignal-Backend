@@ -75,6 +75,8 @@ def fetch_live_issuer_kpi_evidence(
         return []
     forms = (["10-Q", "10-Q/A", "10-K", "10-K/A"] if services_requested or risk_requested
              else ["8-K", "8-K/A", "6-K", "6-K/A"])
+    if risk_requested and not services_requested:
+        forms += ["20-F", "20-F/A"]
     try:
         filings = sec_provider.fetch_recent_filings(
             ticker.upper().strip(), forms=forms,
@@ -100,17 +102,18 @@ def fetch_live_issuer_kpi_evidence(
         # the document actually used; no amendment is treated as a full report.
         if (not risk_requested or risk_found or filing_index != 0
                 or fetched_documents >= max_documents
-                or document_type == "10-K"):
+                or document_type in {"10-K", "20-F"}):
             return
+        annual_form = "20-F" if document_type == "20-F/A" else "10-K"
         try:
             annual = sec_provider.fetch_recent_filings(
-                ticker.upper().strip(), forms=["10-K"], limit=1,
+                ticker.upper().strip(), forms=[annual_form], limit=1,
                 years_back=2, prefer_results=False,
             ) or []
             # A reviewed successor may lack its own full annual report. Use
             # only the explicit historical document, never a broad search
             # under another CIK. Keep the same remaining document slot.
-            if not annual:
+            if not annual and annual_form == "10-K":
                 predecessor = reviewed_predecessor_annual(ticker.upper().strip())
                 if predecessor:
                     candidate, provenance = predecessor
@@ -118,9 +121,9 @@ def fetch_live_issuer_kpi_evidence(
                     predecessor_authorizations[candidate.url] = provenance
             # Preserve amendment-only coverage when no full annual was found.
             # Do not rediscover an amendment already consuming the first slot.
-            if not annual and document_type != "10-K/A":
+            if not annual and document_type != annual_form + "/A":
                 annual = sec_provider.fetch_recent_filings(
-                    ticker.upper().strip(), forms=["10-K/A"], limit=1,
+                    ticker.upper().strip(), forms=[annual_form + "/A"], limit=1,
                     years_back=2, prefer_results=False,
                 ) or []
         except Exception as exc:
