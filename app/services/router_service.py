@@ -1080,6 +1080,19 @@ def _run_investment_pipeline(
             logger.warning("[router] issuer KPI evidence unavailable for %s: %r", ticker, _e)
             return []
 
+    def _fetch_issuer_releases():
+        if as_of:
+            return []
+        try:
+            from .issuer_release_evidence import fetch_issuer_release_evidence
+            from ..config import settings
+            return fetch_issuer_release_evidence(
+                ticker, question=question, user_agent=settings.sec_user_agent,
+            )
+        except Exception as exc:
+            logger.warning("[router] issuer releases unavailable for %s: %r", ticker, exc)
+            return []
+
     def _fetch_news_company():
         if as_of:
             return []
@@ -1127,6 +1140,7 @@ def _run_investment_pipeline(
         "news_macro": "news", "fred": "fred", "valuation": "fmp_valuation",
         "estimates": "fmp_estimates", "sec_metrics": "sec_edgar",
         "issuer_kpis": "sec_edgar_documents",
+        "issuer_releases": "issuer_official_releases",
     }
     _ev_tasks = {
         "fmp":       _fetch_fmp,
@@ -1154,6 +1168,9 @@ def _run_investment_pipeline(
             or (ticker == "AAPL" and (requests_services_revenue(question)
                                      or requests_services_operating_risk(question)))):
         _ev_tasks["issuer_kpis"] = _fetch_issuer_kpis
+    from .issuer_release_evidence import requests_issuer_release
+    if not as_of and requests_issuer_release(ticker, question):
+        _ev_tasks["issuer_releases"] = _fetch_issuer_releases
     _ev_results: dict = {}
     # ── Hard 10s ceiling on evidence collection ──────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
@@ -1240,9 +1257,10 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
+    _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.
-    evidence = (_issuer_kpi_evidence + _sec_metric_evidence + market_evidence
+    evidence = (_issuer_release_evidence + _issuer_kpi_evidence + _sec_metric_evidence + market_evidence
                 + fred_evidence + _val_ratios + _analyst_ests)
     from .evidence_references import admit_evidence
     evidence, _evidence_references, _evidence_integrity = admit_evidence(
