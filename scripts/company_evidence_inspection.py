@@ -5,6 +5,7 @@ from collections import Counter
 import hashlib
 import re
 
+from app.services.reviewed_annual_layouts import reviewed_annual_layout
 from app.services.issuer_risk_evidence import (
     _has_topic_scope, requested_risk_profile, risk_quote_rejections,
 )
@@ -23,6 +24,8 @@ REJECTION_REASONS = {
     "expanded limits require a SEC periodic HTML filing": "sec_periodic_url_or_metadata",
     "document redirect limit exceeded": "redirect_limit",
     "document contained no extractable text": "empty_visible_text",
+    "reviewed annual document hash mismatch": "reviewed_annual_hash_mismatch",
+    "reviewed annual risk mapping unavailable": "reviewed_annual_mapping_missing",
 }
 
 
@@ -32,13 +35,13 @@ def rejection_reason(error) -> str:
     return REJECTION_REASONS.get(str(error), "unclassified_rejection")
 
 
-def boundary_inspection(text: str, *, form: str = "10-K") -> dict:
+def boundary_inspection(text: str, *, form: str = "10-K", layout: dict | None = None) -> dict:
     """Full visible text only; sample caps are independent of evidence limits."""
     samples = []
-    for index, opening in enumerate(risk_openings(text, form=form)):
+    for index, opening in enumerate(risk_openings(text, form=form, layout=layout)):
         if index == 8:
             break
-        closing = find_risk_closing(text, opening.end(), form=form)
+        closing = find_risk_closing(text, opening.end(), form=form, layout=layout)
         samples.append({
             "offset": opening.start(),
             "context": text[max(0, opening.start() - 60):opening.end() + 160],
@@ -68,7 +71,8 @@ def topic_inspection(document, *, ticker: str, question: str) -> dict:
         return {"topic_sentence_samples": samples}
     section_limit = 80_000 if ticker == "AAPL" else MAX_ISSUER_RISK_SECTION_CHARS
     seen = set()
-    for section_start, section_end in risk_section_spans(document.text, max_section_chars=section_limit, form=document.document_type):
+    layout = reviewed_annual_layout(document.final_url, document.document_type, document.published_at, content_hash=document.content_hash)
+    for section_start, section_end in risk_section_spans(document.text, max_section_chars=section_limit, form=document.document_type, layout=layout):
         if len(samples) == 8:
             break
         section = document.text[section_start:section_end]

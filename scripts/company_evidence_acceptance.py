@@ -27,6 +27,7 @@ from app.services.evidence_references import admit_evidence
 from app.services.issuer_risk_evidence import bound_issuer_risk, requested_risk_profile
 from app.services.source_answer import apply_source_answer_gate
 from app.services import public_document_ingestion as ingestion
+from app.services.reviewed_annual_layouts import reviewed_annual_layout
 from scripts.company_evidence_inspection import (
     boundary_inspection, rejection_reason, submission_inventory, topic_inspection,
 )
@@ -64,7 +65,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
         result = real_html_result(parser, *args, **kwargs)
         if inspect_source and kwargs.get("preserve_sec_risk"):
             full_text = parser.normalized_visible_text(preserve_sec_risk=True)
-            html_inspection = boundary_inspection(full_text, form=kwargs.get("risk_form", "10-K"))
+            html_inspection = boundary_inspection(full_text, form=kwargs.get("risk_form", "10-K"), layout=kwargs.get("risk_layout"))
         return result
 
     def observe_discover(company, **kwargs):
@@ -125,7 +126,7 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
             inspections[document.content_hash] = {
                 "public_source_url": document.final_url, "content_hash": document.content_hash,
                 "full_visible_text_observed": html_inspection is not None,
-                "boundaries": html_inspection or boundary_inspection(document.text, form=document.document_type),
+                "boundaries": html_inspection or boundary_inspection(document.text, form=document.document_type, layout=reviewed_annual_layout(document.final_url, document.document_type, document.published_at, content_hash=document.content_hash)),
                 "topic_candidates": topic_inspection(document, ticker=case["ticker"], question=case["question"]),
                 "admission_authority": False,
             }
