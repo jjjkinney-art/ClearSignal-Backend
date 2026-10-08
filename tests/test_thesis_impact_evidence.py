@@ -88,6 +88,8 @@ def test_gate_fails_closed_for_conflict_supersession_unavailability_and_future()
         (_evidence(supersession="superseded"), "superseded"),
         (_evidence(availability="unavailable"), "unavailable"),
         (_evidence(freshness="future"), "future"),
+        (_evidence(freshness="stale"), "stale"),
+        (_evidence(freshness="unknown"), "unknown"),
     ):
         result = gate_thesis_impact_evidence(
             prior_created_at=PRIOR,
@@ -116,7 +118,7 @@ def test_overall_integrity_conflict_blocks_otherwise_eligible_evidence():
     )
 
     assert result == {
-        "gate_version": 1,
+        "gate_version": 2,
         "ready_for_comparison": False,
         "direction": "unverified",
         "eligible_evidence": [],

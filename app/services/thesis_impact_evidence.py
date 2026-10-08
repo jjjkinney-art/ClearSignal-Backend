@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
 
 
-THESIS_IMPACT_GATE_VERSION = 1
+THESIS_IMPACT_GATE_VERSION = 2
 MAX_CANDIDATE_EVIDENCE = 100
 MAX_ELIGIBLE_EVIDENCE = 20
 _BLOCKING_AVAILABILITY = {"unavailable", "removed", "inaccessible"}
@@ -136,6 +136,8 @@ def gate_thesis_impact_evidence(
             reason = "superseded"
         elif freshness in _BLOCKING_FRESHNESS:
             reason = "future"
+        elif freshness in {"stale", "unknown"}:
+            reason = freshness
         elif item.get("admitted") is not True:
             reason = "not_admitted"
         else:
