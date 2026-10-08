@@ -318,11 +318,15 @@ restored useful answers and complete source binding.
 8 October 2026 owner-reported complete post-PR #203 run: all 29 domestic cases
 pass; SPOT, ASML, TSM and NVO remain gaps. This is source-binding acceptance for
 the frozen question sample, not signed-in acceptance or full launch clearance.
-The next slice adds bounded 20-F Item 3 risk extraction. Actual downloaded
-Spotify and TSM filings pass local citation replay; required CI, deployment and
-live/saved acceptance remain pending. ASML integrated-report and Novo Nordisk
-incorporated-report paths remain separate gaps. See
-[foreign annual section work](FOREIGN_20F_RISK_SECTIONS_20261008.md).
+PR #204 is merged; the owner-reported deployed four-case subset passes SPOT
+and TSM and still reports ASML and NVO gaps. This does not establish a new full
+cohort count. The next repair adds a document-specific, hash-pinned ASML integrated
+Risk Factors mapping. Its actual filing passes local extraction, exact-span
+binding and citation replay; pinned CI, deployment and signed-in/live/saved
+acceptance remain separate gates. NVO still requires an incorporation-verified
+annual-report table path that separates risk descriptions, impacts and mitigations.
+See [foreign annual section work](FOREIGN_20F_RISK_SECTIONS_20261008.md) and
+[ASML integrated-report work](ASML_INTEGRATED_RISK_CONTEXT_20261008.md).
 
 
 Post-PR #199 targeted inspection: COST now passes; the complete eight-company

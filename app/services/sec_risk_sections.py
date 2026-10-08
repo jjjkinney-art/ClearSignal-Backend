@@ -63,7 +63,9 @@ def _foreign_headings(text: str):
     return sorted({m.start(): m for m in candidates}.values(), key=lambda m: m.start())
 
 
-def risk_openings(text: str, *, form: str = '10-K'):
+def risk_openings(text: str, *, form: str = '10-K', layout: dict | None = None):
+    if layout:
+        return re.compile(layout['opening'], re.I).finditer(text)
     return _foreign_headings(text) if form in FOREIGN_RISK_FORMS else RISK_START.finditer(text)
 
 
@@ -76,9 +78,9 @@ def rejected_risk_heading(text: str, end: int, *, start: int | None = None) -> b
                     text[max(0, start - 60):start], re.I)))
 
 
-def find_risk_closing(text: str, start: int, *, end: int | None = None, form: str = '10-K') -> re.Match | None:
+def find_risk_closing(text: str, start: int, *, end: int | None = None, form: str = '10-K', layout: dict | None = None) -> re.Match | None:
     """An explicit closing heading, excluding quoted references and TOC rows."""
-    pattern = _FOREIGN_END if form in FOREIGN_RISK_FORMS else RISK_END
+    pattern = re.compile(layout['closing'], re.I) if layout else (_FOREIGN_END if form in FOREIGN_RISK_FORMS else RISK_END)
     for index, heading in enumerate(pattern.finditer(text, start, len(text) if end is None else end)):
         if index == 64:
             return None
@@ -87,9 +89,9 @@ def find_risk_closing(text: str, start: int, *, end: int | None = None, form: st
     return None
 
 
-def complete_risk_window(text: str, *, max_section_chars: int = MAX_ISSUER_RISK_SECTION_CHARS, form: str = '10-K') -> tuple[int, int] | None:
+def complete_risk_window(text: str, *, max_section_chars: int = MAX_ISSUER_RISK_SECTION_CHARS, form: str = '10-K', layout: dict | None = None) -> tuple[int, int] | None:
     """First bounded section with an explicit closing heading; no synthesis."""
-    for index, heading in enumerate(risk_openings(text, form=form)):
+    for index, heading in enumerate(risk_openings(text, form=form, layout=layout)):
         # A hostile document cannot trigger unlimited suffix scans. Failure to
         # find an eligible section within this bound is an explicit gap.
         if index == 64:
@@ -97,17 +99,17 @@ def complete_risk_window(text: str, *, max_section_chars: int = MAX_ISSUER_RISK_
         if rejected_risk_heading(text, heading.end(), start=heading.start()):
             continue
         closing = find_risk_closing(text, heading.end(),
-                                   end=min(len(text), heading.end() + max_section_chars + 100), form=form)
+                                   end=min(len(text), heading.end() + max_section_chars + 100), form=form, layout=layout)
         if closing and closing.start() - heading.end() <= max_section_chars:
             return heading.start(), closing.end()
     return None
 
 
-def risk_section_spans(text: str, *, max_section_chars: int, diagnostics: dict | None = None, form: str = '10-K'):
+def risk_section_spans(text: str, *, max_section_chars: int, diagnostics: dict | None = None, form: str = '10-K', layout: dict | None = None):
     """Bounded, nonoverlapping bodies; references cannot open a section."""
     stats = diagnostics if diagnostics is not None else {}
     covered_until = 0
-    for index, heading in enumerate(risk_openings(text, form=form)):
+    for index, heading in enumerate(risk_openings(text, form=form, layout=layout)):
         if index == 64:
             break
         stats['risk_headings'] = stats.get('risk_headings', 0) + 1
@@ -116,7 +118,7 @@ def risk_section_spans(text: str, *, max_section_chars: int, diagnostics: dict |
             continue
         if heading.start() < covered_until:
             continue
-        closing = find_risk_closing(text, heading.end(), form=form)
+        closing = find_risk_closing(text, heading.end(), form=form, layout=layout)
         if closing is None:
             stats['missing_closing_sections'] = stats.get('missing_closing_sections', 0) + 1
             continue

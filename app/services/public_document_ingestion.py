@@ -21,6 +21,7 @@ import requests
 from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from .sec_risk_sections import complete_risk_window, RISK_FORMS
+from .reviewed_annual_layouts import reviewed_annual_layout
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
@@ -336,7 +337,7 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
             text = _SEC_PAGE_FOOTER.sub('', text)
         return text
 
-    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, risk_form: str = "10-K") -> tuple[
+    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, risk_form: str = "10-K", risk_layout: dict | None = None) -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
@@ -348,7 +349,7 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         self.normalized_text_chars_total = len(full_text)
         start, end = 0, max_chars
         if preserve_sec_risk and len(full_text) > max_chars:
-            window = complete_risk_window(full_text, form=risk_form)
+            window = complete_risk_window(full_text, form=risk_form, layout=risk_layout)
             if window and window[1] > max_chars and window[1] - window[0] <= max_chars:
                 start, end = window
                 self.text_selection = "complete_sec_risk_section"
@@ -521,6 +522,7 @@ def fetch_public_document(
     requested_url = _validate_public_url(url)
     current_url = requested_url
     response = None
+    layout = None
     try:
         for redirect_count in range(MAX_REDIRECTS + 1):
             current_url = _validate_public_url(current_url)
@@ -532,6 +534,8 @@ def fetch_public_document(
                         or parsed.hostname != "www.sec.gov" or parsed.query or parsed.fragment
                         or not re.fullmatch(r"/Archives/edgar/data/\d+/\d{18}/[^/]+\.html?", parsed.path)):
                     raise PublicDocumentError("expanded limits require a SEC periodic HTML filing")
+            layout = (reviewed_annual_layout(current_url, document_type, published_at)
+                      if sec_periodic_limits else None)
             response = requests.get(
                 current_url,
                 headers={"User-Agent": user_agent or "ClearSignal/1.0 public-document-research"},
@@ -553,7 +557,7 @@ def fetch_public_document(
             raise PublicDocumentError("unsupported document content type")
         if sec_periodic_limits and media_type not in {"text/html", "application/xhtml+xml"}:
             raise PublicDocumentError("expanded limits require HTML content")
-        body = _read_bounded(response, max_bytes=(MAX_SEC_PERIODIC_BYTES
+        body = _read_bounded(response, max_bytes=(layout["max_bytes"] if layout else MAX_SEC_PERIODIC_BYTES
                                                 if sec_periodic_limits else MAX_DOCUMENT_BYTES))
         encoding = response.encoding or "utf-8"
     except PublicDocumentError:
@@ -565,6 +569,8 @@ def fetch_public_document(
             response.close()
 
     digest = hashlib.sha256(body).hexdigest()
+    if layout and digest != layout["content_hash"]:
+        raise PublicDocumentError("reviewed annual document hash mismatch")
     accessed_at = datetime.now(timezone.utc).isoformat()
     if media_type == "application/pdf":
         title, text, pages = _extract_pdf(body)
@@ -584,9 +590,11 @@ def fetch_public_document(
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
+        if layout and layout["mapping"] not in parser.normalized_visible_text(preserve_sec_risk=True):
+            raise PublicDocumentError("reviewed annual risk mapping unavailable")
         title, text, sections, raw_links = parser.result(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
-            preserve_sec_risk=sec_periodic_limits, risk_form=document_type or "10-K")
+            preserve_sec_risk=sec_periodic_limits, risk_form=document_type or "10-K", risk_layout=layout)
         text_metadata = {"normalized_text_chars_total": parser.normalized_text_chars_total,
                          "text_window_start": parser.text_window_start,
                          "text_selection": parser.text_selection}
