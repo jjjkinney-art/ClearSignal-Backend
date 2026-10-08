@@ -6,6 +6,72 @@
 
 This roadmap supersedes the live-data scope of the older static company-profile coverage plans. It extends the current account-owned research memory, personalized Intelligence Mode, and claim-level SEC evidence work into a universal public-information research system.
 
+### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
+
+**Launch requirement:** a user researching JetBlue or Smith & Wesson must receive
+research of the same quality as a user researching Apple or Tesla. Company size,
+name recognition, or inclusion in a hand-reviewed ticker list must not determine
+answer quality. The intended scope remains every public company, including
+smaller issuers and international listings. This is a launch-critical expansion
+of the existing infrastructure, not a rebuild or a 33-company product limit.
+
+Prioritize this work ahead of optional feature expansion and cosmetic polish,
+while preserving the existing security, factual-integrity and comparison gates.
+The 33/33 deployed risk-evidence result validates specific issuer/topic cases;
+it does not establish reliable answers across all questions or public companies.
+A safe gap is honest handling, but is not a successful useful-answer result.
+
+**Implementation and acceptance order:**
+
+1. Audit and extend shared issuer identity, official source discovery, document
+   retrieval, sector metrics and topic extraction. Prefer fixes that transfer to
+   unseen companies over an ever-growing collection of ticker-specific patches.
+   Review genuinely issuer-specific layouts without weakening attribution.
+2. Make JetBlue and Smith & Wesson mandatory end-to-end acceptance issuers,
+   alongside Apple and Tesla controls. Test legal company names and tickers;
+   core investment thesis, operating risks, comparable-period financial trends,
+   sector operating metrics, recent developments, and saved-thesis comparisons.
+   Use the signed-in production path and verify readable save/reopen results.
+3. Expand the existing benchmark to its minimum 100-issuer milestone, with at
+   least 30 issuers in each principal large-, mid- and small/micro-cap tier,
+   multiple sectors, fiscal calendars and jurisdictions, and an unseen holdout.
+   This is a first validation floor, not proof that every public company works.
+4. Apply the same factual, citation, relevance and usability standards to every
+   tier. Require at least 90% useful cited answers in each tier and the named
+   acceptance issuers' question sets, not merely 90% in an aggregate dominated
+   by large companies. Apply the existing numerical-accuracy and source-binding
+   gates; allow no fabricated material sources, issuer/period contamination,
+   account leakage or issuer-level stop-ship failure. Report gaps separately.
+5. Measure live latency, freshness, retrieval failures, saved-answer usability,
+   and source coverage by issuer, question family, sector, size and jurisdiction.
+   Fix recurring failure classes and rerun both failing and unseen companies.
+6. Extend exchange/security identity and official non-SEC sources for markets
+   the SEC foundation does not cover. Maintain an auditable market/source-family
+   coverage inventory. Broad acceptance of a name or a safe gap alone must not
+   be advertised as equivalent research quality or universal verified coverage.
+
+No guaranteed issue-free company count is established yet. Exhaustive success
+for every possible question is not a measurable promise; broad public-company
+access, quality parity and evidence-based coverage are the engineering goals.
+Unsupported scope must be explicit, and any narrower initial release must be
+described as a scoped beta rather than completion of the universal launch goal.
+
+**Current implementation baseline:** shared SEC identity/discovery, bounded
+primary-document ingestion, reusable facts and risk-topic extraction, admission,
+citations, account-owned memory and benchmark runners already exist. Global
+source families, broader document layouts, question coverage and representative
+production validation remain substantial work.
+
+Backend PR215 is deployed at `7c69214096c7128a98d62124a7aba1b8d0c131a5`.
+Its live September 26 Tesla comparison retrieved the October 2 SEC delivery
+release, admitted one newer evidence item and survived save/reopen. Frontend
+PR81 is deployed at `7cf1e976dbe3fe9a7400a4bc7632e35fed58c714`; the audit now
+shows eligible evidence separately from an unverified conclusion. These close
+that retrieval/display increment, not full launch readiness. Fully cited and
+semantically supported comparisons remain P0; a delivery count alone must not
+be turned into proof of competitive advantage. Publication-date display across
+time zones also needs review after the live audit rendered October 2 as October 1.
+
 ### Latest acceptance — October 8, 2026
 
 The user supplied the deployed post213 Render source-evidence run: **33/33 pass**.
@@ -16,13 +82,11 @@ historical thesis, declined unsupported direction when no eligible newer evidenc
 was retrieved, and survived reopening. This confirms those regressions; broader
 launch readiness, semantic accuracy and universal source coverage remain open.
 
-The next retrieval increment discovers actual Tesla production/delivery releases
-from its reviewed investor-relations index and binds exact total-row observations
-to publication date, reporting quarter, issuer and document hash. It is scoped to
-Tesla delivery/production questions; other issuer adapters remain roadmap work.
-Local retrieval/parser and comparison-contract tests do not substitute for the
-pending deployed official-release retrieval and real September 26 Tesla thesis
-comparison acceptance. See `OFFICIAL_DELIVERY_RELEASES_20261008.md`.
+The official Tesla release increment has since passed deployed retrieval and
+save/reopen acceptance through the SEC exhibit route described above. The
+issuer's investor-relations index returned HTTP 403 on Render. Wider issuer
+coverage and supported comparison conclusions remain open. See
+`OFFICIAL_DELIVERY_RELEASES_20261008.md` for the retrieval increment.
 
 ## 1. Product promise and boundary
 
@@ -301,7 +365,13 @@ ClearSignal is ready for full launch when all P0 gates pass:
 - History, Research Trail, comparisons, and Personalized Intelligence Mode pass signed-in end-to-end testing on desktop and mobile.
 - Production monitoring covers retrieval failure, source drift, extraction error, stale evidence, authorization denial, latency, and cost.
 
-Foreign jurisdiction breadth and long-tail public-web connectors may continue expanding after launch, but the product must already accept those questions and respond with an honest coverage state. A question being accepted must never be confused with its answer being verified.
+Under the October 9 user directive, international public-company coverage is part
+of the prioritized universal-quality workstream. Optional long-tail sources may
+continue expanding, but an unsupported market cannot count as equivalent quality
+merely because its questions are accepted or return safe gaps. Any staged release
+must disclose its validated scope; a narrower beta is not completion of the
+universal launch goal. A question being accepted must never be confused with its
+answer being verified.
 
 Broad-company acceptance update (2026-10-07): the deployed split-heading repair
 restored all five signed-in retest cases, and the complete 33-company read-only
