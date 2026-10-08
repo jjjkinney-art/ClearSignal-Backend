@@ -19,7 +19,7 @@ def _context():
     }
 
 
-def _thesis(answer="The thesis strengthened because services demand accelerated."):
+def _thesis(answer="The thesis strengthened because services demand accelerated. [E1]"):
     return SimpleNamespace(
         direct_answer=answer,
         conclusion=answer,
@@ -43,6 +43,50 @@ def _evidence(**overrides):
     }
     value.update(overrides)
     return SimpleNamespace(**value)
+
+
+def test_source_title_cannot_bind_an_uncited_directional_conclusion():
+    thesis = _thesis("The thesis strengthened because services demand accelerated.")
+    audit = evaluate_selected_thesis_impact(
+        thesis=thesis, context=_context(), evidence=[_evidence()],
+    )
+    assert audit["evidence_gate"]["status"] == "ready"
+    assert audit["status"] != "verified_change"
+    assert audit["evidence_bound_result"]["reason"] == "missing_change_claims"
+    assert "cannot verify" in thesis.direct_answer
+
+
+def test_citation_to_old_source_cannot_borrow_new_eligible_source():
+    thesis = _thesis("The thesis strengthened because services demand accelerated. [E1]")
+    audit = evaluate_selected_thesis_impact(
+        thesis=thesis, context=_context(),
+        evidence=[_evidence(timestamp="2026-09-01"), _evidence()],
+    )
+    assert audit["evidence_gate"]["status"] == "ready"
+    assert audit["status"] != "verified_change"
+    assert audit["evidence_bound_result"]["reason"] == "unadmitted_evidence_reference"
+
+
+@pytest.mark.parametrize("answer", [
+    "The thesis strengthened because services demand accelerated. [E1] Margins fell.",
+    "The thesis strengthened because services demand accelerated. [E99]",
+    "The thesis weakened because services demand declined. [E1]",
+])
+def test_partial_unknown_or_contradictory_comparison_cannot_be_verified(answer):
+    audit = evaluate_selected_thesis_impact(
+        thesis=_thesis(answer), context=_context(), evidence=[_evidence()],
+    )
+    assert audit["evidence_gate"]["status"] == "ready"
+    assert audit["status"] != "verified_change"
+
+
+def test_numeric_citations_bind_actual_conclusion_to_canonical_identity():
+    answer = "The thesis strengthened because services demand accelerated. [1]"
+    audit = evaluate_selected_thesis_impact(
+        thesis=_thesis(answer), context=_context(), evidence=[_evidence()],
+    )
+    assert audit["status"] == "verified_change"
+    assert audit["evidence_bound_result"]["claims"] == [{"text": answer, "evidence_ids": ["E1"]}]
 
 
 @pytest.mark.parametrize("overrides,reason", [
@@ -86,7 +130,7 @@ def test_admission_removal_preserves_the_surviving_reference_id():
     admitted, refs, integrity = admit_evidence([blocked, surviving])
     assert len(admitted) == 1
     audit = evaluate_selected_thesis_impact(
-        thesis=_thesis(), context=_context(), evidence=admitted,
+        thesis=_thesis("The thesis strengthened because services demand accelerated. [E2]"), context=_context(), evidence=admitted,
         references=refs, evidence_integrity=integrity,
     )
     assert audit["status"] == "verified_change"
@@ -143,7 +187,7 @@ def test_orchestrator_accepts_fully_bound_directional_change():
     assert audit["evidence_changes"][0]["url"] == "https://www.sec.gov/example"
     assert thesis.thesis_trend == "strengthening"
     assert thesis.what_changed == [
-        "Quarterly filing shows services demand acceleration — SEC EDGAR"
+        "The thesis strengthened because services demand accelerated. [E1]"
     ]
 
 
@@ -200,7 +244,7 @@ def test_orchestrator_fails_closed_for_integrity_conflict():
 
 
 def test_unchanged_result_still_requires_new_bound_evidence():
-    thesis = _thesis("The thesis is unchanged as services demand remains stable.")
+    thesis = _thesis("The thesis is unchanged as services demand remains stable. [E1]")
     thesis.thesis_trend = "stable"
     audit = evaluate_selected_thesis_impact(
         thesis=thesis,

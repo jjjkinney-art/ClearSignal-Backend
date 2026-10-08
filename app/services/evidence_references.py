@@ -179,3 +179,31 @@ def admit_evidence(
         "stale_admitted": integrity["counts"]["stale"],
     }
     return admitted, references, integrity
+
+
+def with_canonical_citations(items: Iterable[object], references: list[dict]) -> list[object]:
+    """Copy prompt inputs with their admitted identity before sorting them.
+
+    Keep admission object identity intact for structured-fact projections and
+    never mutate cached/provider evidence. Unmatched inputs cannot cite an ID.
+    """
+    from copy import copy
+    result = []
+    for item in items:
+        def value(key, default=""):
+            return item.get(key, default) if isinstance(item, dict) else getattr(item, key, default)
+        reference = next((ref for ref in references
+            if ref.get("title") == str(value("title") or "Untitled evidence").strip()[:300]
+            and ref.get("source") == str(value("source") or "Unknown source").strip()[:120]
+            and ref.get("published_at") == (str(value("timestamp") or "").strip()[:40] or None)
+            and ref.get("url") == (_evidence_url(item) or None)), None)
+        citation_id = reference["id"] if reference else "UNATTRIBUTED"
+        if hasattr(item, "model_copy"):
+            item = item.model_copy(update={"citation_id": citation_id})
+        elif isinstance(item, dict):
+            item = {**item, "citation_id": citation_id}
+        else:
+            item = copy(item)
+            setattr(item, "citation_id", citation_id)
+        result.append(item)
+    return result

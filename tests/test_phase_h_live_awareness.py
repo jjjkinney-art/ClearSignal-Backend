@@ -264,8 +264,9 @@ class TestEvidenceBlock:
             timestamp="2024-06-01",
         )
         result = _evidence_block([old_ev, recent_ev])
-        # Recent earnings item should appear first (index [1])
-        first_bracket = result.find("[1]")
+        # Ranking changes position, never the original citation identity.
+        first_bracket = result.find("[E2]")
+        assert first_bracket < result.find("[E1]")
         assert "Earnings" in result[first_bracket:first_bracket + 100] or "Q3" in result[first_bracket:first_bracket + 100]
 
     def test_includes_evidence_type_label(self):
@@ -284,9 +285,8 @@ class TestEvidenceBlock:
             for i in range(20)
         ]
         result = _evidence_block(evidence, max_items=5)
-        # Count occurrences of "[N]" patterns
-        count = sum(1 for i in range(1, 21) if f"[{i}]" in result)
-        assert count <= 5
+        count = sum(1 for i in range(1, 21) if f"[E{i}]" in result)
+        assert 0 < count <= 5
 
 
 # ── _extract_recent_events() ──────────────────────────────────────────────────
