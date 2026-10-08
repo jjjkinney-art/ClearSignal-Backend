@@ -71,6 +71,14 @@ citations, account-owned memory and benchmark runners already exist. Global
 source families, broader document layouts, question coverage and representative
 production validation remain substantial work.
 
+The first multi-question capture increment is documented in
+`COMPANY_QUALITY_MATRIX_20261009.md`: six question families produce 108 cases
+across the existing 18-issuer registry, with bounded batches and per-case
+checkpoints. Captures remain unreviewed and dry runs remain unexecuted. This
+does not expand the registry to 100 issuers or validate personalized answer
+quality; primary-source adjudication, unseen holdout and signed-in acceptance
+remain required before reporting useful-answer rates or launch readiness.
+
 Backend PR215 is deployed at `7c69214096c7128a98d62124a7aba1b8d0c131a5`.
 Its live September 26 Tesla comparison retrieved the October 2 SEC delivery
 release, admitted one newer evidence item and survived save/reopen. Frontend
