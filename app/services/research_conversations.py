@@ -52,6 +52,33 @@ def _tickers(values: Optional[Iterable[str]]) -> list[str]:
     return result[:25]
 
 
+def completed_response_ticker(response: object) -> str:
+    """Resolve an unambiguous issuer from a server-produced thesis response.
+
+    Never infer scope from question/transcript text or a comparative ranking.
+    Conflicting structured issuer fields fail closed.
+    """
+    if not isinstance(response, dict):
+        return ""
+    answer = response.get("answer")
+    if not isinstance(answer, dict) or not isinstance(answer.get("investment_thesis"), dict):
+        return ""
+    routing = response.get("routing")
+    if not isinstance(routing, dict) or routing.get("detected_tickers"):
+        return ""
+    if routing.get("pipeline") in {"comparative_ranking", "comparative_disambiguation"}:
+        return ""
+    values = [routing.get("detected_ticker"), response.get("ticker"), response.get("company_ticker")]
+    tickers = set()
+    for value in values:
+        if value is None or value == "":
+            continue
+        if not isinstance(value, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9.-]{0,19}", value.strip()):
+            return ""
+        tickers.add(value.strip().upper())
+    return next(iter(tickers)) if len(tickers) == 1 else ""
+
+
 def _conversation(row: ResearchConversation) -> dict:
     return {
         "id": row.id,
@@ -285,7 +312,22 @@ async def append_completed_turn(session, *, user_id: str, conversation_id: str,
         },
         snapshot_version=RESPONSE_SNAPSHOT_VERSION,
     )
-    return assistant_message is not None
+    if assistant_message is None:
+        return False
+    # Use the persisted snapshot on retries, rather than rebinding scope from
+    # a different response supplied with the same idempotency key.
+    saved_response = assistant_message["displayed_snapshot"].get("response")
+    ticker = completed_response_ticker(saved_response)
+    if ticker:
+        conversation = (await session.execute(select(ResearchConversation).where(
+            ResearchConversation.id == conversation_id,
+            ResearchConversation.user_id == _owner(user_id),
+            ResearchConversation.deleted_at.is_(None),
+        ).with_for_update())).scalar_one_or_none()
+        if conversation is not None and not conversation.scope_tickers:
+            conversation.scope_tickers = [ticker]
+            await session.flush()
+    return True
 
 
 async def list_conversations(session, *, user_id: str, query: Optional[str] = None,
