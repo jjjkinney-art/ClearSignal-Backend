@@ -131,6 +131,47 @@ class TestComparativeRankingService:
 
 
 class TestComparativeRouter:
+    @pytest.mark.parametrize("question", [
+        "Compare this selected Apple investigation with current information: has its thesis strengthened or weakened?",
+        "Compared with this selected Apple investigation, has any attributable evidence published since that record strengthened or weakened the thesis? Comparison acceptance.",
+    ])
+    def test_owned_selected_history_comparison_keeps_single_company_route(self, question):
+        from app.schemas import AgentAnswerResponse, QuestionRequest
+        from app.services.router_service import route_question
+        context = {"applied": True, "ticker": "AAPL", "conversation_id": "owned-history"}
+        stub = AgentAnswerResponse(company="AAPL", request_id="history", agents_used=[], answer={})
+        with patch("app.services.router_service._run_investment_pipeline", return_value=stub) as run:
+            response = route_question(QuestionRequest(
+                company_name="AAPL", question=question,
+                research_memory_context_data=context,
+            ))
+        assert response is stub
+        assert run.call_args.kwargs["research_memory_context_data"] == context
+
+    def test_selected_history_does_not_replace_explicit_two_company_ranking(self):
+        from app.schemas import QuestionRequest
+        from app.services.router_service import route_question
+        response = route_question(QuestionRequest(
+            company_name="AAPL", question="Compare Apple with Microsoft",
+            research_memory_context_data={"applied": True, "ticker": "AAPL"},
+        ))
+        assert response.routing["pipeline"] == "comparative_ranking"
+        assert set(response.routing["detected_tickers"]) == {"AAPL", "MSFT"}
+
+    @pytest.mark.parametrize("context", [
+        {"applied": False, "ticker": "AAPL"},
+        {"applied": True, "ticker": "MSFT"},
+        None,
+    ])
+    def test_unapplied_or_wrong_issuer_history_does_not_bypass_ranking(self, context):
+        from app.schemas import QuestionRequest
+        from app.services.router_service import route_question
+        response = route_question(QuestionRequest(
+            company_name="AAPL", question="Compare this selected Apple investigation: stronger or weaker?",
+            research_memory_context_data=context,
+        ))
+        assert response.routing["pipeline"] == "comparative_disambiguation"
+
     def test_comparison_uses_dedicated_route_without_llm_pipeline(self):
         from app.schemas import QuestionRequest
         from app.services.router_service import route_question
