@@ -26,6 +26,7 @@ REJECTION_REASONS = {
     "document contained no extractable text": "empty_visible_text",
     "reviewed annual document hash mismatch": "reviewed_annual_hash_mismatch",
     "reviewed annual risk mapping unavailable": "reviewed_annual_mapping_missing",
+    "reviewed incorporation document hash mismatch": "reviewed_incorporation_hash_mismatch",
 }
 
 

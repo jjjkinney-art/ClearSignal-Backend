@@ -199,6 +199,9 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             row.update(claim_kind="issuer_disclosed_risk", document_ref=disclosure["document_ref"])
             if disclosure.get("issuer_relationship"):
                 row["issuer_relationship"] = disclosure["issuer_relationship"]
+            if disclosure.get("incorporation"):
+                row["incorporation"] = disclosure["incorporation"]
+                row["table_columns"] = disclosure["table_columns"]
         if len(claims) == 3:
             # Preserve one requested risk slot even when earlier Services
             # context filled the three-claim presentation limit.

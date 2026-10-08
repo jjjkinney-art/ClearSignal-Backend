@@ -321,17 +321,18 @@ the frozen question sample, not signed-in acceptance or full launch clearance.
 PR #204 is merged; the owner-reported deployed four-case subset passes SPOT
 and TSM and still reports ASML and NVO gaps. This does not establish a new full
 cohort count. The next repair adds a document-specific, hash-pinned ASML integrated
-Risk Factors mapping. PR #205 is merged and deployed, but the owner's Render
-report still rejects ASML's current body with a reviewed-hash mismatch. Fresh
-source inspection found an otherwise identical body with a changing empty
-transport-script URL at the tail. The follow-up pins every remaining byte,
-preserves the raw hash and binds the separately verified canonical fingerprint.
-Both downloaded variants pass local extraction, exact-span binding and citation
-replay; follow-up CI, deployment and signed-in/live/saved acceptance remain
-separate gates. NVO still requires an incorporation-verified
-annual-report table path that separates risk descriptions, impacts and mitigations.
-See [foreign annual section work](FOREIGN_20F_RISK_SECTIONS_20261008.md) and
-[ASML integrated-report work](ASML_INTEGRATED_RISK_CONTEXT_20261008.md).
+Risk Factors mapping. PR #206 repaired the changing transport-script hash and is
+merged; the owner-reported deployed subset now passes SPOT, ASML and TSM, with
+NVO still a gap. This does not establish a new full-cohort count. The next slice
+verifies NVO's exact 20-F incorporation statement and observed annual-report link,
+then extracts the reviewed clinical pipeline table with descriptions and impacts
+separate from explicitly excluded mitigating actions. Both old and freshly
+downloaded NVO documents pass local two-attempt source/citation replay, and owned
+snapshot persistence is tested. Required follow-up CI, deployment and fresh
+signed-in/live/saved acceptance remain separate gates. See
+[foreign annual section work](FOREIGN_20F_RISK_SECTIONS_20261008.md),
+[ASML integrated-report work](ASML_INTEGRATED_RISK_CONTEXT_20261008.md), and
+[NVO incorporated table work](NVO_INCORPORATED_RISK_TABLE_20261008.md).
 
 
 Post-PR #199 targeted inspection: COST now passes; the complete eight-company

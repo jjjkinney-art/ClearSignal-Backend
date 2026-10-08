@@ -87,6 +87,14 @@ def _metadata(item: object) -> dict:
     predecessor = item_predecessor_provenance(item)
     if predecessor:
         metadata["issuer_relationship"] = predecessor
+    if getattr(item, "document_type", None) == "EX-15.1":
+        from .incorporated_risk_evidence import bound_incorporated_risk
+        values = getattr(item, "risk_disclosures", [])
+        ticker = values[0].get("ticker") if isinstance(values, list) and len(values) == 1 and isinstance(values[0], dict) else None
+        value = bound_incorporated_risk(item, ticker=ticker, question="What are the drug development risks?") if ticker else None
+        if value:
+            metadata["incorporation"] = value["incorporation"]
+            metadata["table_columns"] = value["table_columns"]
     return metadata
 
 
