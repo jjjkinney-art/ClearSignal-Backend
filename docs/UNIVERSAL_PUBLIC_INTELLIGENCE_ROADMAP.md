@@ -315,6 +315,18 @@ restored useful answers and complete source binding.
 
 ## 6. Immediate implementation sequence
 
+8 October 2026 post-PR #207 acceptance: the owner supplied a complete Render
+`--inspect-source` run with **33/33 passes**, including SPOT, ASML, TSM and NVO.
+This supersedes the earlier read-only cohort gaps below. The production browser
+follow-up passes fresh answers, reload/reopen, History and Research Trail for
+SPOT, ASML, TSM, NVO, AA and AAPL. Alcoa's new record passes AA filtering and is
+excluded under AAPL. The longest observed waiting/completion interval is NVO
+at 55–70 seconds; latency and answer readability remain open. Results and
+limits are recorded in [post-207 signed-in acceptance](POST207_SIGNED_IN_ACCEPTANCE_20261008.md).
+Treat read-only source binding, signed-in persistence, response latency and
+full-launch readiness as separate gates; do not infer unrestricted company or
+question coverage from this frozen sample.
+
 8 October 2026 owner-reported complete post-PR #203 run: all 29 domestic cases
 pass; SPOT, ASML, TSM and NVO remain gaps. This is source-binding acceptance for
 the frozen question sample, not signed-in acceptance or full launch clearance.
