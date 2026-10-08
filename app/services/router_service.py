@@ -1507,6 +1507,8 @@ def _run_investment_pipeline(
                 logger.debug("[router] prior snapshot load failed for %s: %r", ticker, exc)
 
         def _run_synthesis(_prompt_evidence):
+            from .evidence_references import with_canonical_citations
+            _prompt_evidence = with_canonical_citations(_prompt_evidence, _evidence_references)
             return synthesize_thesis(
                 company=company,
                 valuation=valuation,

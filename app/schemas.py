@@ -55,6 +55,10 @@ class RetrievedEvidence(BaseModel):
     source: str = Field(..., description="Publication or data provider name")
     summary: str = Field(..., description="1-3 sentence summary of the relevant finding")
     timestamp: str = Field(..., description="Publication date (YYYY-MM-DD)")
+    citation_id: Optional[str] = Field(
+        default=None, exclude=True,
+        description="Internal canonical citation assigned by evidence admission",
+    )
     url: Optional[str] = Field(
         default=None,
         description=(

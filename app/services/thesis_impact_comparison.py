@@ -9,7 +9,7 @@ from .thesis_impact_evidence import gate_thesis_impact_evidence
 from .thesis_impact_result import build_thesis_impact_result
 
 
-COMPARISON_ORCHESTRATOR_VERSION = 2
+COMPARISON_ORCHESTRATOR_VERSION = 3
 _STOPWORDS = {
     "about", "after", "against", "because", "been", "before", "company",
     "could", "current", "from", "growth", "have", "into", "more", "most",
@@ -56,9 +56,6 @@ def _claimed_direction(thesis: object) -> str:
         "stable": "unchanged",
         "unchanged": "unchanged",
     }.get(trend)
-    if mapped:
-        return mapped
-
     conclusion = _text(
         _value(thesis, "direct_answer") or _value(thesis, "conclusion")
     ).lower()
@@ -69,7 +66,9 @@ def _claimed_direction(thesis: object) -> str:
         directions.append("weaker")
     if re.search(r"\b(unchanged|stable|no material change)\b", conclusion):
         directions.append("unchanged")
-    return directions[0] if len(directions) == 1 else "unverified"
+    if len(directions) > 1 or (mapped and directions and mapped != directions[0]):
+        return "unverified"
+    return mapped or (directions[0] if directions else "unverified")
 
 
 def _evidence_ticker(item: object) -> str:
@@ -175,6 +174,39 @@ def _safe_correction(prior_created_at: str, gate_status: str) -> str:
     )
 
 
+def _cited_conclusion_claims(conclusion: str) -> list[dict[str, Any]]:
+    """Bind the actual conclusion, rather than inventing claims from titles.
+
+    Accept the synthesizer's numeric citation syntax and canonical E syntax.
+    Every sentence must carry citations; source eligibility is checked by the
+    result contract. This is citation validation, not semantic entailment.
+    """
+    citation_pattern = r"\[(E?[1-9]\d*(?:\s*,\s*E?[1-9]\d*)*)\]"
+    # A citation immediately after a full stop belongs to that sentence. Split
+    # again after a trailing citation so the next sentence cannot borrow it.
+    sentences = re.split(r"(?<=[.!?])\s+(?!\[)|(?<=\])\s+(?=[A-Z])|\n+", conclusion)
+    claims = []
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        groups = re.findall(citation_pattern, sentence)
+        ids = []
+        for group in groups:
+            for value in group.split(","):
+                value = value.strip()
+                evidence_id = value if value.startswith("E") else f"E{value}"
+                if evidence_id not in ids:
+                    ids.append(evidence_id)
+        if not ids or not re.sub(citation_pattern, "", sentence).strip(" .!?"):
+            return []
+        claims.append({"text": sentence, "evidence_ids": ids})
+    # The bounded result validator must never silently discard a conclusion's
+    # remaining claims and label the complete prose verified.
+    from .thesis_impact_result import MAX_CHANGE_CLAIMS
+    return claims if len(claims) <= MAX_CHANGE_CLAIMS else []
+
+
 def evaluate_selected_thesis_impact(
     *,
     thesis: object,
@@ -206,17 +238,7 @@ def evaluate_selected_thesis_impact(
     )
 
     proposed_direction = _claimed_direction(thesis)
-    claims = []
-    for item in gate.get("eligible_evidence", []):
-        evidence_id = item["evidence_id"]
-        display = display_by_id.get(evidence_id, {})
-        claims.append({
-            "text": (
-                f"{display.get('title', 'New evidence')} — "
-                f"{display.get('source', 'Unknown source')}"
-            ),
-            "evidence_ids": [evidence_id],
-        })
+    claims = _cited_conclusion_claims(current_conclusion)
     result = build_thesis_impact_result(
         gate=gate,
         proposed_direction=proposed_direction,
@@ -228,7 +250,13 @@ def evaluate_selected_thesis_impact(
     )
 
     if result["status"] != "supported":
-        correction = _safe_correction(prior_created_at, gate.get("status", ""))
+        correction = (
+            "ClearSignal cannot verify a directional thesis change because the "
+            "comparison conclusion does not fully cite eligible newer evidence. "
+            "The prior conclusion remains historical; the current direction is unverified."
+            if gate.get("status") == "ready"
+            else _safe_correction(prior_created_at, gate.get("status", ""))
+        )
         if hasattr(thesis, "direct_answer"):
             thesis.direct_answer = correction
         if hasattr(thesis, "what_changed"):

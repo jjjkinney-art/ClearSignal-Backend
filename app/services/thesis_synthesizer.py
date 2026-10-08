@@ -764,13 +764,21 @@ def _evidence_block(evidence: List[RetrievedEvidence], max_items: int = 10) -> s
 
     lines = []
     for i, ev in enumerate(scored):
+        citation_id = getattr(ev, "citation_id", None)
+        if citation_id is None:
+            # Outside production admission, preserve original input positions
+            # rather than assigning identities after ranking or deduplication.
+            original_index = next(index for index, item in enumerate(evidence, 1) if item is ev)
+            citation_id = f"E{original_index}"
+        elif not isinstance(citation_id, str) or not re.fullmatch(r"E[1-9]\d*", citation_id):
+            citation_id = "UNATTRIBUTED"
         ev_type = _classify_evidence_type(ev)
         warning = ""
         if getattr(ev, "freshness_status", None) == "stale":
             reason = getattr(ev, "status_reason", None) or "freshness threshold exceeded"
             warning = f"    Integrity warning: STALE — {reason}\n"
         lines.append(
-            f"[{i + 1}] [{ev_type.upper()}] {ev.title}\n"
+            f"[{citation_id}] [{ev_type.upper()}] {ev.title}\n"
             f"    Source: {ev.source} ({ev.timestamp[:7] if ev.timestamp else 'n/a'})\n"
             f"{warning}"
             f"    {ev.summary}"
@@ -2300,7 +2308,7 @@ Violation of this rule causes a hallucination alert and disqualifies the thesis.
 HALLUCINATION PREVENTION — ABSOLUTE RULES:
 - NEVER invent a P/E ratio, EV/EBITDA, revenue figure, or price target not present in the evidence.
 - If you do not have a specific figure, write "no current ratio data available" rather than estimating.
-- Every cited number MUST have a corresponding [N] evidence citation.
+- Every cited number MUST use the exact [E#] citation label shown beside its evidence. Never renumber sources.
 
 REQUIRED language: causal chains, specific metrics, named transmission mechanisms,
 asymmetry analysis, stock-price relevance in every sentence.
