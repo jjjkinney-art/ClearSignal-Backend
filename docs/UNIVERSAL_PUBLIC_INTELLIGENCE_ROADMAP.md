@@ -8,10 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
-**Launch requirement:** a user researching JetBlue or Smith & Wesson must receive
-research of the same quality as a user researching Apple or Tesla. Company size,
-name recognition, or inclusion in a hand-reviewed ticker list must not determine
-answer quality. The intended scope remains every public company, including
+**Launch requirement:** users researching companies across the market-cap
+spectrum must receive similarly high-quality, personalized research, whether
+an issuer is small/micro-cap, mid-cap or large-cap. JetBlue and Smith & Wesson
+were illustrative examples of smaller companies; Apple and Tesla illustrated
+large companies. These names are not a required ticker list or special-case
+implementation targets. Company size, name recognition, or inclusion in a
+hand-reviewed ticker list must not determine answer quality. Personalization
+must consistently apply the user's explicit research preferences, selected
+historical thesis, risks and time horizon where available, with the same
+ownership, evidence and uncertainty safeguards across company sizes. The intended scope remains every public company, including
 smaller issuers and international listings. This is a launch-critical expansion
 of the existing infrastructure, not a rebuild or a 33-company product limit.
 
@@ -27,18 +33,21 @@ A safe gap is honest handling, but is not a successful useful-answer result.
    retrieval, sector metrics and topic extraction. Prefer fixes that transfer to
    unseen companies over an ever-growing collection of ticker-specific patches.
    Review genuinely issuer-specific layouts without weakening attribution.
-2. Make JetBlue and Smith & Wesson mandatory end-to-end acceptance issuers,
-   alongside Apple and Tesla controls. Test legal company names and tickers;
+2. Select representative smaller, mid-sized and large companies across sectors
+   and source complexities for end-to-end acceptance, without tailoring the
+   product to the illustrative names. Test legal company names and tickers;
    core investment thesis, operating risks, comparable-period financial trends,
    sector operating metrics, recent developments, and saved-thesis comparisons.
-   Use the signed-in production path and verify readable save/reopen results.
+   Use the signed-in production path, test consistent personalization and
+   relevance to the user's selected thesis/preferences, and verify readable
+   save/reopen results. Include unseen smaller issuers to test transferability.
 3. Expand the existing benchmark to its minimum 100-issuer milestone, with at
    least 30 issuers in each principal large-, mid- and small/micro-cap tier,
    multiple sectors, fiscal calendars and jurisdictions, and an unseen holdout.
    This is a first validation floor, not proof that every public company works.
 4. Apply the same factual, citation, relevance and usability standards to every
-   tier. Require at least 90% useful cited answers in each tier and the named
-   acceptance issuers' question sets, not merely 90% in an aggregate dominated
+   tier. Require at least 90% useful cited answers in each tier and report
+   issuer/question-family failures, not merely 90% in an aggregate dominated
    by large companies. Apply the existing numerical-accuracy and source-binding
    gates; allow no fabricated material sources, issuer/period contamination,
    account leakage or issuer-level stop-ship failure. Report gaps separately.
