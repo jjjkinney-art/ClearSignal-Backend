@@ -22,6 +22,7 @@ from pypdf import PdfReader
 from pypdf.errors import PdfReadError
 from .sec_risk_sections import complete_risk_window, RISK_FORMS
 from .reviewed_annual_layouts import reviewed_annual_layout, reviewed_body_hash
+from .reviewed_incorporations import registered_incorporation
 
 
 MAX_DOCUMENT_BYTES = 2_000_000
@@ -260,6 +261,46 @@ class _HTMLTableExtractor(_VisibleHTMLParser):
 
     def result(self) -> tuple[DocumentTable, ...]:
         return tuple(self._tables)
+
+
+class _ReviewedRiskTableExtractor(_HTMLTableExtractor):
+    """One hash-verified table; only empty decorative row spans may be ignored.
+
+    Existing generic table rules remain intact. Reviewed layout cells have a
+    separate 2k ceiling, and nonempty row-spanned cells still invalidate a table.
+    """
+    def __init__(self, table_number: int):
+        super().__init__()
+        self._reviewed_number = table_number
+        self._decorative_span = False
+
+    def handle_starttag(self, tag, attrs):
+        if tag.lower() in {"td", "th"} and self._number == self._reviewed_number and self._depth == 1:
+            self._decorative_span = any(k == "rowspan" and v not in {None, "1"} for k, v in attrs)
+            attrs = [(k, v) for k, v in attrs if k != "rowspan"]
+        super().handle_starttag(tag, attrs)
+
+    def handle_data(self, data):
+        if self._number == self._reviewed_number and self._depth == 1 and self._cell is not None:
+            if self._hidden_depth:
+                return
+            if sum(map(len, self._cell)) + len(data) > 2000:
+                self._invalid = True
+            else:
+                self._cell.append(data)
+        else:
+            super().handle_data(data)
+
+    def handle_endtag(self, tag):
+        if (tag.lower() in {"td", "th"} and self._number == self._reviewed_number
+                and self._depth == 1 and self._decorative_span):
+            if _clean_text(" ".join(self._cell or [])):
+                self._invalid = True
+            self._decorative_span = False
+        super().handle_endtag(tag)
+
+    def result(self):
+        return tuple(t for t in super().result() if t.table_number == self._reviewed_number)
 
 
 class _HTMLTextExtractor(_VisibleHTMLParser):
@@ -527,11 +568,12 @@ def fetch_public_document(
     try:
         for redirect_count in range(MAX_REDIRECTS + 1):
             current_url = _validate_public_url(current_url)
+            incorporation = registered_incorporation(current_url, document_type, published_at) if sec_periodic_limits else None
             if sec_periodic_limits:
                 parsed = urlsplit(current_url)
                 if (publisher != "SEC EDGAR" or source_type != "regulatory_filing"
                         or source_tier != "primary"
-                        or document_type not in RISK_FORMS
+                        or (document_type not in RISK_FORMS and not incorporation)
                         or parsed.hostname != "www.sec.gov" or parsed.query or parsed.fragment
                         or not re.fullmatch(r"/Archives/edgar/data/\d+/\d{18}/[^/]+\.html?", parsed.path)):
                     raise PublicDocumentError("expanded limits require a SEC periodic HTML filing")
@@ -570,9 +612,11 @@ def fetch_public_document(
             response.close()
 
     digest = hashlib.sha256(body).hexdigest()
-    canonical_digest = reviewed_body_hash(body) if layout else None
+    canonical_digest = reviewed_body_hash(body) if layout or incorporation else None
     if layout and canonical_digest != layout["canonical_content_hash"]:
         raise PublicDocumentError("reviewed annual document hash mismatch")
+    if incorporation and canonical_digest != incorporation[0][incorporation[1] + "_canonical_hash"]:
+        raise PublicDocumentError("reviewed incorporation document hash mismatch")
     accessed_at = datetime.now(timezone.utc).isoformat()
     if media_type == "application/pdf":
         title, text, pages = _extract_pdf(body)
@@ -603,7 +647,11 @@ def fetch_public_document(
                          "text_selection": parser.text_selection}
         links = _normalize_links(current_url, raw_links)
         method = "html"
-        if extract_tables:
+        if incorporation and incorporation[1] == "exhibit":
+            table_parser = _ReviewedRiskTableExtractor(incorporation[0]["table_number"])
+            table_parser.feed(decoded)
+            tables = table_parser.result()
+        elif extract_tables:
             table_parser = _HTMLTableExtractor()
             table_parser.feed(decoded)
             tables = table_parser.result()

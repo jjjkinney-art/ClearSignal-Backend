@@ -16,6 +16,7 @@ from .services_revenue_evidence import (
 )
 from .issuer_risk_evidence import extract_issuer_risk_evidence, requested_risk_topic
 from .issuer_succession import reviewed_predecessor_annual
+from .incorporated_risk_evidence import reviewed_incorporation_candidate
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,7 @@ def fetch_live_issuer_kpi_evidence(
     service_found = False
     risk_found = False
     predecessor_authorizations: dict[str, dict] = {}
+    incorporation_authorizations: dict[str, dict] = {}
 
     def queue_annual_fallback(filing_index: int, document_type: str) -> None:
         # Quarterly reports and amendments can omit the annual Risk Factors.
@@ -139,7 +141,7 @@ def fetch_live_issuer_kpi_evidence(
         url = getattr(filing, "url", None)
         published_at = getattr(filing, "timestamp", None)
         document_type = getattr(filing, "document_type", None)
-        if document_type not in set(forms):
+        if document_type not in set(forms) and url not in incorporation_authorizations:
             title = str(getattr(filing, "title", "") or "")
             document_type = next(
                 (form for form in sorted(forms, key=len, reverse=True) if form in title), None,
@@ -180,7 +182,9 @@ def fetch_live_issuer_kpi_evidence(
             if risk_requested and not risk_found:
                 risk_evidence = extract_issuer_risk_evidence(document, ticker=ticker, question=question,
                     **({"issuer_relationship": predecessor_authorizations[url]}
-                       if url in predecessor_authorizations else {}))
+                       if url in predecessor_authorizations else {}),
+                    **({"incorporation": incorporation_authorizations[url]}
+                       if url in incorporation_authorizations else {}))
                 evidence.extend(risk_evidence)
                 risk_found = bool(risk_evidence)
                 logger.info(
@@ -191,6 +195,13 @@ def fetch_live_issuer_kpi_evidence(
                 )
             if (not services_requested or service_found) and (not risk_requested or risk_found):
                 break
+            if risk_requested and not risk_found and fetched_documents < max_documents:
+                incorporated = reviewed_incorporation_candidate(document, ticker=ticker.upper().strip(), question=question)
+                if incorporated and incorporated[0].url not in attempted_urls:
+                    candidate, proof = incorporated
+                    incorporation_authorizations[candidate.url] = proof
+                    candidates_filings[filing_index + 1:] = [candidate]
+                    continue
             # A quarterly report can refer back to annual Risk Factors. Only
             # discover the annual fallback after the newest document had no
             # qualifying risk; keep it within the remaining document budget.

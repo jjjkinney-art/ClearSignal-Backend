@@ -179,6 +179,19 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
             exact = bool(doc and doc.final_url == value["document_ref"]["url"]
                          and doc.published_at == value["document_ref"]["published_at"]
                          and doc.text[value["start_offset"]:value["end_offset"]] == value["quote"])
+            incorporation_exact = None
+            if value.get("incorporation"):
+                proof = value["incorporation"]
+                parent_ref = proof["parent_document_ref"]
+                parent = documents.get(parent_ref["content_hash"])
+                incorporation_exact = bool(parent and parent.final_url == parent_ref["url"]
+                    and parent.published_at == parent_ref["published_at"]
+                    and parent.canonical_content_hash == proof["parent_canonical_hash"]
+                    and parent.text[proof["parent_start_offset"]:proof["parent_end_offset"]] == parent_ref["quote"]
+                    and any(link.url == doc.final_url for link in parent.links))
+                exact = exact and incorporation_exact and all(
+                    doc.text[cell["start_offset"]:cell["end_offset"]] == cell["text"]
+                    for key, cell in value["table_columns"].items() if key in {"risk_area", "description", "impact"})
             cited = any(c["document_ref"] == value["document_ref"]
                         and value["quote"] in c["claim"]
                         and f'[{c["reference_id"]}]' in thesis.direct_answer for c in risk_claims)
@@ -189,6 +202,10 @@ def run_case(case: dict, *, user_agent: str, fetcher=None, evaluated_at=None,
                 "exact_span": exact, "cited_in_answer": cited}
             if value.get("issuer_relationship"):
                 disclosure["issuer_relationship"] = value["issuer_relationship"]
+            if incorporation_exact is not None:
+                disclosure["incorporation_exact_span"] = incorporation_exact
+                disclosure["incorporation"] = value["incorporation"]
+                disclosure["table_columns"] = value["table_columns"]
             row["disclosures"].append(disclosure)
         row["admitted_risk_count"] = len(row["disclosures"])
         row["passed"] = bool(row["disclosures"] and risk_claims

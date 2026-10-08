@@ -60,7 +60,7 @@ RISK_TOPICS = {
     "Credit losses": r"\b(?:credit losses?|loan losses?|defaults?|nonperforming loans?|borrower\w*)\b",
     "Liquidity": r"\b(?:liquidity|refinancing|debt maturit\w*|funding access)\b",
     "Interest rates": r"\b(?:interest rates?|net interest (?:income|margin))\b",
-    "Drug development": r"\b(?:clinical trials?|drug development|regulatory approval|FDA approval)\b",
+    "Drug development": r"\b(?:clinical trials?|clinical activities|clinical pipeline|drug development|regulatory approval|FDA approval)\b",
     "Patents": r"\b(?:patents?|patent expir\w*|intellectual property)\b",
     "Membership renewals": r"\b(?:memberships?|member renewal\w*)\b",
     "Marketplace sellers": r"\b(?:sellers?|merchants?|marketplace)\b",
@@ -204,7 +204,8 @@ def _issuer_url(url: str, profile: IssuerRiskProfile) -> bool:
 
 def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                                  question: str, diagnostics: dict | None = None,
-                                 issuer_relationship: dict | None = None) -> list[RetrievedEvidence]:
+                                 issuer_relationship: dict | None = None,
+                                 incorporation: dict | None = None) -> list[RetrievedEvidence]:
     """Extract at most two complete, nonnumeric risk sentences; no model calls.
 
     Coverage is limited to explicit supported topics and 10-K/10-Q and explicit 20-F Item 3 sections.
@@ -212,6 +213,12 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
     or overlong sentences produce no claim. Never truncate a risk sentence.
     """
     ticker = str(ticker).strip().upper()
+    if incorporation is not None:
+        if issuer_relationship is not None:
+            return []
+        from .incorporated_risk_evidence import extract_incorporated_risk
+        return extract_incorporated_risk(document, ticker=ticker, question=question,
+            incorporation=incorporation, diagnostics=diagnostics)
     profile = requested_risk_profile(ticker, question)
     layout = reviewed_annual_layout(document.final_url, document.document_type, document.published_at,
         content_hash=document.content_hash, canonical_content_hash=document.canonical_content_hash,
@@ -316,6 +323,12 @@ def risk_summary(disclosure: dict, form: str) -> str:
 def bound_issuer_risk(item: object, *, ticker: str, question: str) -> dict | None:
     """Accept only producer-bound disclosures matching their admitted source item."""
     disclosures = getattr(item, "risk_disclosures", [])
+    if (getattr(item, "document_type", None) == "EX-15.1"
+            or (isinstance(disclosures, list) and any(isinstance(v, dict)
+                   and any(k in v for k in ("incorporation", "table_columns", "exhibit_binding"))
+                   for v in disclosures))):
+        from .incorporated_risk_evidence import bound_incorporated_risk
+        return bound_incorporated_risk(item, ticker=ticker, question=question)
     first_ref = disclosures[0].get("document_ref", {}) if isinstance(disclosures, list) and len(disclosures) == 1 and isinstance(disclosures[0], dict) else {}
     if not isinstance(first_ref, dict):
         return None
