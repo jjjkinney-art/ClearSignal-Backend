@@ -6,6 +6,24 @@
 
 This roadmap supersedes the live-data scope of the older static company-profile coverage plans. It extends the current account-owned research memory, personalized Intelligence Mode, and claim-level SEC evidence work into a universal public-information research system.
 
+### Latest acceptance — October 8, 2026
+
+The user supplied the deployed post213 Render source-evidence run: **33/33 pass**.
+This supersedes the historical post203–post206 cohort gaps recorded below.
+PR213 is deployed at `060d50f6a58b33b73a679616a3a9406aa41b2d03`.
+Signed-in source-evidence and ordinary selected-history comparisons preserved the
+historical thesis, declined unsupported direction when no eligible newer evidence
+was retrieved, and survived reopening. This confirms those regressions; broader
+launch readiness, semantic accuracy and universal source coverage remain open.
+
+The next retrieval increment discovers actual Tesla production/delivery releases
+from its reviewed investor-relations index and binds exact total-row observations
+to publication date, reporting quarter, issuer and document hash. It is scoped to
+Tesla delivery/production questions; other issuer adapters remain roadmap work.
+Local retrieval/parser and comparison-contract tests do not substitute for the
+pending deployed official-release retrieval and real September 26 Tesla thesis
+comparison acceptance. See `OFFICIAL_DELIVERY_RELEASES_20261008.md`.
+
 ## 1. Product promise and boundary
 
 ClearSignal will provide broad query acceptance, not a false promise that every fact on the internet is available. Paywalls, licensing restrictions, removed pages, inaccessible jurisdictions, and facts that were never publicly disclosed must remain explicit limitations.

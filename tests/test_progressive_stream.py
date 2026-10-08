@@ -434,6 +434,14 @@ class TestPublicSourceLabels:
         ])
         assert frame["source_labels"] == ["SEC filings", "News"]
 
+    def test_official_releases_have_public_label_and_hide_internal_name(self, monkeypatch):
+        frame, body, _ = _retrieval_frame(monkeypatch, [
+            ("issuer_official_releases", 2, "ok"),
+            ("sec_edgar", 1, "ok"),
+        ])
+        assert frame["source_labels"] == ["SEC filings", "Official company releases"]
+        assert "issuer_official_releases" not in body.split('{"type":"final"')[0]
+
     def test_order_is_deterministic_regardless_of_arrival(self, monkeypatch):
         forward, _, _ = _retrieval_frame(monkeypatch, [
             ("news", 1, "ok"), ("fred", 1, "ok"), ("sec_edgar", 1, "ok"),
