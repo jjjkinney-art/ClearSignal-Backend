@@ -7,6 +7,70 @@ from app.schemas import CompressedThesis, InvestmentThesis, RetrievedEvidence
 from app.services.source_answer import apply_source_answer_gate, is_source_answer_request
 
 
+def _bound_metric(concept, label):
+    item = _evidence(label, "SEC EDGAR — structured XBRL fact",
+                     f"AAPL {label} increased 10% in the comparable reporting period.")
+    item.verified_claims = [{
+        "ticker": "AAPL", "metric": f"us-gaap:{concept}",
+        "document_ref": {"reference_id": "sec-bound-fact"},
+    }]
+    return item
+
+
+def test_multi_metric_answer_reports_missing_profitability_as_partial():
+    thesis = InvestmentThesis(ticker="AAPL", company_name="Apple Inc.")
+    result = apply_source_answer_gate(
+        thesis, "How have revenue, profitability and operating cash flow changed? Cite exact figures.",
+        [_bound_metric("Revenues", "revenue"),
+         _bound_metric("NetCashProvidedByUsedInOperatingActivities", "operating cash flow")],
+    )
+    assert result["status"] == "partial"
+    assert result["unanswered_parts"] == ["operating income", "net income"]
+    assert "Unverified requested parts: operating income; net income" in thesis.direct_answer
+    assert "not profit margins" in thesis.direct_answer
+
+
+def test_complete_multi_metric_answer_preserves_cash_flow_after_profit_slots():
+    thesis = InvestmentThesis(ticker="AAPL", company_name="Apple Inc.")
+    result = apply_source_answer_gate(
+        thesis, "How have revenue, profitability and operating cash flow changed? Cite exact figures.",
+        [_bound_metric("Revenues", "revenue"),
+         _bound_metric("OperatingIncomeLoss", "operating income"),
+         _bound_metric("NetIncomeLoss", "net income"),
+         _bound_metric("NetCashProvidedByUsedInOperatingActivities", "operating cash flow")],
+    )
+    assert result["status"] == "attributed"
+    assert result["unanswered_parts"] == []
+    assert len(result["claims"]) == 4
+    assert "operating cash flow" in result["claims"][-1]["claim"]
+
+
+def test_wrong_issuer_profit_claim_cannot_complete_requested_parts():
+    thesis = InvestmentThesis(ticker="AAPL", company_name="Apple Inc.")
+    wrong = _bound_metric("NetIncomeLoss", "net income")
+    wrong.verified_claims[0]["ticker"] = "TSLA"
+    result = apply_source_answer_gate(
+        thesis, "Cite revenue and net income trends.",
+        [_bound_metric("Revenues", "revenue"), wrong],
+    )
+    assert result["status"] == "partial"
+    assert result["unanswered_parts"] == ["net income"]
+
+
+def test_broad_thesis_gap_names_all_unanswered_parts_and_withholds_generated_case():
+    thesis = InvestmentThesis(ticker="AAPL", company_name="Apple Inc.",
+                              direct_answer="Unsupported thesis is strengthened.")
+    result = apply_source_answer_gate(
+        thesis, "What is the investment thesis for Apple, what supports it, and what could invalidate it? Cite material claims.", [],
+    )
+    assert result["status"] == "insufficient_claim_evidence"
+    assert result["unanswered_parts"] == [
+        "investment thesis and its supporting/invalidation mechanisms", "operating risk",
+    ]
+    assert "investment thesis" in thesis.direct_answer
+    assert "Unsupported" not in thesis.direct_answer
+
+
 def _evidence(title, source, summary):
     return RetrievedEvidence(
         title=title, source=source, summary=summary,

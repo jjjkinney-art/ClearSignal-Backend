@@ -79,6 +79,13 @@ does not expand the registry to 100 issuers or validate personalized answer
 quality; primary-source adjudication, unseen holdout and signed-in acceptance
 remain required before reporting useful-answer rates or launch readiness.
 
+The first deployed eight-case batch exposed shared question-completeness gaps:
+four broad thesis questions returned risk-only gaps, and four financial answers
+omitted profitability while reporting no unanswered parts. The immediate fix
+adds profitability retrieval, complete metric-slot reporting and explicit date
+ranges. Broad source-supported thesis composition remains P0 across company
+sizes; a successful capture or an attributed subset is not a full useful answer.
+
 Backend PR215 is deployed at `7c69214096c7128a98d62124a7aba1b8d0c131a5`.
 Its live September 26 Tesla comparison retrieved the October 2 SEC delivery
 release, admitted one newer evidence item and survived save/reopen. Frontend

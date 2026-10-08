@@ -32,7 +32,8 @@ def test_builds_claim_level_yoy_evidence_bound_to_current_filing():
     assert "increased 12.0%" in item.summary
     assert "to $112" in item.summary
     assert "from $100" in item.summary
-    assert "period ended 2025-03-31" in item.summary
+    assert "period 2025-01-01 to 2025-03-31" in item.summary
+    assert "prior-year period 2024-01-01 to 2024-03-31" in item.summary
     assert item.url == current.filing_url
     assert item.source == "SEC EDGAR — structured XBRL fact"
     assert item.source_type == "regulatory_filing"
@@ -121,6 +122,16 @@ def test_annual_filing_prefers_full_year_over_embedded_fourth_quarter():
     assert "$350" not in item.summary
     assert item.reporting_period_start == "2024-07-01"
     assert item.verified_claims[0]["period"] == "FY2025"
+
+
+def test_profitability_requests_operating_and_net_income_without_losing_other_metrics():
+    question = "How have revenue, profitability and operating cash flow changed?"
+    requested = service._requested_metrics(question, include_defaults=False)
+    assert [metric[1] for metric in requested] == [
+        "revenue", "operating income", "net income", "operating cash flow",
+    ]
+    assert service._requested_metrics("What supports the investment thesis?", include_defaults=False) == ()
+    assert service._requested_metrics("What supports the investment thesis?") == service._METRICS
 
 
 def test_accepts_53_week_non_calendar_year_comparison():
@@ -600,7 +611,7 @@ def test_bank_metric_pack_uses_correct_period_semantics(monkeypatch):
     )
 
     assert len(interest) == 1
-    assert "for the period ended 2025-03-31" in interest[0].summary
+    assert "for the period 2025-01-01 to 2025-03-31" in interest[0].summary
     assert interest[0].title.startswith("JPM net interest income:")
     assert len(deposits) == 1
     assert "as of 2025-03-31" in deposits[0].summary
@@ -667,7 +678,7 @@ def test_insurer_metric_pack_uses_correct_period_semantics(monkeypatch):
     )
 
     assert len(premiums) == 1
-    assert "for the period ended 2025-03-31" in premiums[0].summary
+    assert "for the period 2025-01-01 to 2025-03-31" in premiums[0].summary
     assert premiums[0].title.startswith("CB net premiums earned:")
     assert len(reserves) == 1
     assert "as of 2025-03-31" in reserves[0].summary
@@ -729,7 +740,7 @@ def test_saas_metric_pack_uses_correct_period_semantics(monkeypatch):
     assert "as of 2025-03-31" in rpo[0].summary
     assert rpo[0].title.startswith("MSFT remaining performance obligations:")
     assert len(recognized) == 1
-    assert "for the period ended 2025-03-31" in recognized[0].summary
+    assert "for the period 2025-01-01 to 2025-03-31" in recognized[0].summary
 
 
 def test_saas_metric_pack_has_question_aware_concept_mapping():
@@ -828,7 +839,7 @@ def test_reit_metric_pack_uses_correct_period_semantics(monkeypatch):
     )
 
     assert len(income) == 1
-    assert "for the period ended 2025-03-31" in income[0].summary
+    assert "for the period 2025-01-01 to 2025-03-31" in income[0].summary
     assert len(property_value) == 1
     assert "as of 2025-03-31" in property_value[0].summary
 

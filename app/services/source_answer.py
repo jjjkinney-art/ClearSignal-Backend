@@ -148,6 +148,15 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     from .evidence_references import _evidence_url
 
     material = list(items)
+    from .verified_sec_metric_service import _requested_metrics
+    requested_metrics = _requested_metrics(question, include_defaults=False)
+    # A multipart metric question must retain all requested metric slots.
+    # Broader prose is still not permission to generate an investment case.
+    requested_thesis = bool(re.search(
+        r"\bwhat\s+is\s+(?:the\s+)?investment thesis\b", question or "", re.I,
+    ))
+    requested_three = bool(re.search(r"\b(?:three|3)\b", question, re.IGNORECASE))
+    claim_limit = 3 if requested_three else max(3, len(requested_metrics))
     claims: list[dict] = []
     selected_items: list[object] = []
     ticker = str(getattr(thesis, "ticker", ""))
@@ -202,7 +211,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             if disclosure.get("incorporation"):
                 row["incorporation"] = disclosure["incorporation"]
                 row["table_columns"] = disclosure["table_columns"]
-        if len(claims) == 3:
+        if len(claims) == claim_limit:
             # Preserve one requested risk slot even when earlier Services
             # context filled the three-claim presentation limit.
             if disclosure:
@@ -212,12 +221,27 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             continue
         claims.append(row)
         selected_items.append(item)
-        if len(claims) == 3 and (not risk_requested or any(
+        if len(claims) == claim_limit and (not risk_requested or any(
             candidate.get("claim_kind") == "issuer_disclosed_risk" for candidate in claims
         )):
             break
 
-    requested_three = bool(re.search(r"\b(?:three|3)\b", question, re.IGNORECASE))
+    unanswered_parts = []
+    if requested_thesis:
+        unanswered_parts.append("investment thesis and its supporting/invalidation mechanisms")
+    if len(requested_metrics) > 1:
+        supported_concepts = {
+            str(claim.get("metric", ""))
+            for item in selected_items for claim in getattr(item, "verified_claims", [])
+            if isinstance(claim, dict) and claim.get("ticker") == ticker
+            and claim.get("document_ref")
+        }
+        unanswered_parts.extend(
+            name for concepts, name, _, _, _ in requested_metrics
+            if not any(f"us-gaap:{concept}" in supported_concepts for concept in concepts)
+        )
+    if risk_requested and not any(c.get("claim_kind") == "issuer_disclosed_risk" for c in claims):
+        unanswered_parts.append("operating risk")
     enough = len(claims) >= (3 if requested_three else 1)
     if not enough:
         answer = (
@@ -234,13 +258,23 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
                 "that risk, its likelihood, or its effect on the thesis. Review the linked "
                 "primary documents; this part of the question remains unverified."
             )
+        if requested_thesis:
+            answer = (
+                "This run did not establish a source-supported investment thesis, its "
+                "supporting mechanisms, or what would invalidate it. No source-bound "
+                "operating-risk disclosure qualified for this broad question. Filing "
+                "discovery alone cannot establish the investment case; these parts "
+                "remain unverified."
+            )
+        elif unanswered_parts:
+            answer += "\n\nUnverified requested parts: " + "; ".join(unanswered_parts) + "."
         _restrict_evidence_thesis(thesis, answer, [], [], enough=False, scope=view_scope)
         return {
             "status": "insufficient_claim_evidence",
             "reason": "No relevant source-bound operating-risk disclosure qualified." if risk_requested
                       else "Not enough relevant claim-level support was retrieved for this question.",
             "claims": [],
-            "unanswered_parts": ["operating risk"] if risk_requested else [],
+            "unanswered_parts": unanswered_parts,
         }
 
     answer = "\n\n".join(
@@ -276,11 +310,16 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
                    "risk likelihood, financial effects, and thesis implications remain unverified.")
     elif risk_requested:
         answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
+    if unanswered_parts:
+        answer += "\n\nUnverified requested parts: " + "; ".join(unanswered_parts) + "."
+    if re.search(r"\bprofitability\b", question or "", re.I):
+        answer += ("\n\nProfitability is represented here by reported operating income and "
+                   "net income where available. These amounts are not profit margins.")
     setattr(thesis, "direct_answer", answer)
     _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True, scope=view_scope)
     return {
-        "status": "partial" if risk_requested and not has_disclosed_risk else "attributed",
+        "status": "partial" if unanswered_parts else "attributed",
         "reason": "Each claim is bound to a retrieved evidence reference.",
         "claims": claims,
-        "unanswered_parts": ["operating risk"] if risk_requested and not has_disclosed_risk else [],
+        "unanswered_parts": unanswered_parts,
     }
