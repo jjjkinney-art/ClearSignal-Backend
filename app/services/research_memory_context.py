@@ -13,6 +13,7 @@ from typing import Any, Mapping
 from sqlalchemy import select
 
 from ..db.models import ResearchConversation, ResearchMessage
+from .research_conversations import completed_response_ticker
 
 
 RESEARCH_MEMORY_CONTEXT_VERSION = 1
@@ -111,6 +112,21 @@ async def load_selected_research_context(
         ResearchMessage.role == "assistant",
     ).order_by(ResearchMessage.ordinal.desc()).limit(20))).scalars().all()
     for message in messages:
+        snapshot = message.displayed_snapshot or {}
+        response = snapshot.get("response") if isinstance(snapshot, Mapping) else None
+        snapshot_ticker = completed_response_ticker(response)
+        # Legacy explicitly scoped snapshots may predate issuer metadata.
+        # A present issuer or ranking marker must never borrow another scope.
+        routing = response.get("routing") if isinstance(response, Mapping) else None
+        has_issuer = isinstance(response, Mapping) and (
+            bool(response.get("ticker") or response.get("company_ticker"))
+            or isinstance(routing, Mapping) and bool(
+                routing.get("detected_ticker") or routing.get("detected_tickers")
+                or routing.get("pipeline") in {"comparative_ranking", "comparative_disambiguation"}
+            )
+        )
+        if (has_issuer and snapshot_ticker != ticker) or (len(scoped_tickers) > 1 and snapshot_ticker != ticker):
+            continue
         thesis = _extract_thesis(message.displayed_snapshot or {})
         if not thesis:
             continue
