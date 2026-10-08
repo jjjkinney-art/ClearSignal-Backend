@@ -124,7 +124,8 @@ def _verified_claim(
         "period_end": record.end,
         "period": (
             f"FY{record.end[:4]}" if record.form.startswith("10-K")
-            else f"quarter ended {record.end}"
+            else (f"quarter ended {record.end}" if _duration(record) is not None and _duration(record) <= 100
+                  else f"year-to-date period {record.start} to {record.end}")
         ),
         "scope": "consolidated",
         "currency": "USD" if record.unit in {"USD", "USD/shares"} else None,

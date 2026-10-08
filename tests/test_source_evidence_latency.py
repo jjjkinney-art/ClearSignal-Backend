@@ -66,6 +66,40 @@ CASES = json.loads((Path(__file__).parents[1] /
                     "validation/company_evidence_coverage.v1.json").read_text())["cases"]
 
 
+@pytest.mark.parametrize("ticker,cik", [("AAPL", "320193"), ("ACHC", "1520697")])
+def test_broad_cited_thesis_returns_partial_financial_foundation_without_models(isolated_pipeline, monkeypatch, ticker, cik):
+    from app.integrity.sec_metric_evidence import comparable_metric_evidence
+    from app.providers.sec_client import SecFactRecord
+    from app.services import verified_sec_metric_service
+
+    items = []
+    for concept, name in (("Revenues", "revenue"), ("NetIncomeLoss", "net income")):
+        records = []
+        for year, value in ((2025, 100), (2026, 120)):
+            accession = f"{int(cik):010d}-{str(year)[-2:]}-000001"
+            records.append(SecFactRecord(cik=cik, taxonomy="us-gaap", concept=concept,
+                label=concept, unit="USD", value=value, start=f"{year}-04-01", end=f"{year}-06-30",
+                filed=f"{year}-08-01", form="10-Q", accession=accession,
+                filing_url=f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}/{accession}-index.htm"))
+        items.append(comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
+                                               concepts=(concept,), metric_name=name))
+    monkeypatch.setattr(verified_sec_metric_service, "fetch_verified_metric_evidence", lambda *a, **k: items)
+    monkeypatch.setattr("app.services.providers.sec_provider._load_ticker_cik_map", lambda: {ticker: cik})
+    response = router._run_investment_pipeline(
+        CompanyContext(ticker=ticker, company_name=ticker),
+        f"What is the investment thesis for {ticker}, what supports it, and what could invalidate it? Cite material claims.",
+        "financial-thesis-foundation", side_effects_enabled=False,
+    )
+    assert isolated_pipeline == []
+    assert response.routing["response_mode"] == "source_evidence"
+    assert response.answer["source_answer"]["status"] == "partial"
+    assert len(response.answer["source_answer"]["inferences"]) == 2
+    assert "Financial thesis foundation (partial)" in response.answer["investment_thesis"]["direct_answer"]
+    reference_ids = {ref["id"] for ref in response.answer["evidence_references"]}
+    assert all(row["reference_id"] in reference_ids for row in response.answer["source_answer"]["claims"])
+    assert response.answer["investment_thesis"]["confidence_score"] == 0
+
+
 @pytest.mark.parametrize("case", CASES, ids=lambda case: case["ticker"])
 def test_every_cohort_question_skips_models_and_returns_honest_gap(isolated_pipeline, case):
     response = router._run_investment_pipeline(

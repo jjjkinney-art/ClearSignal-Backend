@@ -125,3 +125,12 @@ acceptance. The Render logs also report missing FMP and NewsAPI configuration;
 record those provider limitations separately from SEC discovery, which returned
 filings for all four issuers. A missing static profile alone did not prevent
 AA or ACHC from returning structured financial observations.
+
+The user supplied the post218 answer text: AAPL and TSLA returned all four
+financial metrics; AA and ACHC returned net income and explicitly reported
+missing operating income as partial. Start/end dates distinguish quarter and
+year-to-date durations. All four broad thesis answers remain gaps. This confirms
+the deployed completeness behavior, not independent numerical or citation
+accuracy. The next financial thesis foundation increment is documented in
+`SOURCE_SUPPORTED_THESIS_FOUNDATION_20261009.md`; it must pass deployed acceptance
+before changing the observed core-thesis baseline.
