@@ -106,6 +106,7 @@ _PROVIDER_PUBLIC_LABELS: Dict[str, str] = {
     # Public regulator. Matches the wording production already uses.
     "sec_edgar": "SEC filings",
     "sec_edgar_documents": "SEC filings",
+    "issuer_official_releases": "Official company releases",
     # Vendor-supplied company financials and profile data.
     "fmp": "Company financials",
     # Vendor-supplied valuation ratios.
@@ -124,6 +125,7 @@ _PROVIDER_PUBLIC_LABELS: Dict[str, str] = {
 # that shifted between requests would look like changing sources.
 _LABEL_ORDER: tuple = (
     "SEC filings",
+    "Official company releases",
     "Company financials",
     "Analyst estimates",
     "Market data",
