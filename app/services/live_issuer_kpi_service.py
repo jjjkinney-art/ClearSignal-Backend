@@ -7,6 +7,7 @@ import re
 import time
 
 from ..schemas import RetrievedEvidence
+from .issuer_release_evidence import extract_sec_delivery_release, requests_issuer_release
 from .issuer_kpi_evidence import extract_source_bound_kpis, kpi_as_evidence
 from .official_document_discovery import discover_official_documents
 from .providers import sec_provider
@@ -246,6 +247,21 @@ def fetch_live_issuer_kpi_evidence(
             remaining = {
                 key: value for key, value in aliases.items() if key not in resolved_metrics
             }
+            # Delivery matrices need an explicit total-row/column adapter.
+            # Use the already fetched cover and exhibit within this same budget.
+            if requests_issuer_release(ticker, question):
+                release_items = extract_sec_delivery_release(
+                    exhibit, cover=document, ticker=ticker, question=question,
+                )
+                for item in release_items:
+                    metric = {"issuer:vehicle deliveries": "deliveries",
+                              "issuer:vehicle production": "production"}.get(
+                                  item.verified_claims[0]["metric"])
+                    if metric in remaining:
+                        evidence.append(item)
+                        resolved_metrics.add(metric)
+                remaining = {key: value for key, value in remaining.items()
+                             if key not in resolved_metrics}
             for kpi in extract_source_bound_kpis(
                 exhibit, ticker=ticker, metric_aliases=remaining,
             ):

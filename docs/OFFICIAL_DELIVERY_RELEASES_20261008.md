@@ -67,3 +67,36 @@ No old research dates or claims were changed to manufacture positive evidence.
 5. Keep positive directional acceptance open until actual retrieved evidence and
    the stated thesis implication both support it. Expand other issuer adapters
    and semantic accuracy evaluation only after this bounded path is confirmed.
+
+## Post214 Render diagnosis and SEC increment
+
+PR214 deployed at `b34dca0fa8fbfa468e5a6ae76ab53facea65cb95`.
+The signed-in rerun still retrieved only older periodic filings. The user's
+Render diagnostic confirmed the issuer index returns HTTP 403 in 0.13 seconds;
+this is an HTTP access failure, not evidence of a retrieval timeout.
+
+The next increment uses Tesla's permitted SEC publication route within the
+existing live issuer KPI provider's two-document budget. It discovers the 8-K
+and follows its release link; no quarterly URL, date or value is hardcoded.
+The reviewed SEC layout has spacer rows and a trailing empty cell, unlike the
+issuer site's four-column grid. Only that exact layout is normalized. The
+shared extractor still checks headers, quarter, total-row arithmetic, visible
+quotes and ambiguity.
+
+Both requested and final cover/exhibit URLs must belong to Tesla CIK 1318605
+and the same accession. The 8-K must visibly identify TSLA, explicitly state
+when Tesla published Exhibit 99.1, and link the release. Publication cannot be
+future, precede the reporting period, or be more than seven days before filing.
+Claims retain the exhibit hash and exact total-row quote, plus the cover hash,
+URL and publication statement. SEC evidence is accurately labeled SEC EDGAR;
+it is not attributed to the blocked issuer index.
+
+Independent read-only inspection of actual SEC HTML successfully extracted
+486,532 deliveries and 464,391 production for Q3 2026, published October 2.
+This validates the parser on the real layout, not Render's safe retrieval or a
+live directional comparison. The reconstructed-parser tests cover cross-issuer
+and accession rejection, missing publication/link binding, future dates,
+shifted/ambiguous tables, the document budget and actual publication boundaries
+in shared admission/comparison. New evidence alone does not establish a verified
+change or prove competitive advantage. Live Render and signed-in positive-case
+acceptance remain open until this increment deploys and succeeds there.
