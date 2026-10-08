@@ -23,9 +23,9 @@ _METRICS = (
      "revenue", ("revenue", "revenues", "sales", "top line", "top-line"), "USD", "duration"),
     (("GrossProfit",), "gross profit", ("gross profit", "gross margin"), "USD", "duration"),
     (("OperatingIncomeLoss",), "operating income",
-     ("operating income", "operating profit", "operating margin"), "USD", "duration"),
+     ("operating income", "operating profit", "operating margin", "profitability"), "USD", "duration"),
     (("NetIncomeLoss", "ProfitLoss"), "net income",
-     ("net income", "net profit", "earnings"), "USD", "duration"),
+     ("net income", "net profit", "earnings", "profitability"), "USD", "duration"),
     (("EarningsPerShareDiluted",), "diluted EPS",
      ("diluted eps", "diluted earnings per share", "earnings per share", "eps"),
      "USD/shares", "duration"),
@@ -272,11 +272,11 @@ def _attach_free_cash_flow_calculations(
         items[0].calculated_claims.extend(calculations)
 
 
-def _requested_metrics(question: str | None) -> tuple:
+def _requested_metrics(question: str | None, *, include_defaults: bool = True) -> tuple:
     """Narrow an explicit metric question without guessing from broad prose."""
     normalized = re.sub(r"\s+", " ", (question or "").lower()).strip()
     if not normalized:
-        return _METRICS
+        return _METRICS if include_defaults else ()
     if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", normalized):
         required = {"operating cash flow", "capital expenditure"}
         return tuple(metric for metric in _METRICS if metric[1] in required)
@@ -289,7 +289,7 @@ def _requested_metrics(question: str | None) -> tuple:
     ]
     matches = [(metric, terms) for metric, terms in matches if terms]
     if not matches:
-        return _METRICS
+        return _METRICS if include_defaults else ()
     selected = []
     for metric, terms in matches:
         other_terms = {
@@ -309,7 +309,7 @@ def _requested_metrics(question: str | None) -> tuple:
                for term in terms):
             continue
         selected.append(metric)
-    return tuple(selected) or _METRICS
+    return tuple(selected) or (_METRICS if include_defaults else ())
 
 
 def fetch_verified_metric_evidence(

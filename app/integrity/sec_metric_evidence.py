@@ -205,9 +205,9 @@ def comparable_metric_evidence(
     direction = "increased" if change >= 0 else "decreased"
     summary = (
         f"{ticker} {metric_name} {direction} {abs(change):.1f}% to "
-        f"{_value(current.value, unit)} for the period ended {current.end}, from "
-        f"{_value(prior.value, unit)} in the comparable prior-year period ended "
-        f"{prior.end}."
+        f"{_value(current.value, unit)} for the period {current.start} to {current.end}, from "
+        f"{_value(prior.value, unit)} in the comparable prior-year period "
+        f"{prior.start} to {prior.end}."
     )
     verified_claims = [
         claim for record in (current, prior)

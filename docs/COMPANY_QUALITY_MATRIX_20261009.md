@@ -90,4 +90,38 @@ code means planning/capture completed, never that answer quality passed.
 The first increment was validated with 58 local tests covering this runner,
 registry integrity, existing factual grading and subgroup scorecards. Default
 dry runs produced 108 planned cases and no executed or adjudicated answers.
-Real provider output and signed-in quality acceptance remain pending.
+At creation, real provider output and signed-in quality acceptance were pending.
+
+## First deployed capture findings — October 9, 2026 Auckland
+
+The user ran the eight-case AA/ACHC/AAPL/TSLA batch on PR217's deployed commit
+`1bc80c2cd818e1fdb6ec11c6d64577cbc59fada0`. All eight responses were captured.
+The four core-thesis answers were identical operating-risk gaps; the four
+financial answers returned revenue and operating cash flow but omitted requested
+profitability while reporting no unanswered parts. No full useful-answer pass
+is established by this batch, and its numbers have not been independently
+adjudicated against the cited documents.
+
+The shared source-answer route activates for citation and invalidation wording.
+It deliberately withholds generated thesis conclusions. A broad question needs
+source-supported thesis composition and explicit coverage of its supporting and
+invalidation mechanisms; merely changing the route would not establish that
+those claims are supported. This remains a P0 launch blocker across size tiers.
+
+The immediate completeness increment requests operating and net income when a
+question asks about profitability, preserves all requested metric slots beyond
+the usual three-claim presentation limit, and marks missing producer-bound
+metrics as partial. Both start and end dates are included in duration
+comparisons so quarter and year-to-date observations are distinguishable.
+Profit amounts are explicitly distinguished from margins. Broad thesis gaps
+now name the unverified thesis and its mechanisms rather than only a risk slot.
+Source attribution and thesis-comparison safeguards remain in place.
+
+After deployment, repeat the same eight cases with a fresh output path. Review
+profitability coverage, date ranges and missing parts before independent
+numerical/citation adjudication. The thesis cases are expected to remain gaps
+until the broader composition work passes evidence binding and usefulness
+acceptance. The Render logs also report missing FMP and NewsAPI configuration;
+record those provider limitations separately from SEC discovery, which returned
+filings for all four issuers. A missing static profile alone did not prevent
+AA or ACHC from returning structured financial observations.
