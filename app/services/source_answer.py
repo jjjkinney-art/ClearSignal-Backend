@@ -150,14 +150,11 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     material = list(items)
     from .financial_thesis_foundation import is_broad_thesis_request, build_financial_foundation
     requested_thesis = is_broad_thesis_request(question)
-    from .issuer_risk_evidence import requested_risk_topic, RISK_TOPICS
     from .live_issuer_kpi_service import requested_issuer_kpi_aliases
     # A company-wide financial foundation cannot substitute for a requested
     # segment, issuer KPI or named operating-risk mechanism.
-    foundation_scope = (requested_thesis and not _SERVICES_SCOPE_RE.search(question or "")
-                        and not any(re.search(pattern, question or "", re.I) for pattern in RISK_TOPICS.values())
-                        and not requested_risk_topic(str(getattr(thesis, "ticker", "")), question)
-                        and not requested_issuer_kpi_aliases(question))
+    from .thesis_disclosures import requests_thesis_disclosures
+    foundation_scope = requests_thesis_disclosures(str(getattr(thesis, "ticker", "")), question)
     if foundation_scope:
         foundation = build_financial_foundation(ticker=str(getattr(thesis, "ticker", "")),
                                                items=material, references=references)

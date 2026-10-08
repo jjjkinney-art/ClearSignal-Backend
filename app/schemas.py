@@ -109,6 +109,10 @@ class RetrievedEvidence(BaseModel):
             "observations; never populated from generated prose."
         ),
     )
+    business_disclosures: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Producer-bound business description quotes; not independently verified competitive advantages.",
+    )
     risk_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Producer-bound qualitative risk quotes; not verified outcomes or quantitative facts.",

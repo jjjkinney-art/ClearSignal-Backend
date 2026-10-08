@@ -379,7 +379,7 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
             text = _SEC_PAGE_FOOTER.sub('', text)
         return text
 
-    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, risk_form: str = "10-K", risk_layout: dict | None = None) -> tuple[
+    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, preserve_sec_business: bool = False, risk_form: str = "10-K", risk_layout: dict | None = None) -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
@@ -392,9 +392,22 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         start, end = 0, max_chars
         if preserve_sec_risk and len(full_text) > max_chars:
             window = complete_risk_window(full_text, form=risk_form, layout=risk_layout)
+            if preserve_sec_business and risk_form == "10-K" and window:
+                from .sec_risk_sections import complete_business_window
+                business = complete_business_window(full_text)
+                if business and business[1] <= window[0] and window[1] - business[0] <= max_chars:
+                    # Retain the opening heading so downstream extraction can
+                    # establish the same complete Item 1 boundary.
+                    from .sec_risk_sections import BUSINESS_START
+                    opening = next((m for m in BUSINESS_START.finditer(full_text)
+                                    if m.end() == business[0]), None)
+                    if opening and window[1] - opening.start() <= max_chars:
+                        window = (opening.start(), window[1])
+                        self.text_selection = "complete_sec_business_and_risk_section"
             if window and window[1] > max_chars and window[1] - window[0] <= max_chars:
                 start, end = window
-                self.text_selection = "complete_sec_risk_section"
+                if self.text_selection != "complete_sec_business_and_risk_section":
+                    self.text_selection = "complete_sec_risk_section"
         self.text_window_start = start
         text = full_text[start:end]
         headings = [(heading, offset - sum(m.end() - m.start() for m in removed if m.end() <= offset))
@@ -558,6 +571,7 @@ def fetch_public_document(
     source_type: str = "unknown",
     source_tier: str = "unverified",
     sec_periodic_limits: bool = False,
+    preserve_sec_business: bool = False,
     extract_tables: bool = True,
 ) -> PublicDocument:
     """Fetch one public document with bounded redirects and content."""
@@ -640,7 +654,7 @@ def fetch_public_document(
             raise PublicDocumentError("reviewed annual risk mapping unavailable")
         title, text, sections, raw_links = parser.result(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
-            preserve_sec_risk=sec_periodic_limits, risk_form=document_type or "10-K", risk_layout=layout)
+            preserve_sec_risk=sec_periodic_limits, preserve_sec_business=preserve_sec_business, risk_form=document_type or "10-K", risk_layout=layout)
         text_metadata = {"canonical_content_hash": canonical_digest,
                          "normalized_text_chars_total": parser.normalized_text_chars_total,
                          "text_window_start": parser.text_window_start,
