@@ -1974,10 +1974,23 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         request.question,
         re.IGNORECASE,
     ))
-    if is_comparative_question(request.question) and (
+    _comparative_requested = is_comparative_question(request.question) and (
         not request.company_name.strip() or _strong_comparison_request
-    ):
-        _comparison_companies = detect_companies(_comparison_text)
+    )
+    _comparison_companies = detect_companies(_comparison_text) if _comparative_requested else []
+    _selected_history = getattr(request, "research_memory_context_data", None)
+    # Ownership-validated same-issuer history describes a comparison over time,
+    # not a demand for a second company. Explicit multi-company ranking stays
+    # on its existing route. Client selection IDs alone cannot open this path.
+    _selected_historical_comparison = (
+        isinstance(_selected_history, dict)
+        and _selected_history.get("applied") is True
+        and len(_comparison_companies) == 1
+        and _comparison_companies[0].ticker == _selected_history.get("ticker")
+        and bool(re.search(r"\b(selected|historical|prior|previous|record|investigation|thesis)\b",
+                           request.question, re.IGNORECASE))
+    )
+    if _comparative_requested and not _selected_historical_comparison:
         if len(_comparison_companies) >= 2:
             request_id = str(uuid.uuid4())
             _comparison = build_comparative_ranking(
