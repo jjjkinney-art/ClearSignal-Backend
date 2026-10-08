@@ -1640,6 +1640,7 @@ def _run_investment_pipeline(
                 context=research_memory_context_data,
                 evidence=evidence,
                 evidence_integrity=_evidence_integrity,
+                references=_evidence_references,
             )
         except Exception as exc:
             logger.warning("[router] selected research comparison failed for %s: %r", ticker, exc)
