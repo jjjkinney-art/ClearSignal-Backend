@@ -8,7 +8,7 @@ from app.services.filing_metric_evidence import merge_latest_filing_metrics
 from app.services.financial_thesis_foundation import build_financial_foundation, CORE_METRICS, _rebuild
 from app.services.financial_reporting_coverage import reporting_coverage
 from app.services.source_answer import apply_source_answer_gate
-from test_filing_metric_evidence import _items, _xml, _filing
+from test_filing_metric_evidence import _items, _xml, _filing, CIK
 from test_financial_thesis_foundation import evidence, reference
 from test_verified_sec_metrics import _record
 
@@ -26,14 +26,14 @@ def test_latest_inline_bank_revenue_has_same_concept_pairs_exact_values_and_repl
     assert [c['raw_value'] for c in item.verified_claims] == [57347000000, 44912000000]
     assert {c['metric'] for c in item.verified_claims} == {f'us-gaap:{CONCEPT}'}
     assert f'AAPL {LABEL} increased 27.7%' in item.summary
-    assert _rebuild(item, ticker='AAPL', cik='320193', name='revenue', concepts=CORE_METRICS['revenue'])
+    assert _rebuild(item, ticker='AAPL', cik=CIK, name='revenue', concepts=CORE_METRICS['revenue'])
     altered = deepcopy(item)
     altered.summary = altered.summary.replace(LABEL, 'revenue')
-    assert _rebuild(altered, ticker='AAPL', cik='320193', name='revenue', concepts=CORE_METRICS['revenue']) is None
+    assert _rebuild(altered, ticker='AAPL', cik=CIK, name='revenue', concepts=CORE_METRICS['revenue']) is None
 
 
 def test_latest_bank_comparison_replaces_whole_older_generic_pair_and_closes_only_revenue_lag(monkeypatch):
-    monkeypatch.setattr('app.services.providers.sec_provider._load_ticker_cik_map', lambda: {'AAPL':'320193'})
+    monkeypatch.setattr('app.services.providers.sec_provider._load_ticker_cik_map', lambda: {'AAPL':CIK})
     old = evidence('Revenues', 'revenue')
     latest = bank_filing()
     cash = evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow')
@@ -58,10 +58,10 @@ def test_equal_period_generic_and_bank_measures_cannot_silently_replace_each_oth
     ordinary = _items()[0]
     bank = bank_filing()
     from unittest.mock import patch
-    with patch('app.services.providers.sec_provider._load_ticker_cik_map', return_value={'AAPL':'320193'}):
+    with patch('app.services.providers.sec_provider._load_ticker_cik_map', return_value={'AAPL':CIK}):
         assert merge_latest_filing_metrics([ordinary], [bank], ticker='AAPL') == [ordinary]
     cash = evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow')
-    assert build_financial_foundation('AAPL', [ordinary, bank, cash], None, expected_cik='320193') is None
+    assert build_financial_foundation('AAPL', [ordinary, bank, cash], None, expected_cik=CIK) is None
 
 
 def test_company_facts_selects_complete_newer_bank_pair_in_one_fetch(monkeypatch):
@@ -84,7 +84,7 @@ def test_company_facts_selects_complete_newer_bank_pair_in_one_fetch(monkeypatch
 
 
 def test_old_bank_measure_remains_correctly_labeled_in_coverage_warning(monkeypatch):
-    monkeypatch.setattr('app.services.providers.sec_provider._load_ticker_cik_map', lambda: {'AAPL':'320193'})
+    monkeypatch.setattr('app.services.providers.sec_provider._load_ticker_cik_map', lambda: {'AAPL':CIK})
     old = evidence(CONCEPT, LABEL)
     coverage, notice, gaps = reporting_coverage('AAPL', [old, _filing()], [old])
     assert coverage['metrics_behind'][0]['metric'] == LABEL

@@ -343,9 +343,17 @@ coverage warnings for older net-revenue evidence. Operating income, bank-specifi
 cash-flow interpretation, competitive position, valuation and risk-impact gaps
 remain open. No ticker allowlist or universal quality assertion is added.
 
-Local dependency restoration was unavailable in this session; syntax compilation
+Initially local dependency restoration was unavailable; syntax compilation
 and diff checks are available locally, while the pinned Python 3.11 CI gate must
 execute the new cross-path tests and full suite before merge/deployment. A fresh
 JPM capture after deployment must confirm latest-period revenue and supply
 retrieval diagnostics before changing the missing-disclosure path. ASML financial
 coverage, generic thesis language and the 100-issuer size-tier gate remain P0.
+
+First PR229 CI completed the isolated full regression with two failures, both
+in the new bank test file. Its inline fixture produces a padded canonical CIK,
+but the replay test supplied an unpadded identity that changed the exact citation
+ID on reconstruction. The fixture now uses the producer's canonical CIK; source
+binding checks remain intact. After local dependency restoration, all five bank
+tests and the 216-test targeted producer/fallback/foundation/source/router/parser
+set pass. Full CI must rerun on the corrected tree before merge and deployment.
