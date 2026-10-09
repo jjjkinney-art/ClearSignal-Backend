@@ -159,13 +159,20 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         foundation = build_financial_foundation(ticker=str(getattr(thesis, "ticker", "")),
                                                items=material, references=references)
         if foundation:
+            from .financial_reporting_coverage import reporting_coverage
+            coverage, notice, coverage_gaps = reporting_coverage(
+                str(getattr(thesis, "ticker", "")), material, foundation["selected_items"], references)
+            if coverage:
+                foundation["answer"] += "\n\nReporting coverage\n" + notice
+                foundation["unanswered_parts"].extend(coverage_gaps)
             _restrict_evidence_thesis(thesis, foundation["answer"], foundation["claims"],
                                      foundation["selected_items"], enough=True,
                                      scope="Financial thesis foundation")
             return {"status": "partial", "reason": "Producer-bound financial foundation; broader investment case remains unverified.",
                     "claims": foundation["claims"], "inferences": foundation["inferences"],
                     "unanswered_parts": foundation["unanswered_parts"],
-                    "common_reporting_period": foundation["common_reporting_period"]}
+                    "common_reporting_period": foundation["common_reporting_period"],
+                    **({"reporting_coverage": coverage} if coverage else {})}
     from .verified_sec_metric_service import _requested_metrics
     requested_metrics = _requested_metrics(question, include_defaults=False)
     # A multipart metric question must retain all requested metric slots.
@@ -242,6 +249,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             break
 
     unanswered_parts = []
+    from .financial_reporting_coverage import reporting_coverage
+    coverage, coverage_notice, coverage_gaps = reporting_coverage(
+        ticker, material, selected_items, references)
+    unanswered_parts.extend(coverage_gaps)
     if requested_thesis:
         unanswered_parts.append("investment thesis and its supporting/invalidation mechanisms")
     if len(requested_metrics) > 1:
@@ -327,6 +338,8 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
     if unanswered_parts:
         answer += "\n\nUnverified requested parts: " + "; ".join(unanswered_parts) + "."
+    if coverage:
+        answer += "\n\nReporting coverage\n" + coverage_notice
     if re.search(r"\bprofitability\b", question or "", re.I):
         answer += ("\n\nProfitability is represented here by reported operating income and "
                    "net income where available. These amounts are not profit margins.")
@@ -337,4 +350,5 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         "reason": "Each claim is bound to a retrieved evidence reference.",
         "claims": claims,
         "unanswered_parts": unanswered_parts,
+        **({"reporting_coverage": coverage} if coverage else {}),
     }

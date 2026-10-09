@@ -159,3 +159,45 @@ statements retain proof. Deployed acceptance must inspect the selected prose,
 not just count business claims. Continue to primary-source adjudication and
 unseen issuer expansion after this gate, with valuation and the wider quality
 roadmap still open.
+
+## Post224 confirmation and financial reporting coverage
+
+The user supplied eight post224 deployed answers. The four sampled theses now
+select concrete current product, service or segment descriptions: Apple
+products/headphones, Alcoa segments/alumina, Acadia care/treatment levels and
+Tesla segments/energy products. The previous strategy and potential-development
+selections are absent. Financial coverage remains unchanged. This confirms the
+sampled selection correction, not complete business models or independently
+audited universal quality.
+
+Read-only SEC snapshots on 2026-10-09 explain two different financial gaps:
+Alcoa's Company Facts payload has no us-gaap OperatingIncomeLoss observations;
+Acadia's standard tag ends in March 2020 and is correctly withheld by the
+existing staleness guard. Do not relabel pretax income, adjusted EBITDA or a
+segment metric as reported consolidated operating income. Acadia's Assets,
+revenue, net income and operating-cash-flow observations all stop at March 2026
+in that payload, while its submissions inventory includes a June 2026 10-Q
+filed July 28. The rendered March figures were reproduced from the feed; that
+does not establish current-quarter coverage. Snapshots can change on later reads.
+
+Preserve structured report dates in the existing filing-discovery records.
+Compare selected, rebuilt financial comparisons with the newest eligible
+retrieved filing period. Cite canonical admitted filing and fact references,
+add explicit latest-period metric gaps and return a partial answer when the
+observations lag. The filing establishes the coverage limitation, never missing
+financial values. Use the existing inventory without extra network requests or
+historical backfill. Foreign and unsupported grammar/metric families remain
+outside this coverage check; absence of a warning is not a freshness certificate.
+
+The local snapshot replay reproduces Acadia's three March comparisons alongside
+the June filing and exposes all three latest-period gaps. Synthetic regressions
+cover metric and broad-thesis views, canonical references, idempotence, unchanged
+quantities, same/older filings, wrong issuer, invalid/future dates, tampered facts
+and unadmitted inventory. Full CI and deployed capture remain required.
+
+Priority follow-up: independently bind latest filing-level structured facts when
+Company Facts lags, or retain the explicit gap. Review issuer-specific/custom
+operating-income presentation before adding a producer; standard missing tags
+are not permission to invent aliases. Continue primary-document adjudication,
+unseen issuer expansion and the 100-issuer size-tier gate before claiming broad
+quality parity. Valuation, competitive position and risk assessment remain open.

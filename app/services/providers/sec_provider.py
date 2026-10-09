@@ -140,6 +140,7 @@ def _make_evidence(
         source_type="regulatory_filing", source_tier="primary",
         claim_type="filing_metadata", document_type=form_type,
         filed_at=file_date, extraction_method="publisher_feed",
+        reporting_period_end=period or None,
     )
 
 
