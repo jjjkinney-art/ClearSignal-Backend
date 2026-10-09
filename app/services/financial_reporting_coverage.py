@@ -2,7 +2,7 @@
 from datetime import date
 import re
 
-from .financial_thesis_foundation import CORE_METRICS, _rebuild
+from .financial_thesis_foundation import CORE_METRICS, SUPPLEMENTARY_METRICS, _rebuild
 from .thesis_disclosures import _business_issuer_url
 
 
@@ -57,7 +57,7 @@ def reporting_coverage(ticker, material, selected, references=None):
         return None, '', []
     latest, _, filing_ref = max(inventory)
     behind = []
-    for name, concepts in CORE_METRICS.items():
+    for name, concepts in {**CORE_METRICS, **SUPPLEMENTARY_METRICS}.items():
         for index, item in enumerate(material, 1):
             if not any(item is candidate for candidate in selected):
                 continue

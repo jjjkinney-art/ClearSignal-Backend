@@ -26,6 +26,9 @@ _METRICS = (
      ("operating income", "operating profit", "operating margin", "profitability"), "USD", "duration"),
     (("NetIncomeLoss", "ProfitLoss"), "net income",
      ("net income", "net profit", "earnings", "profitability"), "USD", "duration"),
+    (("IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",),
+     "pretax income", ("pretax income", "pre-tax income", "pre tax income", "income before income taxes", "income before taxes"),
+     "USD", "duration"),
     (("EarningsPerShareDiluted",), "diluted EPS",
      ("diluted eps", "diluted earnings per share", "earnings per share", "eps"),
      "USD/shares", "duration"),
@@ -331,6 +334,11 @@ def fetch_verified_metric_evidence(
     if not cik or not cik.isdigit():
         return []
     metrics = _requested_metrics(question)
+    from .financial_thesis_foundation import requests_profitability_context
+    supplementary = next(metric for metric in _METRICS if metric[1] == "pretax income")
+    context_requested = requests_profitability_context(question)
+    if context_requested and supplementary not in metrics:
+        metrics = (*metrics, supplementary)
     concept_units = tuple(
         (concept, unit) for concepts, _, _, unit, _ in metrics for concept in concepts
     )
@@ -379,4 +387,10 @@ def fetch_verified_metric_evidence(
             evidence.append(item)
     if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", (question or "").lower()):
         _attach_free_cash_flow_calculations(evidence)
+    from .financial_thesis_foundation import requests_pretax_income
+    if context_requested and not requests_pretax_income(question):
+        has_operating = any(item.verified_claims and item.verified_claims[0].get("metric") == "us-gaap:OperatingIncomeLoss"
+                            for item in evidence)
+        if has_operating:
+            evidence = [item for item in evidence if item.verified_claims[0].get("metric") != f"us-gaap:{supplementary[0][0]}"]
     return evidence

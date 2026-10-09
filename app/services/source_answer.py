@@ -182,6 +182,26 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     claims: list[dict] = []
     selected_items: list[object] = []
     ticker = str(getattr(thesis, "ticker", ""))
+    from .financial_thesis_foundation import (
+        SUPPLEMENTARY_METRICS, _rebuild, PRETAX_LIMITATION,
+        requests_profitability_context, requests_pretax_income,
+    )
+    pretax_concepts = SUPPLEMENTARY_METRICS["pretax income"]
+    pretax_candidates = [item for item in material if any(
+        claim.get("metric") == f"us-gaap:{pretax_concepts[0]}"
+        for claim in getattr(item, "verified_claims", []) if isinstance(claim, dict))]
+    eligible_pretax = []
+    if pretax_candidates and (requests_profitability_context(question) or requests_pretax_income(question)):
+        from .providers.sec_provider import _load_ticker_cik_map
+        try:
+            cik = _load_ticker_cik_map().get(ticker)
+        except Exception:
+            cik = None
+        if isinstance(cik, str):
+            eligible_pretax = [item for item in pretax_candidates if _rebuild(
+                item, ticker=ticker, cik=cik, name="pretax income", concepts=pretax_concepts)]
+            if len({repr(item.verified_claims) for item in eligible_pretax}) != 1:
+                eligible_pretax = []
     services_requested = bool(_SERVICES_SCOPE_RE.search(question or ""))
     risk_profile = requested_risk_profile(ticker, question)
     scoped_risk = risk_profile if not (ticker == "AAPL" and risk_profile and risk_profile.scope == "Services") else None
@@ -190,6 +210,9 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     unsupported_risk = risk_requested and not risk_profile
     view_scope = scoped_risk.scope if scoped_risk else ("Services" if services_requested else "Requested topic")
     for index, item in enumerate(material, start=1):
+        if any(item is candidate for candidate in pretax_candidates) and not any(
+                item is candidate for candidate in eligible_pretax):
+            continue
         claim = _claim_text(item)
         if not claim:
             continue
@@ -226,6 +249,8 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
                 continue
             reference_id = matching["id"]
         row = {"claim": claim, "reference_id": reference_id}
+        if any(item is candidate for candidate in eligible_pretax) and not requests_pretax_income(question):
+            row["claim_kind"] = "supplementary_profitability_comparison"
         if disclosure:
             row.update(claim_kind="issuer_disclosed_risk", document_ref=disclosure["document_ref"])
             if disclosure.get("issuer_relationship"):
@@ -338,6 +363,9 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
     if unanswered_parts:
         answer += "\n\nUnverified requested parts: " + "; ".join(unanswered_parts) + "."
+    if "operating income" in unanswered_parts:
+        if any(item is candidate for item in selected_items for candidate in eligible_pretax):
+            answer += "\n\n" + PRETAX_LIMITATION
     if coverage:
         answer += "\n\nReporting coverage\n" + coverage_notice
     if re.search(r"\bprofitability\b", question or "", re.I):
