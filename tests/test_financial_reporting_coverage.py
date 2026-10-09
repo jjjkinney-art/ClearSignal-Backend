@@ -80,3 +80,14 @@ def test_discovery_metadata_retains_structured_report_date_without_numeric_claim
     item = filing()
     assert item.reporting_period_end == '2025-09-30'
     assert item.verified_claims == [] and item.claim_type == 'filing_metadata'
+
+
+def test_selected_supplementary_pretax_retains_its_own_latest_period_gap():
+    from test_financial_thesis_foundation import evidence, PRETAX
+    pretax = evidence(PRETAX, 'pretax income')
+    material = [pretax, filing()]
+    coverage, notice, gaps = reporting_coverage('AAPL', material, [pretax])
+    assert coverage['metrics_behind'] == [{'metric': 'pretax income', 'comparison_period_end': '2025-06-30', 'reference_id': 'E1'}]
+    assert gaps == ['latest-period pretax income']
+    assert 'older periods' in notice
+    assert reporting_coverage('AAPL', material, []) == (None, '', [])

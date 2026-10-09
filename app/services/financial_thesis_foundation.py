@@ -18,6 +18,22 @@ CORE_METRICS = {
     "net income": ("NetIncomeLoss", "ProfitLoss"),
     "operating cash flow": ("NetCashProvidedByUsedInOperatingActivities",),
 }
+SUPPLEMENTARY_METRICS = {
+    "pretax income": ("IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",),
+}
+
+
+def requests_profitability_context(question: str | None) -> bool:
+    return is_broad_thesis_request(question or "") or bool(re.search(r"\bprofitability\b", question or "", re.I))
+
+
+def requests_pretax_income(question: str | None) -> bool:
+    return bool(re.search(r"\b(?:pre[- ]?tax income|income before (?:income )?taxes)\b", question or "", re.I))
+
+
+PRETAX_LIMITATION = ("The cited pretax-income comparison is supplementary profitability context. "
+    "Pretax income includes effects outside operating profit; it does not establish operating income "
+    "or an operating margin. Operating income remains unverified.")
 
 
 def is_broad_thesis_request(question: str) -> bool:
@@ -138,6 +154,29 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     # One isolated observation does not form a multi-dimensional financial case.
     if len(rows) < 2:
         return None
+    supplemental = []
+    if "operating income" in missing:
+        name, concepts = next(iter(SUPPLEMENTARY_METRICS.items()))
+        for index, item in enumerate(items, 1):
+            rebuilt = _rebuild(item, ticker=ticker, cik=expected_cik, name=name, concepts=concepts)
+            if rebuilt is None:
+                continue
+            ref = f"E{index}"
+            if references is not None:
+                ref = next((r.get("id") for r in references
+                    if r.get("title") == item.title.strip()[:300]
+                    and r.get("source") == item.source.strip()[:120]
+                    and r.get("url") == item.url and r.get("published_at") == item.timestamp), None)
+                if not re.fullmatch(r"E[1-9]\d*", str(ref or "")):
+                    continue
+            supplemental.append((item, rebuilt, ref))
+        if supplemental and len({repr(row[1].verified_claims) for row in supplemental}) == 1:
+            item, rebuilt, ref = supplemental[0]
+            rows.append({"claim": rebuilt.summary, "reference_id": ref,
+                         "claim_kind": "supplementary_profitability_comparison"})
+            selected.append(item)
+        else:
+            supplemental = []
     periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
     limitation = ("These metrics cover different reporting durations or end dates. Evaluate each "
                   "against its own comparable prior-year period; they do not establish a common-period "
@@ -153,6 +192,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer = "Financial thesis foundation (partial)\n\n" + hypothesis
     answer += "\n\nReported evidence\n" + "\n\n".join(
         f"{index}. {row['claim']} [{row['reference_id']}]" for index, row in enumerate(rows, start=1))
+    if supplemental:
+        answer += "\n\n" + PRETAX_LIMITATION
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}" for row in interpretations)
     from .thesis_disclosures import bound_business_description, bound_thesis_risk

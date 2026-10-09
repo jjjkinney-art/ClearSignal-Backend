@@ -1277,7 +1277,7 @@ def _run_investment_pipeline(
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
     from .filing_metric_evidence import merge_latest_filing_metrics
     _sec_metric_evidence = merge_latest_filing_metrics(
-        _sec_metric_evidence, _ev_results.get("filing_metrics", []), ticker=ticker,
+        _sec_metric_evidence, _ev_results.get("filing_metrics", []), ticker=ticker, question=question,
     )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])

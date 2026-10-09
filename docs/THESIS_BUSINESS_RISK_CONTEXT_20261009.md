@@ -236,3 +236,37 @@ Full CI and a fresh Render capture are required before declaring the current
 financial coverage gap fixed. Missing operating income and wider thesis-quality
 gates remain open. This parser is intentionally narrower than a general XBRL
 processor and does not establish coverage of foreign/custom taxonomies.
+
+Post226 live eight-case capture confirms Acadia's latest-period fallback: June
+quarter revenue is $865.8M (-0.4%), parent-attributable net income $10.9M
+(-63.7%), and January–June operating cash flow $223.6M (+54.2%). The Apple,
+Alcoa and Tesla comparisons remain intact. This closes the specific Acadia
+Company Facts lag demonstrated by that capture, not the broader quality gate.
+
+Review of the June 2026 income statements found no separate consolidated
+operating-income subtotal for Alcoa or Acadia. Both present income before income
+taxes. Alcoa's custom total-costs concept explicitly includes nonoperating
+expenses; neither that concept nor pretax income is an OperatingIncomeLoss
+alias. Sources reviewed:
+- https://www.sec.gov/Archives/edgar/data/1675149/000119312526326265/R2.htm
+- https://www.sec.gov/Archives/edgar/data/1520697/000119312526321076/achc-20260630.htm
+
+Next narrow improvement: when a broad financial thesis or profitability request
+has no verified operating-income comparison, admit an independently reconstructed
+comparison for the standard consolidated USD pretax concept as supplementary
+profitability context. Use the existing one-fetch Company Facts producer and
+bounded latest-filing parser. Both values retain their exact concept, period,
+issuer identity and filing references. Newer same-concept filing evidence can
+replace older pretax evidence; domestic/foreign pretax, custom costs, EBITDA,
+pretax and operating income remain distinct. Explicit pretax questions can request
+that metric directly.
+
+Operating income stays unanswered. The supplementary comparison does not form
+an operating margin, does not count toward the two-core-metric minimum for a
+financial foundation, and does not add a supporting or counter-evidence signal
+to the thesis. Existing operating-income evidence takes precedence. Conflicting,
+tampered or unreferenced supplementary comparisons are withheld. Selected older
+pretax evidence receives its own latest-period coverage warning. This is a general
+producer rule, not a ticker exception or an assertion that every issuer omits
+operating income. Wider operating-profit families, foreign taxonomies, valuation,
+primary-source adjudication and the 100-issuer size-tier gate remain priorities.

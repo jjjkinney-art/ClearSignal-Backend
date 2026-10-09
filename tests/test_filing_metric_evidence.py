@@ -185,3 +185,46 @@ def test_retrieval_failure_preserves_existing_facts(monkeypatch):
     assert service.fetch_latest_filing_metrics('AAPL', question='Cite revenue') == []
     current = _items()
     assert service.merge_latest_filing_metrics(current, [], ticker='AAPL') == current
+
+
+def test_inline_pretax_is_bound_and_merged_after_core_without_operating_alias(monkeypatch):
+    from app.services.financial_thesis_foundation import SUPPLEMENTARY_METRICS
+    concept = SUPPLEMENTARY_METRICS['pretax income'][0]
+    document = _document()
+    document.inline_xbrl_facts = parse_inline_observations(_xml(concept), cik=CIK, concepts=(concept,))
+    pretax, = service.evidence_from_filing(document, _filing(), ticker='AAPL', cik=CIK)
+    assert _rebuild(pretax, ticker='AAPL', cik=CIK, name='pretax income', concepts=(concept,))
+    assert pretax.verified_claims[0]['document_ref']['content_hash'] == 'a' * 64
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': CIK})
+    revenue, = _items()
+    cash, = _items(_xml('NetCashProvidedByUsedInOperatingActivities'))
+    merged = service.merge_latest_filing_metrics([], [pretax, revenue, cash], ticker='AAPL', question='How has profitability changed?')
+    assert merged == [revenue, cash, pretax]
+    foundation = build_financial_foundation('AAPL', merged, None, expected_cik=CIK)
+    assert 'operating income' in foundation['unanswered_parts']
+    assert foundation['claims'][-1]['claim_kind'] == 'supplementary_profitability_comparison'
+    operating, = _items(_xml('OperatingIncomeLoss'))
+    merged = service.merge_latest_filing_metrics([], [pretax, operating], ticker='AAPL', question='How has profitability changed?')
+    assert merged == [operating]
+    assert service.merge_latest_filing_metrics([], [pretax, operating], ticker='AAPL', question='Compare profitability and pretax income') == [operating, pretax]
+
+
+def test_other_pretax_concepts_are_not_aliases_for_consolidated_pretax():
+    for concept in ('IncomeLossFromContinuingOperationsBeforeIncomeTaxesDomestic',
+                    'IncomeLossFromContinuingOperationsBeforeIncomeTaxesForeign',
+                    'aa_CostsAndOperatingExpensesAndNonoperatingIncomeExpenses'):
+        assert _items(_xml(concept)) == []
+
+
+def test_latest_inline_pretax_replaces_only_older_same_concept(monkeypatch):
+    from test_financial_thesis_foundation import evidence, PRETAX
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': CIK})
+    older = evidence(PRETAX, 'pretax income')
+    revenue = evidence('Revenues', 'revenue')
+    document = _document()
+    document.inline_xbrl_facts = parse_inline_observations(_xml(PRETAX), cik=CIK, concepts=(PRETAX,))
+    latest, = service.evidence_from_filing(document, _filing(), ticker='AAPL', cik=CIK)
+    merged = service.merge_latest_filing_metrics([older, revenue], [latest], ticker='AAPL', question='How has profitability changed?')
+    assert merged == [revenue, latest]
+    assert latest.reporting_period_end == '2026-06-30'
+    assert latest.verified_claims[0]['metric'] != 'us-gaap:OperatingIncomeLoss'

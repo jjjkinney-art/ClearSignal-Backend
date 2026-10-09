@@ -865,3 +865,23 @@ def test_reit_metric_pack_has_question_aware_concept_mapping():
         concepts, _, _, unit, period_kind = selected[0]
         assert unit == "USD"
         assert (concepts[0], period_kind) == expected
+
+
+def test_pretax_fallback_uses_exact_concept_and_one_fetch_then_defers_to_operating_income(monkeypatch):
+    concept = "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+    prior = _record(concept=concept)
+    current = replace(prior, value=120, start="2025-01-01", end="2025-03-31", filed="2025-05-01",
+        accession="0000320193-25-000001", filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm")
+    records = [prior, current]
+    calls = []
+    monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(service, "get_company_fact_records_for_concept_units", lambda *a, **kw: calls.append(kw) or records)
+    question = "How has profitability changed?"
+    items = service.fetch_verified_metric_evidence("AAPL", question=question)
+    assert len(calls) == 1
+    assert len(items) == 1 and items[0].verified_claims[0]["metric"] == f"us-gaap:{concept}"
+    assert (concept, "USD") in calls[0]["concept_units"]
+    records.extend([replace(prior, concept="OperatingIncomeLoss"), replace(current, concept="OperatingIncomeLoss")])
+    assert [x.verified_claims[0]["metric"] for x in service.fetch_verified_metric_evidence("AAPL", question=question)] == ["us-gaap:OperatingIncomeLoss"]
+    assert len(service.fetch_verified_metric_evidence("AAPL", question="Compare profitability and pretax income")) == 2
+    assert service.fetch_verified_metric_evidence("AAPL", question="How has operating cash flow changed?") == []

@@ -6,10 +6,15 @@ from ..config import settings
 from ..integrity.sec_metric_evidence import comparable_metric_evidence
 from ..providers.sec_client import SecFactRecord
 from ..providers.sec_inline_facts import validated_observation
-from .financial_thesis_foundation import CORE_METRICS, _rebuild
+from .financial_thesis_foundation import (
+    CORE_METRICS, SUPPLEMENTARY_METRICS, _rebuild,
+    requests_profitability_context, requests_pretax_income,
+)
 from .providers import sec_provider
 from .public_document_ingestion import fetch_public_document
 from .thesis_disclosures import _business_issuer_url, requests_thesis_disclosures
+
+FILING_METRICS = {**CORE_METRICS, **SUPPLEMENTARY_METRICS}
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +28,7 @@ def requests_filing_metrics(ticker, question):
     if (requested_issuer_kpi_aliases(question)
             or re.search(r'\b(?:services|segments?|app store|icloud|apple music|digital content)\b', question, re.I)):
         return False
-    core = {c for aliases in CORE_METRICS.values() for c in aliases}
+    core = {c for aliases in FILING_METRICS.values() for c in aliases}
     return any(unit == 'USD' and kind == 'duration' and set(concepts) & core
                for concepts, _, _, unit, kind in _requested_metrics(question, include_defaults=False))
 
@@ -46,7 +51,7 @@ def evidence_from_filing(document, filing, *, ticker, cik):
         return []
     compact = filing.url.split('/')[-2]
     accession = f'{compact[:10]}-{compact[10:12]}-{compact[12:]}'
-    concepts = tuple(concept for group in CORE_METRICS.values() for concept in group)
+    concepts = tuple(concept for group in FILING_METRICS.values() for concept in group)
     records = []
     for observation in document.inline_xbrl_facts:
         amount = validated_observation(observation, cik=cik, concepts=concepts)
@@ -61,7 +66,7 @@ def evidence_from_filing(document, filing, *, ticker, cik):
             form=filing.document_type, accession=accession, filing_url=document.final_url,
             inline_binding=proof))
     evidence = []
-    for name, aliases in CORE_METRICS.items():
+    for name, aliases in FILING_METRICS.items():
         for concept in aliases:
             item = comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
                                               concepts=(concept,), metric_name=name)
@@ -104,7 +109,7 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
             publisher='SEC EDGAR', published_at=filing.timestamp, document_type=filing.document_type,
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,
             extract_tables=False, inline_fact_cik=cik,
-            inline_fact_concepts=tuple(c for group in CORE_METRICS.values() for c in group))
+            inline_fact_concepts=tuple(c for group in FILING_METRICS.values() for c in group))
         items = evidence_from_filing(document, filing, ticker=ticker, cik=cik)
         (logger.info if items else logger.warning)(
             'Latest filing metrics %s: period=%s observations=%d comparisons=%d',
@@ -114,13 +119,15 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         from .verified_sec_metric_service import _requested_metrics
         requested = {f'us-gaap:{concept}' for concepts, _, _, _, _ in
                      _requested_metrics(question, include_defaults=False) for concept in concepts}
+        if requests_profitability_context(question):
+            requested.update(f'us-gaap:{c}' for group in SUPPLEMENTARY_METRICS.values() for c in group)
         return [item for item in items if item.verified_claims[0]['metric'] in requested]
     except Exception as exc:
         logger.warning('Latest filing metrics unavailable for %s: %s', ticker, type(exc).__name__)
         return []
 
 
-def merge_latest_filing_metrics(company_facts, filing_facts, *, ticker):
+def merge_latest_filing_metrics(company_facts, filing_facts, *, ticker, question=None):
     """Replace older same-concept comparisons; keep same-period conflicts visible.
 
     Do not let an alternative revenue/net-income concept silently replace an
@@ -136,7 +143,7 @@ def merge_latest_filing_metrics(company_facts, filing_facts, *, ticker):
         return list(company_facts)
     output = list(company_facts)
     for candidate in filing_facts:
-        for name, concepts in CORE_METRICS.items():
+        for name, concepts in FILING_METRICS.items():
             checked = _rebuild(candidate, ticker=ticker, cik=cik, name=name, concepts=concepts)
             if checked is None:
                 continue
@@ -161,4 +168,13 @@ def merge_latest_filing_metrics(company_facts, filing_facts, *, ticker):
                     break
             output.append(candidate)
             break
+    if requests_profitability_context(question) and not requests_pretax_income(question):
+        operating = [_rebuild(item, ticker=ticker, cik=cik, name='operating income',
+                            concepts=CORE_METRICS['operating income']) for item in output]
+        if any(item is not None for item in operating):
+            output = [item for item in output if not _rebuild(item, ticker=ticker, cik=cik,
+                name='pretax income', concepts=SUPPLEMENTARY_METRICS['pretax income'])]
+    # Core observations precede supplementary context in bounded evidence views.
+    output.sort(key=lambda item: bool(_rebuild(item, ticker=ticker, cik=cik,
+        name='pretax income', concepts=SUPPLEMENTARY_METRICS['pretax income'])))
     return output

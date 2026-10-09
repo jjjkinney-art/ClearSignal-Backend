@@ -143,3 +143,76 @@ def test_named_cloud_thesis_without_risk_wording_cannot_receive_company_wide_fou
     assert result["status"] == "partial"
     assert "Financial thesis foundation (partial)" not in thesis.direct_answer
     assert "investment thesis and its supporting/invalidation mechanisms" in result["unanswered_parts"]
+
+PRETAX = "IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+
+
+def profitability_items():
+    return [evidence("Revenues", "revenue"), evidence("NetIncomeLoss", "net income"),
+            evidence("NetCashProvidedByUsedInOperatingActivities", "operating cash flow"),
+            evidence(PRETAX, "pretax income", current=60, prior=100)]
+
+
+def test_pretax_is_cited_supplement_without_closing_operating_income_or_changing_inferences():
+    items = profitability_items()
+    result = build_financial_foundation("AAPL", items, [reference(x, f"E{i+7}") for i, x in enumerate(items)], expected_cik="320193")
+    baseline = build_financial_foundation("AAPL", items[:-1], None, expected_cik="320193")
+    assert len(result["claims"]) == 4
+    assert result["claims"][-1]["claim_kind"] == "supplementary_profitability_comparison"
+    assert result["claims"][-1]["reference_id"] == "E10"
+    assert "operating income" in result["unanswered_parts"]
+    assert [x["metric"] for x in result["inferences"]] == [x["metric"] for x in baseline["inferences"]]
+    assert "Operating income remains unverified" in result["answer"]
+    assert "does not establish operating income or an operating margin" in result["answer"]
+
+
+def test_pretax_does_not_satisfy_minimum_core_evidence_or_replace_available_operating_income():
+    supplemental = evidence(PRETAX, "pretax income")
+    assert build_financial_foundation("AAPL", [pair()[0], supplemental], None, expected_cik="320193") is None
+    result = build_financial_foundation("AAPL", pair() + [supplemental], None, expected_cik="320193")
+    assert len(result["claims"]) == 2
+    assert supplemental not in result["selected_items"]
+
+
+@pytest.mark.parametrize("problem", ["tampered", "conflicting", "missing_reference"])
+def test_unqualified_pretax_cannot_enter_foundation(problem):
+    items = profitability_items()
+    refs = [reference(x, f"E{i+1}") for i, x in enumerate(items)]
+    if problem == "tampered":
+        items[-1].verified_claims[0]["raw_value"] = 999
+    elif problem == "conflicting":
+        items.append(evidence(PRETAX, "pretax income", current=180))
+        refs.append(reference(items[-1], "E5"))
+    else:
+        refs.pop()
+    result = build_financial_foundation("AAPL", items, refs, expected_cik="320193")
+    assert len(result["claims"]) == 3
+    assert "operating income" in result["unanswered_parts"]
+    assert "supplementary profitability context" not in result["answer"]
+
+
+@pytest.mark.parametrize("problem", [None, "tampered", "conflicting"])
+def test_financial_view_keeps_operating_gap_with_validated_pretax(monkeypatch, problem):
+    monkeypatch.setattr("app.services.providers.sec_provider._load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    items = profitability_items()
+    if problem == "tampered":
+        items[-1].summary = "Invented pretax result."
+    elif problem == "conflicting":
+        items.append(evidence(PRETAX, "pretax income", current=180))
+    thesis = InvestmentThesis(ticker="AAPL", company_name="Apple")
+    result = apply_source_answer_gate(thesis, "How have revenue, profitability and operating cash flow changed? Cite sources.", items)
+    assert result["status"] == "partial"
+    assert "operating income" in result["unanswered_parts"]
+    assert len(result["claims"]) == (4 if problem is None else 3)
+    assert ("Operating income remains unverified" in thesis.direct_answer) == (problem is None)
+    if problem is None:
+        assert result["claims"][-1]["claim_kind"] == "supplementary_profitability_comparison"
+
+
+def test_explicit_pretax_query_keeps_distinct_metric_identity(monkeypatch):
+    monkeypatch.setattr("app.services.providers.sec_provider._load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    thesis = InvestmentThesis(ticker="AAPL", company_name="Apple")
+    result = apply_source_answer_gate(thesis, "How has pretax income changed? Cite sources.", [evidence(PRETAX, "pretax income")])
+    assert result["status"] == "attributed"
+    assert "pretax income" in result["claims"][0]["claim"]
+    assert "operating income" not in result["unanswered_parts"]
