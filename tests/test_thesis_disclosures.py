@@ -184,3 +184,38 @@ def test_directory_resolved_unseen_issuer_uses_same_producers(monkeypatch):
     assert len(result["claims"]) == 4
     assert BUSINESS in result["answer"] and RISK in result["answer"]
     assert "competitive position" in result["unanswered_parts"]
+
+
+@pytest.mark.parametrize('heading', ['Company Background', 'Overview', 'GENERAL',
+                                     'Business Overview', 'Segment Information'])
+def test_unpunctuated_shared_heading_preserves_complete_sentence_and_exact_span(heading):
+    doc = document(f'Item 1. Business {heading} {BUSINESS} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    stats = {}
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193', diagnostics=stats)
+    assert len(items) == 1
+    value = service.bound_business_description(items[0], ticker='AAPL', cik='320193')
+    assert value['quote'] == BUSINESS
+    assert doc.text[value['start_offset']:value['end_offset']] == BUSINESS
+    assert stats['status'] == 'business_extracted' and stats['heading_prefixes_removed'] == 1
+    assert BUSINESS not in repr(stats)
+
+
+@pytest.mark.parametrize('prefix', ['If approved,', 'Our competitor says', 'Previously,',
+                                    'Overview we may change our plans.', 'General hypothetical case'])
+def test_arbitrary_prefix_cannot_be_removed_to_create_current_business_fact(prefix):
+    doc = document(f'Item 1. Business {prefix} {BUSINESS} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    # Only the separately punctuated complete sentence qualifies, never a
+    # clipped conditional or a sentence attributed to a competitor.
+    assert len(items) == (1 if prefix.endswith('.') else 0)
+
+
+def test_business_diagnostics_distinguish_missing_section_from_rejected_prose():
+    missing, rejected = {}, {}
+    service.extract_business_descriptions(document(text=f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments'),
+        ticker='AAPL', cik='320193', diagnostics=missing)
+    service.extract_business_descriptions(document(text='Item 1. Business Overview We may manufacture specialized components for customers in the future. Item 1A. Risk Factors'),
+        ticker='AAPL', cik='320193', diagnostics=rejected)
+    assert missing['status'] == 'no_complete_business_section'
+    assert rejected['status'] == 'no_qualifying_business_sentence'
+    assert rejected['rejection_counts'] == {'numeric_or_forward_looking': 1}

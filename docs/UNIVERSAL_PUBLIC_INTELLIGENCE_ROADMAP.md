@@ -104,6 +104,12 @@ competitive advantage, valuation, risk materiality or launch readiness. Live
 acceptance and primary-document adjudication precede the next valuation and
 broader-universe increments; the 100-issuer and personalization gates remain P0.
 
+Post220 deployed capture added cited risk context to all four sampled broad
+theses but no business descriptions. Business extraction remains the immediate
+P0 fix before valuation: address normalized heading/sentence boundaries and
+expose count-only section/qualification diagnostics, then rerun live acceptance.
+No full thesis or universal-company quality pass is inferred from these captures.
+
 Backend PR215 is deployed at `7c69214096c7128a98d62124a7aba1b8d0c131a5`.
 Its live September 26 Tesla comparison retrieved the October 2 SEC delivery
 release, admitted one newer evidence item and survived save/reopen. Frontend
