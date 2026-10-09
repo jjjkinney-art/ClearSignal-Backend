@@ -110,6 +110,13 @@ P0 fix before valuation: address normalized heading/sentence boundaries and
 expose count-only section/qualification diagnostics, then rerun live acceptance.
 No full thesis or universal-company quality pass is inferred from these captures.
 
+Post221 diagnostics narrowed the shared business omission to an upstream
+identity-format mismatch: padded directory CIKs were compared literally with
+unpadded archive paths, rejecting all four documents before sentence scanning.
+Normalize validated numeric identity in both business extraction and binding;
+production-shaped fixtures must cover the shared path. Live confirmation is
+still required before closing this business-context gap.
+
 Backend PR215 is deployed at `7c69214096c7128a98d62124a7aba1b8d0c131a5`.
 Its live September 26 Tesla comparison retrieved the October 2 SEC delivery
 release, admitted one newer evidence item and survived save/reopen. Frontend

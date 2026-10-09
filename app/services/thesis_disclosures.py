@@ -21,6 +21,16 @@ _BUSINESS_HEADING_PREFIX = re.compile(
 
 
 
+def _business_issuer_url(url, cik):
+    """Compare numeric issuer identity using SEC archive-path representation."""
+    # The directory pads to ten digits; archive URLs omit those zeroes.
+    # Validate before normalization so malformed identities cannot become
+    # regex patterns or authorize a different issuer.
+    if not isinstance(cik, str) or not re.fullmatch(r"[0-9]{1,10}", cik) or int(cik) <= 0:
+        return False
+    return _issuer_url(url, IssuerRiskProfile(str(int(cik)), "Business", ""))
+
+
 def requests_thesis_disclosures(ticker: str, question: str) -> bool:
     from .financial_thesis_foundation import is_broad_thesis_request
     from .live_issuer_kpi_service import requested_issuer_kpi_aliases
@@ -52,7 +62,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     if (document.document_type != "10-K" or document.publisher != "SEC EDGAR"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
             or document.extraction_method != "html" or not document.text_ready
-            or not _issuer_url(document.final_url, IssuerRiskProfile(cik, "Business", ""))):
+            or not _business_issuer_url(document.final_url, cik)):
         return []
     try:
         if date.fromisoformat(document.published_at or "") > date.today():
@@ -115,7 +125,7 @@ def bound_business_description(item, *, ticker, cik):
         if (value.get("claim_kind") != "issuer_business_description" or value.get("ticker") != ticker
                 or not _business_quote(value.get("quote")) or value["quote"] != ref.get("quote")
                 or ref.get("provider") != "SEC EDGAR" or ref.get("section") != SECTION
-                or not ref.get("content_hash") or not _issuer_url(ref["url"], IssuerRiskProfile(cik, "Business", ""))
+                or not ref.get("content_hash") or not _business_issuer_url(ref["url"], cik)
                 or ref["url"] != item.url or ref.get("published_at") != item.timestamp
                 or date.fromisoformat(item.timestamp) > date.today()
                 or type(start) is not int or type(end) is not int or start < 0 or end - start != len(value["quote"])

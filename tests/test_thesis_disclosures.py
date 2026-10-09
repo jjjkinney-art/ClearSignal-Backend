@@ -112,7 +112,7 @@ def test_duplicate_quotes_do_not_expand_context_or_change_reference_ids():
 
 
 def test_gate_is_idempotent_with_canonical_references_and_no_conviction(monkeypatch):
-    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"AAPL": "0000320193"})
     items, refs, _ = admit_evidence(pair() + [business_item(), risk_item()], evaluated_at="2025-08-05")
     thesis = InvestmentThesis(ticker="AAPL", company_name="Apple")
     first = apply_source_answer_gate(thesis, QUESTION, items, references=refs)
@@ -125,7 +125,7 @@ def test_gate_is_idempotent_with_canonical_references_and_no_conviction(monkeypa
 
 def test_live_fetch_spends_one_document_slot_and_keeps_both_bound_sections(monkeypatch):
     calls = []
-    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"AAPL": "0000320193"})
     monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *a, **k:
         [SimpleNamespace(url=document().final_url, timestamp='2025-08-01', document_type='10-K')])
     def fetch(*args, **kwargs):
@@ -219,3 +219,24 @@ def test_business_diagnostics_distinguish_missing_section_from_rejected_prose():
     assert missing['status'] == 'no_complete_business_section'
     assert rejected['status'] == 'no_qualifying_business_sentence'
     assert rejected['rejection_counts'] == {'numeric_or_forward_looking': 1}
+
+
+@pytest.mark.parametrize('ticker,cik', [('AAPL', '320193'), ('AA', '1675149'),
+                                      ('ACHC', '1520697'), ('TSLA', '1318605')])
+def test_business_identity_accepts_zero_padded_directory_cik_without_changing_issuer(ticker, cik):
+    url = document().final_url.replace('/320193/', f'/{cik}/')
+    doc = document(final_url=url, requested_url=url)
+    padded = cik.zfill(10)
+    stats = {}
+    items = service.extract_business_descriptions(doc, ticker=ticker, cik=padded, diagnostics=stats)
+    assert len(items) == 1
+    assert stats['status'] == 'business_extracted'
+    assert service.bound_business_description(items[0], ticker=ticker, cik=padded)
+    assert not service.bound_business_description(items[0], ticker=ticker, cik='9999999999')
+
+
+@pytest.mark.parametrize('cik', ['', '0', '0000000000', '12345678901',
+                               '320193|1318605', '320193.0', '-320193', True, None])
+def test_invalid_business_identity_cannot_authorize_sec_document(cik):
+    assert service.extract_business_descriptions(document(), ticker='AAPL', cik=cik) == []
+    assert service.bound_business_description(business_item(), ticker='AAPL', cik=cik) is None

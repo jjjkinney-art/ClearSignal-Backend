@@ -86,3 +86,25 @@ not establish that this is the only reason for all four deployed omissions.
 Rerun live acceptance after deployment; investigate remaining section-selection,
 subject and qualification gaps before valuation work. The complete business
 model, competitive position, valuation and size-tier quality gates remain open.
+
+
+## Post221 identity rejection and correction
+
+The deployed post221 diagnostics showed document_ineligible with zero sentences
+scanned for all four sampled issuers. AA, ACHC and TSLA had already retained
+combined business/risk sections. The earlier heading correction therefore did
+not resolve the upstream rejection.
+
+The production ticker directory supplies ten-digit zero-padded CIK strings;
+SEC archive paths use the numeric CIK without those leading zeroes. Business
+extraction and its final binder had passed the padded string to the strict
+archive URL matcher. Normalize only a validated positive one-to-ten-digit CIK
+into its numeric archive representation at both boundaries. Keep exact issuer,
+SEC host, accession, HTTPS, form and provenance checks. Malformed, zero,
+boolean, oversized or alternate-issuer identities cannot authorize a quote.
+
+Four regressions using directory-shaped CIKs reproduced the rejection before
+the correction and pass afterward. Live-fetch and source-pipeline fixtures now
+also use padded directory identities so production formatting is represented.
+Rerun deployment acceptance to establish actual business-description coverage;
+qualifying prose can still remain missing and full thesis quality is unproven.
