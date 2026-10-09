@@ -40,6 +40,21 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
     try:
         for claim in claims:
             ref = claim["document_ref"]
+            inline = claim.get("inline_binding")
+            if inline is not None:
+                # Filing facts retain the source observation, hash and exact
+                # context. The binder checks them again during reconstruction.
+                concept = inline.get("concept") if isinstance(inline, dict) else None
+                if (concept not in concepts or claim["ticker"] != ticker
+                        or claim["provenance"] != "reported" or claim["metric"] != f"us-gaap:{concept}"
+                        or claim["unit"] != "USD" or claim["scope"] != "consolidated"):
+                    return None
+                records.append(SecFactRecord(cik=cik, taxonomy="us-gaap", concept=concept,
+                    label=claim["label"], unit=claim["unit"], value=claim["raw_value"],
+                    start=claim["period_start"], end=claim["period_end"], filed=ref["published_at"],
+                    form=claim["source"], accession=inline.get("accession"), filing_url=ref["url"],
+                    inline_binding=inline))
+                continue
             match = re.fullmatch(r"sec:(\d+):(\d{10}-\d{2}-\d{6}):us-gaap:([A-Za-z0-9]+)", ref["reference_id"])
             if (not match or int(match[1]) != int(cik) or match[3] not in concepts
                     or claim["ticker"] != ticker or claim["provenance"] != "reported"

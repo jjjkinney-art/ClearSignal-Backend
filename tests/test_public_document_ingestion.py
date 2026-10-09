@@ -98,6 +98,31 @@ def test_extracts_visible_html_title_sections_and_hash(monkeypatch):
     assert document.source_type == "issuer_release"
     assert document.source_tier == "primary"
     assert document.trusted_for_instructions is False
+
+
+def test_opt_in_inline_facts_share_the_bounded_download_hash(monkeypatch):
+    cik, concepts = '320193', ('Revenues',)
+    url = 'https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/company.htm'
+    body = b'''<html xmlns="http://www.w3.org/1999/xhtml"
+        xmlns:x="http://www.xbrl.org/2003/instance" xmlns:ix="http://www.xbrl.org/2013/inlineXBRL"
+        xmlns:g="http://fasb.org/us-gaap/2026" xmlns:iso="http://www.xbrl.org/2003/iso4217">
+        <body><ix:header><ix:resources><x:context id="c"><x:entity>
+        <x:identifier scheme="http://www.sec.gov/CIK">320193</x:identifier></x:entity>
+        <x:period><x:startDate>2026-04-01</x:startDate><x:endDate>2026-06-30</x:endDate></x:period>
+        </x:context><x:unit id="usd"><x:measure>iso:USD</x:measure></x:unit></ix:resources></ix:header>
+        <ix:nonFraction id="f" name="g:Revenues" contextRef="c" unitRef="usd" decimals="0">100</ix:nonFraction>
+        </body></html>'''
+    response = _Response(body)
+    monkeypatch.setattr(requests, 'get', lambda *args, **kwargs: response)
+    document = fetch_public_document(url, publisher='SEC EDGAR', published_at='2026-07-28',
+        document_type='10-Q', source_type='regulatory_filing', source_tier='primary',
+        sec_periodic_limits=True, extract_tables=False, inline_fact_cik=cik,
+        inline_fact_concepts=concepts)
+    assert len(document.inline_xbrl_facts) == 1
+    assert document.content_hash == hashlib.sha256(body).hexdigest()
+    assert response.closed
+    with pytest.raises(PublicDocumentError, match='SEC periodic limits'):
+        fetch_public_document(url, inline_fact_cik=cik)
     assert response.closed is True
 
 

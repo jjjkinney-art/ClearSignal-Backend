@@ -42,6 +42,7 @@ class SecFactRecord:
     form: str
     accession: str
     filing_url: str
+    inline_binding: Optional[dict] = None
 
 
 def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[SecFactRecord]:

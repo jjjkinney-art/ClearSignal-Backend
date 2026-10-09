@@ -52,7 +52,13 @@ def bind_sec_fact(
         return None
     expected_url = (f"https://www.sec.gov/Archives/edgar/data/{int(record.cik)}/"
                     f"{accession.replace('-', '')}/{accession}-index.htm")
-    if record.filing_url != expected_url:
+    inline_reference = None
+    if record.inline_binding is not None:
+        from .sec_inline_binding import inline_document_reference
+        inline_reference = inline_document_reference(record, expected_cik=expected_cik)
+        if inline_reference is None:
+            return None
+    elif record.filing_url != expected_url:
         return None
 
     try:
@@ -89,7 +95,7 @@ def bind_sec_fact(
     if claim.value_text != expected_display:
         return None
 
-    reference = ClaimDocumentReference(
+    reference = inline_reference or ClaimDocumentReference(
         reference_id=f"sec:{record.cik}:{accession}:{record.taxonomy}:{record.concept}",
         title=f"{record.form} filed {record.filed} · {record.label}",
         provider="SEC EDGAR", url=expected_url, published_at=record.filed,

@@ -1067,6 +1067,10 @@ def _run_investment_pipeline(
             logger.warning("[router] verified SEC metrics unavailable for %s: %r", ticker, _e)
             return []
 
+    def _fetch_filing_metrics():
+        from .filing_metric_evidence import fetch_latest_filing_metrics
+        return fetch_latest_filing_metrics(ticker, question=question, as_of=as_of)
+
     def _fetch_issuer_kpis():
         if as_of:
             return []
@@ -1149,6 +1153,7 @@ def _run_investment_pipeline(
         "issuer_kpis": "sec_edgar_documents",
         "thesis_disclosures": "sec_edgar_documents",
         "issuer_releases": "issuer_official_releases",
+        "filing_metrics": "sec_edgar_documents",
     }
     _ev_tasks = {
         "fmp":       _fetch_fmp,
@@ -1179,6 +1184,9 @@ def _run_investment_pipeline(
     from .thesis_disclosures import requests_thesis_disclosures
     if not as_of and is_source_answer_request(question) and requests_thesis_disclosures(ticker, question):
         _ev_tasks["thesis_disclosures"] = _fetch_thesis_disclosures
+    from .filing_metric_evidence import requests_filing_metrics
+    if not as_of and is_source_answer_request(question) and requests_filing_metrics(ticker, question):
+        _ev_tasks["filing_metrics"] = _fetch_filing_metrics
     from .issuer_release_evidence import requests_issuer_release
     if not as_of and requests_issuer_release(ticker, question):
         _ev_tasks["issuer_releases"] = _fetch_issuer_releases
@@ -1267,6 +1275,10 @@ def _run_investment_pipeline(
     _val_ratios:     list = _ev_results.get("valuation", [])
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
+    from .filing_metric_evidence import merge_latest_filing_metrics
+    _sec_metric_evidence = merge_latest_filing_metrics(
+        _sec_metric_evidence, _ev_results.get("filing_metrics", []), ticker=ticker,
+    )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
