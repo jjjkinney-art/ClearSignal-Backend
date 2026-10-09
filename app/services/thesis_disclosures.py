@@ -16,6 +16,9 @@ from .providers import sec_provider
 
 logger = logging.getLogger(__name__)
 SECTION = "Item 1. Business"
+_BUSINESS_HEADING_PREFIX = re.compile(
+    r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Business Description|Segment Information)\s+){1,3}(?=(?:We|Our company|The company)\b)", re.I)
+
 
 
 def requests_thesis_disclosures(ticker: str, question: str) -> bool:
@@ -42,7 +45,10 @@ def _business_summary(value):
             'This is an issuer description; competitive advantage and future performance remain unverified.')
 
 
-def extract_business_descriptions(document, *, ticker, cik):
+def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
+    stats = diagnostics if diagnostics is not None else {}
+    stats.update(status="document_ineligible", sentences=0, heading_prefixes_removed=0,
+                 extracted_descriptions=0, rejection_counts={})
     if (document.document_type != "10-K" or document.publisher != "SEC EDGAR"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
             or document.extraction_method != "html" or not document.text_ready
@@ -54,13 +60,27 @@ def extract_business_descriptions(document, *, ticker, cik):
     except (TypeError, ValueError):
         return []
     window = complete_business_window(document.text)
+    stats["status"] = "no_complete_business_section"
     if not window:
         return []
     start, end = window
+    stats["status"] = "no_qualifying_business_sentence"
     result = []
     for left, right in islice(risk_sentence_spans(document.text[start:end]), 2000):
         quote = document.text[start + left:start + right]
+        stats["sentences"] += 1
+        # Normalized HTML joins block headings to the next sentence. Remove
+        # only an explicit shared heading prefix; retain the entire sentence.
+        heading = _BUSINESS_HEADING_PREFIX.match(quote)
+        if heading:
+            left += heading.end()
+            quote = document.text[start + left:start + right]
+            stats["heading_prefixes_removed"] += 1
         if not _business_quote(quote):
+            reason = ("length" if not 60 <= len(quote) <= 300 else
+                      "numeric_or_forward_looking" if re.search(r"\d|[%$€£]|\b(?:will|may|could|expect|leading|best|superior)\b", quote, re.I) else
+                      "subject_or_activity")
+            stats["rejection_counts"][reason] = stats["rejection_counts"].get(reason, 0) + 1
             continue
         offset = start + left
         try:
@@ -78,6 +98,7 @@ def extract_business_descriptions(document, *, ticker, cik):
             source_tier="primary", claim_type="reported_fact", document_type="10-K",
             filed_at=document.published_at, section=SECTION, extraction_method="html",
             business_disclosures=[value]))
+        stats.update(status="business_extracted", extracted_descriptions=len(result))
         if len(result) == 2:
             break
     return result
@@ -139,7 +160,10 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
             preserve_sec_business=True, extract_tables=False)
-        business = extract_business_descriptions(document, ticker=ticker, cik=cik)
+        diagnostics = {}
+        business = extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
+        (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
+                    ticker, document.text_selection, diagnostics)
         risks = []
         seen = set()
         for scope in RISK_TOPICS:

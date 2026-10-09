@@ -61,3 +61,28 @@ figures against primary documents. Missing annual context must stay explicit;
 an attributed subset or captured response does not count as full thesis success.
 Follow with valuation work, unseen holdout expansion, the minimum 100-issuer
 size-tier benchmark and signed-in personalization/save-reopen acceptance.
+
+
+## Post220 deployed capture and extraction follow-up
+
+The user supplied all eight post220 captured answers. All four broad theses
+added two cited risk excerpts; none included a business description. Financial
+trends retained attributed AAPL/TSLA answers and explicit operating-income gaps
+for AA/ACHC. This confirms sampled visible behavior, not independent source
+adjudication or complete thesis acceptance.
+
+Normalized HTML can join an unpunctuated heading such as Company Background or
+Overview to the next sentence. A follow-up recognizes a small shared set of
+these prefixes, removes only the heading, and preserves the entire qualifying
+sentence with its adjusted exact source span. It does not scan into arbitrary
+conditional or competitor-attributed prose to fabricate a current description.
+Count-only diagnostics distinguish missing complete sections from sentence
+rejections and record the ingestion text selection. Missing descriptions emit
+these counts at warning level so the Render CLI exposes remaining gaps without
+requiring raw source prose or credentials in logs.
+
+Local synthetic regression proves this specific boundary correction. It does
+not establish that this is the only reason for all four deployed omissions.
+Rerun live acceptance after deployment; investigate remaining section-selection,
+subject and qualification gaps before valuation work. The complete business
+model, competitive position, valuation and size-tier quality gates remain open.
