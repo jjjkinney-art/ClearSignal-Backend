@@ -132,6 +132,7 @@ class PublicDocument:
     text_window_start: int = 0
     text_selection: str = "prefix"
     canonical_content_hash: str | None = None
+    inline_xbrl_facts: tuple[dict, ...] = ()
 
 
 class _VisibleHTMLParser(HTMLParser):
@@ -573,9 +574,13 @@ def fetch_public_document(
     sec_periodic_limits: bool = False,
     preserve_sec_business: bool = False,
     extract_tables: bool = True,
+    inline_fact_cik: str | None = None,
+    inline_fact_concepts: tuple[str, ...] = (),
 ) -> PublicDocument:
     """Fetch one public document with bounded redirects and content."""
     requested_url = _validate_public_url(url)
+    if inline_fact_cik is not None and not sec_periodic_limits:
+        raise PublicDocumentError("Inline XBRL extraction requires SEC periodic limits")
     current_url = requested_url
     response = None
     layout = None
@@ -645,6 +650,11 @@ def fetch_public_document(
             source_type=source_type, source_tier=source_tier,
         )
     decoded = body.decode(encoding, errors="replace")
+    inline_facts = ()
+    if inline_fact_cik is not None:
+        from ..providers.sec_inline_facts import parse_inline_observations
+        inline_facts = parse_inline_observations(decoded, cik=inline_fact_cik,
+                                                concepts=inline_fact_concepts)
     tables: tuple[DocumentTable, ...] = ()
     text_metadata = {}
     if media_type in {"text/html", "application/xhtml+xml"}:
@@ -685,6 +695,7 @@ def fetch_public_document(
         published_at=published_at, document_type=document_type,
         source_type=source_type, source_tier=source_tier,
         tables=tables,
+        inline_xbrl_facts=inline_facts,
         **text_metadata,
     )
 

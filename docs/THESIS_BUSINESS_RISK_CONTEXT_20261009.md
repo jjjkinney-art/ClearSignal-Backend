@@ -201,3 +201,38 @@ operating-income presentation before adding a producer; standard missing tags
 are not permission to invent aliases. Continue primary-document adjudication,
 unseen issuer expansion and the 100-issuer size-tier gate before claiming broad
 quality parity. Valuation, competitive position and risk assessment remain open.
+
+Post225 deployed eight-case capture confirms the reporting-coverage check:
+Acadia's broad thesis and financial-trends views cite the June filing while
+explicitly identifying the three March comparisons. Apple, Alcoa and Tesla
+retain their existing observations and business excerpts without new warnings.
+
+Next implementation: retrieve at most one latest domestic primary filing in a
+parallel evidence task inside the existing ten-second router collection ceiling.
+Opt-in Inline XBRL parsing shares the bounded download and SHA-256 body hash.
+Accept only supported namespace-resolved standard US-GAAP consolidated USD
+duration facts, verified registrant contexts, explicit reporting dates and a
+small allowlist of numeric transformations. Preserve scale, sign and exact
+integer statement amounts. Unsupported XML, dimensions, transformations, nil
+values, duplicate IDs, conflicts and missing comparable prior periods remain
+gaps. Both comparison observations retain the document URL, hash, fact and
+context identifiers, source literal and conversion attributes, which the
+claim binder and financial foundation recheck independently of answer prose.
+
+Merge newer same-concept comparisons before admission; equivalent observations
+need only one reference, while same-period value conflicts remain visible to
+the integrity gate. Do not substitute a different revenue or net-income concept
+for an existing comparison. Explicit metric requests receive only requested
+facts. Historical, segment and issuer-KPI requests do not trigger this fallback.
+One document can carry both current and comparative prior-year observations;
+no prior-year download or fabricated quarter conversion is required. Preserve
+older admitted comparisons and the coverage warning when retrieval fails.
+
+Local targeted validation covers parser identity, scaling/sign, full-period
+comparisons, replay binding, conflicts, request scope, evidence merging and
+ingestion boundaries. A direct workspace fetch of Acadia's June document
+returned HTTP 403 on this attempt; it did not provide a live filing replay.
+Full CI and a fresh Render capture are required before declaring the current
+financial coverage gap fixed. Missing operating income and wider thesis-quality
+gates remain open. This parser is intentionally narrower than a general XBRL
+processor and does not establish coverage of foreign/custom taxonomies.

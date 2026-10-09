@@ -131,6 +131,8 @@ def _verified_claim(
         "currency": "USD" if record.unit in {"USD", "USD/shares"} else None,
         "label": record.label,
     })
+    if record.inline_binding is not None:
+        output["inline_binding"] = dict(record.inline_binding)
     return output
 
 
