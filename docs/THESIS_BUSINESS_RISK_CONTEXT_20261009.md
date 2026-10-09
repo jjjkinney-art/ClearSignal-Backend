@@ -270,3 +270,47 @@ pretax evidence receives its own latest-period coverage warning. This is a gener
 producer rule, not a ticker exception or an assertion that every issuer omits
 operating income. Wider operating-profit families, foreign taxonomies, valuation,
 primary-source adjudication and the 100-issuer size-tier gate remain priorities.
+
+Post227 live capture confirms the new separately cited pretax comparisons for
+Alcoa ($482M versus $161M, +199.4%) and Acadia ($22.007M versus $50.003M,
+-56.0%) in the June quarter. Review of the cited SEC income statements confirms
+those values, periods, units and changes. Acadia's June financial comparisons
+remain intact; Apple and Tesla retain operating-income evidence. This is narrow
+numerical corroboration, not complete factual/citation or useful-answer grading.
+
+The expanded 36-case run is incomplete: the first checkpoint contains ten core
+theses through Costco; the second contains all sixteen cases at offsets 20–35.
+There are 26 captured cases and ten missing cases at offsets 10–19. JPM's core
+thesis is the next planned case after the interrupted checkpoint. Render's email
+at 2026-10-09 13:23:30 UTC reports an instance memory limit and automatic restart;
+this checkpoint order does not prove which operation caused the restart. ASML
+has insufficient claim evidence in both captured question families. JPM's
+financial-trends view retains a latest-period revenue gap. These remain P0.
+
+Memory repair: replace the whole-document ElementTree and per-display-element
+namespace index with XML callbacks. Feed 16 KiB slices of the existing decoded
+body and retain only the requested flat facts, eligible context/unit records,
+a bounded ID inventory and one small resource subtree. Preserve namespace
+resolution, exact amounts, through-EOF duplicate checks, forward references,
+identity/period/unit checks and malformed-input rejection. Unsupported nested
+fact content still cannot become a flat number. Limits are 128 levels, 200,000
+IDs, 20,000 resource elements, 20,000 candidate facts and 256 namespaces in scope;
+a resource subtree above 64 nodes is ineligible. Budget exhaustion returns no
+inline evidence and emits a reason-only diagnostic. Other retrieval paths and
+source integrity guards are unchanged; these bounds can leave explicit evidence
+gaps on unusually complex documents.
+
+In fresh local Python processes, a synthetic 5,700,063-character document with
+300,000 unrelated span elements peaked at 104,288 KiB before the repair and
+20,636 KiB after it. These are synthetic process RSS measurements, not production
+capacity guarantees or proof of the Render incident's exact cause. A parser
+allocation regression with 100,000 display nodes also checks that valid facts
+remain identical under a six-megabyte allocation ceiling.
+
+The capture runner checkpoints the active issuer/question immediately before
+provider execution and clears it after a recorded result. A killed process can
+therefore leave an identifiable in-flight case without falsely counting it as
+captured, failed, adjudicated or complete. Full CI, deployment verification and
+a focused JPM core-thesis capture precede resuming only offsets 10–19 with a new
+output filename. Preserve the 26 prior captures and review gaps before wider
+benchmark execution. Launch readiness and the 100-issuer gate remain open.

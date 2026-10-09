@@ -87,6 +87,7 @@ def capture_matrix(*, registry: IssuerRegistry | None = None,
                         "persistence_enabled": False, "notification_delivery_enabled": False,
                         "authenticated_api_tested": False},
         quality_status="not_adjudicated", quality_pass_rate=None, launch_ready=False,
+        active_case=None,
         remaining_acceptance=["primary-source factual and citation adjudication",
                               "blind usefulness review by size and question family",
                               "representative 100-issuer registry and unseen holdout",
@@ -115,6 +116,11 @@ def capture_matrix(*, registry: IssuerRegistry | None = None,
         if not execute:
             row.update(capture_status="not_executed", review_status="not_reviewed")
         else:
+            report["active_case"] = {
+                "issuer_id": case["issuer_id"], "question_id": case["question_id"],
+                "started_at": datetime.now(timezone.utc).isoformat(),
+            }
+            update_progress()
             try:
                 captured = capture_pipeline_outputs(
                     {"schema_version": 1, "run_id": plan["run_id"], "cases": [case]},
@@ -128,6 +134,7 @@ def capture_matrix(*, registry: IssuerRegistry | None = None,
                 # safe evidence-gap answer. Avoid emitting exception secrets.
                 row.update(capture_status="execution_failed", review_status="not_reviewed",
                            error_class=type(exc).__name__)
+            report["active_case"] = None
         report["cases"].append(row)
         update_progress()
     return report
