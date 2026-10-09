@@ -289,3 +289,37 @@ def test_only_promotional_prose_preserves_missing_business_context():
     result = build_financial_foundation('AAPL', pair() + items, None, expected_cik='320193')
     assert 'business model and competitive position' in result['unanswered_parts']
     assert quote not in result['answer']
+
+
+@pytest.mark.parametrize('quote', [
+    'We focus on projects that build upon our existing operational strengths, enable us to serve customer demand growth, and that provide opportunities to unlock synergies through our technical expertise and scalable systems.',
+    'We have a number of potential acquisitions, joint ventures and wholly-owned de novo facilities in various stages of development and consideration.',
+    'We emphasize performance, attractive styling and the safety of our users and workforce in the design and manufacture of our products and are continuing to develop full self-driving technology for improved safety.',
+    'We believe our products create unmatched value for our customers and support our investment strategy.',
+    'We review opportunities to provide additional services to customers in new markets.',
+])
+def test_incidental_activity_vocabulary_cannot_authorize_business_context(quote):
+    doc = document(f'Item 1. Business Overview. {quote} {BUSINESS} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='0000320193')
+    assert [item.business_disclosures[0]['quote'] for item in items] == [BUSINESS]
+    item = business_item()
+    value = item.business_disclosures[0]
+    value.update(quote=quote, end_offset=value['start_offset'] + len(quote))
+    value['document_ref']['quote'] = quote
+    item.summary = service._business_summary(value)
+    assert service.bound_business_description(item, ticker='AAPL', cik='0000320193') is None
+
+
+@pytest.mark.parametrize('quote', [
+    'We operate as two reportable segments: (i) automotive and (ii) energy generation and storage.',
+    'The Company\u2019s line of wireless headphones includes branded products sold through retail channels.',
+    'Our company primarily distributes specialty medical devices to hospitals and outpatient providers.',
+    'We are a manufacturer of specialized industrial equipment sold through independent dealers.',
+])
+def test_current_predicates_and_defined_products_remain_exact(quote):
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='0000320193')
+    assert len(items) == 1
+    value = service.bound_business_description(items[0], ticker='AAPL', cik='0000320193')
+    assert value['quote'] == quote
+    assert doc.text[value['start_offset']:value['end_offset']] == quote

@@ -23,6 +23,17 @@ _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"plan\w* to|working to|continue\w* to grow|value[- ]creating|"
     r"creating long[- ]term value|strong returns|profitably|"
     r"high[- ]quality|cost[- ]effective)\b", re.I)
+_CURRENT_BUSINESS_PREDICATE = re.compile(
+    r"^(?:We|Our company|The company)\s+"
+    r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
+    r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
+    r"distributes?|delivers?|produces?|markets?|"
+    r"(?:are|is) (?:a|an) (?:manufacturer|provider|producer|distributor|"
+    r"operator|developer|retailer))\b|"
+    r"^(?:Our company|The company)['\u2019]s\s+"
+    r"(?:operations|business|(?:line|range|portfolio) of [^.]{1,100})\s+"
+    r"(?:(?:are|is) (?:comprised of|organized into)|"
+    r"includes?|comprises?|consists? of)\b", re.I)
 
 
 
@@ -59,8 +70,10 @@ def _business_quote_rejection(quote):
         return "numeric_or_forward_looking"
     if _BUSINESS_ASPIRATION_OR_PROMOTION.search(quote):
         return "aspirational_or_promotional"
-    if (not re.match(r"(?:We|Our company|The company)\b", quote, re.I)
-            or not re.search(r"\b(?:design|manufactur|develop|provid|sell|operat|distribut|deliver|produc)\w*\b", quote, re.I)
+    # Activity words in a strategy, belief or potential project are not a
+    # current operating predicate. Require the main subject to state the
+    # activity, current business role, segment structure or product range.
+    if (not _CURRENT_BUSINESS_PREDICATE.match(quote)
             or not quote.endswith(".")):
         return "subject_or_activity"
     return None
