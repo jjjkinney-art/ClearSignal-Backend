@@ -240,3 +240,52 @@ def test_business_identity_accepts_zero_padded_directory_cik_without_changing_is
 def test_invalid_business_identity_cannot_authorize_sec_document(cik):
     assert service.extract_business_descriptions(document(), ticker='AAPL', cik=cik) == []
     assert service.bound_business_description(business_item(), ticker='AAPL', cik=cik) is None
+
+
+@pytest.mark.parametrize('quote', [
+    'We are committed to providing the communities we serve with high-quality, cost-effective behavioral healthcare services, while growing our business, increasing profitability and creating long-term value for our stockholders.',
+    'We generate strong returns by profitably operating our business and by actively managing our working capital.',
+    'The Company also seeks to maintain a strong balance sheet through monetization of non-operating assets and further reductions in total debt, while evaluating value-creating growth opportunities.',
+    'We are focused on bringing artificial intelligence into the real world, through products and services, as well as working to develop and commercialize robots.',
+    'We generally sell our products directly to customers, and continue to grow our global retail, service and charging footprint to accelerate the widespread adoption of our products.',
+])
+def test_aspirations_and_promotional_performance_do_not_become_business_facts(quote):
+    # Reproduce sentence shapes exposed by the post222 capture in a synthetic
+    # document; neither a genuine filing nor source accuracy is asserted here.
+    doc = document(f'Item 1. Business Overview. {quote} {BUSINESS} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    stats = {}
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='0000320193', diagnostics=stats)
+    assert [item.business_disclosures[0]['quote'] for item in items] == [BUSINESS]
+    assert stats['rejection_counts']['aspirational_or_promotional'] == 1
+    # Final binding must also reject previously admitted aspirational prose.
+    item = business_item()
+    value = item.business_disclosures[0]
+    value.update(quote=quote, end_offset=value['start_offset'] + len(quote))
+    value['document_ref']['quote'] = quote
+    item.summary = service._business_summary(value)
+    assert service.bound_business_description(item, ticker='AAPL', cik='0000320193') is None
+
+
+@pytest.mark.parametrize('quote', [
+    'We provide inpatient behavioral healthcare services through our network of treatment facilities.',
+    'The Company designs, manufactures and markets smartphones and sells related services to customers.',
+    'We generally sell our products directly to customers through our retail and service locations.',
+    'The Company\u2019s operations are comprised of two reportable business segments: Alumina and Aluminum.',
+])
+def test_concrete_operations_remain_exact_issuer_descriptions(quote):
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='0000320193')
+    assert len(items) == 1
+    value = service.bound_business_description(items[0], ticker='AAPL', cik='0000320193')
+    assert value['quote'] == quote
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+
+
+def test_only_promotional_prose_preserves_missing_business_context():
+    quote = 'We generate strong returns by profitably operating our business and by actively managing our working capital.'
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='0000320193')
+    assert items == []
+    result = build_financial_foundation('AAPL', pair() + items, None, expected_cik='320193')
+    assert 'business model and competitive position' in result['unanswered_parts']
+    assert quote not in result['answer']

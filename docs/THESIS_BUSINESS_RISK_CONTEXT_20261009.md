@@ -108,3 +108,29 @@ the correction and pass afterward. Live-fetch and source-pipeline fixtures now
 also use padded directory identities so production formatting is represented.
 Rerun deployment acceptance to establish actual business-description coverage;
 qualifying prose can still remain missing and full thesis quality is unproven.
+
+## Post222 live confirmation and prose-quality correction
+
+The user supplied all eight deployed post222 answers. Each of the four broad
+theses now includes two business excerpts and two risk excerpts; financial
+answers retain their prior coverage and explicit gaps. This confirms that the
+numeric-identity rejection is resolved in the sampled live path. It does not
+independently adjudicate figures or quotes, or establish universal coverage.
+
+The excerpts also expose a qualification defect: Acadia's selections describe
+commitments and promotional returns, Alcoa's second selection a balance-sheet
+goal, and Tesla's selections include development or expansion intentions.
+Their operational vocabulary alone does not establish a concrete description
+of current business activities. Reject shared aspiration and promotional
+language at both extraction and final binding. Skip the entire mixed sentence
+rather than clipping a factual-looking clause; continue the existing bounded
+scan for later qualifying prose. Preserve exact spans and all source checks.
+If no concrete description qualifies, retain the business-context gap.
+
+Regression cases reproduce those sentence shapes, retain concrete product,
+service, channel and segment descriptions, reject old promotional proof at
+binding, and keep missing context explicit. Live acceptance must confirm the
+new selections, including whether the current subject and length rules still
+leave gaps. Full business-model quality, operating income for AA/ACHC, ACHC
+reporting freshness, competitive position, valuation, risk assessment, the
+100-issuer size-tier benchmark and signed-in personalization remain open.
