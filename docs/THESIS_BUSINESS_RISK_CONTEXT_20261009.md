@@ -134,3 +134,28 @@ new selections, including whether the current subject and length rules still
 leave gaps. Full business-model quality, operating income for AA/ACHC, ACHC
 reporting freshness, competitive position, valuation, risk assessment, the
 100-issuer size-tier benchmark and signed-in personalization remain open.
+
+## Post223 selection review and current-operation predicates
+
+The eight deployed post223 answers preserve financial coverage and retain two
+business excerpts for each sampled thesis. Previously rejected sentences no
+longer appear, but later weak selections remain: Alcoa's project strategy,
+Acadia's potential acquisitions and Tesla's design priorities. Acadia also
+returns a concrete care-service description and Tesla its segment structure.
+This is partial improvement, not acceptance of the business-context quality gate.
+
+The underlying rule searched for activity stems anywhere in a sentence, so
+development, products or a subordinate "provide" could authorize non-operating
+main statements. Require a shared affirmative present operating predicate,
+current business role, segment structure or product-range statement attached
+to the issuer subject. Apply the same rule in extraction and final binding.
+Retain existing aspiration/promotion exclusions, full sentences, adjusted exact
+spans, bounded scanning and source checks. Do not rewrite or clip strategy prose
+into a fact. Unsupported grammar remains an explicit gap rather than a guess.
+
+Five synthetic regressions reproduce the incidental-vocabulary admission before
+the correction; concrete service, product, distribution, role and segment
+statements retain proof. Deployed acceptance must inspect the selected prose,
+not just count business claims. Continue to primary-source adjudication and
+unseen issuer expansion after this gate, with valuation and the wider quality
+roadmap still open.
