@@ -201,7 +201,7 @@ def test_broad_thesis_fetches_disclosures_inside_source_pipeline(isolated_pipeli
     from test_financial_thesis_foundation import pair
     from test_thesis_disclosures import business_item, risk_item, QUESTION
     monkeypatch.setattr(verified_sec_metric_service, "fetch_verified_metric_evidence", lambda *a, **k: pair())
-    monkeypatch.setattr("app.services.providers.sec_provider._load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    monkeypatch.setattr("app.services.providers.sec_provider._load_ticker_cik_map", lambda: {"AAPL": "0000320193"})
     calls = []
     def fetch(*a, **k):
         calls.append(k)
