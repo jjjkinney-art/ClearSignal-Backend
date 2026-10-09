@@ -13,7 +13,7 @@ from ..integrity.sec_metric_evidence import comparable_metric_evidence
 from ..providers.sec_client import SecFactRecord
 
 CORE_METRICS = {
-    "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"),
+    "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
     "operating income": ("OperatingIncomeLoss",),
     "net income": ("NetIncomeLoss", "ProfitLoss"),
     "operating cash flow": ("NetCashProvidedByUsedInOperatingActivities",),
@@ -21,6 +21,13 @@ CORE_METRICS = {
 SUPPLEMENTARY_METRICS = {
     "pretax income": ("IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",),
 }
+
+
+def financial_metric_label(name: str, concept: str) -> str:
+    """Retain the bank revenue definition instead of relabeling it as gross sales."""
+    if name == "revenue" and concept == "RevenuesNetOfInterestExpense":
+        return "revenue net of interest expense"
+    return name
 
 
 def requests_profitability_context(question: str | None) -> bool:
@@ -89,7 +96,8 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
                 accession=match[2], filing_url=ref["url"],
             ))
         rebuilt = comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
-                                             concepts=concepts, metric_name=name)
+                                             concepts=concepts,
+                                             metric_name=financial_metric_label(name, records[0].concept))
         if (rebuilt is None or rebuilt.verified_claims != claims
                 or rebuilt.summary != item.summary or rebuilt.url != item.url
                 or rebuilt.timestamp != item.timestamp
@@ -138,16 +146,17 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             missing.append(name)
             continue
         item, rebuilt, reference_id = qualified[0]
+        display_name = financial_metric_label(name, rebuilt.verified_claims[0]["metric"].split(":")[-1])
         current, prior = rebuilt.verified_claims
         value, baseline = Decimal(str(current["raw_value"])), Decimal(str(prior["raw_value"]))
         movement = "higher" if value > baseline else "lower" if value < baseline else "unchanged"
         signal = "supporting" if value > 0 and value > baseline else "counter_evidence"
-        text = f"Reported {name} is {movement} than the comparable prior-year amount."
+        text = f"Reported {display_name} is {movement} than the comparable prior-year amount."
         if value <= 0:
-            text += f" The current reported {name} is non-positive."
-        interpretations.append({"kind": "financial_inference", "metric": name,
+            text += f" The current reported {display_name} is non-positive."
+        interpretations.append({"kind": "financial_inference", "metric": display_name,
             "signal": signal, "text": text, "reference_ids": [reference_id],
-            "conditional_test": f"A future comparable {name} below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."})
+            "conditional_test": f"A future comparable {display_name} below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."})
         rows.append({"claim": rebuilt.summary, "reference_id": reference_id,
                      "claim_kind": "reported_financial_comparison"})
         selected.append(item)

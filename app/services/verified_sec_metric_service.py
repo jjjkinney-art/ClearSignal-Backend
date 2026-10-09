@@ -19,7 +19,7 @@ _TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z])?\Z")
 _LATEST_PERIOD_ANCHOR = ("Assets", "USD")
 _MAX_STALENESS_DAYS = 550
 _METRICS = (
-    (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues"),
+    (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
      "revenue", ("revenue", "revenues", "sales", "top line", "top-line"), "USD", "duration"),
     (("GrossProfit",), "gross profit", ("gross profit", "gross margin"), "USD", "duration"),
     (("OperatingIncomeLoss",), "operating income",
@@ -334,7 +334,7 @@ def fetch_verified_metric_evidence(
     if not cik or not cik.isdigit():
         return []
     metrics = _requested_metrics(question)
-    from .financial_thesis_foundation import requests_profitability_context
+    from .financial_thesis_foundation import requests_profitability_context, financial_metric_label
     supplementary = next(metric for metric in _METRICS if metric[1] == "pretax income")
     context_requested = requests_profitability_context(question)
     if context_requested and supplementary not in metrics:
@@ -369,13 +369,21 @@ def fetch_verified_metric_evidence(
         # Concept aliases are ordered, not interchangeable observations. Try
         # each explicit taxonomy concept separately so an issuer exposing both
         # a narrow and broad concept cannot create a synthetic comparison.
-        item = next((
+        candidates = [
             candidate for concept in concepts
             if (candidate := builder(
                 records, ticker=ticker, expected_cik=cik,
-                concepts=(concept,), metric_name=metric_name, unit=unit,
+                concepts=(concept,), metric_name=financial_metric_label(metric_name, concept), unit=unit,
             )) is not None
-        ), None)
+        ]
+        item = candidates[0] if candidates else None
+        if metric_name == "revenue" and item is not None:
+            # A complete net-revenue pair may supersede older generic revenue.
+            # Never join values from different concepts or reporting durations.
+            bank = next((candidate for candidate in candidates
+                         if candidate.verified_claims[0]["metric"] == "us-gaap:RevenuesNetOfInterestExpense"), None)
+            if bank is not None and bank.reporting_period_end > item.reporting_period_end:
+                item = bank
         if item is not None and latest_issuer_end and item.reporting_period_end:
             age = (
                 date.fromisoformat(latest_issuer_end)

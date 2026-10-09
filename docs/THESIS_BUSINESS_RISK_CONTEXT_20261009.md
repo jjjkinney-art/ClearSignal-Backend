@@ -314,3 +314,46 @@ captured, failed, adjudicated or complete. Full CI, deployment verification and
 a focused JPM core-thesis capture precede resuming only offsets 10–19 with a new
 output filename. Preserve the 26 prior captures and review gaps before wider
 benchmark execution. Launch readiness and the 100-issuer gate remain open.
+
+Post228 live JPM core-thesis capture completed, followed by all ten missing cases
+at offsets 10–19 on the same Render instance. The 36-case cohort is captured
+across runs; this demonstrates completion of these post-repair runs, not a
+production capacity guarantee or a complete quality adjudication. The new ten
+answers contain eight partial core theses, one attributed Apple financial view
+and one partial Alcoa financial view. JPM retains older revenue and no admitted
+business/risk context; XOM also lacks business/risk context. Competitive position,
+valuation/expected returns and risk impact remain unanswered in core theses.
+
+The June 2026 JPM income statement reports total net revenue using the standard
+us-gaap:RevenuesNetOfInterestExpense concept, previously outside the supported
+revenue family. Primary statement and taxonomy details reviewed:
+https://www.sec.gov/Archives/edgar/data/19617/000162828026054343/R2.htm
+It reports $57,347 million versus $44,912 million for the June quarters. These
+values are primary-source diagnosis, not a hardcoded production answer.
+
+Bank revenue repair admits complete same-concept USD comparisons with the
+explicit label "revenue net of interest expense" in both Company Facts and the
+bounded latest-filing fallback. A complete newer net-revenue comparison can
+replace a whole older generic-revenue comparison; it never combines concepts
+across the current/prior pair or computes bank revenue from component sums.
+Same-period alternatives cannot silently replace existing comparisons. Identity,
+period, content binding, duplicate and source-reference checks remain required.
+Reconstruction and thesis interpretation retain the net-revenue label, including
+coverage warnings for older net-revenue evidence. Operating income, bank-specific
+cash-flow interpretation, competitive position, valuation and risk-impact gaps
+remain open. No ticker allowlist or universal quality assertion is added.
+
+Initially local dependency restoration was unavailable; syntax compilation
+and diff checks are available locally, while the pinned Python 3.11 CI gate must
+execute the new cross-path tests and full suite before merge/deployment. A fresh
+JPM capture after deployment must confirm latest-period revenue and supply
+retrieval diagnostics before changing the missing-disclosure path. ASML financial
+coverage, generic thesis language and the 100-issuer size-tier gate remain P0.
+
+First PR229 CI completed the isolated full regression with two failures, both
+in the new bank test file. Its inline fixture produces a padded canonical CIK,
+but the replay test supplied an unpadded identity that changed the exact citation
+ID on reconstruction. The fixture now uses the producer's canonical CIK; source
+binding checks remain intact. After local dependency restoration, all five bank
+tests and the 216-test targeted producer/fallback/foundation/source/router/parser
+set pass. Full CI must rerun on the corrected tree before merge and deployment.
