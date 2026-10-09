@@ -2,7 +2,7 @@
 from datetime import date
 import re
 
-from .financial_thesis_foundation import CORE_METRICS, SUPPLEMENTARY_METRICS, _rebuild
+from .financial_thesis_foundation import CORE_METRICS, SUPPLEMENTARY_METRICS, _rebuild, financial_metric_label
 from .thesis_disclosures import _business_issuer_url
 
 
@@ -66,7 +66,8 @@ def reporting_coverage(ticker, material, selected, references=None):
                 continue
             ref = _reference(item, index, references)
             if ref:
-                behind.append({'metric': name, 'comparison_period_end': rebuilt.reporting_period_end,
+                label = financial_metric_label(name, rebuilt.verified_claims[0]['metric'].split(':')[-1])
+                behind.append({'metric': label, 'comparison_period_end': rebuilt.reporting_period_end,
                                'reference_id': ref})
     if not behind:
         return None, '', []

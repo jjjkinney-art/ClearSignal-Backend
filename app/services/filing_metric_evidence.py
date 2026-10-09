@@ -9,6 +9,7 @@ from ..providers.sec_inline_facts import validated_observation
 from .financial_thesis_foundation import (
     CORE_METRICS, SUPPLEMENTARY_METRICS, _rebuild,
     requests_profitability_context, requests_pretax_income,
+    financial_metric_label,
 )
 from .providers import sec_provider
 from .public_document_ingestion import fetch_public_document
@@ -69,7 +70,7 @@ def evidence_from_filing(document, filing, *, ticker, cik):
     for name, aliases in FILING_METRICS.items():
         for concept in aliases:
             item = comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
-                                              concepts=(concept,), metric_name=name)
+                                              concepts=(concept,), metric_name=financial_metric_label(name, concept))
             if item and len(item.verified_claims) == 2 and item.reporting_period_end == latest.isoformat():
                 evidence.append(item)
                 break
@@ -152,7 +153,14 @@ def merge_latest_filing_metrics(company_facts, filing_facts, *, ticker, question
             same_metric = [(old, rebuilt) for old, rebuilt in same_metric if rebuilt is not None]
             if same_metric and any(old.verified_claims[0]['metric'] != candidate.verified_claims[0]['metric']
                                    for old, _ in same_metric):
-                break
+                # Bank net revenue is a distinct, explicitly labeled revenue
+                # measure. Replace only whole older comparisons, never one side
+                # of a pair; equal-period alternatives remain separate gaps.
+                metrics = {candidate.verified_claims[0]['metric'],
+                           *(old.verified_claims[0]['metric'] for old, _ in same_metric)}
+                if (name != 'revenue' or 'us-gaap:RevenuesNetOfInterestExpense' not in metrics
+                        or candidate.reporting_period_end <= max(rebuilt.reporting_period_end for _, rebuilt in same_metric)):
+                    break
             latest_old = max((rebuilt.reporting_period_end for _, rebuilt in same_metric), default='')
             if candidate.reporting_period_end < latest_old:
                 break
