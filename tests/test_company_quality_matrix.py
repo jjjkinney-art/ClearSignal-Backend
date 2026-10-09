@@ -54,7 +54,9 @@ def test_failed_capture_continues_checkpoints_and_cannot_be_a_useful_answer():
     assert report['capture_counts']=={'captured':2,'execution_failed':1}
     assert report['batch_complete'] is True
     assert report['next_offset']==3
-    assert [len(r['cases']) for r in checkpoints]==[0,1,2,3]
+    assert [len(r['cases']) for r in checkpoints]==[0,0,1,1,2,2,3]
+    assert report['active_case'] is None
+    assert [r['active_case']['issuer_id'] for r in checkpoints if r['active_case']] == calls
     assert 'secret' not in json.dumps(report)
     assert report['cases'][1]['error_class']=='RuntimeError'
     assert report['quality_status']=='not_adjudicated'
@@ -106,3 +108,23 @@ def test_matrix_hash_tracks_question_scope_and_order():
     b=build_matrix(tickers=['AAPL'],families=['financial_trends'])
     assert a['matrix_sha256']!=b['matrix_sha256']
     assert a['run_id']!=b['run_id']
+
+
+def test_inflight_checkpoint_preserves_resume_offset_without_claiming_capture_or_quality():
+    checkpoints = []
+    def checkpoint(report):
+        checkpoints.append(json.loads(json.dumps(report)))
+    def runner(ticker, question, request):
+        latest = checkpoints[-1]
+        assert latest['active_case']['issuer_id'] == ticker
+        assert latest['active_case']['question_id'] == 'core_thesis'
+        assert latest['active_case']['started_at']
+        assert latest['next_offset'] == 0
+        assert latest['capture_counts'] == {}
+        assert latest['batch_complete'] is False
+        assert latest['launch_ready'] is False
+        return {'answer': {'source_answer': {'status': 'partial'}}}
+    report = capture_matrix(execute=True, limit=1, runner=runner, checkpoint=checkpoint)
+    assert report['active_case'] is None
+    assert report['next_offset'] == 1 and report['batch_complete'] is True
+    assert report['quality_pass_rate'] is None
