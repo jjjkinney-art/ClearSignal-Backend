@@ -15,7 +15,7 @@ from app.services import router_service as router
 @pytest.fixture
 def isolated_pipeline(monkeypatch):
     from app.services import (
-        issuer_release_evidence, live_issuer_kpi_service, session_context_service,
+        issuer_release_evidence, live_issuer_kpi_service, session_context_service, thesis_disclosures,
         verified_sec_fact_service, verified_sec_metric_service,
     )
 
@@ -27,6 +27,7 @@ def isolated_pipeline(monkeypatch):
                   "fetch_analyst_estimates"]),
         (live_issuer_kpi_service, ["fetch_live_issuer_kpi_evidence"]),
         (issuer_release_evidence, ["fetch_issuer_release_evidence"]),
+        (thesis_disclosures, ["fetch_thesis_disclosures"]),
         (verified_sec_metric_service, ["fetch_verified_metric_evidence"]),
     ):
         for name in names:
@@ -193,3 +194,34 @@ def test_historical_replay_does_not_fetch_current_release(isolated_pipeline, mon
         as_of="2026-09-26",
     )
     assert response.answer["evidence_references"] == []
+
+
+def test_broad_thesis_fetches_disclosures_inside_source_pipeline(isolated_pipeline, monkeypatch):
+    from app.services import thesis_disclosures, verified_sec_metric_service
+    from test_financial_thesis_foundation import pair
+    from test_thesis_disclosures import business_item, risk_item, QUESTION
+    monkeypatch.setattr(verified_sec_metric_service, "fetch_verified_metric_evidence", lambda *a, **k: pair())
+    monkeypatch.setattr("app.services.providers.sec_provider._load_ticker_cik_map", lambda: {"AAPL": "320193"})
+    calls = []
+    def fetch(*a, **k):
+        calls.append(k)
+        return [business_item(), risk_item()]
+    monkeypatch.setattr(thesis_disclosures, "fetch_thesis_disclosures", fetch)
+    response = router._run_investment_pipeline(CompanyContext(ticker="AAPL", company_name="Apple"),
+        QUESTION, "business-risk-thesis", side_effects_enabled=False)
+    assert len(calls) == 1
+    source = response.answer["source_answer"]
+    assert source["status"] == "partial" and isolated_pipeline == []
+    assert any(row["claim_kind"] == "issuer_business_description" for row in source["claims"])
+    assert any(row["claim_kind"] == "issuer_disclosed_risk" for row in source["claims"])
+    assert response.answer["investment_thesis"]["confidence_score"] == 0
+
+
+def test_historical_broad_thesis_does_not_fetch_current_disclosures(isolated_pipeline, monkeypatch):
+    from app.services import thesis_disclosures
+    def unexpected(*a, **k):
+        pytest.fail("current filing retrieval must not run during historical replay")
+    monkeypatch.setattr(thesis_disclosures, "fetch_thesis_disclosures", unexpected)
+    router._run_investment_pipeline(CompanyContext(ticker="AAPL", company_name="Apple"),
+        "What is the investment thesis for Apple? Cite material claims.",
+        "historical-thesis", as_of="2026-09-26", side_effects_enabled=False)

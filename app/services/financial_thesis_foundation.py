@@ -140,8 +140,43 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         f"{index}. {row['claim']} [{row['reference_id']}]" for index, row in enumerate(rows, start=1))
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}" for row in interpretations)
-    unanswered = missing + ["business model and competitive position", "valuation and expected returns",
+    from .thesis_disclosures import bound_business_description, bound_thesis_risk
+    disclosures = []
+    counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0}
+    seen = set()
+    for index, item in enumerate(items, start=1):
+        value = (bound_business_description(item, ticker=ticker, cik=expected_cik)
+                 or bound_thesis_risk(item, ticker=ticker))
+        if not value or value["quote"] in seen or counts[value["claim_kind"]] >= 2:
+            continue
+        reference_id = f"E{index}"
+        if references is not None:
+            ref = next((ref for ref in references
+                if ref.get("title") == item.title.strip()[:300]
+                and ref.get("source") == item.source.strip()[:120]
+                and ref.get("url") == item.url and ref.get("published_at") == item.timestamp), None)
+            if not ref or not re.fullmatch(r"E[1-9]\d*", str(ref.get("id", ""))):
+                continue
+            reference_id = ref["id"]
+        row = {"claim": item.summary, "reference_id": reference_id,
+               "claim_kind": value["claim_kind"]}
+        disclosures.append(row)
+        rows.append(row)
+        selected.append(item)
+        seen.add(value["quote"])
+        counts[value["claim_kind"]] += 1
+    if disclosures:
+        answer += "\n\nOfficial business and sampled risk context\n" + "\n\n".join(
+            f"{row['claim']} [{row['reference_id']}]" for row in disclosures)
+        answer += ("\nThese short excerpts are partial context, not a complete business model or a ranking "
+                   "of the most material risks. Disclosed possibilities do not establish occurrence, "
+                   "probability or a quantified effect on the financial case.")
+    unanswered = missing + ["competitive position" if counts["issuer_business_description"] else
+                            "business model and competitive position", "valuation and expected returns",
                             "issuer-disclosed operating-risk mechanisms"]
+    if counts["issuer_disclosed_risk"]:
+        unanswered.remove("issuer-disclosed operating-risk mechanisms")
+        unanswered.append("risk materiality, likelihood and effect on the investment case")
     answer += "\n\n" + limitation
     answer += ("\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell "
                "recommendation. Unverified requested parts: " + "; ".join(unanswered) + ".")

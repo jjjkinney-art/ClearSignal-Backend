@@ -145,3 +145,17 @@ def risk_sentence_spans(text: str):
         if start < end:
             yield start, end
         start = end
+
+
+BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*[.:—–-]?\s*{_word('Business')}\b", re.I)
+
+
+def complete_business_window(text: str):
+    """A bounded 10-K Item 1 body, excluding TOC and quoted references."""
+    for heading in islice(BUSINESS_START.finditer(text), 64):
+        if rejected_risk_heading(text, heading.end(), start=heading.start()):
+            continue
+        for closing in islice(RISK_START.finditer(text, heading.end(), min(len(text), heading.end() + 160_000)), 64):
+            if not rejected_risk_heading(text, closing.end(), start=closing.start()):
+                return heading.end(), closing.start()
+    return None
