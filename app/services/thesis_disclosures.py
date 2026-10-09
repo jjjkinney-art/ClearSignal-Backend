@@ -18,6 +18,11 @@ logger = logging.getLogger(__name__)
 SECTION = "Item 1. Business"
 _BUSINESS_HEADING_PREFIX = re.compile(
     r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Business Description|Segment Information)\s+){1,3}(?=(?:We|Our company|The company)\b)", re.I)
+_BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
+    r"\b(?:committed to|focused on|seeks? to|aims? to|strives? to|intend\w*|"
+    r"plan\w* to|working to|continue\w* to grow|value[- ]creating|"
+    r"creating long[- ]term value|strong returns|profitably|"
+    r"high[- ]quality|cost[- ]effective)\b", re.I)
 
 
 
@@ -41,12 +46,24 @@ def requests_thesis_disclosures(ticker: str, question: str) -> bool:
 
 
 def _business_quote(quote):
+    return _business_quote_rejection(quote) is None
+
+
+def _business_quote_rejection(quote):
     # Exact complete, short qualitative sentences only. Numbers, forecasts and
-    # promotional assertions do not become business-model facts here.
-    return (isinstance(quote, str) and 60 <= len(quote) <= 300
-            and bool(re.match(r"(?:We|Our company|The company)\b", quote, re.I))
-            and bool(re.search(r"\b(?:design|manufactur|develop|provid|sell|operat|distribut|deliver|produc)\w*\b", quote, re.I))
-            and quote.endswith(".") and not re.search(r"\d|[%$€£]|\b(?:will|may|could|expect|leading|best|superior)\b", quote, re.I))
+    # mixed operational/aspirational prose do not become business-model facts.
+    # Do not clip a factual-looking clause out of a promotional sentence.
+    if not isinstance(quote, str) or not 60 <= len(quote) <= 300:
+        return "length"
+    if re.search(r"\d|[%$€£]|\b(?:will|may|could|expect|leading|best|superior)\b", quote, re.I):
+        return "numeric_or_forward_looking"
+    if _BUSINESS_ASPIRATION_OR_PROMOTION.search(quote):
+        return "aspirational_or_promotional"
+    if (not re.match(r"(?:We|Our company|The company)\b", quote, re.I)
+            or not re.search(r"\b(?:design|manufactur|develop|provid|sell|operat|distribut|deliver|produc)\w*\b", quote, re.I)
+            or not quote.endswith(".")):
+        return "subject_or_activity"
+    return None
 
 
 def _business_summary(value):
@@ -86,10 +103,8 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
             left += heading.end()
             quote = document.text[start + left:start + right]
             stats["heading_prefixes_removed"] += 1
-        if not _business_quote(quote):
-            reason = ("length" if not 60 <= len(quote) <= 300 else
-                      "numeric_or_forward_looking" if re.search(r"\d|[%$€£]|\b(?:will|may|could|expect|leading|best|superior)\b", quote, re.I) else
-                      "subject_or_activity")
+        reason = _business_quote_rejection(quote)
+        if reason:
             stats["rejection_counts"][reason] = stats["rejection_counts"].get(reason, 0) + 1
             continue
         offset = start + left
