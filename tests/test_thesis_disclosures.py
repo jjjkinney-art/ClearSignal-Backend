@@ -671,3 +671,64 @@ def test_current_predicates_and_defined_products_remain_exact(quote):
     value = service.bound_business_description(items[0], ticker='AAPL', cik='0000320193')
     assert value['quote'] == quote
     assert doc.text[value['start_offset']:value['end_offset']] == quote
+
+
+
+@pytest.mark.parametrize('name,heading', [
+    ('Quanta Works, Inc.', 'Our Products '),
+    ('General Instruments Corporation', ''),
+])
+def test_named_issuer_operations_require_directory_identity_and_preserve_exact_span(monkeypatch, name, heading):
+    from app.services import issuer_identity
+    ticker, cik = 'ZQXN', '1234567'
+    subject = issuer_identity.name_key(name).title()
+    quote = f'{subject} enables laboratories to organize sample workflows using its software products and integration services.'
+    directory = issuer_identity.parse_directory({'0': {'ticker': ticker, 'title': name, 'cik_str': int(cik)}})
+    monkeypatch.setattr(issuer_identity, '_load_directory', lambda: directory)
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {ticker: cik})
+    url = document().final_url.replace('/320193/', f'/{cik}/')
+    fees = 'We generate revenue from sales of subscriptions to our software and related customer support services.'
+    doc = document(f'Item 1. Business {fees} {BUSINESS} {heading}{quote} '
+                   f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments', final_url=url, requested_url=url)
+    monkeypatch.setattr(service.sec_provider, 'fetch_recent_filings', lambda *a, **kw: [
+        SimpleNamespace(url=url, timestamp=doc.published_at, document_type='10-K')])
+    monkeypatch.setattr(service, 'fetch_public_document', lambda *a, **kw: doc)
+    fetched = service.fetch_thesis_disclosures(ticker, question=f'What is the investment thesis for {ticker}?')
+    items = [item for item in fetched if item.business_disclosures]
+    assert len(items) == 2 and items[0].business_disclosures[0]['quote'] == quote
+    value = service.bound_business_description(items[0], ticker=ticker, cik=cik)
+    assert value and doc.text[value['start_offset']:value['end_offset']] == quote
+    admitted, refs, _ = admit_evidence(pair(ticker=ticker, cik=cik) + items, evaluated_at='2025-08-05')
+    thesis = InvestmentThesis(ticker=ticker, company_name=name)
+    status = apply_source_answer_gate(thesis, f'What is the investment thesis for {ticker}? Cite material claims.',
+                                     admitted, references=refs)
+    assert status['status'] == 'partial' and quote in thesis.direct_answer
+    assert 'competitive position' in status['unanswered_parts']
+    assert 'valuation and expected returns' in status['unanswered_parts']
+    assert thesis.confidence_score == 0
+    other = issuer_identity.parse_directory({'0': {'ticker': ticker, 'title': 'Other Issuer Inc.', 'cik_str': int(cik)}})
+    monkeypatch.setattr(issuer_identity, '_load_directory', lambda: other)
+    assert service.bound_business_description(items[0], ticker=ticker, cik=cik) is None
+
+
+@pytest.mark.parametrize('failure', ['other_name', 'alias', 'wrong_cik', 'unavailable', 'promotional', 'forecast', 'incomplete'])
+def test_named_issuer_does_not_relax_identity_or_qualitative_guardrails(monkeypatch, failure):
+    from app.services import issuer_identity
+    ticker, cik = 'ZQXN', '1234567'
+    directory = issuer_identity.parse_directory({'0': {'ticker': ticker, 'title': 'Quanta Works Inc.',
+        'cik_str': 9999999 if failure == 'wrong_cik' else int(cik)}})
+    if failure == 'unavailable':
+        directory = issuer_identity.Directory({}, {})
+    monkeypatch.setattr(issuer_identity, '_load_directory', lambda: directory)
+    subject = 'Other Issuer' if failure == 'other_name' else 'Quanta' if failure == 'alias' else 'Quanta Works'
+    quote = f'{subject} enables laboratories to organize sample workflows using software products and integration services.'
+    if failure == 'promotional':
+        quote = quote[:-1] + ' with superior results.'
+    if failure == 'forecast':
+        quote = quote[:-1] + ' that will dominate the market.'
+    if failure == 'incomplete':
+        quote = quote[:-1]
+    url = document().final_url.replace('/320193/', f'/{cik}/')
+    doc = document(f'Item 1. Business Our Products {quote} Item 1A. Risk Factors '
+                   f'{RISK} Item 1B. Unresolved Staff Comments', final_url=url, requested_url=url)
+    assert service.extract_business_descriptions(doc, ticker=ticker, cik=cik) == []

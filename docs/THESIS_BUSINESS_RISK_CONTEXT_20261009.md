@@ -702,3 +702,36 @@ when all risk context is withheld. Named refinancing and supply-chain subjects
 remain eligible. CI and a fresh deployed capture must confirm the resulting
 sample. The focused suites pass 235 tests. Full business/product identity, competitive evidence, valuation,
 mechanism-based invalidation and the 100-company adjudicated gate remain P0.
+
+
+## Post241 live verification and named issuer operating descriptions
+
+PR241 passed all CI steps, merged as 0fc1b2b46a70bc1604cc138a0588b8ec16016fac,
+and deployed healthy. The supplied ETSY capture removes the unresolved actions
+excerpt and replaces it with a technology/security mechanism. Marketplace
+fee context and all four financial comparisons remain. The answer is partial;
+quality adjudication and launch readiness remain open.
+
+DOCU's subscription/service context still does not describe its product function.
+Its annual Item 1 contains a qualitative company-named agreement-process
+description, but the existing pronoun-only activity patterns omit it:
+https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm
+
+The shared extractor can now admit a company-named current operating predicate
+only when the subject matches the exact current SEC directory name (using the
+existing legal-suffix normalization) and its CIK matches the source-bound issuer.
+Final binding repeats this check; unavailable or changed identity fails closed.
+No shortened alias, ticker-specific name, product expansion or predecessor
+business context is authorized. Existing numeric, future and promotional
+exclusions remain. A verified named operating description takes presentation
+priority over generic subscription/segment context within the two-item cap.
+
+Known heading removal is allowed before a named sentence only after verifying
+its subject. A company name beginning with a heading-like word such as General
+must remain intact. Exact quotes and offsets are retained. Synthetic tests
+cover fetch through admission and final answers, identity changes, unavailable
+identity, wrong CIK, other names, shortened aliases, promotional claims and
+forecasts. Local workspace writes stalled during implementation and restoration,
+so no local pass is claimed for this change. Full repository CI must validate
+the remotely prepared code before merge. A fresh DOCU capture and full 36-case
+cohort rerun remain required, followed by broader adjudicated quality coverage.
