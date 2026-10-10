@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import Sequence
 
 from ..providers.sec_client import SecFactRecord
+from ..providers.sec_fact_policy import ANNUAL_FORM_PREFIXES, REPORTING_CURRENCIES
 from ..schemas import RetrievedEvidence
 from .provenance import Provenance, QuantitativeClaim
 from .sec_fact_binding import bind_sec_fact
@@ -30,6 +31,8 @@ def _scaled(value: int | float, *, prefix: str = "", suffix: str = "") -> str:
 def _value(value: int | float, unit: str) -> str:
     if unit == "USD":
         return _scaled(value, prefix="$")
+    if unit == "EUR":
+        return _scaled(value, suffix=" EUR")
     if unit == "shares":
         return _scaled(value, suffix=" shares")
     if unit == "USD/shares":
@@ -52,7 +55,7 @@ def _duration_matches_form(record: SecFactRecord) -> bool:
     days = _duration(record)
     if days is None:
         return False
-    if record.form.startswith("10-K"):
+    if record.form.startswith(ANNUAL_FORM_PREFIXES):
         return 330 <= days <= 385
     if record.form.startswith("10-Q"):
         # A 10-Q may expose a discrete quarter or a year-to-date duration.
@@ -97,6 +100,8 @@ def _verified_claim(
         exact = exact.rstrip("0").rstrip(".")
     if record.unit == "USD":
         value_text = f"${exact}"
+    elif record.unit == "EUR":
+        value_text = f"{exact} EUR"
     elif record.unit == "shares":
         value_text = f"{exact} shares"
     elif record.unit == "USD/shares":
@@ -123,12 +128,12 @@ def _verified_claim(
         "period_start": record.start,
         "period_end": record.end,
         "period": (
-            f"FY{record.end[:4]}" if record.form.startswith("10-K")
+            f"FY{record.end[:4]}" if record.form.startswith(ANNUAL_FORM_PREFIXES)
             else (f"quarter ended {record.end}" if _duration(record) is not None and _duration(record) <= 100
                   else f"year-to-date period {record.start} to {record.end}")
         ),
         "scope": "consolidated",
-        "currency": "USD" if record.unit in {"USD", "USD/shares"} else None,
+        "currency": record.unit if record.unit in REPORTING_CURRENCIES else "USD" if record.unit == "USD/shares" else None,
         "label": record.label,
     })
     if record.inline_binding is not None:
@@ -142,7 +147,7 @@ def comparable_metric_evidence(
 ) -> RetrievedEvidence | None:
     """Return a latest-versus-prior-period fact, or fail closed on ambiguity."""
     if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
-            or unit not in {"USD", "shares", "USD/shares"}):
+            or unit not in {*REPORTING_CURRENCIES, "shares", "USD/shares"}):
         return None
     eligible = [
         record for record in records
@@ -162,7 +167,7 @@ def comparable_metric_evidence(
     # comparison uses the shortest duration; a 10-K comparison must use the
     # longest annual duration and never an embedded fourth-quarter fact.
     period_families = {
-        "annual" if record.form.startswith("10-K") else "quarterly"
+        "annual" if record.form.startswith(ANNUAL_FORM_PREFIXES) else "quarterly"
         for record in latest_rows
     }
     if len(period_families) != 1:
@@ -180,14 +185,14 @@ def comparable_metric_evidence(
     if current is None:
         return None
     current_days = _duration(current)
-    current_family = "annual" if current.form.startswith("10-K") else "quarterly"
+    current_family = "annual" if current.form.startswith(ANNUAL_FORM_PREFIXES) else "quarterly"
 
     candidates = []
     current_end = date.fromisoformat(current.end)
     for prior in eligible:
         if prior.concept != current.concept or prior.end >= current.end:
             continue
-        prior_family = "annual" if prior.form.startswith("10-K") else "quarterly"
+        prior_family = "annual" if prior.form.startswith(ANNUAL_FORM_PREFIXES) else "quarterly"
         prior_days = _duration(prior)
         gap = (current_end - date.fromisoformat(prior.end)).days
         if (prior_family == current_family and prior_days is not None
@@ -218,6 +223,8 @@ def comparable_metric_evidence(
             record, ticker=ticker, expected_cik=expected_cik,
         )) is not None
     ]
+    if len(verified_claims) != 2:
+        return None
     return RetrievedEvidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,
@@ -236,7 +243,7 @@ def comparable_instant_metric_evidence(
 ) -> RetrievedEvidence | None:
     """Return a latest-versus-prior-year point-in-time fact."""
     if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
-            or unit not in {"USD", "shares"}):
+            or unit not in {*REPORTING_CURRENCIES, "shares"}):
         return None
     eligible = [
         record for record in records
@@ -252,12 +259,12 @@ def comparable_instant_metric_evidence(
     current = _latest_unambiguous_fact(latest_rows, include_start=False)
     if current is None:
         return None
-    current_family = "annual" if current.form.startswith("10-K") else "quarterly"
+    current_family = "annual" if current.form.startswith(ANNUAL_FORM_PREFIXES) else "quarterly"
     current_end = date.fromisoformat(current.end)
     candidates = [
         record for record in eligible
         if record.concept == current.concept and record.end < current.end
-        and ("annual" if record.form.startswith("10-K") else "quarterly") == current_family
+        and ("annual" if record.form.startswith(ANNUAL_FORM_PREFIXES) else "quarterly") == current_family
         and 350 <= (current_end - date.fromisoformat(record.end)).days <= 380
     ]
     if not candidates:
@@ -285,6 +292,8 @@ def comparable_instant_metric_evidence(
             record, ticker=ticker, expected_cik=expected_cik,
         )) is not None
     ]
+    if len(verified_claims) != 2:
+        return None
     return RetrievedEvidence(
         title=f"{ticker} {metric_name}: {_value(current.value, unit)} ({current.end})",
         source="SEC EDGAR — structured XBRL fact", summary=summary,

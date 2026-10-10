@@ -11,6 +11,7 @@ import re
 
 from ..integrity.sec_metric_evidence import comparable_metric_evidence
 from ..providers.sec_client import SecFactRecord
+from ..providers.sec_fact_policy import REPORTING_CURRENCIES
 
 CORE_METRICS = {
     "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
@@ -82,7 +83,8 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
             if (not match or int(match[1]) != int(cik) or match[3] not in concepts
                     or claim["ticker"] != ticker or claim["provenance"] != "reported"
                     or claim["metric"] != f"us-gaap:{match[3]}"
-                    or claim["unit"] != "USD" or claim["scope"] != "consolidated"
+                    or claim["unit"] not in REPORTING_CURRENCIES or claim.get("currency") != claim["unit"]
+                    or claim["scope"] != "consolidated"
                     or ref["provider"] != "SEC EDGAR"
                     or date.fromisoformat(ref["published_at"]) > date.today()
                     or date.fromisoformat(claim["period_end"]) > date.today()
@@ -97,7 +99,8 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
             ))
         rebuilt = comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
                                              concepts=concepts,
-                                             metric_name=financial_metric_label(name, records[0].concept))
+                                             metric_name=financial_metric_label(name, records[0].concept),
+                                             unit=records[0].unit)
         if (rebuilt is None or rebuilt.verified_claims != claims
                 or rebuilt.summary != item.summary or rebuilt.url != item.url
                 or rebuilt.timestamp != item.timestamp
@@ -162,6 +165,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         selected.append(item)
     # One isolated observation does not form a multi-dimensional financial case.
     if len(rows) < 2:
+        return None
+    if len({item.verified_claims[0]["unit"] for item in selected}) != 1:
+        # Independently valid comparisons in different currencies do not
+        # establish one combined financial foundation without conversion.
         return None
     # Use only the revenue comparison that survived reconstruction, conflicts
     # and response-reference checks. A ticker, profile or unbound claim cannot

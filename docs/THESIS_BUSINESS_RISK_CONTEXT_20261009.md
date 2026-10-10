@@ -535,3 +535,52 @@ XOM's missing business and risk context, incomplete operating-income coverage,
 core business relevance, competitive evidence, valuation and mechanism-based
 invalidation remain P0. The 100-company quality gate and subsequent 500-company
 expansion remain open.
+
+## Post236 live verification and EUR/20-F financial coverage
+
+PR236 passed every CI step, merged as 2663e041e67fa26bf41eb54fa8c9bacc04c4fddf,
+and deployed healthy. The four supplied live core-thesis captures omit DOCU/ETSY
+employee programs and replace LLY/MSFT generic risk introductions with specific
+disclosures. ETSY now correctly retains a business-model gap. DOCU's remaining
+hosting description still does not explain its core product. All four remain
+partial; these captures do not independently adjudicate source accuracy.
+
+The SEC Company Facts response for ASML (CIK 937966) exposes US-GAAP revenue,
+operating income, net income and operating cash flow in EUR through 20-F filings.
+The latest observed annual period ends 2025-12-31, filed 2026-02-25, accession
+0001628280-26-011378. The prior parser admitted none of the EUR observations
+because its form whitelist excluded 20-F; the metric retrieval and binding path
+also required USD. This is not evidence of an IFRS-taxonomy gap for this case.
+Diagnostic source: https://data.sec.gov/api/xbrl/companyfacts/CIK0000937966.json
+
+A shared fact policy now admits annual 20-F/20-F/A alongside existing domestic
+forms and supports explicit USD/EUR monetary comparisons. EUR remains EUR in
+exact bound facts and scaled summaries; no exchange-rate conversion is performed.
+The service queries both currencies in one Company Facts request. It requires
+one unambiguous currency at the latest Assets anchor, falling back to requested
+monetary facts only when no anchor exists. Concurrent USD/EUR presentations do
+not authorize an arbitrary USD preference. Each comparison still requires the
+same concept, issuer, currency and matching annual duration/prior-year gap.
+The foundation rebuilds the native unit and rejects a combined mixed-currency
+case. Existing inline-filing extraction, per-share units and calculated free
+cash flow retain their narrower USD support.
+
+Regression tests use synthetic issuers and cover parser-to-admission-to-answer
+binding, four financial slots, currency ambiguity, cross-currency pairs,
+quarter facts inside annual forms, missing priors, amendments/conflicts,
+wrong issuer, tampered display/reference/currency, and historical cutoffs.
+An offline replay of the captured real ASML response now yields four attributed
+financial comparisons; this is not a deployed benchmark or a complete thesis.
+Full CI and a fresh Render capture remain required.
+
+Both comparison producers now require two successfully bound claims before
+returning a summary. Several older synthetic metric fixtures changed an
+accession while retaining the preceding filing's URL; their URLs now match
+their intended observations. Rejection checks were retained. The final focused
+suite passed 297 tests, including a wrong-URL comparison refusal.
+
+Other reporting currencies, IFRS concepts, 20-F business extraction and complete
+foreign-issuer quality remain P0. XOM's current directory CIK 2115436 names
+ExxonMobil Holdings Corp and its inspected submissions list one 10-Q and no
+annual filing; predecessor identity must be established from primary documents
+before any annual history is associated with the current issuer.

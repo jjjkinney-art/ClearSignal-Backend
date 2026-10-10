@@ -4,6 +4,7 @@ import re
 
 from .financial_thesis_foundation import CORE_METRICS, SUPPLEMENTARY_METRICS, _rebuild, financial_metric_label
 from .thesis_disclosures import _business_issuer_url
+from ..providers.sec_fact_policy import PERIODIC_FORMS
 
 
 def _reference(item, index, references):
@@ -21,7 +22,7 @@ def reporting_coverage(ticker, material, selected, references=None):
     """Filing existence proves a coverage gap, never the missing financial values.
 
     Reuse the already retrieved inventory; no extra live fetch or historical
-    backfill is performed. Only supported domestic period families are compared.
+    backfill is performed. Only supported domestic and 20-F period families are compared.
     """
     if not any(getattr(item, 'verified_claims', []) for item in selected):
         return None, '', []
@@ -37,7 +38,7 @@ def reporting_coverage(ticker, material, selected, references=None):
         if (item.source != 'SEC EDGAR' or item.claim_type != 'filing_metadata'
                 or item.source_type != 'regulatory_filing' or item.source_tier != 'primary'
                 or item.extraction_method != 'publisher_feed'
-                or item.document_type not in {'10-K', '10-Q', '10-K/A', '10-Q/A'}
+                or item.document_type not in PERIODIC_FORMS
                 or item.freshness_status in {'unavailable', 'conflicting', 'superseded', 'stale'}
                 or not _business_issuer_url(item.url, cik)):
             continue

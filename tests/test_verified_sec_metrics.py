@@ -164,6 +164,7 @@ def test_rejects_duration_that_cannot_match_filing_form():
     malformed_current = replace(
         prior, start="2025-12-01", end="2025-12-31", value=1_100,
         filed="2026-02-15", accession="0000320193-26-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/0000320193-26-000001-index.htm",
     )
 
     assert comparable_metric_evidence(
@@ -437,6 +438,7 @@ def test_service_narrows_explicit_metric_question_before_sec_fetch(monkeypatch):
     current = replace(
         prior, value=24, start="2025-01-01", end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     requested = []
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
@@ -449,7 +451,7 @@ def test_service_narrows_explicit_metric_question_before_sec_fetch(monkeypatch):
         "AAPL", question="Which source supports Apple's latest R&D growth?",
     )
 
-    assert requested == [(('ResearchAndDevelopmentExpense', 'USD'), ('Assets', 'USD'))]
+    assert requested == [(('ResearchAndDevelopmentExpense', 'USD'), ('ResearchAndDevelopmentExpense', 'EUR'), ('Assets', 'USD'), ('Assets', 'EUR'))]
     assert len(evidence) == 1
     assert evidence[0].title.startswith("AAPL research and development:")
 
@@ -512,6 +514,7 @@ def test_instant_comparison_uses_point_in_time_semantics_and_filing_url():
     current = replace(
         prior, value=25_000_000_000, end="2025-03-31", filed="2025-05-01",
         accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     item = comparable_instant_metric_evidence(
         [prior, current], ticker="AAPL", expected_cik="0000320193",
@@ -532,6 +535,7 @@ def test_instant_comparison_rejects_duration_wrong_unit_and_ambiguity():
     current = replace(
         prior, value=90, end="2025-03-31", filed="2025-05-01",
         accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     args = dict(
         ticker="AAPL", expected_cik="320193", concepts=("LongTermDebt",),
@@ -539,7 +543,7 @@ def test_instant_comparison_rejects_duration_wrong_unit_and_ambiguity():
     )
     assert comparable_instant_metric_evidence([prior, replace(current, start="2025-01-01")], **args) is None
     assert comparable_instant_metric_evidence([prior, replace(current, unit="shares")], **args) is None
-    alternate = replace(current, value=91, accession="0000320193-25-000002")
+    alternate = replace(current, value=91, accession="0000320193-25-000002", filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000002/0000320193-25-000002-index.htm")
     assert comparable_instant_metric_evidence([prior, current, alternate], **args) is None
 
 
@@ -549,6 +553,7 @@ def test_service_fetches_mixed_units_once_and_routes_period_semantics(monkeypatc
     current_cash = replace(
         prior_cash, value=25_000_000_000, end="2025-03-31", filed="2025-05-01",
         accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     calls = []
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"AAPL": "320193"})
@@ -559,7 +564,7 @@ def test_service_fetches_mixed_units_once_and_routes_period_semantics(monkeypatc
     evidence = service.fetch_verified_metric_evidence(
         "AAPL", question="Which source supports Apple's cash balance?",
     )
-    assert calls == [(('CashAndCashEquivalentsAtCarryingValue', 'USD'), ('Assets', 'USD'))]
+    assert calls == [(('CashAndCashEquivalentsAtCarryingValue', 'USD'), ('CashAndCashEquivalentsAtCarryingValue', 'EUR'), ('Assets', 'USD'), ('Assets', 'EUR'))]
     assert len(evidence) == 1
     assert evidence[0].title.startswith("AAPL cash and cash equivalents:")
 
@@ -569,6 +574,7 @@ def test_service_uses_ordered_concept_fallback_without_mixing_aliases(monkeypatc
     current = replace(
         prior, value=90, end="2025-03-31", filed="2025-05-01",
         accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     broader_current_only = replace(
         current, concept="LongTermDebtAndFinanceLeaseObligations", value=95,
@@ -590,12 +596,14 @@ def test_bank_metric_pack_uses_correct_period_semantics(monkeypatch):
     current_flow = replace(
         prior_flow, value=11_000_000_000, start="2025-01-01", end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     prior_deposits = replace(_record(), concept="Deposits", start=None,
                              value=1_000_000_000_000)
     current_deposits = replace(
         prior_deposits, value=1_100_000_000_000, end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"JPM": "320193"})
     monkeypatch.setattr(
@@ -655,12 +663,14 @@ def test_insurer_metric_pack_uses_correct_period_semantics(monkeypatch):
     current_premiums = replace(
         prior_premiums, value=11_000_000_000, start="2025-01-01", end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     prior_reserve = replace(_record(), concept="UnearnedPremiums", start=None,
                             value=20_000_000_000)
     current_reserve = replace(
         prior_reserve, value=22_000_000_000, end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"CB": "320193"})
     monkeypatch.setattr(
@@ -711,6 +721,7 @@ def test_saas_metric_pack_uses_correct_period_semantics(monkeypatch):
     current_rpo = replace(
         prior_rpo, value=120_000_000_000, end="2025-03-31", filed="2025-05-01",
         accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     prior_recognized = replace(
         _record(), concept="ContractWithCustomerLiabilityRevenueRecognized",
@@ -720,6 +731,7 @@ def test_saas_metric_pack_uses_correct_period_semantics(monkeypatch):
         prior_recognized, value=11_000_000_000, start="2025-01-01",
         end="2025-03-31", filed="2025-05-01",
         accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"MSFT": "320193"})
     monkeypatch.setattr(
@@ -791,15 +803,18 @@ def test_service_rejects_metric_far_older_than_latest_issuer_period(monkeypatch)
         _record(), concept="ContractWithCustomerLiabilityRevenueRecognized",
         value=10_000_000_000, start="2019-01-01", end="2019-03-31",
         filed="2019-05-01", accession="0000320193-19-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019319000001/0000320193-19-000001-index.htm",
     )
     stale_current = replace(
         prior, value=11_000_000_000, start="2020-01-01", end="2020-03-31",
         filed="2020-05-01", accession="0000320193-20-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019320000001/0000320193-20-000001-index.htm",
     )
     latest_assets = replace(
         _record(), concept="Assets", start=None, value=100_000_000_000,
         end="2026-03-31", filed="2026-05-01",
         accession="0000320193-26-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019326000001/0000320193-26-000001-index.htm",
     )
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"MSFT": "320193"})
     monkeypatch.setattr(
@@ -816,12 +831,14 @@ def test_reit_metric_pack_uses_correct_period_semantics(monkeypatch):
     current_income = replace(
         prior_income, value=1_100_000_000, start="2025-01-01", end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     prior_property = replace(_record(), concept="RealEstateInvestmentPropertyNet",
                              start=None, value=20_000_000_000)
     current_property = replace(
         prior_property, value=22_000_000_000, end="2025-03-31",
         filed="2025-05-01", accession="0000320193-25-000001",
+        filing_url="https://www.sec.gov/Archives/edgar/data/320193/000032019325000001/0000320193-25-000001-index.htm",
     )
     monkeypatch.setattr(service, "_load_ticker_cik_map", lambda: {"O": "320193"})
     monkeypatch.setattr(

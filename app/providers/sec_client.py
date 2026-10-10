@@ -20,6 +20,7 @@ from urllib.parse import urlsplit
 from xml.etree import ElementTree
 
 import requests  # type: ignore
+from .sec_fact_policy import PERIODIC_FORMS
 
 logger = logging.getLogger(__name__)
 _ATOM = "{http://www.w3.org/2005/Atom}"
@@ -69,7 +70,7 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
         accession, form = item.get("accn"), item.get("form")
         if not isinstance(accession, str) or not _ACCESSION.fullmatch(accession):
             continue
-        if form not in ("10-K", "10-Q", "10-K/A", "10-Q/A"):
+        if form not in PERIODIC_FORMS:
             continue
         end, filed, start = item.get("end"), item.get("filed"), item.get("start")
         try:
