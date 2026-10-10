@@ -13,6 +13,7 @@ from math import isfinite
 from typing import Optional
 
 from ..providers.sec_client import SecFactRecord
+from ..providers.sec_fact_policy import PERIODIC_FORMS, REPORTING_CURRENCIES
 from .provenance import ClaimDocumentReference, Provenance, QuantitativeClaim
 
 
@@ -40,7 +41,7 @@ def bind_sec_fact(
             or claim.metric != f"us-gaap:{record.concept}"
             or claim.unit != record.unit or claim.as_of != record.end
             or period_start != record.start or claim.source != record.form
-            or record.form not in ("10-K", "10-Q", "10-K/A", "10-Q/A")
+            or record.form not in PERIODIC_FORMS
             or not record.accession or not record.filed):
         return None
 
@@ -81,13 +82,15 @@ def bind_sec_fact(
 
     # The displayed text must denote the same unscaled value. A raw_value
     # of one million paired with "$9M" must never inherit the fact's link.
-    if record.unit not in ("USD", "shares", "USD/shares"):
+    if record.unit not in (*REPORTING_CURRENCIES, "shares", "USD/shares"):
         return None
     displayed = format(Decimal(str(record.value)), ",f")
     if "." in displayed:
         displayed = displayed.rstrip("0").rstrip(".")
     if record.unit == "USD":
         expected_display = f"${displayed}"
+    elif record.unit == "EUR":
+        expected_display = f"{displayed} EUR"
     elif record.unit == "shares":
         expected_display = f"{displayed} shares"
     else:

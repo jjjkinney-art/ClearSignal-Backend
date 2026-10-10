@@ -12,6 +12,7 @@ from ..integrity.sec_metric_evidence import (
     comparable_metric_evidence,
 )
 from ..providers.sec_client import get_company_fact_records_for_concept_units
+from ..providers.sec_fact_policy import REPORTING_CURRENCIES
 from ..schemas import RetrievedEvidence
 from .providers.sec_provider import _load_ticker_cik_map
 
@@ -340,9 +341,12 @@ def fetch_verified_metric_evidence(
     if context_requested and supplementary not in metrics:
         metrics = (*metrics, supplementary)
     concept_units = tuple(
-        (concept, unit) for concepts, _, _, unit, _ in metrics for concept in concepts
+        (concept, currency)
+        for concepts, _, _, unit, _ in metrics for concept in concepts
+        for currency in (REPORTING_CURRENCIES if unit == "USD" else (unit,))
     )
-    concept_units = tuple(dict.fromkeys((*concept_units, _LATEST_PERIOD_ANCHOR)))
+    concept_units = tuple(dict.fromkeys((*concept_units,
+        *((_LATEST_PERIOD_ANCHOR[0], currency) for currency in REPORTING_CURRENCIES))))
     records = get_company_fact_records_for_concept_units(
         cik, concept_units=concept_units,
         user_agent=getattr(settings, "sec_user_agent", "") or "",
@@ -353,15 +357,29 @@ def fetch_verified_metric_evidence(
             if date.fromisoformat(record.filed) <= boundary
             and date.fromisoformat(record.end) <= boundary
         ]
+    # Use a single unambiguous currency from the latest available balance-sheet
+    # anchor (or requested monetary facts when no anchor is available). Never
+    # prefer USD convenience translations or join currencies across periods.
+    monetary = [record for record in records if record.unit in REPORTING_CURRENCIES]
+    anchors = [record for record in monetary
+               if record.concept == _LATEST_PERIOD_ANCHOR[0] and record.start is None]
+    currency_rows = anchors or monetary
+    latest_currency_end = max((record.end for record in currency_rows), default=None)
+    currencies = {record.unit for record in currency_rows if record.end == latest_currency_end}
+    reporting_currency = next(iter(currencies)) if len(currencies) == 1 else None
     anchor_ends = [
         record.end for record in records
         if record.concept == _LATEST_PERIOD_ANCHOR[0]
-        and record.unit == _LATEST_PERIOD_ANCHOR[1]
+        and record.unit == reporting_currency
         and record.start is None
     ]
     latest_issuer_end = max(anchor_ends) if anchor_ends else None
     evidence = []
     for concepts, metric_name, _, unit, period_kind in metrics:
+        if unit == "USD":
+            if reporting_currency is None:
+                continue
+            unit = reporting_currency
         builder = (
             comparable_instant_metric_evidence
             if period_kind == "instant" else comparable_metric_evidence
