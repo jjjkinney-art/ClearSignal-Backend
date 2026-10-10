@@ -207,6 +207,10 @@ def test_financial_view_keeps_operating_gap_with_validated_pretax(monkeypatch, p
     assert ("Operating income remains unverified" in thesis.direct_answer) == (problem is None)
     if problem is None:
         assert result["claims"][-1]["claim_kind"] == "supplementary_profitability_comparison"
+    measures = "net income; pretax income" if problem is None else "net income"
+    assert f"Profitability measures supported in this answer: {measures}." in thesis.direct_answer
+    assert "does not establish that the issuer did not report it" in thesis.direct_answer
+    assert "reported operating income and net income where available" not in thesis.direct_answer
 
 
 def test_explicit_pretax_query_keeps_distinct_metric_identity(monkeypatch):
