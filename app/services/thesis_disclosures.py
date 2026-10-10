@@ -18,8 +18,8 @@ from .issuer_succession import reviewed_predecessor_annual
 logger = logging.getLogger(__name__)
 SECTION = "Item 1. Business"
 _BUSINESS_HEADING_PREFIX = re.compile(
-    r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Business Description|Segment Information|Business segments (?:&|and) Corporate)\s+){1,3}"
-    r"(?=(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The firm)\b)", re.I)
+    r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Our Products|Business Description|Segment Information|Business segments (?:&|and) Corporate)\s+){1,3}"
+    r"(?=(?:For management reporting purposes,\s+)?[A-Z])", re.I)
 _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"\b(?:committed to|focused on|seeks? to|aims? to|strives? to|intend\w*|"
     r"plan\w* to|working to|continue\w* to grow|value[- ]creating|"
@@ -43,6 +43,10 @@ _CURRENT_REVENUE_MODEL = re.compile(
     r"(?:sales of (?:subscriptions|(?:our )?products|services)|"
     r"marketplace activities|(?:transaction|subscription|licensing|service) fees|"
     r"(?:professional (?:and other )?(?:non-subscription )?|subscription )services)\b", re.I)
+_NAMED_ISSUER_ACTIVITY = re.compile(
+    r"^(?P<subject>[a-z][a-z&'\u2019 .-]{1,79}?)\s+"
+    r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
+    r"distributes?|delivers?|produces?|markets?|offers?|enables?)\b", re.I)
 _CURRENT_SEGMENT_STRUCTURE = re.compile(
     r"^(?:Our company|The company|The firm)['\u2019]s\s+"
     r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
@@ -100,8 +104,24 @@ def requests_thesis_disclosures(ticker: str, question: str) -> bool:
             and not requested_issuer_kpi_aliases(question))
 
 
-def _business_quote(quote):
-    return _business_quote_rejection(quote) is None
+def _business_quote(quote, *, ticker=None, cik=None):
+    reason = _business_quote_rejection(quote)
+    return reason is None or (reason == "subject_or_activity"
+                             and _named_issuer_quote(quote, ticker=ticker, cik=cik))
+
+
+def _named_issuer_quote(quote, *, ticker, cik):
+    """A named subject requires exact current directory identity, never an alias guess."""
+    match = _NAMED_ISSUER_ACTIVITY.match(quote)
+    if not match or not quote.endswith(".") or not ticker or not isinstance(cik, str) or not cik.isdigit():
+        return False
+    from . import issuer_identity
+    try:
+        issuer = issuer_identity._load_directory().symbols.get(ticker)
+        return bool(issuer and int(issuer.cik) == int(cik)
+                    and issuer_identity.name_key(match['subject']) == issuer_identity.name_key(issuer.name))
+    except Exception:
+        return False
 
 
 def _bare_segment_list(quote):
@@ -171,17 +191,23 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     start, end = window
     stats["status"] = "no_qualifying_business_sentence"
     candidates = []
+    named_offsets = set()
     for left, right in islice(risk_sentence_spans(document.text[start:end]), 2000):
         quote = document.text[start + left:start + right]
         stats["sentences"] += 1
         # Normalized HTML joins block headings to the next sentence. Remove
         # only an explicit shared heading prefix; retain the entire sentence.
         heading = _BUSINESS_HEADING_PREFIX.match(quote)
-        if heading:
+        after_heading = quote[heading.end():] if heading else ""
+        if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The firm)\b", after_heading, re.I)
+                        or _named_issuer_quote(after_heading, ticker=ticker, cik=cik)):
             left += heading.end()
             quote = document.text[start + left:start + right]
             stats["heading_prefixes_removed"] += 1
         reason = _business_quote_rejection(quote)
+        if reason == "subject_or_activity" and _named_issuer_quote(quote, ticker=ticker, cik=cik):
+            reason = None
+            named_offsets.add(start + left)
         if reason:
             stats["rejection_counts"][reason] = stats["rejection_counts"].get(reason, 0) + 1
             continue
@@ -194,7 +220,8 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         # do not expand abbreviations by guessing or by a ticker dictionary.
         candidates = [(offset, quote) for offset, quote in candidates
                       if not _bare_segment_list(quote)]
-    candidates.sort(key=lambda row: (2 if _CURRENT_SEGMENT_STRUCTURE.match(row[1])
+    candidates.sort(key=lambda row: (-1 if row[0] in named_offsets else
+                                    2 if _CURRENT_SEGMENT_STRUCTURE.match(row[1])
                                     else 1 if _NAMED_SEGMENT_STRUCTURE.match(row[1]) else 0,
                                     row[0]))
     result = []
@@ -227,7 +254,7 @@ def bound_business_description(item, *, ticker, cik):
         ref = ClaimDocumentReference(**value["document_ref"]).to_dict()
         start, end = value["start_offset"], value["end_offset"]
         if (value.get("claim_kind") != "issuer_business_description" or value.get("ticker") != ticker
-                or not _business_quote(value.get("quote")) or value["quote"] != ref.get("quote")
+                or not _business_quote(value.get("quote"), ticker=ticker, cik=cik) or value["quote"] != ref.get("quote")
                 or ref.get("provider") != "SEC EDGAR" or ref.get("section") != SECTION
                 or not ref.get("content_hash") or not _business_issuer_url(ref["url"], cik)
                 or ref["url"] != item.url or ref.get("published_at") != item.timestamp
