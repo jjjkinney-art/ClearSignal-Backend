@@ -34,6 +34,10 @@ _CURRENT_BUSINESS_PREDICATE = re.compile(
     r"(?:operations|business|(?:line|range|portfolio) of [^.]{1,100})\s+"
     r"(?:(?:are|is) (?:comprised of|organized into)|"
     r"includes?|comprises?|consists? of)\b", re.I)
+_CURRENT_SEGMENT_STRUCTURE = re.compile(
+    r"^(?:Our company|The company|The firm)['\u2019]s\s+"
+    r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
+    r"(?:is|are)\s+(?!expected\b|planned\b|proposed\b|potential\b|intended\b)", re.I)
 
 
 
@@ -73,7 +77,8 @@ def _business_quote_rejection(quote):
     # Activity words in a strategy, belief or potential project are not a
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.
-    if (not _CURRENT_BUSINESS_PREDICATE.match(quote)
+    if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
+             or _CURRENT_SEGMENT_STRUCTURE.match(quote))
             or not quote.endswith(".")):
         return "subject_or_activity"
     return None

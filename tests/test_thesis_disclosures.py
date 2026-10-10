@@ -45,6 +45,43 @@ def test_exact_business_span_survives_producer_and_binder():
     assert "competitive advantage" in item.summary
 
 
+@pytest.mark.parametrize('subject', ['The Firm', 'The company', 'Our company'])
+@pytest.mark.parametrize('apostrophe', ["'", '\u2019'])
+def test_current_segment_structure_is_bound_without_claiming_advantage(subject, apostrophe):
+    quote = (f'{subject}{apostrophe}s consumer business segment is CCB, and '
+             f'{subject.lower()}{apostrophe}s wholesale business segments are CIB and AWM.')
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert len(items) == 1
+    value = service.bound_business_description(items[0], ticker='AAPL', cik='320193')
+    assert value['quote'] == quote
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    assert 'competitive advantage and future performance remain unverified' in items[0].summary
+
+
+@pytest.mark.parametrize('quote', [
+    'The Firm is a leader in investment banking and financial services for consumers and small businesses.',
+    'The Firm\u2019s consumer business segment is expected to grow rapidly and outperform its competitors.',
+    'The Firm\u2019s consumer business segment is planned to provide investment services to local customers.',
+    'The other firm\u2019s consumer business segment is a retail bank serving independent business customers.',
+    'If approved, the Firm\u2019s consumer business segment is a retail bank serving local business customers.',
+])
+def test_promotional_planned_and_other_subject_segment_prose_stays_unqualified(quote):
+    assert service._business_quote_rejection(quote) is not None
+
+
+def test_segment_description_reaches_foundation_without_closing_competitive_or_risk_gaps():
+    quote = ('The Firm\u2019s consumer business segment is CCB, and the Firm\u2019s '
+             'wholesale business segments are CIB and AWM.')
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = pair() + service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    result = build_financial_foundation('AAPL', items, None, expected_cik='320193')
+    assert quote in result['answer']
+    assert 'competitive position' in result['unanswered_parts']
+    assert 'valuation and expected returns' in result['unanswered_parts']
+    assert 'issuer-disclosed operating-risk mechanisms' in result['unanswered_parts']
+
+
 @pytest.mark.parametrize("changes", [dict(document_type="20-F"), dict(publisher="Other"),
     dict(published_at="2099-01-01"), dict(source_tier="secondary"), dict(text_ready=False)])
 def test_ineligible_document_does_not_authorize_business_description(changes):
