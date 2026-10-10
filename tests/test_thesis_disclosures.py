@@ -45,6 +45,78 @@ def test_exact_business_span_survives_producer_and_binder():
     assert "competitive advantage" in item.summary
 
 
+@pytest.mark.parametrize('quote', [
+    'We offer subscriptions to our document workflow products to businesses of all sizes through direct and partner channels.',
+    'We generate revenue primarily from marketplace activities, including listing fees, transaction fees and optional seller services.',
+    'The company generates revenue from sales of subscriptions to its laboratory software and related customer support services.',
+    'We also generate revenue from professional and other non-subscription services associated with customer deployment and integration.',
+])
+def test_subscription_and_fee_models_survive_unseen_issuer_fetch_and_final_binding(monkeypatch, quote):
+    # Authored prose across distinct business models, without named-company rules.
+    ticker, cik = 'ZQXB', '1234567'
+    from app.services import issuer_identity
+    directory = issuer_identity.parse_directory({'0': {
+        'ticker': ticker, 'cik_str': int(cik), 'title': 'Synthetic test issuer'}})
+    monkeypatch.setattr(issuer_identity, '_load_directory', lambda: directory)
+    url = document().final_url.replace('/320193/', f'/{cik}/')
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors '
+                   f'{RISK} Item 1B. Unresolved Staff Comments', final_url=url, requested_url=url)
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {ticker: cik})
+    monkeypatch.setattr(service.sec_provider, 'fetch_recent_filings', lambda *a, **kw: [
+        SimpleNamespace(url=url, timestamp=doc.published_at, document_type='10-K')])
+    monkeypatch.setattr(service, 'fetch_public_document', lambda *a, **kw: doc)
+    fetched = service.fetch_thesis_disclosures(ticker, question=f'What is the investment thesis for {ticker}?')
+    business = [item for item in fetched if item.business_disclosures]
+    assert len(business) == 1
+    value = service.bound_business_description(business[0], ticker=ticker, cik=cik)
+    assert value['quote'] == quote
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    admitted, refs, _ = admit_evidence(pair(ticker=ticker, cik=cik) + business,
+                                     evaluated_at='2025-08-05')
+    thesis = InvestmentThesis(ticker=ticker, company_name='Synthetic test issuer')
+    result = apply_source_answer_gate(thesis,
+        f'What is the investment thesis for {ticker}? Cite material claims.', admitted, references=refs)
+    assert result['status'] == 'partial' and quote in thesis.direct_answer
+    assert 'competitive position' in result['unanswered_parts']
+    assert 'valuation and expected returns' in result['unanswered_parts']
+    assert thesis.confidence_score == 0
+    tampered = business[0].model_copy(deep=True)
+    tampered.url = url.replace('/1234567/', '/9999999/')
+    assert service.bound_business_description(tampered, ticker=ticker, cik=cik) is None
+
+
+@pytest.mark.parametrize('quote', [
+    'We offer training and mentoring services to our employees throughout the global workforce.',
+    'We offer subscriptions to products which will dominate the market and generate superior returns.',
+    'We plan to offer subscriptions to our workflow products to businesses through direct sales channels.',
+    'Our competitor offers subscriptions to its workflow products to businesses through direct sales channels.',
+    'We generate revenue primarily from marketplace activities and expect rapid growth in the coming year.',
+    'We generate revenue from sales of investments and property to finance new business ventures.',
+    'We generate revenue from borrowing under credit agreements with independent financial institutions.',
+])
+def test_new_business_shapes_do_not_admit_internal_forecast_or_financing_prose(quote):
+    assert service._business_quote_rejection(quote)
+
+
+def test_internal_hosting_cannot_fill_business_gap_but_customer_hosting_remains_eligible():
+    internal = ('We operate data centers and migrate our production services to a third-party cloud provider '
+                'to support our internal applications.')
+    customer = 'We offer managed hosting and data center services to customers through subscription contracts.'
+    doc = document(f'Item 1. Business {internal} {customer} Item 1A. Risk Factors '
+                   f'{RISK} Item 1B. Unresolved Staff Comments')
+    stats = {}
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193', diagnostics=stats)
+    assert [i.business_disclosures[0]['quote'] for i in items] == [customer]
+    assert stats['rejection_counts']['internal_hosting_activity'] == 1
+    # Final binding withholds an older producer's internal-hosting claim too.
+    item = business_item()
+    value = item.business_disclosures[0]
+    value.update(quote=internal, end_offset=value['start_offset'] + len(internal))
+    value['document_ref']['quote'] = internal
+    item.summary = service._business_summary(value)
+    assert service.bound_business_description(item, ticker='AAPL', cik='320193') is None
+
+
 @pytest.mark.parametrize('subject', ['The Firm', 'The company', 'Our company'])
 @pytest.mark.parametrize('apostrophe', ["'", '\u2019'])
 def test_current_segment_structure_is_bound_without_claiming_advantage(subject, apostrophe):

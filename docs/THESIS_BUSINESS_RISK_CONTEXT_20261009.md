@@ -616,3 +616,42 @@ answer, plus unavailable/unreviewed/changed identity, wrong document and failed
 current-document cases. The focused suites pass 304 tests. Direct local SEC
 probes encountered identity-directory network failures and withheld evidence;
 a fresh deployed XOM capture is still required.
+
+## Post238 live verification and subscription/fee-model descriptions
+
+PR238 passed all CI steps and merged as
+502c8031bad53efc9e56b30f68b9becc0efa6c98. Render served the new healthy build.
+The supplied live XOM capture retains two predecessor annual risk claims,
+explicit historical attribution, the February 18 filing date and relationship
+proof in the structured answer. The answer remains partial with current
+successor risks, operating income, business/competitive context and valuation
+unverified. This closes the broad-path historical-risk retrieval defect only.
+
+Inspection of the DOCU and ETSY annual filings showed qualitative subscription
+offerings and revenue-model sentences in Item 1 that the business predicate
+whitelist omitted. DOCU's surviving co-location/cloud migration sentence instead
+described internal production hosting. Primary diagnostic sources:
+
+- https://www.sec.gov/Archives/edgar/data/1261333/000126133326000021/docu-20260131.htm
+- https://www.sec.gov/Archives/edgar/data/1370637/000137063726000019/etsy-20251231.htm
+
+The shared predicate now recognizes current offerings and bounded revenue-from
+subscriptions, products, services, marketplace activities and fees. It rejects
+sentences explicitly about migrating, hosting or running the issuer's own
+production/internal services, systems or applications. Customer-facing hosting
+products remain eligible. Exact full sentences, section boundaries, issuer URL,
+date, numeric/forecast/promotion exclusions, offsets, final binding and two-item
+caps remain in force. No ticker-specific descriptions or product expansions
+are added. The new shapes improve available partial context, without claiming
+a complete business model or independent competitive advantage.
+
+Synthetic unseen-issuer tests exercise full fetch, admission and final answers,
+subscription/fee models, wrong-issuer URLs, employee programs, forecasts and
+financing prose, and distinguish internal hosting from customer hosting.
+The focused disclosure, financial-foundation, source-answer and succession
+suites pass 224 tests; historical fixtures use their own analysis boundary and
+the final gate is invoked with an explicit citation request.
+Local whole-document probes currently fail DNS resolution and cannot establish
+deployed replacements. Fresh DOCU/ETSY captures are still required after CI and
+deployment. Full investment-thesis coverage and the 100-company adjudicated
+quality gate remain P0.

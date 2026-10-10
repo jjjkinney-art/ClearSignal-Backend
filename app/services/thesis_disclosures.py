@@ -29,13 +29,20 @@ _CURRENT_BUSINESS_PREDICATE = re.compile(
     r"^(?:We|Our company|The company|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
-    r"distributes?|delivers?|produces?|markets?|"
+    r"distributes?|delivers?|produces?|markets?|offers?|"
     r"(?:are|is) (?:a|an) (?:manufacturer|provider|producer|distributor|"
     r"operator|developer|retailer))\b|"
     r"^(?:Our company|The company|The firm)['\u2019]s\s+"
     r"(?:operations|business|(?:line|range|portfolio) of [^.]{1,100})\s+"
     r"(?:(?:are|is) (?:comprised of|organized into)|"
     r"includes?|comprises?|consists? of)\b", re.I)
+_CURRENT_REVENUE_MODEL = re.compile(
+    r"^(?:We|Our company|The company|The firm)\s+"
+    r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
+    r"generates? revenue (?:primarily |principally )?from\s+"
+    r"(?:sales of (?:subscriptions|(?:our )?products|services)|"
+    r"marketplace activities|(?:transaction|subscription|licensing|service) fees|"
+    r"(?:professional (?:and other )?(?:non-subscription )?|subscription )services)\b", re.I)
 _CURRENT_SEGMENT_STRUCTURE = re.compile(
     r"^(?:Our company|The company|The firm)['\u2019]s\s+"
     r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
@@ -51,6 +58,9 @@ _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
     r"\b(?:skills|professional|career) development across our "
     r"(?:organization|workforce)\b", re.I)
+_INTERNAL_HOSTING_ACTIVITY = re.compile(
+    r"\b(?:migrate|host|run) our (?:production|internal) "
+    r"(?:services|systems|applications)\b", re.I)
 _GENERIC_RISK_INTRODUCTION = re.compile(
     r"^(?:(?:Any|All|Some|One|Each)\s+(?:of\s+)?(?:the\s+|these\s+|our\s+)?"
     r"(?:risk factors|risks)\s+(?:discussed|described|listed|set forth)\s+"
@@ -111,10 +121,13 @@ def _business_quote_rejection(quote):
     # Withhold the complete sentence; never clip out a business-looking clause.
     if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote):
         return "internal_employee_activity"
+    if _INTERNAL_HOSTING_ACTIVITY.search(quote):
+        return "internal_hosting_activity"
     # Activity words in a strategy, belief or potential project are not a
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.
     if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
+             or _CURRENT_REVENUE_MODEL.match(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
              or _NAMED_SEGMENT_STRUCTURE.match(quote))
             or not quote.endswith(".")):
