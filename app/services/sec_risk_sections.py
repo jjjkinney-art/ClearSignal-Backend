@@ -133,7 +133,7 @@ def risk_section_spans(text: str, *, max_section_chars: int, diagnostics: dict |
         yield heading.end(), closing.start()
 
 
-_ABBREVIATION = re.compile(r'(?:\be\.g\.|\bi\.e\.|\bU\.S\.|\bU\.K\.|\bInc\.|\bLtd\.|\bvs\.|\bMr\.|\bDr\.)$', re.I)
+_ABBREVIATION = re.compile(r'(?:\be\.g\.|\bi\.e\.|\b(?:[A-Z]\.){2,}|\bInc\.|\bLtd\.|\bCo\.|\bCorp\.|\bvs\.|\bMr\.|\bDr\.)$', re.I)
 
 
 def risk_sentence_spans(text: str):

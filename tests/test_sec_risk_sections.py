@@ -3,6 +3,7 @@ import pytest
 
 from app.services.sec_risk_sections import (
     RISK_START, complete_risk_window, find_risk_closing, complete_business_window,
+    risk_sentence_spans,
 )
 
 
@@ -97,3 +98,11 @@ def test_punctuation_followed_by_prose_does_not_reject_actual_heading():
             'Item 1B. Unresolved Staff Comments')
     assert complete_business_window(text) is not None
     assert complete_risk_window(text) is not None
+
+
+@pytest.mark.parametrize('name', ['Acme & Co.', 'Acme Corp.', 'J.P. Morgan', 'N.A. subsidiary', 'D.C. office'])
+def test_business_names_and_initialisms_do_not_fragment_exact_sentences(name):
+    sentence = f'We provide financial services through the {name} branch for local business customers.'
+    text = sentence + ' We manufacture specialized components for independent dealers.'
+    spans = list(risk_sentence_spans(text))
+    assert [text[start:end] for start, end in spans] == [sentence, text[len(sentence) + 1:]]
