@@ -43,6 +43,7 @@ import json
 import logging
 import re
 from typing import Dict, List, Optional
+from threading import Lock
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -69,6 +70,7 @@ _FORM_LABELS: dict = {
 
 # Module-level cache for ticker → zero-padded CIK (loaded once per process).
 _ticker_cik_cache: Optional[Dict[str, str]] = None
+_ticker_cik_lock = Lock()
 
 # Canonical ticker symbols, including class suffixes (e.g. BRK.B).
 _TICKER_RE = re.compile(r"^[A-Z][A-Z0-9]{0,11}(?:[.-][A-Z0-9]{1,4})?$")
@@ -152,9 +154,19 @@ def _load_ticker_cik_map() -> Dict[str, str]:
     Result is cached globally so repeated calls within the same process cost nothing.
     Returns ``{}`` on error; exact-ticker calls withhold filings.
     """
-    global _ticker_cik_cache
     if _ticker_cik_cache is not None:
         return _ticker_cik_cache
+    # Independent router providers start together on a cold process. Only one
+    # may download the directory; waiters reuse its success or withheld result.
+    with _ticker_cik_lock:
+        if _ticker_cik_cache is not None:
+            return _ticker_cik_cache
+        return _fetch_ticker_cik_map()
+
+
+def _fetch_ticker_cik_map() -> Dict[str, str]:
+    """Populate the directory while holding the cold-load lock."""
+    global _ticker_cik_cache
 
     print("[DIAG] SEC EDGAR: loading ticker→CIK map from company_tickers.json …")
     try:

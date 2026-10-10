@@ -381,3 +381,22 @@ All 253 focused section, disclosure, document, risk, foundation and bank tests
 pass locally. Full CI and a new live JPM capture remain required. Cold retrieval
 latency, missing or ineligible business prose, operating income, bank cash-flow
 interpretation, competitive position, valuation and risk impact remain open.
+
+## Post230 live retest and concurrent cold directory loading
+
+PR230 deployed as 8869c5716fb8e81210a8f7514379b52bf64417e0. JPM's
+business extractor now examines 235 sentences rather than the TOC fragment;
+none qualify under the current conservative business rules. The live task is
+still abandoned by the router at 10 seconds, so the answer remains partial.
+Representative actual business prose and standalone risk counts are still
+needed before changing subject/predicate admission rules.
+
+The same cold run starts four ticker-directory downloads before any publishes
+the module cache. A lock with a second cache check now coalesces these concurrent
+loads into one request. Success and existing withheld-on-failure behavior are
+shared; cached lookups avoid the lock. No provider wall cap, identity validation,
+freshness policy or document bound is changed. Concurrent success/failure tests
+coordinate four waiters without sleeps and prove exactly one request. All 146
+targeted SEC-provider, disclosure, bank and router tests pass locally. Full CI
+and live latency verification remain required; this is not a claim that every
+annual document will finish inside the current time budget.
