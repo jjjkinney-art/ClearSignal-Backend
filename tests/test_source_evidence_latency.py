@@ -15,7 +15,7 @@ from app.services import router_service as router
 @pytest.fixture
 def isolated_pipeline(monkeypatch):
     from app.services import (
-        issuer_release_evidence, live_issuer_kpi_service, session_context_service, thesis_disclosures,
+        filing_metric_evidence, issuer_release_evidence, live_issuer_kpi_service, session_context_service, thesis_disclosures,
         verified_sec_fact_service, verified_sec_metric_service,
     )
 
@@ -28,12 +28,14 @@ def isolated_pipeline(monkeypatch):
         (live_issuer_kpi_service, ["fetch_live_issuer_kpi_evidence"]),
         (issuer_release_evidence, ["fetch_issuer_release_evidence"]),
         (thesis_disclosures, ["fetch_thesis_disclosures"]),
+        (filing_metric_evidence, ["fetch_latest_filing_metrics"]),
         (verified_sec_metric_service, ["fetch_verified_metric_evidence"]),
     ):
         for name in names:
             monkeypatch.setattr(target, name, lambda *a, **k: [])
     monkeypatch.setattr(verified_sec_fact_service, "fetch_verified_revenue_claim",
                         lambda *a, **k: None)
+    monkeypatch.setattr(router._sec_provider, '_load_ticker_cik_map', lambda: {})
     monkeypatch.setattr(router, "get_profile_for_company", lambda *a, **k: None)
     monkeypatch.setattr(session_context_service, "record_active_ticker", lambda *a, **k: None)
     calls = []

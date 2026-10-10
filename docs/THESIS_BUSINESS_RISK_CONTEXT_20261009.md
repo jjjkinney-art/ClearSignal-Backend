@@ -400,3 +400,31 @@ coordinate four waiters without sleeps and prove exactly one request. All 146
 targeted SEC-provider, disclosure, bank and router tests pass locally. Full CI
 and live latency verification remain required; this is not a claim that every
 annual document will finish inside the current time budget.
+
+## Post232 source-document collection budget
+
+PR231 and PR232 passed full CI and deployed together as
+0b991f9ed79e435be302887ac9101fad0556ad9b. The next live JPM core
+capture makes one ticker-directory download, confirming removal of the cold
+duplicate work. Both thesis disclosures and filing metrics still exceed the
+router's 10-second collection cap; the answer remains a partial financial
+foundation. That capture does not establish the new business quote's live
+admission because the entire document result was discarded.
+
+Source-oriented investment answers skip model agents and synthesis. Their
+SEC thesis-disclosure and filing-metric tasks now receive a bounded 20-second
+total collection budget. Ordinary providers are snapshotted at 10 seconds;
+unrelated results arriving during the document grace period remain excluded.
+Model-generated investment answers retain the original 10-second budget.
+Completed document work returns immediately, and failures or unfinished tasks
+remain gaps. No source guard, document size bound or issuer rule is relaxed.
+
+Deterministic tests cover late-document retention, exclusion of late unrelated
+providers, remaining wall-budget calculation, unchanged generated-answer caps,
+unfinished/failed tasks and no extra waits for completed or absent documents.
+225 focused collection/router/source/provider/disclosure/foundation/bank tests
+pass locally. Source-routing and latency regressions also pass; their isolated
+fixture now mocks the filing-metric producer and directory lookup explicitly.
+Full CI and a live JPM core capture remain required before treating the timeout
+as resolved. This permits up to ten more seconds of latency for document-backed
+source answers; preprocessing and faster retrieval remain roadmap work.

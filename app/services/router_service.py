@@ -972,6 +972,37 @@ def _detect_question_intent(question: str) -> str:
     return "investment_thesis"
 
 
+def _collect_investment_evidence(futures, *, source_evidence_view=False):
+    """Snapshot providers at 10s; source views give SEC documents 20s total."""
+    started = time.monotonic()
+    _cf_wait(list(futures.values()), timeout=10, return_when=ALL_COMPLETED)
+    completed = {key for key, future in futures.items() if future.done()}
+    documents = {'thesis_disclosures', 'filing_metrics'}
+    pending_documents = {key: future for key, future in futures.items()
+                         if key in documents and key not in completed}
+    if source_evidence_view and pending_documents:
+        # This path skips model agents and synthesis. The grace period belongs
+        # only to SEC documents, never to unrelated providers finishing late.
+        remaining = max(0, 20 - (time.monotonic() - started))
+        if remaining:
+            _cf_wait(list(pending_documents.values()), timeout=remaining,
+                     return_when=ALL_COMPLETED)
+        completed.update(key for key, future in pending_documents.items() if future.done())
+    results = {}
+    for key, future in futures.items():
+        if key in completed:
+            try:
+                results[key] = future.result()
+            except Exception as exc:
+                logger.warning('[router] evidence task %s failed: %r', key, exc)
+                results[key] = []
+        else:
+            cap = 20 if source_evidence_view and key in documents else 10
+            logger.warning('[router] evidence task %s abandoned (>%ss wall time)', key, cap)
+            results[key] = []
+    return results
+
+
 def _run_investment_pipeline(
     company: CompanyContext,
     question: str,
@@ -1191,14 +1222,16 @@ def _run_investment_pipeline(
     if not as_of and requests_issuer_release(ticker, question):
         _ev_tasks["issuer_releases"] = _fetch_issuer_releases
     _ev_results: dict = {}
-    # ── Hard 10s ceiling on evidence collection ──────────────────────────────
+    # ── Bounded evidence collection ─────────────────────────────────────────
     # Do NOT use `with ThreadPoolExecutor(...)` here — its __exit__ calls
     # shutdown(wait=True) which blocks until ALL tasks complete.  FMP alone
     # makes 5 sequential HTTP calls at 8s each = up to 40s.  Blocking here
     # would exhaust the pipeline budget before agents even start.
     #
     # Instead: submit all tasks, use concurrent.futures.wait(timeout=10) to
-    # collect whatever completes within 10s, then abandon the rest.
+    # snapshot ordinary providers within 10s, then abandon the rest. Source
+    # evidence views allow SEC document tasks up to 20s total because this
+    # deterministic path skips model agents and synthesis below.
     # shutdown(wait=False) lets the abandoned threads finish in the background.
     #
     # On Render Starter (120s proxy_read_timeout), the full healthy cap of 10s
@@ -1208,7 +1241,7 @@ def _run_investment_pipeline(
     # failure class are recorded. The wrapper re-binds the request trace inside
     # the worker thread (contextvars do not cross ThreadPoolExecutor.submit)
     # and returns the task's own value untouched, so provider behavior, the
-    # 10s ceiling and the abandon-on-timeout semantics are unchanged.
+    # ordinary-provider ceiling and abandon-on-timeout semantics stay bounded.
     from ..observability import (
         bind as _obs_bind,
         record_provider_call as _obs_provider,
@@ -1244,18 +1277,9 @@ def _run_investment_pipeline(
     try:
         _ev_futures_map = {k: _ev_pool.submit(_observed(k, fn))
                            for k, fn in _ev_tasks.items()}
-        # Wait for ALL futures, hard-capped at 10s total wall time
-        _cf_wait(list(_ev_futures_map.values()), timeout=10, return_when=ALL_COMPLETED)
-        for k, fut in _ev_futures_map.items():
-            if fut.done():
-                try:
-                    _ev_results[k] = fut.result()
-                except Exception as _e:
-                    logger.warning("[router] evidence task %s failed: %r", k, _e)
-                    _ev_results[k] = []
-            else:
-                logger.warning("[router] evidence task %s abandoned (>10s wall time)", k)
-                _ev_results[k] = []
+        _ev_results = _collect_investment_evidence(
+            _ev_futures_map, source_evidence_view=is_source_answer_request(question),
+        )
     except Exception as _pool_exc:
         logger.warning("[router] evidence pool error (%r) — falling back to sequential", _pool_exc)
         for k, fn in _ev_tasks.items():
