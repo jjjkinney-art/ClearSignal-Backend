@@ -24,13 +24,13 @@ _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"creating long[- ]term value|strong returns|profitably|"
     r"high[- ]quality|cost[- ]effective)\b", re.I)
 _CURRENT_BUSINESS_PREDICATE = re.compile(
-    r"^(?:We|Our company|The company)\s+"
+    r"^(?:We|Our company|The company|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
     r"distributes?|delivers?|produces?|markets?|"
     r"(?:are|is) (?:a|an) (?:manufacturer|provider|producer|distributor|"
     r"operator|developer|retailer))\b|"
-    r"^(?:Our company|The company)['\u2019]s\s+"
+    r"^(?:Our company|The company|The firm)['\u2019]s\s+"
     r"(?:operations|business|(?:line|range|portfolio) of [^.]{1,100})\s+"
     r"(?:(?:are|is) (?:comprised of|organized into)|"
     r"includes?|comprises?|consists? of)\b", re.I)
@@ -38,6 +38,10 @@ _CURRENT_SEGMENT_STRUCTURE = re.compile(
     r"^(?:Our company|The company|The firm)['\u2019]s\s+"
     r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
     r"(?:is|are)\s+(?!expected\b|planned\b|proposed\b|potential\b|intended\b)", re.I)
+_GENERIC_RISK_INTRODUCTION = re.compile(
+    r"^(?:Any|All|Some|One|Each)\s+(?:of\s+)?(?:the\s+|these\s+|our\s+)?"
+    r"(?:risk factors|risks)\s+(?:discussed|described|listed|set forth)\s+"
+    r"(?:above|below|herein)\b", re.I)
 
 
 
@@ -110,7 +114,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         return []
     start, end = window
     stats["status"] = "no_qualifying_business_sentence"
-    result = []
+    candidates = []
     for left, right in islice(risk_sentence_spans(document.text[start:end]), 2000):
         quote = document.text[start + left:start + right]
         stats["sentences"] += 1
@@ -125,7 +129,13 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         if reason:
             stats["rejection_counts"][reason] = stats["rejection_counts"].get(reason, 0) + 1
             continue
-        offset = start + left
+        candidates.append((start + left, quote))
+    # Prefer an admitted description of operations over a bare segment list.
+    # This is a presentation rule, never a claim of competitive importance.
+    # Preserve source order within each group and the existing two-item cap.
+    candidates.sort(key=lambda row: (bool(_CURRENT_SEGMENT_STRUCTURE.match(row[1])), row[0]))
+    result = []
+    for offset, quote in candidates[:2]:
         try:
             ref = ClaimDocumentReference(reference_id=f"document:{document.content_hash}:business:{offset}",
                 title=document.title or f"{ticker} 10-K", provider="SEC EDGAR", url=document.final_url,
@@ -142,8 +152,6 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
             filed_at=document.published_at, section=SECTION, extraction_method="html",
             business_disclosures=[value]))
         stats.update(status="business_extracted", extracted_descriptions=len(result))
-        if len(result) == 2:
-            break
     return result
 
 
@@ -180,6 +188,12 @@ def bound_thesis_risk(item, *, ticker):
         return None
     scope = values[0].get("scope")
     if scope not in RISK_TOPICS or getattr(item, "freshness_status", None) == "stale":
+        return None
+    # Broad-thesis context needs a specific sampled mechanism. A generic
+    # introduction does not become useful merely by mentioning liquidity.
+    # Keep the narrower topic-specific risk producer and its binding unchanged.
+    quote = values[0].get("quote")
+    if not isinstance(quote, str) or _GENERIC_RISK_INTRODUCTION.match(quote):
         return None
     return bound_issuer_risk(item, ticker=ticker, question=f"What operating risk affects {scope}?")
 

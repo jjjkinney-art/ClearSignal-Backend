@@ -1,6 +1,7 @@
 """Bank net revenue retains its measure across producer, filing and answer paths."""
 from copy import deepcopy
 from dataclasses import replace
+import pytest
 
 from app.schemas import InvestmentThesis
 from app.services import verified_sec_metric_service as producer
@@ -89,3 +90,70 @@ def test_old_bank_measure_remains_correctly_labeled_in_coverage_warning(monkeypa
     coverage, notice, gaps = reporting_coverage('AAPL', [old, _filing()], [old])
     assert coverage['metrics_behind'][0]['metric'] == LABEL
     assert gaps == [f'latest-period {LABEL}'] and LABEL in notice
+
+
+@pytest.mark.parametrize('ticker,cik', [('JPM', '19617'), ('ZQXS', '1234567')])
+@pytest.mark.parametrize('current,prior', [(-237, -222), (120, 100), (-50, -100)])
+def test_net_interest_revenue_context_keeps_cash_fact_without_directional_signal(ticker, cik, current, prior):
+    items = [evidence(CONCEPT, LABEL, ticker=ticker, cik=cik),
+             evidence('NetIncomeLoss', 'net income', ticker=ticker, cik=cik),
+             evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow',
+                      ticker=ticker, cik=cik, current=current, prior=prior, ytd=True)]
+    refs = [reference(x, f'E{i+4}') for i, x in enumerate(items)]
+    result = build_financial_foundation(ticker, items, refs, expected_cik=cik)
+    cash = next(x for x in result['inferences'] if x['metric'] == 'operating cash flow')
+    assert cash['signal'] == 'context_only' and cash['reference_ids'] == ['E6']
+    assert items[-1].summary in result['answer']
+    assert result['claims'][-1]['reference_id'] == 'E6'
+    assert 'Counter-evidence' not in result['answer']
+    assert 'operating cash flow [E6]' not in result['answer'].split('Reported evidence')[0]
+    assert 'underlying movements remain unverified' in cash['text']
+    assert 'below the cited current amount' not in cash['conditional_test']
+    assert 'operating income' in result['unanswered_parts']
+    assert result['common_reporting_period'] is False
+
+
+@pytest.mark.parametrize('problem', ['missing', 'summary', 'identity', 'reference', 'conflict'])
+def test_unqualified_net_interest_revenue_cannot_change_cash_signal(problem):
+    bank = evidence(CONCEPT, LABEL)
+    items = [evidence('OperatingIncomeLoss', 'operating income'),
+             evidence('NetIncomeLoss', 'net income'),
+             evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow', current=-237, prior=-222)]
+    if problem != 'missing':
+        items.append(bank)
+    refs = [reference(x, f'E{i+1}') for i, x in enumerate(items)]
+    if problem == 'summary':
+        bank.summary = 'Invented bank revenue.'
+    elif problem == 'identity':
+        bank.verified_claims[0]['ticker'] = 'JPM'
+    elif problem == 'reference':
+        refs.pop()
+    elif problem == 'conflict':
+        other = evidence(CONCEPT, LABEL, current=999)
+        items.append(other)
+        refs.append(reference(other, 'E5'))
+    result = build_financial_foundation('AAPL', items, refs, expected_cik='320193')
+    cash = next(x for x in result['inferences'] if x['metric'] == 'operating cash flow')
+    assert cash['signal'] == 'counter_evidence'
+    assert 'revenue' in result['unanswered_parts']
+
+
+def test_ordinary_revenue_retains_cash_signal_even_for_bank_ticker():
+    items = [evidence('Revenues', 'revenue', ticker='JPM', cik='19617'),
+             evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow',
+                      ticker='JPM', cik='19617', current=-237, prior=-222)]
+    result = build_financial_foundation('JPM', items, None, expected_cik='19617')
+    assert result['inferences'][-1]['signal'] == 'counter_evidence'
+
+
+def test_net_interest_cash_context_survives_source_gate_without_conviction(monkeypatch):
+    monkeypatch.setattr('app.services.providers.sec_provider._load_ticker_cik_map', lambda: {'ZQXS': '1234567'})
+    items = [evidence(CONCEPT, LABEL, ticker='ZQXS', cik='1234567'),
+             evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow',
+                      ticker='ZQXS', cik='1234567', current=-237, prior=-222)]
+    thesis = InvestmentThesis(ticker='ZQXS', company_name='Synthetic issuer')
+    result = apply_source_answer_gate(thesis, 'What is the investment thesis for ZQXS? Cite material claims.', items)
+    assert result['status'] == 'partial'
+    assert result['inferences'][-1]['signal'] == 'context_only'
+    assert 'Counter-evidence' not in thesis.direct_answer
+    assert thesis.confidence_score == 0 and thesis.directional_stance == ''

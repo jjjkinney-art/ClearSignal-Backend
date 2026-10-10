@@ -163,6 +163,21 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     # One isolated observation does not form a multi-dimensional financial case.
     if len(rows) < 2:
         return None
+    # Use only the revenue comparison that survived reconstruction, conflicts
+    # and response-reference checks. A ticker, profile or unbound claim cannot
+    # authorize a different cash-flow interpretation. This measure is a narrow
+    # financial-reporting context, not a complete banking classification.
+    if any(row["metric"] == "revenue net of interest expense" for row in interpretations):
+        for row in interpretations:
+            if row["metric"] != "operating cash flow":
+                continue
+            row["signal"] = "context_only"
+            row["text"] += (" For an issuer reporting revenue net of interest expense, "
+                "this cash-flow total alone does not establish stronger or weaker operating "
+                "performance, liquidity or capital adequacy. Its underlying movements remain unverified.")
+            row["conditional_test"] = ("Review the underlying cash-flow movements alongside "
+                "liquidity and capital disclosures before assigning a favorable or adverse thesis signal; "
+                "this is a monitoring condition, not a forecast.")
     supplemental = []
     if "operating income" in missing:
         name, concepts = next(iter(SUPPLEMENTARY_METRICS.items()))

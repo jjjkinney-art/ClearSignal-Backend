@@ -59,6 +59,49 @@ def test_current_segment_structure_is_bound_without_claiming_advantage(subject, 
     assert 'competitive advantage and future performance remain unverified' in items[0].summary
 
 
+def test_operating_descriptions_following_segment_lists_take_bounded_priority():
+    segment = 'The Firm\u2019s consumer business segment is CCB, and the Firm\u2019s wholesale business segments are CIB and AWM.'
+    second = 'The Firm provides custody and payment processing services to institutional customers.'
+    doc = document(f'Item 1. Business Overview. {segment} {segment} {BUSINESS} {second} '
+                   f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert [x.business_disclosures[0]['quote'] for x in items] == [BUSINESS, second]
+    for item in items:
+        value = service.bound_business_description(item, ticker='AAPL', cik='320193')
+        assert value and doc.text[value['start_offset']:value['end_offset']] == value['quote']
+
+
+def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatch):
+    intro = ('Any of the risk factors discussed below could by itself, or combined with other factors, '
+             'materially and adversely affect our liquidity and results of operations.')
+    specific = ('Any significant losses in our investment portfolio or from market-making activities '
+                'could reduce our profitability and our liquidity and capital levels.')
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
+                   f'{intro} {specific} Item 1B. Unresolved Staff Comments')
+    risk_items = service.extract_issuer_risk_evidence(doc, ticker='AAPL', question='What operating risk affects Liquidity?')
+    assert len(risk_items) == 2
+    assert service.bound_thesis_risk(risk_items[0], ticker='AAPL') is None
+    assert service.bound_thesis_risk(risk_items[1], ticker='AAPL')
+    result = build_financial_foundation('AAPL', pair() + risk_items, None, expected_cik='320193')
+    assert intro not in result['answer'] and specific in result['answer']
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': '320193'})
+    monkeypatch.setattr(service.sec_provider, 'fetch_recent_filings', lambda *a, **kw: [
+        SimpleNamespace(url=doc.final_url, timestamp=doc.published_at, document_type='10-K')])
+    monkeypatch.setattr(service, 'fetch_public_document', lambda *a, **kw: doc)
+    fetched = service.fetch_thesis_disclosures('AAPL', question=QUESTION)
+    assert intro not in repr(fetched) and specific in repr(fetched)
+
+
+def test_only_generic_risk_context_cannot_close_mechanism_gap():
+    intro = 'All the risks described below could materially and adversely affect our liquidity and business operations.'
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors {intro} Item 1B. Unresolved Staff Comments')
+    risks = service.extract_issuer_risk_evidence(doc, ticker='AAPL', question='What operating risk affects Liquidity?')
+    assert risks
+    result = build_financial_foundation('AAPL', pair() + risks, None, expected_cik='320193')
+    assert intro not in result['answer']
+    assert 'issuer-disclosed operating-risk mechanisms' in result['unanswered_parts']
+
+
 @pytest.mark.parametrize('quote', [
     'The Firm is a leader in investment banking and financial services for consumers and small businesses.',
     'The Firm\u2019s consumer business segment is expected to grow rapidly and outperform its competitors.',
