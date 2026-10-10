@@ -428,3 +428,47 @@ fixture now mocks the filing-metric producer and directory lookup explicitly.
 Full CI and a live JPM core capture remain required before treating the timeout
 as resolved. This permits up to ten more seconds of latency for document-backed
 source answers; preprocessing and faster retrieval remain roadmap work.
+
+## Post233 live result and interpretation quality follow-up
+
+PR233 deployed as eac17f415f337e6b1daa2d9dd8f8c535cb4e4d31. The live
+JPM core capture completed document retrieval in 12.81 seconds with seven
+attributed claims: four financial comparisons, the exact segment description
+and two risk excerpts. Neither document task was abandoned. This confirms
+late-document retention for that capture, not broad-company launch readiness.
+
+The capture also exposes quality gaps: a cash-flow decline was labeled
+counter-evidence without underlying cash-flow drivers; a generic risk-factor
+introduction occupied one of two sampled risk slots; and the business excerpt
+only listed unexplained segment abbreviations.
+
+For a reconstructed, reference-bound revenue comparison explicitly reporting
+RevenuesNetOfInterestExpense, operating cash flow now remains a reported fact
+and a context-only interpretation. Neither its sign nor movement alone enters
+the supporting/counter-evidence thesis summary or a directional monitoring
+test. The response asks for underlying cash-flow, liquidity and capital
+disclosures instead. This is a narrow measure-based safeguard, not a banking
+industry classifier: banks with other revenue concepts remain follow-up work.
+Unbound, conflicting, wrong-issuer or missing-reference revenue cannot trigger
+this context. No actual cash-flow driver is inferred from the total.
+
+Research basis: JPM's 2025 consolidated cash-flow statement reports operating
+movements in trading assets, securities borrowed and loans held for sale.
+These observations motivate withholding a total-only directional signal;
+they are not inserted as claims about the June 2026 comparison.
+Primary source: https://www.jpmorganchase.com/content/dam/jpmc/jpmorgan-chase-and-co/investor-relations/documents/annualreport-2025.pdf
+
+Broad-thesis risk binding now excludes explicit generic introductions such as
+"Any of the risk factors discussed below...". Specific topic producers retain
+their existing rules. Business extraction scans its existing 2,000-sentence
+bound and prefers admitted operating predicates over bare segment structures,
+preserving complete source quotes and offsets, at most two descriptions and
+source order within each group. "The Firm" can use the same factual predicates
+as "The Company"; promotion and forecast guards still apply. This neither
+expands acronyms without evidence nor guarantees a richer JPM description.
+
+These changes need full CI and a fresh live JPM capture before production
+quality is confirmed. Remaining P0 work includes cash-flow component coverage,
+source-bound business explanation, useful sector metrics, risk completeness,
+valuation and diverse/held-out 100-company quality adjudication. The 500-company
+expansion follows measured quality in the first cohort, not capture success.
