@@ -72,7 +72,10 @@ def risk_openings(text: str, *, form: str = '10-K', layout: dict | None = None):
 def rejected_risk_heading(text: str, end: int, *, start: int | None = None) -> bool:
     # TOC page numbers, quoted cross-references and dash-led references are not
     # independently established section boundaries.
-    return bool(re.match(r'[\d"”\u2013\u2014-]|\(Continued\)', text[end:].lstrip(), re.I)
+    # Styled HTML can leave a separate period/colon between the heading
+    # title and its TOC page number ("Business . 1"). Keep source offsets
+    # unchanged and reject the same pagination after this separator too.
+    return bool(re.match(r'(?:[.:]\s*)?\d|["”\u2013\u2014-]|\(Continued\)', text[end:].lstrip(), re.I)
                 or (start is not None and re.search(
                     r'(?:["“]\s*|\b(?:see|refer\s+to|discussed\s+in|in|under|within)\s*)$',
                     text[max(0, start - 60):start], re.I)))

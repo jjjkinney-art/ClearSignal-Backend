@@ -357,3 +357,27 @@ ID on reconstruction. The fixture now uses the producer's canonical CIK; source
 binding checks remain intact. After local dependency restoration, all five bank
 tests and the 216-test targeted producer/fallback/foundation/source/router/parser
 set pass. Full CI must rerun on the corrected tree before merge and deployment.
+
+## Post229 live verification and punctuated contents headings
+
+PR229 merged and deployed as 87fab36a85b95bab1f32969dbc0e93f7ef98ed1a.
+Both live JPM families now use the June-quarter revenue net of interest expense
+comparison ($57.3B versus $44.9B, +27.7%) with primary source references; the
+latest-revenue coverage gap is closed. This does not certify a complete thesis.
+
+The cold core capture abandoned thesis disclosures and filing metrics at the
+router's 10-second wall cap. The disclosure task later logged one rejected
+business sentence. A standalone Render document probe took 5.96 seconds and
+revealed that its 223-character business window was the table of contents:
+the normalized heading has a separate period before its page number. The shared
+boundary guard rejected a directly adjacent page number but missed this form.
+
+Rejecting a period or colon followed by a page number now applies to business
+openings, risk openings and closing headings. No source text or offsets are
+rewritten; prose after punctuation remains eligible. Regression cases exercise
+TOC-only failure, genuine later sections, punctuated closing references and
+bounded HTML selection through business/risk producers and source binding.
+All 253 focused section, disclosure, document, risk, foundation and bank tests
+pass locally. Full CI and a new live JPM capture remain required. Cold retrieval
+latency, missing or ineligible business prose, operating income, bank cash-flow
+interpretation, competitive position, valuation and risk impact remain open.
