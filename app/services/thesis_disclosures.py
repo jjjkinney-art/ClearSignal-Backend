@@ -46,10 +46,18 @@ _NAMED_SEGMENT_STRUCTURE = re.compile(
     r"reportable business segments?\s*[\u2013\u2014:-]\s+"
     # Require spelled-out names, rather than interpreting unfamiliar acronyms.
     r"(?=(?-i:[A-Z][a-z]{2,})\b)", re.I)
+_INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
+    r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
+    r"\b(?:skills|professional|career) development across our "
+    r"(?:organization|workforce)\b", re.I)
 _GENERIC_RISK_INTRODUCTION = re.compile(
-    r"^(?:Any|All|Some|One|Each)\s+(?:of\s+)?(?:the\s+|these\s+|our\s+)?"
+    r"^(?:(?:Any|All|Some|One|Each)\s+(?:of\s+)?(?:the\s+|these\s+|our\s+)?"
     r"(?:risk factors|risks)\s+(?:discussed|described|listed|set forth)\s+"
-    r"(?:above|below|herein)\b", re.I)
+    r"(?:above|below|herein)\b|"
+    r"(?:Additional|Other) risks and uncertainties not "
+    r"(?:presently|currently) known to us\b|"
+    r"Our operations and financial results are subject to "
+    r"(?:various|certain) risks and uncertainties,? including those described below\b)", re.I)
 
 
 
@@ -97,6 +105,11 @@ def _business_quote_rejection(quote):
         return "numeric_or_forward_looking"
     if _BUSINESS_ASPIRATION_OR_PROMOTION.search(quote):
         return "aspirational_or_promotional"
+    # A current 'provide' predicate can describe internal human-capital
+    # programs rather than the issuer's products or customer services.
+    # Withhold the complete sentence; never clip out a business-looking clause.
+    if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote):
+        return "internal_employee_activity"
     # Activity words in a strategy, belief or potential project are not a
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.

@@ -504,3 +504,34 @@ and the source-answer gate. Neither competitive position nor valuation is
 established by these segment names. Full CI and a fresh live capture are needed
 to confirm the names reach the deployed answer. Products, revenue drivers and
 complete business-model explanation remain broader roadmap work.
+
+## Post235 cohort review and shared selection filters
+
+PR235 deployed as ba8573da61ad770f4dd3072a4a591eab8cc77271. The live
+JPM response now retains the source-spelled segment names. The subsequent
+18-issuer, two-family benchmark captured all 36 cases. The supplied compact
+summary reports 12 attributed, five partial and one insufficient financial
+answer; 17 partial and one insufficient core-thesis answer. These are producer
+statuses, not independent citation adjudication or launch approval.
+
+The observed DOCU and ETSY business claims include internal employee benefits
+and skills development. A shared filter now withholds complete sentences
+explicitly directed to the issuer's own employees, staff or workforce, or
+describing development across its own organization. Both extraction and final
+binding apply the filter. Customer-facing employee-benefit administration and
+payroll services remain eligible. No substitute business description is invented.
+
+The observed LLY and MSFT risk samples include unknown-risk boilerplate and an
+explicit introduction to risks described below. Broad-thesis binding now
+withholds these additional bounded introduction shapes. Specific mechanisms
+and the narrower topic-specific risk producer retain their existing checks.
+The source quotes, section and issuer checks and extraction caps are unchanged.
+
+Regression tests exercise the observed sentence shapes, customer-service
+preservation, exact offsets, final binding and financial-foundation gap labels.
+Live responses must still confirm useful replacements; filtering can correctly
+leave a gap when no qualifying sentence survives. ASML's financial/form coverage,
+XOM's missing business and risk context, incomplete operating-income coverage,
+core business relevance, competitive evidence, valuation and mechanism-based
+invalidation remain P0. The 100-company quality gate and subsequent 500-company
+expansion remain open.

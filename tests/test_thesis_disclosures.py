@@ -134,9 +134,12 @@ def test_named_list_does_not_suppress_a_segment_operating_description():
     assert [x.business_disclosures[0]['quote'] for x in items] == [named, operation]
 
 
-def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatch):
-    intro = ('Any of the risk factors discussed below could by itself, or combined with other factors, '
-             'materially and adversely affect our liquidity and results of operations.')
+@pytest.mark.parametrize('intro', [
+    'Any of the risk factors discussed below could by itself, or combined with other factors, materially and adversely affect our liquidity and results of operations.',
+    'Additional risks and uncertainties not presently known to us or that we currently believe to be immaterial could also adversely affect our business, financial condition, liquidity, cash flows, results of operations, reputation, and prospects.',
+    'Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, financial condition, results of operations, liquidity, and the trading price of our common stock.',
+])
+def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatch, intro):
     specific = ('Any significant losses in our investment portfolio or from market-making activities '
                 'could reduce our profitability and our liquidity and capital levels.')
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
@@ -153,6 +156,39 @@ def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatc
     monkeypatch.setattr(service, 'fetch_public_document', lambda *a, **kw: doc)
     fetched = service.fetch_thesis_disclosures('AAPL', question=QUESTION)
     assert intro not in repr(fetched) and specific in repr(fetched)
+
+
+@pytest.mark.parametrize('quote', [
+    'We also provide a range of health, savings, retirement, time-off and wellness benefits for our employees, which vary based on local regulations and norms.',
+    'We provide budget for skills development across our organization, along with tailored mentorship opportunities.',
+    'The Company provides training and support services to our staff throughout its global operations.',
+])
+def test_internal_employee_programs_cannot_close_business_model_gap(quote):
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    stats = {}
+    assert service.extract_business_descriptions(doc, ticker='AAPL', cik='320193', diagnostics=stats) == []
+    assert stats['rejection_counts']['internal_employee_activity'] == 1
+    # Final binding independently checks the predicate even if an older
+    # producer or a modified item supplies internally focused prose.
+    item = business_item()
+    value = item.business_disclosures[0]
+    value['quote'] = quote
+    value['document_ref']['quote'] = quote
+    value['end_offset'] = value['start_offset'] + len(quote)
+    item.summary = service._business_summary(value)
+    assert service.bound_business_description(item, ticker='AAPL', cik='320193') is None
+    result = build_financial_foundation('AAPL', pair() + [item], None, expected_cik='320193')
+    assert quote not in result['answer']
+    assert 'business model and competitive position' in result['unanswered_parts']
+
+
+def test_employee_service_provider_and_specific_risk_remain_eligible():
+    quote = 'We provide employee benefits administration and payroll services to corporate customers.'
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    value = service.bound_business_description(items[0], ticker='AAPL', cik='320193')
+    assert value and doc.text[value['start_offset']:value['end_offset']] == quote
+    assert service.bound_thesis_risk(risk_item(), ticker='AAPL')
 
 
 def test_only_generic_risk_context_cannot_close_mechanism_gap():
