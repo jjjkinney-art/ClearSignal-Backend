@@ -159,6 +159,27 @@ def test_large_filing_opt_in_preserves_business_and_risk_without_raising_ceiling
     assert len(combined) <= 400
 
 
+def test_punctuated_contents_rows_do_not_replace_bound_business_and_risk_text():
+    toc = ('Item 1. Business . 1 Overview 1 Business segments & Corporate 1 '
+           'Item 1A. Risk Factors . 9 Item 1B. Unresolved Staff Comments . 20 ')
+    actual = document().text
+    parser = _HTMLTextExtractor()
+    parser.feed('<p>' + toc + 'Preamble. ' * 100 + actual + '</p>')
+    _, text, _, _ = parser.result(max_chars=400, preserve_sec_risk=True,
+                                preserve_sec_business=True)
+    assert parser.text_selection == 'complete_sec_business_and_risk_section'
+    assert BUSINESS in text and RISK in text and 'Business segments & Corporate' not in text
+    doc = document(text=text)
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert len(items) == 1
+    value = service.bound_business_description(items[0], ticker='AAPL', cik='320193')
+    assert value and value['quote'] == BUSINESS
+    assert text[value['start_offset']:value['end_offset']] == BUSINESS
+    risks = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
+        question='What operating risk affects Supply chain?')
+    assert len(risks) == 1 and service.bound_thesis_risk(risks[0], ticker='AAPL')
+
+
 def test_oversized_business_falls_back_to_complete_risk_section():
     parser = _HTMLTextExtractor()
     parser.feed('<p>' + 'Preamble. ' * 100 + 'Item 1. Business Overview. ' + BUSINESS * 10
