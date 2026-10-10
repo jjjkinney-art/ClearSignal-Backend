@@ -56,6 +56,11 @@ _NAMED_SEGMENT_STRUCTURE = re.compile(
     r"(?=(?-i:[A-Z][a-z]{2,})\b)", re.I)
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
+    r"^(?:We|Our company|The company|The firm)\s+"
+    r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
+    r"offers?\s+(?:our\s+)?(?:employees|staff|workforce)\s+"
+    r"(?:(?:a|an|the)\s+(?:[a-z-]+\s+){0,3})?"
+    r"(?:package of benefits|benefits|healthcare|stipends)\b|"
     r"\b(?:skills|professional|career) development across our "
     r"(?:organization|workforce)\b", re.I)
 _INTERNAL_HOSTING_ACTIVITY = re.compile(
