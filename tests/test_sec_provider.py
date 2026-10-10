@@ -7,10 +7,59 @@ SEC EDGAR needs no API key, but requests need the User-Agent header.
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier, Event, Lock
+
 import pytest
 
 from app.services.providers import sec_provider
 from app.schemas import RetrievedEvidence
+
+
+@pytest.mark.parametrize('failure', [False, True])
+def test_concurrent_cold_directory_load_fetches_once_and_shares_result(monkeypatch, failure):
+    monkeypatch.setattr(sec_provider, '_ticker_cik_cache', None)
+    entered = Event()
+    release = Event()
+    barrier = Barrier(4)
+    counter_lock, load_lock = Lock(), Lock()
+    attempts, calls = [], []
+
+    class ObservedLock:
+        def __enter__(self):
+            with counter_lock:
+                attempts.append(True)
+                if len(attempts) == 4:
+                    entered.set()
+            load_lock.acquire()
+        def __exit__(self, *args):
+            load_lock.release()
+
+    def fetch(url, timeout=10):
+        calls.append(url)
+        assert release.wait(5)
+        if failure:
+            raise RuntimeError('synthetic unavailable')
+        return {'0': {'ticker': 'BRK-B', 'cik_str': 1067983}}
+
+    def load():
+        barrier.wait(timeout=5)
+        return sec_provider._load_ticker_cik_map()
+
+    monkeypatch.setattr(sec_provider, '_ticker_cik_lock', ObservedLock())
+    monkeypatch.setattr(sec_provider, '_fetch_json', fetch)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        futures = [pool.submit(load) for _ in range(4)]
+        try:
+            assert entered.wait(5)
+        finally:
+            release.set()
+        results = [future.result(timeout=5) for future in futures]
+    expected = {} if failure else {'BRK-B': '0001067983', 'BRK.B': '0001067983'}
+    assert results == [expected] * 4
+    assert calls == [sec_provider._COMPANY_TICKERS_URL]
+    assert sec_provider._load_ticker_cik_map() == expected
+    assert len(calls) == 1
 
 
 # ── helpers ───────────────────────────────────────────────────────────────────
