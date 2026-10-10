@@ -369,8 +369,27 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     if coverage:
         answer += "\n\nReporting coverage\n" + coverage_notice
     if re.search(r"\bprofitability\b", question or "", re.I):
-        answer += ("\n\nProfitability is represented here by reported operating income and "
-                   "net income where available. These amounts are not profit margins.")
+        profitability_concepts = {
+            "operating income": {"us-gaap:OperatingIncomeLoss"},
+            "net income": {"us-gaap:NetIncomeLoss", "us-gaap:ProfitLoss"},
+            "pretax income": {f"us-gaap:{concept}" for concept in pretax_concepts},
+        }
+        selected_concepts = {
+            str(claim.get("metric", ""))
+            for item in selected_items for claim in getattr(item, "verified_claims", [])
+            if isinstance(claim, dict) and claim.get("ticker") == ticker
+            and claim.get("document_ref")
+        }
+        measures = [name for name, concepts in profitability_concepts.items()
+                    if concepts & selected_concepts]
+        if measures:
+            answer += ("\n\nProfitability measures supported in this answer: "
+                       + "; ".join(measures) + ". These amounts are not profit margins.")
+        else:
+            answer += "\n\nNo requested profitability measure was verified. Amounts are not profit margins."
+        if "operating income" in unanswered_parts:
+            answer += ("\n\nOperating income was not verified in this run. This does not establish "
+                       "that the issuer did not report it; retrieval or extraction may be incomplete.")
     setattr(thesis, "direct_answer", answer)
     _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True, scope=view_scope)
     return {
