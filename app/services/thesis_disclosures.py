@@ -17,7 +17,8 @@ from .providers import sec_provider
 logger = logging.getLogger(__name__)
 SECTION = "Item 1. Business"
 _BUSINESS_HEADING_PREFIX = re.compile(
-    r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Business Description|Segment Information)\s+){1,3}(?=(?:We|Our company|The company)\b)", re.I)
+    r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Business Description|Segment Information|Business segments (?:&|and) Corporate)\s+){1,3}"
+    r"(?=(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The firm)\b)", re.I)
 _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"\b(?:committed to|focused on|seeks? to|aims? to|strives? to|intend\w*|"
     r"plan\w* to|working to|continue\w* to grow|value[- ]creating|"
@@ -38,6 +39,13 @@ _CURRENT_SEGMENT_STRUCTURE = re.compile(
     r"^(?:Our company|The company|The firm)['\u2019]s\s+"
     r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
     r"(?:is|are)\s+(?!expected\b|planned\b|proposed\b|potential\b|intended\b)", re.I)
+_NAMED_SEGMENT_STRUCTURE = re.compile(
+    r"^(?:For management reporting purposes,\s+)?"
+    r"(?:We|Our company|The company|The firm)\s+(?:has|have)\s+"
+    r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+"
+    r"reportable business segments?\s*[\u2013\u2014:-]\s+"
+    # Require spelled-out names, rather than interpreting unfamiliar acronyms.
+    r"(?=(?-i:[A-Z][a-z]{2,})\b)", re.I)
 _GENERIC_RISK_INTRODUCTION = re.compile(
     r"^(?:Any|All|Some|One|Each)\s+(?:of\s+)?(?:the\s+|these\s+|our\s+)?"
     r"(?:risk factors|risks)\s+(?:discussed|described|listed|set forth)\s+"
@@ -68,6 +76,17 @@ def _business_quote(quote):
     return _business_quote_rejection(quote) is None
 
 
+def _bare_segment_list(quote):
+    """Recognize only segment predicates whose objects are bare acronyms."""
+    for clause in re.split(r",\s+and\s+", quote[:-1], flags=re.I):
+        predicate = _CURRENT_SEGMENT_STRUCTURE.match(clause)
+        if not predicate or not re.fullmatch(
+                r"[A-Z]{2,8}(?:,\s*[A-Z]{2,8})*(?:\s+and\s+[A-Z]{2,8})?",
+                clause[predicate.end():]):
+            return False
+    return True
+
+
 def _business_quote_rejection(quote):
     # Exact complete, short qualitative sentences only. Numbers, forecasts and
     # mixed operational/aspirational prose do not become business-model facts.
@@ -82,7 +101,8 @@ def _business_quote_rejection(quote):
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.
     if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
-             or _CURRENT_SEGMENT_STRUCTURE.match(quote))
+             or _CURRENT_SEGMENT_STRUCTURE.match(quote)
+             or _NAMED_SEGMENT_STRUCTURE.match(quote))
             or not quote.endswith(".")):
         return "subject_or_activity"
     return None
@@ -133,7 +153,14 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     # Prefer an admitted description of operations over a bare segment list.
     # This is a presentation rule, never a claim of competitive importance.
     # Preserve source order within each group and the existing two-item cap.
-    candidates.sort(key=lambda row: (bool(_CURRENT_SEGMENT_STRUCTURE.match(row[1])), row[0]))
+    if any(_NAMED_SEGMENT_STRUCTURE.match(quote) for _, quote in candidates):
+        # A source-spelled segment list supersedes the redundant bare list;
+        # do not expand abbreviations by guessing or by a ticker dictionary.
+        candidates = [(offset, quote) for offset, quote in candidates
+                      if not _bare_segment_list(quote)]
+    candidates.sort(key=lambda row: (2 if _CURRENT_SEGMENT_STRUCTURE.match(row[1])
+                                    else 1 if _NAMED_SEGMENT_STRUCTURE.match(row[1]) else 0,
+                                    row[0]))
     result = []
     for offset, quote in candidates[:2]:
         try:
