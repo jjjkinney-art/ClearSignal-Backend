@@ -87,6 +87,7 @@ def test_subscription_and_fee_models_survive_unseen_issuer_fetch_and_final_bindi
 
 @pytest.mark.parametrize('quote', [
     'We offer training and mentoring services to our employees throughout the global workforce.',
+    'We also offer employees a comprehensive package of benefits, including family building benefits, mental healthcare access, and flexible stipends for personal well-being.',
     'We offer subscriptions to products which will dominate the market and generate superior returns.',
     'We plan to offer subscriptions to our workflow products to businesses through direct sales channels.',
     'Our competitor offers subscriptions to its workflow products to businesses through direct sales channels.',
@@ -115,6 +116,33 @@ def test_internal_hosting_cannot_fill_business_gap_but_customer_hosting_remains_
     value['document_ref']['quote'] = internal
     item.summary = service._business_summary(value)
     assert service.bound_business_description(item, ticker='AAPL', cik='320193') is None
+
+
+@pytest.mark.parametrize('recipient', ['employees', 'our staff', 'our workforce'])
+def test_direct_employee_benefit_recipient_is_rejected_at_extraction_and_final_binding(recipient):
+    quote = f'We also offer {recipient} a comprehensive package of benefits, including healthcare and wellness support.'
+    customer = 'We offer employee benefits administration software to customers through subscription contracts.'
+    doc = document(f'Item 1. Business {quote} {customer} Item 1A. Risk Factors '
+                   f'{RISK} Item 1B. Unresolved Staff Comments')
+    stats = {}
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193', diagnostics=stats)
+    assert [i.business_disclosures[0]['quote'] for i in items] == [customer]
+    assert stats['rejection_counts']['internal_employee_activity'] == 1
+    item = business_item()
+    value = item.business_disclosures[0]
+    value.update(quote=quote, end_offset=value['start_offset'] + len(quote))
+    value['document_ref']['quote'] = quote
+    item.summary = service._business_summary(value)
+    assert service.bound_business_description(item, ticker='AAPL', cik='320193') is None
+    result = build_financial_foundation('AAPL', pair() + [item], None, expected_cik='320193')
+    assert quote not in result['answer']
+    assert 'business model and competitive position' in result['unanswered_parts']
+
+
+def test_employee_products_for_customer_workforces_are_not_internal_benefits():
+    quote = ('We offer employees of customer companies access to benefit administration services '
+             'through contracts with their employers.')
+    assert service._business_quote_rejection(quote) is None
 
 
 @pytest.mark.parametrize('subject', ['The Firm', 'The company', 'Our company'])

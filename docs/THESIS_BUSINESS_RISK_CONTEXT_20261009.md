@@ -655,3 +655,25 @@ Local whole-document probes currently fail DNS resolution and cannot establish
 deployed replacements. Fresh DOCU/ETSY captures are still required after CI and
 deployment. Full investment-thesis coverage and the 100-company adjudicated
 quality gate remain P0.
+
+## Post239 live regression: direct employee-benefit recipients
+
+PR239 passed all CI steps, merged as 9f9e6607bb90c7183befe7a4897a7d3697eba8a9,
+and deployed healthy. The supplied two-case Render capture confirms DOCU's
+internal hosting sentence is absent and subscription/service descriptions appear.
+ETSY now includes a marketplace fee-model sentence, but also includes an internal
+employee-benefits description through the new offer predicate. This is a live
+relevance regression; the change is not fully verified. Both core answers remain
+partial and the benchmark reports not_adjudicated / launch_ready=false.
+
+The existing employee-program exclusion recognized benefits for/to our employees
+but missed a direct recipient after offer: employees followed by a benefits
+package. The shared exclusion now also recognizes bounded direct employee,
+staff and workforce recipient shapes for benefits packages, healthcare and
+stipends. It applies at extraction and final binding. Employee-benefit software
+and services for customer workforces remain eligible. No company-specific rule
+or replacement sentence is added. Tests cover the observed live sentence,
+recipient variants, forged older-producer items and customer-service preservation.
+The focused checks passed 229 tests. CI and a fresh live ETSY capture
+remain required. DOCU's product identity and ETSY's context-dependent risk sample,
+broader business coverage, valuation and competitive assessment remain open.
