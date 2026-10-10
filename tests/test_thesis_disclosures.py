@@ -71,6 +71,69 @@ def test_operating_descriptions_following_segment_lists_take_bounded_priority():
         assert value and doc.text[value['start_offset']:value['end_offset']] == value['quote']
 
 
+@pytest.mark.parametrize('ticker,cik,names', [
+    ('JPM', '19617', 'Consumer & Community Banking (“CCB”), Commercial & Investment Bank (“CIB”) and Asset & Wealth Management (“AWM”)'),
+    ('ZQXS', '1234567', 'Medical Devices (“MD”), Laboratory Products (“LP”) and Specialty Services (“SS”)'),
+])
+def test_source_named_segments_replace_bare_abbreviations_with_exact_quote(ticker, cik, names, monkeypatch):
+    # The first shape reproduces user-supplied normalized filing text; the
+    # second is synthetic and proves the rule does not depend on JPM names.
+    quote = (f'For management reporting purposes, the Firm has three reportable business segments – '
+             f'{names} – with the remaining activities in Corporate.')
+    bare = 'The Firm\u2019s consumer business segment is CCB, and the Firm\u2019s wholesale business segments are CIB and AWM.'
+    text = (f'Item 1. Business Business segments & Corporate {quote} {bare} '
+            f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    url = document().final_url.replace('/320193/', f'/{cik}/')
+    doc = document(text=text, final_url=url, requested_url=url)
+    stats = {}
+    business = service.extract_business_descriptions(doc, ticker=ticker, cik=cik, diagnostics=stats)
+    assert len(business) == 1
+    value = service.bound_business_description(business[0], ticker=ticker, cik=cik)
+    assert value and value['quote'] == quote
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    assert stats['heading_prefixes_removed'] == 1
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {ticker: cik})
+    thesis = InvestmentThesis(ticker=ticker, company_name='Synthetic test issuer')
+    result = apply_source_answer_gate(thesis,
+        f'What is the investment thesis for {ticker}? Cite material claims.',
+        pair(ticker=ticker, cik=cik) + business)
+    assert result['status'] == 'partial'
+    assert names in thesis.direct_answer and bare not in thesis.direct_answer
+    assert 'competitive position' in result['unanswered_parts']
+    assert 'valuation and expected returns' in result['unanswered_parts']
+    assert thesis.confidence_score == 0 and thesis.directional_stance == ''
+
+
+@pytest.mark.parametrize('quote', [
+    'The Firm has three reportable business segments – CCB, CIB and AWM – with the remaining activities in Corporate.',
+    'The Firm expects to have three reportable business segments – Consumer Banking, Markets and Wealth Management.',
+    'The Firm will have three reportable business segments – Consumer Banking, Markets and Wealth Management.',
+    'The Firm has three reportable business segments – Consumer Banking, Markets and Wealth Management – which will lead the industry.',
+    'Our competitor has three reportable business segments – Consumer Banking, Markets and Wealth Management.',
+    'If approved, the Firm has three reportable business segments – Consumer Banking, Markets and Wealth Management.',
+    'The Firm has 3 reportable business segments – Consumer Banking, Markets and Wealth Management.',
+])
+def test_named_segment_shape_cannot_authorize_acronym_only_forecast_or_other_subject(quote):
+    assert service._business_quote_rejection(quote) is not None
+
+
+def test_operations_keep_priority_and_arbitrary_heading_prefix_is_not_removed():
+    quote = 'The Company has two reportable business segments: Medical Devices and Laboratory Services.'
+    doc = document(f'Item 1. Business {quote} {BUSINESS} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert [x.business_disclosures[0]['quote'] for x in items] == [BUSINESS, quote]
+    doc = document(f'Item 1. Business Planned acquisition {quote} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    assert service.extract_business_descriptions(doc, ticker='AAPL', cik='320193') == []
+
+
+def test_named_list_does_not_suppress_a_segment_operating_description():
+    named = 'The Company has two reportable business segments: Consumer Banking and Wealth Management.'
+    operation = 'The Company\u2019s consumer business segment is a retail bank serving households and small business customers.'
+    doc = document(f'Item 1. Business {named} {operation} Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    items = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert [x.business_disclosures[0]['quote'] for x in items] == [named, operation]
+
+
 def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatch):
     intro = ('Any of the risk factors discussed below could by itself, or combined with other factors, '
              'materially and adversely affect our liquidity and results of operations.')

@@ -472,3 +472,35 @@ quality is confirmed. Remaining P0 work includes cash-flow component coverage,
 source-bound business explanation, useful sector metrics, risk completeness,
 valuation and diverse/held-out 100-company quality adjudication. The 500-company
 expansion follows measured quality in the first cohort, not capture success.
+
+## Post234 live result and named-segment follow-up
+
+PR234 passed full CI and deployed as 5a6aded803986a736f4efd9cf403d1abdd157bce.
+The live JPM capture retains cash-flow facts with context_only interpretation,
+omits the generic risk introduction and includes a specific credit-loss
+mechanism. Retrieval completed in 13.70 seconds without document abandonment.
+The business description still lists CCB, CIB and AWM without their names.
+
+The earlier user-supplied normalized Item 1 text contains a full named-segment
+sentence immediately before that bare list. It starts with the joined heading
+"Business segments & Corporate" and "For management reporting purposes".
+Neither the heading nor its factual has-reportable-segments predicate was
+previously admitted. A shared rule now admits this complete sentence shape,
+including an explicit one-through-twelve word count, named segments introduced
+by a dash or colon, and the existing qualitative, length, issuer and section
+checks. The names must appear in the source; no ticker dictionary or inferred
+acronym expansion is used. Digit-bearing counts remain ineligible.
+
+The exact generic heading can be removed before this explicit subject; the
+quote and offsets still point to the complete sentence in normalized text.
+Admitted operating descriptions retain priority, followed by the named segment
+list. A bare segment list is omitted when a named list qualifies, avoiding
+redundant unexplained abbreviations. Forecasts, promotion, arbitrary prefixes,
+other subjects, wrong identity and unsupported forms remain gaps.
+
+Tests reproduce the supplied JPM sentence shape and an unseen synthetic medical
+issuer with different names, through extraction, exact offsets, final binding
+and the source-answer gate. Neither competitive position nor valuation is
+established by these segment names. Full CI and a fresh live capture are needed
+to confirm the names reach the deployed answer. Products, revenue drivers and
+complete business-model explanation remain broader roadmap work.
