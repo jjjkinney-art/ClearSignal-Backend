@@ -230,6 +230,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .thesis_disclosures import bound_business_description, bound_thesis_risk
     disclosures = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0}
+    current_risks = 0
     seen = set()
     for index, item in enumerate(items, start=1):
         value = (bound_business_description(item, ticker=ticker, cik=expected_cik)
@@ -247,6 +248,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             reference_id = ref["id"]
         row = {"claim": item.summary, "reference_id": reference_id,
                "claim_kind": value["claim_kind"]}
+        if value.get("issuer_relationship"):
+            row["issuer_relationship"] = value["issuer_relationship"]
+        elif value["claim_kind"] == "issuer_disclosed_risk":
+            current_risks += 1
         disclosures.append(row)
         rows.append(row)
         selected.append(item)
@@ -263,6 +268,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                             "issuer-disclosed operating-risk mechanisms"]
     if counts["issuer_disclosed_risk"]:
         unanswered.remove("issuer-disclosed operating-risk mechanisms")
+        if not current_risks:
+            unanswered.append("current successor-disclosed operating-risk mechanisms")
         unanswered.append("risk materiality, likelihood and effect on the investment case")
     answer += "\n\n" + limitation
     answer += ("\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell "

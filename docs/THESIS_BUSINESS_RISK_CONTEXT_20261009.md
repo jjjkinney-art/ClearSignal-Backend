@@ -580,7 +580,39 @@ their intended observations. Rejection checks were retained. The final focused
 suite passed 297 tests, including a wrong-URL comparison refusal.
 
 Other reporting currencies, IFRS concepts, 20-F business extraction and complete
-foreign-issuer quality remain P0. XOM's current directory CIK 2115436 names
-ExxonMobil Holdings Corp and its inspected submissions list one 10-Q and no
-annual filing; predecessor identity must be established from primary documents
-before any annual history is associated with the current issuer.
+foreign-issuer quality remain P0.
+
+## Post237 live verification and broad-thesis successor history
+
+PR237 merged as 9ec7ca255ffd6ccae4fcaa051d79ce0d9bb7fc9b after all CI steps
+passed and deployed healthy. The supplied Render ASML capture returns all four
+annual EUR financial comparisons. Financial trends are attributed with no
+unanswered metrics. Core thesis remains partial, with two specific 20-F risk
+quotes and gaps in business/competitive context, valuation and risk assessment.
+This confirms the deployed financial path; it is not a full quality adjudication
+or evidence that all foreign issuers work.
+
+XOM's current SEC directory CIK 2115436 identifies ExxonMobil Holdings Corp.
+Its inspected submissions contain a 10-Q but no annual filing. The existing
+issuer-succession registry already authorizes one exact predecessor annual
+report for historical risk context, supported by the July 1, 2026 8-K12B
+succession notice and the August 3, 2026 10-Q continuity note:
+
+- https://www.sec.gov/Archives/edgar/data/2115436/000119312526291990/d71068d8k12b.htm
+- https://www.sec.gov/Archives/edgar/data/2115436/000003408826000093/R9.htm
+
+The broad-thesis fetch previously returned immediately when the current issuer
+had no annual. It now reuses the reviewed fallback only in that case. Current
+annual failures do not trigger predecessor retries. Authorization still checks
+the current directory identity and exact historical document, form, date and
+canonical relationship. No predecessor business descriptions or financial
+metrics are inherited. The two-risk cap and original quote/offset binding remain.
+
+Financial-foundation claims retain the relationship metadata and explicit
+predecessor attribution. Historical-only risk context leaves a separate gap for
+current successor-disclosed risk mechanisms; business/competitive and valuation
+gaps remain open. Tests exercise the broad fetch through admission and final
+answer, plus unavailable/unreviewed/changed identity, wrong document and failed
+current-document cases. The focused suites pass 304 tests. Direct local SEC
+probes encountered identity-directory network failures and withheld evidence;
+a fresh deployed XOM capture is still required.

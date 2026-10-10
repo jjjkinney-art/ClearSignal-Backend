@@ -58,6 +58,70 @@ def test_foreign_filing_requires_explicit_reviewed_authorization():
     assert value["issuer_relationship"]["source_issuer"]["cik"] == "34088"
 
 
+def test_broad_thesis_reuses_exact_predecessor_risks_without_inheriting_business(monkeypatch):
+    from app.services import thesis_disclosures as service
+    from app.services.financial_thesis_foundation import build_financial_foundation
+    from test_financial_thesis_foundation import pair
+    question = "What is the investment thesis for XOM, what supports it, and what could invalidate it?"
+    business = "We manufacture specialized components and distribute our products through independent dealers."
+    text = (f"Item 1. Business {business} Item 1A. Risk Factors {QUOTE} "
+            "Item 1B. Unresolved Staff Comments")
+    doc = document(text=text, content_hash=sha256(text.encode()).hexdigest())
+    calls = []
+    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"XOM": "2115436"})
+    monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *a, **kw: [])
+    def fetch(url, **kwargs):
+        calls.append(url)
+        return doc
+    monkeypatch.setattr(service, "fetch_public_document", fetch)
+    items = service.fetch_thesis_disclosures("XOM", question=question)
+    assert calls == [URL] and len(items) == 1
+    assert items[0].business_disclosures == []
+    assert service.bound_thesis_risk(items[0], ticker="XOM")
+    assert items[0].timestamp == "2026-02-18"
+    assert "Exxon Mobil Corporation (predecessor)" in items[0].summary
+    assert "not a new successor disclosure" in items[0].summary
+    admitted, references, _ = admit_evidence(items)
+    assert len(admitted) == 1
+    assert references[0]["issuer_relationship"] == reviewed_succession("XOM").provenance()
+    result = build_financial_foundation("XOM", pair(ticker="XOM", cik="2115436") + admitted,
+                                        None, expected_cik="2115436")
+    assert business not in result["answer"] and QUOTE in result["answer"]
+    assert "current successor-disclosed operating-risk mechanisms" in result["unanswered_parts"]
+    assert "business model and competitive position" in result["unanswered_parts"]
+    risk = result["claims"][-1]
+    assert risk["issuer_relationship"] == references[0]["issuer_relationship"]
+    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"XOM": "2115436"})
+    thesis = InvestmentThesis(ticker="XOM", company_name="ExxonMobil Holdings Corp")
+    status = apply_source_answer_gate(thesis, question, pair(ticker="XOM", cik="2115436") + admitted)
+    assert status["status"] == "partial" and QUOTE in thesis.direct_answer
+    assert "current successor-disclosed operating-risk mechanisms" in status["unanswered_parts"]
+
+
+@pytest.mark.parametrize("failure", ["unreviewed", "changed_identity", "wrong_document", "fetch_failed", "current_available"])
+def test_broad_thesis_fallback_is_bounded_and_does_not_retry_current_failures(monkeypatch, failure):
+    from app.services import thesis_disclosures as service
+    question = "What is the investment thesis for XOM?"
+    ticker = "OTHER" if failure == "unreviewed" else "XOM"
+    if failure == "changed_identity":
+        set_identity(monkeypatch, cik=99999)
+    monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {ticker: "2115436"})
+    current = RetrievedEvidence(title="Current annual", source="SEC EDGAR", summary="metadata",
+        url=CURRENT_URL, timestamp="2026-08-03", document_type="10-K")
+    monkeypatch.setattr(service.sec_provider, "fetch_recent_filings",
+                        lambda *a, **kw: [current] if failure == "current_available" else [])
+    calls = []
+    def fetch(url, **kwargs):
+        calls.append(url)
+        if failure in {"fetch_failed", "current_available"}:
+            raise RuntimeError("unavailable")
+        return document(final_url=URL.replace("34088/", "99999/"))
+    monkeypatch.setattr(service, "fetch_public_document", fetch)
+    assert service.fetch_thesis_disclosures(ticker, question=question) == []
+    assert calls == ([] if failure in {"unreviewed", "changed_identity"} else
+                     [CURRENT_URL] if failure == "current_available" else [URL])
+
+
 @pytest.mark.parametrize("changes", [
     {"final_url": URL.replace("34088/", "99999/")},
     {"final_url": URL.replace("20251231", "20241231")},

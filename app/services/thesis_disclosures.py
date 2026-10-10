@@ -13,6 +13,7 @@ from .issuer_risk_evidence import (
 from .public_document_ingestion import fetch_public_document
 from .sec_risk_sections import complete_business_window, risk_sentence_spans
 from .providers import sec_provider
+from .issuer_succession import reviewed_predecessor_annual
 
 logger = logging.getLogger(__name__)
 SECTION = "Item 1. Business"
@@ -248,9 +249,16 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
             return []
         filings = sec_provider.fetch_recent_filings(ticker, forms=["10-K", "20-F"],
             limit=1, years_back=2, prefer_results=False) or []
-        if not filings:
-            return []
-        filing = filings[0]
+        relationship = None
+        if filings:
+            filing = filings[0]
+        else:
+            # Reuse the exact reviewed document authorization. It permits
+            # historical risks only, never inherited business or metric facts.
+            predecessor = reviewed_predecessor_annual(ticker)
+            if predecessor is None:
+                return []
+            filing, relationship = predecessor
         if filing.document_type not in {"10-K", "20-F"}:
             return []
         document = fetch_public_document(filing.url, user_agent=user_agent, publisher="SEC EDGAR",
@@ -258,14 +266,17 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
             preserve_sec_business=True, extract_tables=False)
         diagnostics = {}
-        business = extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
+        business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
+                    if relationship is None else [])
+        if relationship is not None:
+            diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
                     ticker, document.text_selection, diagnostics)
         risks = []
         seen = set()
         for scope in RISK_TOPICS:
             for item in extract_issuer_risk_evidence(document, ticker=ticker,
-                    question=f"What operating risk affects {scope}?"):
+                    question=f"What operating risk affects {scope}?", issuer_relationship=relationship):
                 value = bound_thesis_risk(item, ticker=ticker)
                 if value and value["quote"] not in seen:
                     seen.add(value["quote"])
