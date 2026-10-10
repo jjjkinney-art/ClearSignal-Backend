@@ -677,3 +677,28 @@ recipient variants, forged older-producer items and customer-service preservatio
 The focused checks passed 229 tests. CI and a fresh live ETSY capture
 remain required. DOCU's product identity and ETSY's context-dependent risk sample,
 broader business coverage, valuation and competitive assessment remain open.
+
+## Post240 live verification and unresolved risk subjects
+
+PR240 passed all CI steps, merged as bf06e8d9b6f937f704ef8e418bfc074ec92d14ca,
+and deployed healthy. The supplied Render ETSY capture preserves the marketplace
+fee description and removes the employee-benefits sentence. The four financial
+comparisons and specific economic/supply-chain risk remain. The answer is still
+partial and the benchmark remains not adjudicated / not launch ready.
+
+The remaining sample about insufficient actions does not identify the actions
+or the underlying cause of harm. Broad-thesis binding now withholds bounded
+unnamed action/effort/measure and these/such risk/factor subjects followed
+immediately by may/could/might/can. Optional introductory conjunctions do not
+provide the missing antecedent. Explicitly named mechanisms remain eligible.
+This is a relevance guard, not proof of risk materiality or a ranking system.
+The narrow topic-risk producer, exact quotes, offsets, issuer/date/section
+checks and extraction caps are unchanged. Missing context is never guessed,
+clipped or reconstructed from a different paragraph.
+
+Regression checks cover the observed ETSY shape, additional unnamed subjects,
+narrow-producer preservation, broad fetch, final answer binding and gap labels
+when all risk context is withheld. Named refinancing and supply-chain subjects
+remain eligible. CI and a fresh deployed capture must confirm the resulting
+sample. The focused suites pass 235 tests. Full business/product identity, competitive evidence, valuation,
+mechanism-based invalidation and the 100-company adjudicated gate remain P0.

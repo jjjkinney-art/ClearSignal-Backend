@@ -74,6 +74,10 @@ _GENERIC_RISK_INTRODUCTION = re.compile(
     r"(?:presently|currently) known to us\b|"
     r"Our operations and financial results are subject to "
     r"(?:various|certain) risks and uncertainties,? including those described below\b)", re.I)
+_UNRESOLVED_RISK_SUBJECT = re.compile(
+    r"^(?:(?:Furthermore|Moreover|However|In addition|As a result|Consequently),?\s+)?"
+    r"(?:our (?:actions|efforts|measures)|(?:these|such) (?:actions|efforts|measures|risks|factors))"
+    r"\s+(?:may|could|might|can)\b", re.I)
 
 
 
@@ -252,7 +256,10 @@ def bound_thesis_risk(item, *, ticker):
     # introduction does not become useful merely by mentioning liquidity.
     # Keep the narrower topic-specific risk producer and its binding unchanged.
     quote = values[0].get("quote")
-    if not isinstance(quote, str) or _GENERIC_RISK_INTRODUCTION.match(quote):
+    # A transition word does not resolve which actions or measures failed.
+    # Withhold this standalone sample instead of inventing the missing context.
+    if (not isinstance(quote, str) or _GENERIC_RISK_INTRODUCTION.match(quote)
+            or _UNRESOLVED_RISK_SUBJECT.match(quote)):
         return None
     return bound_issuer_risk(item, ticker=ticker, question=f"What operating risk affects {scope}?")
 

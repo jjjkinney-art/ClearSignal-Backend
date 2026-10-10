@@ -301,6 +301,54 @@ def test_only_generic_risk_context_cannot_close_mechanism_gap():
     assert 'issuer-disclosed operating-risk mechanisms' in result['unanswered_parts']
 
 
+@pytest.mark.parametrize('quote,scope', [
+    ('Furthermore, our actions may be insufficient, may not be timely, and may not be effective in mitigating harm to our buyers, sellers, or other third parties or avoiding negative publicity.', 'Marketplace sellers'),
+    ('Our efforts could be insufficient and materially adversely affect our liquidity and operating results.', 'Liquidity'),
+    ('In addition, these measures may fail and adversely affect our liquidity and capital levels.', 'Liquidity'),
+    ('Furthermore, such factors could materially adversely affect our liquidity and financial condition.', 'Liquidity'),
+])
+def test_unresolved_risk_subject_is_withheld_from_broad_fetch_and_final_answer(monkeypatch, quote, scope):
+    specific = ('Supply chain disruptions could materially adversely affect our marketplace sellers, '
+                'liquidity and operating results.')
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
+                   f'{quote} {specific} Item 1B. Unresolved Staff Comments')
+    risks = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
+                                                question=f'What operating risk affects {scope}?')
+    assert len(risks) == 2
+    # The narrow producer remains unchanged; only broad context rejects the
+    # unresolved referent instead of inventing or clipping an antecedent.
+    assert service.bound_issuer_risk(risks[0], ticker='AAPL',
+                                   question=f'What operating risk affects {scope}?')
+    assert service.bound_thesis_risk(risks[0], ticker='AAPL') is None
+    assert service.bound_thesis_risk(risks[1], ticker='AAPL')
+    result = build_financial_foundation('AAPL', pair() + risks, None, expected_cik='320193')
+    assert quote not in result['answer'] and specific in result['answer']
+    only_unresolved = build_financial_foundation('AAPL', pair() + risks[:1], None, expected_cik='320193')
+    assert 'issuer-disclosed operating-risk mechanisms' in only_unresolved['unanswered_parts']
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': '320193'})
+    monkeypatch.setattr(service.sec_provider, 'fetch_recent_filings', lambda *a, **kw: [
+        SimpleNamespace(url=doc.final_url, timestamp=doc.published_at, document_type='10-K')])
+    monkeypatch.setattr(service, 'fetch_public_document', lambda *a, **kw: doc)
+    fetched = service.fetch_thesis_disclosures('AAPL', question=QUESTION)
+    assert quote not in repr(fetched) and specific in repr(fetched)
+    thesis = InvestmentThesis(ticker='AAPL', company_name='Apple')
+    status = apply_source_answer_gate(thesis, QUESTION, pair() + risks)
+    assert status['status'] == 'partial'
+    assert quote not in thesis.direct_answer and specific in thesis.direct_answer
+
+
+@pytest.mark.parametrize('quote', [
+    'Our efforts to refinance debt maturities may fail and materially adversely affect our liquidity.',
+    'Supply chain disruptions could materially adversely affect our liquidity and operating results.',
+])
+def test_risk_subject_with_explicit_mechanism_remains_eligible(quote):
+    doc = document(f'Item 1. Business {BUSINESS} Item 1A. Risk Factors '
+                   f'{quote} Item 1B. Unresolved Staff Comments')
+    items = service.extract_issuer_risk_evidence(doc, ticker='AAPL', question='What operating risk affects Liquidity?')
+    assert len(items) == 1
+    assert service.bound_thesis_risk(items[0], ticker='AAPL')
+
+
 @pytest.mark.parametrize('quote', [
     'The Firm is a leader in investment banking and financial services for consumers and small businesses.',
     'The Firm\u2019s consumer business segment is expected to grow rapidly and outperform its competitors.',
