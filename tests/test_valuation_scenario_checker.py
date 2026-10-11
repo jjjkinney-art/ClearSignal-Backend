@@ -238,3 +238,36 @@ def test_earnings_scope_cannot_be_omitted_or_guessed():
     payload = scenario()
     del payload['entry_pe']['eps_basis']['earnings_scope']
     assert not evaluate_scenario(payload)['available']
+
+
+@pytest.mark.parametrize('mode', ['evaluate_growth_scenario', 'solve_required_earnings_growth'])
+def test_positive_terminal_factor_cannot_be_reported_as_complete_price_loss(mode):
+    payload = scenario(mode)
+    payload['entry_pe']['value'] = payload['exit_pe']['value'] = '20'
+    payload['horizon']['value'] = 1000
+    key = 'eps_growth_rate' if mode == 'evaluate_growth_scenario' else 'annual_price_return_rate'
+    payload[key]['value'] = '-0.2'
+    result = evaluate_scenario(payload)
+    assert not result['available']
+    assert 'cumulative price change lost a positive terminal factor' in result['reason']
+
+
+def test_required_eps_change_cannot_be_erased_by_multiple_root_rounding():
+    payload = scenario('solve_required_earnings_growth')
+    payload['entry_pe']['value'] = '1.' + '0'*48 + '1'
+    payload['exit_pe']['value'] = '1'
+    payload['horizon']['value'] = 2
+    result = evaluate_scenario(payload)
+    assert not result['available']
+    assert 'multiple root change was lost' in result['reason']
+
+
+def test_exact_zero_required_eps_growth_from_offsetting_price_and_multiple_change():
+    payload = scenario('solve_required_earnings_growth')
+    payload['annual_price_return_rate']['value'] = '0.5'
+    result = evaluate_scenario(payload)
+    # EPS unchanged; 45/20 = (1 + 1/2)^2, independently exact.
+    assert Fraction(45, 20) == Fraction(3, 2)**2
+    assert result['available']
+    assert Decimal(result['values']['eps_growth_rate']) == 0
+    assert Decimal(result['values']['terminal_price_factor']) == Decimal('2.25')

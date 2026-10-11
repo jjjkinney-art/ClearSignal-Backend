@@ -66,7 +66,12 @@ Arithmetic uses an explicit Decimal context: 50 significant digits,
 ROUND_HALF_EVEN, exponent limits -999999 through 999999. Results are rounded
 Decimal computations, not a promise of exact transcendental roots. Detected rounding loss of a positive factor, supplied tiny rate, multiple
 change or annual price change produces unavailability instead of a misleading
-boundary value. These guards do not detect every possible rounding difference.
+boundary value. This includes a positive terminal factor rounding to a -100%
+cumulative price change, and a non-identity multiple ratio whose root rounds
+to identity. Genuine offsetting scenario changes remain supported. The solve mode uses an
+exact rational identity, `(1+r)^n * entry_PE == exit_PE`, solely to recognize
+zero required EPS growth without a numerical tolerance. These guards
+do not detect every possible rounding difference.
 Supported horizons are integer years 1–1000; decimal strings are at most 66
 characters. These are technical bounds, not investment policy. Fractional
 horizons are rejected rather than rounded. Exponents and JSON floating-point
@@ -84,12 +89,13 @@ true` with equations, inputs, provenance, numeric precision and limitations
 Independent Fraction identities establish exact cases: unchanged EPS with
 20x-to-45x over two years gives annual price change 50%; 45x-to-20x with 10%
 required annual price change over two years requires EPS growth of 65%.
-The 59 tests also cover signs, incompatible bases, explicit all-assumption scenarios,
+The 63 tests also cover signs, incompatible bases, explicit all-assumption scenarios,
 invalid inputs/units/provenance, duplicate keys, ambient Decimal contexts,
 precision limits and CLI failures. Network calls are prohibited in the tests.
 
-The existing backend virtualenv was unavailable during this increment. The
-stdlib-only checker tests ran in an isolated Python 3.12.14 environment with
-pytest; repository application conftest was excluded. Production wiring,
+The existing backend virtualenv was unavailable during this increment. Initial
+checks used isolated Python 3.12.14; the final 63-case precision follow-up ran
+in isolated Python 3.11.17 with pytest. Repository application conftest was
+excluded. Production wiring,
 source verification, model-output validation, full application regression and
 live acceptance are not claimed. Review/CI must confirm the repository runtime.

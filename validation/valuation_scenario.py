@@ -4,6 +4,7 @@ from __future__ import annotations
 from decimal import Decimal, DecimalException, localcontext, ROUND_HALF_EVEN, Context, InvalidOperation, DivisionByZero, Overflow
 import json
 from datetime import date
+from fractions import Fraction
 import re
 
 
@@ -119,7 +120,14 @@ def _evaluate_scenario(payload):
             if entry != terminal and multiple_ratio == one:
                 raise ValuationContractError('multiple change was lost at 50-digit precision')
             if mode == 'solve_required_earnings_growth':
-                growth = (one + rate) * multiple_ratio ** (one / n) - one
+                multiple_root = multiple_ratio ** (one / n)
+                if multiple_ratio != one and multiple_root == one:
+                    raise ValuationContractError('multiple root change was lost at 50-digit precision')
+                growth = (one + rate) * multiple_root - one
+                # Recognize only an exact algebraic zero; never use a tolerance
+                # to turn a small nonzero growth requirement into zero.
+                if (Fraction(1) + Fraction(rate)) ** years * Fraction(entry) == Fraction(terminal):
+                    growth = Decimal(0)
                 price_factor = (one + rate) ** years
                 annual_price = rate
                 formula = 'EPS_growth = (1 + annual_price_return) * (entry_PE / exit_PE)^(1 / years) - 1'
@@ -132,8 +140,11 @@ def _evaluate_scenario(payload):
                 raise ValuationContractError('rounding lost a positive factor at 50-digit precision')
             if price_factor != one and annual_price == 0:
                 raise ValuationContractError('annual price change was lost at 50-digit precision')
+            cumulative_change = price_factor - one
+            if cumulative_change <= -one:
+                raise ValuationContractError('cumulative price change lost a positive terminal factor at 50-digit precision')
             values = {'eps_growth_rate': growth, 'terminal_price_factor': price_factor,
-                      'cumulative_price_change': price_factor - one,
+                      'cumulative_price_change': cumulative_change,
                       'annualized_price_change': annual_price}
             if not all(value.is_finite() for value in values.values()):
                 raise ValuationContractError('calculation exceeded finite arithmetic bounds')
