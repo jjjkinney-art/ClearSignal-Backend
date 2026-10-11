@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+import re
 from typing import List, Optional
 
 
@@ -88,11 +89,13 @@ def validate_bands(bands: List[ThresholdBand]) -> List[str]:
 def infer_direction(metric: str) -> Optional[MetricDirection]:
     """Best-effort direction for a named metric (used when validating raw fixtures)."""
     m = metric.lower()
-    lower = ("p/e", "pe", "ev/ebitda", "ev/sales", "price/", "leverage",
+    lower = ("p/e", "ev/ebitda", "ev/sales", "price/", "leverage",
              "debt", "multiple", "payback")
     higher = ("growth", "margin", "roic", "roe", "yield", "fcf", "share gain",
               "retention", "attach")
-    if any(k in m for k in lower):
+    # The PE abbreviation is a whole token, not the letters inside operating,
+    # expense, or per-share. Keep the existing metric and operator fallbacks.
+    if re.search(r"\bpe\b", m) or any(k in m for k in lower):
         return MetricDirection.LOWER_IS_BETTER
     if any(k in m for k in higher):
         return MetricDirection.HIGHER_IS_BETTER
