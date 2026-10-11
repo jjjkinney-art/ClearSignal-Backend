@@ -23,3 +23,10 @@ decimals. They now fail closed instead of discarding signs or punctuation.
 Regression examples include `<-€10`, `<−€10`, `<($10)`, `<10..x` and unbalanced
 parentheses. The seven affected files passed again (378 tests); two additional
 unbalanced-parenthesis cases then passed with the complete 31-case new file.
+
+## Follow-up: unmatched sign-bearing prefixes
+
+Any sign skipped before the numeric token now makes the threshold unavailable,
+including `-US$`, lowercase `-usd`/`-eur`, and unknown prefix text. Currency
+names are not enumerated or newly supported. The public builder cannot silently
+replace a negative free-cash-flow boundary with its positive magnitude.

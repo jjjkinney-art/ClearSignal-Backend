@@ -221,7 +221,11 @@ def _parse_side(text: str) -> Optional[Dict[str, Any]]:
     prefix, suffix = text[:m.start("val")], text[m.end():]
     if re.search(r"\([^)]*$", prefix) or suffix.lstrip().startswith(")"):
         return None
-    if re.search(r"[+-]\s*(?:[€£¥₹$]|[A-Z]{3})\s*$", prefix):
+    # Every numeric sign must be consumed by the numeric token itself. A
+    # search that skips a sign-bearing prefix (US$, lowercase currency text,
+    # or any other unsupported syntax) cannot safely assign a positive value.
+    # Do not enumerate currencies here or infer support for their syntax.
+    if re.search(r"[+-]", prefix):
         return None
     # A match is not valid when it consumes only part of a malformed decimal.
     if suffix.startswith((".", ",")) or prefix.endswith("."):

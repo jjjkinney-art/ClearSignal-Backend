@@ -45,6 +45,20 @@ def test_standard_thousands_and_prose_are_preserved():
     assert result['neutral_interval'] == [1000, 2000]
 
 
+@pytest.mark.parametrize('prefix', ['-US$', '−US$', '-usd', '-eur', '-uSd',
+                                  '-anything', '- US $ ', '+usd'])
+def test_public_builder_rejects_unconsumed_sign_before_numeric_boundary(prefix):
+    # Free cash flow exposes the silent positive conversion: 20 > +10 would
+    # otherwise be accepted as a coherent band, concealing the lost minus.
+    result = band('>US$20', f'<{prefix}10', 'Free cash flow')
+    assert result['unavailable'] is True
+    assert 'bear_boundary' not in result
+    assert result['display'] == 'Threshold unavailable'
+    result = band(f'>{prefix}20', '<US$10', 'Free cash flow')
+    assert result['unavailable'] is True
+    assert 'bull_boundary' not in result
+
+
 def test_thesis_wiring_preserves_negative_earnings_and_rejects_ambiguous_multiple():
     from types import SimpleNamespace
     from app.integrity.thesis_wiring import attach_structured_content
