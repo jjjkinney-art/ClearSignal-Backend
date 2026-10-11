@@ -46,6 +46,8 @@ def reviewed_annual_layout(url, form, filed_at, *, content_hash=None, canonical_
                 and (content_hash is None or content_hash == value['content_hash']
                      or (isinstance(content_hash, str) and re.fullmatch(r'[0-9a-f]{64}', content_hash)
                          and canonical_content_hash == value['canonical_content_hash']))
-                and (cik is None or str(cik) == value['cik'])):
+                and (cik is None or (isinstance(cik, str)
+                     and re.fullmatch(r'[0-9]{1,10}', cik)
+                     and str(int(cik)) == value['cik']))):
             return deepcopy(value)
     return None

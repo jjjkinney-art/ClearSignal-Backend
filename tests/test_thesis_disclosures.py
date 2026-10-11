@@ -806,7 +806,8 @@ def test_foreign_text_selection_retains_business_after_risk_with_closing_heading
     assert service.bound_business_description(item, ticker='AAPL', cik='320193')
 
 
-def test_reviewed_integrated_business_layout_requires_producer_and_binder_authorization():
+@pytest.mark.parametrize("cik", ["937966", "0000937966"])
+def test_reviewed_integrated_business_layout_requires_producer_and_binder_authorization(cik):
     from app.services.reviewed_annual_layouts import REVIEWED_ANNUAL_LAYOUTS
     layout = REVIEWED_ANNUAL_LAYOUTS[0]
     quote = 'To help our customers improve manufacturing workflows, we provide technical support and equipment maintenance services.'
@@ -817,18 +818,18 @@ def test_reviewed_integrated_business_layout_requires_producer_and_binder_author
     doc = document(text, requested_url=layout['url'], final_url=layout['url'],
                    document_type='20-F', published_at=layout['filed_at'],
                    content_hash=layout['content_hash'])
-    item, = service.extract_business_descriptions(doc, ticker='ASML', cik='937966')
-    value = service.bound_business_description(item, ticker='ASML', cik='937966')
+    item, = service.extract_business_descriptions(doc, ticker='ASML', cik=cik)
+    value = service.bound_business_description(item, ticker='ASML', cik=cik)
     assert value['quote'] == quote
     assert item.section == layout['business_section']
     assert doc.text[value['start_offset']:value['end_offset']] == quote
     for updates in ({'content_hash': 'a' * 64}, {'document_type': '20-F/A'},
                     {'published_at': '2026-02-26'}):
-        assert service.extract_business_descriptions(replace(doc, **updates), ticker='ASML', cik='937966') == []
+        assert service.extract_business_descriptions(replace(doc, **updates), ticker='ASML', cik=cik) == []
     for key in ('raw_content_hash', 'canonical_content_hash', 'registry_id'):
         tampered = item.model_copy(deep=True)
         tampered.business_disclosures[0]['reviewed_layout'][key] = 'changed'
-        assert service.bound_business_description(tampered, ticker='ASML', cik='937966') is None
+        assert service.bound_business_description(tampered, ticker='ASML', cik=cik) is None
     tampered = item.model_copy(deep=True)
     del tampered.business_disclosures[0]['reviewed_layout']
-    assert service.bound_business_description(tampered, ticker='ASML', cik='937966') is None
+    assert service.bound_business_description(tampered, ticker='ASML', cik=cik) is None

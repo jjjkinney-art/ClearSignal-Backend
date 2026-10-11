@@ -21,6 +21,18 @@ QUOTE = "Export controls could adversely affect our operating results."
 CASE = next(c for c in CASES if c["ticker"] == "ASML")
 
 
+@pytest.mark.parametrize("cik", ["937966", "0000937966"])
+def test_registration_accepts_numeric_sec_cik_representations(cik):
+    assert reviewed_annual_layout(LAYOUT["url"], LAYOUT["form"], LAYOUT["filed_at"],
+        content_hash=LAYOUT["content_hash"], cik=cik) == LAYOUT
+
+
+@pytest.mark.parametrize("cik", ["", "0", "0000000000", "937966x", "+937966", " 937966", "00000937966", "937967"])
+def test_registration_rejects_malformed_or_other_ciks(cik):
+    assert reviewed_annual_layout(LAYOUT["url"], LAYOUT["form"], LAYOUT["filed_at"],
+        content_hash=LAYOUT["content_hash"], cik=cik) is None
+
+
 def integrated_document(text=None):
     return replace(document(CASE, form="20-F", text=text or f"{OPEN} {QUOTE} {CLOSE}"),
         requested_url=LAYOUT["url"], final_url=LAYOUT["url"], published_at=LAYOUT["filed_at"],
