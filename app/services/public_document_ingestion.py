@@ -393,17 +393,13 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         start, end = 0, max_chars
         if preserve_sec_risk and len(full_text) > max_chars:
             window = complete_risk_window(full_text, form=risk_form, layout=risk_layout)
-            if preserve_sec_business and risk_form == "10-K" and window:
-                from .sec_risk_sections import complete_business_window
-                business = complete_business_window(full_text)
-                if business and business[1] <= window[0] and window[1] - business[0] <= max_chars:
-                    # Retain the opening heading so downstream extraction can
-                    # establish the same complete Item 1 boundary.
-                    from .sec_risk_sections import BUSINESS_START
-                    opening = next((m for m in BUSINESS_START.finditer(full_text)
-                                    if m.end() == business[0]), None)
-                    if opening and window[1] - opening.start() <= max_chars:
-                        window = (opening.start(), window[1])
+            if preserve_sec_business and window:
+                from .sec_risk_sections import business_section_bounds
+                business = business_section_bounds(full_text, form=risk_form, layout=risk_layout)
+                if business:
+                    combined = (min(window[0], business[0]), max(window[1], business[3]))
+                    if combined[1] - combined[0] <= max_chars:
+                        window = combined
                         self.text_selection = "complete_sec_business_and_risk_section"
             if window and window[1] > max_chars and window[1] - window[0] <= max_chars:
                 start, end = window
@@ -660,8 +656,12 @@ def fetch_public_document(
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
-        if layout and layout["mapping"] not in parser.normalized_visible_text(preserve_sec_risk=True):
-            raise PublicDocumentError("reviewed annual risk mapping unavailable")
+        if layout:
+            mapped_text = parser.normalized_visible_text(preserve_sec_risk=True)
+            if layout["mapping"] not in mapped_text:
+                raise PublicDocumentError("reviewed annual risk mapping unavailable")
+            if preserve_sec_business and layout.get("business_mapping") not in mapped_text:
+                raise PublicDocumentError("reviewed annual business mapping unavailable")
         title, text, sections, raw_links = parser.result(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
             preserve_sec_risk=sec_periodic_limits, preserve_sec_business=preserve_sec_business, risk_form=document_type or "10-K", risk_layout=layout)

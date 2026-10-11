@@ -11,14 +11,15 @@ from .issuer_risk_evidence import (
     extract_issuer_risk_evidence,
 )
 from .public_document_ingestion import fetch_public_document
-from .sec_risk_sections import complete_business_window, risk_sentence_spans
+from .sec_risk_sections import complete_business_window, risk_sentence_spans, business_section_label
+from .reviewed_annual_layouts import reviewed_annual_layout, layout_binding
 from .providers import sec_provider
 from .issuer_succession import reviewed_predecessor_annual
 
 logger = logging.getLogger(__name__)
 SECTION = "Item 1. Business"
 _BUSINESS_HEADING_PREFIX = re.compile(
-    r"^(?:(?:Company Background|Business Overview|Company Overview|Overview|General|Our Business|Our Products|Business Description|Segment Information|Business segments (?:&|and) Corporate)\s+){1,3}"
+    r"^(?:(?:Navigating challenges in advanced lithography|Company Background|Business Overview|Company Overview|Overview|General|Our Business|Our Products|Business Description|Segment Information|Business segments (?:&|and) Corporate)\s+){1,3}"
     r"(?=(?:For management reporting purposes,\s+)?[A-Z])", re.I)
 _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"\b(?:committed to|focused on|seeks? to|aims? to|strives? to|intend\w*|"
@@ -135,6 +136,13 @@ def _bare_segment_list(quote):
     return True
 
 
+def _customer_purpose_activity(quote):
+    # Retain the complete sentence; this lead identifies customers and does
+    # not authorize strategy, belief or forecast clauses as current activity.
+    lead = re.match(r"^To help our customers [^.;]{1,100},\s+", quote, re.I)
+    return bool(lead and _CURRENT_BUSINESS_PREDICATE.match(quote[lead.end():]))
+
+
 def _business_quote_rejection(quote):
     # Exact complete, short qualitative sentences only. Numbers, forecasts and
     # mixed operational/aspirational prose do not become business-model facts.
@@ -156,6 +164,7 @@ def _business_quote_rejection(quote):
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.
     if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
+             or _customer_purpose_activity(quote)
              or _CURRENT_REVENUE_MODEL.match(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
              or _NAMED_SEGMENT_STRUCTURE.match(quote))
@@ -165,7 +174,7 @@ def _business_quote_rejection(quote):
 
 
 def _business_summary(value):
-    return (f'{value["ticker"]} described its business in its 10-K filed '
+    return (f'{value["ticker"]} described its business in its {value.get("document_type", "10-K")} filed '
             f'{value["document_ref"]["published_at"]}: “{value["quote"]}” '
             'This is an issuer description; competitive advantage and future performance remain unverified.')
 
@@ -174,7 +183,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     stats = diagnostics if diagnostics is not None else {}
     stats.update(status="document_ineligible", sentences=0, heading_prefixes_removed=0,
                  extracted_descriptions=0, rejection_counts={})
-    if (document.document_type != "10-K" or document.publisher != "SEC EDGAR"
+    if (document.document_type not in {"10-K", "20-F"} or document.publisher != "SEC EDGAR"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
             or document.extraction_method != "html" or not document.text_ready
             or not _business_issuer_url(document.final_url, cik)):
@@ -184,7 +193,15 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
             return []
     except (TypeError, ValueError):
         return []
-    window = complete_business_window(document.text)
+    layout = reviewed_annual_layout(document.final_url, document.document_type, document.published_at,
+        content_hash=document.content_hash, canonical_content_hash=document.canonical_content_hash, cik=cik)
+    section = business_section_label(document.document_type, layout)
+    if layout and layout.get("business_mapping") not in document.text:
+        # The mapping can be outside a selected text window; ingestion verifies
+        # the full-text mapping before truncation and the canonical hash binds it.
+        if not document.canonical_content_hash or document.canonical_content_hash != layout['canonical_content_hash']:
+            return []
+    window = complete_business_window(document.text, form=document.document_type, layout=layout)
     stats["status"] = "no_complete_business_section"
     if not window:
         return []
@@ -200,6 +217,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         heading = _BUSINESS_HEADING_PREFIX.match(quote)
         after_heading = quote[heading.end():] if heading else ""
         if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The firm)\b", after_heading, re.I)
+                        or _customer_purpose_activity(after_heading)
                         or _named_issuer_quote(after_heading, ticker=ticker, cik=cik)):
             left += heading.end()
             quote = document.text[start + left:start + right]
@@ -228,18 +246,22 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     for offset, quote in candidates[:2]:
         try:
             ref = ClaimDocumentReference(reference_id=f"document:{document.content_hash}:business:{offset}",
-                title=document.title or f"{ticker} 10-K", provider="SEC EDGAR", url=document.final_url,
-                published_at=document.published_at, section=SECTION,
+                title=document.title or f"{ticker} {document.document_type}", provider="SEC EDGAR", url=document.final_url,
+                published_at=document.published_at, section=section,
                 content_hash=document.content_hash, quote=quote).to_dict()
         except (TypeError, ValueError):
             return []
         value = dict(claim_kind="issuer_business_description", ticker=ticker, quote=quote,
                      start_offset=offset, end_offset=offset + len(quote), document_ref=ref)
+        if document.document_type != "10-K":
+            value["document_type"] = document.document_type
+        if layout:
+            value["reviewed_layout"] = layout_binding(layout, document.content_hash)
         result.append(RetrievedEvidence(title=f"{ticker} business description · {document.published_at} · {len(result)+1}",
             source="SEC EDGAR", summary=_business_summary(value), timestamp=document.published_at,
             url=document.final_url, relevance_score=0.96, source_type="regulatory_filing",
-            source_tier="primary", claim_type="reported_fact", document_type="10-K",
-            filed_at=document.published_at, section=SECTION, extraction_method="html",
+            source_tier="primary", claim_type="reported_fact", document_type=document.document_type,
+            filed_at=document.published_at, section=section, extraction_method="html",
             business_disclosures=[value]))
         stats.update(status="business_extracted", extracted_descriptions=len(result))
     return result
@@ -253,9 +275,20 @@ def bound_business_description(item, *, ticker, cik):
     try:
         ref = ClaimDocumentReference(**value["document_ref"]).to_dict()
         start, end = value["start_offset"], value["end_offset"]
+        binding = value.get("reviewed_layout")
+        if binding is not None and (not isinstance(binding, dict)
+                or binding.get("raw_content_hash") != ref.get("content_hash")):
+            return None
+        layout = reviewed_annual_layout(item.url, item.document_type, item.timestamp,
+            content_hash=ref.get("content_hash"),
+            canonical_content_hash=binding.get("canonical_content_hash") if binding else None, cik=cik)
+        if (layout is not None and binding is None) or (binding is not None and (
+                not layout or binding != layout_binding(layout, ref.get("content_hash")))):
+            return None
+        section = business_section_label(item.document_type, layout)
         if (value.get("claim_kind") != "issuer_business_description" or value.get("ticker") != ticker
                 or not _business_quote(value.get("quote"), ticker=ticker, cik=cik) or value["quote"] != ref.get("quote")
-                or ref.get("provider") != "SEC EDGAR" or ref.get("section") != SECTION
+                or ref.get("provider") != "SEC EDGAR" or ref.get("section") != section
                 or not ref.get("content_hash") or not _business_issuer_url(ref["url"], cik)
                 or ref["url"] != item.url or ref.get("published_at") != item.timestamp
                 or date.fromisoformat(item.timestamp) > date.today()
@@ -263,7 +296,7 @@ def bound_business_description(item, *, ticker, cik):
                 or ref["reference_id"] != f'document:{ref["content_hash"]}:business:{start}'
                 or item.source != "SEC EDGAR" or item.source_type != "regulatory_filing"
                 or item.source_tier != "primary" or item.claim_type != "reported_fact"
-                or item.document_type != "10-K" or item.section != SECTION or item.extraction_method != "html"
+                or item.document_type not in {"10-K", "20-F"} or value.get("document_type", "10-K") != item.document_type or item.section != section or item.extraction_method != "html"
                 or item.freshness_status in {"unavailable", "conflicting", "superseded", "stale"}
                 or item.summary != _business_summary(value)):
             return None

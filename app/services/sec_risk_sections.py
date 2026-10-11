@@ -153,12 +153,39 @@ def risk_sentence_spans(text: str):
 BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*[.:—–-]?\s*{_word('Business')}\b", re.I)
 
 
-def complete_business_window(text: str):
-    """A bounded 10-K Item 1 body, excluding TOC and quoted references."""
-    for heading in islice(BUSINESS_START.finditer(text), 64):
+_FOREIGN_BUSINESS_END = re.compile(
+    rf"\b{_ITEM}\s+(?:4\s*A\s*[.:—–-]?\s*{_word('Unresolved')}\s+{_word('Staff')}\s+{_word('Comments')}|"
+    rf"5\s*[.:—–-]?\s*{_word('Operating')}\s+and\s+{_word('Financial')}\s+{_word('Review')})\b", re.I)
+
+
+def business_section_label(form, layout=None):
+    if layout and layout.get('business_section'):
+        return layout['business_section']
+    return {'10-K': 'Item 1. Business', '20-F': 'Item 4. Information on the Company'}.get(form)
+
+
+def business_section_bounds(text, *, form='10-K', layout=None):
+    """Explicit bounded annual headings; never TOC or quoted cross-references."""
+    if layout:
+        if not layout.get('business_opening') or not layout.get('business_closing'):
+            return None
+        opening = re.compile(layout['business_opening'], re.I)
+        ending = re.compile(layout['business_closing'], re.I)
+    elif form == '10-K':
+        opening, ending = BUSINESS_START, RISK_START
+    elif form == '20-F':
+        opening, ending = _FOREIGN_END, _FOREIGN_BUSINESS_END
+    else:
+        return None
+    for heading in islice(opening.finditer(text), 64):
         if rejected_risk_heading(text, heading.end(), start=heading.start()):
             continue
-        for closing in islice(RISK_START.finditer(text, heading.end(), min(len(text), heading.end() + 160_000)), 64):
+        for closing in islice(ending.finditer(text, heading.end(), min(len(text), heading.end() + 160_000)), 64):
             if not rejected_risk_heading(text, closing.end(), start=closing.start()):
-                return heading.end(), closing.start()
+                return heading.start(), heading.end(), closing.start(), closing.end()
     return None
+
+
+def complete_business_window(text, *, form='10-K', layout=None):
+    bounds = business_section_bounds(text, form=form, layout=layout)
+    return (bounds[1], bounds[2]) if bounds else None

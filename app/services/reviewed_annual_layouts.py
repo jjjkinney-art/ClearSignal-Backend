@@ -31,6 +31,10 @@ _ASML = {
     'opening': r'\bRisk and security\s+Risk factors\s+The risk factors outlined in this section\b',
     'closing': r'\bRisk and security\s+Information security\s+We believe\b',
     'mapping': 'D. Risk Factors Risk – Risk factors 66 4 Information on the Company',
+    'business_section': 'Strategic report - Our business - Lithography, products and services',
+    'business_opening': r'\bOur holistic approach to lithography(?=\s+Lithography – using light\b)',
+    'business_closing': r'\bOur market place\s+Th e macro headlines\b',
+    'business_mapping': 'B. Business Overview At a glance 6 At a glance/Our business 13',
     'max_bytes': 30_000_000,
 }
 REVIEWED_ANNUAL_LAYOUTS = (_ASML,)
