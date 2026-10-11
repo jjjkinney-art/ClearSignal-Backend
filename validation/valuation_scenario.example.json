@@ -1,0 +1,54 @@
+{
+  "mode": "evaluate_growth_scenario",
+  "distributions": "excluded",
+  "entry_pe": {
+    "value": "20",
+    "unit": "x",
+    "eps_basis": {
+      "issuer": "TEST",
+      "currency": "USD",
+      "accounting": "gaap",
+      "adjustment_definition": "none",
+      "share_basis": "diluted",
+      "period_basis": "trailing_12_months",
+      "split_basis": "unchanged split-adjusted share basis"
+    },
+    "provenance": {
+      "kind": "user_assumption",
+      "reference": "Explicit scenario supplied for arithmetic review"
+    }
+  },
+  "exit_pe": {
+    "value": "45",
+    "unit": "x",
+    "eps_basis": {
+      "issuer": "TEST",
+      "currency": "USD",
+      "accounting": "gaap",
+      "adjustment_definition": "none",
+      "share_basis": "diluted",
+      "period_basis": "trailing_12_months",
+      "split_basis": "unchanged split-adjusted share basis"
+    },
+    "provenance": {
+      "kind": "user_assumption",
+      "reference": "Explicit scenario supplied for arithmetic review"
+    }
+  },
+  "horizon": {
+    "value": 2,
+    "unit": "years",
+    "provenance": {
+      "kind": "user_assumption",
+      "reference": "Explicit scenario supplied for arithmetic review"
+    }
+  },
+  "eps_growth_rate": {
+    "value": "0",
+    "unit": "annual_fraction",
+    "provenance": {
+      "kind": "user_assumption",
+      "reference": "Explicit scenario supplied for arithmetic review"
+    }
+  }
+}
