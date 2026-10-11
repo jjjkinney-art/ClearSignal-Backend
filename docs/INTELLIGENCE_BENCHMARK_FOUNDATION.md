@@ -120,6 +120,18 @@ python3 scripts/benchmark_factual_grade.py grade-input.json --require-complete
 
 The resulting scorecard exposes `material_numerical_accuracy`, `claim_source_binding`, `fabricated_material_sources`, pending review count, per-claim dimension results, and explicit findings. Automated entailment may be introduced only after its outputs are calibrated against double-reviewed human examples and its version is recorded with the benchmark run.
 
+Input-integrity repair (October 11, 2026): expected and observed numbers and
+explicit tolerances must be finite; tolerances must be nonnegative.
+`document_exists` must be an explicit JSON/Python boolean, and reviewer identity
+must be a nonempty string. Strings such as `"false"` cannot establish document
+existence, and an infinite tolerance cannot make arbitrary values correct.
+These checks apply to both JSON payloads and direct Python record construction.
+Invalid contracts make the CLI exit 2 without a scorecard; a genuine `false`
+existence review remains a fabricated/missing-source stop-ship finding.
+This hardens the existing grading contract without changing thresholds or
+providing new primary-source adjudication, representative-company coverage or
+launch clearance.
+
 ### Captured product-output grading
 
 `validation.generated_output_grading` connects the frozen factual grader to
