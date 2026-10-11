@@ -291,6 +291,29 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             name for concepts, name, _, _, _ in requested_metrics
             if not any(f"us-gaap:{concept}" in supported_concepts for concept in concepts)
         )
+    profitability_requested = bool(re.search(r"\bprofitability\b", question or "", re.I))
+    profitability = []
+    unverified_profitability = []
+    if profitability_requested:
+        from .profitability_coverage import profitability_coverage
+        profitability = profitability_coverage(ticker, selected_items, claims)
+        unverified_profitability = [row["metric"] for row in profitability
+                                   if row["status"] != "verified_comparison"]
+        # Retrieval still requests both measures. General profitability does not
+        # require every issuer to publish an operating-income subtotal. Only a
+        # rebuilt core comparison can satisfy this scope; pretax alone cannot.
+        core_profitability = [row for row in profitability
+                              if row["metric"] in {"operating income", "net income"}]
+        explicit_metrics = {metric[1] for metric in _requested_metrics(
+            re.sub(r"\bprofitability\b", "", question or "", flags=re.I), include_defaults=False)}
+        general_supported = (any(row["status"] == "verified_comparison" for row in core_profitability)
+                             and not any(row["status"] == "conflicting_comparisons"
+                                         for row in core_profitability))
+        unanswered_parts = [name for name in unanswered_parts
+                            if name not in {"operating income", "net income"}]
+        unanswered_parts.extend(row["metric"] for row in core_profitability
+                                if row["status"] != "verified_comparison"
+                                and (not general_supported or row["metric"] in explicit_metrics))
     if risk_requested and not any(c.get("claim_kind") == "issuer_disclosed_risk" for c in claims):
         unanswered_parts.append("operating risk")
     enough = len(claims) >= (3 if requested_three else 1)
@@ -363,33 +386,24 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         answer += "\n\nNo source-bound Services operating-risk disclosure qualified in this run."
     if unanswered_parts:
         answer += "\n\nUnverified requested parts: " + "; ".join(unanswered_parts) + "."
-    if "operating income" in unanswered_parts:
+    if "operating income" in unanswered_parts or "operating income" in unverified_profitability:
         if any(item is candidate for item in selected_items for candidate in eligible_pretax):
             answer += "\n\n" + PRETAX_LIMITATION
     if coverage:
         answer += "\n\nReporting coverage\n" + coverage_notice
-    if re.search(r"\bprofitability\b", question or "", re.I):
-        profitability_concepts = {
-            "operating income": {"us-gaap:OperatingIncomeLoss"},
-            "net income": {"us-gaap:NetIncomeLoss", "us-gaap:ProfitLoss"},
-            "pretax income": {f"us-gaap:{concept}" for concept in pretax_concepts},
-        }
-        selected_concepts = {
-            str(claim.get("metric", ""))
-            for item in selected_items for claim in getattr(item, "verified_claims", [])
-            if isinstance(claim, dict) and claim.get("ticker") == ticker
-            and claim.get("document_ref")
-        }
-        measures = [name for name, concepts in profitability_concepts.items()
-                    if concepts & selected_concepts]
+    if profitability_requested:
+        measures = [row["metric"] for row in profitability
+                    if row["status"] == "verified_comparison"]
         if measures:
             answer += ("\n\nProfitability measures supported in this answer: "
                        + "; ".join(measures) + ". These amounts are not profit margins.")
         else:
             answer += "\n\nNo requested profitability measure was verified. Amounts are not profit margins."
-        if "operating income" in unanswered_parts:
+        if "operating income" in unverified_profitability:
             answer += ("\n\nOperating income was not verified in this run. This does not establish "
                        "that the issuer did not report it; retrieval or extraction may be incomplete.")
+        if "net income" in unverified_profitability:
+            answer += "\n\nA comparable net income measure was not verified in this run."
     setattr(thesis, "direct_answer", answer)
     _restrict_evidence_thesis(thesis, answer, claims, selected_items, enough=True, scope=view_scope)
     return {
@@ -397,5 +411,6 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         "reason": "Each claim is bound to a retrieved evidence reference.",
         "claims": claims,
         "unanswered_parts": unanswered_parts,
+        **({"profitability_coverage": profitability} if profitability else {}),
         **({"reporting_coverage": coverage} if coverage else {}),
     }

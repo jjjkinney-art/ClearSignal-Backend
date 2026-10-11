@@ -30,14 +30,16 @@ def test_multi_metric_answer_reports_missing_profitability_as_partial():
     assert "not profit margins" in thesis.direct_answer
 
 
-def test_complete_multi_metric_answer_preserves_cash_flow_after_profit_slots():
+def test_complete_multi_metric_answer_preserves_cash_flow_after_profit_slots(monkeypatch):
+    from tests.test_financial_thesis_foundation import evidence
+    monkeypatch.setattr("app.services.profitability_coverage._load_ticker_cik_map", lambda: {"AAPL": "320193"})
     thesis = InvestmentThesis(ticker="AAPL", company_name="Apple Inc.")
     result = apply_source_answer_gate(
         thesis, "How have revenue, profitability and operating cash flow changed? Cite exact figures.",
-        [_bound_metric("Revenues", "revenue"),
-         _bound_metric("OperatingIncomeLoss", "operating income"),
-         _bound_metric("NetIncomeLoss", "net income"),
-         _bound_metric("NetCashProvidedByUsedInOperatingActivities", "operating cash flow")],
+        [evidence("Revenues", "revenue"),
+         evidence("OperatingIncomeLoss", "operating income"),
+         evidence("NetIncomeLoss", "net income"),
+         evidence("NetCashProvidedByUsedInOperatingActivities", "operating cash flow")],
     )
     assert result["status"] == "attributed"
     assert result["unanswered_parts"] == []
