@@ -200,7 +200,7 @@ def test_financial_view_keeps_operating_gap_with_validated_pretax(monkeypatch, p
     elif problem == "conflicting":
         items.append(evidence(PRETAX, "pretax income", current=180))
     thesis = InvestmentThesis(ticker="AAPL", company_name="Apple")
-    result = apply_source_answer_gate(thesis, "How have revenue, profitability and operating cash flow changed? Cite sources.", items)
+    result = apply_source_answer_gate(thesis, "How have revenue, profitability, operating income and operating cash flow changed? Cite sources.", items)
     assert result["status"] == "partial"
     assert "operating income" in result["unanswered_parts"]
     assert len(result["claims"]) == (4 if problem is None else 3)
