@@ -412,7 +412,8 @@ def test_composer_keeps_disclosures_separate_from_financial_inferences_and_mater
     items = pair() + [business_item(), risk_item()]
     result = build_financial_foundation("AAPL", items, None, expected_cik="320193")
     assert len(result["claims"]) == 4
-    assert len(result["inferences"]) == 2
+    assert len([row for row in result["inferences"] if row["kind"] == "financial_inference"]) == 2
+    assert len([row for row in result["inferences"] if row["kind"] == "risk_monitoring_inference"]) == 1
     assert BUSINESS in result["answer"] and RISK in result["answer"]
     assert "competitive position" in result["unanswered_parts"]
     assert "valuation and expected returns" in result["unanswered_parts"]
@@ -880,3 +881,59 @@ def test_absent_annual_fetches_one_current_quarter_without_predecessor_inheritan
     assert calls == [['10-K','20-F'], ['10-Q']]
     assert item.document_type == '10-Q' and item.business_disclosures
     assert not item.risk_disclosures
+
+
+def test_bound_risk_produces_cited_specific_condition_without_claiming_occurrence():
+    result = build_financial_foundation('AAPL', pair() + [risk_item()], None, expected_cik='320193')
+    inference, = [row for row in result['inferences'] if row['kind'] == 'risk_monitoring_inference']
+    assert inference['condition'] == 'Supply chain disruptions'
+    assert inference['potential_effect'] == 'our ability to manufacture and deliver products'
+    assert inference['reference_ids'] == ['E3']
+    assert not inference['historical_context_only']
+    assert 'does not establish that the condition occurred' in inference['text']
+    assert 'disclosure alone does not invalidate' in inference['conditional_test']
+    assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
+    assert '[E3]' in result['answer'].split('Conditional risk monitoring')[1]
+
+
+def test_unbound_risk_or_missing_reference_cannot_produce_monitoring_test():
+    bad = risk_item().model_copy(update={'summary':'Altered unbound claim'})
+    result = build_financial_foundation('AAPL', pair() + [bad], None, expected_cik='320193')
+    assert all(row['kind'] == 'financial_inference' for row in result['inferences'])
+    items = pair() + [risk_item()]
+    refs = [dict(id=f'E{i}', title=item.title, source=item.source, url=item.url,
+                 published_at=item.timestamp) for i, item in enumerate(items[:2], 1)]
+    result = build_financial_foundation('AAPL', items, refs, expected_cik='320193')
+    assert 'Conditional risk monitoring' not in result['answer']
+
+
+@pytest.mark.parametrize('quote', [
+    'Supply chain disruptions are among the risks described elsewhere in this annual report.',
+    'Supply chain disruptions may occur and could adversely affect our manufacturing operations.',
+    'Supply chain disruptions will occur and could adversely affect our manufacturing operations.',
+    'Supply chain disruptions could not adversely affect our manufacturing operations.',
+])
+def test_monitoring_does_not_invent_missing_or_nested_condition_effect(quote):
+    from app.services.financial_thesis_foundation import _risk_monitoring_inference
+    assert _risk_monitoring_inference(dict(quote=quote, scope='Supply chain'), 'E1') is None
+
+
+def test_historical_risk_monitoring_requires_current_successor_confirmation():
+    from app.services.financial_thesis_foundation import _risk_monitoring_inference
+    result = _risk_monitoring_inference(dict(quote=RISK, scope='Supply chain',
+        issuer_relationship={'use':'historical_risk_context_only'}), 'E6')
+    assert result['historical_context_only']
+    assert result['text'].startswith('Historical predecessor mechanism:')
+    assert 'First verify that the successor confirms' in result['conditional_test']
+    assert 'not a current successor invalidation test' in result['conditional_test']
+
+
+def test_source_answer_gate_retains_risk_inference_as_partial_analysis():
+    items, references, _ = admit_evidence(pair() + [risk_item()], evaluated_at='2025-09-01')
+    thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic company')
+    result = apply_source_answer_gate(thesis, QUESTION, items, references=references)
+    assert result['status'] == 'partial'
+    inference, = [row for row in result['inferences'] if row['kind'] == 'risk_monitoring_inference']
+    assert inference['reference_ids'] == ['E3']
+    assert 'Conditional risk monitoring' in thesis.direct_answer
+    assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
