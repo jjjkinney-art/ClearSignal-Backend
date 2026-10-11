@@ -1,4 +1,4 @@
-# Material-adverse risk monitoring
+# Preserve monitoring for bound risk mechanisms
 
 The accepted explicit-mechanism fixture in `test_thesis_disclosures.py` includes
 “Supply chain disruptions could materially adversely affect our liquidity and
@@ -19,6 +19,16 @@ and the final source-answer gate; exact source spans, unchanged partial status,
 zero assessed confidence, unresolved materiality/likelihood/impact, tampered
 claims and missing references. Socket guards prohibit network in the new gate
 cases. This is synthetic regression evidence, not live answer-quality acceptance.
+
+An additional reproduced omission affected short explicit subjects: “Cyberattacks”
+and “Loan defaults” passed source binding but were below the monitoring parser's
+15-character minimum. Monitoring now requires a lexical subject instead of that
+arbitrary minimum. Empty, whitespace-only, punctuation-only and one-letter
+subjects remain excluded, as do unresolved demonstrative/pronoun subjects.
+The 500-character maximum and nested-modal exclusions remain. Tests exercise
+both subjects through extraction, binding and the final answer gate with both
+modals and with/without the materiality modifier; negative cases include unresolved
+subjects, nested forecasts and the length limit.
 
 This bounded repair implements part of the conditional-monitoring work recorded
 in `CITED_RISK_MONITORING_20261011.md`. The broader risk-relevance and representative

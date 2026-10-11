@@ -897,7 +897,13 @@ def test_bound_risk_produces_cited_specific_condition_without_claiming_occurrenc
 
 
 @pytest.mark.parametrize('modal', ['could', 'may'])
-def test_material_adverse_mechanism_survives_binding_and_final_answer(monkeypatch, modal):
+@pytest.mark.parametrize('condition,scope', [
+    ('Supply chain disruptions', 'Liquidity'),
+    ('Cyberattacks', 'Cybersecurity'),
+    ('Loan defaults', 'Credit losses'),
+])
+@pytest.mark.parametrize('modifier', ['', 'materially '])
+def test_bound_mechanism_survives_binding_and_final_answer(monkeypatch, modal, condition, scope, modifier):
     import socket
 
     def unexpected_network(*args, **kwargs):
@@ -908,12 +914,12 @@ def test_material_adverse_mechanism_survives_binding_and_final_answer(monkeypatc
     monkeypatch.setattr(socket.socket, 'connect_ex', unexpected_network)
     monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map',
                         lambda: {'AAPL': '0000320193'})
-    quote = (f'Supply chain disruptions {modal} materially adversely affect '
+    quote = (f'{condition} {modal} {modifier}adversely affect '
              'our liquidity and operating results.')
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    f'{quote} Item 1B. Unresolved Staff Comments')
     risk, = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
-                                                question='What operating risk affects Liquidity?')
+                                                question=f'What operating risk affects {scope}?')
     bound = service.bound_thesis_risk(risk, ticker='AAPL')
     assert bound['quote'] == quote
     assert doc.text[bound['start_offset']:bound['end_offset']] == quote
@@ -921,7 +927,7 @@ def test_material_adverse_mechanism_survives_binding_and_final_answer(monkeypatc
     thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic company')
     result = apply_source_answer_gate(thesis, QUESTION, items, references=references)
     inference, = [row for row in result['inferences'] if row['kind'] == 'risk_monitoring_inference']
-    assert inference['condition'] == 'Supply chain disruptions'
+    assert inference['condition'] == condition
     assert inference['potential_effect'] == 'our liquidity and operating results'
     assert inference['reference_ids'] == ['E3']
     assert quote in thesis.direct_answer
@@ -960,6 +966,16 @@ def test_unbound_risk_or_missing_reference_cannot_produce_monitoring_test():
 def test_monitoring_does_not_invent_missing_or_nested_condition_effect(quote):
     from app.services.financial_thesis_foundation import _risk_monitoring_inference
     assert _risk_monitoring_inference(dict(quote=quote, scope='Supply chain'), 'E1') is None
+
+
+@pytest.mark.parametrize('condition', ['', ' ', '...', '—', 'X', 'It', 'These risks',
+                                      'Furthermore, it', 'However, ...',
+                                      'Cyberattacks may occur and', 'Cyberattacks will occur and',
+                                      'A' * 501])
+def test_short_condition_still_requires_explicit_lexical_mechanism(condition):
+    from app.services.financial_thesis_foundation import _risk_monitoring_inference
+    quote = f'{condition} could adversely affect our business and operating results.'
+    assert _risk_monitoring_inference(dict(quote=quote, scope='Cybersecurity'), 'E1') is None
 
 
 @pytest.mark.parametrize('quote', [RISK, RISK.replace('could adversely', 'could materially adversely'),

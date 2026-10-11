@@ -55,16 +55,24 @@ def _risk_monitoring_inference(value, reference_id):
     attribute reported financial movements or authorize a successor risk claim.
     """
     match = re.fullmatch(
-        r'(?P<condition>.{15,500}?)\s+(?:could|may)\s+'
+        r'(?P<condition>.{1,500}?)\s+(?:could|may)\s+'
         r'(?:(?:materially )?adversely affect|have (?:a )?(?:material )?adverse effect on|harm)\s+'
         r'(?P<effect>.{10,350})\.', value['quote'], re.I)
     if not match or re.search(r'\b(?:could|may|might|will)\b', match['condition'], re.I):
         return None
     condition, effect = match['condition'], match['effect']
+    # A source-bound mechanism can be short (e.g. Cyberattacks). Require a
+    # lexical subject rather than using character count as a relevance proxy.
+    if not re.search(r'\b[A-Za-z]{2,}\b', condition):
+        return None
     # Display-only cleanup of an explicit discourse lead. The original
     # condition, full bound quote and offsets remain untouched.
     display_condition = re.sub(r'^(?:On the other hand|Furthermore|Moreover|However|In addition),\s+',
                                '', condition, count=1, flags=re.I)
+    if (not re.search(r'\b[A-Za-z]{2,}\b', display_condition)
+            or re.fullmatch(r'(?:this|these|that|those|it|they|such)(?:\s+\w+)?',
+                            display_condition.strip(), re.I)):
+        return None
     historical = bool(value.get('issuer_relationship'))
     text = f'Watch: “{display_condition}”. Potential adverse effect: “{effect}”.'
     test = ('Reported occurrence and resulting operating deterioration would challenge the '
