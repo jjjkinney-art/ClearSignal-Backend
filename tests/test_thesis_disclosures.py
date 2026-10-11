@@ -732,3 +732,103 @@ def test_named_issuer_does_not_relax_identity_or_qualitative_guardrails(monkeypa
     doc = document(f'Item 1. Business Our Products {quote} Item 1A. Risk Factors '
                    f'{RISK} Item 1B. Unresolved Staff Comments', final_url=url, requested_url=url)
     assert service.extract_business_descriptions(doc, ticker=ticker, cik=cik) == []
+
+
+@pytest.mark.parametrize('closing', ['Item 4A. Unresolved Staff Comments',
+                                     'Item 5. Operating and Financial Review and Prospects'])
+def test_foreign_business_uses_explicit_item4_boundaries_and_actual_form(closing):
+    doc = document(f'Item 4. Information on the Company Overview. {BUSINESS} {closing}',
+                   document_type='20-F')
+    item, = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert item.document_type == '20-F'
+    assert item.section == 'Item 4. Information on the Company'
+    assert 'in its 20-F filed' in item.summary
+    assert service.bound_business_description(item, ticker='AAPL', cik='320193')
+    foundation = build_financial_foundation('AAPL', pair() + [item], None, expected_cik='320193')
+    assert 'business model and competitive position' not in foundation['unanswered_parts']
+    assert 'competitive position' in foundation['unanswered_parts']
+    assert 'valuation and expected returns' in foundation['unanswered_parts']
+    assert BUSINESS in foundation['answer']
+    value = item.business_disclosures[0]
+    assert doc.text[value['start_offset']:value['end_offset']] == BUSINESS
+    tampered = item.model_copy(deep=True)
+    tampered.document_type = '10-K'
+    assert service.bound_business_description(tampered, ticker='AAPL', cik='320193') is None
+
+
+@pytest.mark.parametrize('text', [
+    f'Item 4. Information on the Company 14 {BUSINESS} Item 5. Operating and Financial Review 20',
+    f'See Item 4. Information on the Company Overview. {BUSINESS} Item 5. Operating and Financial Review',
+    f'Item 4. Information on the Company Overview. {BUSINESS}',
+    f'Business Overview. {BUSINESS} Item 5. Operating and Financial Review',
+    f'Item 4. Information on the Company Overview. {BUSINESS} See Item 5. Operating and Financial Review',
+    f'Item 4. Information on the Company Overview. {"Context. " * 20000} {BUSINESS} Item 5. Operating and Financial Review',
+])
+def test_foreign_business_toc_cross_reference_incomplete_and_oversized_fail_closed(text):
+    assert service.extract_business_descriptions(document(text, document_type='20-F'),
+                                                 ticker='AAPL', cik='320193') == []
+
+
+@pytest.mark.parametrize('quote', [
+    'To help our customers improve their manufacturing workflows, we provide equipment maintenance and technical support services.',
+    'To help our customers correct production errors, we develop software and provide support throughout the manufacturing process.',
+])
+def test_complete_customer_purpose_activity_keeps_exact_sentence(quote):
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK}')
+    item, = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert service.bound_business_description(item, ticker='AAPL', cik='320193')['quote'] == quote
+
+
+@pytest.mark.parametrize('quote', [
+    'To help our customers improve workflows, we will provide software and technical support services.',
+    'To help our customers improve workflows, we provide the best software and technical support services.',
+    'To help our employees improve workflows, we provide software and technical support services.',
+    'To help our customers improve workflows, our competitor provides software and technical support services.',
+    'To help our customers improve workflows, we provide software and expect rapid future revenue growth.',
+    'To help our customers improve workflows, we plan to provide software and technical support services.',
+])
+def test_customer_purpose_does_not_authorize_forecasts_promotions_or_wrong_subject(quote):
+    doc = document(f'Item 1. Business Overview. {quote} Item 1A. Risk Factors {RISK}')
+    assert service.extract_business_descriptions(doc, ticker='AAPL', cik='320193') == []
+
+
+def test_foreign_text_selection_retains_business_after_risk_with_closing_heading():
+    prefix = 'Preface. ' * 15000
+    text = prefix + f'Item 3.D. Risk Factors {RISK} Item 4. Information on the Company Overview. {BUSINESS} Item 5. Operating and Financial Review and Prospects'
+    parser = _HTMLTextExtractor()
+    parser.feed('<html><body>' + text + '</body></html>')
+    _, selected, _, _ = parser.result(max_chars=1500, preserve_sec_risk=True,
+                                     preserve_sec_business=True, risk_form='20-F')
+    assert parser.text_selection == 'complete_sec_business_and_risk_section'
+    assert 'Item 5. Operating and Financial Review' in selected
+    doc = document(selected, document_type='20-F')
+    item, = service.extract_business_descriptions(doc, ticker='AAPL', cik='320193')
+    assert service.bound_business_description(item, ticker='AAPL', cik='320193')
+
+
+def test_reviewed_integrated_business_layout_requires_producer_and_binder_authorization():
+    from app.services.reviewed_annual_layouts import REVIEWED_ANNUAL_LAYOUTS
+    layout = REVIEWED_ANNUAL_LAYOUTS[0]
+    quote = 'To help our customers improve manufacturing workflows, we provide technical support and equipment maintenance services.'
+    text = (layout['business_mapping'] + ' Mapping ends. '
+            'Our holistic approach to lithography Lithography – using light describes our process. '
+            f'Navigating challenges in advanced lithography {quote} '
+            'Our market place Th e macro headlines concern the economy.')
+    doc = document(text, requested_url=layout['url'], final_url=layout['url'],
+                   document_type='20-F', published_at=layout['filed_at'],
+                   content_hash=layout['content_hash'])
+    item, = service.extract_business_descriptions(doc, ticker='ASML', cik='937966')
+    value = service.bound_business_description(item, ticker='ASML', cik='937966')
+    assert value['quote'] == quote
+    assert item.section == layout['business_section']
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    for updates in ({'content_hash': 'a' * 64}, {'document_type': '20-F/A'},
+                    {'published_at': '2026-02-26'}):
+        assert service.extract_business_descriptions(replace(doc, **updates), ticker='ASML', cik='937966') == []
+    for key in ('raw_content_hash', 'canonical_content_hash', 'registry_id'):
+        tampered = item.model_copy(deep=True)
+        tampered.business_disclosures[0]['reviewed_layout'][key] = 'changed'
+        assert service.bound_business_description(tampered, ticker='ASML', cik='937966') is None
+    tampered = item.model_copy(deep=True)
+    del tampered.business_disclosures[0]['reviewed_layout']
+    assert service.bound_business_description(tampered, ticker='ASML', cik='937966') is None
