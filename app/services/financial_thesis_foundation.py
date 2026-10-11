@@ -48,6 +48,37 @@ def is_broad_thesis_request(question: str) -> bool:
     return bool(re.search(r"\bwhat\s+is\s+(?:the\s+)?investment thesis\b", question or "", re.I))
 
 
+def _risk_monitoring_inference(value, reference_id):
+    """Interpret only an explicit condition/effect clause already source-bound.
+
+    Keep the source's actual words. This does not rank risks, estimate likelihood,
+    attribute reported financial movements or authorize a successor risk claim.
+    """
+    match = re.fullmatch(
+        r'(?P<condition>.{15,500}?)\s+(?:could|may)\s+'
+        r'(?:adversely affect|have (?:a )?(?:material )?adverse effect on|harm)\s+'
+        r'(?P<effect>.{10,350})\.', value['quote'], re.I)
+    if not match or re.search(r'\b(?:could|may|might|will)\b', match['condition'], re.I):
+        return None
+    condition, effect = match['condition'], match['effect']
+    historical = bool(value.get('issuer_relationship'))
+    text = (f'The disclosed mechanism links “{condition}” to potential harm to “{effect}”. '
+            'This identifies a condition to investigate; it does not establish that the condition '
+            'occurred or caused the reported financial trends.')
+    test = (f'Monitor whether “{condition}” occurs and whether the issuer reports adverse effects '
+            f'on “{effect}”. Confirmed operating deterioration through this mechanism would '
+            'challenge an assumption that this risk remains manageable; the disclosure alone '
+            'does not invalidate the investment case. This is a conditional research test, not a forecast.')
+    if historical:
+        text = 'Historical predecessor mechanism: ' + text
+        test = ('First verify that the successor confirms this mechanism remains applicable. '
+                'Until then, this is a historical watch item, not a current successor invalidation test. ' + test)
+    return {'kind': 'risk_monitoring_inference', 'scope': value['scope'],
+            'condition': condition, 'potential_effect': effect,
+            'historical_context_only': historical, 'text': text,
+            'conditional_test': test, 'reference_ids': [reference_id]}
+
+
 def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
     """Recheck both facts and the displayed summary with the existing producer."""
     if (getattr(item, "source", None) != "SEC EDGAR — structured XBRL fact"
@@ -229,6 +260,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}" for row in interpretations)
     from .thesis_disclosures import bound_business_description, bound_thesis_risk
     disclosures = []
+    risk_interpretations = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0}
     current_risks = 0
     seen = set()
@@ -253,6 +285,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         elif value["claim_kind"] == "issuer_disclosed_risk":
             current_risks += 1
         disclosures.append(row)
+        if value['claim_kind'] == 'issuer_disclosed_risk':
+            interpretation = _risk_monitoring_inference(value, reference_id)
+            if interpretation:
+                risk_interpretations.append(interpretation)
         rows.append(row)
         selected.append(item)
         seen.add(value["quote"])
@@ -263,6 +299,11 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         answer += ("\nThese short excerpts are partial context, not a complete business model or a ranking "
                    "of the most material risks. Disclosed possibilities do not establish occurrence, "
                    "probability or a quantified effect on the financial case.")
+    if risk_interpretations:
+        answer += '\n\nConditional risk monitoring\n' + '\n\n'.join(
+            f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}"
+            for row in risk_interpretations)
+        interpretations.extend(risk_interpretations)
     unanswered = missing + ["competitive position" if counts["issuer_business_description"] else
                             "business model and competitive position", "valuation and expected returns",
                             "issuer-disclosed operating-risk mechanisms"]
