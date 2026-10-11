@@ -137,51 +137,16 @@ def _evidence_block(evidence: List[RetrievedEvidence]) -> str:
 
 # ── Per-intent prompt templates ───────────────────────────────────────────────
 
+from ..services.implied_growth_contract import IMPLIED_GROWTH_RULES
+
 _INTENT_PROMPTS = {
 
-    "implied_growth_rate": """\
-You are a financial analyst. Your ONE job is to answer this specific question:
-
-USER'S EXACT QUESTION: "{question}"
-
+    "implied_growth_rate": """USER'S EXACT QUESTION: "{question}"
 COMPANY: {name} ({ticker})
-
 {profile_block}
-
-EVIDENCE (financial data, analyst estimates, valuation ratios):
+EVIDENCE:
 {evidence_block}
-
-TASK: Produce a precise 4-sentence direct answer to the question above.
-
-Sentence 1 — State {ticker}'s current forward P/E or EV/Revenue multiple (use evidence data).
-  Then compute the implied compound revenue or EPS CAGR that multiple requires over 3–5 years.
-  Use: implied_CAGR ≈ (required_earnings_in_year_N / current_earnings)^(1/N) - 1
-  where required_earnings is anchored to what would justify the current multiple at a terminal P/E of 20-25x.
-  Format: "At ~[X]x forward P/E, the market is pricing in approximately [Y]% compound revenue growth
-  over [N] years to justify the multiple at a terminal ~[Z]x."
-
-Sentence 2 — State the current analyst consensus growth estimate from evidence.
-  Explicitly compare: does consensus meet, exceed, or fall short of the implied rate?
-  Format: "Analyst consensus projects ~[X]% revenue CAGR, which [meets / falls short of / exceeds]
-  the implied [Y]% by [Z] percentage points."
-
-Sentence 3 — Name 1-2 historical analogs: company, period, multiple at entry, and whether
-  they sustained the implied growth rate. Use evidence if available; use training knowledge
-  for well-known cases (Cisco 2000, Qualcomm 2014, etc.) only if evidence is absent.
-  Format: "Historical analog: [Company] in [period] carried a ~[X]x multiple requiring ~[Y]%
-  growth — [outcome: they sustained it / they fell short by Z% / the stock rerating took N years]."
-
-Sentence 4 — State whether the implied growth rate is achievable given {ticker}'s profile,
-  and the single data point that would confirm or deny it.
-  Format: "[Achievable / Stretched / Requires execution perfection] — the key variable is [metric]:
-  if [specific threshold], the growth rate is defensible; if not, the multiple faces [X]% compression."
-
-RULES:
-- Do NOT open with company description.
-- Do NOT hedge with "it depends" without providing a directional answer.
-- Use actual numbers from evidence for the multiple. If forward P/E is unavailable, use trailing P/E.
-- Return ONLY the 4-sentence answer as plain text. No JSON, no headers, no bullet points.
-""",
+""" + IMPLIED_GROWTH_RULES + "\nReturn four plain-text sentences directly answering the question, including any calculation limitation.\n",
 
     "timing_lag": """\
 You are a financial analyst. Your ONE job is to answer this specific question:

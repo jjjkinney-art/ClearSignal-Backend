@@ -1897,26 +1897,11 @@ def _build_synthesis_prompt(
         )
     # ── Phase 4: six new specific-answer intents ─────────────────────────────
     elif original_user_question and question_intent == "implied_growth_rate":
+        from .implied_growth_contract import IMPLIED_GROWTH_RULES
         question_anchor_block = (
-            f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'
-            f"SECTION MANDATES — IMPLIED GROWTH RATE QUESTION:\n"
-            f"direct_answer (4 sentences REQUIRED):\n"
-            f"  Sentence 1 — State {ticker}'s current forward P/E or EV/Revenue multiple "
-            f"and the implied compound revenue or EPS CAGR that multiple requires over 3–5 years "
-            f"(assume 10% discount rate if unspecified). Quantify: '~[X]x forward P/E implies "
-            f"~[Y]% compound growth over [N] years.'\n"
-            f"  Sentence 2 — State the current analyst consensus growth estimate and whether "
-            f"it meets, exceeds, or falls short of the implied rate.\n"
-            f"  Sentence 3 — Name 1–2 historical analogs (company, period, multiple entry point, "
-            f"growth outcome) — did those companies sustain the implied rate?\n"
-            f"  Sentence 4 — State whether the implied growth rate is achievable, stretched, or "
-            f"requires execution perfection, and what single data point would confirm or deny it.\n"
-            f"  FORBIDDEN: Opening with generic company description.\n"
-            f"  FORBIDDEN: Answering with 'the market believes growth is strong.'\n"
-            f"valuation_view — GROWTH-RATE ANCHOR REQUIRED:\n"
-            f"  Lead with the specific multiple and the implied growth rate.\n"
-            f"  MANDATORY: Use 'at ~[X]x, the market is paying for [Y]% compound growth' language.\n\n"
+            f"USER'S EXACT QUESTION: {original_user_question}\n" + IMPLIED_GROWTH_RULES
         )
+
     elif original_user_question and question_intent == "timing_lag":
         question_anchor_block = (
             f'USER\'S EXACT QUESTION: "{original_user_question}"\n\n'

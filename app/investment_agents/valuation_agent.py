@@ -16,6 +16,8 @@ from ._signal_extraction import extract_min_bullish_signal
 
 logger = logging.getLogger(__name__)
 
+from ..services.implied_growth_contract import IMPLIED_GROWTH_RULES
+
 _AGENT_NAME = "valuation_agent"
 
 _EVIDENCE_KEYWORDS = [
@@ -153,18 +155,7 @@ explain what data is missing in `valuation_stance_reasoning`.
     # intents except valuation_stance (which already has its own full mandate).
     if question and question_intent not in ("valuation_stance", None, ""):
         _q_intent_hints = {
-            "implied_growth_rate": (
-                f"The user's question is about the IMPLIED GROWTH RATE embedded in "
-                f"{company.ticker}'s current multiple. MANDATORY:\n"
-                f"  - In `pe_assessment`: state the current forward P/E or EV/Revenue "
-                f"explicitly, then compute what compound revenue CAGR that multiple "
-                f"implies over 3–5 years (use discount rate 10% if unspecified).\n"
-                f"  - In `growth_view`: state the analyst consensus growth rate and "
-                f"whether it meets or falls short of the implied rate.\n"
-                f"  - In `relative_value`: name 1–2 historical periods or peers where "
-                f"a similar multiple was sustained — and the outcome.\n"
-                f"  - In `overall`: lead with the implied CAGR figure."
-            ),
+            "implied_growth_rate": IMPLIED_GROWTH_RULES,
             "quantitative_threshold": (
                 f"The user is asking for a QUANTITATIVE THRESHOLD — what level of "
                 f"[revenue decline / margin compression / loss rate] causes material "
