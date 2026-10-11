@@ -305,6 +305,16 @@ def fetch_debt_metrics(symbol: str) -> List[RetrievedEvidence]:
     return []
 
 
+def _calendar_number(value):
+    """A malformed actual value cannot establish reported earnings."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return value if math.isfinite(value) else None
+    except OverflowError:
+        return None
+
+
 def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
     """Fetch recent / upcoming earnings dates and EPS estimates."""
     api_key = _get_api_key()
@@ -317,13 +327,16 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
         if not data or not isinstance(data, list):
             return []
 
-        snippets = []
+        evidence = []
         for entry in data[:3]:
+            if not isinstance(entry, dict):
+                continue
             date = entry.get("date", "")
-            eps_est = entry.get("epsEstimated")
-            eps_act = entry.get("eps")
-            rev_est = entry.get("revenueEstimated")
-            rev_act = entry.get("revenue")
+            date = date if isinstance(date, str) else ""
+            eps_est = _calendar_number(entry.get("epsEstimated"))
+            eps_act = _calendar_number(entry.get("eps"))
+            rev_est = _calendar_number(entry.get("revenueEstimated"))
+            rev_act = _calendar_number(entry.get("revenue"))
 
             parts = [f"Date: {date}"]
             if eps_est is not None:
@@ -334,18 +347,20 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
                 parts.append(f"Revenue estimate: {_fmt_large(rev_est)}")
             if rev_act is not None:
                 parts.append(f"Revenue actual: {_fmt_large(rev_act)}")
-            snippets.append("  •  ".join(parts))
-
-        first = data[0]
-        title = f"{symbol} Earnings — Next/Recent: {first.get('date', 'TBD')}"
-        summary = f"Earnings calendar for {symbol}:\n" + "\n".join(snippets)
-        return [RetrievedEvidence(
-            title=title,
-            source="Financial Modeling Prep",
-            summary=summary,
-            timestamp=first.get("date", ""),
-            relevance_score=0.85,
-        )]
+            if len(parts) == 1:
+                continue
+            has_actual = eps_act is not None or rev_act is not None
+            # A scheduled event date does not date an estimate's publication.
+            # Keep rows separate so a newer estimate cannot date older results.
+            evidence.append(RetrievedEvidence(
+                title=f"{symbol} Earnings — Next/Recent: {date or 'TBD'}",
+                source="Financial Modeling Prep",
+                summary=f"Earnings calendar for {symbol}:\n" + "  •  ".join(parts),
+                timestamp=date if has_actual else "",
+                claim_type="reported_fact" if has_actual else "estimate",
+                relevance_score=0.85,
+            ))
+        return evidence
     except (HTTPError, URLError) as exc:
         logger.warning("FMP earnings-calendar network error for %s: %r", symbol, exc)
     except Exception as exc:

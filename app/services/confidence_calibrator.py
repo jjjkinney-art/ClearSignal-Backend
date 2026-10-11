@@ -124,6 +124,8 @@ def _parse_timestamp(ts: Optional[str]) -> Optional[datetime]:
 def _has_live_valuation(evidence: List[RetrievedEvidence]) -> bool:
     """Require a known date within the existing valuation freshness window."""
     for ev in evidence:
+        if is_estimate_evidence(ev):
+            continue
         haystack = f"{ev.source or ''} {ev.title or ''}".lower()
         age = _age(getattr(ev, "timestamp", None))
         if (any(fp in haystack for fp in _FMP_VALUATION_FINGERPRINTS)

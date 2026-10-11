@@ -39,8 +39,18 @@ estimate period with publication. These remain prompt instructions, not proof
 that a live model will follow them. The unknown-date and earnings/estimate
 distinction is enforced deterministically in freshness and coverage.
 
-Downstream repair validation: 528 tests passed across provider freshness
-semantics (21 cases), truth density, realism hardening, monitoring intelligence,
+A second review found that the earnings-calendar adapter bundled estimate-only
+and actual-result rows under the first event's date. It now emits separate rows:
+estimate-only entries retain their event date in prose but have an unknown
+publication timestamp and estimate classification. Actual-result entries retain
+their own dated reported context. Finite zero/negative actuals remain supported;
+malformed actuals cannot establish reported earnings. Date-only entries provide
+no earnings evidence. These provider observations still have no verified claims
+or primary-source status. Typed/identified estimates are also excluded from
+observed-valuation freshness and coverage, even when they mention P/E.
+
+Downstream repair validation: 585 tests passed across provider freshness
+semantics (33 cases), FMP provider contracts, truth density, realism hardening, monitoring intelligence,
 valuation period labels, valuation consistency, conviction modeling/dispersion,
 structured provenance, question-anchored valuation and source-pipeline latency.
 The combined run emitted existing background-thread and Starlette deprecation

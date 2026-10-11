@@ -276,7 +276,7 @@ def _analyze_dimension(
     matching = []
     for ev in evidence:
         estimate = is_estimate_evidence(ev)
-        if dimension == "earnings" and estimate:
+        if dimension in ("earnings", "valuation") and estimate:
             continue
         if (dimension == "estimates" and not estimate
                 and getattr(ev, "claim_type", None) == "reported_fact"):

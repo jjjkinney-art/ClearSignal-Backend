@@ -144,3 +144,59 @@ def test_publication_parser_preserves_timezone_and_legacy_supported_forms():
     assert _parse_ts('2026-01-01T23:30:00-05:00') == datetime(2026, 1, 2, 4, 30, tzinfo=timezone.utc)
     assert _parse_ts('2026-01') == datetime(2026, 1, 1, tzinfo=timezone.utc)
     assert coverage._parse_timestamp('2026-01-01') == _parse_ts('2026-01-01')
+
+
+def calendar(monkeypatch, rows):
+    monkeypatch.setattr(fmp_provider, '_get_api_key', lambda: 'synthetic')
+    monkeypatch.setattr(fmp_provider, '_fetch_json', lambda url: rows)
+    return fmp_provider.fetch_earnings_calendar('TEST')
+
+
+@pytest.mark.parametrize('actual', [None, True, '2.5', float('nan'), float('inf'), {}])
+def test_calendar_estimates_do_not_become_reported_results(monkeypatch, actual):
+    event_date = dated(2)[:10]
+    items = calendar(monkeypatch, [dict(date=event_date, epsEstimated=2.5,
+        revenueEstimated=1000000, eps=actual, revenue=None)])
+    assert len(items) == 1 and items[0].claim_type == 'estimate'
+    assert items[0].timestamp == '' and event_date in items[0].summary
+    profile = analyze_evidence_freshness(items)
+    assert profile.earnings.item_count == 0 and profile.earnings.tier == 'unknown'
+    assert profile.estimates.item_count == 1 and profile.estimates.tier == 'unknown'
+    assert 'GAP_EARNINGS' in gap_codes(items)
+    assert '- No dated recent reported earnings evidence' in prompt(items)
+
+
+@pytest.mark.parametrize('actual', [0, -2.5, 2.5])
+def test_calendar_actual_results_retain_their_own_event_date(monkeypatch, actual):
+    items = calendar(monkeypatch, [dict(date=dated(2)[:10], eps=actual, epsEstimated=2.5)])
+    assert items[0].claim_type == 'reported_fact'
+    assert f'EPS actual: ${actual:.2f}' in items[0].summary
+    assert analyze_evidence_freshness(items).earnings.tier == 'fresh'
+    assert 'GAP_EARNINGS' not in gap_codes(items)
+    assert '- Dated recent reported earnings evidence is present' in prompt(items)
+
+
+def test_calendar_rows_cannot_lend_newer_date_to_older_actual_results(monkeypatch):
+    items = calendar(monkeypatch, [
+        dict(date=dated(2)[:10], epsEstimated=2.5),
+        dict(date=dated(150)[:10], eps=2.4),
+    ])
+    assert len(items) == 2
+    assert items[0].timestamp == '' and items[1].timestamp == dated(150)[:10]
+    assert analyze_evidence_freshness(items).earnings.tier == 'stale'
+    assert 'GAP_EARNINGS' in gap_codes(items)
+    assert '- No dated recent reported earnings evidence' in prompt(items)
+
+
+@pytest.mark.parametrize('claim_type,source', [('estimate', 'Research'),
+                                             ('unknown', 'FMP/analyst-estimates')])
+def test_estimated_pe_cannot_become_observed_valuation_coverage(claim_type, source):
+    item = RetrievedEvidence(title='TEST PE ratio analyst estimates', source=source,
+        timestamp=dated(2), summary='Estimated PE ratio: 25x', claim_type=claim_type)
+    profile = analyze_evidence_freshness([item])
+    assert profile.valuation.item_count == 0 and profile.valuation.tier == 'unknown'
+    assert profile.estimates.tier == 'fresh'
+    assert 'GAP_VALUATION' in gap_codes([item])
+    output = prompt([item])
+    assert '- No dated fresh valuation ratios available.' in output
+    assert '- Dated fresh valuation ratios (FMP) are present' not in output
