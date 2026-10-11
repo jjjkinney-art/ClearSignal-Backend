@@ -479,6 +479,28 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
     return evidence
 
 
+def _estimate_number(value):
+    """Keep finite provider numbers; never coerce malformed estimate fields."""
+    import math
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return value if math.isfinite(value) else None
+    except OverflowError:
+        return None
+
+
+def _estimate_period(value):
+    """An estimate period is not its publication date or a return horizon."""
+    from datetime import date
+    try:
+        if not isinstance(value, str) or date.fromisoformat(value).isoformat() != value:
+            return "period unavailable"
+        return f"period ending {value}"
+    except ValueError:
+        return "period unavailable"
+
+
 def fetch_analyst_estimates(symbol: str) -> List[RetrievedEvidence]:
     """Fetch analyst EPS/revenue estimates and price targets.
 
@@ -499,25 +521,27 @@ def fetch_analyst_estimates(symbol: str) -> List[RetrievedEvidence]:
         if isinstance(data, list) and data:
             est = data[0]
             parts: List[str] = []
-            date = est.get("date", "")
-            rev_est = est.get("estimatedRevenueAvg")
-            eps_est = est.get("estimatedEpsAvg")
-            rev_high = est.get("estimatedRevenueHigh")
-            rev_low  = est.get("estimatedRevenueLow")
-            if rev_est:
-                parts.append(f"Revenue est. {date}: {_fmt_large(rev_est)}")
-                if rev_high and rev_low:
+            period = _estimate_period(est.get("date"))
+            rev_est = _estimate_number(est.get("estimatedRevenueAvg"))
+            eps_est = _estimate_number(est.get("estimatedEpsAvg"))
+            rev_high = _estimate_number(est.get("estimatedRevenueHigh"))
+            rev_low  = _estimate_number(est.get("estimatedRevenueLow"))
+            if rev_est is not None:
+                parts.append(f"Revenue est. ({period}): {_fmt_large(rev_est)}")
+                if rev_high is not None and rev_low is not None and rev_low <= rev_high:
                     parts.append(f"(range: {_fmt_large(rev_low)} – {_fmt_large(rev_high)})")
-            if eps_est:
-                parts.append(f"EPS est. {date}: ${eps_est:.2f}")
-            num_analysts = est.get("numberAnalystEstimatedRevenue")
-            if num_analysts:
+            if eps_est is not None:
+                parts.append(f"EPS est. ({period}): ${eps_est:.2f}")
+            num_analysts = _estimate_number(est.get("numberAnalystEstimatedRevenue"))
+            if parts and num_analysts is not None and num_analysts > 0 and num_analysts == int(num_analysts):
                 parts.append(f"Based on {int(num_analysts)} analyst estimates")
             if parts:
-                summary = f"{symbol} forward analyst estimates: " + " | ".join(parts) + "."
+                summary = f"{symbol} analyst estimates: " + " | ".join(parts) + "."
                 evidence.append(RetrievedEvidence(
                     title=f"{symbol} Analyst Estimates",
                     source="FMP/analyst-estimates",
+                    timestamp="",  # Estimate period is not a publication date.
+                    claim_type="estimate",
                     summary=summary,
                     relevance_score=0.92,
                 ))
@@ -535,21 +559,25 @@ def fetch_analyst_estimates(symbol: str) -> List[RetrievedEvidence]:
             pt = {}
         if pt:
             parts2: List[str] = []
-            target_high = pt.get("targetHigh")
-            target_low  = pt.get("targetLow")
-            target_mean = pt.get("targetMean") or pt.get("targetConsensus")
-            target_median = pt.get("targetMedian")
-            if target_mean:
+            target_high = _estimate_number(pt.get("targetHigh"))
+            target_low  = _estimate_number(pt.get("targetLow"))
+            target_mean = _estimate_number(pt.get("targetMean"))
+            if target_mean is None:
+                target_mean = _estimate_number(pt.get("targetConsensus"))
+            target_median = _estimate_number(pt.get("targetMedian"))
+            if target_mean is not None and target_mean > 0:
                 parts2.append(f"Consensus price target: ${target_mean:.2f}")
-            if target_high and target_low:
+            if target_high is not None and target_low is not None and 0 < target_low <= target_high:
                 parts2.append(f"Range: ${target_low:.2f} – ${target_high:.2f}")
-            if target_median and target_median != target_mean:
+            if target_median is not None and target_median > 0 and target_median != target_mean:
                 parts2.append(f"Median: ${target_median:.2f}")
             if parts2:
                 summary2 = f"{symbol} analyst price targets: " + " | ".join(parts2) + "."
                 evidence.append(RetrievedEvidence(
                     title=f"{symbol} Analyst Price Targets",
                     source="FMP/price-target-consensus",
+                    timestamp="",
+                    claim_type="estimate",
                     summary=summary2,
                     relevance_score=0.93,
                 ))
