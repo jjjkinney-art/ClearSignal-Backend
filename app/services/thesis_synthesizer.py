@@ -640,23 +640,26 @@ def _build_live_data_provenance_block(evidence: List[RetrievedEvidence]) -> str:
 
     if has_val:
         lines.append(
-            "- Live valuation ratios (FMP) are present in the evidence. "
+            "- Dated fresh valuation ratios (FMP) are present in the evidence. "
             "You MUST cite the specific ratio (P/E, EV/EBITDA, FCF yield, or Price/Sales) "
-            "from these items in valuation_view. "
+            "from the dated fresh items in valuation_view. "
             'Do NOT write "the stock trades at a premium" without naming the actual multiple.'
         )
     else:
         lines.append(
-            "- No live valuation ratios available. "
-            "You MUST qualify valuation claims with 'estimated' or 'based on available data' "
-            "and note the absence of current ratio data in confidence_reasoning."
+            "- No dated fresh valuation ratios available. "
+            "Any supplied undated or outdated ratios remain evidence with unestablished current relevance. "
+            "Do not call them live/current or infer a publication date from retrieval or a TTM label. "
+            "Qualify their temporal relevance and note this current-data gap in confidence_reasoning."
         )
 
     if has_est:
         lines.append(
             "- Analyst estimates / price-target consensus data is present. "
-            "You MUST reference the consensus target vs current price or forward EPS estimate "
-            "when discussing the valuation outlook."
+            "Keep these labeled estimates, not reported earnings. Preserve the supplied estimate "
+            "period; do not call EPS forward or estimates current without supporting period/date evidence. "
+            "An estimate period is not a publication date. Compare a target to price only when "
+            "compatible dated price evidence and the target basis are supplied."
         )
     else:
         lines.append(
@@ -666,13 +669,13 @@ def _build_live_data_provenance_block(evidence: List[RetrievedEvidence]) -> str:
 
     if has_earn:
         lines.append(
-            "- Recent earnings evidence is present. "
+            "- Dated recent reported earnings evidence is present. "
             "You MUST incorporate the actual vs estimated result or guidance language "
             "when assessing near-term trajectory."
         )
     else:
         lines.append(
-            "- No recent earnings evidence (< 90d). "
+            "- No dated recent reported earnings evidence (< 90d). "
             "Flag this gap when discussing near-term earnings visibility."
         )
 
@@ -688,6 +691,10 @@ def _build_live_data_provenance_block(evidence: List[RetrievedEvidence]) -> str:
             "Prefer the most recent items when claims conflict across time periods."
         )
 
+    lines.append(
+        "- Freshness is item-specific: a dated item does not establish the date or freshness "
+        "of another item. Preserve unknown publication dates as unknown."
+    )
     lines.append(
         "- CITATION REQUIREMENT: Every quantitative claim (multiples, margins, growth rates, "
         "price targets) MUST be traceable to an evidence item number [N]. "

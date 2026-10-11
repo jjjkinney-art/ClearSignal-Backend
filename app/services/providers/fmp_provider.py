@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 from typing import List, Optional
 from urllib.error import HTTPError, URLError
@@ -304,6 +305,16 @@ def fetch_debt_metrics(symbol: str) -> List[RetrievedEvidence]:
     return []
 
 
+def _calendar_number(value):
+    """A malformed actual value cannot establish reported earnings."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return value if math.isfinite(value) else None
+    except OverflowError:
+        return None
+
+
 def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
     """Fetch recent / upcoming earnings dates and EPS estimates."""
     api_key = _get_api_key()
@@ -316,13 +327,16 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
         if not data or not isinstance(data, list):
             return []
 
-        snippets = []
+        evidence = []
         for entry in data[:3]:
+            if not isinstance(entry, dict):
+                continue
             date = entry.get("date", "")
-            eps_est = entry.get("epsEstimated")
-            eps_act = entry.get("eps")
-            rev_est = entry.get("revenueEstimated")
-            rev_act = entry.get("revenue")
+            date = date if isinstance(date, str) else ""
+            eps_est = _calendar_number(entry.get("epsEstimated"))
+            eps_act = _calendar_number(entry.get("eps"))
+            rev_est = _calendar_number(entry.get("revenueEstimated"))
+            rev_act = _calendar_number(entry.get("revenue"))
 
             parts = [f"Date: {date}"]
             if eps_est is not None:
@@ -333,18 +347,20 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
                 parts.append(f"Revenue estimate: {_fmt_large(rev_est)}")
             if rev_act is not None:
                 parts.append(f"Revenue actual: {_fmt_large(rev_act)}")
-            snippets.append("  •  ".join(parts))
-
-        first = data[0]
-        title = f"{symbol} Earnings — Next/Recent: {first.get('date', 'TBD')}"
-        summary = f"Earnings calendar for {symbol}:\n" + "\n".join(snippets)
-        return [RetrievedEvidence(
-            title=title,
-            source="Financial Modeling Prep",
-            summary=summary,
-            timestamp=first.get("date", ""),
-            relevance_score=0.85,
-        )]
+            if len(parts) == 1:
+                continue
+            has_actual = eps_act is not None or rev_act is not None
+            # A scheduled event date does not date an estimate's publication.
+            # Keep rows separate so a newer estimate cannot date older results.
+            evidence.append(RetrievedEvidence(
+                title=f"{symbol} Earnings — Next/Recent: {date or 'TBD'}",
+                source="Financial Modeling Prep",
+                summary=f"Earnings calendar for {symbol}:\n" + "  •  ".join(parts),
+                timestamp=date if has_actual else "",
+                claim_type="reported_fact" if has_actual else "estimate",
+                relevance_score=0.85,
+            ))
+        return evidence
     except (HTTPError, URLError) as exc:
         logger.warning("FMP earnings-calendar network error for %s: %r", symbol, exc)
     except Exception as exc:
@@ -352,8 +368,18 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
     return []
 
 
+def _pe_value(value):
+    """Accept finite, nonzero JSON numbers without coercing malformed ratios."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return value if value != 0 and math.isfinite(value) else None
+    except OverflowError:
+        return None
+
+
 def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
-    """Fetch forward valuation multiples: forward P/E, EV/EBITDA, P/S, P/FCF.
+    """Fetch valuation multiples, preserving each reported time basis.
 
     Uses FMP's /v3/ratios-ttm and /v3/key-metrics-ttm endpoints.
     Returns [] when the API key is absent or the call fails.
@@ -373,11 +399,15 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             r = {}
 
         parts: List[str] = []
-        pe_ttm = r.get("peRatioTTM")
-        if pe_ttm:
+        trailing_values = {_pe_value(r.get(key)) for key in
+                           ("peRatioTTM", "priceEarningsRatioTTM")} - {None}
+        # Both aliases describe trailing earnings. Conflicting values are not
+        # silently selected or repurposed as a forward multiple.
+        pe_ttm = next(iter(trailing_values)) if len(trailing_values) == 1 else None
+        if pe_ttm is not None:
             parts.append(f"Trailing P/E (TTM): {pe_ttm:.1f}x")
-        fwd_pe = r.get("priceEarningsRatioTTM") or r.get("forwardPE")
-        if fwd_pe and fwd_pe != pe_ttm:
+        fwd_pe = _pe_value(r.get("forwardPE"))
+        if fwd_pe is not None:
             parts.append(f"Forward P/E: {fwd_pe:.1f}x")
         ev_ebitda = r.get("enterpriseValueMultipleTTM") or r.get("evToEbitdaTTM")
         if ev_ebitda:
@@ -396,10 +426,11 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             parts.append(f"ROE (TTM): {_fmt_pct(roe)}")
 
         if parts:
-            summary = f"{symbol} valuation multiples (TTM): " + " | ".join(parts) + "."
+            summary = f"{symbol} valuation multiples: " + " | ".join(parts) + "."
             evidence.append(RetrievedEvidence(
-                title=f"{symbol} Valuation Multiples (TTM)",
+                title=f"{symbol} Valuation Multiples",
                 source="FMP/ratios-ttm",
+                timestamp="",  # This endpoint does not establish a publication date.
                 summary=summary,
                 relevance_score=0.95,
             ))
@@ -438,6 +469,7 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             evidence.append(RetrievedEvidence(
                 title=f"{symbol} Key Metrics (TTM)",
                 source="FMP/key-metrics-ttm",
+                timestamp="",
                 summary=summary2,
                 relevance_score=0.90,
             ))

@@ -321,7 +321,10 @@ class TestFetchEarningsCalendar:
     def test_returns_evidence(self, monkeypatch):
         _patch_key(monkeypatch)
         _patch_fetch(monkeypatch, _EARNINGS_PAYLOAD)
-        assert len(fmp_provider.fetch_earnings_calendar("AAPL")) == 1
+        items = fmp_provider.fetch_earnings_calendar("AAPL")
+        assert len(items) == 2
+        assert items[0].claim_type == 'estimate' and items[0].timestamp == ''
+        assert items[1].claim_type == 'reported_fact' and items[1].timestamp == '2024-10-31'
 
     def test_title_contains_next_date(self, monkeypatch):
         _patch_key(monkeypatch)

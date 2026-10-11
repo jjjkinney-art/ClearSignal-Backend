@@ -50,6 +50,7 @@ Usage
 from __future__ import annotations
 
 import dataclasses
+import re
 from datetime import datetime, timezone
 from typing import Dict, List, Optional, Tuple
 
@@ -196,30 +197,26 @@ class FreshnessProfile:
 
 # ── Timestamp parsing ─────────────────────────────────────────────────────────
 
-_TS_FORMATS = [
-    ("%Y-%m-%dT%H:%M:%SZ", 20),
-    ("%Y-%m-%dT%H:%M:%S",  19),
-    ("%Y-%m-%dT%H:%M",     16),
-    ("%Y-%m-%d",            10),
-    ("%Y-%m",                7),
-]
-
-
 def _parse_ts(ts: Optional[str]) -> Optional[datetime]:
-    if not ts:
+    if not isinstance(ts, str) or not ts.strip():
         return None
     ts_clean = ts.strip()
-    for fmt, ln in _TS_FORMATS:
-        try:
-            return datetime.strptime(ts_clean[:ln], fmt).replace(tzinfo=timezone.utc)
-        except (ValueError, TypeError):
-            continue
-    return None
+    try:
+        # Retain the supported month-only form, but never truncate malformed
+        # dates/times into apparently valid publication dates.
+        if re.fullmatch(r"\d{4}-\d{2}", ts_clean):
+            return datetime.strptime(ts_clean, "%Y-%m").replace(tzinfo=timezone.utc)
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?", ts_clean):
+            return None
+        parsed = datetime.fromisoformat(ts_clean.replace("Z", "+00:00"))
+        return parsed.replace(tzinfo=timezone.utc) if parsed.tzinfo is None else parsed.astimezone(timezone.utc)
+    except ValueError:
+        return None
 
 
 def _age(ts: Optional[str]) -> Optional[int]:
     dt = _parse_ts(ts)
-    if dt is None:
+    if dt is None or dt > datetime.now(timezone.utc):
         return None
     return (datetime.now(timezone.utc) - dt).days
 
@@ -233,6 +230,24 @@ def _matches(ev: RetrievedEvidence, keywords: Tuple[str, ...]) -> bool:
         getattr(ev, "summary", "") or "",
     ]).lower()
     return any(kw in haystack for kw in keywords)
+
+
+def is_estimate_evidence(ev: RetrievedEvidence) -> bool:
+    """Recognize estimate provenance without treating reported consensus beats as estimates."""
+    if getattr(ev, "claim_type", None) == "estimate":
+        return True
+    source = (ev.source or '').lower()
+    if any(term in source for term in ('analyst-estimates', 'analyst_estimates',
+                                      'price-target', 'price target')):
+        return True
+    if getattr(ev, "claim_type", None) == "reported_fact":
+        return False
+    origin = f"{ev.source or ''} {ev.title or ''}".lower()
+    return any(term in origin for term in (
+        "analyst-estimates", "analyst_estimates", "analyst estimates",
+        "price-target", "price target", "analyst forecast", "consensus estimates",
+        "eps estimate", "revenue estimate", "estimate revision",
+    ))
 
 
 # ── Freshness tier classification ─────────────────────────────────────────────
@@ -258,8 +273,16 @@ def _analyze_dimension(
     dimension: str,
 ) -> DimensionFreshness:
     """Find matching items and return the freshness of the MOST RECENT one."""
-    now = datetime.now(timezone.utc)
-    matching = [ev for ev in evidence if _matches(ev, keywords)]
+    matching = []
+    for ev in evidence:
+        estimate = is_estimate_evidence(ev)
+        if dimension in ("earnings", "valuation") and estimate:
+            continue
+        if (dimension == "estimates" and not estimate
+                and getattr(ev, "claim_type", None) == "reported_fact"):
+            continue
+        if _matches(ev, keywords) or (dimension == "estimates" and estimate):
+            matching.append(ev)
     if not matching:
         return DimensionFreshness(age_days=None, tier=TIER_UNKNOWN, item_count=0)
 
@@ -268,8 +291,7 @@ def _analyze_dimension(
     known = [a for a in ages if a is not None]
 
     if not known:
-        # Items exist but no parseable timestamps — benefit of the doubt: treat as fresh
-        return DimensionFreshness(age_days=None, tier=TIER_FRESH, item_count=len(matching))
+        return DimensionFreshness(age_days=None, tier=TIER_UNKNOWN, item_count=len(matching))
 
     min_age = min(known)
     return DimensionFreshness(

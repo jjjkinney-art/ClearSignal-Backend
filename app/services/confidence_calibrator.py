@@ -33,6 +33,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Tuple
 
 from ..schemas import RetrievedEvidence
+from .freshness_analyzer import _age, _parse_ts, _THRESHOLDS, is_estimate_evidence
 
 # ── Evidence-source fingerprints ──────────────────────────────────────────────
 _FMP_VALUATION_FINGERPRINTS = (
@@ -113,46 +114,22 @@ _STALE_THRESHOLD_DAYS: int = 180
 
 # ── Timestamp parsing ─────────────────────────────────────────────────────────
 
-# Map format strings to the expected length of the date string they match.
-# This allows us to slice the input string to exactly the right number of
-# characters before attempting to parse — critical because format codes like
-# "%Y" are 2 chars but expand to 4-char values in the actual date string.
-_TS_FORMAT_LENGTHS: "list[tuple[str, int]]" = [
-    ("%Y-%m-%dT%H:%M:%SZ", 20),  # "2026-01-15T10:30:00Z"
-    ("%Y-%m-%dT%H:%M:%S",  19),  # "2026-01-15T10:30:00"
-    ("%Y-%m-%dT%H:%M",     16),  # "2026-01-15T10:30"
-    ("%Y-%m-%d",            10),  # "2026-01-15"
-    ("%Y-%m",                7),  # "2026-01"
-]
-
-
 def _parse_timestamp(ts: Optional[str]) -> Optional[datetime]:
-    """Parse an ISO-ish timestamp string into an aware datetime.
-
-    Returns None when the string is absent or unparseable.
-    Tries each format from most-specific to least-specific, slicing the
-    input string to the expected output length (not the format-string length).
-    """
-    if not ts:
-        return None
-    ts_clean = ts.strip()
-    for fmt, expected_len in _TS_FORMAT_LENGTHS:
-        try:
-            return datetime.strptime(ts_clean[:expected_len], fmt).replace(
-                tzinfo=timezone.utc
-            )
-        except (ValueError, TypeError):
-            continue
-    return None
+    """Use the same publication-date parser as dimension freshness."""
+    return _parse_ts(ts)
 
 
 # ── Coverage detectors ────────────────────────────────────────────────────────
 
 def _has_live_valuation(evidence: List[RetrievedEvidence]) -> bool:
-    """Return True if any evidence item came from an FMP valuation/ratios endpoint."""
+    """Require a known date within the existing valuation freshness window."""
     for ev in evidence:
+        if is_estimate_evidence(ev):
+            continue
         haystack = f"{ev.source or ''} {ev.title or ''}".lower()
-        if any(fp in haystack for fp in _FMP_VALUATION_FINGERPRINTS):
+        age = _age(getattr(ev, "timestamp", None))
+        if (any(fp in haystack for fp in _FMP_VALUATION_FINGERPRINTS)
+                and age is not None and age <= _THRESHOLDS["valuation"][0]):
             return True
     return False
 
@@ -172,18 +149,17 @@ def _has_recent_earnings(
 ) -> bool:
     """Return True if any earnings evidence is within *threshold_days* of today.
 
-    When an earnings item exists but has no parseable timestamp, it is
-    accepted (benefit of the doubt — assume it is recent).
+    Unknown publication dates and analyst estimates cannot establish recent
+    reported earnings, even when estimate prose mentions EPS or a fiscal year.
     """
-    now = datetime.now(timezone.utc)
     for ev in evidence:
+        if is_estimate_evidence(ev):
+            continue
         text = f"{ev.title or ''} {ev.summary or ''}".lower()
         if not any(kw in text for kw in _EARNINGS_KEYWORDS):
             continue
-        ev_dt = _parse_timestamp(getattr(ev, "timestamp", None))
-        if ev_dt is None:
-            return True  # undated earnings evidence — assume fresh
-        if (now - ev_dt).days <= threshold_days:
+        age = _age(getattr(ev, "timestamp", None))
+        if age is not None and age <= threshold_days:
             return True
     return False
 
@@ -298,8 +274,8 @@ def compute_evidence_coverage_gaps(
     if not _has_live_valuation(evidence):
         penalty += _PENALTY_NO_LIVE_VALUATION
         gaps.append(
-            "GAP_VALUATION | No live valuation ratios — P/E, EV/EBITDA, and FCF yield "
-            "absent; multiple-based conclusions are unanchored and cannot be stress-tested "
+            "GAP_VALUATION | No dated fresh valuation ratios — P/E, EV/EBITDA, and FCF yield "
+            "may be absent, undated or outdated; multiple-based conclusions cannot be stress-tested "
             "against current pricing"
         )
 
@@ -316,7 +292,7 @@ def compute_evidence_coverage_gaps(
     if not _has_recent_earnings(evidence):
         penalty += _PENALTY_NO_RECENT_EARNINGS
         gaps.append(
-            f"GAP_EARNINGS | No recent earnings evidence (< {_RECENT_EARNINGS_THRESHOLD_DAYS}d) — "
+            f"GAP_EARNINGS | No dated recent reported earnings evidence (< {_RECENT_EARNINGS_THRESHOLD_DAYS}d) — "
             "actual results vs guidance, margin trajectory, and beat/miss cadence "
             "are absent from the evidence base"
         )

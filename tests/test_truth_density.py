@@ -41,6 +41,7 @@ def _make_evidence(
 
 
 def _fmp_valuation_ev(**kwargs) -> "RetrievedEvidence":  # noqa: F821
+    kwargs.setdefault("timestamp", (datetime.now(timezone.utc) - timedelta(days=5)).isoformat())
     return _make_evidence(
         title="AAPL Valuation Ratios TTM",
         source="FMP ratios-ttm",
@@ -174,7 +175,7 @@ class TestCoverageGapDetection:
     def test_all_coverage_present_zero_penalty(self):
         """Full coverage — recent FMP + analyst + earnings — yields zero penalty."""
         from app.services.confidence_calibrator import compute_evidence_coverage_gaps
-        fresh_ts = (datetime.now(timezone.utc) - timedelta(days=20)).strftime(
+        fresh_ts = (datetime.now(timezone.utc) - timedelta(days=5)).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
         ev = [
@@ -264,11 +265,11 @@ class TestCoverageDetectorFunctions:
         ev = [_earnings_ev(timestamp=old_ts)]
         assert _has_recent_earnings(ev) is False
 
-    def test_has_recent_earnings_no_timestamp_returns_true(self):
-        """Earnings evidence with no timestamp gets benefit of doubt."""
+    def test_has_recent_earnings_no_timestamp_returns_false(self):
+        """An undated earnings item cannot establish recent results."""
         from app.services.confidence_calibrator import _has_recent_earnings
         ev = [_make_evidence(title="Q3 Earnings Results", timestamp="")]
-        assert _has_recent_earnings(ev) is True
+        assert _has_recent_earnings(ev) is False
 
     def test_oldest_evidence_age_days_parseable(self):
         from app.services.confidence_calibrator import _oldest_evidence_age_days
@@ -526,7 +527,7 @@ class TestProvenanceBlockInPrompt:
         """Without live valuation, prompt warns to qualify claims."""
         ev = [_make_evidence(source="newsapi")]
         prompt = self._build(ev)
-        assert "No live valuation ratios" in prompt
+        assert "No dated fresh valuation ratios" in prompt
 
     def test_provenance_block_with_analyst_estimates(self):
         """With analyst estimates, prompt requires consensus target citation."""
