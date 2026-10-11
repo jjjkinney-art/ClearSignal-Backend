@@ -56,7 +56,7 @@ def _operand(value, *, unit, basis=False):
 
 def _basis(value):
     _object(value, {'issuer', 'currency', 'accounting', 'adjustment_definition',
-                   'share_basis', 'period_basis', 'split_basis'}, 'EPS basis')
+                   'share_basis', 'period_basis', 'split_basis', 'earnings_scope'}, 'EPS basis')
     for key in ('issuer', 'split_basis'):
         _text(value[key], key)
     if not isinstance(value['currency'], str) or not re.fullmatch('[A-Z]{3}', value['currency']):
@@ -67,6 +67,8 @@ def _basis(value):
         _text(value['adjustment_definition'], 'adjustment definition')
     elif value['adjustment_definition'] != 'none':
         raise ValuationContractError('GAAP adjustment_definition must be none')
+    if value['earnings_scope'] not in ('total_operations', 'continuing_operations'):
+        raise ValuationContractError('earnings_scope must be total_operations or continuing_operations')
     if value['share_basis'] not in ('basic', 'diluted'):
         raise ValuationContractError('share_basis must be basic or diluted')
     if value['period_basis'] not in ('trailing_12_months', 'forward_12_months'):

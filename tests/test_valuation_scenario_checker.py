@@ -23,6 +23,7 @@ def scenario(mode='evaluate_growth_scenario'):
     provenance = {'kind': 'user_assumption', 'reference': 'Explicit scenario supplied for arithmetic review'}
     basis = {'issuer': 'TEST', 'currency': 'USD', 'accounting': 'gaap',
              'adjustment_definition': 'none', 'share_basis': 'diluted',
+             'earnings_scope': 'total_operations',
              'period_basis': 'trailing_12_months', 'split_basis': 'unchanged split-adjusted share basis'}
     def pe(value):
         return {'value': value, 'unit': 'x', 'eps_basis': deepcopy(basis), 'provenance': deepcopy(provenance)}
@@ -70,7 +71,7 @@ def test_unchanged_multiple_one_year_equals_explicit_eps_change(growth):
 
 
 @pytest.mark.parametrize('field', ['issuer', 'currency', 'accounting', 'adjustment_definition',
-                                    'share_basis', 'period_basis', 'split_basis'])
+                                    'share_basis', 'period_basis', 'split_basis', 'earnings_scope'])
 def test_incompatible_bases_refused(field):
     payload = scenario()
     payload['exit_pe']['eps_basis'][field] = 'different'
@@ -221,3 +222,19 @@ def test_genuine_offsetting_growth_and_multiple_compression_remain_valid():
     assert result['available']
     assert Decimal(result['values']['terminal_price_factor']) == 1
     assert Decimal(result['values']['annualized_price_change']) == 0
+
+
+def test_valid_distinct_earnings_scopes_cannot_be_mixed():
+    payload = scenario()
+    payload['exit_pe']['eps_basis']['earnings_scope'] = 'continuing_operations'
+    result = evaluate_scenario(payload)
+    assert not result['available']
+    assert 'must match exactly' in result['reason']
+    payload['entry_pe']['eps_basis']['earnings_scope'] = 'continuing_operations'
+    assert evaluate_scenario(payload)['available']
+
+
+def test_earnings_scope_cannot_be_omitted_or_guessed():
+    payload = scenario()
+    del payload['entry_pe']['eps_basis']['earnings_scope']
+    assert not evaluate_scenario(payload)['available']

@@ -10,6 +10,7 @@
       "accounting": "gaap",
       "adjustment_definition": "none",
       "share_basis": "diluted",
+      "earnings_scope": "total_operations",
       "period_basis": "trailing_12_months",
       "split_basis": "unchanged split-adjusted share basis"
     },
@@ -27,6 +28,7 @@
       "accounting": "gaap",
       "adjustment_definition": "none",
       "share_basis": "diluted",
+      "earnings_scope": "total_operations",
       "period_basis": "trailing_12_months",
       "split_basis": "unchanged split-adjusted share basis"
     },

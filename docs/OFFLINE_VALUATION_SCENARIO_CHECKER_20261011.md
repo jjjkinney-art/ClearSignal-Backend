@@ -33,7 +33,8 @@ integer `value` and `unit: "years"`. No input, dividend assumption or period is
 defaulted; unexpected fields and mode-incompatible operands are rejected.
 
 Entry and exit EPS bases must match exactly: issuer, currency, GAAP/adjusted
-accounting, adjustment definition, basic/diluted shares, trailing/forward
+accounting, adjustment definition, earnings scope (`total_operations` or
+`continuing_operations`), basic/diluted shares, trailing/forward
 12-month period basis, and split basis. GAAP uses adjustment_definition `none`;
 adjusted EPS requires a nonempty identical definition. These comparisons check
 caller assertions, not the truth of financial statements. The period basis
@@ -83,7 +84,7 @@ true` with equations, inputs, provenance, numeric precision and limitations
 Independent Fraction identities establish exact cases: unchanged EPS with
 20x-to-45x over two years gives annual price change 50%; 45x-to-20x with 10%
 required annual price change over two years requires EPS growth of 65%.
-The 56 tests also cover signs, incompatible bases, explicit all-assumption scenarios,
+The 59 tests also cover signs, incompatible bases, explicit all-assumption scenarios,
 invalid inputs/units/provenance, duplicate keys, ambient Decimal contexts,
 precision limits and CLI failures. Network calls are prohibited in the tests.
 
