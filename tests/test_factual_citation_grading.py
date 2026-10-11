@@ -220,3 +220,129 @@ def test_cli_rejects_pending_material_review(tmp_path):
     path.write_text(json.dumps(_payload(label="pending")))
     assert benchmark_factual_grade.main([str(path), "--require-complete"]) == 2
 
+
+@pytest.mark.parametrize("bad", ["false", "true", "0", "", 0, 1, None, [], {}])
+def test_document_existence_cannot_be_coerced_into_review_evidence(bad):
+    payload = _payload()
+    payload["adjudications"][0]["document_exists"] = bad
+    with pytest.raises(BenchmarkContractError, match="document_exists requires a boolean"):
+        grade_payload(payload)
+    with pytest.raises(BenchmarkContractError, match="document_exists requires a boolean"):
+        _adjudication(document_exists=bad)
+
+
+def test_missing_existence_review_is_invalid_not_a_completed_review():
+    payload = _payload()
+    del payload["adjudications"][0]["document_exists"]
+    with pytest.raises(BenchmarkContractError, match="document_exists requires a boolean"):
+        grade_payload(payload)
+
+
+@pytest.mark.parametrize("bad", [None, False, 0, 123, [], {}, "", "   "])
+def test_reviewer_must_be_an_explicit_nonempty_identity(bad):
+    payload = _payload()
+    payload["adjudications"][0]["reviewer"] = bad
+    with pytest.raises(BenchmarkContractError, match="reviewer identity"):
+        grade_payload(payload)
+    with pytest.raises(BenchmarkContractError, match="reviewer identity"):
+        _adjudication(reviewer=bad)
+
+
+@pytest.mark.parametrize("bad", ["NaN", "sNaN", "Infinity", "-Infinity", float("nan"), float("inf")])
+@pytest.mark.parametrize("target", ["expected", "observed", "tolerance"])
+def test_nonfinite_numbers_cannot_pass_or_crash_scoring(target, bad):
+    payload = _payload()
+    if target == "observed":
+        payload["observed_claims"][0]["value"] = bad
+        direct = lambda: _observed(value=bad)
+    else:
+        field = "absolute_tolerance" if target == "tolerance" else "value"
+        payload["expected_claims"][0][field] = bad
+        direct = lambda: _expected(**{field: bad})
+    with pytest.raises(BenchmarkContractError, match="finite decimal"):
+        grade_payload(payload)
+    with pytest.raises(BenchmarkContractError, match="finite decimal"):
+        direct()
+
+
+def test_finite_explicit_tolerance_and_negative_values_remain_supported():
+    payload = _payload()
+    payload["expected_claims"][0].update(value="-100", absolute_tolerance="0.1")
+    payload["observed_claims"][0]["value"] = "-100.05"
+    assert grade_payload(payload).material_numerical_accuracy == 1.0
+    payload["observed_claims"][0]["value"] = "-100.2"
+    assert grade_payload(payload).material_numerical_accuracy == 0.0
+
+
+def test_negative_tolerance_rejected_in_both_interfaces():
+    payload = _payload()
+    payload["expected_claims"][0]["absolute_tolerance"] = "-0.1"
+    with pytest.raises(BenchmarkContractError, match="cannot be negative"):
+        grade_payload(payload)
+    with pytest.raises(BenchmarkContractError, match="cannot be negative"):
+        _expected(absolute_tolerance="-0.1")
+
+
+def test_genuine_false_existence_remains_a_fabricated_source_stop_ship():
+    payload = _payload()
+    payload["adjudications"][0]["document_exists"] = False
+    result = grade_payload(payload)
+    assert result.fabricated_material_sources == 1
+    assert result.claim_source_binding == 0.0
+    assert result.stop_ship_count == 1
+
+
+@pytest.mark.parametrize("field,bad", [("document_exists", "false"), ("reviewer", None)])
+def test_cli_rejects_invalid_adjudication_without_emitting_a_scorecard(tmp_path, capsys, field, bad):
+    payload = _payload()
+    payload["adjudications"][0][field] = bad
+    path = tmp_path / "invalid-review.json"
+    path.write_text(json.dumps(payload))
+    with pytest.raises(SystemExit) as error:
+        benchmark_factual_grade.main([str(path), "--require-complete"])
+    assert error.value.code == 2
+    assert capsys.readouterr().out == ""
+
+
+def test_cli_rejects_infinite_tolerance_instead_of_passing_arbitrary_values(tmp_path, capsys):
+    payload = _payload()
+    payload["expected_claims"][0]["absolute_tolerance"] = "Infinity"
+    payload["observed_claims"][0]["value"] = "999999"
+    path = tmp_path / "invalid-tolerance.json"
+    path.write_text(json.dumps(payload))
+    with pytest.raises(SystemExit) as error:
+        benchmark_factual_grade.main([str(path), "--require-complete"])
+    assert error.value.code == 2
+    assert capsys.readouterr().out == ""
+
+
+@pytest.mark.parametrize("replacement", [
+    '"document_exists": false, "document_exists": true',
+    '"document_exists": true, "document_exists": false',
+    '"document_exists": true, "document_exists": true',
+])
+def test_cli_rejects_duplicate_existence_decisions_without_a_scorecard(tmp_path, capsys, replacement):
+    encoded = json.dumps(_payload()).replace('"document_exists": true', replacement)
+    path = tmp_path / "duplicate-review.json"
+    path.write_text(encoded)
+    with pytest.raises(SystemExit) as error:
+        benchmark_factual_grade.main([str(path), "--require-complete"])
+    assert error.value.code == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "duplicate JSON key" in captured.err
+
+
+@pytest.mark.parametrize("encoded", [
+    '{"expected_claims": [], "expected_claims": []}',
+    json.dumps(_payload()).replace('"label": "supports"', '"label": "pending", "label": "supports"'),
+    json.dumps(_payload()).replace('"value": "100"', '"value": "999999", "value": "100"', 1),
+])
+def test_cli_rejects_duplicate_keys_at_every_object_depth(tmp_path, capsys, encoded):
+    path = tmp_path / "duplicate-grading.json"
+    path.write_text(encoded)
+    with pytest.raises(SystemExit) as error:
+        benchmark_factual_grade.main([str(path), "--require-complete"])
+    assert error.value.code == 2
+    assert capsys.readouterr().out == ""
+

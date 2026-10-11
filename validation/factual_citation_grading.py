@@ -29,6 +29,16 @@ class EntailmentLabel(str, Enum):
     PENDING = "pending"
 
 
+def _finite_decimal(value: Any, field: str) -> Decimal:
+    try:
+        number = Decimal(str(value))
+    except (InvalidOperation, ValueError) as exc:
+        raise BenchmarkContractError(f"{field} requires a finite decimal") from exc
+    if not number.is_finite():
+        raise BenchmarkContractError(f"{field} requires a finite decimal")
+    return number
+
+
 @dataclass(frozen=True)
 class ExpectedClaim:
     claim_id: str
@@ -42,6 +52,12 @@ class ExpectedClaim:
     materiality: Materiality
     absolute_tolerance: str = "0"
 
+    def __post_init__(self):
+        _finite_decimal(self.value, "expected value")
+        tolerance = _finite_decimal(self.absolute_tolerance, "absolute_tolerance")
+        if tolerance < 0:
+            raise BenchmarkContractError("absolute_tolerance cannot be negative")
+
     @staticmethod
     def from_dict(value: Mapping[str, Any]) -> "ExpectedClaim":
         required = ("claim_id", "metric", "value", "unit", "period", "scope", "source_id")
@@ -49,12 +65,8 @@ class ExpectedClaim:
             raise BenchmarkContractError(f"expected claim requires fields: {required}")
         try:
             materiality = Materiality(str(value["materiality"]))
-            Decimal(str(value["value"]))
-            tolerance = Decimal(str(value.get("absolute_tolerance", "0")))
-        except (KeyError, ValueError, InvalidOperation) as exc:
-            raise BenchmarkContractError("expected claim has invalid numeric or materiality data") from exc
-        if tolerance < 0:
-            raise BenchmarkContractError("absolute_tolerance cannot be negative")
+        except (KeyError, ValueError) as exc:
+            raise BenchmarkContractError("expected claim has invalid materiality data") from exc
         return ExpectedClaim(
             claim_id=str(value["claim_id"]), metric=str(value["metric"]),
             value=str(value["value"]), unit=str(value["unit"]),
@@ -76,17 +88,16 @@ class ObservedClaim:
     scope: str
     cited_source_id: Optional[str]
 
+    def __post_init__(self):
+        _finite_decimal(self.value, "observed value")
+
     @staticmethod
     def from_dict(value: Mapping[str, Any]) -> "ObservedClaim":
         claim_id = str(value.get("claim_id", "")).strip()
         if not claim_id:
             raise BenchmarkContractError("observed claim_id is required")
-        try:
-            Decimal(str(value["value"]))
-        except (KeyError, InvalidOperation) as exc:
-            raise BenchmarkContractError(
-                f"observed claim {claim_id} requires a decimal value"
-            ) from exc
+        if "value" not in value:
+            raise BenchmarkContractError("observed claim requires a finite decimal value")
         return ObservedClaim(
             claim_id=claim_id, text=str(value.get("text", "")),
             value=str(value["value"]), unit=str(value.get("unit", "")),
@@ -105,6 +116,14 @@ class CitationAdjudication:
     reviewer: str
     rationale: str
 
+    def __post_init__(self):
+        # Truthiness coercion makes strings such as "false" count as proof that
+        # the source exists. Require an explicit review decision in both APIs.
+        if type(self.document_exists) is not bool:
+            raise BenchmarkContractError("document_exists requires a boolean")
+        if not isinstance(self.reviewer, str) or not self.reviewer.strip():
+            raise BenchmarkContractError("citation adjudication requires reviewer identity")
+
     @staticmethod
     def from_dict(value: Mapping[str, Any]) -> "CitationAdjudication":
         try:
@@ -113,12 +132,12 @@ class CitationAdjudication:
             raise BenchmarkContractError("citation adjudication has invalid label") from exc
         if not str(value.get("claim_id", "")).strip() or not str(value.get("source_id", "")).strip():
             raise BenchmarkContractError("citation adjudication requires claim_id and source_id")
-        reviewer = str(value.get("reviewer", "")).strip()
-        if not reviewer:
-            raise BenchmarkContractError("citation adjudication requires reviewer identity")
+        reviewer = value.get("reviewer")
+        if isinstance(reviewer, str):
+            reviewer = reviewer.strip()
         return CitationAdjudication(
             claim_id=str(value["claim_id"]), source_id=str(value["source_id"]),
-            document_exists=bool(value.get("document_exists", False)),
+            document_exists=value.get("document_exists"),
             label=label, reviewer=reviewer,
             rationale=str(value.get("rationale", "")),
         )
