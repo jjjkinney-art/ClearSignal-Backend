@@ -56,7 +56,7 @@ def _risk_monitoring_inference(value, reference_id):
     """
     match = re.fullmatch(
         r'(?P<condition>.{15,500}?)\s+(?:could|may)\s+'
-        r'(?:adversely affect|have (?:a )?(?:material )?adverse effect on|harm)\s+'
+        r'(?:(?:materially )?adversely affect|have (?:a )?(?:material )?adverse effect on|harm)\s+'
         r'(?P<effect>.{10,350})\.', value['quote'], re.I)
     if not match or re.search(r'\b(?:could|may|might|will)\b', match['condition'], re.I):
         return None

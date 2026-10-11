@@ -896,6 +896,46 @@ def test_bound_risk_produces_cited_specific_condition_without_claiming_occurrenc
     assert '[E3]' in result['answer'].split('Conditional risk monitoring')[1]
 
 
+@pytest.mark.parametrize('modal', ['could', 'may'])
+def test_material_adverse_mechanism_survives_binding_and_final_answer(monkeypatch, modal):
+    import socket
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail('Bound risk monitoring must not use the network')
+
+    monkeypatch.setattr(socket, 'getaddrinfo', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect_ex', unexpected_network)
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map',
+                        lambda: {'AAPL': '0000320193'})
+    quote = (f'Supply chain disruptions {modal} materially adversely affect '
+             'our liquidity and operating results.')
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
+                   f'{quote} Item 1B. Unresolved Staff Comments')
+    risk, = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
+                                                question='What operating risk affects Liquidity?')
+    bound = service.bound_thesis_risk(risk, ticker='AAPL')
+    assert bound['quote'] == quote
+    assert doc.text[bound['start_offset']:bound['end_offset']] == quote
+    items, references, _ = admit_evidence(pair() + [risk], evaluated_at='2025-09-01')
+    thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic company')
+    result = apply_source_answer_gate(thesis, QUESTION, items, references=references)
+    inference, = [row for row in result['inferences'] if row['kind'] == 'risk_monitoring_inference']
+    assert inference['condition'] == 'Supply chain disruptions'
+    assert inference['potential_effect'] == 'our liquidity and operating results'
+    assert inference['reference_ids'] == ['E3']
+    assert quote in thesis.direct_answer
+    assert not inference['historical_context_only']
+    assert 'not a forecast' in inference['conditional_test']
+    assert result['status'] == 'partial' and thesis.confidence_score == 0
+    assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
+    tampered = risk.model_copy(update={'summary': 'Unbound material risk claim'})
+    rejected = build_financial_foundation('AAPL', pair() + [tampered], None, expected_cik='320193')
+    assert not any(row['kind'] == 'risk_monitoring_inference' for row in rejected['inferences'])
+    missing_ref = build_financial_foundation('AAPL', pair() + [risk], references[:2], expected_cik='320193')
+    assert not any(row['kind'] == 'risk_monitoring_inference' for row in missing_ref['inferences'])
+
+
 def test_unbound_risk_or_missing_reference_cannot_produce_monitoring_test():
     bad = risk_item().model_copy(update={'summary':'Altered unbound claim'})
     result = build_financial_foundation('AAPL', pair() + [bad], None, expected_cik='320193')
@@ -912,15 +952,21 @@ def test_unbound_risk_or_missing_reference_cannot_produce_monitoring_test():
     'Supply chain disruptions may occur and could adversely affect our manufacturing operations.',
     'Supply chain disruptions will occur and could adversely affect our manufacturing operations.',
     'Supply chain disruptions could not adversely affect our manufacturing operations.',
+    'Supply chain disruptions could not materially adversely affect our manufacturing operations.',
+    'Supply chain disruptions will materially adversely affect our manufacturing operations.',
+    'Supply chain disruptions may occur and could materially adversely affect our manufacturing operations.',
+    'Supply chain disruptions could probably materially adversely affect our manufacturing operations.',
 ])
 def test_monitoring_does_not_invent_missing_or_nested_condition_effect(quote):
     from app.services.financial_thesis_foundation import _risk_monitoring_inference
     assert _risk_monitoring_inference(dict(quote=quote, scope='Supply chain'), 'E1') is None
 
 
-def test_historical_risk_monitoring_requires_current_successor_confirmation():
+@pytest.mark.parametrize('quote', [RISK, RISK.replace('could adversely', 'could materially adversely'),
+                                 RISK.replace('could adversely', 'may materially adversely')])
+def test_historical_risk_monitoring_requires_current_successor_confirmation(quote):
     from app.services.financial_thesis_foundation import _risk_monitoring_inference
-    result = _risk_monitoring_inference(dict(quote=RISK, scope='Supply chain',
+    result = _risk_monitoring_inference(dict(quote=quote, scope='Supply chain',
         issuer_relationship={'use':'historical_risk_context_only'}), 'E6')
     assert result['historical_context_only']
     assert result['text'].startswith('Historical predecessor watch:')
