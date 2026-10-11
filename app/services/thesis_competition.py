@@ -19,10 +19,16 @@ def _qualifies(quote):
     if re.search(r'\d|[%$€£]|\b(?:may|could|might|will|expect\w*|believe\w*|'
                  r'leading|best|superior|advantage\w*|dominant|unmatched)\b', quote, re.I):
         return False
+    if re.search(r'\b(?:employees|personnel|workforce|recruit\w*|talent|'
+                 r'software developers|sales professionals)\b', quote, re.I):
+        return False
     return bool(re.match(
         r'^We (?:(?:also|primarily|principally) )?compete (?:(?:primarily|principally) )?'
         r'(?:with|against|on the basis of|based on) \S|'
+        r'^We (?:also )?face competition from \S|'
         r'^Our (?:principal|primary|main) competitors (?:are|include) \S|'
+        r'^Our (?:principal|primary|main) (?:global |regional |national )?competitor'
+        r'(?: for [^.;]{1,80}?)? is (?:currently )?\S|'
         r'^Competition (?:in|within|for) [^.]{3,100} (?:is based|depends) on \S', quote, re.I))
 
 
@@ -59,6 +65,12 @@ def extract_competition_descriptions(document, *, ticker, cik):
     for start, end, section in windows:
         for left, right in islice(risk_sentence_spans(document.text[start:end]), 2000):
             quote = document.text[start + left:start + right]
+            # HTML joins a block heading to the next sentence. Strip only a
+            # shared literal heading when the entire following sentence qualifies.
+            heading = re.match(r'^(?:Our Competition|Competition)\s+', quote)
+            if heading and _qualifies(quote[heading.end():]):
+                left += heading.end()
+                quote = document.text[start + left:start + right]
             if not _qualifies(quote) or quote in seen:
                 continue
             offset = start + left

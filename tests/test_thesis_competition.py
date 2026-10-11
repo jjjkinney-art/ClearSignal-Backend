@@ -134,3 +134,39 @@ def test_predecessor_fetch_does_not_extract_competition(monkeypatch):
         pytest.fail('predecessor must not enter current competition producer')
     monkeypatch.setattr(service, 'extract_competition_descriptions', unexpected)
     assert thesis_disclosures.fetch_thesis_disclosures('XOM', question=QUESTION) == []
+
+
+@pytest.mark.parametrize('quote', [
+    'Our primary global competitor for laboratory software is currently another enterprise software provider.',
+    'Our principal regional competitor is an established manufacturer of specialized components.',
+    'We also face competition from vendors that focus on specific industries and product areas.',
+])
+def test_new_shared_forms_survive_joined_heading_and_final_binding(quote):
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Our Competition {quote} '
+                   f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    url = doc.final_url.replace('/320193/', '/1234567/')
+    doc = replace(doc, requested_url=url, final_url=url)
+    item, = service.extract_competition_descriptions(doc, ticker='ZQXB', cik='1234567')
+    value = service.bound_competition_description(item, ticker='ZQXB', cik='1234567')
+    assert value['quote'] == quote
+    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    assert 'Our Competition' not in item.summary
+    admitted, refs, _ = admit_evidence(pair(ticker='ZQXB', cik='1234567') + [item], evaluated_at='2025-08-05')
+    result = build_financial_foundation('ZQXB', admitted, refs, expected_cik='1234567')
+    assert quote in result['answer']
+    assert 'business model and competitive position' in result['unanswered_parts']
+
+
+@pytest.mark.parametrize('quote', [
+    'Our primary global competitor for laboratory software may become another enterprise software provider.',
+    'Our primary global competitor for laboratory software is currently a provider we believe we outperform.',
+    'We also face competition from software companies that may enter our principal product markets.',
+    'We face competition from other employers for skilled software developers and sales professionals.',
+    'We compete with other manufacturers for employees and skilled production personnel.',
+    'We believe our principal global competitor is another enterprise software provider.',
+    'Our competitor faces competition from vendors that focus on specific industries and product areas.',
+])
+def test_joined_heading_does_not_authorize_forecasts_beliefs_or_workforce_competition(quote):
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Our Competition {quote} '
+                   f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+    assert service.extract_competition_descriptions(doc, ticker='AAPL', cik='320193') == []
