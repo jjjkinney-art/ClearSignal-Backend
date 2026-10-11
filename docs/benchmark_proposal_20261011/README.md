@@ -51,9 +51,14 @@ Do not mechanically apply the US listing's share count to foreign total equity.
 Every candidate has a market-cap summary observation from its linked public
 StockAnalysis page, retrieved October 11, 2026. These are secondary aggregator
 observations, not audited financial truth or independently verified values.
-Their actual stated dates span September 18–October 9, 2026; 82 are October 9.
-October 9 is the proposed common measurement target, **not a substituted date**
-for older observations. Retrieval date and source observation date are separate
+The refreshed 100 summaries explicitly state October 9, 2026. The earlier
+observations (82 dated October 9 and 18 older) are preserved unchanged in
+`prior_observations.json`; refreshed values are not backdated into that record.
+Per-read UTC retrieval timestamps, requested/resolved URLs, short excerpts and
+excerpt hashes are in `refreshed_source_observations.json`. Each candidate
+references its observation ID. Three redirect reads reuse canonical excerpts.
+Hashes cover excerpts only, not complete pages; mutable-page values remain
+secondary observations. Retrieval time and source observation date are separate
 fields. Values are rounded, transcribed from the summary statement; historical
 table entries on the same page may differ and have not been reconciled. For
 example, the UTMD page displayed $237.32m in its summary versus $237.30m in the
@@ -69,9 +74,26 @@ classification under an unapproved rule.
 
 The observations change the old baseline labels: AA/DOCU would be large and
 ACHC/ACMR/MAN mid under this proposed policy. This proposal records the old
-registry entries for comparison; it never rewrites them. Refresh older dates,
-reconcile near-boundary names such as NWN/GRC, confirm active listing and issuer
+registry entries for comparison; it never rewrites them. The refreshed NWN summary moved from $1.99bn dated October 6 to $2.01bn dated
+October 9, crossing the proposed cutoff. NWN is therefore recorded as a mid-cap
+removed development candidate, replaced by RGR at an observed $691.22m dated
+October 9. This preserves all 18 old registry issuers and all 20 holdouts.
+Reconcile near-boundary names such as GRC, confirm active listing and issuer
 identity, and resolve corporate actions before freezing an accepted new version.
+
+## Current ticker corrections
+
+Primary sources confirm the development-pool identity updates; historical aliases
+are preserved and the 20 reserved holdouts are unchanged:
+
+- [ASGN to Everforth / EFOR, April 24, 2026](https://www.sec.gov/Archives/edgar/data/890564/000089056426000025/asgn-20260424.htm).
+- [IAC to People Incorporated / PPLI, June 4, 2026](https://ir.people-incorporated.com/news-releases/news-release-details/iac-now-people-incorporated-new-ticker-symbol).
+- [Gannett / GCI to USA TODAY Co. / TDAY, November 18, 2025](https://www.usatodayco.com/pr/gannett-rebrands-to-usa-today-co/), corroborated by its [current investor-relations page](https://investors.usatodayco.com/).
+
+The replacement [RGR issuer page](https://ruger.com/corporate/index.html?r=y)
+confirms NYSE ticker RGR. Its size classification is still conditional on the
+proposed cutoff and secondary cap observation. These narrow identity checks do
+not establish all candidates' legal identity or broader source coverage.
 
 ## Reserved evaluation-only pool
 
@@ -129,6 +151,6 @@ failing holdout issuers. Metadata corrections must preserve an amendment trail.
 
 Next decisions are approval of the proposed cutoff/date/currency/source policy
 and confirmation of no prior exposure outside the audited repositories. Next data
-work is common-date cap reconciliation, primary identity/sector/fiscal/jurisdiction
+work is exact cap reconciliation, primary identity/sector/fiscal/jurisdiction
 verification, followed by independently adjudicated captures when authorized.
 The 100-company quality benchmark remains unexecuted and unaccepted.
