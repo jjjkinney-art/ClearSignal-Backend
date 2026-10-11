@@ -928,7 +928,18 @@ def test_historical_risk_monitoring_requires_current_successor_confirmation():
     assert 'not a current successor invalidation test' in result['conditional_test']
 
 
-def test_source_answer_gate_retains_risk_inference_as_partial_analysis():
+def test_source_answer_gate_retains_risk_inference_as_partial_analysis(monkeypatch):
+    import socket
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail('Synthetic risk-inference acceptance must not use the network')
+
+    monkeypatch.setattr(socket, 'getaddrinfo', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect_ex', unexpected_network)
+    # Match the authored financial/risk fixtures without loading SEC's directory.
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map',
+                        lambda: {'AAPL': '0000320193'})
     items, references, _ = admit_evidence(pair() + [risk_item()], evaluated_at='2025-09-01')
     thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic company')
     result = apply_source_answer_gate(thesis, QUESTION, items, references=references)
