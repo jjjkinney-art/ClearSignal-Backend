@@ -16,3 +16,10 @@ wiring, negative EPS/margins, positive controls and malformed input rejection.
 No model/provider calls or live acceptance were used. This is deterministic
 input-fidelity validation, not verification of the model's chosen investment
 thresholds, valuation assumptions or expected-return arithmetic.
+
+Independent review identified further partial matches: unsupported sign-before-
+non-dollar-currency expressions, accounting parentheses and trailing malformed
+decimals. They now fail closed instead of discarding signs or punctuation.
+Regression examples include `<-€10`, `<−€10`, `<($10)`, `<10..x` and unbalanced
+parentheses. The seven affected files passed again (378 tests); two additional
+unbalanced-parenthesis cases then passed with the complete 31-case new file.

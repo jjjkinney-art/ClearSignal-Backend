@@ -33,7 +33,8 @@ def test_negative_eps_band_is_not_converted_to_positive():
 
 
 @pytest.mark.parametrize('raw', ['<1e3x', '<1E-3x', '<--2x', '<1,,000x', '<1,00x',
-                               '<1.2.3x', '<10-12x', '<' + '9'*400 + 'x', 123, True])
+                               '<1.2.3x', '<10-12x', '<-€10', '<−€10', '<($10)', '<10..x',
+                               '<-£10', '<- JPY 10', '<(10)x', '<10.x.', '<($10', '<10)x', '<' + '9'*400 + 'x', 123, True])
 def test_ambiguous_malformed_or_nonfinite_boundary_is_unavailable(raw):
     assert band(raw)['unavailable'] is True
 

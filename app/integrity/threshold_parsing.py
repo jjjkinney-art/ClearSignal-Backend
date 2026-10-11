@@ -198,7 +198,11 @@ def _parse_side(text: str) -> Optional[Dict[str, Any]]:
     {op, value, unit}. Returns None if unparseable."""
     if not isinstance(text, str) or not text:
         return None
-    text = text.replace("−", "-")
+    text = text.replace("−", "-").strip()
+    # Accounting parentheses and unsupported sign-before-currency forms must
+    # not lose their sign when the numeric search starts inside the expression.
+    if re.search(r"\([^)]*\d[^)]*\)", text):
+        return None
     # Normalize a sign before a dollar symbol without dropping its meaning.
     text = re.sub(r"([+-])\s*\$\s*", r"$\1", text)
     # Scientific notation is not part of the threshold grammar. Do not
@@ -213,6 +217,14 @@ def _parse_side(text: str) -> Optional[Dict[str, Any]]:
         return None
     m = matches[0]
     if not m.group("val"):
+        return None
+    prefix, suffix = text[:m.start("val")], text[m.end():]
+    if re.search(r"\([^)]*$", prefix) or suffix.lstrip().startswith(")"):
+        return None
+    if re.search(r"[+-]\s*(?:[€£¥₹$]|[A-Z]{3})\s*$", prefix):
+        return None
+    # A match is not valid when it consumes only part of a malformed decimal.
+    if suffix.startswith((".", ",")) or prefix.endswith("."):
         return None
     if "," in m.group("val") and not re.fullmatch(
             r"[+-]?\d{1,3}(?:,\d{3})+(?:\.\d*)?", m.group("val")):
