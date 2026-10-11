@@ -14,12 +14,13 @@ validate_band logic is not touched.
 from __future__ import annotations
 
 import re
+import math
 from typing import Any, Dict, List, Optional
 
 from .thresholds import ThresholdBand, MetricDirection, validate_band, infer_direction
 
 _NUM_RE = re.compile(
-    r"(?P<op><=|>=|<|>)?\s*\$?\s?(?P<val>\d[\d,]*\.?\d*)\s?(?P<unit>%|x|bp|bps|B|M|K)?",
+    r"(?P<op><=|>=|<|>)?\s*\$?\s?(?P<val>[+-]?(?:\d[\d,]*\.?\d*|\.\d+))\s?(?P<unit>%|x|bp|bps|B|M|K)?",
     re.IGNORECASE,
 )
 
@@ -195,14 +196,48 @@ def infer_unit(metric: str, *, currency: Optional[str] = None) -> Optional[str]:
 def _parse_side(text: str) -> Optional[Dict[str, Any]]:
     """Parse one threshold side (e.g. '<31x', '>$40B', '>25%') into
     {op, value, unit}. Returns None if unparseable."""
-    if not text:
+    if not isinstance(text, str) or not text:
         return None
-    m = _NUM_RE.search(text.strip())
-    if not m or not m.group("val"):
+    text = text.replace("−", "-").strip()
+    # Accounting parentheses and unsupported sign-before-currency forms must
+    # not lose their sign when the numeric search starts inside the expression.
+    if re.search(r"\([^)]*\d[^)]*\)", text):
+        return None
+    # Normalize a sign before a dollar symbol without dropping its meaning.
+    text = re.sub(r"([+-])\s*\$\s*", r"$\1", text)
+    # Scientific notation is not part of the threshold grammar. Do not
+    # truncate its exponent into a different, apparently valid boundary.
+    if re.search(r"\d\s*[eE]\s*[+-]?\d", text):
+        return None
+    if re.search(r"[+-]\s*[+-]", text):
+        return None
+    text = re.sub(r"([+-])\s+(?=[\d.])", r"\1", text)
+    matches = list(_NUM_RE.finditer(text.strip()))
+    if len(matches) != 1:
+        return None
+    m = matches[0]
+    if not m.group("val"):
+        return None
+    prefix, suffix = text[:m.start("val")], text[m.end():]
+    if re.search(r"\([^)]*$", prefix) or suffix.lstrip().startswith(")"):
+        return None
+    # Every numeric sign must be consumed by the numeric token itself. A
+    # search that skips a sign-bearing prefix (US$, lowercase currency text,
+    # or any other unsupported syntax) cannot safely assign a positive value.
+    # Do not enumerate currencies here or infer support for their syntax.
+    if re.search(r"[+-]", prefix):
+        return None
+    # A match is not valid when it consumes only part of a malformed decimal.
+    if suffix.startswith((".", ",")) or prefix.endswith("."):
+        return None
+    if "," in m.group("val") and not re.fullmatch(
+            r"[+-]?\d{1,3}(?:,\d{3})+(?:\.\d*)?", m.group("val")):
         return None
     try:
         value = float(m.group("val").replace(",", ""))
     except ValueError:
+        return None
+    if not math.isfinite(value):
         return None
     op = m.group("op") or ("<" if text.strip().startswith("<") else
                            ">" if text.strip().startswith(">") else None)
