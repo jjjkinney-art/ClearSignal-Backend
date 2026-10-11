@@ -38,6 +38,17 @@ forms with no prefix and each of the five supported discourse prefixes. The
 quoted disclosure remains issuer-reported context; it cannot create a meaningless
 conditional watch. Short explicit Cyberattacks/Loan defaults tests remain green.
 
+Further review established that lexical text alone cannot resolve short subjects
+such as “The situation”, “The risks”, “In turn, this”, “All of this” and “Both”.
+Short-subject support is therefore restricted to subjects matching the already
+bound disclosure's existing risk-topic vocabulary. Topic words in the effect
+do not satisfy this check. Other subjects retain the original 15-character
+minimum after supported discourse-prefix cleanup. This reuses existing topic
+grounding rather than growing a list of vague nouns or assigning materiality.
+Forty-eight final-answer cases cover all eight observed unresolved forms with
+the supported discourse prefixes; explicit Cyberattacks and Loan defaults retain
+positive extraction-to-answer coverage.
+
 This bounded repair implements part of the conditional-monitoring work recorded
 in `CITED_RISK_MONITORING_20261011.md`. The broader risk-relevance and representative
 company adjudication gaps remain open. Live verification is deferred.

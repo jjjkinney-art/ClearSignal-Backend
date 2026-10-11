@@ -978,7 +978,17 @@ def test_short_condition_still_requires_explicit_lexical_mechanism(condition):
     assert _risk_monitoring_inference(dict(quote=quote, scope='Cybersecurity'), 'E1') is None
 
 
-@pytest.mark.parametrize('condition', ['The foregoing', 'The above', 'We'])
+def test_short_subject_must_name_bound_topic_not_borrow_it_from_effect():
+    from app.services.financial_thesis_foundation import _risk_monitoring_inference
+    quote = 'The situation could adversely affect our cybersecurity and operating results.'
+    assert _risk_monitoring_inference(dict(quote=quote, scope='Cybersecurity'), 'E1') is None
+    quote = 'Cyberattacks could adversely affect our liquidity and operating results.'
+    assert _risk_monitoring_inference(dict(quote=quote, scope='Liquidity'), 'E1') is None
+
+
+@pytest.mark.parametrize('condition', ['The foregoing', 'The above', 'We',
+                                      'The situation', 'The risks', 'In turn, this',
+                                      'All of this', 'Both'])
 @pytest.mark.parametrize('prefix', ['', 'Furthermore, ', 'On the other hand, ',
                                     'Moreover, ', 'However, ', 'In addition, '])
 def test_bound_anaphoric_subject_does_not_become_monitoring(monkeypatch, condition, prefix):

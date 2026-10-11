@@ -69,6 +69,14 @@ def _risk_monitoring_inference(value, reference_id):
     # condition, full bound quote and offsets remain untouched.
     display_condition = re.sub(r'^(?:On the other hand|Furthermore|Moreover|However|In addition),\s+',
                                '', condition, count=1, flags=re.I)
+    # Preserve the original minimum for unspecified short subjects. Relax it
+    # only when the subject itself names the bound disclosure's existing topic;
+    # topic words in the effect cannot supply the missing condition.
+    if len(display_condition.strip()) < 15:
+        from .issuer_risk_evidence import RISK_TOPICS
+        topic = RISK_TOPICS.get(value.get('scope'))
+        if not topic or not re.search(topic, display_condition, re.I):
+            return None
     if (not re.search(r'\b[A-Za-z]{2,}\b', display_condition)
             or re.fullmatch(r'(?:(?:this|these|that|those|it|they|such)(?:\s+\w+)?'
                             r'|we|us|you|he|she|(?:the\s+)?(?:foregoing|above|below|latter|former))',
