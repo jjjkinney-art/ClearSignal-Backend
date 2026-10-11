@@ -61,20 +61,22 @@ def _risk_monitoring_inference(value, reference_id):
     if not match or re.search(r'\b(?:could|may|might|will)\b', match['condition'], re.I):
         return None
     condition, effect = match['condition'], match['effect']
+    # Display-only cleanup of an explicit discourse lead. The original
+    # condition, full bound quote and offsets remain untouched.
+    display_condition = re.sub(r'^(?:On the other hand|Furthermore|Moreover|However|In addition),\s+',
+                               '', condition, count=1, flags=re.I)
     historical = bool(value.get('issuer_relationship'))
-    text = (f'The disclosed mechanism links “{condition}” to potential harm to “{effect}”. '
-            'This identifies a condition to investigate; it does not establish that the condition '
-            'occurred or caused the reported financial trends.')
-    test = (f'Monitor whether “{condition}” occurs and whether the issuer reports adverse effects '
-            f'on “{effect}”. Confirmed operating deterioration through this mechanism would '
-            'challenge an assumption that this risk remains manageable; the disclosure alone '
-            'does not invalidate the investment case. This is a conditional research test, not a forecast.')
+    text = f'Watch: “{display_condition}”. Potential adverse effect: “{effect}”.'
+    test = ('Reported occurrence and resulting operating deterioration would challenge the '
+            'assumption that this risk remains manageable. The disclosure alone does not '
+            'invalidate the investment case; this is a conditional research test, not a forecast.')
     if historical:
-        text = 'Historical predecessor mechanism: ' + text
-        test = ('First verify that the successor confirms this mechanism remains applicable. '
-                'Until then, this is a historical watch item, not a current successor invalidation test. ' + test)
+        text = 'Historical predecessor watch: ' + text.removeprefix('Watch: ')
+        test = ('Confirm current successor relevance before applying this historical mechanism. '
+                'It is not a current successor invalidation test. ' + test)
     return {'kind': 'risk_monitoring_inference', 'scope': value['scope'],
             'condition': condition, 'potential_effect': effect,
+            'display_condition': display_condition,
             'historical_context_only': historical, 'text': text,
             'conditional_test': test, 'reference_ids': [reference_id]}
 

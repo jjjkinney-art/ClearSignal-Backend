@@ -890,8 +890,8 @@ def test_bound_risk_produces_cited_specific_condition_without_claiming_occurrenc
     assert inference['potential_effect'] == 'our ability to manufacture and deliver products'
     assert inference['reference_ids'] == ['E3']
     assert not inference['historical_context_only']
-    assert 'does not establish that the condition occurred' in inference['text']
-    assert 'disclosure alone does not invalidate' in inference['conditional_test']
+    assert inference['text'].startswith('Watch:')
+    assert 'disclosure alone does not invalidate' in inference['conditional_test'].lower()
     assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
     assert '[E3]' in result['answer'].split('Conditional risk monitoring')[1]
 
@@ -923,8 +923,8 @@ def test_historical_risk_monitoring_requires_current_successor_confirmation():
     result = _risk_monitoring_inference(dict(quote=RISK, scope='Supply chain',
         issuer_relationship={'use':'historical_risk_context_only'}), 'E6')
     assert result['historical_context_only']
-    assert result['text'].startswith('Historical predecessor mechanism:')
-    assert 'First verify that the successor confirms' in result['conditional_test']
+    assert result['text'].startswith('Historical predecessor watch:')
+    assert 'Confirm current successor relevance' in result['conditional_test']
     assert 'not a current successor invalidation test' in result['conditional_test']
 
 
@@ -937,3 +937,28 @@ def test_source_answer_gate_retains_risk_inference_as_partial_analysis():
     assert inference['reference_ids'] == ['E3']
     assert 'Conditional risk monitoring' in thesis.direct_answer
     assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
+
+
+def test_risk_display_drops_only_leading_transition_retaining_source_condition():
+    from app.services.financial_thesis_foundation import _risk_monitoring_inference
+    quote = 'On the other hand, a material increase in commodity prices could have a material adverse effect on our manufacturing operations.'
+    value = dict(quote=quote, scope='Commodity prices')
+    result = _risk_monitoring_inference(value, 'E7')
+    assert value['quote'] == quote
+    assert result['condition'] == 'On the other hand, a material increase in commodity prices'
+    assert result['display_condition'] == 'a material increase in commodity prices'
+    assert 'On the other hand' not in result['text']
+    assert result['text'].count(result['display_condition']) == 1
+    assert result['display_condition'] not in result['conditional_test']
+    assert result['potential_effect'] not in result['conditional_test']
+    assert result['reference_ids'] == ['E7']
+
+
+@pytest.mark.parametrize('condition', ['Any failure to maintain customer support',
+                                     'Our inability to secure raw materials',
+                                     'A decline, however, in customer demand'])
+def test_risk_display_retains_substantive_conditions_and_internal_qualifiers(condition):
+    from app.services.financial_thesis_foundation import _risk_monitoring_inference
+    result = _risk_monitoring_inference(dict(quote=f'{condition} could adversely affect our manufacturing operations.',
+        scope='Supply chain'), 'E1')
+    assert result['display_condition'] == condition == result['condition']
