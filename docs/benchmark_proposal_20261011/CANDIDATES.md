@@ -1,8 +1,8 @@
-# 100 candidate proposal — unapproved classifications
+# 100 candidates — approved policy, admission review pending
 
-Every cap is a dated, rounded secondary-page observation; no classification is approved or independently verified. Links point to refreshed public pages; per-read UTC timestamps and excerpts are in the JSON artifacts. Prior observations are preserved separately. See README.md for scope and limitations.
+Every cap is a dated, rounded secondary-page observation; the classification policy is user-approved, while observations and company admission remain subject to reconciliation. Links point to refreshed public pages; per-read UTC timestamps and excerpts are in the JSON artifacts. Prior observations are preserved separately. See README.md for scope and limitations.
 
-| Slot | Candidate | Proposed tier | Proposed sector | Observed cap (USD) | Source as-of | Holdout |
+| Slot | Candidate | Provisional tier | Proposed sector | Observed cap (USD) | Source as-of | Holdout |
 |---|---|---|---|---|---|---|
 | large | [AAPL](https://stockanalysis.com/stocks/aapl/market-cap/) — Apple | large | Information Technology | 4.91 trillion | 2026-10-09 |  |
 | large | [MSFT](https://stockanalysis.com/stocks/msft/market-cap/) — Microsoft | large | Information Technology | 3.97 trillion | 2026-10-09 |  |

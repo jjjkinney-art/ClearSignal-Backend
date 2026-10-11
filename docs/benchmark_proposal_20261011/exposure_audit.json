@@ -859,5 +859,13 @@
         "sample_matches": []
       }
     }
+  },
+  "user_exposure_statement": {
+    "recorded_at": "2026-10-11T23:43:39Z",
+    "statement": "I don't believe that I've used those companies before but I can't say for certain.",
+    "scope": "all_20_reserved_holdouts",
+    "interpretation": "no_certain_attestation; prior_exposure_outside_audited_repositories_unknown",
+    "verified_unseen": false,
+    "holdout_membership_changed": false
   }
 }

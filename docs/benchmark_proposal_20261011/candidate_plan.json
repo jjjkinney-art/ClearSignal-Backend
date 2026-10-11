@@ -17,18 +17,6 @@
     "minimum_distinct_sectors": 10,
     "minimum_distinct_complexity_tags": 20
   },
-  "unapproved_classification_policy_proposal": {
-    "source": "https://www.finra.org/investors/insights/market-cap",
-    "currency": "USD",
-    "large_min_inclusive": 10000000000,
-    "mid_min_inclusive": 2000000000,
-    "mid_max_exclusive": 10000000000,
-    "small_micro_max_exclusive": 2000000000,
-    "boundary_equality_rule": "proposed_half_open_intervals_not_an_approved_policy",
-    "common_measurement_target_date": "2026-10-09",
-    "actual_dates": "per_row_source_as_of; never substituted with retrieval date",
-    "market_cap_basis": "total_company_common_equity_not_enterprise_value_or_float; share-class_and_ADR_handling_need_approval_and_verification"
-  },
   "coverage_summary": {
     "allocation_counts": {
       "large": 30,
@@ -85,7 +73,7 @@
     "USNA",
     "MTRX"
   ],
-  "holdout_reservation_status": "reserved_for_evaluation_only_before_further_answer_tuning; primary_identity_and_policy_review_pending",
+  "holdout_reservation_status": "reserved_for_evaluation_only_before_further_answer_tuning; outside_audited_repositories_prior_exposure_unknown",
   "existing_registry_complexity_tags_to_retain_and_reverify": [
     "adjusted_metrics",
     "adr",
@@ -152,7 +140,7 @@
       "display_company_observed": "Apple",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.91",
         "display_scale": "trillion",
@@ -188,14 +176,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000320193",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "MSFT",
       "display_company_observed": "Microsoft",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.97",
         "display_scale": "trillion",
@@ -231,14 +235,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000789019",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NVDA",
       "display_company_observed": "NVIDIA",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "5.54",
         "display_scale": "trillion",
@@ -274,14 +294,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001045810",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ASML",
       "display_company_observed": "ASML Holding",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "688.72",
         "display_scale": "billion",
@@ -318,14 +354,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000937966",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "JPM",
       "display_company_observed": "JPMorgan Chase",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "885.15",
         "display_scale": "billion",
@@ -361,14 +413,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000019617",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "V",
       "display_company_observed": "Visa",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "707.53",
         "display_scale": "billion",
@@ -404,14 +472,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001403161",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "XOM",
       "display_company_observed": "ExxonMobil Holdings",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "694.67",
         "display_scale": "billion",
@@ -447,14 +531,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0002115436",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "COST",
       "display_company_observed": "Costco",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "419.61",
         "display_scale": "billion",
@@ -490,14 +590,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000909832",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "LLY",
       "display_company_observed": "Eli Lilly",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.05",
         "display_scale": "trillion",
@@ -533,14 +649,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000059478",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "BA",
       "display_company_observed": "Boeing",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "150.46",
         "display_scale": "billion",
@@ -576,14 +708,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000012927",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "PLTR",
       "display_company_observed": "Palantir",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "502.36",
         "display_scale": "billion",
@@ -619,14 +767,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001321655",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "TSLA",
       "display_company_observed": "Tesla",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.51",
         "display_scale": "trillion",
@@ -662,14 +826,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001318605",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AON",
       "display_company_observed": "Aon plc",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "58.01",
         "display_scale": "billion",
@@ -692,16 +872,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000315293",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AJG",
       "display_company_observed": "Arthur J. Gallagher & Co.",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "59.65",
         "display_scale": "billion",
@@ -724,16 +920,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000354190",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "DTE",
       "display_company_observed": "DTE Energy Company",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "26.41",
         "display_scale": "billion",
@@ -756,16 +968,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000936340",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "PCAR",
       "display_company_observed": "PACCAR",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "56.87",
         "display_scale": "billion",
@@ -788,16 +1016,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000075362",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ODFL",
       "display_company_observed": "Old Dominion Freight Line",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "37.73",
         "display_scale": "billion",
@@ -820,16 +1064,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000878927",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "VTR",
       "display_company_observed": "Ventas",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "42.36",
         "display_scale": "billion",
@@ -852,16 +1112,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000740260",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AMZN",
       "display_company_observed": "Amazon",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.83",
         "display_scale": "trillion",
@@ -886,14 +1162,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001018724",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "GOOGL",
       "display_company_observed": "Alphabet",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.3",
         "display_scale": "trillion",
@@ -918,14 +1210,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001652044",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "META",
       "display_company_observed": "Meta Platforms",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.83",
         "display_scale": "trillion",
@@ -950,14 +1258,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001326801",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "WMT",
       "display_company_observed": "Walmart",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "883.42",
         "display_scale": "billion",
@@ -982,14 +1306,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000104169",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "PG",
       "display_company_observed": "Procter & Gamble",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "351.26",
         "display_scale": "billion",
@@ -1014,14 +1354,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000080424",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NEE",
       "display_company_observed": "NextEra Energy",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "161.41",
         "display_scale": "billion",
@@ -1046,14 +1402,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000753308",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "LIN",
       "display_company_observed": "Linde",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "222.99",
         "display_scale": "billion",
@@ -1078,14 +1450,31 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001707925",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json",
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AMT",
       "display_company_observed": "American Tower",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "84.92",
         "display_scale": "billion",
@@ -1110,14 +1499,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001053507",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NVS",
       "display_company_observed": "Novartis AG",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "272.48",
         "display_scale": "billion",
@@ -1142,14 +1547,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001114448",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "JNJ",
       "display_company_observed": "Johnson & Johnson",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "630.04",
         "display_scale": "billion",
@@ -1174,14 +1595,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000200406",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "KO",
       "display_company_observed": "The Coca-Cola Company",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "378.84",
         "display_scale": "billion",
@@ -1206,14 +1643,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000021344",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SHW",
       "display_company_observed": "SHW",
       "allocation_slot": "large",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "77.07",
         "display_scale": "billion",
@@ -1238,14 +1691,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000089800",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ETSY",
       "display_company_observed": "Etsy, Inc.",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "7.04",
         "display_scale": "billion",
@@ -1281,14 +1750,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001370637",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ACHC",
       "display_company_observed": "Acadia Healthcare Company",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.72",
         "display_scale": "billion",
@@ -1324,14 +1809,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001520697",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ACMR",
       "display_company_observed": "ACM Research",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.97",
         "display_scale": "billion",
@@ -1367,14 +1868,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001680062",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "MAN",
       "display_company_observed": "ManpowerGroup",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.45",
         "display_scale": "billion",
@@ -1410,14 +1927,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000871763",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ENS",
       "display_company_observed": "EnerSys",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "6.48",
         "display_scale": "billion",
@@ -1440,16 +1973,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001289308",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "INGR",
       "display_company_observed": "Ingredion",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "6",
         "display_scale": "billion",
@@ -1474,14 +2023,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001046257",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "KBR",
       "display_company_observed": "KBR, Inc.",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.46",
         "display_scale": "billion",
@@ -1504,16 +2069,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001357615",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AVT",
       "display_company_observed": "Avnet",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "8.15",
         "display_scale": "billion",
@@ -1536,16 +2117,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000008858",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "VNT",
       "display_company_observed": "Vontier",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.36",
         "display_scale": "billion",
@@ -1568,16 +2165,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001786842",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "RHI",
       "display_company_observed": "Robert Half",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.41",
         "display_scale": "billion",
@@ -1600,16 +2213,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000315213",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "BKH",
       "display_company_observed": "Black Hills",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "5.8",
         "display_scale": "billion",
@@ -1632,16 +2261,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001130464",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "WDFC",
       "display_company_observed": "WD-40 Company",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.71",
         "display_scale": "billion",
@@ -1666,14 +2311,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000105132",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "OGS",
       "display_company_observed": "ONE Gas",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.56",
         "display_scale": "billion",
@@ -1696,16 +2357,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001587732",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AWR",
       "display_company_observed": "AWR",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.26",
         "display_scale": "billion",
@@ -1730,14 +2407,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001056903",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SWX",
       "display_company_observed": "Southwest Gas Holdings",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "6.1",
         "display_scale": "billion",
@@ -1762,14 +2455,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001692115",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "MAT",
       "display_company_observed": "Mattel",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.77",
         "display_scale": "billion",
@@ -1794,14 +2503,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000063276",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "LEVI",
       "display_company_observed": "Levi Strauss & Co.",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "7.17",
         "display_scale": "billion",
@@ -1826,14 +2551,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000094845",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "GEF",
       "display_company_observed": "Greif",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.65",
         "display_scale": "billion",
@@ -1858,14 +2599,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000043920",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SON",
       "display_company_observed": "Sonoco Products Company",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.74",
         "display_scale": "billion",
@@ -1890,14 +2647,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000091767",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "FUL",
       "display_company_observed": "H.B. Fuller Company",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.67",
         "display_scale": "billion",
@@ -1922,14 +2695,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000039368",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ASH",
       "display_company_observed": "Ashland",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.23",
         "display_scale": "billion",
@@ -1954,14 +2743,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001674862",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "CWT",
       "display_company_observed": "CWT",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.84",
         "display_scale": "billion",
@@ -1986,14 +2791,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001035201",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "CBU",
       "display_company_observed": "CBU",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.08",
         "display_scale": "billion",
@@ -2018,14 +2839,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000723188",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "BANF",
       "display_company_observed": "BancFirst",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.57",
         "display_scale": "billion",
@@ -2050,14 +2887,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000760498",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NHI",
       "display_company_observed": "National Health Investors",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.18",
         "display_scale": "billion",
@@ -2082,14 +2935,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000877860",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "PPLI",
       "display_company_observed": "People Incorporated",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.04",
         "display_scale": "billion",
@@ -2132,6 +3001,22 @@
         "published_date": "2026-06-04",
         "evidence_summary": "Issuer release confirms IAC legal name change to People Incorporated and Nasdaq ticker PPLI effective June 4.",
         "reviewed_at": "2026-10-11T23:33:56Z"
+      },
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001800227",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
       }
     },
     {
@@ -2139,7 +3024,7 @@
       "display_company_observed": "Northern Oil and Gas",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.63",
         "display_scale": "billion",
@@ -2164,14 +3049,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001104485",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "HAE",
       "display_company_observed": "Haemonetics",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "5.4",
         "display_scale": "billion",
@@ -2196,14 +3097,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000313143",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "KAI",
       "display_company_observed": "Kadant",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "3.08",
         "display_scale": "billion",
@@ -2228,14 +3145,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000886346",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SR",
       "display_company_observed": "Spire",
       "allocation_slot": "mid",
       "proposed_size_tier": "mid",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "4.64",
         "display_scale": "billion",
@@ -2260,14 +3193,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001126956",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "EFOR",
       "display_company_observed": "Everforth, Inc.",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.53",
         "display_scale": "billion",
@@ -2312,6 +3261,22 @@
         "published_date": "2026-04-24",
         "evidence_summary": "SEC Form 8-K identifies Everforth, Inc., formerly ASGN Incorporated, and common stock ticker EFOR on NYSE; name/ticker change effective April 24.",
         "reviewed_at": "2026-10-11T23:33:56Z"
+      },
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000890564",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
       }
     },
     {
@@ -2319,7 +3284,7 @@
       "display_company_observed": "Insperity",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.86",
         "display_scale": "billion",
@@ -2344,14 +3309,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001000753",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "RGR",
       "display_company_observed": "Sturm, Ruger & Company",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "691.22",
         "display_scale": "million",
@@ -2383,6 +3364,22 @@
         "resolved_url": "https://ruger.com/corporate/index.html?r=y",
         "reviewed_at": "2026-10-11T23:33:56Z",
         "evidence_summary": "Issuer investor-relations page states NYSE listing under RGR since 1990."
+      },
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000095029",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
       }
     },
     {
@@ -2390,7 +3387,7 @@
       "display_company_observed": "Energizer Holdings",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.46",
         "display_scale": "billion",
@@ -2415,14 +3412,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001632790",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AIN",
       "display_company_observed": "Albany International",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.75",
         "display_scale": "billion",
@@ -2447,14 +3460,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000819793",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "JBLU",
       "display_company_observed": "JetBlue Airways",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.45",
         "display_scale": "billion",
@@ -2479,14 +3508,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001158463",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SWBI",
       "display_company_observed": "Smith & Wesson Brands",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "626.86",
         "display_scale": "million",
@@ -2511,14 +3556,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001092796",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "BGS",
       "display_company_observed": "B&G Foods",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "195.06",
         "display_scale": "million",
@@ -2543,14 +3604,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001278027",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "TDAY",
       "display_company_observed": "USA TODAY Co., Inc.",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "993.76",
         "display_scale": "million",
@@ -2594,6 +3671,22 @@
         "evidence_summary": "Issuer announcement identifies Gannett/GCI name change to USA TODAY Co. and NYSE ticker TDAY effective November 18, 2025.",
         "corroborating_current_source_url": "https://investors.usatodayco.com/",
         "reviewed_at": "2026-10-11T23:33:56Z"
+      },
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001579684",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
       }
     },
     {
@@ -2601,7 +3694,7 @@
       "display_company_observed": "HBB",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "467.26",
         "display_scale": "million",
@@ -2624,16 +3717,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001709164",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "VLGEA",
       "display_company_observed": "Village Super Market",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "651.92",
         "display_scale": "million",
@@ -2656,16 +3765,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000103595",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SENEA",
       "display_company_observed": "Seneca Foods",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.21",
         "display_scale": "billion",
@@ -2688,16 +3813,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000088948",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "CAL",
       "display_company_observed": "Caleres",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "417.17",
         "display_scale": "million",
@@ -2722,14 +3863,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000014707",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ANGO",
       "display_company_observed": "AngioDynamics",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "484.47",
         "display_scale": "million",
@@ -2752,16 +3909,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001275187",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "UTMD",
       "display_company_observed": "Utah Medical Products",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "237.32",
         "display_scale": "million",
@@ -2784,16 +3957,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000706698",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "USNA",
       "display_company_observed": "USANA Health Sciences",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "270.87",
         "display_scale": "million",
@@ -2816,16 +4005,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000896264",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "MLR",
       "display_company_observed": "Miller Industries",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "595.54",
         "display_scale": "million",
@@ -2850,14 +4055,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000924822",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "GRC",
       "display_company_observed": "The Gorman-Rupp Company",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "1.95",
         "display_scale": "billion",
@@ -2882,14 +4103,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000042682",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "MTRX",
       "display_company_observed": "Matrix Service Company",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "297.91",
         "display_scale": "million",
@@ -2912,16 +4149,32 @@
       "sector_status": "planning_label_not_independently_verified",
       "prior_registry_entry": null,
       "reserved_holdout": true,
-      "holdout_exposure_status": "no_match_in_audited_available_history",
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000866273",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NNBR",
       "display_company_observed": "NN, Inc.",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "370.29",
         "display_scale": "million",
@@ -2946,14 +4199,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000918541",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "PLOW",
       "display_company_observed": "Douglas Dynamics",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "904.39",
         "display_scale": "million",
@@ -2978,14 +4247,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001287213",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SGC",
       "display_company_observed": "SGC",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "208.08",
         "display_scale": "million",
@@ -3010,14 +4295,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000095574",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "JOUT",
       "display_company_observed": "Johnson Outdoors",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "441.13",
         "display_scale": "million",
@@ -3042,14 +4343,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000788329",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "PETS",
       "display_company_observed": "PetMed Express",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "27.05",
         "display_scale": "million",
@@ -3074,14 +4391,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001040130",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NATH",
       "display_company_observed": "Nathan's Famous",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "417.02",
         "display_scale": "million",
@@ -3106,14 +4439,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000069733",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "RELL",
       "display_company_observed": "Richardson Electronics",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "309.29",
         "display_scale": "million",
@@ -3138,14 +4487,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000355948",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "ACNB",
       "display_company_observed": "ACNB Corporation",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "633.48",
         "display_scale": "million",
@@ -3170,14 +4535,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000715579",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "CCBG",
       "display_company_observed": "Capital City Bank Group",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "823.15",
         "display_scale": "million",
@@ -3202,14 +4583,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000726601",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "NGS",
       "display_company_observed": "NGS",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "426.93",
         "display_scale": "million",
@@ -3234,14 +4631,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001084991",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_b.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "FRPH",
       "display_company_observed": "FRP Holdings",
       "allocation_slot": "small_micro",
       "proposed_size_tier": "small_micro",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "384.73",
         "display_scale": "million",
@@ -3266,14 +4679,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "compatible_display_rounding_only",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000844059",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "AA",
       "display_company_observed": "Alcoa",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "11.14",
         "display_scale": "billion",
@@ -3309,14 +4738,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001675149",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "DOCU",
       "display_company_observed": "DocuSign",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "13.29",
         "display_scale": "billion",
@@ -3352,14 +4797,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001261333",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/domestic_identity_a.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "TSM",
       "display_company_observed": "TSMC",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "2.07",
         "display_scale": "trillion",
@@ -3384,14 +4845,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "equal_displayed_values",
+        "cap_conflict_unresolved": false,
+        "company_admitted": false,
+        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001046179",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SAP",
       "display_company_observed": "SAP SE",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "247.43",
         "display_scale": "billion",
@@ -3416,14 +4893,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001000184",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "SONY",
       "display_company_observed": "Sony Group",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "141.45",
         "display_scale": "billion",
@@ -3448,14 +4941,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000313838",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "TM",
       "display_company_observed": "Toyota Motor",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "216.5",
         "display_scale": "billion",
@@ -3480,14 +4989,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001094517",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "RY",
       "display_company_observed": "Royal Bank of Canada",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "265.64",
         "display_scale": "billion",
@@ -3512,14 +5037,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001000275",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "BHP",
       "display_company_observed": "BHP Group",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "216.16",
         "display_scale": "billion",
@@ -3544,14 +5085,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000811809",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "UL",
       "display_company_observed": "Unilever",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "133.17",
         "display_scale": "billion",
@@ -3576,14 +5133,30 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0000217410",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     },
     {
       "ticker_candidate": "EQNR",
       "display_company_observed": "Equinor ASA",
       "allocation_slot": "extra",
       "proposed_size_tier": "large",
-      "classification_status": "proposed_unapproved_secondary_observation",
+      "classification_status": "approved_policy_applied_to_provisional_secondary_observation; admission_review_pending",
       "market_cap_observation": {
         "display_amount": "103.81",
         "display_scale": "billion",
@@ -3608,7 +5181,23 @@
       "reserved_holdout": false,
       "holdout_exposure_status": "development_pool_not_claimed_unseen",
       "legal_identity_and_listing_status": "primary_source_confirmation_pending",
-      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending"
+      "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
+      "admission_review": {
+        "cap_review_ref": "reconciliation/cap_value_review.json",
+        "cap_decision": "conflict_unresolved",
+        "cap_conflict_unresolved": true,
+        "company_admitted": false,
+        "status": "blocked_cap_conflict",
+        "not_an_execution_authorization": true
+      },
+      "current_primary_identity": {
+        "deduplication_key": "SEC_CIK:0001140625",
+        "status": "current_SEC_mapping_observed",
+        "evidence_refs": [
+          "reconciliation/international_identity_review.json"
+        ],
+        "historical_target_date_verified_by_this_mapping": false
+      }
     }
   ],
   "holdout_reservation_amendment": {
@@ -3629,7 +5218,7 @@
       }
     ]
   },
-  "updated_at": "2026-10-11T23:33:19Z",
+  "updated_at": "2026-10-11T23:43:39Z",
   "source_refresh_amendment": {
     "prior_observations_file": "prior_observations.json",
     "new_observations_file": "refreshed_source_observations.json",
@@ -3728,5 +5317,40 @@
     "added_candidate": "RGR",
     "reserved_holdout_unchanged": true,
     "reason": "Refresh mutable secondary pages, confirm ticker transitions using primary sources, and retain approved composition under proposed cutoffs."
+  },
+  "approved_classification_policy": {
+    "source": "https://www.finra.org/investors/insights/market-cap",
+    "currency": "USD",
+    "large_min_inclusive": 10000000000,
+    "mid_min_inclusive": 2000000000,
+    "mid_max_exclusive": 10000000000,
+    "small_micro_max_exclusive": 2000000000,
+    "boundary_equality_rule": "approved_half_open_intervals",
+    "common_measurement_target_date": "2026-10-09",
+    "actual_dates": "per_row_source_as_of; never substituted with retrieval date",
+    "market_cap_basis": "total_company_common_equity_value; one_company_across_share_classes_and_ADRs; reconcile_conflicts_before_admission",
+    "policy_ref": "../../validation/benchmark_classification_policy.v1.json",
+    "status": "approved_by_user",
+    "approval_recorded_at": "2026-10-11T23:43:39Z"
+  },
+  "user_exposure_statement": {
+    "recorded_at": "2026-10-11T23:43:39Z",
+    "statement": "I don't believe that I've used those companies before but I can't say for certain.",
+    "scope": "all_20_reserved_holdouts",
+    "interpretation": "no_certain_attestation; prior_exposure_outside_audited_repositories_unknown",
+    "verified_unseen": false,
+    "holdout_membership_changed": false
+  },
+  "reconciliation_summary": {
+    "cap_matching_displayed_values": 55,
+    "cap_conflicts_unresolved": 45,
+    "all_differences_block_admission": true,
+    "full_100_company_registry_activation_allowed": false,
+    "note": "Matching provisional caps do not by themselves establish complete identity/share-class/ADR admission. No paid or live execution authorized.",
+    "current_primary_identity_mappings": 100,
+    "distinct_current_SEC_registrants": 100,
+    "canonical_company_keys_established": true,
+    "individual_admissions": 0,
+    "reason_no_registry_activation": "45 unresolved company cap conflicts prevent the approved full-cohort admission. Individual security/class review remains scoped in linked evidence; this decision does not require independent price-times-shares reconstruction."
   }
 }

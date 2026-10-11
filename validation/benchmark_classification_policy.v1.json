@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "policy_id": "benchmark_total_company_equity_20261009_v1",
+  "status": "approved_by_user",
+  "approval_recorded_at": "2026-10-11T23:43:39Z",
+  "approval_evidence": "Parent-supplied transcript: user approved the stated classification policy; exact approval time was not supplied.",
+  "classification_as_of": "2026-10-09",
+  "currency": "USD",
+  "basis": "total_company_common_equity_value",
+  "issuer_counting": "one_company_across_share_classes_and_ADRs",
+  "tiers": {
+    "large": {
+      "min_inclusive_usd": 10000000000
+    },
+    "mid": {
+      "min_inclusive_usd": 2000000000,
+      "max_exclusive_usd": 10000000000
+    },
+    "small_micro": {
+      "min_exclusive_usd": 0,
+      "max_exclusive_usd": 2000000000
+    }
+  },
+  "source_policy": "collected_secondary_figures_provisional_subject_to_identity_share_class_ADR_and_conflict_reconciliation_before_admission",
+  "conflicts": "unresolved_conflicting_figures_block_admission",
+  "execution_authorized": false
+}
