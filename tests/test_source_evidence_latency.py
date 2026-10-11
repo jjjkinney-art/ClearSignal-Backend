@@ -70,13 +70,17 @@ CASES = json.loads((Path(__file__).parents[1] /
 
 
 @pytest.mark.parametrize("ticker,cik", [("AAPL", "320193"), ("ACHC", "1520697")])
-def test_broad_cited_thesis_returns_partial_financial_foundation_without_models(isolated_pipeline, monkeypatch, ticker, cik):
+@pytest.mark.parametrize('profit_concept,profit_name', [
+    ('NetIncomeLoss', 'net income'), ('OperatingIncomeLoss', 'operating income'),
+])
+def test_broad_cited_thesis_returns_partial_financial_foundation_without_models(
+        isolated_pipeline, monkeypatch, ticker, cik, profit_concept, profit_name):
     from app.integrity.sec_metric_evidence import comparable_metric_evidence
     from app.providers.sec_client import SecFactRecord
     from app.services import verified_sec_metric_service
 
     items = []
-    for concept, name in (("Revenues", "revenue"), ("NetIncomeLoss", "net income")):
+    for concept, name in (("Revenues", "revenue"), (profit_concept, profit_name)):
         records = []
         for year, value in ((2025, 100), (2026, 120)):
             accession = f"{int(cik):010d}-{str(year)[-2:]}-000001"
@@ -96,10 +100,19 @@ def test_broad_cited_thesis_returns_partial_financial_foundation_without_models(
     assert isolated_pipeline == []
     assert response.routing["response_mode"] == "source_evidence"
     assert response.answer["source_answer"]["status"] == "partial"
-    assert len(response.answer["source_answer"]["inferences"]) == 2
+    inferences = response.answer["source_answer"]["inferences"]
+    assert len([row for row in inferences if row['kind'] == 'financial_inference']) == 2
+    margins = [row for row in inferences if row['kind'] == 'operating_margin_calculation']
+    assert len(margins) == (1 if profit_name == 'operating income' else 0)
+    assert len(inferences) == 2 + len(margins)
     assert "Financial thesis foundation (partial)" in response.answer["investment_thesis"]["direct_answer"]
     reference_ids = {ref["id"] for ref in response.answer["evidence_references"]}
     assert all(row["reference_id"] in reference_ids for row in response.answer["source_answer"]["claims"])
+    if margins:
+        assert set(margins[0]['reference_ids']) <= reference_ids
+        assert margins[0]['provenance'] == 'derived' and margins[0]['signal'] == 'context_only'
+        assert margins[0]['text'] in response.answer['investment_thesis']['direct_answer']
+        assert 'business model and competitive position' in response.answer['source_answer']['unanswered_parts']
     assert response.answer["investment_thesis"]["confidence_score"] == 0
 
 

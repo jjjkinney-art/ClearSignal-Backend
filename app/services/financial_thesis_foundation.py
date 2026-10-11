@@ -160,6 +160,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     if not expected_cik or not expected_cik.isdigit():
         return None
     selected, rows, interpretations = [], [], []
+    core_comparisons = {}
     missing = []
     for name, concepts in CORE_METRICS.items():
         qualified = []
@@ -196,6 +197,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         rows.append({"claim": rebuilt.summary, "reference_id": reference_id,
                      "claim_kind": "reported_financial_comparison"})
         selected.append(item)
+        core_comparisons[name] = (item, reference_id)
     # One isolated observation does not form a multi-dimensional financial case.
     if len(rows) < 2:
         return None
@@ -260,6 +262,17 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         answer += "\n\n" + PRETAX_LIMITATION
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}" for row in interpretations)
+    from .operating_margin_assessment import operating_margin_assessment
+    margin = operating_margin_assessment(core_comparisons, references)
+    if margin:
+        citations = ' '.join(f'[{ref}]' for ref in margin['reference_ids'])
+        answer += ('\n\nOperating-margin evidence for competitive assessment\n'
+                   f"{margin['text']} {citations} {margin['conditional_test']}")
+        interpretations.append(margin)
+        limitation = ('The operating-margin comparison uses matched revenue and operating-income '
+                      'periods and filing versions. No cash-conversion ratio or causal relationship '
+                      'has been established.' + (' Other metrics cover different reporting durations '
+                      'or end dates.' if len(periods) > 1 else ''))
     from .thesis_disclosures import bound_business_description, bound_thesis_risk
     from .thesis_competition import bound_competition_description
     disclosures = []
