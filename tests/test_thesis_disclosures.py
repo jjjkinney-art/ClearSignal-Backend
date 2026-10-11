@@ -349,6 +349,66 @@ def test_risk_subject_with_explicit_mechanism_remains_eligible(quote):
     assert service.bound_thesis_risk(items[0], ticker='AAPL')
 
 
+@pytest.mark.parametrize('with_valid_risks', [False, True])
+@pytest.mark.parametrize('rejected_prefix_count', [0, 1, 2, 3])
+def test_broad_risk_eligibility_precedes_sample_cap(monkeypatch, with_valid_risks, rejected_prefix_count):
+    import socket
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail('Risk sample selection must not use the network')
+
+    monkeypatch.setattr(socket, 'getaddrinfo', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect_ex', unexpected_network)
+    rejected = [
+        'All the risks described below could materially and adversely affect our liquidity and business operations.',
+        'Our efforts could be insufficient and materially adversely affect our liquidity and operating results.',
+        'Furthermore, such factors could materially adversely affect our liquidity and financial condition.',
+    ][:rejected_prefix_count]
+    valid = [
+        'Our inability to refinance debt maturities could adversely affect our liquidity and operating results.',
+        'Higher refinancing costs could adversely affect our liquidity and financial condition.',
+        'Loss of funding access could adversely affect our liquidity and operating results.',
+    ] if with_valid_risks else []
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
+                   + ' '.join(rejected + valid) + ' Item 1B. Unresolved Staff Comments')
+    calls = []
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': '320193'})
+    monkeypatch.setattr(service.sec_provider, 'fetch_recent_filings', lambda *a, **kw: [
+        SimpleNamespace(url=doc.final_url, timestamp=doc.published_at, document_type='10-K')])
+
+    def fetch_document(*args, **kwargs):
+        calls.append(args)
+        return doc
+
+    monkeypatch.setattr(service, 'fetch_public_document', fetch_document)
+    narrow = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
+                                                question='What operating risk affects Liquidity?')
+    assert [item.risk_disclosures[0]['quote'] for item in narrow] == (rejected + valid)[:2]
+    fetched = service.fetch_thesis_disclosures('AAPL', question=QUESTION)
+    risks = [item for item in fetched if item.risk_disclosures]
+    assert len(calls) == 1
+    assert [item.risk_disclosures[0]['quote'] for item in risks] == valid[:2]
+    for item in risks:
+        value = service.bound_thesis_risk(item, ticker='AAPL')
+        assert value and doc.text[value['start_offset']:value['end_offset']] == value['quote']
+        assert value['document_ref']['content_hash'] == doc.content_hash
+    items, refs, _ = admit_evidence(pair() + fetched, evaluated_at='2025-09-01')
+    thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic company')
+    result = apply_source_answer_gate(thesis, QUESTION, items, references=refs)
+    assert result['status'] == 'partial' and thesis.confidence_score == 0
+    assert all(quote not in thesis.direct_answer for quote in rejected)
+    assert ('issuer-disclosed operating-risk mechanisms' in result['unanswered_parts']) == (not with_valid_risks)
+    if with_valid_risks:
+        assert all(quote in thesis.direct_answer for quote in valid[:2])
+        assert valid[2] not in thesis.direct_answer
+        assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
+        risk_claims = [row for row in result['claims'] if row['claim_kind'] == 'issuer_disclosed_risk']
+        assert len(risk_claims) == 2
+        assert all(any(ref['id'] == row['reference_id'] and ref['url'] == doc.final_url for ref in refs)
+                   for row in risk_claims)
+
+
 @pytest.mark.parametrize('quote', [
     'The Firm is a leader in investment banking and financial services for consumers and small businesses.',
     'The Firm\u2019s consumer business segment is expected to grow rapidly and outperform its competitors.',

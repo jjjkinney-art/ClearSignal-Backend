@@ -11,6 +11,7 @@ from .issuer_risk_evidence import (
     extract_issuer_risk_evidence,
 )
 from .public_document_ingestion import fetch_public_document
+from .thesis_risk_relevance import eligible_thesis_risk_quote
 from .sec_risk_sections import complete_business_window, risk_sentence_spans, business_section_label
 from .reviewed_annual_layouts import reviewed_annual_layout, layout_binding
 from .providers import sec_provider
@@ -74,18 +75,6 @@ _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
 _INTERNAL_HOSTING_ACTIVITY = re.compile(
     r"\b(?:migrate|host|run) our (?:production|internal) "
     r"(?:services|systems|applications)\b", re.I)
-_GENERIC_RISK_INTRODUCTION = re.compile(
-    r"^(?:(?:Any|All|Some|One|Each)\s+(?:of\s+)?(?:the\s+|these\s+|our\s+)?"
-    r"(?:risk factors|risks)\s+(?:discussed|described|listed|set forth)\s+"
-    r"(?:above|below|herein)\b|"
-    r"(?:Additional|Other) risks and uncertainties not "
-    r"(?:presently|currently) known to us\b|"
-    r"Our operations and financial results are subject to "
-    r"(?:various|certain) risks and uncertainties,? including those described below\b)", re.I)
-_UNRESOLVED_RISK_SUBJECT = re.compile(
-    r"^(?:(?:Furthermore|Moreover|However|In addition|As a result|Consequently),?\s+)?"
-    r"(?:our (?:actions|efforts|measures)|(?:these|such) (?:actions|efforts|measures|risks|factors))"
-    r"\s+(?:may|could|might|can)\b", re.I)
 
 
 
@@ -322,8 +311,7 @@ def bound_thesis_risk(item, *, ticker):
     quote = values[0].get("quote")
     # A transition word does not resolve which actions or measures failed.
     # Withhold this standalone sample instead of inventing the missing context.
-    if (not isinstance(quote, str) or _GENERIC_RISK_INTRODUCTION.match(quote)
-            or _UNRESOLVED_RISK_SUBJECT.match(quote)):
+    if not eligible_thesis_risk_quote(quote):
         return None
     return bound_issuer_risk(item, ticker=ticker, question=f"What operating risk affects {scope}?")
 
@@ -384,7 +372,8 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
         seen = set()
         for scope in RISK_TOPICS:
             for item in extract_issuer_risk_evidence(document, ticker=ticker,
-                    question=f"What operating risk affects {scope}?", issuer_relationship=relationship):
+                    question=f"What operating risk affects {scope}?", issuer_relationship=relationship,
+                    broad_thesis=True):
                 value = bound_thesis_risk(item, ticker=ticker)
                 if value and value["quote"] not in seen:
                     seen.add(value["quote"])
