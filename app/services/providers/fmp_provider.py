@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+from decimal import Decimal, localcontext
 import os
 from typing import List, Optional
 from urllib.error import HTTPError, URLError
@@ -368,14 +369,30 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
     return []
 
 
-def _pe_value(value):
-    """Accept finite, nonzero JSON numbers without coercing malformed ratios."""
+def _valuation_number(value):
+    """Keep finite JSON numbers without coercing booleans or provider strings."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     try:
-        return value if value != 0 and math.isfinite(value) else None
+        return value if math.isfinite(value) else None
     except OverflowError:
         return None
+
+
+def _multiple_value(*values):
+    # Preserve the existing omission of zero multiples. Conflicting aliases
+    # cannot establish one value; a bad alias must not hide a valid sibling.
+    valid = {_valuation_number(value) for value in values} - {None, 0}
+    return next(iter(valid)) if len(valid) == 1 else None
+
+
+def _valuation_percent(value):
+    # Multiplying a finite float by 100 can overflow. Decimal keeps a valid
+    # reported ratio finite during display-only percentage conversion.
+    number = Decimal(str(value))
+    with localcontext() as context:
+        context.prec = max(28, len(number.as_tuple().digits) + 3)
+        return f"{number * 100:.1f}%"
 
 
 def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
@@ -399,31 +416,29 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             r = {}
 
         parts: List[str] = []
-        trailing_values = {_pe_value(r.get(key)) for key in
-                           ("peRatioTTM", "priceEarningsRatioTTM")} - {None}
         # Both aliases describe trailing earnings. Conflicting values are not
         # silently selected or repurposed as a forward multiple.
-        pe_ttm = next(iter(trailing_values)) if len(trailing_values) == 1 else None
+        pe_ttm = _multiple_value(r.get("peRatioTTM"), r.get("priceEarningsRatioTTM"))
         if pe_ttm is not None:
             parts.append(f"Trailing P/E (TTM): {pe_ttm:.1f}x")
-        fwd_pe = _pe_value(r.get("forwardPE"))
+        fwd_pe = _multiple_value(r.get("forwardPE"))
         if fwd_pe is not None:
             parts.append(f"Forward P/E: {fwd_pe:.1f}x")
-        ev_ebitda = r.get("enterpriseValueMultipleTTM") or r.get("evToEbitdaTTM")
-        if ev_ebitda:
+        ev_ebitda = _multiple_value(r.get("enterpriseValueMultipleTTM"), r.get("evToEbitdaTTM"))
+        if ev_ebitda is not None:
             parts.append(f"EV/EBITDA (TTM): {ev_ebitda:.1f}x")
-        ps = r.get("priceToSalesRatioTTM")
-        if ps:
+        ps = _multiple_value(r.get("priceToSalesRatioTTM"))
+        if ps is not None:
             parts.append(f"Price/Sales (TTM): {ps:.1f}x")
-        pfcf = r.get("priceToFreeCashFlowsRatioTTM") or r.get("priceFreeCashFlowRatioTTM")
-        if pfcf:
+        pfcf = _multiple_value(r.get("priceToFreeCashFlowsRatioTTM"), r.get("priceFreeCashFlowRatioTTM"))
+        if pfcf is not None:
             parts.append(f"Price/FCF (TTM): {pfcf:.1f}x")
-        pb = r.get("priceToBookRatioTTM")
-        if pb:
+        pb = _multiple_value(r.get("priceToBookRatioTTM"))
+        if pb is not None:
             parts.append(f"Price/Book (TTM): {pb:.1f}x")
-        roe = r.get("returnOnEquityTTM")
-        if roe:
-            parts.append(f"ROE (TTM): {_fmt_pct(roe)}")
+        roe = _valuation_number(r.get("returnOnEquityTTM"))
+        if roe is not None:
+            parts.append(f"ROE (TTM): {_valuation_percent(roe)}")
 
         if parts:
             summary = f"{symbol} valuation multiples: " + " | ".join(parts) + "."
@@ -448,21 +463,21 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             km = {}
 
         parts2: List[str] = []
-        revenue_per_share = km.get("revenuePerShareTTM")
-        if revenue_per_share:
+        revenue_per_share = _valuation_number(km.get("revenuePerShareTTM"))
+        if revenue_per_share is not None:
             parts2.append(f"Revenue/share: ${revenue_per_share:.2f}")
-        fcf_yield = km.get("freeCashFlowYieldTTM")
-        if fcf_yield:
-            parts2.append(f"FCF yield: {_fmt_pct(fcf_yield)}")
-        ev = km.get("enterpriseValueTTM")
-        if ev:
+        fcf_yield = _valuation_number(km.get("freeCashFlowYieldTTM"))
+        if fcf_yield is not None:
+            parts2.append(f"FCF yield: {_valuation_percent(fcf_yield)}")
+        ev = _valuation_number(km.get("enterpriseValueTTM"))
+        if ev is not None:
             parts2.append(f"Enterprise value: {_fmt_large(ev)}")
-        net_debt_ebitda = km.get("netDebtToEBITDATTM")
-        if net_debt_ebitda:
+        net_debt_ebitda = _valuation_number(km.get("netDebtToEBITDATTM"))
+        if net_debt_ebitda is not None:
             parts2.append(f"Net Debt/EBITDA: {net_debt_ebitda:.2f}x")
-        roic = km.get("roicTTM")
-        if roic:
-            parts2.append(f"ROIC: {_fmt_pct(roic)}")
+        roic = _valuation_number(km.get("roicTTM"))
+        if roic is not None:
+            parts2.append(f"ROIC: {_valuation_percent(roic)}")
 
         if parts2:
             summary2 = f"{symbol} key metrics (TTM): " + " | ".join(parts2) + "."
