@@ -373,6 +373,9 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
         diagnostics = {}
         business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
                     if relationship is None else [])
+        from .thesis_competition import extract_competition_descriptions
+        competition = (extract_competition_descriptions(document, ticker=ticker, cik=cik)
+                       if relationship is None else [])
         if relationship is not None:
             diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
@@ -388,7 +391,7 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
                     risks.append(item)
         # Source order, never an assertion that these are the most material risks.
         risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + risks[:2]
+        return (quarterly_business + business)[:2] + competition + risks[:2]
     except Exception as exc:
         logger.warning("thesis disclosures unavailable for %s: %s", ticker, type(exc).__name__)
         return quarterly_business
