@@ -13,6 +13,7 @@ from urllib.parse import urlsplit
 from ..integrity.provenance import ClaimDocumentReference
 from ..schemas import RetrievedEvidence
 from .public_document_ingestion import PublicDocument
+from .thesis_risk_relevance import eligible_thesis_risk_quote
 from .reviewed_annual_layouts import reviewed_annual_layout, layout_binding
 from .issuer_succession import authorized_predecessor, item_predecessor_provenance
 from .sec_risk_sections import (
@@ -205,9 +206,11 @@ def _issuer_url(url: str, profile: IssuerRiskProfile) -> bool:
 def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                                  question: str, diagnostics: dict | None = None,
                                  issuer_relationship: dict | None = None,
-                                 incorporation: dict | None = None) -> list[RetrievedEvidence]:
+                                 incorporation: dict | None = None,
+                                 broad_thesis: bool = False) -> list[RetrievedEvidence]:
     """Extract at most two complete, nonnumeric risk sentences; no model calls.
 
+    Broad thesis samples apply their existing eligibility rule before the cap.
     Coverage is limited to explicit supported topics and 10-K/10-Q and explicit 20-F Item 3 sections.
     TOCs, cross-references, other sections, unsupported issuers and ambiguous
     or overlong sentences produce no claim. Never truncate a risk sentence.
@@ -268,6 +271,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
                     counts = stats["topic_rejection_counts"]
                     counts[reason] = counts.get(reason, 0) + 1
             if reasons or quote in seen:
+                continue
+            if broad_thesis and not eligible_thesis_risk_quote(quote):
                 continue
             stats["qualifying_sentences"] += 1
             # Retain the exact normalized-document span, not a generated paraphrase.
