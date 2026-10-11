@@ -99,3 +99,37 @@ def test_consensus_alias_and_missing_key(monkeypatch):
     assert 'Consensus price target: $100.00' in fetch(monkeypatch, targets={'targetConsensus': 100})[0].summary
     monkeypatch.setattr(fmp_provider, '_get_api_key', lambda: '')
     assert fmp_provider.fetch_analyst_estimates('TEST') == []
+
+
+@pytest.mark.parametrize('period', ['2000-01-01', '2099-01-01', None])
+def test_actual_adapter_preserves_unknown_freshness_through_synthesis(monkeypatch, period):
+    from app.model_client import model_client
+    from app.schemas import (CompanyContext, ValuationView, MacroSensitivity,
+                             RiskProfile, MarketContext, QualityAssessment)
+    from app.services.freshness_analyzer import analyze_evidence_freshness
+    from app.services.confidence_calibrator import compute_evidence_coverage_gaps
+    from app.services.thesis_synthesizer import _build_synthesis_prompt
+
+    def no_model(*args, **kwargs):
+        pytest.fail('Provider-to-synthesis contract must not call a model')
+    monkeypatch.setattr(model_client, 'call', no_model)
+    items = fetch(monkeypatch, [{'date': period, 'estimatedEpsAvg': 2.5}],
+                  {'targetMean': 100})
+    assert len(items) == 2
+    freshness = analyze_evidence_freshness(items)
+    assert freshness.estimates.tier == 'unknown'
+    assert freshness.estimates.age_days is None
+    assert freshness.earnings.item_count == 0
+    gaps = {gap.split(' | ')[0] for gap in compute_evidence_coverage_gaps(items)[1]}
+    assert {'GAP_EARNINGS', 'GAP_VALUATION'} <= gaps
+    output = _build_synthesis_prompt(
+        CompanyContext(ticker='TEST', company_name='Test Company'),
+        ValuationView(overall='', confidence=0), MacroSensitivity(overall='', confidence=0),
+        RiskProfile(overall='', confidence=0), MarketContext(overall='', confidence=0),
+        QualityAssessment(overall='', confidence=0), evidence=items)
+    assert all(item.summary in output for item in items)
+    assert '- No dated recent reported earnings evidence' in output
+    assert '- No dated fresh valuation ratios available.' in output
+    assert 'Keep these labeled estimates, not reported earnings' in output
+    assert 'An estimate period is not a publication date' in output
+    assert 'You MUST reference the consensus target vs current price or forward EPS estimate' not in output

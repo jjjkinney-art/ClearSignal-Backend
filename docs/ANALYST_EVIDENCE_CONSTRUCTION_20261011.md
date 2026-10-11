@@ -32,3 +32,20 @@ discount rate. Those are existing repository instructions, not newly proposed
 policy. They do not supply all mathematical inputs needed to infer growth from
 a multiple or create a source-bound expected-return calculation. This repair
 neither changes nor claims to complete that calculation contract.
+
+## Required downstream dependency
+
+This branch now depends on PR257 head
+c483e7037119ac7f11086e23776b41cd98c37ed3. Merge that freshness/coverage/synthesis
+repair before this constructor restoration. It prevents undated provider
+estimates from being treated as fresh reported earnings or mandatory forward
+claims. Actual adapter payloads with old, future and missing estimate periods
+now flow through freshness, coverage and synthesis-prompt tests: estimates stay
+unknown-date, reported earnings stays absent, earnings/valuation gaps stay open,
+and supported estimate text remains visible without live/current promotion.
+
+After rebasing, 301 tests passed in separate processes across analyst evidence
+31, provider freshness 21, FMP provider 45, question-anchored valuation 50,
+valuation consistency 48, source evidence latency 45 and truth density 61.
+No live provider/model calls were used. Background-thread warnings occurred
+in existing pipeline tests; execution passed.
