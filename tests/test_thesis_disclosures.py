@@ -833,3 +833,50 @@ def test_reviewed_integrated_business_layout_requires_producer_and_binder_author
     tampered = item.model_copy(deep=True)
     del tampered.business_disclosures[0]['reviewed_layout']
     assert service.bound_business_description(tampered, ticker='ASML', cik=cik) is None
+
+QUARTER_SEGMENTS = 'Our four reportable segments are Manufacturing, Distribution, Service Products, and Specialty Products.'
+
+
+def quarterly_document(text=None):
+    return document(text or f'Note 3. Disclosures about Segments and Related Information {QUARTER_SEGMENTS} Note 4. Pension Benefits Other context.', document_type='10-Q')
+
+
+def test_current_quarter_segment_context_survives_admission_and_binding():
+    doc = quarterly_document()
+    item, = service.extract_business_descriptions(doc, ticker='AAPL', cik='0000320193')
+    admitted, refs, _ = admit_evidence([item], evaluated_at='2025-09-01')
+    value = service.bound_business_description(admitted[0], ticker='AAPL', cik='320193')
+    assert value['quote'] == QUARTER_SEGMENTS
+    assert doc.text[value['start_offset']:value['end_offset']] == QUARTER_SEGMENTS
+    assert refs[0]['document_type'] == '10-Q'
+    assert refs[0]['section'] == 'Notes to Financial Statements - Segments'
+    assert service.bound_business_description(item, ticker='AAPL', cik='937966') is None
+    assert service.bound_business_description(item.model_copy(update={'document_type':'10-K'}), ticker='AAPL', cik='320193') is None
+
+
+@pytest.mark.parametrize('text', [
+    f'Note 3. Disclosures about Segments and Related Information 9 {QUARTER_SEGMENTS} Note 4. Pension Benefits 10',
+    f'See Note 3. Disclosures about Segments and Related Information {QUARTER_SEGMENTS} Note 4. Pension Benefits Other context.',
+    f'Note 3. Disclosures about Segments and Related Information {QUARTER_SEGMENTS}',
+    f'Note 3. Disclosures about Segments and Related Information Context only. Note 4. Pension Benefits {QUARTER_SEGMENTS}',
+    f'Note 3. Disclosures about Segments and Related Information Our four reportable segments are expected to be Manufacturing and Distribution. Note 4. Pension Benefits Other context.',
+])
+def test_quarterly_context_rejects_toc_cross_references_unclosed_and_forecasts(text):
+    assert service.extract_business_descriptions(quarterly_document(text), ticker='AAPL', cik='320193') == []
+
+
+def test_absent_annual_fetches_one_current_quarter_without_predecessor_inheritance(monkeypatch):
+    calls = []
+    doc = quarterly_document()
+    filing = SimpleNamespace(url=doc.final_url, timestamp=doc.published_at, document_type='10-Q')
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL':'0000320193'})
+    def discovery(*args, **kwargs):
+        calls.append(kwargs['forms'])
+        return [filing] if kwargs['forms'] == ['10-Q'] else []
+    monkeypatch.setattr(service.sec_provider, 'fetch_recent_filings', discovery)
+    monkeypatch.setattr(service, 'reviewed_predecessor_annual', lambda ticker: None)
+    monkeypatch.setattr(service, 'fetch_public_document', lambda *args, **kwargs: doc)
+    item, = service.fetch_thesis_disclosures('AAPL', question=QUESTION)
+    assert calls == [['10-K','20-F'], ['10-Q']]
+    assert item.document_type == '10-Q' and item.business_disclosures
+    assert not item.risk_disclosures

@@ -59,6 +59,9 @@ _NAMED_SEGMENT_STRUCTURE = re.compile(
     r"reportable business segments?\s*[\u2013\u2014:-]\s+"
     # Require spelled-out names, rather than interpreting unfamiliar acronyms.
     r"(?=(?-i:[A-Z][a-z]{2,})\b)", re.I)
+_REPORTED_SEGMENT_LIST = re.compile(
+    r"^Our (?:one|two|three|four|five|six|seven|eight|nine|ten) reportable segments are "
+    r"[A-Z][a-z]+(?: [A-Z][a-z]+)*(?:, (?:and )?[A-Z][a-z]+(?: [A-Z][a-z]+)*)+\.$")
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
     r"^(?:We|Our company|The company|The firm)\s+"
@@ -167,6 +170,7 @@ def _business_quote_rejection(quote):
              or _customer_purpose_activity(quote)
              or _CURRENT_REVENUE_MODEL.match(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
+             or _REPORTED_SEGMENT_LIST.fullmatch(quote)
              or _NAMED_SEGMENT_STRUCTURE.match(quote))
             or not quote.endswith(".")):
         return "subject_or_activity"
@@ -183,7 +187,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     stats = diagnostics if diagnostics is not None else {}
     stats.update(status="document_ineligible", sentences=0, heading_prefixes_removed=0,
                  extracted_descriptions=0, rejection_counts={})
-    if (document.document_type not in {"10-K", "20-F"} or document.publisher != "SEC EDGAR"
+    if (document.document_type not in {"10-K", "20-F", "10-Q"} or document.publisher != "SEC EDGAR"
             or document.source_type != "regulatory_filing" or document.source_tier != "primary"
             or document.extraction_method != "html" or not document.text_ready
             or not _business_issuer_url(document.final_url, cik)):
@@ -296,7 +300,7 @@ def bound_business_description(item, *, ticker, cik):
                 or ref["reference_id"] != f'document:{ref["content_hash"]}:business:{start}'
                 or item.source != "SEC EDGAR" or item.source_type != "regulatory_filing"
                 or item.source_tier != "primary" or item.claim_type != "reported_fact"
-                or item.document_type not in {"10-K", "20-F"} or value.get("document_type", "10-K") != item.document_type or item.section != section or item.extraction_method != "html"
+                or item.document_type not in {"10-K", "20-F", "10-Q"} or value.get("document_type", "10-K") != item.document_type or item.section != section or item.extraction_method != "html"
                 or item.freshness_status in {"unavailable", "conflicting", "superseded", "stale"}
                 or item.summary != _business_summary(value)):
             return None
@@ -325,9 +329,10 @@ def bound_thesis_risk(item, *, ticker):
 
 
 def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
-    """One full annual filing; failures remain gaps, never ticker-specific prose."""
+    """Annual context, or one current quarter plus authorized historical risks."""
     if not requests_thesis_disclosures(ticker, question):
         return []
+    quarterly_business = []
     try:
         cik = sec_provider._load_ticker_cik_map().get(ticker)
         if not cik:
@@ -338,11 +343,26 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
         if filings:
             filing = filings[0]
         else:
+            # Current issuer context must come from its own filing, never an
+            # inherited predecessor description. One bounded quarterly attempt.
+            quarters = sec_provider.fetch_recent_filings(ticker, forms=["10-Q"],
+                limit=1, years_back=2, prefer_results=False) or []
+            if quarters and quarters[0].document_type == "10-Q":
+                quarter = quarters[0]
+                try:
+                    quarterly_document = fetch_public_document(quarter.url, user_agent=user_agent,
+                        publisher="SEC EDGAR", published_at=quarter.timestamp, document_type="10-Q",
+                        source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
+                        preserve_sec_business=True, extract_tables=False)
+                    quarterly_business = extract_business_descriptions(quarterly_document,
+                        ticker=ticker, cik=cik)
+                except Exception as exc:
+                    logger.warning("quarterly business context unavailable for %s: %s", ticker, type(exc).__name__)
             # Reuse the exact reviewed document authorization. It permits
             # historical risks only, never inherited business or metric facts.
             predecessor = reviewed_predecessor_annual(ticker)
             if predecessor is None:
-                return []
+                return quarterly_business
             filing, relationship = predecessor
         if filing.document_type not in {"10-K", "20-F"}:
             return []
@@ -368,7 +388,7 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
                     risks.append(item)
         # Source order, never an assertion that these are the most material risks.
         risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return business + risks[:2]
+        return (quarterly_business + business)[:2] + risks[:2]
     except Exception as exc:
         logger.warning("thesis disclosures unavailable for %s: %s", ticker, type(exc).__name__)
-        return []
+        return quarterly_business
