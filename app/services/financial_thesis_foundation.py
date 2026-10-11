@@ -261,13 +261,16 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}" for row in interpretations)
     from .thesis_disclosures import bound_business_description, bound_thesis_risk
+    from .thesis_competition import bound_competition_description
     disclosures = []
     risk_interpretations = []
-    counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0}
+    counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
+              "issuer_competition_description": 0}
     current_risks = 0
     seen = set()
     for index, item in enumerate(items, start=1):
         value = (bound_business_description(item, ticker=ticker, cik=expected_cik)
+                 or bound_competition_description(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if not value or value["quote"] in seen or counts[value["claim_kind"]] >= 2:
             continue
@@ -296,7 +299,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         seen.add(value["quote"])
         counts[value["claim_kind"]] += 1
     if disclosures:
-        answer += "\n\nOfficial business and sampled risk context\n" + "\n\n".join(
+        context_heading = ("Official business, competition and sampled risk context"
+                           if counts['issuer_competition_description'] else
+                           "Official business and sampled risk context")
+        answer += "\n\n" + context_heading + "\n" + "\n\n".join(
             f"{row['claim']} [{row['reference_id']}]" for row in disclosures)
         answer += ("\nThese short excerpts are partial context, not a complete business model or a ranking "
                    "of the most material risks. Disclosed possibilities do not establish occurrence, "
