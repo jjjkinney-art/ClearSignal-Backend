@@ -161,7 +161,8 @@ _FOREIGN_BUSINESS_END = re.compile(
 def business_section_label(form, layout=None):
     if layout and layout.get('business_section'):
         return layout['business_section']
-    return {'10-K': 'Item 1. Business', '20-F': 'Item 4. Information on the Company'}.get(form)
+    return {'10-K': 'Item 1. Business', '20-F': 'Item 4. Information on the Company',
+            '10-Q': 'Notes to Financial Statements - Segments'}.get(form)
 
 
 def business_section_bounds(text, *, form='10-K', layout=None):
@@ -175,12 +176,18 @@ def business_section_bounds(text, *, form='10-K', layout=None):
         opening, ending = BUSINESS_START, RISK_START
     elif form == '20-F':
         opening, ending = _FOREIGN_END, _FOREIGN_BUSINESS_END
+    elif form == '10-Q':
+        opening = re.compile(r'\bNote\s+(?P<number>\d{1,2})\s*[.:—–-]?\s*(?:Disclosures about Segments and Related Information|Segment Information|Segments and Related Information)\b', re.I)
+        ending = None
     else:
         return None
     for heading in islice(opening.finditer(text), 64):
         if rejected_risk_heading(text, heading.end(), start=heading.start()):
             continue
-        for closing in islice(ending.finditer(text, heading.end(), min(len(text), heading.end() + 160_000)), 64):
+        closing_pattern = ending
+        if form == '10-Q':
+            closing_pattern = re.compile(r'\bNote\s+' + str(int(heading['number']) + 1) + r'\s*[.:—–-]?\s+[A-Z][a-zA-Z ]{2,80}\b')
+        for closing in islice(closing_pattern.finditer(text, heading.end(), min(len(text), heading.end() + 160_000)), 64):
             if not rejected_risk_heading(text, closing.end(), start=closing.start()):
                 return heading.start(), heading.end(), closing.start(), closing.end()
     return None
