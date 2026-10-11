@@ -978,6 +978,36 @@ def test_short_condition_still_requires_explicit_lexical_mechanism(condition):
     assert _risk_monitoring_inference(dict(quote=quote, scope='Cybersecurity'), 'E1') is None
 
 
+@pytest.mark.parametrize('condition', ['The foregoing', 'The above', 'We'])
+@pytest.mark.parametrize('prefix', ['', 'Furthermore, ', 'On the other hand, ',
+                                    'Moreover, ', 'However, ', 'In addition, '])
+def test_bound_anaphoric_subject_does_not_become_monitoring(monkeypatch, condition, prefix):
+    import socket
+
+    def unexpected_network(*args, **kwargs):
+        pytest.fail('Anaphoric risk acceptance must not use the network')
+
+    monkeypatch.setattr(socket, 'getaddrinfo', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect', unexpected_network)
+    monkeypatch.setattr(socket.socket, 'connect_ex', unexpected_network)
+    monkeypatch.setattr(service.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': '320193'})
+    quote = f'{prefix}{condition} could adversely affect our liquidity and operating results.'
+    doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
+                   f'{quote} Item 1B. Unresolved Staff Comments')
+    risk, = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
+                                               question='What operating risk affects Liquidity?')
+    bound = service.bound_thesis_risk(risk, ticker='AAPL')
+    assert bound and bound['quote'] == quote
+    assert doc.text[bound['start_offset']:bound['end_offset']] == quote
+    items, refs, _ = admit_evidence(pair() + [risk], evaluated_at='2025-09-01')
+    thesis = InvestmentThesis(ticker='AAPL', company_name='Synthetic company')
+    result = apply_source_answer_gate(thesis, QUESTION, items, references=refs)
+    assert result['status'] == 'partial' and thesis.confidence_score == 0
+    assert not any(row['kind'] == 'risk_monitoring_inference' for row in result['inferences'])
+    assert 'Conditional risk monitoring' not in thesis.direct_answer
+    assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
+
+
 @pytest.mark.parametrize('quote', [RISK, RISK.replace('could adversely', 'could materially adversely'),
                                  RISK.replace('could adversely', 'may materially adversely')])
 def test_historical_risk_monitoring_requires_current_successor_confirmation(quote):

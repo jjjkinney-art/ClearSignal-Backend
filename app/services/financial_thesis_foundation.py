@@ -70,7 +70,8 @@ def _risk_monitoring_inference(value, reference_id):
     display_condition = re.sub(r'^(?:On the other hand|Furthermore|Moreover|However|In addition),\s+',
                                '', condition, count=1, flags=re.I)
     if (not re.search(r'\b[A-Za-z]{2,}\b', display_condition)
-            or re.fullmatch(r'(?:this|these|that|those|it|they|such)(?:\s+\w+)?',
+            or re.fullmatch(r'(?:(?:this|these|that|those|it|they|such)(?:\s+\w+)?'
+                            r'|we|us|you|he|she|(?:the\s+)?(?:foregoing|above|below|latter|former))',
                             display_condition.strip(), re.I)):
         return None
     historical = bool(value.get('issuer_relationship'))

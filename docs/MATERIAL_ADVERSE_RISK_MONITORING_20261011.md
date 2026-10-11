@@ -30,6 +30,14 @@ both subjects through extraction, binding and the final answer gate with both
 modals and with/without the materiality modifier; negative cases include unresolved
 subjects, nested forecasts and the length limit.
 
+Independent review identified anaphoric-only subjects that also passed filing
+binding: “The foregoing”, “The above” and “We”. The lexical guard now rejects
+these and bounded pronoun/reference-only variants after the existing discourse
+lead cleanup. Eighteen extraction-to-final-answer cases cover the three observed
+forms with no prefix and each of the five supported discourse prefixes. The
+quoted disclosure remains issuer-reported context; it cannot create a meaningless
+conditional watch. Short explicit Cyberattacks/Loan defaults tests remain green.
+
 This bounded repair implements part of the conditional-monitoring work recorded
 in `CITED_RISK_MONITORING_20261011.md`. The broader risk-relevance and representative
 company adjudication gaps remain open. Live verification is deferred.
