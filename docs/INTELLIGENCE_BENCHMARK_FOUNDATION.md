@@ -128,6 +128,8 @@ existence, and an infinite tolerance cannot make arbitrary values correct.
 These checks apply to both JSON payloads and direct Python record construction.
 Invalid contracts make the CLI exit 2 without a scorecard; a genuine `false`
 existence review remains a fabricated/missing-source stop-ship finding.
+The CLI rejects duplicate JSON keys at every nesting depth before grading, so
+a later existence decision cannot silently overwrite an earlier one.
 This hardens the existing grading contract without changing thresholds or
 providing new primary-source adjudication, representative-company coverage or
 launch clearance.

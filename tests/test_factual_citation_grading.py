@@ -315,3 +315,34 @@ def test_cli_rejects_infinite_tolerance_instead_of_passing_arbitrary_values(tmp_
     assert error.value.code == 2
     assert capsys.readouterr().out == ""
 
+
+@pytest.mark.parametrize("replacement", [
+    '"document_exists": false, "document_exists": true',
+    '"document_exists": true, "document_exists": false',
+    '"document_exists": true, "document_exists": true',
+])
+def test_cli_rejects_duplicate_existence_decisions_without_a_scorecard(tmp_path, capsys, replacement):
+    encoded = json.dumps(_payload()).replace('"document_exists": true', replacement)
+    path = tmp_path / "duplicate-review.json"
+    path.write_text(encoded)
+    with pytest.raises(SystemExit) as error:
+        benchmark_factual_grade.main([str(path), "--require-complete"])
+    assert error.value.code == 2
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "duplicate JSON key" in captured.err
+
+
+@pytest.mark.parametrize("encoded", [
+    '{"expected_claims": [], "expected_claims": []}',
+    json.dumps(_payload()).replace('"label": "supports"', '"label": "pending", "label": "supports"'),
+    json.dumps(_payload()).replace('"value": "100"', '"value": "999999", "value": "100"', 1),
+])
+def test_cli_rejects_duplicate_keys_at_every_object_depth(tmp_path, capsys, encoded):
+    path = tmp_path / "duplicate-grading.json"
+    path.write_text(encoded)
+    with pytest.raises(SystemExit) as error:
+        benchmark_factual_grade.main([str(path), "--require-complete"])
+    assert error.value.code == 2
+    assert capsys.readouterr().out == ""
+
