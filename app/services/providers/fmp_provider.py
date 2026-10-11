@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 import os
 from typing import List, Optional
 from urllib.error import HTTPError, URLError
@@ -352,8 +353,18 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
     return []
 
 
+def _pe_value(value):
+    """Accept finite, nonzero JSON numbers without coercing malformed ratios."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    try:
+        return value if value != 0 and math.isfinite(value) else None
+    except OverflowError:
+        return None
+
+
 def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
-    """Fetch forward valuation multiples: forward P/E, EV/EBITDA, P/S, P/FCF.
+    """Fetch valuation multiples, preserving each reported time basis.
 
     Uses FMP's /v3/ratios-ttm and /v3/key-metrics-ttm endpoints.
     Returns [] when the API key is absent or the call fails.
@@ -373,11 +384,15 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             r = {}
 
         parts: List[str] = []
-        pe_ttm = r.get("peRatioTTM")
-        if pe_ttm:
+        trailing_values = {_pe_value(r.get(key)) for key in
+                           ("peRatioTTM", "priceEarningsRatioTTM")} - {None}
+        # Both aliases describe trailing earnings. Conflicting values are not
+        # silently selected or repurposed as a forward multiple.
+        pe_ttm = next(iter(trailing_values)) if len(trailing_values) == 1 else None
+        if pe_ttm is not None:
             parts.append(f"Trailing P/E (TTM): {pe_ttm:.1f}x")
-        fwd_pe = r.get("priceEarningsRatioTTM") or r.get("forwardPE")
-        if fwd_pe and fwd_pe != pe_ttm:
+        fwd_pe = _pe_value(r.get("forwardPE"))
+        if fwd_pe is not None:
             parts.append(f"Forward P/E: {fwd_pe:.1f}x")
         ev_ebitda = r.get("enterpriseValueMultipleTTM") or r.get("evToEbitdaTTM")
         if ev_ebitda:
@@ -396,10 +411,11 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             parts.append(f"ROE (TTM): {_fmt_pct(roe)}")
 
         if parts:
-            summary = f"{symbol} valuation multiples (TTM): " + " | ".join(parts) + "."
+            summary = f"{symbol} valuation multiples: " + " | ".join(parts) + "."
             evidence.append(RetrievedEvidence(
-                title=f"{symbol} Valuation Multiples (TTM)",
+                title=f"{symbol} Valuation Multiples",
                 source="FMP/ratios-ttm",
+                timestamp="",  # This endpoint does not establish a publication date.
                 summary=summary,
                 relevance_score=0.95,
             ))
@@ -438,6 +454,7 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
             evidence.append(RetrievedEvidence(
                 title=f"{symbol} Key Metrics (TTM)",
                 source="FMP/key-metrics-ttm",
+                timestamp="",
                 summary=summary2,
                 relevance_score=0.90,
             ))
