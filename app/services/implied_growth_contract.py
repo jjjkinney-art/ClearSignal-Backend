@@ -3,8 +3,10 @@
 IMPLIED_GROWTH_RULES = """IMPLIED-GROWTH EVIDENCE CONTRACT:
 Before calculating, identify the supplied inputs and their provenance: current
 multiple with earnings/revenue basis and observation date, an exact scenario
-horizon and terminal multiple, and the required earnings endpoint. Show the
-formula and assumptions. If required inputs are missing, explicitly say the
+horizon, terminal multiple, and payout/required-return treatment consistent
+with the disclosed equation. Require sufficient consistent inputs, not absolute
+earnings when those terms cancel in an explicitly specified ratio scenario.
+Show the formula and assumptions. If required inputs are missing, explicitly say the
 calculation is unavailable and name the missing inputs; do not invent numbers.
 Do not force a CAGR, consensus gap or compression percentage from a multiple alone.
 Existing conventions of 3–5 years, 10% discount and terminal P/E 20–25x are

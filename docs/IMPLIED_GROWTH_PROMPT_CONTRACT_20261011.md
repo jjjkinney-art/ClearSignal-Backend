@@ -8,8 +8,10 @@ instruction. This increment shares one explicit-input contract across those
 three implied-growth prompts.
 
 The contract requires named input provenance, multiple basis/date, exact
-scenario horizon, terminal multiple and earnings endpoint before computation;
-missing inputs must be identified without invented values. Earnings growth
+scenario horizon, terminal multiple and payout/return treatment consistent
+with the disclosed equation before computation;
+missing inputs must be identified without invented values. Absolute earnings
+are not required when they cancel in a fully specified ratio scenario. Earnings growth
 cannot become revenue growth without a margin/share-count bridge. Consensus
 comparisons require matching metrics and periods. Numerical analogs need
 supplied evidence. Implied operating growth is not expected stock return.

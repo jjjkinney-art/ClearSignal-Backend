@@ -24,6 +24,8 @@ def test_all_three_implied_growth_prompts_share_input_and_metric_contract():
     for prompt in prompts:
         assert IMPLIED_GROWTH_RULES in prompt
         assert 'Earnings CAGR is not revenue CAGR' in prompt
+        assert 'earnings when those terms cancel' in prompt
+        assert 'payout/required-return treatment' in prompt
         assert 'margin\nand share-count bridge' in prompt
         assert 'matching metric and\nperiods' in prompt
         assert 'Numerical historical analogs require supplied evidence, never training' in prompt
