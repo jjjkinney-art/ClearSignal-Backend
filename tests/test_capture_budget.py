@@ -189,3 +189,49 @@ def test_corrupt_restart_never_recreates_accounting_tables(tmp_path, policy):
         db.execute('DROP TABLE attempts')
     with pytest.raises(sqlite3.DatabaseError):
         AttemptLedger(book.path, policy)
+
+
+@pytest.mark.parametrize('precision', [2, 28, 80])
+def test_conversion_is_conservative_and_context_independent(precision):
+    from decimal import localcontext
+    with localcontext() as context:
+        context.prec = precision
+        assert money('0.0000000010000000000000000000000000001') == 2
+        assert money('0.0141') == 14_100_000
+        assert money('0.9999999991', round_up=False) == 999_999_999
+        assert money('1e-999999999') == 1
+        assert money('1e-999999999', round_up=False) == 0
+        with pytest.raises(BudgetError):
+            money('1e999999999')
+
+
+def test_fractional_nanodollar_budget_never_rounds_up(tmp_path, policy):
+    policy['budget_usd'] = '0.9999999991'
+    rate = policy['prices']['fixture/model']
+    rate.update(request_usd='1', input_token_usd='0', output_token_usd='0')
+    book = ledger(tmp_path, policy)
+    run = book.begin_case('ASML:core_thesis')
+    with pytest.raises(BudgetError, match='exceeds'):
+        reserve(book, run)
+    assert book.summary()['budget_nanousd'] == 999_999_999
+    assert book.summary()['reserved_nanousd'] == 0
+
+
+def test_same_policy_hash_and_reservations_across_decimal_contexts(tmp_path, policy):
+    from decimal import localcontext
+    rate = policy['prices']['fixture/model']
+    rate.update(request_usd='0.0141', input_token_usd='0', output_token_usd='0')
+    with localcontext() as context:
+        context.prec = 2
+        book = ledger(tmp_path, policy)
+        run = book.begin_case('ASML:core_thesis')
+        first = reserve(book, run)
+        book.settle(first, input_tokens=0, output_tokens=0)
+    with localcontext() as context:
+        context.prec = 80
+        restored = AttemptLedger(book.path, policy)
+        second = reserve(restored, run)
+        restored.settle(second, input_tokens=0, output_tokens=0)
+        assert restored.policy_hash == book.policy_hash
+        assert restored.summary()['reserved_nanousd'] == 28_200_000
+        assert restored.summary()['known_actual_nanousd'] == 28_200_000

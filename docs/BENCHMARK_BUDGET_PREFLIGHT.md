@@ -20,7 +20,9 @@ must not be represented as protecting a separately invoked existing runner.
 - SQLite `BEGIN IMMEDIATE` serializes reservations across local processes using
   the same ledger. Each reservation accounts for one physical request, including
   each retry. Request fees plus bounded input/output tokens are rounded upward
-  to integer nanodollars. Floats, negative/nonfinite rates, unrecognized charge
+  to integer nanodollars, while approved budgets round downward. Conversion uses
+  exact integer arithmetic independent of the ambient Decimal context. Floats,
+  negative/nonfinite rates, unrecognized charge
   fields, unknown routes and units above policy limits are refused.
 - Reservations never decrease, including after success, cancellation or timeout.
   Retrying requires another reservation. Missing, ambiguous or excessive usage

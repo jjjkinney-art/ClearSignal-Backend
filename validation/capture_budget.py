@@ -4,7 +4,7 @@ A future audited transport must reserve every physical attempt before dispatch.
 No production/capture runner imports this module. No network or app imports.
 """
 from contextlib import contextmanager
-from decimal import Decimal, InvalidOperation, ROUND_CEILING
+from decimal import Decimal, InvalidOperation
 import argparse
 import hashlib
 import json
@@ -47,15 +47,37 @@ def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':'), allow_nan=False).encode()).hexdigest()
 
 
-def money(value):
-    """Round upward to integer nanodollars; floats and ambiguous values forbidden."""
-    if not isinstance(value, str):
-        raise BudgetError('USD values must be decimal strings')
+def money(value, *, round_up=True):
+    """Convert USD exactly, independent of the ambient Decimal context.
+
+    Charges round UP; approved budgets round DOWN. Integer coefficient/exponent
+    arithmetic avoids Decimal multiplication silently rounding before conversion.
+    Limit input length and avoid constructing enormous powers from exponents.
+    """
+    if not isinstance(value, str) or len(value) > 512:
+        raise BudgetError('USD values must be bounded decimal strings')
     try:
         number = Decimal(value)
-        if not number.is_finite() or number < 0:
+        if not number.is_finite():
             raise ValueError
-        result = int((number * 1_000_000_000).to_integral_value(rounding=ROUND_CEILING))
+        sign, digits, exponent = number.as_tuple()
+        coefficient = int(''.join(str(digit) for digit in digits))
+        if sign and coefficient:
+            raise ValueError
+        shift = exponent + 9
+        if not coefficient:
+            result = 0
+        elif shift >= 0:
+            if len(str(coefficient)) + shift > 19:
+                raise ValueError
+            result = coefficient * 10**shift
+        else:
+            places = -shift
+            if places >= len(digits):
+                quotient, remainder = 0, coefficient
+            else:
+                quotient, remainder = divmod(coefficient, 10**places)
+            result = quotient + int(round_up and remainder != 0)
         if result > 2**63 - 1:
             raise ValueError
         return result
@@ -75,7 +97,7 @@ def validate_policy(policy):
     for key in ('pilot_id', 'approval_reference', 'configuration_version', 'pricing_review_reference'):
         if not isinstance(policy.get(key), str) or not policy[key].strip():
             raise BudgetError(f'{key} is required')
-    budget = money(policy.get('budget_usd'))
+    budget = money(policy.get('budget_usd'), round_up=False)
     if budget <= 0 or count(policy.get('maximum_attempts')) < 1:
         raise BudgetError('positive budget and maximum_attempts required')
     cases = policy.get('approved_case_ids')
