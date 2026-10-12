@@ -2,6 +2,8 @@
 import hashlib
 import json
 from collections import Counter
+from datetime import date
+from decimal import Decimal
 from pathlib import Path
 
 
@@ -99,3 +101,79 @@ def test_canonical_registry_is_preserved_and_full_cohort_is_blocked():
     assert len(set(decision['cap_conflict_blocked_tickers'])) == 45
     actual = hashlib.sha256((ROOT / decision['active_registry']).read_bytes()).hexdigest()
     assert actual == decision['active_registry_sha256']
+
+
+def test_followup_covers_every_conflict_once_and_keeps_source_choice_unapproved():
+    directory = DOCS / 'reconciliation'
+    summary = read(directory / 'followup_admission_summary.json')
+    covered = []
+    for filename in summary['evidence_files']:
+        evidence = read(directory / filename)
+        covered.extend(r['ticker'] for r in evidence.get('rows', [evidence]))
+    conflicts = {r['ticker'] for r in read(directory / 'cap_value_review.json')['rows']
+                 if r['conflict_unresolved']}
+    assert len(covered) == len(set(covered)) == 45
+    assert set(covered) == conflicts == {r['ticker'] for r in summary['rows']}
+    tiny = read(directory / 'rounding_followup.json')['rows']
+    choice = summary['smallest_user_choice']
+    assert len(tiny) == 19
+    assert set(choice['scope_tickers']) == {r['ticker'] for r in tiny}
+    assert choice['status'] == 'proposed_not_approved_not_applied'
+    assert read(DOCS / 'canonical_setup_decision.json')['source_precedence_proposal_activated'] is False
+    for row in tiny:
+        assert row['source_confirmed_rounding'] is False
+        assert row['selected_value_usd'] is None
+        assert row['admitted'] is False
+    for row in summary['rows']:
+        assert row['tier_crossing'] is False
+        expected = abs(Decimal(row['summary_usd']) - Decimal(row['historical_usd']))
+        assert Decimal(row['absolute_difference_usd']) == expected
+        percent = expected / Decimal(row['summary_usd']) * 100
+        assert abs(Decimal(row['absolute_difference_percent_of_summary']) - percent) < Decimal('1e-24')
+
+
+def test_primary_share_estimates_preserve_class_arithmetic_and_date_limits():
+    rows = read(DOCS / 'reconciliation' / 'domestic_material_cap_followup.json')['rows']
+    for row in rows:
+        counts = row['primary_shares']['share_counts']
+        prices = row['price']['prices_by_class']
+        if row['ticker'] == 'JOUT':
+            # Unquoted B uses an explicitly conditional A-price proxy.
+            assert 'Class B' not in prices
+            actual = sum(Decimal(v) for v in counts.values()) * Decimal(prices['Class A'])
+            assert any('proxy' in a.lower() for a in row['calculation']['assumptions'])
+        else:
+            actual = sum(Decimal(count) * Decimal(prices[share_class])
+                         for share_class, count in counts.items())
+        assert actual == Decimal(row['calculation']['conditional_reported_share_value_usd'])
+        age = date.fromisoformat(row['price']['date']) - date.fromisoformat(row['primary_shares']['observation_date'])
+        assert age.days == row['calculation']['shares_older_than_price_days'] > 0
+        assert row['exact_oct9_verified'] is False
+        assert row['admission_changed'] is False
+        assert row['execution_enabled'] is False
+    remaining = read(DOCS / 'reconciliation' / 'domestic_remaining_cap_followup.json')['rows']
+    estimates = [r for r in remaining if r.get('provisional_estimate')]
+    assert len(estimates) == 7
+    for row in estimates:
+        estimate = row['provisional_estimate']
+        actual = Decimal(estimate['observed_primary_shares']) * Decimal(row['price_observation']['close_usd'])
+        assert actual == Decimal(estimate['calculated_usd'])
+        assert estimate['share_measurement_date'] < row['price_observation']['date']
+
+
+def test_tday_and_boundary_check_use_regular_close_without_admission():
+    directory = DOCS / 'reconciliation'
+    tday = read(directory / 'tday_cap_followup.json')
+    sources = {r['id']: r for r in tday['sources']}
+    product = Decimal(sources['primary_10q']['common_shares_outstanding']) * Decimal(sources['dated_price']['close_usd'])
+    assert product == Decimal(tday['calculations']['primary_reported_shares_times_Oct9_close']['result_usd'])
+    assert tday['cap_conflict_resolved'] is False
+    assert tday['company_admitted'] is False
+    assert tday['execution_authorized'] is False
+    grc = read(directory / 'grc_boundary_followup.json')
+    product = Decimal(grc['common_shares_outstanding']) * Decimal(grc['regular_close_usd'])
+    assert product == Decimal(grc['calculation']['usd'])
+    assert Decimal(grc['approved_mid_boundary_usd']) - product == Decimal(grc['calculated_distance_to_boundary_usd'])
+    assert grc['calculation']['share_count_date_is_price_date'] is False
+    assert grc['canonical_admitted'] is False
+    assert grc['execution_authorized'] is False

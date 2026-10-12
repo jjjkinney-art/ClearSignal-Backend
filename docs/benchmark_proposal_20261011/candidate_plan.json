@@ -301,7 +301,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001045810",
@@ -361,7 +362,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000937966",
@@ -479,7 +481,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001403161",
@@ -656,7 +659,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000059478",
@@ -929,7 +933,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000354190",
@@ -1121,7 +1126,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000740260",
@@ -1361,7 +1367,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000080424",
@@ -1409,7 +1416,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000753308",
@@ -1554,7 +1562,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001114448",
@@ -1698,7 +1707,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000089800",
@@ -2222,7 +2232,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000315213",
@@ -2318,7 +2329,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000105132",
@@ -2606,7 +2618,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000043920",
@@ -3056,7 +3069,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001104485",
@@ -3371,7 +3385,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000095029",
@@ -3467,7 +3482,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000819793",
@@ -3563,7 +3579,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001092796",
@@ -3611,7 +3628,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001278027",
@@ -3678,7 +3696,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001579684",
@@ -3726,7 +3745,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001709164",
@@ -3774,7 +3794,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000103595",
@@ -3870,7 +3891,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000014707",
@@ -3918,7 +3940,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001275187",
@@ -3966,7 +3989,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000706698",
@@ -4014,7 +4038,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000896264",
@@ -4062,7 +4087,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000924822",
@@ -4158,7 +4184,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000866273",
@@ -4206,7 +4233,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000918541",
@@ -4254,7 +4282,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001287213",
@@ -4302,7 +4331,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000095574",
@@ -4350,7 +4380,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000788329",
@@ -4398,7 +4429,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001040130",
@@ -4446,7 +4478,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000069733",
@@ -4494,7 +4527,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000355948",
@@ -4542,7 +4576,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000715579",
@@ -4590,7 +4625,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000726601",
@@ -4638,7 +4674,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001084991",
@@ -4686,7 +4723,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000844059",
@@ -4900,7 +4938,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001000184",
@@ -4948,7 +4987,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000313838",
@@ -4996,7 +5036,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001094517",
@@ -5044,7 +5085,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001000275",
@@ -5092,7 +5134,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000811809",
@@ -5140,7 +5183,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000217410",
@@ -5188,7 +5232,8 @@
         "cap_conflict_unresolved": true,
         "company_admitted": false,
         "status": "blocked_cap_conflict",
-        "not_an_execution_authorization": true
+        "not_an_execution_authorization": true,
+        "followup_ref": "reconciliation/followup_admission_summary.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001140625",
@@ -5351,6 +5396,7 @@
     "distinct_current_SEC_registrants": 100,
     "canonical_company_keys_established": true,
     "individual_admissions": 0,
-    "reason_no_registry_activation": "45 unresolved company cap conflicts prevent the approved full-cohort admission. Individual security/class review remains scoped in linked evidence; this decision does not require independent price-times-shares reconstruction."
+    "reason_no_registry_activation": "45 unresolved company cap conflicts prevent the approved full-cohort admission. Individual security/class review remains scoped in linked evidence; this decision does not require independent price-times-shares reconstruction.",
+    "followup_ref": "reconciliation/followup_admission_summary.json"
   }
 }

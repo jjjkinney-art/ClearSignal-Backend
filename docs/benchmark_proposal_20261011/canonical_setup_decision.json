@@ -102,5 +102,7 @@
       "evidence_ref": "reconciliation/domestic_identity_a.json",
       "treatment": "Preserve raw observations separately; explicit dated issuer evidence supports proposed exchange correction. Do not misattribute NYSE to SEC mapping."
     }
-  ]
+  ],
+  "continued_evidence_review_ref": "reconciliation/followup_admission_summary.json",
+  "source_precedence_proposal_activated": false
 }

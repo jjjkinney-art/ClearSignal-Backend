@@ -175,6 +175,15 @@ values. Nine affected names are reserved holdouts, which remain in the reservati
 Public methodology checks did not establish a resolution. No figure was selected
 for a conflicting row.
 
+[The continued evidence review](reconciliation/FOLLOWUP_DECISION.md) investigates
+all 45 differences and separates tier evidence from exact value reconciliation.
+No summary/history difference changes a size tier. Primary share-count products
+explain several material discrepancies, and a separate GRC check corroborates its
+small-cap tier. The review proposes historical-row source precedence for exactly
+19 tiny differences; that choice is not approved or applied. The other 26 retain
+specific class, count-date or source-basis tasks. No general tolerance or new
+requirement to independently audit every daily share count has been introduced.
+
 Primary identity and security-class reviews are stored alongside that review.
 Current SEC ticker mappings identify registrants; they do not independently establish
 all share classes, October 9 continuity, or the publisher's company-total aggregation.
@@ -198,7 +207,7 @@ answer capture, paid provider call, or live acceptance test ran in this review.
 
 The candidate-policy integrity suite and existing registry suite pass together:
 `pytest --noconftest tests/test_benchmark_candidate_plan.py tests/test_benchmark_registry.py`
-(17 tests, isolated Python 3.11.17; application conftest excluded). The isolated
+(20 tests, isolated Python 3.11.17; application conftest excluded). The isolated
 environment reports an unused `asyncio_mode` configuration warning.
 The existing strict registry audit returns exit 1 as expected: historical v1 has
 18 issuers, 54 fixtures and eight sectors, with valid integrity but incomplete

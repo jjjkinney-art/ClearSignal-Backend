@@ -1,0 +1,584 @@
+{
+  "schema_version": 1,
+  "artifact_type": "international_cap_conflict_diagnostics_not_admission",
+  "created_at": "2026-10-12T00:00:02Z",
+  "target_date": "2026-10-09",
+  "scope": [
+    "ASML",
+    "NVS",
+    "SAP",
+    "SONY",
+    "TM",
+    "RY",
+    "BHP",
+    "UL",
+    "EQNR"
+  ],
+  "price_convention_used_for_diagnostics": "US regular-session close in USD; whole-company net common shares / ADS ratio. No FX needed for this convention. Home-market-close with explicit same-date FX is a different convention not silently substituted.",
+  "policy_unchanged": true,
+  "registry_unchanged": true,
+  "holdouts_unchanged": true,
+  "execution_authorized": false,
+  "prior_evidence_refs": [
+    "cap_value_review.json",
+    "international_identity_review.json"
+  ],
+  "findings": [
+    "EQNR ADS1:1 and one share class resolved from2025 SECsecurities description.",
+    "EQNR historical display107.54bn reproduces with2025 year-end count \u00d7Oct9close; Julycapital reduction and Oct2own-share balance establish concrete stale-count concern.",
+    "No nine-company cap admitted; all derived counts and mixed-date values explicitly diagnostic.",
+    "TM10:1 and BHP2:1 conversion is necessary; secondary ordinary-count labels and historicalcaps are approximately consistent after conversion. This is not evidence those caps are exact."
+  ],
+  "smallest_convention_decision_if_publisher_components_unavailable": {
+    "choice": "For corrected values, use Oct9 USregularclose \u00d7 whole-company ordinary shares outstanding excluding issuer-owned treasury / depositary ratio; explicitly adjudicate employee-plan treasury. Alternative home-marketclose requires its own fixed FXtimestamp.",
+    "status": "proposal_only_not_adopted",
+    "required_EQNR_evidence": "Freeissuer release coveringOct5\u20139 and any postJulycapital or employee-sharechanges; no paidfeed needed for the identified nextstep.",
+    "fallback": "Publisher-provided component effective dates explaining both conflicting observations can resolve without requiring a universal independent cap audit."
+  },
+  "access_limits": [
+    "Public web reads succeeded; direct shell issuer request failedproxy403. No bypass attempted.",
+    "SECsubmissions endpoint and depositary JavaScript page unavailable throughweb; staticSEC exhibit succeeded.",
+    "No paidprovider or answerqualitycalls; no outreach to issuer/vendor."
+  ],
+  "sources": [
+    {
+      "id": "ASML_PRICE",
+      "url": "https://stockanalysis.com/stocks/asml/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "1780.34",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "NVS_PRICE",
+      "url": "https://stockanalysis.com/stocks/nvs/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "143.75",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "SAP_PRICE",
+      "url": "https://stockanalysis.com/stocks/sap/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "214.78",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "SONY_PRICE",
+      "url": "https://stockanalysis.com/stocks/sony/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "24.12",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "TM_PRICE",
+      "url": "https://stockanalysis.com/stocks/tm/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "185.30",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "RY_PRICE",
+      "url": "https://stockanalysis.com/stocks/ry/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "191.91",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "BHP_PRICE",
+      "url": "https://stockanalysis.com/stocks/bhp/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "86.74",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "UL_PRICE",
+      "url": "https://stockanalysis.com/stocks/ul/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "62.26",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "EQNR_PRICE",
+      "url": "https://stockanalysis.com/stocks/eqnr/history/",
+      "type": "secondary_public_price_history",
+      "observed_date": "2026-10-09",
+      "publication_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "43.01",
+      "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+    },
+    {
+      "id": "EQNR_20F",
+      "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/exhibit21descriptionofsecu.htm",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": "2026-03-19",
+      "observed_date": "2025-12-31",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "Each ADS represents one ordinary share."
+    },
+    {
+      "id": "EQNR_FILING_DATE",
+      "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/0001140625-26-000013-index.htm",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": "2026-03-19",
+      "observed_date": "2025-12-31",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "2026-03-19"
+    },
+    {
+      "id": "EQNR_CAPITAL",
+      "url": "https://www.globenewswire.com/news-release/2026/07/02/3321603/0/no/equinor-asa-gjennomf%C3%B8rt-kapitalnedsettelse.html",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": "2026-07-02",
+      "observed_date": "2026-07-02",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "fordelt p\u00e5 2.390.749.040 aksjer, hver p\u00e5lydende NOK 2,50."
+    },
+    {
+      "id": "EQNR_OWN",
+      "url": "https://www.globenewswire.com/news-release/2026/10/06/3375133/0/en/equinor-asa-share-buy-back-third-tranche-for-2026.html",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": "2026-10-06",
+      "observed_date": "2026-10-02",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "Equinor ASA owns a total of 21,624,123 own shares"
+    },
+    {
+      "id": "EQNR_CADENCE",
+      "url": "https://www.globenewswire.com/news-release/2026/09/29/3370400/0/en/equinor-asa-share-buy-back-third-tranche-for-2026.html",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": "2026-09-29",
+      "observed_date": "2026-09-25",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "From 21 September to 25 September 2026"
+    },
+    {
+      "id": "SONY_SHARES",
+      "url": "https://www.sony.com/en/SonyInfo/IR/stock/information.html",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": null,
+      "observed_date": "2026-09-30",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "125,471,854 shares recorded on the register of shareholders as treasury stock"
+    },
+    {
+      "id": "TM_SHARES",
+      "url": "https://global.toyota/en/ir/stock/outline/",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": null,
+      "observed_date": "2026-06-30",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "the total number of issued shares after the retirement of 1,200,000,000 shares of treasury stock was 14,594,987,460."
+    },
+    {
+      "id": "ASML_SHARES",
+      "url": "https://investor.asml.com/share-information",
+      "type": "issuer_primary_or_SEC_filing",
+      "publication_date": null,
+      "observed_date": "2025-12-31",
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+      "excerpt": "Aggregate number of issued shares: 385,417,665"
+    },
+    {
+      "id": "TM_STATS",
+      "url": "https://stockanalysis.com/stocks/tm/statistics/",
+      "type": "secondary_current_statistics",
+      "publication_date": null,
+      "observed_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp.",
+      "excerpt": "Shares Outstanding",
+      "displayed_shares_outstanding": "11.84B",
+      "limitation": "Page quote datedOct9 does not establish share-count effective date."
+    },
+    {
+      "id": "BHP_STATS",
+      "url": "https://stockanalysis.com/stocks/bhp/statistics/",
+      "type": "secondary_current_statistics",
+      "publication_date": null,
+      "observed_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp.",
+      "excerpt": "Shares Outstanding",
+      "displayed_shares_outstanding": "5.08B",
+      "limitation": "Page quote datedOct9 does not establish share-count effective date."
+    },
+    {
+      "id": "EQNR_STATS",
+      "url": "https://stockanalysis.com/stocks/eqnr/statistics/",
+      "type": "secondary_current_statistics",
+      "publication_date": null,
+      "observed_date": null,
+      "retrieved_at": "2026-10-12T00:00:02Z",
+      "retrieval_timestamp_semantics": "Research-batch completion timestamp.",
+      "excerpt": "Shares Outstanding",
+      "displayed_shares_outstanding": "2.43B",
+      "limitation": "Page quote datedOct9 does not establish share-count effective date."
+    }
+  ],
+  "rows": [
+    {
+      "ticker": "ASML",
+      "summary_usd": "688720000000",
+      "historical_row_usd": "684540000000",
+      "absolute_difference_usd": "4180000000",
+      "absolute_difference_pct_of_summary": "0.606923",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "1780.34",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "ASML_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "international_identity_review.json#ASML",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "386847456.104",
+        "historical_row": "384499589.966",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Resolve issuer share-page internally reversed issued/outstanding labels against a dated filing; reconcile buybacks to Oct9. Nasdaq security is registered ordinary, so no ADR multiplier is appropriate.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false
+    },
+    {
+      "ticker": "NVS",
+      "summary_usd": "272480000000",
+      "historical_row_usd": "273230000000",
+      "absolute_difference_usd": "750000000",
+      "absolute_difference_pct_of_summary": "0.275250",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "143.75",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "NVS_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "international_identity_review.json#NVS",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "1895513043.478",
+        "historical_row": "1900730434.783",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Obtain issuer ordinary outstanding count after 2026 buybacks, with effective date; ask publisher which count underlies each value. ADR custody count is not total company shares.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false
+    },
+    {
+      "ticker": "SAP",
+      "summary_usd": "247430000000",
+      "historical_row_usd": "248720000000",
+      "absolute_difference_usd": "1290000000",
+      "absolute_difference_pct_of_summary": "0.521360",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "214.78",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "SAP_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "international_identity_review.json#SAP",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "1152016016.389",
+        "historical_row": "1158022162.212",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Obtain dated ordinary shares excluding treasury from issuer capital/buyback disclosures; publisher must identify component count and price timestamps for the two values.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false
+    },
+    {
+      "ticker": "SONY",
+      "summary_usd": "141450000000",
+      "historical_row_usd": "141640000000",
+      "absolute_difference_usd": "190000000",
+      "absolute_difference_pct_of_summary": "0.134323",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "24.12",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "SONY_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "international_identity_review.json#SONY",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "5864427860.697",
+        "historical_row": "5872305140.962",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Start from Sep30 issuer issued-minus-treasury snapshot; reconcile Oct1\u20139 movements. Do not substitute the ADS-only count or Sony Financial Group depositary terms.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false,
+      "mixed_date_diagnostic": {
+        "issued_2026_09_30": 5965316326,
+        "treasury_2026_09_30": 125471854,
+        "net_common": 5839844472,
+        "times_oct9_USclose_usd": "140857048664.64",
+        "source_refs": [
+          "SONY_SHARES",
+          "SONY_PRICE"
+        ],
+        "limitation": "Not Oct9 cap; Oct1\u20139 movement and page publication timing unverified. Both disputed values use larger implied counts."
+      }
+    },
+    {
+      "ticker": "TM",
+      "summary_usd": "216500000000",
+      "historical_row_usd": "219430000000",
+      "absolute_difference_usd": "2930000000",
+      "absolute_difference_pct_of_summary": "1.353349",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "185.30",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "TM_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 10,
+      "ratio_evidence_ref": "international_identity_review.json#TM",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "11683756071.236",
+        "historical_row": "11841878035.618",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Use ten ordinary shares per ADS; reconcile June30 retirement and subsequent treasury position instead of mixing June issued shares with March treasury shares. Obtain dated net ordinary count underlying each vendor value.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false,
+      "rounded_vendor_count_diagnostic": {
+        "ordinary_count": "1.184E+10",
+        "source_ref": "TM_STATS",
+        "ordinary_count_date": null,
+        "converted_US_equivalent_cap_usd": "2.1939520E+11",
+        "interpretation": "Roughly matches historical value at displayed count precision; supports checking share-count vintage, not alleging missing ADR conversion. Not accepted reconstruction."
+      }
+    },
+    {
+      "ticker": "RY",
+      "summary_usd": "265640000000",
+      "historical_row_usd": "266590000000",
+      "absolute_difference_usd": "950000000",
+      "absolute_difference_pct_of_summary": "0.357627",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "191.91",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "RY_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "international_identity_review.json#RY",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "1384190505.966",
+        "historical_row": "1389140743.057",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Use company-wide common shares, excluding preferred equity; obtain dated net common outstanding count and verify US USD close versus Toronto CAD close/FX convention.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false
+    },
+    {
+      "ticker": "BHP",
+      "summary_usd": "216160000000",
+      "historical_row_usd": "220380000000",
+      "absolute_difference_usd": "4220000000",
+      "absolute_difference_pct_of_summary": "1.952258",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "86.74",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "BHP_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 2,
+      "ratio_evidence_ref": "international_identity_review.json#BHP",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "4984090385.059",
+        "historical_row": "5081392667.743",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Use two ordinary shares per ADS. The vendor 5.08B ordinary-count label must not be multiplied directly by ADS price; request dated BHP net ordinary count, with company-wide rather than receipt-pool scope.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false,
+      "rounded_vendor_count_diagnostic": {
+        "ordinary_count": "5.08E+9",
+        "source_ref": "BHP_STATS",
+        "ordinary_count_date": null,
+        "converted_US_equivalent_cap_usd": "2.203196E+11",
+        "interpretation": "Roughly matches historical value at displayed count precision; supports checking share-count vintage, not alleging missing ADR conversion. Not accepted reconstruction."
+      }
+    },
+    {
+      "ticker": "UL",
+      "summary_usd": "133170000000",
+      "historical_row_usd": "134060000000",
+      "absolute_difference_usd": "890000000",
+      "absolute_difference_pct_of_summary": "0.668319",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "62.26",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "UL_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "international_identity_review.json#UL",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "2138933504.658",
+        "historical_row": "2153228397.045",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Obtain issuer dated issued-minus-treasury count after capital actions; undated FAQ issued count is insufficient. Use1:1 ADR and identify USclose versus Londonclose/FX convention.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false
+    },
+    {
+      "ticker": "EQNR",
+      "summary_usd": "103810000000",
+      "historical_row_usd": "107540000000",
+      "absolute_difference_usd": "3730000000",
+      "absolute_difference_pct_of_summary": "3.593103",
+      "percentage_denominator": "summary_usd",
+      "price": {
+        "usd_close": "43.01",
+        "date": "2026-10-09",
+        "session": "US regular close, not after-hours or dividend-adjusted total return",
+        "source_ref": "EQNR_PRICE",
+        "source_quality": "secondary public price history; not independently exchange-verified"
+      },
+      "underlying_ordinary_per_us_security": 1,
+      "ratio_evidence_ref": "EQNR_20F",
+      "implied_ordinary_counts": {
+        "formula": "displayed market_cap_usd / US_close_usd * ordinary_per_US_security",
+        "summary": "2413624738.433",
+        "historical_row": "2500348756.103",
+        "interpretation": "Diagnostic implied counts, not independently observed Oct9 outstanding shares; display rounding retained in input record."
+      },
+      "adr_error_assessment": "No demonstrated ratio error explains the difference. Confirmed ratios applied diagnostically; near-unity cap differences are not evidence of missing2x/10x conversion. ASML/RY are direct shares.",
+      "smallest_next_evidence": "Obtain free issuer weekly release covering Oct5\u20139, reconcile employee-share movements and any post-July capital changes; then apply explicit treasury convention to Oct9 USclose. Latest inspected weekly transaction date is Oct2.",
+      "selected_oct9_cap_usd": null,
+      "conflict_resolved": false,
+      "admission_allowed": false,
+      "primary_mechanism": {
+        "ratio_verified": 1,
+        "class_count_reported": 1,
+        "class_evidence_date": "2025-12-31",
+        "ordinary_outstanding_2025_12_31": 2500271030,
+        "old_count_times_oct9_price_usd": "107536657000.30",
+        "rounded_billions": "107.54",
+        "matches_disputed_historical_display": true,
+        "inference": "Historical cap is arithmetically consistent with stale2025 year-end count; this is not proof of publisher methodology.",
+        "registered_issued_2026_07_02": 2390749040,
+        "own_shares_after_2026_10_02": 21624123,
+        "own_shares_excluding_employee_programme": 10524363,
+        "diagnostic_net_all_own": 2369124917,
+        "diagnostic_net_all_own_times_oct9_price_usd": "101896062680.17",
+        "diagnostic_excluding_only_buyback_shares_times_oct9_price_usd": "102373463357.77",
+        "issued_without_treasury_deduction_times_oct9_price_usd": "102826116210.40",
+        "mixed_dates_not_oct9_reconstruction": true,
+        "limitations": [
+          "July2 registered issued capital has not been independently rolled forward throughOct9.",
+          "Own-share snapshot endsOct2; Oct5\u20139 movements unverified.",
+          "Employee savings programme treatment changes net count; policy must explicitly state treatment.",
+          "Both disputed values imply more ordinary shares at USclose than July issued total, conditional on no subsequent issuance; no unconditional Oct9 upper bound asserted."
+        ],
+        "source_refs": [
+          "EQNR_20F",
+          "EQNR_CAPITAL",
+          "EQNR_OWN",
+          "EQNR_PRICE"
+        ],
+        "publication_cadence": {
+          "observed": [
+            {
+              "published": "2026-09-29",
+              "transactions_through": "2026-09-25"
+            },
+            {
+              "published": "2026-10-06",
+              "transactions_through": "2026-10-02"
+            }
+          ],
+          "inference": "Both observed releases are Tuesday following Friday transaction cutoff; Oct13 plausible next date, not issuer-promised.",
+          "next_release_missing_in_inspected_sources": true,
+          "not_claimed": "No exhaustive proof of nonpublication elsewhere; do not assert Oct12 schedule."
+        }
+      }
+    }
+  ]
+}
