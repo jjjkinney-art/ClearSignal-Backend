@@ -2,8 +2,9 @@
 
 `validation.capture_budget` is an isolated, opt-in accounting prototype. It does
 not import the application, contact providers, read secrets or change production
-request handling. Neither the existing capture runner nor any provider transport
-uses it. Its preflight always reports `execution_allowed: false` and
+request handling. The existing capture runner and production provider transports do not use it.
+An isolated [fixture-only SDK transport](BENCHMARK_FIXTURE_TRANSPORT.md) exercises
+its dispatch claims using synthetic in-memory responses only. Its preflight always reports `execution_allowed: false` and
 `hard_usd_cap_established: false`. No spending approval or live execution is
 established by this change. Existing capture controls are unchanged; this module
 must not be represented as protecting a separately invoked existing runner.
@@ -64,8 +65,9 @@ python -m validation.capture_budget --policy /path/to/reviewed-policy.json \
 
 `AttemptLedger(path, policy, create=True)` explicitly initializes offline state;
 `AttemptLedger(path, policy)` reopens it. `begin_case`, `reserve`, `settle` and
-`finish_case` exercise accounting only. A future adapter must dispatch exactly
-one request for each returned reservation ID and never dispatch when refused.
+`finish_case` exercise accounting only. Bound fixture reservations require `claim_dispatch()` before dispatch, and only
+one claimant can succeed. Accounting-only unbound reservations cannot claim.
+New ledgers use schema version 2; older ledgers are refused without migration.
 
 ## Required integration before any spending
 
