@@ -72,13 +72,13 @@ def test_primary_identity_evidence_joins_without_duplicate_companies():
     assert etsy['proposed_exchange_from_dated_issuer_evidence'] == 'NYSE'
 
 
-def test_conflicting_values_cannot_be_selected_or_admitted():
+def test_only_explicitly_approved_conflicting_values_can_be_selected():
     plan = read(DOCS / 'candidate_plan.json')
     caps = read(DOCS / 'reconciliation' / 'cap_value_review.json')['rows']
     assert len(caps) == 100
     assert Counter(r['cap_decision'] for r in caps) == {
         'equal_displayed_values': 55, 'conflict_unresolved': 26,
-        'compatible_display_rounding_only': 19,
+        'approved_historical_row_precedence': 19,
     }
     candidates = {r['ticker_candidate']: r for r in plan['candidates']}
     assert set(candidates) == {r['ticker'] for r in caps}
@@ -86,9 +86,15 @@ def test_conflicting_values_cannot_be_selected_or_admitted():
         assert row['summary_as_of'] == row['historical_row_as_of'] == '2026-10-09'
         different = row['summary']['normalized_usd'] != row['historical_row']['normalized_usd']
         assert row['conflict_unresolved'] is different
-        if different:
+        if row['cap_decision'] == 'approved_historical_row_precedence':
+            assert row['selected_value_usd'] == row['historical_row']['normalized_usd']
+            assert row['discrepancy_cause'] == 'unexplained'
+            selection = candidates[row['ticker']]['classification_cap_selection']
+            assert selection['normalized_usd'] == int(row['selected_value_usd'])
+            assert candidates[row['ticker']]['market_cap_observation']['normalized_rounded_usd'] == int(row['summary']['normalized_usd'])
+        elif different:
             assert row['selected_value_usd'] is None
-            assert candidates[row['ticker']]['admission_review']['company_admitted'] is False
+        assert candidates[row['ticker']]['admission_review']['company_admitted'] is False
         assert row['eligible_to_execute'] is False
 
 
@@ -98,12 +104,12 @@ def test_canonical_registry_is_preserved_and_full_cohort_is_blocked():
     assert decision['individual_admissions'] == 0
     assert decision['full_cohort_admission_allowed'] is False
     assert decision['execution_authorized'] is False
-    assert len(set(decision['cap_conflict_blocked_tickers'])) == 45
+    assert len(set(decision['cap_conflict_blocked_tickers'])) == 26
     actual = hashlib.sha256((ROOT / decision['active_registry']).read_bytes()).hexdigest()
     assert actual == decision['active_registry_sha256']
 
 
-def test_followup_covers_every_conflict_once_and_keeps_source_choice_unapproved():
+def test_followup_covers_every_difference_and_applies_only_approved_scope():
     directory = DOCS / 'reconciliation'
     summary = read(directory / 'followup_admission_summary.json')
     covered = []
@@ -118,11 +124,11 @@ def test_followup_covers_every_conflict_once_and_keeps_source_choice_unapproved(
     choice = summary['smallest_user_choice']
     assert len(tiny) == 19
     assert set(choice['scope_tickers']) == {r['ticker'] for r in tiny}
-    assert choice['status'] == 'proposed_not_approved_not_applied'
-    assert read(DOCS / 'canonical_setup_decision.json')['source_precedence_proposal_activated'] is False
+    assert choice['status'] == 'approved_and_applied'
+    assert read(DOCS / 'canonical_setup_decision.json')['source_precedence_proposal_activated'] is True
     for row in tiny:
         assert row['source_confirmed_rounding'] is False
-        assert row['selected_value_usd'] is None
+        assert row['selected_value_usd'] == row['history_usd']
         assert row['admitted'] is False
     for row in summary['rows']:
         assert row['tier_crossing'] is False
@@ -191,3 +197,23 @@ def test_visa_class_equivalents_do_not_become_exact_cap_or_admission():
     assert estimate['exact_oct9_cap_verified'] is False
     assert visa['selected_value_usd'] is None
     assert visa['eligible_to_execute'] is False
+
+
+def test_approved_source_rule_is_exactly_nineteen_and_preserves_other_gates():
+    expected = set('RGR SWBI BGS HBB VLGEA CAL ANGO UTMD USNA MLR MTRX PLOW SGC NATH RELL ACNB CCBG NGS FRPH'.split())
+    rule = read(DOCS / 'reconciliation' / 'approved_historical_precedence.json')
+    assert set(rule['scope_tickers']) == expected
+    assert rule['status'] == 'approved_and_applied'
+    assert rule['approval_evidence']['user_answer'] == 'yes'
+    for field in ('source_confirmed_rounding', 'general_tolerance_authorized',
+                  'broader_classification_only_rule_approved',
+                  'automatic_company_admission', 'execution_authorized'):
+        assert rule[field] is False
+    cap = read(DOCS / 'reconciliation' / 'cap_value_review.json')
+    selected = {r['ticker'] for r in cap['rows'] if r['cap_decision'] == 'approved_historical_row_precedence'}
+    assert selected == expected
+    blocked = {r['ticker'] for r in cap['rows'] if r['cap_decision'] == 'conflict_unresolved'}
+    decision = read(DOCS / 'canonical_setup_decision.json')
+    assert blocked == set(decision['cap_conflict_blocked_tickers'])
+    assert len(blocked) == 26 and not blocked & expected
+    assert decision['broader_classification_only_rule_approved'] is False

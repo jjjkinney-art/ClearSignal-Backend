@@ -3,7 +3,7 @@
 The 45 discrepancies have now been investigated individually, with primary
 share-count and security evidence where accessible. They are not 45 arithmetic
 defects. None changes the observed size tier. No company has been admitted and
-no new source convention has been applied.
+the approved historical-row convention has been applied to exactly 19 names.
 
 ## Material findings
 
@@ -37,7 +37,7 @@ For **19 named cases only**, the differences are $10,000–$50,000, or
 USD-million units but does not confirm the publisher's rounding convention.
 No tolerance has been inferred from these amounts.
 
-**Proposed choice:** use the published October 9 historical-row value, at its
+**Approved and applied choice:** use the published October 9 historical-row value, at its
 displayed precision, as the classification value for these 19 names; preserve
 both observations and their unconfirmed cause. This chooses a dated source field;
 it does not certify that the competing values are equivalent.
@@ -45,11 +45,11 @@ it does not certify that the competing values are equivalent.
 RGR, SWBI, BGS, HBB, VLGEA, CAL, ANGO, UTMD, USNA, MLR, MTRX, PLOW, SGC,
 NATH, RELL, ACNB, CCBG, NGS and FRPH.
 
-If approved, this would resolve the benchmark's source-field selection for those
-19 only. It would not authorize execution, automatically admit a company,
-waive its class/identity checks, or resolve the other 26 cases. The alternative
-is to retain these 19 blocks until a provider correction or documented dated
-value resolves them. **The proposal is not approved or applied.**
+The user approved this exact scope on October 12; see
+[the approval record](approved_historical_precedence.json). The historical value
+is now selected for those 19 only. Both observations and their unexplained cause
+are preserved. This does not authorize execution, automatically admit a company,
+waive identity/class checks, or resolve the other 26 cases. No tolerance is applied.
 
 The larger cases retain their specific evidence tasks, especially Greif's class
 prices, NN's larger secondary share count, Lilly's conflicting count, Equinor's
@@ -64,7 +64,8 @@ There were no ClearSignal answer captures, paid data calls, or production action
 
 ## Practical completion path for the other 26
 
-The 19-name source choice remains pending and is independent of this proposal.
+The 19-name source choice is approved and applied; the broader proposal below
+remains unapproved and unapplied.
 Do not spend additional research cycles proving a publisher's exact calculation
 when the benchmark only needs a defensible size classification.
 

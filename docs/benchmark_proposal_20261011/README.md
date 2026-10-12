@@ -170,17 +170,18 @@ The 100-company quality benchmark remains unexecuted and unaccepted.
 [The cap review](reconciliation/cap_value_review.json) compares all 100 summaries
 with their October 9 historical rows. [Its findings](reconciliation/supportingbrief.md)
 list 26 conflicts and 19 differences conditionally compatible with an unconfirmed
-rounding convention. All 45 remain blocked; matching tiers do not resolve conflicting
-values. Nine affected names are reserved holdouts, which remain in the reservation.
-Public methodology checks did not establish a resolution. No figure was selected
-for a conflicting row.
+rounding convention. All 45 differences remain unexplained. The user approved historical-row precedence
+for exactly 19; the other 26 remain source-selection blocks. Matching tiers alone
+do not resolve conflicting values. Nine affected names are reserved holdouts, which remain in the reservation.
+Public methodology checks did not establish the discrepancy causes. The approved
+19-name source rule selects a value without claiming source-confirmed rounding.
 
 [The continued evidence review](reconciliation/FOLLOWUP_DECISION.md) investigates
 all 45 differences and separates tier evidence from exact value reconciliation.
 No summary/history difference changes a size tier. Primary share-count products
 explain several material discrepancies, and a separate GRC check corroborates its
-small-cap tier. The review proposes historical-row source precedence for exactly
-19 tiny differences; that choice is not approved or applied. The other 26 retain
+small-cap tier. Historical-row source precedence is now approved and applied for exactly
+19 tiny differences; see [the approval record](reconciliation/approved_historical_precedence.json). The other 26 retain
 specific class, count-date or source-basis tasks. No general tolerance or new
 requirement to independently audit every daily share count has been introduced.
 
@@ -207,7 +208,7 @@ answer capture, paid provider call, or live acceptance test ran in this review.
 
 The candidate-policy integrity suite and existing registry suite pass together:
 `pytest --noconftest tests/test_benchmark_candidate_plan.py tests/test_benchmark_registry.py`
-(21 tests, isolated Python 3.11.17; application conftest excluded). The isolated
+(22 tests, isolated Python 3.11.17; application conftest excluded). The isolated
 environment reports an unused `asyncio_mode` configuration warning.
 The existing strict registry audit returns exit 1 as expected: historical v1 has
 18 issuers, 54 fixtures and eight sectors, with valid integrity but incomplete

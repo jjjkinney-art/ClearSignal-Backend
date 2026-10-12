@@ -26,10 +26,13 @@
   "summary": {
     "reviewed": 19,
     "source_confirmed_resolutions": 0,
-    "blocked": 19,
+    "blocked": 0,
     "holdouts": 6,
     "absolute_difference_usd_min": 10000,
-    "absolute_difference_usd_max": 50000
+    "absolute_difference_usd_max": 50000,
+    "approved_source_selections": 19,
+    "companies_admitted": 0,
+    "blocked_meaning": "Source-selection blocks only; company identity/class admission checks are not waived."
   },
   "methodology_sources": [
     {
@@ -63,10 +66,10 @@
       "result": "Direct execution-environment HTML fetch failed proxy HTTP403; rendered web text accessible. No embedded JS/payload inspected."
     }
   ],
-  "evidence_interpretation": "USD-million provider units and terminal-zero history displays support a precision hypothesis, not proof of nearest-0.1m rounding or identical underlying inputs. No tolerance or source priority is activated. A later filing share count multiplied by close would be a new estimate unless effective-date coverage, classes and provider inputs are reconciled.",
+  "evidence_interpretation": "USD-million provider units and terminal-zero history displays support a precision hypothesis, not proof of nearest-0.1m rounding or identical underlying inputs. No tolerance is activated. Historical-row precedence is now approved for the exact 19-name scope; the difference cause remains unexplained. A later filing share count multiplied by close would be a new estimate unless effective-date coverage, classes and provider inputs are reconciled.",
   "holdout_followup": "Rendered HBB/VLGEA/ANGO/UTMD/USNA/MTRX market-cap pages were revisited; no explicit rounding explanation found. This is metadata research only, not answer tuning.",
   "bounded_user_proposal": {
-    "status": "proposed_not_approved_not_applied",
+    "status": "approved_and_applied",
     "scope": [
       "RGR",
       "SWBI",
@@ -91,13 +94,14 @@
     "decision": "For these 19 enumerated cases only, designate the explicitly dated StockAnalysis October 9 historical row as the provisional benchmark cap observation, retaining both reported amounts and the unresolved precision flag.",
     "rationale": "A dated historical observation is reproducible from the captured row and matches the fixed-date benchmark purpose; this is an explicit source-priority convention, not a factual finding that one figure is correct.",
     "requirements": [
-      "Explicit approval of this source-priority convention before activation.",
+      "Explicit approval obtained for exactly these 19 names; see approval record.",
       "Keep both original figures and discrepancy; do not mark source-confirmed rounding.",
       "Issuer identity and total-company class/ADR checks still apply.",
       "Do not extend this convention to the other 26 materially different cases or new issuers automatically.",
       "No benchmark execution authorized by this proposal."
     ],
-    "alternative": "Obtain an explicit provider rounding definition and linkage to these rows, or a dated all-class share-count/price reconstruction with reconciled effective dates. No support message or paid data request was sent."
+    "alternative": "Obtain an explicit provider rounding definition and linkage to these rows, or a dated all-class share-count/price reconstruction with reconciled effective dates. No support message or paid data request was sent.",
+    "approval_ref": "approved_historical_precedence.json"
   },
   "rows": [
     {
@@ -110,11 +114,12 @@
       "history_usd": 691200000,
       "signed_summary_minus_history_usd": 20000,
       "absolute_difference_usd": 20000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 691200000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00289343"
+      "absolute_difference_percent_of_summary": "0.00289343",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "SWBI",
@@ -126,11 +131,12 @@
       "history_usd": 626900000,
       "signed_summary_minus_history_usd": -40000,
       "absolute_difference_usd": 40000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 626900000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00638101"
+      "absolute_difference_percent_of_summary": "0.00638101",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "BGS",
@@ -142,11 +148,12 @@
       "history_usd": 195100000,
       "signed_summary_minus_history_usd": -40000,
       "absolute_difference_usd": 40000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 195100000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.02050651"
+      "absolute_difference_percent_of_summary": "0.02050651",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "HBB",
@@ -158,11 +165,12 @@
       "history_usd": 467300000,
       "signed_summary_minus_history_usd": -40000,
       "absolute_difference_usd": 40000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 467300000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00856054"
+      "absolute_difference_percent_of_summary": "0.00856054",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "VLGEA",
@@ -174,11 +182,12 @@
       "history_usd": 651900000,
       "signed_summary_minus_history_usd": 20000,
       "absolute_difference_usd": 20000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 651900000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00306786"
+      "absolute_difference_percent_of_summary": "0.00306786",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "CAL",
@@ -190,11 +199,12 @@
       "history_usd": 417200000,
       "signed_summary_minus_history_usd": -30000,
       "absolute_difference_usd": 30000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 417200000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00719131"
+      "absolute_difference_percent_of_summary": "0.00719131",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "ANGO",
@@ -206,11 +216,12 @@
       "history_usd": 484500000,
       "signed_summary_minus_history_usd": -30000,
       "absolute_difference_usd": 30000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 484500000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00619233"
+      "absolute_difference_percent_of_summary": "0.00619233",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "UTMD",
@@ -222,11 +233,12 @@
       "history_usd": 237300000,
       "signed_summary_minus_history_usd": 20000,
       "absolute_difference_usd": 20000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 237300000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00842744"
+      "absolute_difference_percent_of_summary": "0.00842744",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "USNA",
@@ -238,11 +250,12 @@
       "history_usd": 270900000,
       "signed_summary_minus_history_usd": -30000,
       "absolute_difference_usd": 30000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 270900000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.01107542"
+      "absolute_difference_percent_of_summary": "0.01107542",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "MLR",
@@ -254,11 +267,12 @@
       "history_usd": 595500000,
       "signed_summary_minus_history_usd": 40000,
       "absolute_difference_usd": 40000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 595500000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00671659"
+      "absolute_difference_percent_of_summary": "0.00671659",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "MTRX",
@@ -270,11 +284,12 @@
       "history_usd": 297900000,
       "signed_summary_minus_history_usd": 10000,
       "absolute_difference_usd": 10000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 297900000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00335672"
+      "absolute_difference_percent_of_summary": "0.00335672",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "PLOW",
@@ -286,11 +301,12 @@
       "history_usd": 904400000,
       "signed_summary_minus_history_usd": -10000,
       "absolute_difference_usd": 10000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 904400000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00110572"
+      "absolute_difference_percent_of_summary": "0.00110572",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "SGC",
@@ -302,11 +318,12 @@
       "history_usd": 208100000,
       "signed_summary_minus_history_usd": -20000,
       "absolute_difference_usd": 20000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 208100000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00961169"
+      "absolute_difference_percent_of_summary": "0.00961169",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "NATH",
@@ -318,11 +335,12 @@
       "history_usd": 417000000,
       "signed_summary_minus_history_usd": 20000,
       "absolute_difference_usd": 20000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 417000000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00479593"
+      "absolute_difference_percent_of_summary": "0.00479593",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "RELL",
@@ -334,11 +352,12 @@
       "history_usd": 309300000,
       "signed_summary_minus_history_usd": -10000,
       "absolute_difference_usd": 10000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 309300000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00323321"
+      "absolute_difference_percent_of_summary": "0.00323321",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "ACNB",
@@ -350,11 +369,12 @@
       "history_usd": 633500000,
       "signed_summary_minus_history_usd": -20000,
       "absolute_difference_usd": 20000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 633500000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00315716"
+      "absolute_difference_percent_of_summary": "0.00315716",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "CCBG",
@@ -366,11 +386,12 @@
       "history_usd": 823100000,
       "signed_summary_minus_history_usd": 50000,
       "absolute_difference_usd": 50000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 823100000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00607423"
+      "absolute_difference_percent_of_summary": "0.00607423",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "NGS",
@@ -382,11 +403,12 @@
       "history_usd": 426900000,
       "signed_summary_minus_history_usd": 30000,
       "absolute_difference_usd": 30000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 426900000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00702691"
+      "absolute_difference_percent_of_summary": "0.00702691",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "FRPH",
@@ -398,12 +420,14 @@
       "history_usd": 384700000,
       "signed_summary_minus_history_usd": 30000,
       "absolute_difference_usd": 30000,
-      "status": "unresolved_precision_or_input_difference",
+      "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
-      "selected_value_usd": null,
+      "selected_value_usd": 384700000,
       "admitted": false,
-      "absolute_difference_percent_of_summary": "0.00779768"
+      "absolute_difference_percent_of_summary": "0.00779768",
+      "source_precedence_ref": "approved_historical_precedence.json"
     }
   ],
-  "relative_difference_denominator": "summary_usd"
+  "relative_difference_denominator": "summary_usd",
+  "input_sha256_scope": "Original pre-approval cap review snapshot; retained as historical research provenance, not the hash of the amended current review."
 }

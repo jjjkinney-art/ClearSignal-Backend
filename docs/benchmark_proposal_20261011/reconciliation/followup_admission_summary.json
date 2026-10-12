@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-10-12T00:04:29Z",
+  "updated_at": "2026-10-12T00:19:19.578637+00:00",
   "classification_date": "2026-10-09",
-  "policy_changed": false,
+  "policy_changed": true,
   "holdout_membership_changed": false,
   "external_prior_exposure": "unknown; no further attestation requested",
   "evidence_files": [
@@ -18,12 +18,13 @@
     "candidate_count": 100,
     "cap_displays_identical": 55,
     "cap_displays_differ": 45,
-    "named_precision_cases_pending_source_priority_decision": 19,
     "other_basis_or_date_cases": 26,
     "observed_summary_history_tier_crossings": 0,
     "newly_admitted_companies": 0,
     "full_100_registry_activated": false,
-    "execution_authorized": false
+    "execution_authorized": false,
+    "approved_historical_source_selections": 19,
+    "remaining_source_selection_blocks": 26
   },
   "component_findings": [
     "GEF two published caps reproduce different A-price/class-equivalent proxies; class-price sum using reported July 27 shares and both October 9 closes is 4,337,542,781.38 USD, a dated share estimate.",
@@ -54,11 +55,12 @@
       "UTMD",
       "VLGEA"
     ],
-    "status": "proposed_not_approved_not_applied",
+    "status": "approved_and_applied",
     "question": "For these 19 named cases only, use the published October 9 historical-row value, at its displayed precision, as the benchmark classification value instead of the conflicting current summary? Retain both observations and mark their cause unconfirmed; keep every identity/class-basis gate and all other 26 conflicts separate.",
     "option_a": "Approve narrowly bounded historical-row source precedence for the 19 named cases; no general percentage tolerance and no automatic company admission.",
     "option_b": "Keep the 19 blocked until a public provider correction or an independently documented dated value resolves each difference.",
-    "rationale": "Both displayed values have identical tiers; absolute discrepancies 10k\u201350k USD are not demonstrated arithmetic defects. Provider USD-million units are documented, but publisher rounding is not. This is a transparent source-precedence choice, not a claim the discrepancy was factually resolved."
+    "rationale": "Both displayed values have identical tiers; absolute discrepancies 10k\u201350k USD are not demonstrated arithmetic defects. Provider USD-million units are documented, but publisher rounding is not. This is a transparent source-precedence choice, not a claim the discrepancy was factually resolved.",
+    "approval_ref": "approved_historical_precedence.json"
   },
   "material_case_next_actions": {
     "GEF": "Use separate class prices under approved total-company equity definition; reconcile reported class-count dates and intervening changes. Neither A-only pricing nor dividend-weighting is a same-class market-price sum.",
@@ -520,5 +522,7 @@
       "reserved_holdout": false,
       "group": "19_named_precision_source_choice"
     }
-  ]
+  ],
+  "policy_change_scope": "Only approved 19-name historical-row source precedence; broader classification-only rule unapproved.",
+  "broader_classification_only_rule_approved": false
 }

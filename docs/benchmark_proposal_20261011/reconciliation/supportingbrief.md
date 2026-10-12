@@ -1,3 +1,9 @@
+> Historical review below records the pre-approval state. On October 12, the user
+> approved historical-row precedence for exactly 19 names. Their source selection
+> is now cleared; all 45 numerical differences remain unexplained and 26 source
+> selections remain blocked. Identity/class gates are unchanged. See
+> [the approval record](approved_historical_precedence.json).
+
 # October 9 cap-value reconciliation
 
 Review covers all 100 current candidate identities, using each summary and dated

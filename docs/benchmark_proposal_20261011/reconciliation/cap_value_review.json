@@ -28,7 +28,7 @@
     "decisions": {
       "equal_displayed_values": 55,
       "conflict_unresolved": 26,
-      "compatible_display_rounding_only": 19
+      "approved_historical_row_precedence": 19
     },
     "tickers_by_decision": {
       "equal_displayed_values": [
@@ -116,7 +116,7 @@
         "UL",
         "EQNR"
       ],
-      "compatible_display_rounding_only": [
+      "approved_historical_row_precedence": [
         "RGR",
         "SWBI",
         "BGS",
@@ -153,7 +153,15 @@
       "USNA",
       "MTRX"
     ],
-    "whole_dataset_admitted": false
+    "whole_dataset_admitted": false,
+    "cap_source_selection_blocked": 26,
+    "approved_historical_selections": 19,
+    "unresolved_source_conflicts_meaning": "45 unexplained numerical differences remain; only 26 block source selection after the explicitly approved 19-name rule.",
+    "reserved_holdout_source_selection_blocked": [
+      "AJG",
+      "VTR",
+      "RHI"
+    ]
   },
   "execution_enabled": false,
   "policy_files_modified": false,
@@ -3235,19 +3243,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "691200000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "ENR",
@@ -3435,19 +3446,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "626900000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "BGS",
@@ -3488,19 +3502,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "195100000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "TDAY",
@@ -3590,19 +3607,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "467300000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "VLGEA",
@@ -3643,19 +3663,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "651900000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "SENEA",
@@ -3745,19 +3768,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "417200000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "ANGO",
@@ -3798,19 +3824,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "484500000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "UTMD",
@@ -3851,19 +3880,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "237300000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "USNA",
@@ -3904,19 +3936,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "270900000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "MLR",
@@ -3957,19 +3992,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "595500000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "GRC",
@@ -4059,19 +4097,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "297900000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "NNBR",
@@ -4161,19 +4202,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "904400000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "SGC",
@@ -4214,19 +4258,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "208100000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "JOUT",
@@ -4365,19 +4412,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "417000000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "RELL",
@@ -4418,19 +4468,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "309300000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "ACNB",
@@ -4471,19 +4524,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "633500000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "CCBG",
@@ -4524,19 +4580,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "823100000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "NGS",
@@ -4577,19 +4636,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "426900000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "FRPH",
@@ -4630,19 +4692,22 @@
         "policy_handling": "Use the secondary definition provisionally under the approved policy; this review does not assert independently reconstructed share-class/ADR aggregation or impose an additional audit requirement."
       },
       "eligible_to_execute": false,
-      "cap_decision": "compatible_display_rounding_only",
+      "cap_decision": "approved_historical_row_precedence",
       "conflict_unresolved": true,
       "conditional_coarser_rounding": {
         "assumed_historical_quantum_usd": "100000",
         "assumption_confirmed_by_source": false,
         "explanation": "A hypothetical $0.1m historical rounding step with a padded terminal zero could explain the difference; the actual printed precision is $0.01m. This hypothesis does not resolve the source conflict."
       },
-      "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "selected_value_usd": "384700000",
+      "cap_value_gate": "source_selection_cleared_identity_and_class_review_still_required",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "source_selection_resolved": true,
+      "discrepancy_cause": "unexplained",
+      "source_precedence_ref": "approved_historical_precedence.json"
     },
     {
       "ticker": "AA",
@@ -5134,5 +5199,6 @@
       "tier_agreement_is_not_conflict_resolution": true,
       "reserved_holdout": false
     }
-  ]
+  ],
+  "source_precedence_amendment_ref": "approved_historical_precedence.json"
 }

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-12T00:19:19.578637+00:00",
+  "status": "approved_and_applied",
+  "scope_tickers": [
+    "ACNB",
+    "ANGO",
+    "BGS",
+    "CAL",
+    "CCBG",
+    "FRPH",
+    "HBB",
+    "MLR",
+    "MTRX",
+    "NATH",
+    "NGS",
+    "PLOW",
+    "RELL",
+    "RGR",
+    "SGC",
+    "SWBI",
+    "USNA",
+    "UTMD",
+    "VLGEA"
+  ],
+  "source_field": "StockAnalysis October 9 historical row",
+  "classification_date": "2026-10-09",
+  "approval_evidence": {
+    "assistant_question": "I need one small source-policy decision for the benchmark: for 19 tiny discrepancies, may I use the source\u2019s dated October 9 historical value instead of its summary value, while preserving both and marking the difference unexplained? None changes a company\u2019s size group. This would apply only to those 19 cases; the 26 larger or share-count-related differences would still need separate checks.",
+    "user_answer": "yes",
+    "source": "parent-provided transcript evidence on 2026-10-12"
+  },
+  "difference_cause": "unexplained",
+  "source_confirmed_rounding": false,
+  "general_tolerance_authorized": false,
+  "broader_classification_only_rule_approved": false,
+  "automatic_company_admission": false,
+  "execution_authorized": false,
+  "raw_observations_preserved": true
+}

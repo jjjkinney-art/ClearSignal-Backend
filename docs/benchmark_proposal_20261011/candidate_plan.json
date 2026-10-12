@@ -3381,12 +3381,14 @@
       },
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000095029",
@@ -3395,6 +3397,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 691200000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3575,12 +3585,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001092796",
@@ -3589,6 +3601,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 626900000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3624,12 +3644,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001278027",
@@ -3638,6 +3660,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 195100000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3741,12 +3771,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001709164",
@@ -3755,6 +3787,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 467300000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3790,12 +3830,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000103595",
@@ -3804,6 +3846,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 651900000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3887,12 +3937,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000014707",
@@ -3901,6 +3953,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 417200000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3936,12 +3996,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001275187",
@@ -3950,6 +4012,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 484500000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -3985,12 +4055,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000706698",
@@ -3999,6 +4071,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 237300000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4034,12 +4114,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000896264",
@@ -4048,6 +4130,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 270900000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4083,12 +4173,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000924822",
@@ -4097,6 +4189,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 595500000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4180,12 +4280,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000866273",
@@ -4194,6 +4296,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 297900000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4278,12 +4388,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001287213",
@@ -4292,6 +4404,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 904400000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4327,12 +4447,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000095574",
@@ -4341,6 +4463,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 208100000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4474,12 +4604,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000069733",
@@ -4488,6 +4620,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 417000000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4523,12 +4663,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000355948",
@@ -4537,6 +4679,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 309300000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4572,12 +4722,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000715579",
@@ -4586,6 +4738,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 633500000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4621,12 +4781,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000726601",
@@ -4635,6 +4797,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 823100000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4670,12 +4840,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001084991",
@@ -4684,6 +4856,14 @@
           "reconciliation/domestic_identity_b.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 426900000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -4719,12 +4899,14 @@
       "primary_filing_fiscal_calendar_and_jurisdiction": "confirmation_pending",
       "admission_review": {
         "cap_review_ref": "reconciliation/cap_value_review.json",
-        "cap_decision": "compatible_display_rounding_only",
+        "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "cap_source_selected_identity_and_class_review_pending",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "cap_source_selection_resolved": true,
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000844059",
@@ -4733,6 +4915,14 @@
           "reconciliation/domestic_identity_a.json"
         ],
         "historical_target_date_verified_by_this_mapping": false
+      },
+      "classification_cap_selection": {
+        "normalized_usd": 384700000,
+        "source_as_of": "2026-10-09",
+        "source_field": "historical_row",
+        "rule_ref": "reconciliation/approved_historical_precedence.json",
+        "difference_cause": "unexplained",
+        "raw_summary_observation_preserved": true
       }
     },
     {
@@ -5263,7 +5453,7 @@
       }
     ]
   },
-  "updated_at": "2026-10-11T23:43:39Z",
+  "updated_at": "2026-10-12T00:19:19.578637+00:00",
   "source_refresh_amendment": {
     "prior_observations_file": "prior_observations.json",
     "new_observations_file": "refreshed_source_observations.json",
@@ -5389,14 +5579,17 @@
   "reconciliation_summary": {
     "cap_matching_displayed_values": 55,
     "cap_conflicts_unresolved": 45,
-    "all_differences_block_admission": true,
+    "all_differences_block_admission": false,
     "full_100_company_registry_activation_allowed": false,
     "note": "Matching provisional caps do not by themselves establish complete identity/share-class/ADR admission. No paid or live execution authorized.",
     "current_primary_identity_mappings": 100,
     "distinct_current_SEC_registrants": 100,
     "canonical_company_keys_established": true,
     "individual_admissions": 0,
-    "reason_no_registry_activation": "45 unresolved company cap conflicts prevent the approved full-cohort admission. Individual security/class review remains scoped in linked evidence; this decision does not require independent price-times-shares reconstruction.",
-    "followup_ref": "reconciliation/followup_admission_summary.json"
+    "reason_no_registry_activation": "26 cap source-selection conflicts remain; the 19 approved historical selections do not waive identity, security-class or other metadata admission gates.",
+    "followup_ref": "reconciliation/followup_admission_summary.json",
+    "cap_source_selection_blocked": 26,
+    "approved_historical_selections": 19,
+    "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
   }
 }
