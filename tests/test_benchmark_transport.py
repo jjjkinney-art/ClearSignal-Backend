@@ -289,3 +289,10 @@ def test_multiple_wrappers_share_cost_and_attempt_limits(book):
     assert 0 <= successes <= 2
     assert shared.summary()['attempts'] == 2
     assert shared.summary()['unresolved_attempts'] == 2 - successes
+
+
+def test_wrapper_subclass_cannot_replace_internal_handler():
+    with pytest.raises(TypeError, match='subclasses'):
+        class NetworkWrapper(BenchmarkTransport):
+            def _respond(self, request):
+                pytest.fail('override must not be supported')

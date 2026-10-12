@@ -26,6 +26,9 @@ class BenchmarkTransport(httpx.BaseTransport):
     No external transport, handler, credential loader or production flag exists.
     Trusted callers/storage are required; arbitrary Python can bypass anything.
     """
+    def __init_subclass__(cls, **kwargs):
+        raise TypeError('fixture transport subclasses are unsupported')
+
     def __init__(self, ledger, case_run, *, model, responses):
         if type(ledger) is not AttemptLedger or type(model) is not str or not model:
             raise BudgetError('exact ledger and explicit fixture model required')

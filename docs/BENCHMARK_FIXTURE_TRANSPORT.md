@@ -5,7 +5,8 @@ OpenAI SDK's HTTPX dispatch boundary to an internally constructed, exact
 `httpx.MockTransport`. It only accepts immutable `FixtureResponse` data. There is
 no transport/handler injection argument, credential loader, application import,
 CLI execution option or production integration. Real/default transports,
-transport subclasses and callback fixtures are rejected. Requests must use an
+transport subclasses and callback fixtures are rejected. Subclassing the wrapper
+to override its internal handler is also rejected. Requests must use an
 exact HTTPX request and in-memory ByteStream; custom stream callbacks are refused.
 This is cooperative fixture-only assurance, **not sandbox security against
 arbitrary Python**, monkeypatches, replaced imports or malicious local storage.
