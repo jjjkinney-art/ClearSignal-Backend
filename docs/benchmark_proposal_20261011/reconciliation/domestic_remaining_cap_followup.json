@@ -132,10 +132,43 @@
           "url": "https://investor.visa.com/financial-information/quarterly-earnings/default.aspx",
           "kind": "issuer_index_attempt",
           "finding": "Rendered index did not supply usable current class-specific outstanding counts."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000104/v-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "filed_on": "2026-07-28",
+          "shares_as_of": "2026-07-21",
+          "finding": "Cover provides class-specific common shares; these are not October 9 counts."
         }
       ],
       "provisional_estimate": null,
-      "next_decision_or_source_needed": "Supply a dated class-specific common-share table and applicable conversion ratios, or approve a named provider whose total-company Class A-equivalent methodology is documented. October 9 close times Class A alone is insufficient."
+      "next_decision_or_source_needed": "Class counts obtained. Accept a dated reported-share convention and restricted-class conversion-parity valuation explicitly, or obtain October 9 class counts/ratios and a documented total-company valuation basis. Neither vendor cap is reconciled.",
+      "class_equivalent_estimate": {
+        "shares_as_of": "2026-07-21",
+        "counts": {
+          "A": 1704112694,
+          "B1": 2180148,
+          "B2": 486669,
+          "B3": 60589871,
+          "C": 17059152
+        },
+        "conversion_ratios_as_of": "2026-09-18",
+        "class_A_equivalent_ratios": {
+          "A": "1",
+          "B1": "1.5400",
+          "B2": "1.4924",
+          "B3": "1.4773",
+          "C": "4"
+        },
+        "class_A_equivalents": "1865942451.1639",
+        "price_as_of": "2026-10-09",
+        "class_A_close_usd": "385.45",
+        "total_proxy_usd": "719227517801.125255",
+        "class_A_component_usd": "656850237902.30",
+        "limitation": "July counts, September conversion ratios and October price are mixed-date inputs. Conversion parity for restricted classes is a provisional valuation convention, not observed class prices. Class A alone supports a large-tier dated estimate but is not total-company capitalization.",
+        "convention_approved": false,
+        "exact_oct9_cap_verified": false
+      }
     },
     {
       "ticker": "AJG",

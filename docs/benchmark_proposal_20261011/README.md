@@ -207,7 +207,7 @@ answer capture, paid provider call, or live acceptance test ran in this review.
 
 The candidate-policy integrity suite and existing registry suite pass together:
 `pytest --noconftest tests/test_benchmark_candidate_plan.py tests/test_benchmark_registry.py`
-(20 tests, isolated Python 3.11.17; application conftest excluded). The isolated
+(21 tests, isolated Python 3.11.17; application conftest excluded). The isolated
 environment reports an unused `asyncio_mode` configuration warning.
 The existing strict registry audit returns exit 1 as expected: historical v1 has
 18 issuers, 54 fixtures and eight sectors, with valid integrity but incomplete

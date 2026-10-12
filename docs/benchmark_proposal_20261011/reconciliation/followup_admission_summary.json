@@ -66,7 +66,8 @@
     "LLY": "Reconcile secondary 891.36m common shares against primary August 3 941.357065m; do not substitute one without dated source explanation.",
     "EQNR": "Obtain free issuer transaction/capital disclosures through October 9; latest verified weekly transactions end October 2.",
     "PETS": "Preserve inclusion/exclusion of issued restricted shares explicitly and use exact quoted price precision; gross issued-share result is 27.85740449m rather than asserting either rounded source exact.",
-    "JOUT": "Keep unquoted Class B price proxy explicit; actual Class A+Class B outstanding and restricted-share treatment need consistent basis."
+    "JOUT": "Keep unquoted Class B price proxy explicit; actual Class A+Class B outstanding and restricted-share treatment need consistent basis.",
+    "V": "July 21 class counts now obtained in domestic_remaining_cap_followup.json. Conditional conversion-parity total is 719227517801.125255 USD; approve that explicit valuation/date convention or obtain target-date basis. No exact-cap resolution or admission."
   },
   "rows": [
     {

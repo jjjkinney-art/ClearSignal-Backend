@@ -177,3 +177,17 @@ def test_tday_and_boundary_check_use_regular_close_without_admission():
     assert grc['calculation']['share_count_date_is_price_date'] is False
     assert grc['canonical_admitted'] is False
     assert grc['execution_authorized'] is False
+
+
+def test_visa_class_equivalents_do_not_become_exact_cap_or_admission():
+    rows = read(DOCS / 'reconciliation' / 'domestic_remaining_cap_followup.json')['rows']
+    visa = next(r for r in rows if r['ticker'] == 'V')
+    estimate = visa['class_equivalent_estimate']
+    equivalents = sum(Decimal(count) * Decimal(estimate['class_A_equivalent_ratios'][kind])
+                      for kind, count in estimate['counts'].items())
+    assert equivalents == Decimal(estimate['class_A_equivalents'])
+    assert equivalents * Decimal(estimate['class_A_close_usd']) == Decimal(estimate['total_proxy_usd'])
+    assert estimate['convention_approved'] is False
+    assert estimate['exact_oct9_cap_verified'] is False
+    assert visa['selected_value_usd'] is None
+    assert visa['eligible_to_execute'] is False
