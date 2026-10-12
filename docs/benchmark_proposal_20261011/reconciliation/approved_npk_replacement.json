@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "status": "approved_by_user",
+  "recorded_at": "2026-10-12T00:54:42.417502+00:00",
+  "from_ticker": "JOUT",
+  "to_ticker": "NPK",
+  "pool": "development",
+  "approval_question": "May I substitute NPK for JOUT? The 20 reserved test companies would stay unchanged.",
+  "user_response": "yes",
+  "source_thread_id": "01a12b11-fa29-74a1-955d-1fa2896bc026",
+  "holdout_membership_change_authorized": false,
+  "execution_authorized": false,
+  "scope": "Apply only development replacement; preserve archived JOUT evidence. Complete offline100registry and600case manifest if structural and metadata gates pass; no paid/live captures.",
+  "evidence_ref": "replacement_candidate_review.json",
+  "archived_proposal_ref": "../candidate_plan.json",
+  "archived_readiness_ref": "classification_setup_readiness.json"
+}

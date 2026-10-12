@@ -100,8 +100,8 @@ def test_only_explicitly_approved_conflicting_values_can_be_selected():
         assert row['eligible_to_execute'] is False
 
 
-def test_canonical_registry_is_preserved_and_full_cohort_is_blocked():
-    decision = read(DOCS / 'canonical_setup_decision.json')
+def test_archived_decision_preserves_pre_replacement_registry_and_block():
+    decision = read(DOCS / 'reconciliation' / 'canonical_setup_decision_before_npk.json')
     assert decision['active_registry_changed'] is False
     readiness = read(DOCS / 'reconciliation' / 'classification_setup_readiness.json')
     assert decision['individual_admissions'] == readiness['summary']['company_admitted_count']

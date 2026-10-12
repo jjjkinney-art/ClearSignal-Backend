@@ -1,17 +1,17 @@
 {
   "schema_version": 1,
   "recorded_at": "2026-10-11T23:50:43Z",
-  "decision": "stage_approved_policy_and_verified_current_company_keys; do_not_activate_100_company_registry",
+  "decision": "activate_version2_offline_cohort_only_execution_disabled",
   "policy_ref": "../../validation/benchmark_classification_policy.v1.json",
   "candidate_plan_ref": "candidate_plan.json",
-  "active_registry": "validation/issuer_registry.v1.json",
-  "active_registry_sha256": "0783b288028843edb32b1813f4eb7a2d73a78bea948b8bb114c7d80ea52a9379",
-  "active_registry_changed": false,
+  "active_registry": "validation/issuer_registry.v2.json",
+  "active_registry_sha256": "ad9f51a6f7025c4c97af980976efb004c5fb0c3c87853a066aa92cfb7431a7bb",
+  "active_registry_changed": true,
   "approved_policy_installed": true,
   "current_company_keys_established": 100,
   "distinct_current_registrants": 100,
-  "individual_admissions": 99,
-  "full_cohort_admission_allowed": false,
+  "individual_admissions": 100,
+  "full_cohort_admission_allowed": true,
   "execution_authorized": false,
   "cap_conflict_blocked_tickers": [
     "NVDA",
@@ -41,11 +41,7 @@
     "UL",
     "EQNR"
   ],
-  "remaining_admission_work": [
-    "Complete explicitly listed classification exclusions and metadata fields in classification_setup_readiness.json.",
-    "Decide development replacement proposal for JOUT; preserve all 20 reserved holdouts.",
-    "Only create a new registry and six-family fixture manifest when all evidence and composition gates pass. No live execution authorized."
-  ],
+  "remaining_admission_work": [],
   "not_additional_requirements": [
     "No independent audit of every price/share-count multiplication is imposed beyond approved provisional secondary figures.",
     "Unknown prior exposure outside audited repositories is a disclosed qualification, not a request for another approval or absolute attestation."
@@ -60,7 +56,6 @@
     "reconciliation/international_identity_review.json"
   ],
   "not_claimed": [
-    "accepted 100-company coverage",
     "live benchmark acceptance",
     "answer-quality evaluation",
     "production deployment verification"
@@ -110,9 +105,13 @@
   "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
   "broader_classification_only_rule_approved": true,
   "classification_only_rule_ref": "reconciliation/approved_classification_only.json",
-  "setup_readiness_ref": "reconciliation/classification_setup_readiness.json",
-  "classification_blocked_tickers": [
-    "JOUT"
-  ],
-  "cap_conflict_blocked_tickers_meaning": "26 exact-value selections remain unresolved; approved classification-only evidence may clear size stratification without selecting either exact value."
+  "setup_readiness_ref": "reconciliation/finalized_cohort.json",
+  "classification_blocked_tickers": [],
+  "cap_conflict_blocked_tickers_meaning": "Historical26exactvalues unresolved, including excluded JOUT; no current size-classification block. These values remain unverified for answers.",
+  "archived_decision_ref": "reconciliation/canonical_setup_decision_before_npk.json",
+  "replacement_approval_ref": "reconciliation/approved_npk_replacement.json",
+  "registry_runner_default_changed": false,
+  "fixture_manifest": "validation/fixtures.v2.json",
+  "canonical_question_matrix": "validation/company_quality_manifest.v2.json",
+  "artifact_binding": "validation/company_quality_manifest.v2.metadata.json"
 }

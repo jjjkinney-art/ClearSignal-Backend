@@ -1,4 +1,8 @@
 > Current status: both bounded source policies are now approved and applied.
+
+**Current status:** the approved JOUT-to-NPK substitution completes version 2
+offline setup. See [finalized setup](FINALIZED_SETUP.md). The original proposal and
+99-company assessment below remain historical evidence; execution is disabled.
 > See [SETUP_READINESS.md](SETUP_READINESS.md) for current per-company admission,
 > exclusions and remaining work. The original findings below retain their source
 > dates and distinguish estimates from verified answer valuation data.

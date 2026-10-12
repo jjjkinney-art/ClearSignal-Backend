@@ -1,5 +1,9 @@
 # Benchmark setup readiness after classification approval
 
+**Current status:** the approved JOUT-to-NPK substitution completes version 2
+offline setup. See [finalized setup](FINALIZED_SETUP.md). The original proposal and
+99-company assessment below remain historical evidence; execution is disabled.
+
 The user-approved classification-only rule is applied to the remaining 26 cases.
 The 19-name historical-row rule remains applied. Both original values are retained;
 none of the disputed exact values is verified for ClearSignal answers. Older share

@@ -1,5 +1,9 @@
 # Representative 100-issuer proposal and holdout reservation
 
+**Current status:** the approved JOUT-to-NPK substitution completes version 2
+offline setup. See [finalized setup](reconciliation/FINALIZED_SETUP.md). The original proposal and
+99-company assessment below remain historical evidence; execution is disabled.
+
 Status: **classification policies approved and applied; evidence-gated setup review**.
 [Current readiness and exact remaining blockers](reconciliation/SETUP_READINESS.md)
 are authoritative over earlier review snapshots.
