@@ -20,11 +20,13 @@
     "cap_displays_differ": 45,
     "other_basis_or_date_cases": 26,
     "observed_summary_history_tier_crossings": 0,
-    "newly_admitted_companies": 0,
+    "newly_admitted_companies": 99,
     "full_100_registry_activated": false,
     "execution_authorized": false,
     "approved_historical_source_selections": 19,
-    "remaining_source_selection_blocks": 26
+    "remaining_source_selection_blocks": 26,
+    "classification_eligible_count": 99,
+    "remaining_source_selection_blocks_meaning": "26 exact values remain unselected; not equivalent to 26 size-classification blocks."
   },
   "component_findings": [
     "GEF two published caps reproduce different A-price/class-equivalent proxies; class-price sum using reported July 27 shares and both October 9 closes is 4,337,542,781.38 USD, a dated share estimate.",
@@ -523,6 +525,8 @@
       "group": "19_named_precision_source_choice"
     }
   ],
-  "policy_change_scope": "Only approved 19-name historical-row source precedence; broader classification-only rule unapproved.",
-  "broader_classification_only_rule_approved": false
+  "policy_change_scope": "Approved 19-name historical precedence and approved classification-only treatment of 26; exact values remain unverified for answers.",
+  "broader_classification_only_rule_approved": true,
+  "classification_only_rule_ref": "approved_classification_only.json",
+  "setup_readiness_ref": "classification_setup_readiness.json"
 }

@@ -94,14 +94,18 @@ def test_only_explicitly_approved_conflicting_values_can_be_selected():
             assert candidates[row['ticker']]['market_cap_observation']['normalized_rounded_usd'] == int(row['summary']['normalized_usd'])
         elif different:
             assert row['selected_value_usd'] is None
-        assert candidates[row['ticker']]['admission_review']['company_admitted'] is False
+        readiness = read(DOCS / 'reconciliation' / 'classification_setup_readiness.json')
+        admitted = {r['ticker']: r['company_admitted'] for r in readiness['rows']}
+        assert candidates[row['ticker']]['admission_review']['company_admitted'] is admitted[row['ticker']]
         assert row['eligible_to_execute'] is False
 
 
 def test_canonical_registry_is_preserved_and_full_cohort_is_blocked():
     decision = read(DOCS / 'canonical_setup_decision.json')
     assert decision['active_registry_changed'] is False
-    assert decision['individual_admissions'] == 0
+    readiness = read(DOCS / 'reconciliation' / 'classification_setup_readiness.json')
+    assert decision['individual_admissions'] == readiness['summary']['company_admitted_count']
+    assert decision['individual_admissions'] < 100
     assert decision['full_cohort_admission_allowed'] is False
     assert decision['execution_authorized'] is False
     assert len(set(decision['cap_conflict_blocked_tickers'])) == 26
@@ -129,7 +133,8 @@ def test_followup_covers_every_difference_and_applies_only_approved_scope():
     for row in tiny:
         assert row['source_confirmed_rounding'] is False
         assert row['selected_value_usd'] == row['history_usd']
-        assert row['admitted'] is False
+        admitted = {r['ticker']: r['company_admitted'] for r in read(directory / 'classification_setup_readiness.json')['rows']}
+        assert row['admitted'] is admitted[row['ticker']]
     for row in summary['rows']:
         assert row['tier_crossing'] is False
         expected = abs(Decimal(row['summary_usd']) - Decimal(row['historical_usd']))
@@ -216,4 +221,4 @@ def test_approved_source_rule_is_exactly_nineteen_and_preserves_other_gates():
     decision = read(DOCS / 'canonical_setup_decision.json')
     assert blocked == set(decision['cap_conflict_blocked_tickers'])
     assert len(blocked) == 26 and not blocked & expected
-    assert decision['broader_classification_only_rule_approved'] is False
+    assert decision['broader_classification_only_rule_approved'] is True

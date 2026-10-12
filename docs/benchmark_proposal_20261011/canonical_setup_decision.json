@@ -10,7 +10,7 @@
   "approved_policy_installed": true,
   "current_company_keys_established": 100,
   "distinct_current_registrants": 100,
-  "individual_admissions": 0,
+  "individual_admissions": 99,
   "full_cohort_admission_allowed": false,
   "execution_authorized": false,
   "cap_conflict_blocked_tickers": [
@@ -42,9 +42,9 @@
     "EQNR"
   ],
   "remaining_admission_work": [
-    "Resolve the remaining 26 source-selection conflicts; the approved historical-row rule selects values for exactly 19 names while preserving their unexplained differences. Identity/class checks remain required.",
-    "Complete/adjudicate remaining security-class and ADR/company identity evidence, including temporal corporate actions and any actual company-total basis conflicts. A current SEC mapping is not a complete class inventory.",
-    "Freeze a new registry version only after metadata admission; retain v1 as historical. Do not fabricate sector, domicile, reporting or complexity facts needed by the registry schema."
+    "Complete explicitly listed classification exclusions and metadata fields in classification_setup_readiness.json.",
+    "Decide development replacement proposal for JOUT; preserve all 20 reserved holdouts.",
+    "Only create a new registry and six-family fixture manifest when all evidence and composition gates pass. No live execution authorized."
   ],
   "not_additional_requirements": [
     "No independent audit of every price/share-count multiplication is imposed beyond approved provisional secondary figures.",
@@ -108,5 +108,11 @@
     "VLGEA"
   ],
   "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
-  "broader_classification_only_rule_approved": false
+  "broader_classification_only_rule_approved": true,
+  "classification_only_rule_ref": "reconciliation/approved_classification_only.json",
+  "setup_readiness_ref": "reconciliation/classification_setup_readiness.json",
+  "classification_blocked_tickers": [
+    "JOUT"
+  ],
+  "cap_conflict_blocked_tickers_meaning": "26 exact-value selections remain unresolved; approved classification-only evidence may clear size stratification without selecting either exact value."
 }

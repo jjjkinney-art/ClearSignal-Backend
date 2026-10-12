@@ -31,8 +31,9 @@
     "absolute_difference_usd_min": 10000,
     "absolute_difference_usd_max": 50000,
     "approved_source_selections": 19,
-    "companies_admitted": 0,
-    "blocked_meaning": "Source-selection blocks only; company identity/class admission checks are not waived."
+    "companies_admitted": 19,
+    "blocked_meaning": "Source-selection blocks only; company identity/class admission checks are not waived.",
+    "admission_semantics": "Subsequent independent metadata/class admission review; not automatic admission by source precedence."
   },
   "methodology_sources": [
     {
@@ -117,9 +118,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 691200000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00289343",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "SWBI",
@@ -134,9 +136,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 626900000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00638101",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "BGS",
@@ -151,9 +154,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 195100000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.02050651",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "HBB",
@@ -168,9 +172,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 467300000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00856054",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "VLGEA",
@@ -185,9 +190,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 651900000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00306786",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "CAL",
@@ -202,9 +208,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 417200000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00719131",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "ANGO",
@@ -219,9 +226,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 484500000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00619233",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "UTMD",
@@ -236,9 +244,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 237300000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00842744",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "USNA",
@@ -253,9 +262,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 270900000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.01107542",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "MLR",
@@ -270,9 +280,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 595500000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00671659",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "MTRX",
@@ -287,9 +298,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 297900000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00335672",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "PLOW",
@@ -304,9 +316,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 904400000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00110572",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "SGC",
@@ -321,9 +334,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 208100000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00961169",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "NATH",
@@ -338,9 +352,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 417000000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00479593",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "RELL",
@@ -355,9 +370,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 309300000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00323321",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "ACNB",
@@ -372,9 +388,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 633500000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00315716",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "CCBG",
@@ -389,9 +406,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 823100000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00607423",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "NGS",
@@ -406,9 +424,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 426900000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00702691",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     },
     {
       "ticker": "FRPH",
@@ -423,9 +442,10 @@
       "status": "historical_row_selected_by_approved_rule_cause_unexplained",
       "source_confirmed_rounding": false,
       "selected_value_usd": 384700000,
-      "admitted": false,
+      "admitted": true,
       "absolute_difference_percent_of_summary": "0.00779768",
-      "source_precedence_ref": "approved_historical_precedence.json"
+      "source_precedence_ref": "approved_historical_precedence.json",
+      "admission_ref": "classification_setup_readiness.json"
     }
   ],
   "relative_difference_denominator": "summary_usd",

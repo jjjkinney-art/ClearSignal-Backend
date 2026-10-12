@@ -1,6 +1,8 @@
 # Representative 100-issuer proposal and holdout reservation
 
-Status: **classification policy approved; company admission review pending**.
+Status: **classification policies approved and applied; evidence-gated setup review**.
+[Current readiness and exact remaining blockers](reconciliation/SETUP_READINESS.md)
+are authoritative over earlier review snapshots.
 This is a planning artifact, not an expanded canonical registry, verified
 market-cap dataset or answer-quality result.
 No providers were used to generate ClearSignal answers. No paid captures ran.
@@ -171,8 +173,9 @@ The 100-company quality benchmark remains unexecuted and unaccepted.
 with their October 9 historical rows. [Its findings](reconciliation/supportingbrief.md)
 list 26 conflicts and 19 differences conditionally compatible with an unconfirmed
 rounding convention. All 45 differences remain unexplained. The user approved historical-row precedence
-for exactly 19; the other 26 remain source-selection blocks. Matching tiers alone
-do not resolve conflicting values. Nine affected names are reserved holdouts, which remain in the reservation.
+for exactly 19; the other 26 retain unselected exact values. The subsequently approved
+classification-only rule evaluates their size tiers using documented dated shares
+and October 9 prices; matching publisher tiers alone is insufficient. Nine affected names are reserved holdouts, which remain in the reservation.
 Public methodology checks did not establish the discrepancy causes. The approved
 19-name source rule selects a value without claiming source-confirmed rounding.
 
@@ -181,8 +184,9 @@ all 45 differences and separates tier evidence from exact value reconciliation.
 No summary/history difference changes a size tier. Primary share-count products
 explain several material discrepancies, and a separate GRC check corroborates its
 small-cap tier. Historical-row source precedence is now approved and applied for exactly
-19 tiny differences; see [the approval record](reconciliation/approved_historical_precedence.json). The other 26 retain
-specific class, count-date or source-basis tasks. No general tolerance or new
+19 tiny differences; see [the approval record](reconciliation/approved_historical_precedence.json). The other 26 have now received classification-only adjudication: 25 have
+supported tier evidence, while JOUT remains excluded for its unquoted Class B
+valuation gap. These decisions do not certify any exact value. No general tolerance or new
 requirement to independently audit every daily share count has been introduced.
 
 Primary identity and security-class reviews are stored alongside that review.
@@ -201,16 +205,22 @@ are observations, not a blanket certification of every listing field; issuer
 sources can expose stale mapping details that must be reconciled separately.
 An approved policy and
 100 proposed names are insufficient to activate a valid 100-company benchmark.
-No unresolved issuer is admitted, no holdout is silently replaced, and no ClearSignal
+No issuer with an unresolved admission gate is admitted, no holdout is silently replaced, and no ClearSignal
 answer capture, paid provider call, or live acceptance test ran in this review.
 
 ## Offline validation
 
-The candidate-policy integrity suite and existing registry suite pass together:
-`pytest --noconftest tests/test_benchmark_candidate_plan.py tests/test_benchmark_registry.py`
-(22 tests, isolated Python 3.11.17; application conftest excluded). The isolated
-environment reports an unused `asyncio_mode` configuration warning.
-The existing strict registry audit returns exit 1 as expected: historical v1 has
-18 issuers, 54 fixtures and eight sectors, with valid integrity but incomplete
-100-company coverage. Neither that expected coverage failure nor these passing
-structural tests are live quality acceptance or a full application regression.
+The offline suites cover candidate/source policy, admission evidence and holdouts,
+existing registry/fixture integration, numerical accuracy and citation binding:
+
+```sh
+PYTHONPATH=. python -m pytest -q --noconftest tests/test_benchmark_candidate_plan.py tests/test_benchmark_admission_readiness.py tests/test_benchmark_candidate_admission_builder.py tests/test_benchmark_registry.py tests/test_factual_citation_grading.py tests/test_cap_tier_factual_benchmark.py
+```
+
+Validation uses isolated Python 3.11.17 with application conftest excluded. The
+unused `asyncio_mode` warning reflects omitted application plugins. See the current
+readiness note for the final test count. The historical registry's strict coverage
+audit still fails as expected: 18 issuers, 54 fixtures and eight sectors. Its
+integrity passes; it is not an accepted 100-company cohort. Neither structural
+checks nor existing fixture tests are live quality acceptance or full application
+regression. No new execution manifest or answer-capture results are fabricated.

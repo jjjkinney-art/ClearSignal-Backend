@@ -1,3 +1,8 @@
+> Current status: both bounded source policies are now approved and applied.
+> See [SETUP_READINESS.md](SETUP_READINESS.md) for current per-company admission,
+> exclusions and remaining work. The original findings below retain their source
+> dates and distinguish estimates from verified answer valuation data.
+
 # Cap evidence follow-up and narrow source choice
 
 The 45 discrepancies have now been investigated individually, with primary
@@ -62,35 +67,41 @@ Holdouts and their unknown exposure outside the audited repositories are unchang
 There were no ClearSignal answer captures, paid data calls, or production actions.
 
 
-## Practical completion path for the other 26
+## Approved classification policy and historical research path
 
-The 19-name source choice is approved and applied; the broader proposal below
-remains unapproved and unapplied.
+The 19-name source choice and the classification-only approach are approved and
+applied. The approval and scoped implementation are recorded in
+[approved_classification_only.json](approved_classification_only.json).
 Do not spend additional research cycles proving a publisher's exact calculation
 when the benchmark only needs a defensible size classification.
 
-**Recommended separate policy decision:** permit a classification-only admission
+**Approved separate policy decision:** permit a classification-only admission
 review using October 9 regular-close USD prices and dated, publicly reported
 company-wide common shares available by that date. Preserve the actual count,
 price and publication dates; exclude treasury, include issued restricted common
 shares, and adjust known intervening capital actions. Keep the two vendor values
 and their unresolved cause in the audit record. This is an explicitly provisional
 reported-share estimate, not certification of exact October 9 capitalization.
-It changes the current conflict-admission rule and therefore requires approval;
-it is not activated by this document. It introduces no numeric tolerance.
+The user approved this scoped change to conflict admission. Per-company evidence
+review still determines eligibility; it introduces no numeric tolerance.
 
-| Evidence group | Names | Exact remaining limitation and action |
+The table below preserves the **historical pre-approval research assessment**.
+It is superseded by [SETUP_READINESS.md](SETUP_READINESS.md) and must not be used
+as a current task list: Visa and all eight foreign issuers now qualify for size
+classification, all required metadata fields are resolved, and only JOUT remains
+excluded. Visa uses its documented Class A component as a lower bound; no parity
+assumption is required. NPK is a supported, unapplied development replacement.
+
+| Historical evidence group | Names | Historical limitation and proposed action (superseded) |
 |---|---|---|
 | Primary common-share estimates already calculated | NNBR, LLY, PETS, AIN, WDFC, NOG, NVDA, AJG, VTR, PG, NEE, SHW, RHI, TDAY | Count dates precede October 9; exact intervening share movements/vendor methodology are not established. Under the proposed convention, review known corporate actions and retain dated estimates instead of demanding exact provider reconciliation. AIN is closest to a boundary in this group: $1.75512bn versus $2bn. |
 | Quoted classes / known capital changes | GEF, EQNR | GEF has both actual class prices and July counts. EQNR has July issued capital and October 2 treasury counts, published October 6; October 5–9 movements remain unverified. Apply the reported-share convention only if approved, with these limitations explicit. |
 | Unquoted/restricted class valuation | JOUT, V | Counts are available. JOUT needs an explicit A-price proxy for B; Visa needs explicit conversion-parity valuation for B/C and dated ratio treatment. These are separate valuation assumptions, not missing arithmetic or raw-count aggregation. |
 | Foreign share-count/publication provenance | ASML, NVS, SAP, SONY, TM, RY, BHP, UL | ADR/direct-share identities are established, but the stored evidence does not establish an adequate dated net company-wide common count for seven names; Sony has a September 30 count but its publication timing is unverified. ASML requires a dated filing to settle reversed share-page labels; TM needs one coherent issued/treasury date; RY excludes preferred equity. Acquire these exact fields from issuer filings before classification-only admission. Two agreeing tiers from one secondary publisher are not independent verification. |
 
-After approval, finish the bounded metadata checks for all 100 names, including
-identity, class basis, sector/fiscal/jurisdiction fields and unresolved near-boundary
-cases. Recompute 30/30/30 plus ten, company uniqueness, sector/tag coverage and the
-unchanged 20-name holdout reservation. Admit only individually cleared names;
-do not call a partially cleared cohort a completed benchmark.
+Current next step: decide the JOUT-to-NPK development replacement proposal,
+preserving all 20 holdouts, then rerun admission and composition gates. The
+remaining gap is one small-cap issuer; no required metadata field is unresolved.
 
 Then validate an offline 600-case manifest (480 development / 120 holdout),
 source-binding and numerical checker paths using existing permitted fixtures.

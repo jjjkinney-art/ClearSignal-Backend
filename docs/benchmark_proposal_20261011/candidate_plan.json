@@ -181,9 +181,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AAPL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000320193",
@@ -240,9 +244,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#MSFT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000789019",
@@ -299,10 +307,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#NVDA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001045810",
@@ -360,10 +373,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#ASML",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000937966",
@@ -420,9 +438,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#JPM",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000019617",
@@ -479,10 +501,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#V",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001403161",
@@ -539,9 +566,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#XOM",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0002115436",
@@ -598,9 +629,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#COST",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000909832",
@@ -657,10 +692,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#LLY",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000059478",
@@ -717,9 +757,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#BA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000012927",
@@ -776,9 +820,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#PLTR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001321655",
@@ -835,9 +883,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#TSLA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001318605",
@@ -883,9 +935,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AON",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000315293",
@@ -931,10 +987,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#AJG",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000354190",
@@ -980,9 +1041,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#DTE",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000936340",
@@ -1028,9 +1093,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#PCAR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000075362",
@@ -1076,9 +1145,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ODFL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000878927",
@@ -1124,10 +1197,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#VTR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000740260",
@@ -1173,9 +1251,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AMZN",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001018724",
@@ -1221,9 +1303,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#GOOGL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001652044",
@@ -1269,9 +1355,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#META",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001326801",
@@ -1317,9 +1407,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#WMT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000104169",
@@ -1365,10 +1459,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#PG",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000080424",
@@ -1414,10 +1513,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#NEE",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000753308",
@@ -1463,9 +1567,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#LIN",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001707925",
@@ -1512,9 +1620,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AMT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001053507",
@@ -1560,10 +1672,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#NVS",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001114448",
@@ -1609,9 +1726,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#JNJ",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000200406",
@@ -1657,9 +1778,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#KO",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000021344",
@@ -1705,10 +1830,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#SHW",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000089800",
@@ -1765,9 +1895,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ETSY",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001370637",
@@ -1824,9 +1958,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ACHC",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001520697",
@@ -1883,9 +2021,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ACMR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001680062",
@@ -1942,9 +2084,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#MAN",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000871763",
@@ -1990,9 +2136,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ENS",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001289308",
@@ -2038,9 +2188,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#INGR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001046257",
@@ -2086,9 +2240,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#KBR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001357615",
@@ -2134,9 +2292,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AVT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000008858",
@@ -2182,9 +2344,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#VNT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001786842",
@@ -2230,10 +2396,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#RHI",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000315213",
@@ -2279,9 +2450,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#BKH",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001130464",
@@ -2327,10 +2502,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#WDFC",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000105132",
@@ -2376,9 +2556,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#OGS",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001587732",
@@ -2424,9 +2608,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AWR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001056903",
@@ -2472,9 +2660,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#SWX",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001692115",
@@ -2520,9 +2712,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#MAT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000063276",
@@ -2568,9 +2764,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#LEVI",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000094845",
@@ -2616,10 +2816,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#GEF",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000043920",
@@ -2665,9 +2870,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#SON",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000091767",
@@ -2713,9 +2922,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#FUL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000039368",
@@ -2761,9 +2974,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ASH",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001674862",
@@ -2809,9 +3026,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#CWT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001035201",
@@ -2857,9 +3078,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#CBU",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000723188",
@@ -2905,9 +3130,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#BANF",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000760498",
@@ -2953,9 +3182,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#NHI",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000877860",
@@ -3019,9 +3252,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#PPLI",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001800227",
@@ -3067,10 +3304,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#NOG",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001104485",
@@ -3116,9 +3358,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#HAE",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000313143",
@@ -3164,9 +3410,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#KAI",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000886346",
@@ -3212,9 +3462,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#SR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001126956",
@@ -3280,9 +3534,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#EFOR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000890564",
@@ -3328,9 +3586,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#NSP",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001000753",
@@ -3383,12 +3645,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#RGR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000095029",
@@ -3442,9 +3708,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ENR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001632790",
@@ -3490,10 +3760,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#AIN",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000819793",
@@ -3539,9 +3814,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#JBLU",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001158463",
@@ -3587,12 +3866,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#SWBI",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001092796",
@@ -3646,12 +3929,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#BGS",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001278027",
@@ -3724,10 +4011,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#TDAY",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001579684",
@@ -3773,12 +4065,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#HBB",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001709164",
@@ -3832,12 +4128,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#VLGEA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000103595",
@@ -3891,9 +4191,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#SENEA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000088948",
@@ -3939,12 +4243,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#CAL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000014707",
@@ -3998,12 +4306,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ANGO",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001275187",
@@ -4057,12 +4369,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#UTMD",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000706698",
@@ -4116,12 +4432,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#USNA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000896264",
@@ -4175,12 +4495,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#MLR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000924822",
@@ -4234,9 +4558,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#GRC",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000042682",
@@ -4282,12 +4610,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#MTRX",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000866273",
@@ -4341,10 +4673,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#NNBR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000918541",
@@ -4390,12 +4727,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#PLOW",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001287213",
@@ -4449,12 +4790,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#SGC",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000095574",
@@ -4509,9 +4854,14 @@
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
         "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "status": "blocked_classification_basis",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": false,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#JOUT",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000788329",
@@ -4557,10 +4907,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#PETS",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001040130",
@@ -4606,12 +4961,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#NATH",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000069733",
@@ -4665,12 +5024,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#RELL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000355948",
@@ -4724,12 +5087,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#ACNB",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000715579",
@@ -4783,12 +5150,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#CCBG",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000726601",
@@ -4842,12 +5213,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#NGS",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001084991",
@@ -4901,12 +5276,16 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "approved_historical_row_precedence",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "cap_source_selected_identity_and_class_review_pending",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
         "followup_ref": "reconciliation/followup_admission_summary.json",
         "cap_source_selection_resolved": true,
-        "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+        "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#FRPH",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000844059",
@@ -4971,9 +5350,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#AA",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001675149",
@@ -5030,9 +5413,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#DOCU",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001261333",
@@ -5078,9 +5465,13 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "equal_displayed_values",
         "cap_conflict_unresolved": false,
-        "company_admitted": false,
-        "status": "individual_admission_not_yet_adjudicated; see_primary_security_evidence_and_scoped_gaps",
-        "not_an_execution_authorization": true
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
+        "not_an_execution_authorization": true,
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/cap_value_review.json#TSM",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001046179",
@@ -5126,10 +5517,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#SAP",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001000184",
@@ -5175,10 +5571,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#SONY",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000313838",
@@ -5224,10 +5625,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#TM",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001094517",
@@ -5273,10 +5679,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#RY",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001000275",
@@ -5322,10 +5733,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#BHP",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000811809",
@@ -5371,10 +5787,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/international_classification_admission.json#UL",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0000217410",
@@ -5420,10 +5841,15 @@
         "cap_review_ref": "reconciliation/cap_value_review.json",
         "cap_decision": "conflict_unresolved",
         "cap_conflict_unresolved": true,
-        "company_admitted": false,
-        "status": "blocked_cap_conflict",
+        "company_admitted": true,
+        "status": "staged_metadata_admitted_not_active",
         "not_an_execution_authorization": true,
-        "followup_ref": "reconciliation/followup_admission_summary.json"
+        "followup_ref": "reconciliation/followup_admission_summary.json",
+        "classification_eligible": true,
+        "classification_evidence_ref": "reconciliation/classification_domestic_adjudication.json#EQNR",
+        "metadata_blockers": [],
+        "exact_cap_verified_for_answers": false,
+        "classification_only_rule_ref": "reconciliation/approved_classification_only.json"
       },
       "current_primary_identity": {
         "deduplication_key": "SEC_CIK:0001140625",
@@ -5585,11 +6011,16 @@
     "current_primary_identity_mappings": 100,
     "distinct_current_SEC_registrants": 100,
     "canonical_company_keys_established": true,
-    "individual_admissions": 0,
-    "reason_no_registry_activation": "26 cap source-selection conflicts remain; the 19 approved historical selections do not waive identity, security-class or other metadata admission gates.",
+    "individual_admissions": 99,
+    "reason_no_registry_activation": "See explicit classification exclusions and required metadata shortfalls in classification_setup_readiness.json; no blanket admission.",
     "followup_ref": "reconciliation/followup_admission_summary.json",
     "cap_source_selection_blocked": 26,
     "approved_historical_selections": 19,
-    "source_precedence_ref": "reconciliation/approved_historical_precedence.json"
+    "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+    "classification_only_approval_applied": true,
+    "classification_excluded_tickers": [
+      "JOUT"
+    ],
+    "setup_readiness_ref": "reconciliation/classification_setup_readiness.json"
   }
 }

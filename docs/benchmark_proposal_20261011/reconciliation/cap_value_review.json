@@ -161,6 +161,10 @@
       "AJG",
       "VTR",
       "RHI"
+    ],
+    "classification_eligible_count": 99,
+    "classification_excluded_tickers": [
+      "JOUT"
     ]
   },
   "execution_enabled": false,
@@ -307,11 +311,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "ASML",
@@ -356,11 +362,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "JPM",
@@ -454,11 +462,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "XOM",
@@ -601,11 +611,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "BA",
@@ -846,11 +858,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "DTE",
@@ -1042,11 +1056,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "AMZN",
@@ -1287,11 +1303,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "NEE",
@@ -1336,11 +1354,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "LIN",
@@ -1483,11 +1503,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "JNJ",
@@ -1630,11 +1652,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "ETSY",
@@ -2120,11 +2144,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "mid",
       "tier_from_historical_row": "mid",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": true
+      "reserved_holdout": true,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "BKH",
@@ -2218,11 +2244,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "mid",
       "tier_from_historical_row": "mid",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "OGS",
@@ -2512,11 +2540,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "mid",
       "tier_from_historical_row": "mid",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "SON",
@@ -2953,11 +2983,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "mid",
       "tier_from_historical_row": "mid",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "HAE",
@@ -3352,11 +3384,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "JBLU",
@@ -3562,11 +3596,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "HBB",
@@ -4157,11 +4193,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "PLOW",
@@ -4318,11 +4356,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "excluded_insufficient_classification_basis"
     },
     {
       "ticker": "PETS",
@@ -4367,11 +4407,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "small_micro",
       "tier_from_historical_row": "small_micro",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "NATH",
@@ -4899,11 +4941,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "SONY",
@@ -4948,11 +4992,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "TM",
@@ -4997,11 +5043,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "RY",
@@ -5046,11 +5094,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "BHP",
@@ -5095,11 +5145,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "UL",
@@ -5144,11 +5196,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     },
     {
       "ticker": "EQNR",
@@ -5193,11 +5247,13 @@
       "conflict_unresolved": true,
       "conditional_coarser_rounding": null,
       "selected_value_usd": null,
-      "cap_value_gate": "blocked_unresolved_source_conflict",
+      "cap_value_gate": "exact_value_unverified_not_eligible_as_answer_valuation",
       "tier_from_summary": "large",
       "tier_from_historical_row": "large",
       "tier_agreement_is_not_conflict_resolution": true,
-      "reserved_holdout": false
+      "reserved_holdout": false,
+      "classification_only_rule_ref": "approved_classification_only.json",
+      "classification_gate": "supported_for_size_only"
     }
   ],
   "source_precedence_amendment_ref": "approved_historical_precedence.json"

@@ -1,0 +1,727 @@
+{
+  "schema_version": 1,
+  "status": "completed_public_metadata_review",
+  "scope": "Public primary-source registry metadata only; no answer captures, cap selections, admissions or holdout changes.",
+  "rows": [
+    {
+      "ticker": "DTE",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "DTE_filing",
+          "scope_note": "Incorporation: Michigan, US. Principal executive offices: Detroit, Michigan, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "DTE_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "DTE_filing",
+          "scope_note": "Electric and natural gas utility operations, Note 1."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "DTE_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/936340/000093634026000146/dte-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "AMZN",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "AMZN_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: Seattle, Washington, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "AMZN_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "AMZN_filing",
+          "scope_note": "North America/International consumer retail and AWS; analyst sector mapping, not issuer-certified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "AMZN_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000026/amzn-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "PG",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "PG_filing",
+          "scope_note": "Incorporation: Ohio, US. Principal executive offices: Cincinnati, Ohio, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "PG_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "PG_filing",
+          "scope_note": "Daily-use consumer goods; Item 1; accounting note p45."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "PG_filing",
+          "url": "https://assets.ctfassets.net/oggad6svuzkv/4JHQenYzRCrXokDMBfqJAg/5f464a615be36bfa994338568825b735/FY2526_10-K_Accessible_final.pdf",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "NVS",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "CH",
+          "status": "verified_primary",
+          "source_ref": "NVS_filing",
+          "scope_note": "Swiss corporation; registered office and headquarters Basel, Switzerland"
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "verified_primary",
+          "source_ref": "NVS_filing",
+          "scope_note": "Consolidated group IFRS as issued by IASB, annual report financial review p.55 and consolidated audit report p.250. Separate Novartis AG parent-only statutory accounts use Swiss Code of Obligations; not the selected consolidated basis."
+        },
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "NVS_filing",
+          "scope_note": "Medicines research, development and commercialization; Item 4."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "NVS_filing",
+          "url": "https://www.novartis.com/sites/novartis_com/files/novartis-annual-report-2025.pdf",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2025-12-31"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "ENS",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "ENS_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: Reading, Pennsylvania, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "ENS_filing",
+          "scope_note": "Annual report PDF pp.78 (cover),83 (business),149 (accounting policies)."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "ENS_filing",
+          "scope_note": "Stored-energy systems, industrial batteries and chargers; annual report Item 1. Analyst mapping, not issuer-certified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "ENS_filing",
+          "url": "https://www.annualreports.com/Click/37771",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2026-03-31",
+          "source_period_scope": "Annual report PDF pp.78 (cover),83 (business),149 (accounting policies)."
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false,
+      "access_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1289308/000128930826000016/",
+          "result": "Initial candidate quarterly accession directory inaccessible in web tool; alternate annual filing recovered."
+        }
+      ]
+    },
+    {
+      "ticker": "VNT",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "VNT_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: Raleigh, North Carolina, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "VNT_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "VNT_filing",
+          "scope_note": "Industrial mobility technology, fueling equipment and repair solutions; Note 1."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "VNT_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1786842/000162828026054180/vnt-20260703.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-07-03"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "OGS",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "OGS_filing",
+          "scope_note": "Incorporation: Oklahoma, US. Headquarters: Tulsa, Oklahoma, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "OGS_filing",
+          "scope_note": "Note 1 Use of Estimates explicitly applies GAAP; glossary defines GAAP as United States accounting principles. Older accessible filing; no claim of 2026 event continuity."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "OGS_filing",
+          "scope_note": "Regulated natural gas distribution; Item 1 and Note 1. Analyst mapping, not issuer-certified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "OGS_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1587732/000158773225000013/ogs-20241231.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2024-12-31",
+          "source_period_scope": "Note 1 Use of Estimates explicitly applies GAAP; glossary defines GAAP as United States accounting principles. Older accessible filing; no claim of 2026 event continuity."
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false,
+      "access_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1587732/000158773226000033/",
+          "result": "Initial candidate quarterly accession directory inaccessible in web tool; alternate annual filing recovered."
+        }
+      ]
+    },
+    {
+      "ticker": "LEVI",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "LEVI_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: San Francisco, California, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "LEVI_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "LEVI_filing",
+          "scope_note": "Brand-name apparel; Item 1."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "LEVI_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/94845/000009484526000008/lvis-20251130.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2025-11-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "ASH",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "ASH_filing",
+          "scope_note": "Incorporation: Delaware incorporation, US. Principal executive offices: Wilmington, Delaware, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "ASH_reporting_basis",
+          "scope_note": "Note A explicitly applies US GAAP to interim consolidated statements."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "ASH_sector",
+          "scope_note": "Note Q describes chemical additives, polymers and intermediates; analyst sector mapping, not issuer-certified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "ASH_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1674862/000119312526324226/R1.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        },
+        {
+          "id": "ASH_reporting_basis",
+          "url": "https://www.sec.gov/Archives/edgar/data/1674862/000119312526324226/R7.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2026-06-30",
+          "source_period_scope": "Dated filing evidence; no independent corporate-event continuity claim through October 9, 2026."
+        },
+        {
+          "id": "ASH_sector",
+          "url": "https://www.sec.gov/Archives/edgar/data/1674862/000119312526324226/R23.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2026-06-30",
+          "source_period_scope": "Dated filing evidence; no independent corporate-event continuity claim through October 9, 2026."
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false,
+      "access_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1674862/000119312526324226/ash-20260630.htm",
+          "result": "Full filing exceeded web-tool size limit; same-accession cover and note fragments read successfully."
+        }
+      ]
+    },
+    {
+      "ticker": "NHI",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "NHI_filing",
+          "scope_note": "Incorporation: Maryland, US. Principal executive offices: Murfreesboro, Tennessee, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "NHI_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Real Estate",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "NHI_filing",
+          "scope_note": "Healthcare real estate investments and senior housing operating portfolio."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "NHI_filing",
+          "url": "https://s205.q4cdn.com/302521515/files/doc_financials/2025/ar/NHI-ARS-2025-4-1-26-002.pdf",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2025-12-31"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "KAI",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "KAI_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: Westford, Massachusetts, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "KAI_filing",
+          "scope_note": "Cover and Note 1 Use of Estimates explicitly state US GAAP."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "KAI_filing",
+          "scope_note": "Engineered systems and equipment for industrial processing; Item 1. Analyst mapping, not issuer-certified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "KAI_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/886346/000088634626000018/kai-20260103.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2026-01-03",
+          "source_period_scope": "Cover and Note 1 Use of Estimates explicitly state US GAAP."
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false,
+      "access_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/886346/000088634626000052/",
+          "result": "Initial candidate quarterly accession directory inaccessible in web tool; alternate annual filing recovered."
+        }
+      ]
+    },
+    {
+      "ticker": "RGR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "RGR_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: Southport, Connecticut, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "RGR_filing",
+          "scope_note": "Cover, Item 2 and Note 1 explicitly applying United States GAAP."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "RGR_filing",
+          "scope_note": "Firearms manufacturing primarily for commercial sporting market; Item 1. Analyst mapping, not issuer-certified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "RGR_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/95029/000117494726000243/rgr-20251231.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2025-12-31",
+          "source_period_scope": "Cover, Item 2 and Note 1 explicitly applying United States GAAP."
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "SWBI",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "SWBI_filing",
+          "scope_note": "Incorporation: Nevada, US. Principal executive offices: Maryville, Tennessee, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "SWBI_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "SWBI_filing",
+          "scope_note": "Firearms design/manufacturing for consumer/professional customers."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "SWBI_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1092796/000119312526274254/swbi-20260430.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-04-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "VLGEA",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "VLGEA_filing",
+          "scope_note": "Incorporation: New Jersey, US. Principal executive offices: Springfield, New Jersey, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "VLGEA_filing",
+          "scope_note": "Note 1 Use of Estimates explicitly applies U.S. generally accepted accounting principles."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "VLGEA_filing",
+          "scope_note": "Supermarkets and specialty food markets; Item 1."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "VLGEA_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/103595/000010359525000015/vlgea-20250726.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2025-07-26"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "UTMD",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "UTMD_filing",
+          "scope_note": "Incorporation: Utah, US. Principal executive offices: Midvale, Utah, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "UTMD_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "UTMD_filing",
+          "scope_note": "Medical device manufacture and sales; note1 and MD&A."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "UTMD_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/706698/000109690626001210/utmd-20260630_10q.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "MTRX",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "MTRX_filing",
+          "scope_note": "Incorporation: Delaware, US. Principal executive offices: Houston, Texas, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "MTRX_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "MTRX_filing",
+          "scope_note": "Engineering, construction and maintenance of energy/industrial infrastructure."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "MTRX_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/866273/000086627326000057/mtrx-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "JOUT",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "JOUT_filing",
+          "scope_note": "Incorporation: Wisconsin, US. Principal executive offices: Racine, Wisconsin, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "JOUT_reporting_basis",
+          "scope_note": "Annual FY2025 Note 1 Principles of Consolidation explicitly applies US GAAP; quarterly cover used separately for domicile."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "JOUT_filing",
+          "scope_note": "Outdoor recreation equipment for fishing, diving, paddling and camping."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "JOUT_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/788329/000078832926000016/jout-20260703.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-07-03"
+        },
+        {
+          "id": "JOUT_reporting_basis",
+          "url": "https://www.sec.gov/Archives/edgar/data/788329/000114036125045348/jout-20251003.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "report_period_end": "2025-10-03",
+          "source_period_scope": "Dated filing evidence; no independent corporate-event continuity claim through October 9, 2026."
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "ACNB",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "ACNB_filing",
+          "scope_note": "Incorporation: Pennsylvania, US. Principal executive offices: Gettysburg, Pennsylvania, US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "ACNB_filing",
+          "scope_note": "Consolidated issuer accounting basis; no inference from SEC listing or XBRL taxonomy."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "ACNB_filing",
+          "scope_note": "Banking, wealth management, mortgages and insurance; note1."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "ACNB_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/715579/000162828026054143/acnb-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2026-06-30"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "TSM",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "TW",
+          "status": "verified_primary",
+          "source_ref": "TSM_filing",
+          "scope_note": "Republic of China incorporation; Hsinchu, Taiwan"
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "verified_primary",
+          "source_ref": "TSM_filing",
+          "scope_note": "Consolidated financial statements Note 5 Statement of Compliance, PDF p.108, explicitly IFRS Accounting Standards; IASB basis corroborated by consolidated auditor report."
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "TSM_filing",
+          "scope_note": "Semiconductor foundry; IASB IFRS financial statements."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "TSM_filing",
+          "url": "https://investor.tsmc.com/sites/ir/sec-filings/2025_20F%20Report.pdf",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "See filing URL and cover; metadata observation, not independent corporate-event continuity through October 9.",
+          "report_period_end": "2025-12-31"
+        }
+      ],
+      "complexity_tags": [],
+      "execution_authorized": false
+    }
+  ],
+  "completed_at_utc": "2026-10-12 00:44:41 UTC",
+  "metadata_scope": "Domicile maps incorporation/principal office to ISO country; sector is analyst mapping from issuer business, not a licensed GICS certification. Reporting basis is consolidated issuer accounting. Empty complexity tags assert no tag requirements, not absence of business complexity.",
+  "summary": {
+    "rows": 19,
+    "domicile_supported_count": 19,
+    "reporting_basis_supported_count": 19,
+    "sector_supported_count": 19,
+    "fully_supported_rows": 19,
+    "unresolved_field_count": 0
+  }
+}

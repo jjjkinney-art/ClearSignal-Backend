@@ -1,0 +1,962 @@
+{
+  "schema_version": 1,
+  "artifact_type": "primary_metadata_completion",
+  "retrieved_at_utc": "2026-10-12T00:41:09.865462+00:00",
+  "scope": "Required country domicile, explicit financial reporting basis, and analyst sector mapping from primary business evidence. Dated filings, no exhaustive subsequent-change audit. No application answers or benchmark capture.",
+  "rows": [
+    {
+      "ticker": "AJG",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-05",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/354190/000162828026053489/ajg-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Rolling Meadows, Illinois, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/354190/000162828026053489/ajg-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Rolling Meadows, Illinois, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/354190/000162828026053489/ajg-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/354190/000162828026053489/ajg-20260630.htm",
+          "scope_note": "Note1 defines GAAP as US generally accepted accounting principles and Use of Estimates explicitly states consolidated statements prepared in conformity with GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/354190/000162828026053489/ajg-20260630.htm",
+          "scope_note": "Insurance and reinsurance brokerage, consulting and claims administration. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/354190/000162828026053489/ajg-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "AMT",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-28",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1053507/000105350726000133/amt-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Boston, Massachusetts, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1053507/000105350726000133/amt-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Boston, Massachusetts, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1053507/000105350726000133/amt-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1053507/000105350726000133/amt-20260630.htm",
+          "scope_note": "MD&A Critical Accounting Policies expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Real Estate",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1053507/000105350726000133/amt-20260630.htm",
+          "scope_note": "REIT leasing multitenant communications sites; also owns data-center facilities. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1053507/000105350726000133/amt-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "ANGO",
+      "document_period_end": "2026-05-31",
+      "document_publication_date": "2026-07-14",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1275187/000162828026048138/ango-20260531.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Latham, New York, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1275187/000162828026048138/ango-20260531.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Latham, New York, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1275187/000162828026048138/ango-20260531.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1275187/000162828026048138/ango-20260531.htm",
+          "scope_note": "Note1 Basis of Presentation; auditor opinion expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1275187/000162828026048138/ango-20260531.htm",
+          "scope_note": "Medical devices used by interventional physicians and oncology/critical-care clinicians. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1275187/000162828026048138/ango-20260531.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "AVT",
+      "document_period_end": "2026-06-27",
+      "document_publication_date": "2026-08-14",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/8858/000110465926096346/avt-20260627x10k.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Phoenix, Arizona, US; incorporation New York, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "New York, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/8858/000110465926096346/avt-20260627x10k.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Phoenix, Arizona, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/8858/000110465926096346/avt-20260627x10k.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/8858/000110465926096346/avt-20260627x10k.htm",
+          "scope_note": "Independent auditor opinion and accounting policies expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/8858/000110465926096346/avt-20260627x10k.htm",
+          "scope_note": "Electronic-component technology distribution and related solutions. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/8858/000110465926096346/avt-20260627x10k.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "BANF",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-07",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.bancfirst.bank/getContentAsset/9e313283-13bf-402f-b47d-f5be80301f8d/582e10d9-e479-4901-9a67-7b8c0f57354b/BANF_10Q_630-2026.pdf?language=en",
+          "scope_note": "Cover p0: Oklahoma incorporation and Oklahoma City principal executive offices; country-level domicile, not tax-residence inference."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Oklahoma, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.bancfirst.bank/getContentAsset/9e313283-13bf-402f-b47d-f5be80301f8d/582e10d9-e479-4901-9a67-7b8c0f57354b/BANF_10Q_630-2026.pdf?language=en",
+          "scope_note": "Cover p0, distinct from office address."
+        },
+        "principal_executive_office": {
+          "value": "100 N. Broadway Ave., Oklahoma City, Oklahoma, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.bancfirst.bank/getContentAsset/9e313283-13bf-402f-b47d-f5be80301f8d/582e10d9-e479-4901-9a67-7b8c0f57354b/BANF_10Q_630-2026.pdf?language=en",
+          "scope_note": "Cover p0."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.bancfirst.bank/getContentAsset/9e313283-13bf-402f-b47d-f5be80301f8d/582e10d9-e479-4901-9a67-7b8c0f57354b/BANF_10Q_630-2026.pdf?language=en",
+          "scope_note": "Note1 p7 explicitly states US GAAP financial statement preparation."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.bancfirst.bank/investor-relations",
+          "scope_note": "Issuer describes banking subsidiaries and insurance agency; analyst mapping, not licensed GICS."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.bancfirst.bank/getContentAsset/9e313283-13bf-402f-b47d-f5be80301f8d/582e10d9-e479-4901-9a67-7b8c0f57354b/BANF_10Q_630-2026.pdf?language=en",
+          "scope_note": "No new tags assigned."
+        }
+      },
+      "unresolved_fields": [],
+      "source_access_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/760498/",
+          "result": "Internal error; repeated without trailing slash also failed."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/760498/000119312526075954/banf-20251231.htm",
+          "result": "Search discovered 10-K, direct open internal error."
+        },
+        {
+          "url": "https://investors.bancfirst.bank/financials/sec-filings/default.aspx",
+          "result": "Attempted guessed issuer path inaccessible; not evidence."
+        },
+        {
+          "url": "https://www.bancfirst.bank/investor-relations",
+          "result": "Actual issuer page linked accessible June2026 10-Q PDF; used cover and Note1."
+        }
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "EQNR",
+      "document_period_end": "2025-12-31",
+      "document_publication_date": "2026-03-19",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "NO",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/R1.htm",
+          "scope_note": "SEC cover explicitly records Stavanger, Norway principal address; not inferred from ADR listing or revenue mix."
+        },
+        "incorporation_jurisdiction": {
+          "value": null,
+          "status": "not_decoded",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/R1.htm",
+          "scope_note": "SEC cover code Q8 observed; code not silently converted into ISO country. Country domicile is independently supported by principal address."
+        },
+        "principal_executive_office": {
+          "value": "Forusbeen 50, Stavanger, Norway",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/R1.htm",
+          "scope_note": "Principal address and NO country code in filing cover."
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/R10.htm",
+          "scope_note": "Accounting policies Statement of compliance specifies IFRS as adopted by EU and issued by IASB, with Norwegian Accounting Act requirements."
+        },
+        "sector": {
+          "value": "Energy",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.equinor.com/investors/annual-reports",
+          "scope_note": "2025 annual-report issuer page describes oil/gas production and energy supply; analyst mapping, not licensed classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/R1.htm",
+          "scope_note": "No new tags required for this pass."
+        }
+      },
+      "unresolved_fields": [],
+      "optional_metadata_gaps": [
+        "incorporation_jurisdiction textual label not decoded from SEC Q8; domicile country is explicit NO"
+      ],
+      "source_access_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/eqnr-20251231.htm",
+          "result": "Web internal error; separately rendered SEC cover and accounting-note pages accessible and used."
+        }
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "FRPH",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-05",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/844059/000084405926000086/frph-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Jacksonville, Florida, US; incorporation Florida, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Florida, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/844059/000084405926000086/frph-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Jacksonville, Florida, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/844059/000084405926000086/frph-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/844059/000084405926000086/frph-20260630.htm",
+          "scope_note": "Note1 expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Real Estate",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/844059/000084405926000086/frph-20260630.htm",
+          "scope_note": "Real-estate leasing, development and management, including mining royalty land. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/844059/000084405926000086/frph-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "FUL",
+      "document_period_end": "2026-05-30",
+      "document_publication_date": "2026-06-25",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/39368/000143774926021677/ful20260530_10q.htm",
+          "scope_note": "Country-level registry domicile: principal executive office St. Paul, Minnesota, US; incorporation Minnesota, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Minnesota, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/39368/000143774926021677/ful20260530_10q.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "St. Paul, Minnesota, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/39368/000143774926021677/ful20260530_10q.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/39368/000143774926021677/ful20260530_10q.htm",
+          "scope_note": "Note1 Basis of Presentation expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/39368/000143774926021677/ful20260530_10q.htm",
+          "scope_note": "Hygiene/health/consumable, engineering and building adhesive businesses. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/39368/000143774926021677/ful20260530_10q.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "GRC",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Mansfield, Ohio, US; incorporation Ohio, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Ohio, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Mansfield, Ohio, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+          "scope_note": "Note1 expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+          "scope_note": "Design, manufacture and sale of pumps and pump systems. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "HAE",
+      "document_period_end": "2026-06-27",
+      "document_publication_date": "2026-08-06",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/313143/000031314326000120/hae-20260627.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Boston, Massachusetts, US; incorporation Massachusetts, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Massachusetts, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/313143/000031314326000120/hae-20260627.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Boston, Massachusetts, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/313143/000031314326000120/hae-20260627.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/313143/000031314326000120/hae-20260627.htm",
+          "scope_note": "Basis of Presentation expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/313143/000031314326000120/hae-20260627.htm",
+          "scope_note": "Medical technology: plasma/blood collection and hospital/interventional technologies. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/313143/000031314326000120/hae-20260627.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "HBB",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-05",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1709164/000170916426000160/hbb-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Glen Allen, Virginia, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1709164/000170916426000160/hbb-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Glen Allen, Virginia, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1709164/000170916426000160/hbb-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1709164/000170916426000160/hbb-20260630.htm",
+          "scope_note": "Basis of presentation expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1709164/000170916426000160/hbb-20260630.htm",
+          "scope_note": "Household and commercial small electric appliances and specialty housewares. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1709164/000170916426000160/hbb-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "JBLU",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-28",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1158463/000115846326000075/jblu-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Long Island City, New York, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1158463/000115846326000075/jblu-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Long Island City, New York, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1158463/000115846326000075/jblu-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1158463/000115846326000075/jblu-20260630.htm",
+          "scope_note": "Note1 interim basis of presentation expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1158463/000115846326000075/jblu-20260630.htm",
+          "scope_note": "Passenger air transportation and associated loyalty/ancillary services. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1158463/000115846326000075/jblu-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "MAT",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-06",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/63276/000162828026054347/mat-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office El Segundo, California, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/63276/000162828026054347/mat-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "El Segundo, California, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/63276/000162828026054347/mat-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/63276/000162828026054347/mat-20260630.htm",
+          "scope_note": "Note1 expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/63276/000162828026054347/mat-20260630.htm",
+          "scope_note": "Toy brands, play products and family entertainment intellectual property. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/63276/000162828026054347/mat-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "NSP",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-29",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1000753/000100075326000087/nsp-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Kingwood, Texas, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1000753/000100075326000087/nsp-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Kingwood, Texas, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1000753/000100075326000087/nsp-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1000753/000100075326000087/nsp-20260630.htm",
+          "scope_note": "Financial statement note on consolidation and estimates expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1000753/000100075326000087/nsp-20260630.htm",
+          "scope_note": "Human resources and business services, including professional employer organization services. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1000753/000100075326000087/nsp-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "RELL",
+      "document_period_end": "2026-02-28",
+      "document_publication_date": "2026-04-09",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/355948/000119312526149207/rell-20260228.htm",
+          "scope_note": "Country-level registry domicile: principal executive office LaFox, Illinois, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/355948/000119312526149207/rell-20260228.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "LaFox, Illinois, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/355948/000119312526149207/rell-20260228.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/355948/000119312526149207/rell-20260228.htm",
+          "scope_note": "Note2 Basis of Presentation expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/355948/000119312526149207/rell-20260228.htm",
+          "scope_note": "Power/RF/microwave electronic components, engineered solutions and display systems. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/355948/000119312526149207/rell-20260228.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "SGC",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-04",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/95574/000143774926025511/sgc20260630_10q.htm",
+          "scope_note": "Country-level registry domicile: principal executive office St. Petersburg, Florida, US; incorporation Florida, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Florida, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/95574/000143774926025511/sgc20260630_10q.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "St. Petersburg, Florida, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/95574/000143774926025511/sgc20260630_10q.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/95574/000143774926025511/sgc20260630_10q.htm",
+          "scope_note": "Note1 expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/95574/000143774926025511/sgc20260630_10q.htm",
+          "scope_note": "Branded merchandise/uniform programs, healthcare apparel and contact-center services. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/95574/000143774926025511/sgc20260630_10q.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "SHW",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-28",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Cleveland, Ohio, US; incorporation Ohio, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Ohio, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Cleveland, Ohio, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "scope_note": "Note1 expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "scope_note": "Paints, coatings and related products development, manufacture, distribution and sale. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "VTR",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-30",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Chicago, Illinois, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Chicago, Illinois, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "scope_note": "Note2 Accounting Policies expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Real Estate",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "scope_note": "Senior-housing and healthcare real-estate portfolio; REIT/UPREIT structure. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "WDFC",
+      "document_period_end": "2026-05-31",
+      "document_publication_date": "2026-07-09",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+          "scope_note": "Country-level registry domicile: principal executive office San Diego, California, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "San Diego, California, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+          "scope_note": "Basis of presentation and MD&A Critical Accounting Policies expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+          "scope_note": "Branded maintenance products and homecare/cleaning products; regional sales tables identify these categories. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "WMT",
+      "document_period_end": "2026-07-31",
+      "document_publication_date": "2026-08-28",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "scope_note": "Country-level registry domicile: principal executive office Bentonville, Arkansas, US; incorporation Delaware, US. Neither tax residence nor geographic revenue mix inferred."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "scope_note": "Cover-page incorporation jurisdiction, distinct from headquarters."
+        },
+        "principal_executive_office": {
+          "value": "Bentonville, Arkansas, US",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "scope_note": "Cover-page principal executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "scope_note": "Note1 expressly identifies United States GAAP; not inferred from form type."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "scope_note": "Stores and membership clubs; grocery dominates disclosed US merchandise revenue. Sector is analyst mapping, not claimed licensed GICS classification."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/104169/000010416926000154/wmt-20260731.htm",
+          "scope_note": "No new complexity tags assigned in metadata-only completion."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    }
+  ],
+  "counts": {
+    "assigned": 20,
+    "required_metadata_complete": 20,
+    "required_fields_unresolved": 0,
+    "optional_incorporation_text_gap": 1
+  },
+  "date_scope": "Document period and publication date are separate from retrieval. GRC filing publication date not independently extracted; its period is known. Source timestamps are batch completion, not invented field effective dates."
+}
