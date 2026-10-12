@@ -174,3 +174,38 @@ def test_classification_readiness_matches_all_approved_source_adjudications():
         assert row['classification_evidence_ref'] == artifact + '#' + source['ticker']
         if source[eligible_field]:
             assert row['proposed_size_tier'] == source['tier']
+
+
+def test_ul_dated_count_deducts_both_compensation_treasury_holdings():
+    from decimal import Decimal
+    evidence = read(RECONCILIATION / 'international_classification_admission.json')
+    row = next(r for r in evidence['rows'] if r['ticker'] == 'UL')
+    assert row['issued_common_count'] == 2_181_005_247
+    assert row['treasury_common_components'] == {
+        'employee_benefit_trust_PLC': 1_208_143,
+        'PLC_and_subsidiaries_PLC': 314_912,
+    }
+    assert row['net_common_count'] == row['issued_common_count'] - sum(row['treasury_common_components'].values()) == 2_179_482_192
+    assert Decimal(row['calculation']['result_usd']) == Decimal('135694561273.92')
+    assert row['primary_count_date'] == '2025-12-31'
+    assert row['underlying_common_per_us_security'] == 1
+    assert row['tier'] == 'large' and row['limitations']
+    assert row['exact_oct9_cap_verified'] is False
+    assert row['answer_valuation_verified'] is False
+
+
+def test_tm_dated_count_uses_treasury_including_esop():
+    from decimal import Decimal
+    evidence = read(RECONCILIATION / 'international_classification_admission.json')
+    row = next(r for r in evidence['rows'] if r['ticker'] == 'TM')
+    assert row['issued_common_count'] == 15_794_987_460
+    assert row['treasury_common_components'] == {
+        'treasury_including_stock_grant_ESOP': 2_761_602_986,
+    }
+    assert row['net_common_count'] == row['issued_common_count'] - sum(row['treasury_common_components'].values()) == 13_033_384_474
+    assert Decimal(row['calculation']['result_usd']) == Decimal('241508614303.22')
+    assert row['primary_count_date'] == '2026-03-31'
+    assert row['underlying_common_per_us_security'] == 10
+    assert row['tier'] == 'large' and row['limitations']
+    assert row['exact_oct9_cap_verified'] is False
+    assert row['answer_valuation_verified'] is False

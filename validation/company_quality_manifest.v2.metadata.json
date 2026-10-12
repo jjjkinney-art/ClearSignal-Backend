@@ -12,16 +12,16 @@
     "docs/benchmark_proposal_20261011/reconciliation/canonical_setup_decision_before_npk.json": "42eca523df123470d62cc7c9ac674d231b0dcb38be67457d75fbd9f7ddd8be03",
     "docs/benchmark_proposal_20261011/reconciliation/cap_value_review.json": "cb2b1af7eb85b20cf0cdf078e7c80069a91c413667037affd4baf204f2cff85b",
     "docs/benchmark_proposal_20261011/reconciliation/classification_domestic_adjudication.json": "cce603e4036356fe69fa9830943329b42fc0643e31869acb50a44a1a06e15eb3",
-    "docs/benchmark_proposal_20261011/reconciliation/classification_setup_readiness.json": "b2059ee4bd315b5e6d2566c9fe1b8cb17d62570ba714e1ea75e4f6ec44abaae4",
+    "docs/benchmark_proposal_20261011/reconciliation/classification_setup_readiness.json": "58b903c2b4d8a3576694fd40a6e1ebc1b885cdf9d997e3585867db20c1456d29",
     "docs/benchmark_proposal_20261011/reconciliation/domestic_identity_a.json": "986a65c48f40d162133a6471d2691af58fd9712ed68f29046e6b93648c22f61f",
     "docs/benchmark_proposal_20261011/reconciliation/domestic_identity_b.json": "9b8b6d577208c6202f22a6ea4d4cdb4868eb3406ed95ff2d9db5eb4ce31ff0cf",
     "docs/benchmark_proposal_20261011/reconciliation/domestic_material_cap_followup.json": "501174c44d584197bb1cce5cc55e573e5dfb4bc70cb736176263e3f0aa5974f8",
     "docs/benchmark_proposal_20261011/reconciliation/domestic_remaining_cap_followup.json": "11c12e64e27b6fe8b119cccce5ab3560781bbfe9c72bbbacaecf20f39ad4f8d9",
-    "docs/benchmark_proposal_20261011/reconciliation/finalized_cohort.json": "a5dd418afdeed4969bfaa3229d835d17f0ef1dffd3fcdec7eb25b8b14de4fc3c",
+    "docs/benchmark_proposal_20261011/reconciliation/finalized_cohort.json": "25a344057875175fae5076c699e4b759528436a3b328c9f5a4e8ef978ff157c8",
     "docs/benchmark_proposal_20261011/reconciliation/followup_admission_summary.json": "56afac84ed08368da74e2f2ed07022f7a49009e8e4ede8120cc6f953aefdae09",
     "docs/benchmark_proposal_20261011/reconciliation/grc_boundary_followup.json": "1ab4852f9d986b3b381e2bc221cc6a245e066b7b4d594dd6462e3bc3807b11c2",
     "docs/benchmark_proposal_20261011/reconciliation/international_cap_followup.json": "df82695e43517e7cb7489dcddfc32fcfdbb890ee4c012dc983edf592070eeec5",
-    "docs/benchmark_proposal_20261011/reconciliation/international_classification_admission.json": "4275e086a1028f0021be762b7615d2f6eb74979c7f2681f41c4964b1456226de",
+    "docs/benchmark_proposal_20261011/reconciliation/international_classification_admission.json": "d827baab843ed444d9ffdd56f10795dbab1c05ce89e373dc3cfc668d211d27de",
     "docs/benchmark_proposal_20261011/reconciliation/international_identity_review.json": "946b440c39abca6ba502f7a75c6d30a3b93411fd13ee2c038e22f1ecaf740b7d",
     "docs/benchmark_proposal_20261011/reconciliation/metadata_admission_audit.json": "07d47a61d0bd9e66a7c7be222c0dab10262f795d4eac6e90e344524548853036",
     "docs/benchmark_proposal_20261011/reconciliation/metadata_completion_batch0.json": "bec9baf59011495b8c12ee0cf42d2c9d41d3238c64791d624fd8082d2fdbad09",
@@ -34,7 +34,7 @@
     "docs/benchmark_proposal_20261011/reconciliation/tday_cap_followup.json": "09b6c8b77fc5e127b9b3def29cadaccba5ff695eb18558e5146122bfcfe06eaa",
     "validation/company_quality_manifest.v2.json": "f7f4b3bf630e309b1250162df0b200f9e00a12fd950428050566c2c002c1d1f8",
     "validation/fixtures.v2.json": "c09c60313b482590702119b3eb96f9c4045f9e8f698a7f11d99127d9ccb71066",
-    "validation/issuer_registry.v2.json": "ad9f51a6f7025c4c97af980976efb004c5fb0c3c87853a066aa92cfb7431a7bb"
+    "validation/issuer_registry.v2.json": "7acd7a369a2321e40626b9ae803ad63739690e1dc93652c41a952c278dd74842"
   },
   "reserved_holdouts": [
     "AJG",

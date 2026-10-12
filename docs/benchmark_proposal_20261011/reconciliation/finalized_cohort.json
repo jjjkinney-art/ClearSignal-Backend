@@ -291,9 +291,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -320,9 +321,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -2273,9 +2275,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -2302,9 +2305,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -8195,9 +8199,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -8224,9 +8229,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -8399,9 +8405,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -8428,9 +8435,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -8603,9 +8611,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -8632,9 +8641,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -8895,9 +8905,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -8924,9 +8935,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -9108,9 +9120,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -9137,9 +9150,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",
@@ -9312,9 +9326,10 @@
             "publication_date": "2026-06-10",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover and p119: issued 15,794,987,460 minus treasury 2,761,055,486 = 13,033,931,974. One ADS represents ten common. Later tender/retirement not assumed captured.",
-            "excerpt": "13,033,931,974",
-            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82."
+            "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+            "excerpt": "2,761,602,986",
+            "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "TM_PUBLICATION",
@@ -9341,9 +9356,10 @@
             "publication_date": "2026-03-12",
             "retrieved_at": "2026-10-12T00:32:57Z",
             "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
-            "locator": "PDF cover/p69: December31 outstanding 2,181,005,247 ordinary. December10 cancellation removed remaining 51,625,153 treasury after share consolidation. ADR1:1 per earlier issuer identity review.",
+            "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
             "excerpt": "2,181,005,247",
-            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+            "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+            "correction_verified_on_utc": "2026-10-12"
           },
           {
             "source_id": "UL_PUBLICATION",

@@ -5,7 +5,7 @@
   "policy_ref": "../../validation/benchmark_classification_policy.v1.json",
   "candidate_plan_ref": "candidate_plan.json",
   "active_registry": "validation/issuer_registry.v2.json",
-  "active_registry_sha256": "ad9f51a6f7025c4c97af980976efb004c5fb0c3c87853a066aa92cfb7431a7bb",
+  "active_registry_sha256": "7acd7a369a2321e40626b9ae803ad63739690e1dc93652c41a952c278dd74842",
   "active_registry_changed": true,
   "approved_policy_installed": true,
   "current_company_keys_established": 100,

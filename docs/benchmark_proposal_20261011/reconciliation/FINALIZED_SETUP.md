@@ -63,10 +63,37 @@ or account-setting change is part of this setup. The next execution step require
 separate live-capture authorization and must retain the held-out reservation and
 all quality gates.
 
-Validation result: **218 tests passed** across the nine focused suites above;
+Validation result: **220 tests passed** across the nine focused suites above;
 strict version 2 coverage audit passed with no deficits or integrity errors.
 One pytest warning concerns the excluded application plugin setting `asyncio_mode`.
 Negative checks reject changed approval scope, cap date/currency or value conflicts,
 missing metadata, duplicate identities, holdout changes, altered questions, weakened
 targets, execution flags and nested capture payloads. Matrix reconciliation confirms
 600 missing captures and pending reviews; the plan CLI never calls capture.
+
+
+## Share-count correction amendment — October 12, 2026
+
+The final source review corrects two dated classification-only proxies:
+
+- UL: 2,181,005,247 issued minus 1,208,143 employee-benefit-trust PLC shares
+  and 314,912 PLC/subsidiary-held PLC shares gives 2,179,482,192 net shares.
+  At the retained October 9 price of $62.26 and 1:1 ADR ratio, the proxy is
+  $135,694,561,273.92, replacing $135,789,386,678.22. The treasury holdings
+  remain after the December buyback cancellation and are deducted from other
+  reserves. See [Unilever notes 4C and 15B](https://www.unilever.com/files/unilever-annual-report-on-form-20-f-2025.pdf),
+  printed pages 147/163 (zero-based PDF indices 153/169).
+- TM: 15,794,987,460 issued minus 2,761,602,986 treasury shares **including
+  stock-grant ESOP** gives 13,033,384,474 net shares. Dividing by 10 common shares
+  per ADS and multiplying by the retained October 9 price of $185.30 gives
+  $241,508,614,303.22, replacing $241,518,759,478.22. See
+  [Toyota note 26(2)](https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf),
+  printed F-70 (zero-based PDF index 227).
+
+UL retains its December 31, 2025 count date; TM retains March 31, 2026 and its
+later capital-action caveats. Both remain provisional large-tier classification
+evidence, not verified October 9 market values or answer valuations. Source
+corrections propagate through the existing admission/cohort builders and artifact
+hash bindings. Version 1, cohort membership, reservations, question fixtures,
+canonical question matrix, approval scope and disabled execution are unchanged.
+The two added regression checks enforce the distinct treasury deductions.
