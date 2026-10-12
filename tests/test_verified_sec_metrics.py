@@ -312,7 +312,7 @@ def test_service_fetches_once_and_returns_supported_metrics(monkeypatch):
     evidence = service.fetch_verified_metric_evidence("AAPL")
     assert len(calls) == 1
     assert [item.title.split(":")[0] for item in evidence] == [
-        "AAPL revenue", "AAPL operating cash flow"]
+        "AAPL revenue (as reported)", "AAPL operating cash flow"]
     assert service.fetch_verified_metric_evidence("AAPL/../") == []
 
 
@@ -346,7 +346,7 @@ def test_service_supports_general_company_metric_family(monkeypatch):
 
     titles = [item.title.split(":")[0] for item in evidence]
     assert titles == [
-        "AAPL gross profit", "AAPL net income",
+        "AAPL gross profit", "AAPL net income attributable to parent",
         "AAPL research and development", "AAPL capital expenditure",
         "AAPL stock-based compensation", "AAPL share repurchases",
         "AAPL dividends paid",

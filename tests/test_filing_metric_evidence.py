@@ -104,7 +104,8 @@ def test_sign_and_ytd_cashflow_are_preserved_without_quarter_conversion():
     item, = _items(xml)
     assert item.verified_claims[0]['raw_value'] == -1100000
     assert item.reporting_period_start == '2026-01-01'
-    assert 'decreased 210.0%' in item.summary
+    assert 'moved from cash provided to cash used' in item.summary
+    assert '%' not in item.summary
     assert item.verified_claims[0]['period'].startswith('year-to-date')
 
 

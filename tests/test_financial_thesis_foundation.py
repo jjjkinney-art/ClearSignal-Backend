@@ -36,7 +36,7 @@ def test_mixed_trends_produce_cited_counter_evidence_and_conditional_tests():
     items = [evidence("Revenues", "revenue"),
              evidence("OperatingIncomeLoss", "operating income", current=40)]
     result = build_financial_foundation("AAPL", items, None, expected_cik="320193")
-    assert "revenue [E1]" in result["answer"]
+    assert "revenue (as reported) [E1]" in result["answer"]
     assert "Counter-evidence" in result["answer"]
     assert result["inferences"][1]["signal"] == "counter_evidence"
     assert all("not a forecast" in row["conditional_test"] for row in result["inferences"])

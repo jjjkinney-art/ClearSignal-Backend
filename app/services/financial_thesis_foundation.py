@@ -25,10 +25,9 @@ SUPPLEMENTARY_METRICS = {
 
 
 def financial_metric_label(name: str, concept: str) -> str:
-    """Retain the bank revenue definition instead of relabeling it as gross sales."""
-    if name == "revenue" and concept == "RevenuesNetOfInterestExpense":
-        return "revenue net of interest expense"
-    return name
+    """Use concept semantics consistently in producer, reconstruction and display."""
+    from ..integrity.sec_metric_labels import metric_label
+    return metric_label(name, concept)
 
 
 def requests_profitability_context(question: str | None) -> bool:
