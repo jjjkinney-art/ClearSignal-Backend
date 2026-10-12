@@ -176,3 +176,12 @@ def test_bound_claims_survive_admission_and_future_filing_is_blocked():
     admitted, _, integrity = admit_evidence(fresh_evidence, as_of="2025-07-01")
     assert admitted == []
     assert integrity["admission"]["blocked_count"] == 2
+
+
+@pytest.fixture(autouse=True)
+def frozen_issuer_directory(monkeypatch):
+    # Source composition also checks reporting coverage; never fetch its directory.
+    monkeypatch.setattr(
+        "app.services.providers.sec_provider._load_ticker_cik_map",
+        lambda: {"AAPL": "0000320193"},
+    )
