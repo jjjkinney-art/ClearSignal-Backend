@@ -1,0 +1,1344 @@
+{
+  "schema_version": 1,
+  "artifact_type": "classification_only_adjudication",
+  "review_completed_at": "2026-10-12T00:31:45.938270+00:00",
+  "authority": "Parent relay of new user approval: dated reported counts times October9 close for size only; exclude insufficient identity/class basis. This supersedes older source-choice-pending status only for this scoped assessment.",
+  "total_company_basis": "Company-wide outstanding common equity across common classes; not enterprise value, diluted EPS shares, receipt pool, or preferred equity before conversion.",
+  "thresholds_usd": {
+    "large_min_inclusive": 10000000000,
+    "mid_min_inclusive": 2000000000,
+    "small_micro_max_exclusive": 2000000000
+  },
+  "counts": {
+    "reviewed": 18,
+    "tier_eligible": 17,
+    "blocked": 1
+  },
+  "not_claimed": [
+    "Full benchmark admission: domicile, reporting basis, sector and complexity metadata have separate scoped gaps.",
+    "Verified market caps for answer scoring.",
+    "Any captures, holdout exposure reset, paid calls, code changes or execution authorization."
+  ],
+  "rows": [
+    {
+      "ticker": "AIN",
+      "tier_eligible": true,
+      "tier": "small_micro",
+      "classification_estimate_usd": "1755120000.00",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#AIN",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Industrials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/819793/000162828026052329/ain-20260630.htm",
+        "observation_date": "2026-07-15",
+        "share_counts": {
+          "Class A": "28400000"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close.",
+        "precision_note": "Cover rounds count to0.1million;28.4M is not an exact integer count."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Class A": "61.80"
+        },
+        "source_url": "https://stockanalysis.com/stocks/ain/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "1755120000.00",
+        "shares_older_than_price_days": 86,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    },
+    {
+      "ticker": "AJG",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "59650550700.00",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#AJG",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Financials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://investor.ajg.com/news/news-details/2026/Arthur-J--Gallagher--Co--Announces-Second-Quarter-2026-Financial-Results/default.aspx",
+          "kind": "issuer_release",
+          "publication_date": "2026-07-30",
+          "finding": "June 30, 2026 period-end common shares: 256,341 thousand. This is a point-in-time count; basic/diluted weighted averages are different measures."
+        },
+        {
+          "url": "https://www.nasdaq.com/market-activity/stocks/ajg/historical",
+          "kind": "exchange_publisher_history_attempt",
+          "finding": "Common-stock security label visible; historical-price data unavailable in rendered page."
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/ajg/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "232.70",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "256341000",
+        "share_measurement_date": "2026-06-30",
+        "share_basis": "Period-end company common shares; count displayed in thousands.",
+        "formula": "observed primary point-in-time common shares * secondary October 9 close",
+        "calculated_usd": "59650550700.00",
+        "calculated_minus_summary_usd": "550700.00",
+        "calculated_minus_historical_usd": "10550700.00",
+        "conditional_nearest_display_unit_usd": "59650000000",
+        "conditional_display_matches": "summary",
+        "conditions": "Mixed measurement dates, explicitly provisional. HALF_UP nearest display-unit illustration is not verified provider rounding. No proof count unchanged through October 9, no proof this is the latest disclosed count, and no proof of the provider discrepancy cause. Source precedence/convention decision required before selection."
+      }
+    },
+    {
+      "ticker": "EQNR",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "101896062680.17",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "international_cap_followup.json#EQNR",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited.",
+        "October 2 own-share snapshot includes employee-program own shares; no October 5\u20139 roll-forward asserted. No new Oct9 exact-count audit gate imposed."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Energy",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "id": "EQNR_PRICE",
+          "url": "https://stockanalysis.com/stocks/eqnr/history/",
+          "type": "secondary_public_price_history",
+          "observed_date": "2026-10-09",
+          "publication_date": null,
+          "retrieved_at": "2026-10-12T00:00:02Z",
+          "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+          "excerpt": "43.01",
+          "excerpt_context": "Close column of October9,2026 historical price row, USD USlisting."
+        },
+        {
+          "id": "EQNR_20F",
+          "url": "https://www.sec.gov/Archives/edgar/data/1140625/000114062526000013/exhibit21descriptionofsecu.htm",
+          "type": "issuer_primary_or_SEC_filing",
+          "publication_date": "2026-03-19",
+          "observed_date": "2025-12-31",
+          "retrieved_at": "2026-10-12T00:00:02Z",
+          "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+          "excerpt": "Each ADS represents one ordinary share."
+        },
+        {
+          "id": "EQNR_CAPITAL",
+          "url": "https://www.globenewswire.com/news-release/2026/07/02/3321603/0/no/equinor-asa-gjennomf%C3%B8rt-kapitalnedsettelse.html",
+          "type": "issuer_primary_or_SEC_filing",
+          "publication_date": "2026-07-02",
+          "observed_date": "2026-07-02",
+          "retrieved_at": "2026-10-12T00:00:02Z",
+          "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+          "excerpt": "fordelt p\u00e5 2.390.749.040 aksjer, hver p\u00e5lydende NOK 2,50."
+        },
+        {
+          "id": "EQNR_OWN",
+          "url": "https://www.globenewswire.com/news-release/2026/10/06/3375133/0/en/equinor-asa-share-buy-back-third-tranche-for-2026.html",
+          "type": "issuer_primary_or_SEC_filing",
+          "publication_date": "2026-10-06",
+          "observed_date": "2026-10-02",
+          "retrieved_at": "2026-10-12T00:00:02Z",
+          "retrieval_timestamp_semantics": "Research-batch completion timestamp; extraction occurred earlier in this batch.",
+          "excerpt": "Equinor ASA owns a total of 21,624,123 own shares"
+        }
+      ],
+      "basis": {
+        "issued_shares": "2390749040",
+        "issued_as_of": "2026-07-02",
+        "own_shares": "21624123",
+        "own_shares_as_of": "2026-10-02",
+        "ordinary_per_ADS": 1,
+        "net_reported_common": "2369124917",
+        "formula": "(2390749040 - 21624123) * 43.01",
+        "treasury_treatment": "Deduct all issuer-owned shares, including issuer-held employee-program shares; do not deduct only buyback tranche shares.",
+        "scope": "Mixed-date reported common-equity proxy, not assertion of actual October 9 shares."
+      }
+    },
+    {
+      "ticker": "GEF",
+      "tier_eligible": true,
+      "tier": "mid",
+      "classification_estimate_usd": "4337542781.38",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#GEF",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Materials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+        "observation_date": "2026-07-27",
+        "share_counts": {
+          "Class A": "24808643",
+          "Class B": "21359678"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Class A": "81.82",
+          "Class B": "108.04"
+        },
+        "source_url": "https://stockanalysis.com/stocks/gef/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape.",
+        "additional_class_source_url": "https://stockanalysis.com/stocks/gef.b/history/"
+      },
+      "calculation": {
+        "formula": "sum(class_shares * same_class_close)",
+        "conditional_reported_share_value_usd": "4337542781.38",
+        "shares_older_than_price_days": 74,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    },
+    {
+      "ticker": "JOUT",
+      "tier_eligible": false,
+      "tier": null,
+      "classification_estimate_usd": null,
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": "Optional one-for-one conversion provides a conversion floor, not an upper bound on distinct Class B value. A-price proxy therefore does not prove total common equity below $2bn; exclude from classification under current evidence.",
+      "evidence_artifact": "domestic_material_cap_followup.json#JOUT",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": {
+          "value": "Wisconsin, US",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/788329/000078832926000016/jout-20260703.htm",
+          "scope": "incorporation, not inferred domicile"
+        },
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Consumer Discretionary",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [
+          {
+            "tag": "dual_class_common",
+            "source_url": "https://www.sec.gov/Archives/edgar/data/788329/000078832926000016/jout-20260703.htm",
+            "status": "verified structure; proposed tag"
+          }
+        ],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/788329/000078832926000016/jout-20260703.htm",
+        "observation_date": "2026-07-30",
+        "share_counts": {
+          "Class A": "9273554",
+          "Class B": "1206116"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Class A": "42.76"
+        },
+        "source_url": "https://stockanalysis.com/stocks/jout/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "(Class_A + Class_B) * Class_A_close",
+        "conditional_reported_share_value_usd": "448110689.20",
+        "shares_older_than_price_days": 71,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled.",
+          "Class B is valued at Class A quoted price solely as an explicit unquoted-class proxy, not an observed B market price."
+        ]
+      },
+      "diagnostic_estimate_usd": "448110689.20",
+      "targeted_primary_review": {
+        "url": "https://www.sec.gov/Archives/edgar/data/788329/000089706900000311/0000897069-00-000311.txt",
+        "current_incorporation_by_reference_url": "https://www.sec.gov/Archives/edgar/data/788329/000078832926000016/jout-20260703.htm",
+        "locator": "Articles B(2)(a), B(6)(a); current 10-Q Exhibit3.1",
+        "finding": "Holder may convert B into A one-for-one at any time. A receives 110% of B cash dividend. Supports conversion-equivalent proxy, not identical market prices.",
+        "smallest_remaining_decision": "Obtain supported total-company common-equity valuation or a defensible B-class upper bound; optional conversion alone is insufficient."
+      },
+      "diagnostic_tier": "small_micro"
+    },
+    {
+      "ticker": "LLY",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "1110114146042.55",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#LLY",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Health Care",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": {
+          "ticker": "LLY",
+          "company": "Eli Lilly",
+          "market_cap_tier": "mega_large",
+          "sector": "Health Care",
+          "domicile": "US",
+          "reporting_basis": "US_GAAP",
+          "complexity_tags": [
+            "adjusted_metrics",
+            "pipeline_and_patent"
+          ]
+        }
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/59478/000005947826000081/lly-20260630.htm",
+        "observation_date": "2026-08-03",
+        "share_counts": {
+          "Common": "941357065"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "1179.27"
+        },
+        "source_url": "https://stockanalysis.com/stocks/lly/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "1110114146042.55",
+        "shares_older_than_price_days": 67,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    },
+    {
+      "ticker": "NEE",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "161399450764.82",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#NEE",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Utilities",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://www.nexteraenergy.com/FinancialResults",
+          "kind": "issuer_results_attempt",
+          "finding": "Web reader returned URL inaccessible; no primary share-count observation obtained."
+        },
+        {
+          "url": "https://www.investor.nexteraenergy.com/financial-information/quarterly-results",
+          "kind": "issuer_results_attempt",
+          "finding": "Web reader returned URL inaccessible."
+        },
+        {
+          "url": "https://www.investor.nexteraenergy.com/financial-information/financial-results",
+          "kind": "issuer_results_attempt",
+          "finding": "Web reader returned URL inaccessible."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000060/nee-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-07-24",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports NEE common shares separately from wholly owned FPL shares; subsidiary shares excluded.",
+          "outstanding_common_shares": "2085803189",
+          "measurement_date": "2026-06-30"
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/nee/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "77.38",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "2085803189",
+        "share_measurement_date": "2026-06-30",
+        "share_basis": "Cover reports NEE common shares separately from wholly owned FPL shares; subsidiary shares excluded.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "161399450764.82",
+        "calculated_minus_summary_usd": "-10549235.18",
+        "calculated_minus_historical_usd": "-549235.18",
+        "conditional_nearest_display_unit_usd": "161400000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      }
+    },
+    {
+      "ticker": "NNBR",
+      "tier_eligible": true,
+      "tier": "small_micro",
+      "classification_estimate_usd": "326194412.80",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#NNBR",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Industrials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+        "observation_date": "2026-08-05",
+        "share_counts": {
+          "Common": "82580864"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "3.95"
+        },
+        "source_url": "https://stockanalysis.com/stocks/nnbr/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "326194412.80",
+        "shares_older_than_price_days": 65,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    },
+    {
+      "ticker": "NOG",
+      "tier_eligible": true,
+      "tier": "mid",
+      "classification_estimate_usd": "2638156409.28",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#NOG",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Energy",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1104485/000110448526000032/nog-20260630.htm",
+        "observation_date": "2026-08-03",
+        "share_counts": {
+          "Common": "106549128"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "24.76"
+        },
+        "source_url": "https://stockanalysis.com/stocks/nog/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "2638156409.28",
+        "shares_older_than_price_days": 67,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    },
+    {
+      "ticker": "NVDA",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "5525648000000.00",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#NVDA",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Information Technology",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": {
+          "ticker": "NVDA",
+          "company": "NVIDIA",
+          "market_cap_tier": "mega_large",
+          "sector": "Information Technology",
+          "domicile": "US",
+          "reporting_basis": "US_GAAP",
+          "complexity_tags": [
+            "cycle_exposure",
+            "non_calendar_fiscal_year"
+          ]
+        }
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027",
+          "kind": "issuer_release",
+          "finding": "Quarter ended July 26, 2026. Located weighted-average diluted share computation, not a current point-in-time share count; excluded from cap arithmetic."
+        },
+        {
+          "url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+          "kind": "issuer_index_attempt",
+          "finding": "Rendered index did not expose a usable current filing share count in this bounded check."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-08-26",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports 24.1 billion common shares; disclosed precision is 0.1 billion, not exact individual shares.",
+          "outstanding_common_shares": "24100000000",
+          "measurement_date": "2026-08-21"
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/nvda/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "229.28",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "24100000000",
+        "share_measurement_date": "2026-08-21",
+        "share_basis": "Cover reports 24.1 billion common shares; disclosed precision is 0.1 billion, not exact individual shares.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "5525648000000.00",
+        "calculated_minus_summary_usd": "-14352000000.00",
+        "calculated_minus_historical_usd": "-4352000000.00",
+        "conditional_nearest_display_unit_usd": "5530000000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      }
+    },
+    {
+      "ticker": "PETS",
+      "tier_eligible": true,
+      "tier": "small_micro",
+      "classification_estimate_usd": "27857404.490",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#PETS",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Consumer Discretionary",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+        "observation_date": "2026-08-07",
+        "share_counts": {
+          "Common": "21678914"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "1.285"
+        },
+        "source_url": "https://stockanalysis.com/stocks/pets/statistics/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Regular-close quote header1.285 is more precise than history table1.29; after-hours1.280 excluded."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "27857404.490",
+        "shares_older_than_price_days": 63,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    },
+    {
+      "ticker": "PG",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "351524011663.80",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#PG",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited.",
+        "Company-wide common equity only: excludes separately issued ESOP preferred until conversion; not enterprise value or all preferred-plus-common equity."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Consumer Staples",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://assets.ctfassets.net/oggad6svuzkv/4JHQenYzRCrXokDMBfqJAg/5f464a615be36bfa994338568825b735/FY2526_10-K_Accessible_final.pdf",
+          "kind": "issuer_hosted_10K",
+          "locator": "Cover page; preferred-stock notes",
+          "finding": "Cover reports 2,324,433,060 common shares at July 31, 2026, PG on NYSE. ESOP Series A and B convertible preferred each convert one-for-one to common; these are distinct preferred instruments."
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/pg/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "151.23",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "2324433060",
+        "share_measurement_date": "2026-07-31",
+        "share_basis": "Common shares only; not an as-converted preferred equity estimate.",
+        "formula": "observed primary point-in-time common shares * secondary October 9 close",
+        "calculated_usd": "351524011663.80",
+        "calculated_minus_summary_usd": "264011663.80",
+        "calculated_minus_historical_usd": "4011663.80",
+        "conditional_nearest_display_unit_usd": "351520000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Mixed measurement dates, explicitly provisional. HALF_UP nearest display-unit illustration is not verified provider rounding. No proof count unchanged through October 9, no proof this is the latest disclosed count, and no proof of the provider discrepancy cause. Source precedence/convention decision required before selection."
+      }
+    },
+    {
+      "ticker": "RHI",
+      "tier_eligible": true,
+      "tier": "mid",
+      "classification_estimate_usd": "3473136824.04",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#RHI",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Industrials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://www.roberthalf.com/content/dam/roberthalf/documents/us/en/indexed/investor-center/form-10q/RHI%20Q2%202026%2010Q%20-2026-08-04-11-10.pdf",
+          "kind": "issuer_hosted_10Q",
+          "locator": "Cover page and balance sheet page 2",
+          "finding": "Cover reports 102,361,828 common shares as of July 31, 2026; RHI common stock is registered on NYSE. June 30 balance sheet reports 102,361,829 common shares and no issued preferred shares."
+        },
+        {
+          "url": "https://www.nasdaq.com/market-activity/stocks/rhi/historical",
+          "kind": "exchange_publisher_history_attempt",
+          "finding": "Common-stock security label visible; historical-price data unavailable in rendered page."
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/rhi/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "33.93",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "102361828",
+        "share_measurement_date": "2026-07-31",
+        "share_basis": "Cover-page company common shares; no preferred issued at June 30.",
+        "formula": "observed primary point-in-time common shares * secondary October 9 close",
+        "calculated_usd": "3473136824.04",
+        "calculated_minus_summary_usd": "63136824.04",
+        "calculated_minus_historical_usd": "3136824.04",
+        "conditional_nearest_display_unit_usd": "3470000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Mixed measurement dates, explicitly provisional. HALF_UP nearest display-unit illustration is not verified provider rounding. No proof count unchanged through October 9, no proof this is the latest disclosed count, and no proof of the provider discrepancy cause. Source precedence/convention decision required before selection."
+      }
+    },
+    {
+      "ticker": "SHW",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "77527243103.36",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#SHW",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Materials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://investors.sherwin-williams.com/press-releases/press-release-details/2026/The-Sherwin-Williams-Company-Reports-2026-Second-Quarter-Financial-Results/default.aspx",
+          "kind": "issuer_release",
+          "publication_date": "2026-07-28",
+          "finding": "Release provides Q2 basic/diluted weighted-average shares, not a usable point-in-time common-share count; excluded from cap arithmetic."
+        },
+        {
+          "url": "https://investors.sherwin-williams.com/stock-information/historical-price-lookup/default.aspx",
+          "kind": "issuer_price_attempt",
+          "finding": "Dynamic rendered price lookup did not expose an October 9 price."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-07-28",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports company common shares outstanding, distinct from weighted-average EPS shares.",
+          "outstanding_common_shares": "242758151",
+          "measurement_date": "2026-06-30"
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/shw/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "319.36",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "242758151",
+        "share_measurement_date": "2026-06-30",
+        "share_basis": "Cover reports company common shares outstanding, distinct from weighted-average EPS shares.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "77527243103.36",
+        "calculated_minus_summary_usd": "457243103.36",
+        "calculated_minus_historical_usd": "-2756896.64",
+        "conditional_nearest_display_unit_usd": "77530000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      }
+    },
+    {
+      "ticker": "TDAY",
+      "tier_eligible": true,
+      "tier": "small_micro",
+      "classification_estimate_usd": "1001298357.62",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "tday_cap_followup.json",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Communication Services",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "id": "primary_10q",
+          "url": "https://www.sec.gov/Archives/edgar/data/1579684/000157968426000047/tday-20260630.htm",
+          "filed_on": "2026-08-06",
+          "share_count_as_of": "2026-08-03",
+          "common_shares_outstanding": 146817941,
+          "security": "Common Stock $0.01 par NYSE TDAY",
+          "balance_sheet_as_of": "2026-06-30",
+          "preferred_issued_and_outstanding": 0,
+          "scope": "Same common-share number also appears on June30 balance sheet; August3 cover is later observation. Potential convertible debt is not treated as presently outstanding common equity."
+        },
+        {
+          "id": "dated_price",
+          "url": "https://stockanalysis.com/stocks/tday/history/",
+          "provider_label": "S&P Global Market Intelligence",
+          "price_as_of": "2026-10-09",
+          "close_usd": "6.82",
+          "adjusted_close_usd": "6.82",
+          "scope": "Secondary daily price row and4pmEDT header agree."
+        },
+        {
+          "id": "statistics",
+          "url": "https://stockanalysis.com/stocks/tday/statistics/",
+          "page_last_updated": "2026-10-11",
+          "displayed_shares": "145.71M",
+          "share_count_measurement_date": null,
+          "provider_label": "S&P Global Market Intelligence",
+          "scope": "Explicit share-class/total-shares both145.71M; observation date is not share-count effective date."
+        },
+        {
+          "id": "cap_conflict",
+          "url": "https://stockanalysis.com/stocks/tday/market-cap/",
+          "summary_as_of": "2026-10-09",
+          "historical_as_of": "2026-10-09",
+          "summary_usd": "993760000",
+          "historical_usd": "1000000000",
+          "provider_label": "Nasdaq Data Link"
+        }
+      ],
+      "basis": {
+        "formula": "146817941 * 6.82",
+        "result_usd": "1001298357.62",
+        "classification": "dated_share_proxy_not_exact_same_date_total_equity",
+        "price_date": "2026-10-09",
+        "share_date": "2026-08-03",
+        "rounds_to_historical_display": "1.00B",
+        "inference": "Compatible with historical table using a reported share count; does not establish actual vendor mechanism."
+      }
+    },
+    {
+      "ticker": "V",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": null,
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#V",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited.",
+        "Class A component is not total-company capitalization. No total-cap estimate selected, no restricted-class parity valuation used."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": {
+          "value": "Delaware, US",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000104/v-20260630.htm",
+          "scope": "incorporation only"
+        },
+        "domicile": null,
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000104/v-20260630.htm",
+          "locator": "Note1 consolidation and basis of presentation"
+        },
+        "planning_sector": "Financials",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [
+          {
+            "tag": "restricted_multiple_common_classes",
+            "source_url": "https://investor.visa.com/stock-information/class-b-c-stock-info/default.aspx",
+            "status": "verified structure; proposed tag"
+          }
+        ],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": {
+          "ticker": "V",
+          "company": "Visa",
+          "market_cap_tier": "mega_large",
+          "sector": "Financials",
+          "domicile": "US",
+          "reporting_basis": "US_GAAP",
+          "complexity_tags": [
+            "network_economics",
+            "non_calendar_fiscal_year"
+          ]
+        }
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://investor.visa.com/stock-information/class-b-c-stock-info/default.aspx",
+          "kind": "issuer_class_information",
+          "finding": "At September 18, 2026, Class B-1, B-2 and B-3 conversion rates into Class A are 1.5400, 1.4924 and 1.4773. Class C converts at 4.0 Class A shares per Class C. Restricted classes must not be summed as unadjusted Class A units."
+        },
+        {
+          "url": "https://investor.visa.com/financial-information/quarterly-earnings/default.aspx",
+          "kind": "issuer_index_attempt",
+          "finding": "Rendered index did not supply usable current class-specific outstanding counts."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000104/v-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "filed_on": "2026-07-28",
+          "shares_as_of": "2026-07-21",
+          "finding": "Cover provides class-specific common shares; these are not October 9 counts."
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/v/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "385.45",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "shares_as_of": "2026-07-21",
+        "counts": {
+          "A": 1704112694,
+          "B1": 2180148,
+          "B2": 486669,
+          "B3": 60589871,
+          "C": 17059152
+        },
+        "conversion_ratios_as_of": "2026-09-18",
+        "class_A_equivalent_ratios": {
+          "A": "1",
+          "B1": "1.5400",
+          "B2": "1.4924",
+          "B3": "1.4773",
+          "C": "4"
+        },
+        "class_A_equivalents": "1865942451.1639",
+        "price_as_of": "2026-10-09",
+        "class_A_close_usd": "385.45",
+        "total_proxy_usd": "719227517801.125255",
+        "class_A_component_usd": "656850237902.30",
+        "limitation": "July counts, September conversion ratios and October price are mixed-date inputs. Conversion parity for restricted classes is a provisional valuation convention, not observed class prices. Class A alone supports a large-tier dated estimate but is not total-company capitalization.",
+        "convention_approved": false,
+        "exact_oct9_cap_verified": false
+      },
+      "diagnostic_estimate_usd": "719227517801.125255",
+      "targeted_primary_review": {
+        "url": "https://investor.visa.com/stock-information/class-b-c-stock-info/default.aspx",
+        "finding": "Class B transfers generally prohibited until escrow termination, subject to permitted transfers. C unrestricted. Conversion units do not prove price parity for restricted B classes.",
+        "smallest_remaining_decision": "No additional decision needed for large-tier lower-component classification; restricted-class parity remains unapproved and unused."
+      },
+      "classification_lower_component_usd": "656850237902.30",
+      "classification_proof": "Dated Class A component alone exceeds the inclusive $10bn large threshold. Known other common classes have nonnegative equity value; adding them cannot lower the total below this component. This proves only the large tier under the approved reported-share convention, not total market cap or conversion parity."
+    },
+    {
+      "ticker": "VTR",
+      "tier_eligible": true,
+      "tier": "large",
+      "classification_estimate_usd": "42082119292.36",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_remaining_cap_followup.json#VTR",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Real Estate",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "primary_evidence": [
+        {
+          "url": "https://s203.q4cdn.com/581756553/files/doc_financials/2026/q2/Ventas_Second_Quarter_2026_Earnings_Presentation.pdf",
+          "kind": "issuer_presentation",
+          "publication_date": "2026-07-28",
+          "finding": "Q2 diluted weighted-average shares and full-year share guidance are not point-in-time common shares; excluded from cap arithmetic."
+        },
+        {
+          "url": "https://s203.q4cdn.com/581756553/files/doc_financials/2025/ar/2025_VTR_AnnualReport.pdf",
+          "kind": "issuer_annual_report",
+          "finding": "Equity-forward agreements can settle physically, in cash, or net shares. Outstanding forwards are not automatically issued common shares."
+        },
+        {
+          "url": "https://ir.ventasreit.com/financials/quarterly-results/default.aspx",
+          "kind": "issuer_index_attempt",
+          "finding": "Rendered dynamic index supplied no usable current quarterly filing share count."
+        },
+        {
+          "url": "https://www.nasdaq.com/market-activity/stocks/vtr/historical",
+          "kind": "exchange_publisher_history_attempt",
+          "finding": "Common-stock security label visible; historical-price data unavailable in rendered page."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-07-30",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports company common shares. June 30 balance sheet reports preferred stock unissued; do not add unsettled forwards or subsidiary OP interests.",
+          "outstanding_common_shares": "512946359",
+          "measurement_date": "2026-07-28"
+        }
+      ],
+      "price": {
+        "url": "https://stockanalysis.com/stocks/vtr/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "82.04",
+        "primary_exchange_close_independently_verified": false
+      },
+      "basis": {
+        "observed_primary_shares": "512946359",
+        "share_measurement_date": "2026-07-28",
+        "share_basis": "Cover reports company common shares. June 30 balance sheet reports preferred stock unissued; do not add unsettled forwards or subsidiary OP interests.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "42082119292.36",
+        "calculated_minus_summary_usd": "-277880707.64",
+        "calculated_minus_historical_usd": "2119292.36",
+        "conditional_nearest_display_unit_usd": "42080000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      }
+    },
+    {
+      "ticker": "WDFC",
+      "tier_eligible": true,
+      "tier": "mid",
+      "classification_estimate_usd": "2714953509.84",
+      "verified_answer_market_cap_usd": null,
+      "exact_oct9_market_cap_verified": false,
+      "blocked_reason": null,
+      "evidence_artifact": "domestic_material_cap_followup.json#WDFC",
+      "price_date": "2026-10-09",
+      "limits": [
+        "Classification only under newly approved dated reported-share convention; not verified answer evidence.",
+        "Share measurement dates precede price; intervening changes not exhaustively reconciled.",
+        "Free secondary regular-close prices are not independently exchange-audited."
+      ],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen",
+      "metadata_fields": {
+        "incorporation_jurisdiction": null,
+        "domicile": null,
+        "reporting_basis": null,
+        "planning_sector": "Consumer Staples",
+        "sector_status": "existing planning label; not newly verified",
+        "complexity_tags": [],
+        "unresolved": [
+          "No new domicile/accounting-basis verification for this row in this bounded classification pass."
+        ],
+        "prior_registry_metadata": null
+      },
+      "execution_authorized": false,
+      "basis": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+        "observation_date": "2026-07-02",
+        "share_counts": {
+          "Common": "13421096"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "202.29"
+        },
+        "source_url": "https://stockanalysis.com/stocks/wdfc/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "2714953509.84",
+        "shares_older_than_price_days": 99,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      }
+    }
+  ]
+}

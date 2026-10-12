@@ -1,0 +1,404 @@
+{
+  "artifact_type": "metadata_only_material_cap_basis_followup",
+  "schema_version": 1,
+  "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+  "target_date": "2026-10-09",
+  "scope_tickers": [
+    "GEF",
+    "NNBR",
+    "LLY",
+    "PETS",
+    "JOUT",
+    "AIN",
+    "WDFC",
+    "NOG"
+  ],
+  "scope": "Primary reported share counts and free secondary regular-close prices; conditional arithmetic, no benchmark answers or live model/provider calls. No existing artifacts changed.",
+  "arithmetic": "Decimal exact on displayed operands; not extra source precision. Difference percentages use original summary as denominator.",
+  "policy_boundary": "This artifact proposes source-backed provisional reported-share estimates. It does not impose an audit of exact October9 shares. Parent decides consistent source hierarchy and any unquoted-class proxy; no admission flags changed.",
+  "primary_count_observed_count": 8,
+  "secondary_target_close_observed_count": 8,
+  "actual_class_price_sum_observed_count": 1,
+  "holdouts": "Reserved holdouts unchanged; external prior exposure remains unknown.",
+  "source_access_notes": [
+    "SEC archive directories and direct filing documents worked. Several issuer IR routes/SEC CGI queries were inaccessible; general search often returned unrelated results. Sources below are actual inspected documents.",
+    "Latest inspected filing is not asserted exhaustive post-filing corporate-action review."
+  ],
+  "rows": [
+    {
+      "ticker": "GEF",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "4650000000",
+      "original_historical_usd": "3780000000",
+      "absolute_difference_pct_of_summary": "18.7097",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+        "observation_date": "2026-07-27",
+        "share_counts": {
+          "Class A": "24808643",
+          "Class B": "21359678"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Class A": "81.82",
+          "Class B": "108.04"
+        },
+        "source_url": "https://stockanalysis.com/stocks/gef/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape.",
+        "additional_class_source_url": "https://stockanalysis.com/stocks/gef.b/history/"
+      },
+      "calculation": {
+        "formula": "sum(class_shares * same_class_close)",
+        "conditional_reported_share_value_usd": "4337542781.38",
+        "shares_older_than_price_days": 74,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "basis_diagnostics": {
+        "all_shares_at_A_price_usd": "3777492024.22",
+        "A_plus_1_5_B_at_A_price_usd": "4651316451.200",
+        "finding": "Historical3.78B is reproduced by pricing A+B at A close; summary4.65B is reproduced by weighting B1.5 at A close. Filing discloses B dividend entitlement1.5 times A. These numerical matches infer provider mechanics; they do not establish its documented methodology. Listed B actually closes108.04, so class-price sum differs from both."
+      },
+      "recommendation": "Prefer provisional sum of separately traded class values, $4.33754278138B with July27 counts, over either single-price proxy. Preserve both raw observations; parent must adopt reported-share/source hierarchy before admission.",
+      "smallest_remaining_choice_or_source": "Approve latest-inspected reported shares plus each class actual target close as provisional convention; no exact October9 share-register audit required. A later dated class-count disclosure could improve the estimate."
+    },
+    {
+      "ticker": "NNBR",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "370290000",
+      "original_historical_usd": "326200000",
+      "absolute_difference_pct_of_summary": "11.9069",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+        "observation_date": "2026-08-05",
+        "share_counts": {
+          "Common": "82580864"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "3.95"
+        },
+        "source_url": "https://stockanalysis.com/stocks/nnbr/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "326194412.80",
+        "shares_older_than_price_days": 65,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "secondary_share_observation": {
+        "source_url": "https://stockanalysis.com/stocks/nnbr/statistics/",
+        "display_shares_millions": "93.74",
+        "as_of": null
+      },
+      "basis_diagnostics": {
+        "finding": "August5 cover82,580,864 produces326.1944128M, close to historical326.20M but outside its displayed nearest-rounding interval. Current secondary93.74M explains summary370.29M. Primary filing already records July2 issuance24,509,804 and August5 preferred exchange5,500,000; do not add these again to cover count. No inspected primary evidence establishes the additional approximately11.16M current-secondary shares."
+      },
+      "recommendation": "Use cover-based326.1944128M only under explicit primary-reported-share precedence; otherwise retain conflict. Do not treat unverified93.74M as established later issuance.",
+      "smallest_remaining_choice_or_source": "A dated post-August5 outstanding-common-share disclosure supporting93.74M, or approval to prioritize August5 primary count over undated current-secondary count."
+    },
+    {
+      "ticker": "LLY",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "1050000000000",
+      "original_historical_usd": "1110000000000",
+      "absolute_difference_pct_of_summary": "5.7143",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/59478/000005947826000081/lly-20260630.htm",
+        "observation_date": "2026-08-03",
+        "share_counts": {
+          "Common": "941357065"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "1179.27"
+        },
+        "source_url": "https://stockanalysis.com/stocks/lly/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "1110114146042.55",
+        "shares_older_than_price_days": 67,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "secondary_share_observation": {
+        "source_url": "https://stockanalysis.com/stocks/lly/financials/balance-sheet/",
+        "display_filing_date_shares_millions": "891.36",
+        "period_label": "Jun26",
+        "primary_disagreement": "Primary cover941,357,065 differs by approximately50M shares."
+      },
+      "basis_diagnostics": {
+        "finding": "Primary941,357,065 at1179.27 yields1.11011414604255T, reproducing historical1.11T at displayed precision. Secondary891.36M yields approximately1.05T. Source share-count disagreement is concrete; reason for secondary discrepancy not verified."
+      },
+      "recommendation": "Historical1.11T has primary reported-share corroboration and is the preferred provisional candidate over summary1.05T, with August3 count date disclosed.",
+      "smallest_remaining_choice_or_source": "Approve dated primary-reported-share precedence over conflicting secondary shares; no new valuation assumption or audited October9 count required."
+    },
+    {
+      "ticker": "PETS",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "27050000",
+      "original_historical_usd": "27900000",
+      "absolute_difference_pct_of_summary": "3.1423",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+        "observation_date": "2026-08-07",
+        "share_counts": {
+          "Common": "21678914"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "1.285"
+        },
+        "source_url": "https://stockanalysis.com/stocks/pets/statistics/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Regular-close quote header1.285 is more precise than history table1.29; after-hours1.280 excluded."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "27857404.490",
+        "shares_older_than_price_days": 63,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "basis_diagnostics": {
+        "june30_nonvested_restricted_shares": "626804",
+        "cover_minus_june_restricted_times_price_usd": "27051961.350",
+        "finding": "Removing June30 issued restricted shares from August7 cover count produces27.05196135M, matching summary27.05M. Full cover count produces27.85740449M; it does not exactly reproduce historical27.90M. Filing also discloses August11 grant60,000 restricted shares; no complete October9 share-change reconciliation attempted. Exclusion mechanism is an inference with mixed share dates."
+      },
+      "recommendation": "Do not call summary total issued common equity without addressing restricted-share exclusion. Prefer explicitly dated gross reported-share estimate if issued restricted common stock is included by the cohort convention; do not equate it to historical27.90M.",
+      "smallest_remaining_choice_or_source": "Confirm total-company common-equity includes already-issued restricted common stock (not unissued RSUs/options) and use primary share-source precedence; optionally obtain later common count incorporating August11 grant."
+    },
+    {
+      "ticker": "JOUT",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "441130000",
+      "original_historical_usd": "448100000",
+      "absolute_difference_pct_of_summary": "1.5800",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/788329/000078832926000016/jout-20260703.htm",
+        "observation_date": "2026-07-30",
+        "share_counts": {
+          "Class A": "9273554",
+          "Class B": "1206116"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Class A": "42.76"
+        },
+        "source_url": "https://stockanalysis.com/stocks/jout/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "(Class_A + Class_B) * Class_A_close",
+        "conditional_reported_share_value_usd": "448110689.20",
+        "shares_older_than_price_days": 71,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled.",
+          "Class B is valued at Class A quoted price solely as an explicit unquoted-class proxy, not an observed B market price."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "basis_diagnostics": {
+        "july3_nonvested_shares": "163149",
+        "cover_minus_july3_nonvested_at_A_price_usd": "441134437.96",
+        "finding": "A+B cover count at A close yields448.1106892M, near historical448.10M but not equal at its displayed precision. Removing July3 nonvested163,149 shares gives441.13443796M, matching summary441.13M. Dual classes therefore are not by themselves evidence that a whole class was omitted; issued restricted shares explain the amount difference much more closely. Mixed share dates and B proxy remain explicit."
+      },
+      "recommendation": "Use full issued-share count rather than restricted-share-excluded total if common equity convention includes issued restricted shares; require explicit A-price proxy convention for unquoted B before treating estimate as company cap.",
+      "smallest_remaining_choice_or_source": "Approve or specify the unquoted B valuation proxy and issued-restricted-common inclusion. No assumption of an observed B quote."
+    },
+    {
+      "ticker": "AIN",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "1750000000",
+      "original_historical_usd": "1760000000",
+      "absolute_difference_pct_of_summary": "0.5714",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/819793/000162828026052329/ain-20260630.htm",
+        "observation_date": "2026-07-15",
+        "share_counts": {
+          "Class A": "28400000"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close.",
+        "precision_note": "Cover rounds count to0.1million;28.4M is not an exact integer count."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Class A": "61.80"
+        },
+        "source_url": "https://stockanalysis.com/stocks/ain/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "1755120000.00",
+        "shares_older_than_price_days": 86,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "basis_diagnostics": {
+        "finding": "28.4M\u00d761.80 gives1.75512B, close to display boundary between1.75B/1.76B. Cover count is rounded; both candidate values remain compatible with plausible count precision, so no share-class error established. June30 equity table has ClassA issued41.057M less treasury12.686M; do not use gross issued including treasury."
+      },
+      "recommendation": "Retain as small precision/source-convention issue; choose a consistent provisional primary count/rounding convention rather than claim either displayed figure independently exact.",
+      "smallest_remaining_choice_or_source": "More precise dated net outstanding count, or approve rounded reported-share estimate1.75512B with disclosed count precision."
+    },
+    {
+      "ticker": "WDFC",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "2710000000",
+      "original_historical_usd": "2720000000",
+      "absolute_difference_pct_of_summary": "0.3690",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/105132/000010513226000061/wdfc-20260531.htm",
+        "observation_date": "2026-07-02",
+        "share_counts": {
+          "Common": "13421096"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "202.29"
+        },
+        "source_url": "https://stockanalysis.com/stocks/wdfc/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "2714953509.84",
+        "shares_older_than_price_days": 99,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "basis_diagnostics": {
+        "finding": "July2 count\u00d7202.29 gives2.71495350984B, just below2.715B half-cent-billion boundary, supporting2.71B at displayed rounding. It is only46,490.16 below the boundary, so tiny later share changes or sub-cent quote precision could change2.72B display."
+      },
+      "recommendation": "Summary2.71B is corroborated by inspected dated shares; adopt provisionally only with consistent reported-share convention.",
+      "smallest_remaining_choice_or_source": "Approve dated reported-share/regular-close precedence, or obtain a later precise common count for boundary reconciliation."
+    },
+    {
+      "ticker": "NOG",
+      "target_date": "2026-10-09",
+      "retrieved_at": "2026-10-12T00:01:11.229957+00:00",
+      "original_summary_usd": "2630000000",
+      "original_historical_usd": "2640000000",
+      "absolute_difference_pct_of_summary": "0.3802",
+      "primary_shares": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1104485/000110448526000032/nog-20260630.htm",
+        "observation_date": "2026-08-03",
+        "share_counts": {
+          "Common": "106549128"
+        },
+        "scope": "Latest cover share count directly inspected in this follow-up; not asserted exhaustive search of every subsequent filing. Count date retained separately from target close."
+      },
+      "price": {
+        "date": "2026-10-09",
+        "session": "regular market close",
+        "currency": "USD",
+        "prices_by_class": {
+          "Common": "24.76"
+        },
+        "source_url": "https://stockanalysis.com/stocks/nog/history/",
+        "source_type": "free secondary historical price",
+        "precision_note": "Displayed close precision retained; not an independently audited exchange tape."
+      },
+      "calculation": {
+        "formula": "reported_shares * regular_close",
+        "conditional_reported_share_value_usd": "2638156409.28",
+        "shares_older_than_price_days": 67,
+        "status": "provisional_reported_share_estimate_not_exact_target_date_cap",
+        "assumptions": [
+          "Uses observed earlier dated reported shares at target close; intervening share changes are not exhaustively reconciled."
+        ]
+      },
+      "exact_oct9_verified": false,
+      "admission_changed": false,
+      "execution_enabled": false,
+      "basis_diagnostics": {
+        "finding": "August3 count\u00d724.76 gives2.63815640928B, rounding2.64B and corroborating historical row over2.63B summary; no class aggregation error established."
+      },
+      "recommendation": "Prefer provisional2.63815640928B reported-share estimate, displayed2.64B, subject to source hierarchy.",
+      "smallest_remaining_choice_or_source": "Approve dated reported-share/regular-close precedence; exact October9 share-register audit is not required for provisional classification."
+    }
+  ]
+}

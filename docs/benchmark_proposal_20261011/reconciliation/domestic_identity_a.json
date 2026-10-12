@@ -1,0 +1,1879 @@
+{
+  "artifact_type": "metadata_only_primary_identity_reconciliation",
+  "schema_version": 1,
+  "created_at": "2026-10-11T23:46:03Z",
+  "scope": "First 45 alphabetic candidates after excluding ASML,NVS,TSM,SAP,SONY,TM,RY,BHP,UL,EQNR,AON",
+  "candidate_count": 45,
+  "current_primary_identity_mapping_count": 45,
+  "unique_cik_count": 45,
+  "historical_target_identity_verified_count": 0,
+  "full_company_market_cap_verified_count": 0,
+  "source_access": {
+    "SEC_web": "succeeded for all assigned ticker rows",
+    "direct_shell_SEC": "blocked: URLopen Tunnel connection failed: 403 Forbidden; no bypass attempted",
+    "additional_primary_classes": "ACMR, AIN, GEF and HBB primary filing/issuer pages; Alphabet same-CIK alias mapping",
+    "unsupported_claims": [
+      "SEC current list is not historical Oct 9 identity evidence",
+      "absence of another ticker in extracted snippets is not proof of a single-class capital structure",
+      "provisional secondary market capitalization approval does not independently reconcile conflicting source values"
+    ]
+  },
+  "actions_not_taken": [
+    "No application changes",
+    "No benchmark answers or captures",
+    "No tuning using holdout answers",
+    "No canonical registry changes",
+    "No paid provider calls",
+    "No commit"
+  ],
+  "rows": [
+    {
+      "ticker_candidate": "AA",
+      "issuer_name_observed": "Alcoa Corp",
+      "cik": "0001675149",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001675149",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/aa",
+        "source_as_of": null,
+        "observed_security_label": "Alcoa Corporation Common Stock (AA)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "site:sec.gov/Archives/edgar/data/1675149 Alcoa 2026 common stock AA",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "No search results"
+        },
+        {
+          "url_or_query": "https://investors.alcoa.com/resources/investor-faqs/default.aspx",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Accessible rendered FAQ lacks class content"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/aa",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Alcoa Corporation Common Stock (AA)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "AAPL",
+      "issuer_name_observed": "Apple Inc.",
+      "cik": "0000320193",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000320193",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "class_name": "Common Stock, $0.00001 par value",
+        "other_classes": [],
+        "scope": "10-Q cover maps common stock to AAPL on Nasdaq; balance sheet identifies common equity. Older dated evidence, not a 2026 filing.",
+        "cap_gap": "No independent cap reconstruction required; use separate approved provisional-secondary total-company basis and cap conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000073/aapl-20250628.htm",
+        "source_as_of": "2025-06-28",
+        "dated_applicability": "Class/identity evidence at the stated filing or event date; current SEC identity mapping corroborates registrant. Does not independently prove all October 9 corporate actions or trading status."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/Archives/edgar/data/320193/000032019325000073/aapl-20250628.htm",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Primary class evidence retrieved and inspected."
+        },
+        {
+          "url_or_query": "site:sec.gov/Archives/edgar/data/320193 aapl 2026 common stock",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Search returned unrelated dictionary results; not evidence"
+        }
+      ],
+      "followup_scope": "Bounded primary class-source search; absence of a retrieved class source is not evidence of no common class.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ACHC",
+      "issuer_name_observed": "Acadia Healthcare Company, Inc.",
+      "cik": "0001520697",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001520697",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/achc",
+        "source_as_of": null,
+        "observed_security_label": "Acadia Healthcare Company, Inc. Common Stock (ACHC)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/edgar/browse/?CIK=1520697&owner=exclude",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Rendered dynamic shell lacks issuer filing rows; not proof of absent filings"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/achc",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Acadia Healthcare Company, Inc. Common Stock (ACHC)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ACMR",
+      "issuer_name_observed": "ACM Research, Inc.",
+      "cik": "0001680062",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001680062",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "url": "https://www.sec.gov/Archives/edgar/data/1680062/000162828026032842/acmr-20260331.htm",
+        "date": "2026-03-31",
+        "class_name": "Class A common stock",
+        "other_classes": [
+          {
+            "name": "Class B common stock",
+            "ticker": null
+          }
+        ],
+        "scope": "Cover identifies ACMR as Nasdaq Class A; both A and B outstanding. ACM Shanghai is separately listed; do not substitute its equity value for the US parent.",
+        "cap_gap": "Need whole-parent equity covering A and B; do not use separately listed ACM Shanghai capitalization.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/files/company_tickers_exchange.json",
+          "retrieved_at": "2026-10-11T23:46:03Z",
+          "result": "Existing primary filing class evidence from initial pass retained; see share_class_review."
+        }
+      ],
+      "followup_scope": "Existing primary class evidence retained from first pass; no new request necessary.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ACNB",
+      "issuer_name_observed": "ACNB CORP",
+      "cik": "0000715579",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000715579",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "AIN",
+      "issuer_name_observed": "ALBANY INTERNATIONAL CORP /DE/",
+      "cik": "0000819793",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000819793",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "url": "https://www.sec.gov/Archives/edgar/data/819793/000162828026010871/ain-20260224.htm",
+        "date": "2026-02-24",
+        "class_name": "Class A common stock",
+        "other_classes": [],
+        "scope": "SEC 8-K cover identifies AIN as NYSE Class A.",
+        "cap_gap": "Current full class inventory and total-company capitalization basis not established by cover mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "Existing primary class evidence retained from first pass; no new request necessary."
+    },
+    {
+      "ticker_candidate": "AJG",
+      "issuer_name_observed": "Arthur J. Gallagher & Co.",
+      "cik": "0000354190",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000354190",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "AMT",
+      "issuer_name_observed": "AMERICAN TOWER CORP /MA/",
+      "cik": "0001053507",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001053507",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/amt",
+        "source_as_of": null,
+        "observed_security_label": "American Tower Corporation (REIT) Common Stock (AMT)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/edgar/browse/?CIK=1053507&owner=exclude",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Rendered dynamic shell lacks issuer filing rows"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/amt",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: American Tower Corporation (REIT) Common Stock (AMT)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "AMZN",
+      "issuer_name_observed": "AMAZON COM INC",
+      "cik": "0001018724",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001018724",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/amzn",
+        "source_as_of": null,
+        "observed_security_label": "Amazon.com, Inc. Common Stock (AMZN)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://ir.aboutamazon.com/annual-reports-proxies-and-shareholder-letters/default.aspx",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Accessible shell did not expose annual filing links/class evidence"
+        },
+        {
+          "url_or_query": "site:sec.gov/Archives/edgar/data/1018724 amzn 2026 common stock",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Search returned unrelated results; not evidence"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/amzn",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Amazon.com, Inc. Common Stock (AMZN)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ANGO",
+      "issuer_name_observed": "ANGIODYNAMICS INC",
+      "cik": "0001275187",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001275187",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "ASH",
+      "issuer_name_observed": "ASHLAND INC.",
+      "cik": "0001674862",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001674862",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/ash",
+        "source_as_of": null,
+        "observed_security_label": "Ashland Inc. Common Stock (ASH)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/edgar/browse/?CIK=1674862&owner=exclude",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Tool reported inaccessible/internal error"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/ash",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Ashland Inc. Common Stock (ASH)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "AVT",
+      "issuer_name_observed": "AVNET INC",
+      "cik": "0000008858",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000008858",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/avt",
+        "source_as_of": null,
+        "observed_security_label": "Avnet, Inc. Common Stock (AVT)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/avt",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Avnet, Inc. Common Stock (AVT)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "AWR",
+      "issuer_name_observed": "AMERICAN STATES WATER CO",
+      "cik": "0001056903",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001056903",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/awr",
+        "source_as_of": null,
+        "observed_security_label": "American States Water Company Common Stock (AWR)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/awr",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: American States Water Company Common Stock (AWR)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "BA",
+      "issuer_name_observed": "BOEING CO",
+      "cik": "0000012927",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000012927",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/ba",
+        "source_as_of": null,
+        "observed_security_label": "Boeing Company (The) Common Stock (BA)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/ba",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Boeing Company (The) Common Stock (BA)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "BANF",
+      "issuer_name_observed": "BANCFIRST CORP /OK/",
+      "cik": "0000760498",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000760498",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/banf",
+        "source_as_of": null,
+        "observed_security_label": "BancFirst Corporation Common Stock (BANF)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/banf",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: BancFirst Corporation Common Stock (BANF)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "BGS",
+      "issuer_name_observed": "B&G Foods, Inc.",
+      "cik": "0001278027",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001278027",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "BKH",
+      "issuer_name_observed": "BLACK HILLS CORP /SD/",
+      "cik": "0001130464",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001130464",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/bkh",
+        "source_as_of": null,
+        "observed_security_label": "Black Hills Corporation Common Stock (BKH)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/bkh",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Black Hills Corporation Common Stock (BKH)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "CAL",
+      "issuer_name_observed": "CALERES INC",
+      "cik": "0000014707",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000014707",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "CBU",
+      "issuer_name_observed": "COMMUNITY FINANCIAL SYSTEM, INC.",
+      "cik": "0000723188",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000723188",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/cbu",
+        "source_as_of": null,
+        "observed_security_label": "Community Financial System, Inc. Common Stock (CBU)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/cbu",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Community Financial System, Inc. Common Stock (CBU)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "CCBG",
+      "issuer_name_observed": "CAPITAL CITY BANK GROUP INC",
+      "cik": "0000726601",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000726601",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "COST",
+      "issuer_name_observed": "COSTCO WHOLESALE CORP /NEW",
+      "cik": "0000909832",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000909832",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/cost",
+        "source_as_of": null,
+        "observed_security_label": "Costco Wholesale Corporation Common Stock (COST)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://investor.costco.com/resources/investor-faqs/default.aspx",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Issuer FAQ references common stock and historic COST ticker, but dated current class inventory not established"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/cost",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Costco Wholesale Corporation Common Stock (COST)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "CWT",
+      "issuer_name_observed": "CALIFORNIA WATER SERVICE GROUP",
+      "cik": "0001035201",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001035201",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/cwt",
+        "source_as_of": null,
+        "observed_security_label": "California Water Service Group Common Stock (CWT)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/cwt",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: California Water Service Group Common Stock (CWT)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "DOCU",
+      "issuer_name_observed": "DOCUSIGN, INC.",
+      "cik": "0001261333",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001261333",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/docu",
+        "source_as_of": null,
+        "observed_security_label": "DocuSign, Inc. Common Stock (DOCU)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://investor.docusign.com/resources/investor-faqs/default.aspx",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Accessible FAQ lacked common-stock class content"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/docu",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: DocuSign, Inc. Common Stock (DOCU)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "DTE",
+      "issuer_name_observed": "DTE ENERGY CO",
+      "cik": "0000936340",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000936340",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/dte",
+        "source_as_of": null,
+        "observed_security_label": "DTE Energy Company Common Stock (DTE)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/dte",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: DTE Energy Company Common Stock (DTE)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "EFOR",
+      "issuer_name_observed": "Everforth Inc",
+      "cik": "0000890564",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000890564",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "8-K cover explicitly maps Everforth common stock to EFOR on NYSE.",
+        "cap_gap": "No independent cap reconstruction required; use separate approved provisional-secondary total-company basis and cap conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000047/asgn-20260729.htm",
+        "source_as_of": "2026-07-29",
+        "dated_applicability": "Class/identity evidence at the stated filing or event date; current SEC identity mapping corroborates registrant. Does not independently prove all October 9 corporate actions or trading status."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "additional_gap": "Current SEC name is Everforth Inc. Historical name/ticker transition effective date was not verified from a primary corporate-action notice in this bounded check.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000047/asgn-20260729.htm",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Primary class evidence retrieved and inspected."
+        },
+        {
+          "url_or_query": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000025/asgn-20260424.htm",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Name and ticker transition retrieved from issuer SEC 8-K."
+        }
+      ],
+      "followup_scope": "Bounded primary class-source search; absence of a retrieved class source is not evidence of no common class.",
+      "corporate_action_evidence": {
+        "source_url": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000025/asgn-20260424.htm",
+        "event_date": "2026-04-24",
+        "finding": "ASGN Incorporated changed name to Everforth, Inc.; announced NYSE symbol change from ASGN to EFOR effective that day; stockholder rights unchanged. This is not a DXC predecessor."
+      },
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ENR",
+      "issuer_name_observed": "ENERGIZER HOLDINGS, INC.",
+      "cik": "0001632790",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001632790",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/enr",
+        "source_as_of": null,
+        "observed_security_label": "Energizer Holdings, Inc. Common Stock (ENR)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/enr",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Energizer Holdings, Inc. Common Stock (ENR)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ENS",
+      "issuer_name_observed": "EnerSys",
+      "cik": "0001289308",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001289308",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/ens",
+        "source_as_of": null,
+        "observed_security_label": "EnerSys Common Stock (ENS)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/ens",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: EnerSys Common Stock (ENS)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "ETSY",
+      "issuer_name_observed": "ETSY INC",
+      "cik": "0001370637",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001370637",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "class_name": "Common stock",
+        "other_classes": [],
+        "scope": "Issuer FAQ identifies common-stock transfer to NYSE effective October 13, 2025, with ETSY symbol. Page currently observed; date is stated historical event, not page publication.",
+        "cap_gap": "No independent cap reconstruction required; use separate approved provisional-secondary total-company basis and cap conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://investors.etsy.com/resources/faq",
+        "source_as_of": null,
+        "dated_applicability": "Class/identity evidence at the stated filing or event date; current SEC identity mapping corroborates registrant. Does not independently prove all October 9 corporate actions or trading status."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://investors.etsy.com/resources/faq",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Primary class evidence retrieved and inspected."
+        }
+      ],
+      "followup_scope": "Bounded primary class-source search; absence of a retrieved class source is not evidence of no common class.",
+      "exchange_source_conflict": {
+        "sec_mapping_exchange": "Nasdaq",
+        "issuer_faq_exchange": "NYSE",
+        "issuer_stated_transfer_effective_date": "2025-10-13",
+        "status": "conflicting_primary_observations_preserved",
+        "action": "Prefer explicit dated issuer transfer evidence for proposed exchange correction, subject to parent reconciliation; do not silently treat SEC mapping as current exchange proof."
+      },
+      "basic_listed_class_observed": true,
+      "proposed_exchange_from_dated_issuer_evidence": "NYSE"
+    },
+    {
+      "ticker_candidate": "FRPH",
+      "issuer_name_observed": "FRP HOLDINGS, INC.",
+      "cik": "0000844059",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000844059",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "FUL",
+      "issuer_name_observed": "FULLER H B CO",
+      "cik": "0000039368",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000039368",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/ful",
+        "source_as_of": null,
+        "observed_security_label": "H. B. Fuller Company Common Stock (FUL)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/ful",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: H. B. Fuller Company Common Stock (FUL)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "GEF",
+      "issuer_name_observed": "GREIF, INC",
+      "cik": "0000043920",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000043920",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "url": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+        "date": "2026-06-30",
+        "class_name": "Class A common stock",
+        "other_classes": [
+          {
+            "name": "Class B common stock",
+            "ticker": "GEF-B"
+          }
+        ],
+        "scope": "Cover identifies NYSE GEF Class A and GEF-B Class B; both are one Greif issuer.",
+        "cap_gap": "Whole-company capitalization must include both classes without treating GEF-B as another company; unequal class economics preclude assuming identical class prices.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "Existing primary class evidence retained from first pass; no new request necessary."
+    },
+    {
+      "ticker_candidate": "GOOGL",
+      "issuer_name_observed": "Alphabet Inc.",
+      "cik": "0001652044",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001652044",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Class A Common Stock",
+        "other_classes": [
+          {
+            "name": "class title not verified in this bounded check",
+            "ticker": "GOOG"
+          }
+        ],
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/googl",
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_as_of": null,
+        "observed_security_label": "Alphabet Inc. Class A Common Stock (GOOGL)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://abc.xyz/investor/faqs-and-general-information/",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Accessible FAQ had no Class matching text; existing SEC GOOG/GOOGL same-CIK dedup retained"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/googl",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Alphabet Inc. Class A Common Stock (GOOGL)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "GRC",
+      "issuer_name_observed": "GORMAN RUPP CO",
+      "cik": "0000042682",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000042682",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/grc",
+        "source_as_of": null,
+        "observed_security_label": "Gorman-Rupp Company (The) Common Stock (GRC)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/grc",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Gorman-Rupp Company (The) Common Stock (GRC)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "HAE",
+      "issuer_name_observed": "HAEMONETICS CORP",
+      "cik": "0000313143",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000313143",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/hae",
+        "source_as_of": null,
+        "observed_security_label": "Haemonetics Corporation Common Stock (HAE)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/hae",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Haemonetics Corporation Common Stock (HAE)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "HBB",
+      "issuer_name_observed": "Hamilton Beach Brands Holding Co",
+      "cik": "0001709164",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001709164",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "url": "https://www.hamiltonbeachbrands.com/investors/faqs/default.aspx",
+        "date": null,
+        "class_name": "Class A common stock",
+        "other_classes": [
+          {
+            "name": "Class B common stock",
+            "ticker": null
+          }
+        ],
+        "scope": "Issuer FAQ identifies HBB as NYSE Class A, restricted unlisted Class B, equal dividend/distribution rights and one-for-one B-to-A conversion.",
+        "cap_gap": "Total-company common equity should cover both A and unlisted B; FAQ does not establish aggregator share-count basis.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "Existing primary class evidence retained from first pass; no new request necessary."
+    },
+    {
+      "ticker_candidate": "INGR",
+      "issuer_name_observed": "Ingredion Inc",
+      "cik": "0001046257",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001046257",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/ingr",
+        "source_as_of": null,
+        "observed_security_label": "Ingredion Incorporated Common Stock (INGR)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/ingr",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Ingredion Incorporated Common Stock (INGR)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "JBLU",
+      "issuer_name_observed": "JETBLUE AIRWAYS CORP",
+      "cik": "0001158463",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001158463",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/jblu",
+        "source_as_of": null,
+        "observed_security_label": "JetBlue Airways Corporation Common Stock (JBLU)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://ir.jetblue.com/investor-relations/financial-information/sec-filings/default.aspx",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Tool reported inaccessible"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/jblu",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: JetBlue Airways Corporation Common Stock (JBLU)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "JNJ",
+      "issuer_name_observed": "JOHNSON & JOHNSON",
+      "cik": "0000200406",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000200406",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/jnj",
+        "source_as_of": null,
+        "observed_security_label": "Johnson & Johnson Common Stock (JNJ)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.investor.jnj.com/investor-resources/faqs",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Tool reported inaccessible"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/jnj",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Johnson & Johnson Common Stock (JNJ)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "JOUT",
+      "issuer_name_observed": "JOHNSON OUTDOORS INC",
+      "cik": "0000788329",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000788329",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "class_label_not_established_by_ticker_mapping",
+        "class_name": null,
+        "other_classes": [],
+        "scope": "SEC ticker mapping identifies the registrant and exchange, not the full security-class or capitalization inventory.",
+        "cap_gap": "Total-company versus listed-class/float/enterprise-value basis not established by the SEC ticker mapping.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "additional_gap": "Issuer-hosted September 2024 8-K supports historical A/B dividends, but does not alone establish the complete October 2026 class inventory.",
+      "cap_numeric_comparison_status": "nonoverlapping_display_intervals_unresolved",
+      "primary_class_followup_attempts": [],
+      "followup_scope": "No additional issuer class source retrieved within this bounded pass; unresolved, not claimed inaccessible."
+    },
+    {
+      "ticker_candidate": "JPM",
+      "issuer_name_observed": "JPMORGAN CHASE & CO",
+      "cik": "0000019617",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000019617",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/jpm",
+        "source_as_of": null,
+        "observed_security_label": "JP Morgan Chase & Co. Common Stock (JPM)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://investor.jpmorganchase.com/shareholder-information/faqs",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Tool reported inaccessible"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/jpm",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: JP Morgan Chase & Co. Common Stock (JPM)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "KAI",
+      "issuer_name_observed": "KADANT INC",
+      "cik": "0000886346",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000886346",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/kai",
+        "source_as_of": null,
+        "observed_security_label": "Kadant Inc Common Stock (KAI)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/kai",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Kadant Inc Common Stock (KAI)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "KBR",
+      "issuer_name_observed": "KBR, INC.",
+      "cik": "0001357615",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001357615",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/kbr",
+        "source_as_of": null,
+        "observed_security_label": "KBR, Inc. Common Stock (KBR)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/kbr",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: KBR, Inc. Common Stock (KBR)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "KO",
+      "issuer_name_observed": "COCA COLA CO",
+      "cik": "0000021344",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000021344",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Common Stock",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/ko",
+        "source_as_of": null,
+        "observed_security_label": "Coca-Cola Company (The) Common Stock (KO)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://investors.coca-colacompany.com/shareowners/investor-faqs",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Tool reported inaccessible"
+        },
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/ko",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Coca-Cola Company (The) Common Stock (KO)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "LEVI",
+      "issuer_name_observed": "LEVI STRAUSS & CO",
+      "cik": "0000094845",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0000094845",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "specific_primary_class_mapping_observed",
+        "class_name": "Class A Common Stock, $0.001 par value",
+        "other_classes": [
+          {
+            "class_name": "Class B common stock",
+            "listed_ticker": null,
+            "scope": "Class B remains outstanding; January 23, 2026 class inventory in the January 28 annual filing."
+          }
+        ],
+        "scope": "10-K cover maps LEVI to Class A on NYSE; filing describes Class B and restricted trading/conversion. Deduplicate both classes as one issuer; secondary cap must represent total company, not Class A float.",
+        "cap_gap": "No independent cap reconstruction required; use separate approved provisional-secondary total-company basis and cap conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/94845/000009484526000008/lvis-20251130.htm",
+        "source_as_of": "2026-01-28",
+        "dated_applicability": "Class/identity evidence at the stated filing or event date; current SEC identity mapping corroborates registrant. Does not independently prove all October 9 corporate actions or trading status."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "additional_gap": "Attempted issuer FAQ URL was inaccessible via web tool; current SEC identity is confirmed, but class details are not inferred from that failure.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.sec.gov/Archives/edgar/data/94845/000009484526000008/lvis-20251130.htm",
+          "retrieved_at": "2026-10-11T23:51:41.667435+00:00",
+          "result": "Primary class evidence retrieved and inspected."
+        }
+      ],
+      "followup_scope": "Bounded primary class-source search; absence of a retrieved class source is not evidence of no common class.",
+      "basic_listed_class_observed": true
+    },
+    {
+      "ticker_candidate": "LIN",
+      "issuer_name_observed": "LINDE PLC",
+      "cik": "0001707925",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "identity_source_as_of": null,
+      "retrieved_at": "2026-10-11T23:46:03Z",
+      "retrieval_timestamp_semantics": "retrieval-batch completion; not source publication or market observation time",
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "issuer_deduplication_key": "SEC_CIK:0001707925",
+      "listing_status_scope": "Present in current SEC exchange mapping; not an independently verified Oct 9 trading-status history.",
+      "share_class_review": {
+        "status": "exchange_quote_basic_listed_class_observed",
+        "class_name": "Ordinary Shares",
+        "other_classes": [],
+        "scope": "Nasdaq-operated quote page basic listed-security identity only. Presence on Nasdaq website does not mean Nasdaq is its listing exchange. Not a complete unlisted-class inventory.",
+        "cap_gap": "No independent cap reconstruction required. Retain approved provisional-secondary total-company basis and separate cap amount conflict gate.",
+        "provisional_cap_policy_note": "Independent reconstruction of price times every class share count is not required by approved provisional-secondary policy. Known multiple classes require issuer deduplication and secondary total-company basis; cap amount conflicts remain separate blockers.",
+        "source_url": "https://www.nasdaq.com/market-activity/stocks/lin",
+        "source_as_of": null,
+        "observed_security_label": "Linde plc Ordinary Shares (LIN)",
+        "dated_applicability": "Current page observed at retrieval; publication/as-of date unavailable. Not independently dated October 9 historical identity evidence."
+      },
+      "total_company_market_cap_verified": false,
+      "market_cap_action": "Retain approved provisional secondary classification only subject to separate amount/as-of reconciliation; this identity review neither accepts nor replaces a disputed cap.",
+      "holdout_action": "Preserve existing reservation; metadata-only identity research; external prior answer exposure remains unknown.",
+      "additional_gap": "Foreign plc identity; international reconciliation agent is separately assessing domicile/ordinary-share details. Do not assume domestic incorporation from this workload split.",
+      "cap_numeric_comparison_status": "same_displayed_numeric_value",
+      "primary_class_followup_attempts": [
+        {
+          "url_or_query": "https://www.nasdaq.com/market-activity/stocks/lin",
+          "retrieved_at": "2026-10-11T23:53:08.210452+00:00",
+          "result": "Accessible Nasdaq market-activity page explicitly identifies listed class in page title/header: Linde plc Ordinary Shares (LIN)"
+        }
+      ],
+      "followup_scope": "Actual primary exchange-site quote page read completed; basic listed class observed; no claim about complete share-class inventory, price, market cap, or live trading status.",
+      "basic_listed_class_observed": true
+    }
+  ],
+  "updated_at": "2026-10-11T23:53:08.210452+00:00",
+  "primary_class_mapping_observed_count": 37,
+  "class_mapping_unresolved_count": 8,
+  "primary_exchange_conflict_tickers": [
+    "ETSY"
+  ],
+  "cap_equal_priority_class_mapping_observed_tickers": [
+    "AA",
+    "AAPL",
+    "ACHC",
+    "ACMR",
+    "AMT",
+    "AMZN",
+    "ASH",
+    "AVT",
+    "AWR",
+    "BA",
+    "BANF",
+    "BKH",
+    "CBU",
+    "COST",
+    "CWT",
+    "DOCU",
+    "DTE",
+    "EFOR",
+    "ENR",
+    "ENS",
+    "ETSY",
+    "FUL",
+    "GOOGL",
+    "GRC",
+    "HAE",
+    "INGR",
+    "JBLU",
+    "JNJ",
+    "JPM",
+    "KAI",
+    "KBR",
+    "KO",
+    "LEVI",
+    "LIN"
+  ],
+  "new_followup_attempted_issuer_count": 34,
+  "admission_note": "Metadata evidence only; no admission asserted. Parent combines these dated class findings, issuer deduplication, international review, and approved provisional-secondary total-company cap gate. Independent share-count audit is not a new admission requirement.",
+  "exchange_quote_basic_class_count": 29,
+  "equal_cap_primary_class_attempted_count": 34
+}

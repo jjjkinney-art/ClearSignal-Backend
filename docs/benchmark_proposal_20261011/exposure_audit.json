@@ -1,0 +1,871 @@
+{
+  "audit_type": "available_repository_text_exposure_screen",
+  "audited_before_reservation": true,
+  "reservation_time": "2026-10-11T23:20:42Z",
+  "repositories": [
+    {
+      "repository": "clearsignal-issuer-proposal",
+      "head": "aa46d4e710e48bfe95e4811c7b56b38d37a07630",
+      "reachable_commit_count": 690,
+      "reachable_commits_sha256": "60fca5bdeb6d10fb51f9148a2772fb5d568131b9f90020d2e2e98209d8c5986f",
+      "shallow": "false"
+    },
+    {
+      "repository": "Ai-Intelligence-interface",
+      "head": "7cbcd76c98a31cbca2edb115ce61c3354f15936c",
+      "reachable_commit_count": 233,
+      "reachable_commits_sha256": "bbe199e9c8ef135528ce4b3a11522e18ac3527fbee0e0d767088327aa6827246",
+      "shallow": "false"
+    }
+  ],
+  "method": {
+    "head": "all readable tracked files, no exclusion of app knowledge/tests/fixtures/docs/scripts",
+    "history": "git log --all --no-ext-diff --no-renames -p --text; every added/deleted line of reachable history",
+    "ticker_matching": "case-sensitive token boundaries, excluding adjacent ASCII letters/digits",
+    "company_name_matching": "case-insensitive supplied alias token boundaries",
+    "classification_metadata_research": "permitted; not an answer-quality tuning run"
+  },
+  "reserved_holdout_checks": {
+    "AON": {
+      "aliases": [
+        "Aon"
+      ],
+      "matches": []
+    },
+    "AJG": {
+      "aliases": [
+        "Arthur J. Gallagher",
+        "Arthur J Gallagher"
+      ],
+      "matches": []
+    },
+    "DTE": {
+      "aliases": [
+        "DTE Energy"
+      ],
+      "matches": []
+    },
+    "PCAR": {
+      "aliases": [
+        "PACCAR"
+      ],
+      "matches": []
+    },
+    "ODFL": {
+      "aliases": [
+        "Old Dominion Freight"
+      ],
+      "matches": []
+    },
+    "VTR": {
+      "aliases": [
+        "Ventas"
+      ],
+      "matches": []
+    },
+    "ENS": {
+      "aliases": [
+        "EnerSys"
+      ],
+      "matches": []
+    },
+    "OGS": {
+      "aliases": [
+        "ONE Gas"
+      ],
+      "matches": []
+    },
+    "KBR": {
+      "aliases": [
+        "KBR"
+      ],
+      "matches": [],
+      "additional_aliases": [
+        "Kellogg Brown & Root",
+        "Kellogg Brown and Root"
+      ],
+      "additional_alias_matches": []
+    },
+    "AVT": {
+      "aliases": [
+        "Avnet"
+      ],
+      "matches": []
+    },
+    "VNT": {
+      "aliases": [
+        "Vontier"
+      ],
+      "matches": []
+    },
+    "RHI": {
+      "aliases": [
+        "Robert Half"
+      ],
+      "matches": []
+    },
+    "BKH": {
+      "aliases": [
+        "Black Hills"
+      ],
+      "matches": []
+    },
+    "HBB": {
+      "aliases": [
+        "Hamilton Beach"
+      ],
+      "matches": []
+    },
+    "VLGEA": {
+      "aliases": [
+        "Village Super Market"
+      ],
+      "matches": [],
+      "additional_aliases": [
+        "VLGEB"
+      ],
+      "additional_alias_matches": []
+    },
+    "SENEA": {
+      "aliases": [
+        "Seneca Foods"
+      ],
+      "matches": [],
+      "additional_aliases": [
+        "SENEB"
+      ],
+      "additional_alias_matches": []
+    },
+    "ANGO": {
+      "aliases": [
+        "AngioDynamics"
+      ],
+      "matches": []
+    },
+    "UTMD": {
+      "aliases": [
+        "Utah Medical"
+      ],
+      "matches": []
+    },
+    "USNA": {
+      "aliases": [
+        "USANA"
+      ],
+      "matches": []
+    },
+    "MTRX": {
+      "aliases": [
+        "Matrix Service"
+      ],
+      "matches": []
+    }
+  },
+  "screened_alternatives": {
+    "NVS": {
+      "aliases": [
+        "Novartis"
+      ],
+      "match_count": 2,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/test_question_anchored_valuation.py",
+          "line": 90,
+          "match": "Novartis"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "1db9d572ce32ec5ce2878c6353417fb92441391b",
+          "path": "diff --git a/tests/test_question_anchored_valuation.py b/tests/test_question_anchored_valuation.py",
+          "match": "Novartis"
+        }
+      ]
+    },
+    "INGR": {
+      "aliases": [
+        "Ingredion"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "ASGN": {
+      "aliases": [
+        "ASGN",
+        "On Assignment"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "NSP": {
+      "aliases": [
+        "Insperity"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "NWN": {
+      "aliases": [
+        "Northwest Natural"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "AWR": {
+      "aliases": [
+        "American States Water"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "SWX": {
+      "aliases": [
+        "Southwest Gas"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "POR": {
+      "aliases": [
+        "Portland General"
+      ],
+      "match_count": 1,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "01555aa82f80abf431b9cfbc802e1ddb2f5c2000",
+          "path": "diff --git a/ai_analyst_backend.zip b/ai_analyst_backend.zip",
+          "match": "POR"
+        }
+      ]
+    },
+    "MAT": {
+      "aliases": [
+        "Mattel"
+      ],
+      "match_count": 2,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/test_services/test_scenario_calibration_service.py",
+          "line": 373,
+          "match": "MAT"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "a5e007b4e52cac6ca3367259f9748f8b2a89f6c2",
+          "path": "diff --git a/tests/test_services/test_scenario_calibration_service.py b/tests/test_services/test_scenario_calibration_service.py",
+          "match": "MAT"
+        }
+      ]
+    },
+    "LEVI": {
+      "aliases": [
+        "Levi Strauss"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "GEF": {
+      "aliases": [
+        "Greif"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "SON": {
+      "aliases": [
+        "Sonoco"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "FUL": {
+      "aliases": [
+        "H.B. Fuller",
+        "HB Fuller"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "ASH": {
+      "aliases": [
+        "Ashland"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "THS": {
+      "aliases": [
+        "TreeHouse Foods"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "ENR": {
+      "aliases": [
+        "Energizer"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "CWT": {
+      "aliases": [
+        "California Water"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "AIN": {
+      "aliases": [
+        "Albany International"
+      ],
+      "match_count": 1,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "01555aa82f80abf431b9cfbc802e1ddb2f5c2000",
+          "path": "diff --git a/ai_analyst_backend.zip b/ai_analyst_backend.zip",
+          "match": "AIN"
+        }
+      ]
+    },
+    "FARM": {
+      "aliases": [
+        "Farmer Bros",
+        "Farmer Brothers"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "CVGW": {
+      "aliases": [
+        "Calavo"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "CAL": {
+      "aliases": [
+        "Caleres"
+      ],
+      "match_count": 2,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/test_services/test_scenario_observability_service.py",
+          "line": 347,
+          "match": "CAL"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "d4553cbf6e9a7655ca2fe275bf466d9f01597416",
+          "path": "diff --git a/tests/test_services/test_scenario_observability_service.py b/tests/test_services/test_scenario_observability_service.py",
+          "match": "CAL"
+        }
+      ]
+    },
+    "FONR": {
+      "aliases": [
+        "Fonar"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "MPX": {
+      "aliases": [
+        "Marine Products"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "GRC": {
+      "aliases": [
+        "Gorman-Rupp",
+        "Gorman Rupp"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "NNBR": {
+      "aliases": [
+        "NN Inc",
+        "NN, Inc"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "PLOW": {
+      "aliases": [
+        "Douglas Dynamics"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "SGC": {
+      "aliases": [
+        "Superior Group of Companies",
+        "Superior Uniform"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "JOUT": {
+      "aliases": [
+        "Johnson Outdoors"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "PETS": {
+      "aliases": [
+        "PetMed"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "NATH": {
+      "aliases": [
+        "Nathan's Famous",
+        "Nathans Famous"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "RELL": {
+      "aliases": [
+        "Richardson Electronics"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "MCK": {
+      "aliases": [
+        "McKesson"
+      ],
+      "match_count": 2,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_detection.py",
+          "line": 304,
+          "match": "MCK"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "7e51f2acfe0c8714595d21c2cd630582657b7ce7",
+          "path": "diff --git a/app/services/company_detection.py b/app/services/company_detection.py",
+          "match": "MCK"
+        }
+      ]
+    },
+    "COR": {
+      "aliases": [
+        "Cencora",
+        "AmerisourceBergen"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "CB": {
+      "aliases": [
+        "Chubb"
+      ],
+      "match_count": 9,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_detection.py",
+          "line": 386,
+          "match": "CB"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/scenario_routing_service.py",
+          "line": 215,
+          "match": "CB"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/test_severity1b_routing_regression.py",
+          "line": 12,
+          "match": "CB"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/test_verified_sec_metrics.py",
+          "line": 675,
+          "match": "CB"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "64ec3d9f0be8393e91a204506d651cb8501baf16",
+          "path": "diff --git a/tests/test_verified_sec_metrics.py b/tests/test_verified_sec_metrics.py",
+          "match": "CB"
+        }
+      ]
+    },
+    "DLR": {
+      "aliases": [
+        "Digital Realty"
+      ],
+      "match_count": 2,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_detection.py",
+          "line": 333,
+          "match": "DLR"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "7e51f2acfe0c8714595d21c2cd630582657b7ce7",
+          "path": "diff --git a/app/services/company_detection.py b/app/services/company_detection.py",
+          "match": "DLR"
+        }
+      ]
+    },
+    "AVB": {
+      "aliases": [
+        "AvalonBay"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "EQR": {
+      "aliases": [
+        "Equity Residential"
+      ],
+      "match_count": 10,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_knowledge.py",
+          "line": 10648,
+          "match": "EQR"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "docs/COVERAGE_EXPANSION_PHASE4_PLAN.md",
+          "line": 53,
+          "match": "EQR"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/test_phase6_profiles.py",
+          "line": 26,
+          "match": "EQR"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/validate_100_company.py",
+          "line": 171,
+          "match": "EQR"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/validate_phase6_targeted.py",
+          "line": 71,
+          "match": "EQR"
+        }
+      ]
+    },
+    "PPL": {
+      "aliases": [
+        "PPL"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "ROK": {
+      "aliases": [
+        "Rockwell Automation"
+      ],
+      "match_count": 6,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_knowledge.py",
+          "line": 3308,
+          "match": "Rockwell Automation"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/scenario_routing_service.py",
+          "line": 241,
+          "match": "ROK"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "tests/routing_regression_tests.py",
+          "line": 329,
+          "match": "ROK"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "b69afa8ff6bddd816891ea688d73977f6112c8ef",
+          "path": "diff --git a/app/services/scenario_routing_service.py b/app/services/scenario_routing_service.py",
+          "match": "ROK"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "b69afa8ff6bddd816891ea688d73977f6112c8ef",
+          "path": "diff --git a/tests/routing_regression_tests.py b/tests/routing_regression_tests.py",
+          "match": "ROK"
+        }
+      ]
+    },
+    "APD": {
+      "aliases": [
+        "Air Products"
+      ],
+      "match_count": 4,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_detection.py",
+          "line": 367,
+          "match": "APD"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "website_test_results.txt",
+          "line": 42,
+          "match": "APD"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "04c94dbaf390174100272aff3e04cd5c89063d0e",
+          "path": "diff --git a/website_test_results.txt b/website_test_results.txt",
+          "match": "APD"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "7e51f2acfe0c8714595d21c2cd630582657b7ce7",
+          "path": "diff --git a/app/services/company_detection.py b/app/services/company_detection.py",
+          "match": "APD"
+        }
+      ]
+    },
+    "ECL": {
+      "aliases": [
+        "Ecolab"
+      ],
+      "match_count": 2,
+      "sample_matches": [
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "HEAD",
+          "path": "app/services/company_detection.py",
+          "line": 368,
+          "match": "ECL"
+        },
+        {
+          "repository": "clearsignal-issuer-proposal",
+          "scope": "history",
+          "commit": "7e51f2acfe0c8714595d21c2cd630582657b7ce7",
+          "path": "diff --git a/app/services/company_detection.py b/app/services/company_detection.py",
+          "match": "ECL"
+        }
+      ]
+    },
+    "CTVA": {
+      "aliases": [
+        "Corteva"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "WAB": {
+      "aliases": [
+        "Wabtec",
+        "Westinghouse Air Brake"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    },
+    "ITW": {
+      "aliases": [
+        "Illinois Tool Works"
+      ],
+      "match_count": 0,
+      "sample_matches": []
+    }
+  },
+  "known_development_baseline": [
+    "AA",
+    "AAPL",
+    "ACHC",
+    "ACMR",
+    "ASML",
+    "BA",
+    "COST",
+    "DOCU",
+    "ETSY",
+    "JPM",
+    "LLY",
+    "MAN",
+    "MSFT",
+    "NVDA",
+    "PLTR",
+    "TSLA",
+    "V",
+    "XOM"
+  ],
+  "limitations": [
+    "No-match search excludes private chats, inaccessible artifacts, untracked files, missing refs and aliases not listed.",
+    "No answer-quality evaluation was performed for the reserved holdout.",
+    "Binary files and embedded archives were not unpacked or semantically inspected; git --text searches raw patch text only."
+  ],
+  "holdout_reservation_amendment": {
+    "amended_at": "2026-10-11T23:24:05Z",
+    "reason": "Conservative alias-completeness review before any answer-quality tuning",
+    "changes": [
+      {
+        "removed_from_holdout": "COR",
+        "replacement": "AON",
+        "candidate_pool_change": "COR replaced by AON",
+        "reason": "Former ticker ABC had historical text matches; no issuer-specific adjudication performed, so exclude conservatively."
+      },
+      {
+        "removed_from_holdout": "INGR",
+        "replacement": "OGS",
+        "candidate_pool_change": "both remain in 100",
+        "reason": "Former ticker CPO/Corn Products required additional screening; conservative reservation moved to already-screened OGS. Follow-up found no supplied-alias match, but reservation change retained."
+      }
+    ]
+  },
+  "additional_alias_audit": {
+    "repositories": [
+      {
+        "repository": "clearsignal-issuer-proposal",
+        "head": "aa46d4e710e48bfe95e4811c7b56b38d37a07630",
+        "reachable_commit_count": 692,
+        "reachable_commits_sha256": "054f6664ebbe6b043c19fbfb790440c8a8e4813a60be6365385482e853e69cb6",
+        "shallow": "false"
+      },
+      {
+        "repository": "Ai-Intelligence-interface",
+        "head": "7cbcd76c98a31cbca2edb115ce61c3354f15936c",
+        "reachable_commit_count": 233,
+        "reachable_commits_sha256": "bbe199e9c8ef135528ce4b3a11522e18ac3527fbee0e0d767088327aa6827246",
+        "shallow": "false"
+      }
+    ],
+    "checks": {
+      "COR": {
+        "aliases": [
+          "ABC",
+          "AmerisourceBergen"
+        ],
+        "match_count": 80,
+        "sample_matches": [
+          {
+            "repository": "clearsignal-issuer-proposal",
+            "scope": "HEAD",
+            "path": "app/enterprise/tenant.py",
+            "line": 20,
+            "match": "abc"
+          },
+          {
+            "repository": "clearsignal-issuer-proposal",
+            "scope": "HEAD",
+            "path": "app/security/request_body_limit.py",
+            "line": 10,
+            "match": "abc"
+          },
+          {
+            "repository": "clearsignal-issuer-proposal",
+            "scope": "HEAD",
+            "path": "app/services/company_knowledge.py",
+            "line": 5035,
+            "match": "ABC"
+          },
+          {
+            "repository": "clearsignal-issuer-proposal",
+            "scope": "HEAD",
+            "path": "app/services/ingestion/base.py",
+            "line": 3,
+            "match": "abc"
+          },
+          {
+            "repository": "clearsignal-issuer-proposal",
+            "scope": "HEAD",
+            "path": "app/services/timeline_store.py",
+            "line": 69,
+            "match": "abc"
+          }
+        ]
+      },
+      "INGR": {
+        "aliases": [
+          "CPO",
+          "Corn Products International"
+        ],
+        "match_count": 0,
+        "sample_matches": []
+      },
+      "SENEA": {
+        "aliases": [
+          "SENEB"
+        ],
+        "match_count": 0,
+        "sample_matches": []
+      },
+      "KBR": {
+        "aliases": [
+          "Kellogg Brown & Root",
+          "Kellogg Brown and Root"
+        ],
+        "match_count": 0,
+        "sample_matches": []
+      },
+      "VLGEA": {
+        "aliases": [
+          "VLGEB"
+        ],
+        "match_count": 0,
+        "sample_matches": []
+      }
+    }
+  },
+  "user_exposure_statement": {
+    "recorded_at": "2026-10-11T23:43:39Z",
+    "statement": "I don't believe that I've used those companies before but I can't say for certain.",
+    "scope": "all_20_reserved_holdouts",
+    "interpretation": "no_certain_attestation; prior_exposure_outside_audited_repositories_unknown",
+    "verified_unseen": false,
+    "holdout_membership_changed": false
+  }
+}

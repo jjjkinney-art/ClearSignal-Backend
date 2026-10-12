@@ -1,0 +1,532 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-10-12T00:19:19.578637+00:00",
+  "classification_date": "2026-10-09",
+  "policy_changed": true,
+  "holdout_membership_changed": false,
+  "external_prior_exposure": "unknown; no further attestation requested",
+  "evidence_files": [
+    "rounding_followup.json",
+    "domestic_material_cap_followup.json",
+    "domestic_remaining_cap_followup.json",
+    "international_cap_followup.json",
+    "tday_cap_followup.json"
+  ],
+  "additional_boundary_check": "grc_boundary_followup.json",
+  "scope": "All 45 differing values followed up, plus GRC boundary check. No ClearSignal answers or paid captures.",
+  "admission_summary": {
+    "candidate_count": 100,
+    "cap_displays_identical": 55,
+    "cap_displays_differ": 45,
+    "other_basis_or_date_cases": 26,
+    "observed_summary_history_tier_crossings": 0,
+    "newly_admitted_companies": 99,
+    "full_100_registry_activated": false,
+    "execution_authorized": false,
+    "approved_historical_source_selections": 19,
+    "remaining_source_selection_blocks": 26,
+    "classification_eligible_count": 99,
+    "remaining_source_selection_blocks_meaning": "26 exact values remain unselected; not equivalent to 26 size-classification blocks."
+  },
+  "component_findings": [
+    "GEF two published caps reproduce different A-price/class-equivalent proxies; class-price sum using reported July 27 shares and both October 9 closes is 4,337,542,781.38 USD, a dated share estimate.",
+    "PETS and JOUT lower observations numerically track exclusion of issued restricted shares; reconstruct issued-common basis without treating estimates as publisher-method confirmation.",
+    "Disclosed-count estimates for LLY, NNBR, JOUT, TDAY, RHI, PG, NVDA, NEE, VTR and SHW support historical display neighborhoods; AJG supports the summary. Share-count dates and display precision differ from the price date. All calculations remain dated reported-share estimates.",
+    "EQNR 1:1 ADS ratio and one-class structure confirmed; historical cap reproduces 2025 year-end count. July capital reduction and October 2 treasury data point to a different count. Need issuer transaction update covering October 5\u20139; no promised publication date.",
+    "GRC July 27 common count\u00d7October 9 regular close = 1,954,093,879.57 USD, below 2bn; corroborates displayed 1.95bn without proving exact October 9 shares."
+  ],
+  "smallest_user_choice": {
+    "scope_tickers": [
+      "ACNB",
+      "ANGO",
+      "BGS",
+      "CAL",
+      "CCBG",
+      "FRPH",
+      "HBB",
+      "MLR",
+      "MTRX",
+      "NATH",
+      "NGS",
+      "PLOW",
+      "RELL",
+      "RGR",
+      "SGC",
+      "SWBI",
+      "USNA",
+      "UTMD",
+      "VLGEA"
+    ],
+    "status": "approved_and_applied",
+    "question": "For these 19 named cases only, use the published October 9 historical-row value, at its displayed precision, as the benchmark classification value instead of the conflicting current summary? Retain both observations and mark their cause unconfirmed; keep every identity/class-basis gate and all other 26 conflicts separate.",
+    "option_a": "Approve narrowly bounded historical-row source precedence for the 19 named cases; no general percentage tolerance and no automatic company admission.",
+    "option_b": "Keep the 19 blocked until a public provider correction or an independently documented dated value resolves each difference.",
+    "rationale": "Both displayed values have identical tiers; absolute discrepancies 10k\u201350k USD are not demonstrated arithmetic defects. Provider USD-million units are documented, but publisher rounding is not. This is a transparent source-precedence choice, not a claim the discrepancy was factually resolved.",
+    "approval_ref": "approved_historical_precedence.json"
+  },
+  "material_case_next_actions": {
+    "GEF": "Use separate class prices under approved total-company equity definition; reconcile reported class-count dates and intervening changes. Neither A-only pricing nor dividend-weighting is a same-class market-price sum.",
+    "NNBR": "Reconcile unexplained secondary 93.74m shares with primary August 5 82.580864m and any subsequent actual issuance.",
+    "LLY": "Reconcile secondary 891.36m common shares against primary August 3 941.357065m; do not substitute one without dated source explanation.",
+    "EQNR": "Obtain free issuer transaction/capital disclosures through October 9; latest verified weekly transactions end October 2.",
+    "PETS": "Preserve inclusion/exclusion of issued restricted shares explicitly and use exact quoted price precision; gross issued-share result is 27.85740449m rather than asserting either rounded source exact.",
+    "JOUT": "Keep unquoted Class B price proxy explicit; actual Class A+Class B outstanding and restricted-share treatment need consistent basis.",
+    "V": "July 21 class counts now obtained in domestic_remaining_cap_followup.json. Conditional conversion-parity total is 719227517801.125255 USD; approve that explicit valuation/date convention or obtain target-date basis. No exact-cap resolution or admission."
+  },
+  "rows": [
+    {
+      "ticker": "GEF",
+      "summary_usd": "4650000000",
+      "historical_usd": "3780000000",
+      "absolute_difference_usd": "870000000",
+      "absolute_difference_percent_of_summary": "18.70967741935483870967741935483870967742",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "NNBR",
+      "summary_usd": "370290000",
+      "historical_usd": "326200000",
+      "absolute_difference_usd": "44090000",
+      "absolute_difference_percent_of_summary": "11.90688379378325096545950471252261740798",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "LLY",
+      "summary_usd": "1050000000000",
+      "historical_usd": "1110000000000",
+      "absolute_difference_usd": "60000000000",
+      "absolute_difference_percent_of_summary": "5.714285714285714285714285714285714285714",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "EQNR",
+      "summary_usd": "103810000000",
+      "historical_usd": "107540000000",
+      "absolute_difference_usd": "3730000000",
+      "absolute_difference_percent_of_summary": "3.593102783932183797322030632887005105481",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "PETS",
+      "summary_usd": "27050000",
+      "historical_usd": "27900000",
+      "absolute_difference_usd": "850000",
+      "absolute_difference_percent_of_summary": "3.142329020332717190388170055452865064695",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "BHP",
+      "summary_usd": "216160000000",
+      "historical_usd": "220380000000",
+      "absolute_difference_usd": "4220000000",
+      "absolute_difference_percent_of_summary": "1.952257586972612879348630643967431532198",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "RHI",
+      "summary_usd": "3410000000",
+      "historical_usd": "3470000000",
+      "absolute_difference_usd": "60000000",
+      "absolute_difference_percent_of_summary": "1.759530791788856304985337243401759530792",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "JOUT",
+      "summary_usd": "441130000",
+      "historical_usd": "448100000",
+      "absolute_difference_usd": "6970000",
+      "absolute_difference_percent_of_summary": "1.580033096819531657334572574977897671888",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "TM",
+      "summary_usd": "216500000000",
+      "historical_usd": "219430000000",
+      "absolute_difference_usd": "2930000000",
+      "absolute_difference_percent_of_summary": "1.353348729792147806004618937644341801386",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "UL",
+      "summary_usd": "133170000000",
+      "historical_usd": "134060000000",
+      "absolute_difference_usd": "890000000",
+      "absolute_difference_percent_of_summary": "0.6683186903957347750994968836825110760682",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "VTR",
+      "summary_usd": "42360000000",
+      "historical_usd": "42080000000",
+      "absolute_difference_usd": "280000000",
+      "absolute_difference_percent_of_summary": "0.6610009442870632672332389046270066100094",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "TDAY",
+      "summary_usd": "993760000",
+      "historical_usd": "1000000000",
+      "absolute_difference_usd": "6240000",
+      "absolute_difference_percent_of_summary": "0.6279182096280792142972146192239574947673",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "ASML",
+      "summary_usd": "688720000000",
+      "historical_usd": "684540000000",
+      "absolute_difference_usd": "4180000000",
+      "absolute_difference_percent_of_summary": "0.6069229875711464746195841561156928795447",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "SHW",
+      "summary_usd": "77070000000",
+      "historical_usd": "77530000000",
+      "absolute_difference_usd": "460000000",
+      "absolute_difference_percent_of_summary": "0.5968599974049565330219281172959647074088",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "AIN",
+      "summary_usd": "1750000000",
+      "historical_usd": "1760000000",
+      "absolute_difference_usd": "10000000",
+      "absolute_difference_percent_of_summary": "0.5714285714285714285714285714285714285714",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "SAP",
+      "summary_usd": "247430000000",
+      "historical_usd": "248720000000",
+      "absolute_difference_usd": "1290000000",
+      "absolute_difference_percent_of_summary": "0.5213595764458634765388190599361435557531",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "NOG",
+      "summary_usd": "2630000000",
+      "historical_usd": "2640000000",
+      "absolute_difference_usd": "10000000",
+      "absolute_difference_percent_of_summary": "0.3802281368821292775665399239543726235741",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "WDFC",
+      "summary_usd": "2710000000",
+      "historical_usd": "2720000000",
+      "absolute_difference_usd": "10000000",
+      "absolute_difference_percent_of_summary": "0.3690036900369003690036900369003690036900",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "RY",
+      "summary_usd": "265640000000",
+      "historical_usd": "266590000000",
+      "absolute_difference_usd": "950000000",
+      "absolute_difference_percent_of_summary": "0.3576268634241831049540731817497364854691",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "NVS",
+      "summary_usd": "272480000000",
+      "historical_usd": "273230000000",
+      "absolute_difference_usd": "750000000",
+      "absolute_difference_percent_of_summary": "0.2752495596007046388725778038755137991779",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "NVDA",
+      "summary_usd": "5540000000000",
+      "historical_usd": "5530000000000",
+      "absolute_difference_usd": "10000000000",
+      "absolute_difference_percent_of_summary": "0.1805054151624548736462093862815884476534",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "SONY",
+      "summary_usd": "141450000000",
+      "historical_usd": "141640000000",
+      "absolute_difference_usd": "190000000",
+      "absolute_difference_percent_of_summary": "0.1343230823612583951926475786496995404737",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "PG",
+      "summary_usd": "351260000000",
+      "historical_usd": "351520000000",
+      "absolute_difference_usd": "260000000",
+      "absolute_difference_percent_of_summary": "0.07401924500370096225018504811250925240563",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "V",
+      "summary_usd": "707530000000",
+      "historical_usd": "707750000000",
+      "absolute_difference_usd": "220000000",
+      "absolute_difference_percent_of_summary": "0.03109408788319929896965499696125959323280",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "BGS",
+      "summary_usd": "195060000",
+      "historical_usd": "195100000",
+      "absolute_difference_usd": "40000",
+      "absolute_difference_percent_of_summary": "0.02050651081718445606480057418230288116477",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "AJG",
+      "summary_usd": "59650000000",
+      "historical_usd": "59640000000",
+      "absolute_difference_usd": "10000000",
+      "absolute_difference_percent_of_summary": "0.01676445934618608549874266554903604358759",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "USNA",
+      "summary_usd": "270870000",
+      "historical_usd": "270900000",
+      "absolute_difference_usd": "30000",
+      "absolute_difference_percent_of_summary": "0.01107542363495403699191494074648355299590",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "SGC",
+      "summary_usd": "208080000",
+      "historical_usd": "208100000",
+      "absolute_difference_usd": "20000",
+      "absolute_difference_percent_of_summary": "0.009611687812379853902345251826220684352172",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "HBB",
+      "summary_usd": "467260000",
+      "historical_usd": "467300000",
+      "absolute_difference_usd": "40000",
+      "absolute_difference_percent_of_summary": "0.008560544450627059881008432136283867653983",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "UTMD",
+      "summary_usd": "237320000",
+      "historical_usd": "237300000",
+      "absolute_difference_usd": "20000",
+      "absolute_difference_percent_of_summary": "0.008427439743805831788302713635597505477836",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "FRPH",
+      "summary_usd": "384730000",
+      "historical_usd": "384700000",
+      "absolute_difference_usd": "30000",
+      "absolute_difference_percent_of_summary": "0.007797676292464845476048137654978816312739",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "CAL",
+      "summary_usd": "417170000",
+      "historical_usd": "417200000",
+      "absolute_difference_usd": "30000",
+      "absolute_difference_percent_of_summary": "0.007191312894024018985066040223410120574346",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "NGS",
+      "summary_usd": "426930000",
+      "historical_usd": "426900000",
+      "absolute_difference_usd": "30000",
+      "absolute_difference_percent_of_summary": "0.007026913077085236455625043918206731782728",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "MLR",
+      "summary_usd": "595540000",
+      "historical_usd": "595500000",
+      "absolute_difference_usd": "40000",
+      "absolute_difference_percent_of_summary": "0.006716593343855996238707727440642106323673",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "SWBI",
+      "summary_usd": "626860000",
+      "historical_usd": "626900000",
+      "absolute_difference_usd": "40000",
+      "absolute_difference_percent_of_summary": "0.006381010113901030533133395016431101043295",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "NEE",
+      "summary_usd": "161410000000",
+      "historical_usd": "161400000000",
+      "absolute_difference_usd": "10000000",
+      "absolute_difference_percent_of_summary": "0.006195403010965863329409578093054953224707",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "26_other_basis_or_date_conflicts"
+    },
+    {
+      "ticker": "ANGO",
+      "summary_usd": "484470000",
+      "historical_usd": "484500000",
+      "absolute_difference_usd": "30000",
+      "absolute_difference_percent_of_summary": "0.006192333890643383491237847544739612359898",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "CCBG",
+      "summary_usd": "823150000",
+      "historical_usd": "823100000",
+      "absolute_difference_usd": "50000",
+      "absolute_difference_percent_of_summary": "0.006074227054607301220919637976067545404847",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "NATH",
+      "summary_usd": "417020000",
+      "historical_usd": "417000000",
+      "absolute_difference_usd": "20000",
+      "absolute_difference_percent_of_summary": "0.004795933048774639106038079708407270634502",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "MTRX",
+      "summary_usd": "297910000",
+      "historical_usd": "297900000",
+      "absolute_difference_usd": "10000",
+      "absolute_difference_percent_of_summary": "0.003356718472021751535698700949951327582156",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "RELL",
+      "summary_usd": "309290000",
+      "historical_usd": "309300000",
+      "absolute_difference_usd": "10000",
+      "absolute_difference_percent_of_summary": "0.003233211549031653141065019884251026544667",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "ACNB",
+      "summary_usd": "633480000",
+      "historical_usd": "633500000",
+      "absolute_difference_usd": "20000",
+      "absolute_difference_percent_of_summary": "0.003157163604217970575235208688514238807855",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "VLGEA",
+      "summary_usd": "651920000",
+      "historical_usd": "651900000",
+      "absolute_difference_usd": "20000",
+      "absolute_difference_percent_of_summary": "0.003067861087249969321389127500306786108725",
+      "tier_crossing": false,
+      "reserved_holdout": true,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "RGR",
+      "summary_usd": "691220000",
+      "historical_usd": "691200000",
+      "absolute_difference_usd": "20000",
+      "absolute_difference_percent_of_summary": "0.002893434796446862069963253378085124851711",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    },
+    {
+      "ticker": "PLOW",
+      "summary_usd": "904390000",
+      "historical_usd": "904400000",
+      "absolute_difference_usd": "10000",
+      "absolute_difference_percent_of_summary": "0.001105717666051150499231526222094450403034",
+      "tier_crossing": false,
+      "reserved_holdout": false,
+      "group": "19_named_precision_source_choice"
+    }
+  ],
+  "policy_change_scope": "Approved 19-name historical precedence and approved classification-only treatment of 26; exact values remain unverified for answers.",
+  "broader_classification_only_rule_approved": true,
+  "classification_only_rule_ref": "approved_classification_only.json",
+  "setup_readiness_ref": "classification_setup_readiness.json"
+}

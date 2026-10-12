@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-10-11T23:50:43Z",
+  "decision": "stage_approved_policy_and_verified_current_company_keys; do_not_activate_100_company_registry",
+  "policy_ref": "../../validation/benchmark_classification_policy.v1.json",
+  "candidate_plan_ref": "candidate_plan.json",
+  "active_registry": "validation/issuer_registry.v1.json",
+  "active_registry_sha256": "0783b288028843edb32b1813f4eb7a2d73a78bea948b8bb114c7d80ea52a9379",
+  "active_registry_changed": false,
+  "approved_policy_installed": true,
+  "current_company_keys_established": 100,
+  "distinct_current_registrants": 100,
+  "individual_admissions": 99,
+  "full_cohort_admission_allowed": false,
+  "execution_authorized": false,
+  "cap_conflict_blocked_tickers": [
+    "NVDA",
+    "ASML",
+    "V",
+    "LLY",
+    "AJG",
+    "VTR",
+    "PG",
+    "NEE",
+    "NVS",
+    "SHW",
+    "RHI",
+    "WDFC",
+    "GEF",
+    "NOG",
+    "AIN",
+    "TDAY",
+    "NNBR",
+    "JOUT",
+    "PETS",
+    "SAP",
+    "SONY",
+    "TM",
+    "RY",
+    "BHP",
+    "UL",
+    "EQNR"
+  ],
+  "remaining_admission_work": [
+    "Complete explicitly listed classification exclusions and metadata fields in classification_setup_readiness.json.",
+    "Decide development replacement proposal for JOUT; preserve all 20 reserved holdouts.",
+    "Only create a new registry and six-family fixture manifest when all evidence and composition gates pass. No live execution authorized."
+  ],
+  "not_additional_requirements": [
+    "No independent audit of every price/share-count multiplication is imposed beyond approved provisional secondary figures.",
+    "Unknown prior exposure outside audited repositories is a disclosed qualification, not a request for another approval or absolute attestation."
+  ],
+  "holdout_membership_changed": false,
+  "external_prior_exposure": "unknown; user cannot be certain",
+  "verified_unseen": false,
+  "evidence_files": [
+    "reconciliation/cap_value_review.json",
+    "reconciliation/domestic_identity_a.json",
+    "reconciliation/domestic_identity_b.json",
+    "reconciliation/international_identity_review.json"
+  ],
+  "not_claimed": [
+    "accepted 100-company coverage",
+    "live benchmark acceptance",
+    "answer-quality evaluation",
+    "production deployment verification"
+  ],
+  "basic_listed_security_followup": {
+    "matching_cap_domestic_a": 34,
+    "matching_cap_domestic_b": 19,
+    "matching_cap_international": [
+      "AON",
+      "TSM"
+    ],
+    "scope": "All 55 equal-cap candidates have basic primary security evidence or scoped primary-source attempts; cover/class labels are not an exhaustive unlisted-class inventory or an independent company-cap audit."
+  },
+  "known_primary_source_disagreements": [
+    {
+      "ticker": "ETSY",
+      "SEC_current_mapping_exchange": "Nasdaq",
+      "dated_issuer_transfer_evidence_exchange": "NYSE",
+      "issuer_effective_date": "2025-10-13",
+      "evidence_ref": "reconciliation/domestic_identity_a.json",
+      "treatment": "Preserve raw observations separately; explicit dated issuer evidence supports proposed exchange correction. Do not misattribute NYSE to SEC mapping."
+    }
+  ],
+  "continued_evidence_review_ref": "reconciliation/followup_admission_summary.json",
+  "source_precedence_proposal_activated": true,
+  "source_precedence_scope_tickers": [
+    "ACNB",
+    "ANGO",
+    "BGS",
+    "CAL",
+    "CCBG",
+    "FRPH",
+    "HBB",
+    "MLR",
+    "MTRX",
+    "NATH",
+    "NGS",
+    "PLOW",
+    "RELL",
+    "RGR",
+    "SGC",
+    "SWBI",
+    "USNA",
+    "UTMD",
+    "VLGEA"
+  ],
+  "source_precedence_ref": "reconciliation/approved_historical_precedence.json",
+  "broader_classification_only_rule_approved": true,
+  "classification_only_rule_ref": "reconciliation/approved_classification_only.json",
+  "setup_readiness_ref": "reconciliation/classification_setup_readiness.json",
+  "classification_blocked_tickers": [
+    "JOUT"
+  ],
+  "cap_conflict_blocked_tickers_meaning": "26 exact-value selections remain unresolved; approved classification-only evidence may clear size stratification without selecting either exact value."
+}

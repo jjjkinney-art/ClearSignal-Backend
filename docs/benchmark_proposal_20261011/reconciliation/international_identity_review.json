@@ -1,0 +1,586 @@
+{
+  "artifact_type": "metadata_only_primary_international_identity_reconciliation",
+  "schema_version": 1,
+  "created_at": "2026-10-11T23:48:54Z",
+  "candidate_count": 12,
+  "scope": "Requested 11 international candidates plus LIN, overlapping domestic coverage intentionally for foreign-plc follow-up; deduplicate by CIK.",
+  "current_primary_identity_mapping_count": 12,
+  "verified_primary_security_mapping_count": 10,
+  "historical_target_identity_verified_count": 0,
+  "full_company_market_cap_verified_count": 0,
+  "policy_scope": "Provisional secondary figures approved by user; security mapping verification does not audit or certify those figures. No full price/share-count/FX reconstruction attempted.",
+  "limitations": [
+    "Publication dates unknown on undated issuer webpages; report period is distinct from filing date.",
+    "Current observations are not independent proof of listing/class/ratio on 2026-10-09.",
+    "No exhaustive issued-class inventory across all issuers; absence of another class in excerpts proves nothing.",
+    "No benchmark answers run or tuned; 20 holdouts unchanged; exposure outside audited repositories unknown.",
+    "No canonical registry or candidate membership edits; no code edits, paid calls, commit or push."
+  ],
+  "sources": [
+    {
+      "source_id": "sec",
+      "url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "source_type": "regulator_directory",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "fields"
+    },
+    {
+      "source_id": "ASML",
+      "url": "https://investor.asml.com/share-information",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Our ordinary shares also trade on NASDAQ."
+    },
+    {
+      "source_id": "NVS",
+      "url": "https://www.novartis.com/investors/shareholder-information/american-depositary-receipts-adr",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "NVS"
+    },
+    {
+      "source_id": "SAP",
+      "url": "https://www.sap.com/investors/en/stock/adr.html",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "1 ADR = 1 ordinary share"
+    },
+    {
+      "source_id": "TSM",
+      "url": "https://investor.tsmc.com/sites/ir/sec-filings/2025_20F%20Report.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": "2025-12-31",
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Each ADS represents ownership of five common shares on deposit with the custodian."
+    },
+    {
+      "source_id": "SONY",
+      "url": "https://www.sony.com/en/SonyInfo/IR/library/FY2025_20F_PDF.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": "2026-03-31",
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Each American Depositary Share represents one share of Common Stock."
+    },
+    {
+      "source_id": "TM",
+      "url": "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": "2026-03-31",
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Each American Depositary Share representing ten shares of the registrant\u2019s Common Stock."
+    },
+    {
+      "source_id": "RY",
+      "url": "https://www.rbc.com/investor-relations/share-information.html",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Royal Bank of Canada (TSX: RY) (NYSE: RY)"
+    },
+    {
+      "source_id": "BHP",
+      "url": "https://www.bhp.com/investor-centre/shareholder-information/frequently-asked-questions",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "each American Depositary Share (ADS) represents two underlying BHP Group Limited ordinary shares held by the Depositary."
+    },
+    {
+      "source_id": "UL",
+      "url": "https://www.unilever.com/investors/investor-centre/faqs/",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Unilever's ratio is 1:1, i.e. one ADR represents one underlying Unilever PLC share."
+    },
+    {
+      "source_id": "EQNR",
+      "url": "https://www.equinor.com/investors/the-equinor-share",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "The Equinor share is listed on the Oslo Stock Exchange and the New York Stock Exchange as EQNR."
+    },
+    {
+      "source_id": "AON",
+      "url": "https://ir.aon.com/image/Aon_plc_2025_Annual_Financial_Report_BMK.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": "2025-12-31",
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Aonplc\u2019s Class A Ordinary Shares are listed on the New York Stock Exchange."
+    },
+    {
+      "source_id": "LIN",
+      "url": "https://www.linde.com/investors",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:48:54Z",
+      "retrieval_timestamp_semantics": "Completion of successful re-open batch; not source publication or market observation time.",
+      "excerpt": "Linde plc is listed on the Nasdaq with the ticker symbol LIN."
+    },
+    {
+      "source_id": "EQNR_ADR",
+      "url": "https://www.equinor.com/investors/contacts-investor-relations",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": null,
+      "retrieved_at": "2026-10-11T23:49:54Z",
+      "retrieval_timestamp_semantics": "Successful retrieval completion; not source publication time.",
+      "excerpt": "J.P. Morgan Chase Bank N.A. acts as depositary for the ADR holdings traded on the New York Stock Exchange."
+    },
+    {
+      "source_id": "NVS_FAQ",
+      "url": "https://www.novartis.com/investors/shareholder-information/frequently-asked-questions",
+      "source_type": "issuer_primary",
+      "publication_date": null,
+      "report_period_end": "2025-12-31",
+      "retrieved_at": "2026-10-11T23:52:11Z",
+      "retrieval_timestamp_semantics": "Recorded after successful open and footnote retrieval; not publication time.",
+      "excerpt": "The depositary, JPMorgan Chase Bank, N.A., holds one Novartis AG share for every ADR issued.",
+      "date_scope": "ADR table covers 2025, 2024 and 2023; no pagewide publication date inferred from unrelated section update date."
+    }
+  ],
+  "rows": [
+    {
+      "ticker_candidate": "ASML",
+      "issuer_name_observed": "ASML Holding NV",
+      "cik": "0000937966",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0000937966",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "registered ordinary shares",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "direct share; no depositary conversion",
+        "evidence": [
+          "ASML"
+        ],
+        "company_count_mapping": "One ordinary equity interest traded via registered Nasdaq and Euronext shares; do not sum venue counts. Authorized cumulative preference capital is not evidence of issued common shares.",
+        "notes": "Correct legacy adr tag in future v2 only. Issuer share table contains inconsistent issued/treasury/outstanding arithmetic; not used for cap verification."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "NVS",
+      "issuer_name_observed": "Novartis AG",
+      "cik": "0001114448",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001114448",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADR",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "NVS",
+          "NVS_FAQ"
+        ],
+        "company_count_mapping": "One Novartis AG ordinary share per ADR. US ADR and Swiss underlying represent one issuer; do not sum receipt and underlying counts.",
+        "notes": "Issuer FAQ footnote under 2025/2024/2023 ADR table confirms one share per ADR; no independent continuity verification through October 9."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "TSM",
+      "issuer_name_observed": "Taiwan Semiconductor Manufacturing Co Ltd",
+      "cik": "0001046179",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001046179",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 5,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "TSM"
+        ],
+        "company_count_mapping": "Five ordinary shares per ADS; ADS custody pool is a subset representation, not an additional company or total ordinary count.",
+        "notes": "FY2025 securities description establishes ratio; no corporate-action continuity check through Oct 9."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "SAP",
+      "issuer_name_observed": "SAP SE",
+      "cik": "0001000184",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001000184",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADR",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "SAP"
+        ],
+        "company_count_mapping": "One ordinary share per ADR; same issuer across German ordinary and US depositary interests.",
+        "notes": "Undated issuer page proves observed mapping, not historical continuity."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "SONY",
+      "issuer_name_observed": "Sony Group Corporation",
+      "cik": "0000313838",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0000313838",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "SONY"
+        ],
+        "company_count_mapping": "One common share per ADS. March 2026 report separately shows common and ADS counts; do not add them or use only ADS count for company total.",
+        "notes": "Sony Financial Group spin-off ADR terms are not Sony ADS terms."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "TM",
+      "issuer_name_observed": "Toyota Motor Corporation",
+      "cik": "0001094517",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001094517",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 10,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "TM"
+        ],
+        "company_count_mapping": "Ten common shares per ADS; underlying Japanese ordinary and US receipt are one issuer.",
+        "notes": "Do not use March or June 2026 issued counts as October 9 counts."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "RY",
+      "issuer_name_observed": "Royal Bank of Canada",
+      "cik": "0001000275",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001000275",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "common shares",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "direct share; no depositary conversion",
+        "evidence": [
+          "RY"
+        ],
+        "company_count_mapping": "Issuer common-share dividend notice identifies TSX and NYSE RY; same common equity across venues. Preferred shares listed separately.",
+        "notes": "Page includes August 27, 2026 common dividend notice. Full issued-class inventory not audited."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "BHP",
+      "issuer_name_observed": "BHP Group Ltd",
+      "cik": "0000811809",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0000811809",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 2,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "BHP"
+        ],
+        "company_count_mapping": "Two BHP Group Limited ordinary shares per ADS; ASX/London/Johannesburg venues do not represent additional companies.",
+        "notes": "Historical dual-listed-company structure not independently audited here."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "UL",
+      "issuer_name_observed": "Unilever PLC",
+      "cik": "0000217410",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0000217410",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADR",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "UL"
+        ],
+        "company_count_mapping": "One PLC underlying share per ADR; same issuer across underlying and receipt.",
+        "notes": "Undated issued-share count is not October 9 proof."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "EQNR",
+      "issuer_name_observed": "Equinor ASA",
+      "cik": "0001140625",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001140625",
+      "share_class_review": {
+        "status": "partial_primary_security_mapping",
+        "instrument": "US listed security; ADR programme identified on issuer investor contacts",
+        "underlying_common_shares_per_us_security": null,
+        "ratio_semantics": "unresolved",
+        "evidence": [
+          "EQNR",
+          "EQNR_ADR"
+        ],
+        "company_count_mapping": "Oslo and NYSE EQNR map to one issuer; retrieved share page does not establish depositary ratio.",
+        "notes": "Obtain dated securities description/deposit agreement to confirm ADS ratio."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology.",
+        "Obtain dated securities description/deposit agreement to confirm ADS ratio."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "AON",
+      "issuer_name_observed": "Aon plc",
+      "cik": "0000315293",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "NYSE",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0000315293",
+      "share_class_review": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "Class A ordinary shares",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "direct share; no depositary conversion",
+        "evidence": [
+          "AON"
+        ],
+        "company_count_mapping": "Direct Class A ordinary share, not an ADR. Other issued economic classes not exhaustively established by this report excerpt.",
+        "notes": "Annual report shareholder information p146; holdout metadata only."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    },
+    {
+      "ticker_candidate": "LIN",
+      "issuer_name_observed": "Linde plc",
+      "cik": "0001707925",
+      "lei": null,
+      "lei_status": "not_researched",
+      "exchange_observed": "Nasdaq",
+      "primary_identity_status": "current_SEC_ticker_exchange_mapping_observed",
+      "identity_evidence": [
+        "sec"
+      ],
+      "issuer_deduplication_key": "SEC_CIK:0001707925",
+      "share_class_review": {
+        "status": "partial_primary_security_mapping",
+        "instrument": "precise share class unresolved",
+        "underlying_common_shares_per_us_security": null,
+        "ratio_semantics": "unresolved",
+        "evidence": [
+          "LIN"
+        ],
+        "company_count_mapping": "Current Nasdaq LIN maps to one Linde plc CIK; exact class and other issued classes not verified by investor hub.",
+        "notes": "Additional foreign plc lead; confirm legal domicile and precise ordinary share class from filing cover."
+      },
+      "historical_target_date": "2026-10-09",
+      "historical_target_identity_verified": false,
+      "company_total_cap_basis_status": "specific_provisional_secondary_value_basis_not_established",
+      "company_total_cap_verified": false,
+      "cap_basis_requirement": "Company-wide common equity, adjusted for depositary conversion; never US receipt float alone and never sum duplicate listings. Actual provisional vendor basis not demonstrated by security terms.",
+      "gaps": [
+        "Dated continuity evidence through 2026-10-09 not established.",
+        "Specific provisional secondary market-cap value not linked to documented company-total methodology.",
+        "Additional foreign plc lead; confirm legal domicile and precise ordinary share class from filing cover."
+      ],
+      "canonical_eligibility": "unresolved_fail_closed"
+    }
+  ]
+}

@@ -1,0 +1,449 @@
+{
+  "schema_version": 1,
+  "artifact_type": "primary_metadata_completion_batch3a",
+  "created_at": "2026-10-12T00:47:54.318743+00:00",
+  "target_date": "2026-10-09",
+  "scope": [
+    "PCAR",
+    "GOOGL",
+    "NEE",
+    "JNJ",
+    "INGR",
+    "RHI",
+    "AWR",
+    "GEF",
+    "CWT",
+    "PPLI"
+  ],
+  "rows": [
+    {
+      "ticker": "GOOGL",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+          "scope_note": "Delaware corporation; legal incorporation, not sales geography."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+          "scope_note": "Auditor opinion: conformity with U.S. generally accepted accounting principles; reader line1519."
+        },
+        "sector": {
+          "value": "Communication Services",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+          "scope_note": "Google Services primarily earns performance/brand advertising revenue; search and YouTube platforms. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "JNJ",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000016/jnj-20251228.htm",
+          "scope_note": "New Jersey incorporation and New Brunswick principal executive offices, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000016/jnj-20251228.htm",
+          "scope_note": "Auditor opinion explicitly US generally accepted accounting principles; reader line3788."
+        },
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000016/jnj-20251228.htm",
+          "scope_note": "Innovative Medicine pharmaceutical products and MedTech devices. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "INGR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1046257/000162828026008603/ingr-20251231.htm",
+          "scope_note": "Delaware incorporation; Westchester Illinois executive offices, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1046257/000162828026008603/ingr-20251231.htm",
+          "scope_note": "Auditor opinion and accounting policies explicitly US GAAP; lines1080/1363."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1046257/000162828026008603/ingr-20251231.htm",
+          "scope_note": "Plant-based ingredient solutions for food, beverage, animal nutrition, brewing and industrial customers. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "RHI",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/315213/000031521326000006/rhi-20251231.htm",
+          "scope_note": "Delaware corporation explicitly identified, line1068."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/315213/000031521326000006/rhi-20251231.htm",
+          "scope_note": "Auditor opinion explicitly accounting principles generally accepted in United States; line1797."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/315213/000031521326000006/rhi-20251231.htm",
+          "scope_note": "Contract talent, permanent placement and Protiviti professional consulting services. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "AWR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1056903/000162828026009114/awr-20251231.htm",
+          "scope_note": "California incorporation and San Dimas California principal address, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1056903/000162828026009114/awr-20251231.htm",
+          "scope_note": "Consolidated accounting policy explicitly US GAAP, line2833."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1056903/000162828026009114/awr-20251231.htm",
+          "scope_note": "Subsidiaries distribute water and electricity; contracted water services. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "GEF",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+          "scope_note": "Delaware incorporation; Delaware Ohio executive offices, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+          "scope_note": "Interim consolidated statements explicitly prepared under US GAAP for interim reporting, line530; scope is quarterly."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+          "scope_note": "Polymer, metal and fiber industrial packaging plus closures. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "CWT",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1035201/000162828026012444/cwt-20251231.htm",
+          "scope_note": "Delaware incorporation; San Jose California executive offices, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1035201/000162828026012444/cwt-20251231.htm",
+          "scope_note": "Auditor opinion explicitly US GAAP, line1633."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1035201/000162828026012444/cwt-20251231.htm",
+          "scope_note": "Holding company provides regulated water utilities and related services through subsidiaries. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "PPLI",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1800227/000162828026051881/ppli-20260630.htm",
+          "scope_note": "Delaware incorporation, cover; same issuer renamed from IAC."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1800227/000162828026051881/ppli-20260630.htm",
+          "scope_note": "Consolidated financial statement preparation explicitly US GAAP, line506."
+        },
+        "sector": {
+          "value": "Communication Services",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1800227/000162828026051881/ppli-20260630.htm",
+          "scope_note": "Digital and print publishing, advertising, performance marketing and magazine subscriptions; line2050. Benchmark sector mapping, not verified proprietary GICS assignment."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": []
+    },
+    {
+      "ticker": "PCAR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/75362/000119312526323642/R1.htm",
+          "scope_note": "XBRL cover records incorporation DE, principal offices Bellevue WA. Do not confuse headquarters with state of incorporation."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/75362/000119312526323642/R10.htm",
+          "scope_note": "Quarterly Note A states GAAP interim preparation and FASB standards. Companion July28 issuer release p9 explicitly defines GAAP as US generally accepted accounting principles; see PCAR_RELEASE source."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://s202.q4cdn.com/173635405/files/doc_news/2026/earnings-financials-combined-72826.pdf",
+          "scope_note": "Truck manufacturing, parts and related financial services; issuer release pp0\u20133/8. Benchmark analyst mapping, not verified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": [],
+      "resolved_prior_access_limit": "SEC annual and quarterly document requests returned internal/content-length errors; issuer annual PDF returned 3-line wrapper. No company reporting basis inferred from employee-benefit-plan 11-K."
+    },
+    {
+      "ticker": "NEE",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000060/nee-20260630.htm",
+          "scope_note": "Florida incorporation and Juno Beach Florida principal offices; cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000060/nee-20260630.htm",
+          "scope_note": "Reader line2069 states NEE prepares financial statements under GAAP; glossary line88 explicitly defines GAAP as US principles."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000060/nee-20260630.htm",
+          "scope_note": "Electric utility FPL and generation/transmission operations; benchmark analyst mapping, not verified GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "tags": [],
+      "resolved_prior_access_limit": "Combined annual filing requested at parent and subsidiary CIK archive paths returned internal errors; issuer annual-report route inaccessible."
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "GOOGL_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/goog-20251231.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2025-12-31",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "Delaware corporation; legal incorporation, not sales geography.",
+        "sector": "Google Services primarily earns performance/brand advertising revenue; search and YouTube platforms.",
+        "reporting_basis": "Auditor opinion: conformity with U.S. generally accepted accounting principles; reader line1519."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "JNJ_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/200406/000020040626000016/jnj-20251228.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2025-12-28",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "New Jersey incorporation and New Brunswick principal executive offices, cover.",
+        "sector": "Innovative Medicine pharmaceutical products and MedTech devices.",
+        "reporting_basis": "Auditor opinion explicitly US generally accepted accounting principles; reader line3788."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "INGR_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/1046257/000162828026008603/ingr-20251231.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2025-12-31",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "Delaware incorporation; Westchester Illinois executive offices, cover.",
+        "sector": "Plant-based ingredient solutions for food, beverage, animal nutrition, brewing and industrial customers.",
+        "reporting_basis": "Auditor opinion and accounting policies explicitly US GAAP; lines1080/1363."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "RHI_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/315213/000031521326000006/rhi-20251231.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2025-12-31",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "Delaware corporation explicitly identified, line1068.",
+        "sector": "Contract talent, permanent placement and Protiviti professional consulting services.",
+        "reporting_basis": "Auditor opinion explicitly accounting principles generally accepted in United States; line1797."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "AWR_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/1056903/000162828026009114/awr-20251231.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2025-12-31",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "California incorporation and San Dimas California principal address, cover.",
+        "sector": "Subsidiaries distribute water and electricity; contracted water services.",
+        "reporting_basis": "Consolidated accounting policy explicitly US GAAP, line2833."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "GEF_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/43920/000162828026050547/gef-20260630.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2026-06-30",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "Delaware incorporation; Delaware Ohio executive offices, cover.",
+        "sector": "Polymer, metal and fiber industrial packaging plus closures.",
+        "reporting_basis": "Interim consolidated statements explicitly prepared under US GAAP for interim reporting, line530; scope is quarterly."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "CWT_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/1035201/000162828026012444/cwt-20251231.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2025-12-31",
+      "publication_date": null,
+      "publication_date_status": "not_independently_extracted_from_filing_index",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "Delaware incorporation; San Jose California executive offices, cover.",
+        "sector": "Holding company provides regulated water utilities and related services through subsidiaries.",
+        "reporting_basis": "Auditor opinion explicitly US GAAP, line1633."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "PPLI_FILING",
+      "url": "https://www.sec.gov/Archives/edgar/data/1800227/000162828026051881/ppli-20260630.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2026-06-30",
+      "publication_date": "2026-08-03",
+      "publication_date_status": "cover_verified",
+      "retrieved_at": "2026-10-12T00:47:54.318743+00:00",
+      "retrieval_timestamp_semantics": "Evidence batch completion; not per-request timestamp.",
+      "evidence_locator": {
+        "domicile": "Delaware incorporation, cover; same issuer renamed from IAC.",
+        "sector": "Digital and print publishing, advertising, performance marketing and magazine subscriptions; line2050.",
+        "reporting_basis": "Consolidated financial statement preparation explicitly US GAAP, line506."
+      },
+      "excerpt": "United States"
+    },
+    {
+      "source_id": "NEE",
+      "url": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000060/nee-20260630.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2026-06-30",
+      "publication_date": "2026-07-24",
+      "publication_date_status": "parent_verified_SEC_index",
+      "retrieved_at": "2026-10-12T00:49:01.073260+00:00",
+      "excerpt": "NEE prepares its financial statements under GAAP."
+    },
+    {
+      "source_id": "PCAR_COVER",
+      "url": "https://www.sec.gov/Archives/edgar/data/75362/000119312526323642/R1.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2026-06-30",
+      "publication_date": "2026-07-29",
+      "publication_date_status": "SEC_directory_date_verified",
+      "retrieved_at": "2026-10-12T00:49:01.073260+00:00",
+      "excerpt": "Entity Incorporation, State or Country Code"
+    },
+    {
+      "source_id": "PCAR_BASIS",
+      "url": "https://www.sec.gov/Archives/edgar/data/75362/000119312526323642/R10.htm",
+      "source_type": "SEC_primary_filing",
+      "report_period_end": "2026-06-30",
+      "publication_date": "2026-07-29",
+      "publication_date_status": "SEC_directory_date_verified",
+      "retrieved_at": "2026-10-12T00:49:01.073260+00:00",
+      "excerpt": "Basis of Presentation"
+    },
+    {
+      "source_id": "PCAR_RELEASE",
+      "url": "https://s202.q4cdn.com/173635405/files/doc_news/2026/earnings-financials-combined-72826.pdf",
+      "source_type": "issuer_release",
+      "report_period_end": "2026-06-30",
+      "publication_date": "2026-07-28",
+      "publication_date_status": "document_date_verified",
+      "retrieved_at": "2026-10-12T00:49:01.073260+00:00",
+      "excerpt": "U.S. generally accepted accounting principles"
+    }
+  ],
+  "complete_count": 10,
+  "limitations": [
+    "Metadata only; no exact target-date capital, answer-quality or valuation claims.",
+    "No registry/cohort/holdout edits. Empty tags intentional.",
+    "Report period does not substitute for publication date; missing index dates explicit."
+  ],
+  "updated_at": "2026-10-12T00:49:01.073260+00:00"
+}

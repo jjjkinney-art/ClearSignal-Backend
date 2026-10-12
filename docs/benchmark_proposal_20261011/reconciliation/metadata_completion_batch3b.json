@@ -1,0 +1,531 @@
+{
+  "schema_version": 1,
+  "artifact_type": "primary_metadata_completion",
+  "retrieved_at_utc": "2026-10-12T00:48:59.584038+00:00",
+  "scope": [
+    "SR",
+    "ENR",
+    "BGS",
+    "SENEA",
+    "USNA",
+    "NNBR",
+    "PETS",
+    "CCBG",
+    "RY"
+  ],
+  "rows": [
+    {
+      "ticker": "SR",
+      "document_period_end": "2025-09-30",
+      "document_publication_date": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+          "scope_note": "Cover explicitly identifies Missouri incorporation and St. Louis, Missouri principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Missouri",
+          "status": "verified_primary",
+          "source_ref": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "St. Louis, Missouri",
+          "status": "verified_primary",
+          "source_ref": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+          "scope_note": "Auditor opinion PDF page45 explicitly US accounting principles."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+          "scope_note": "Natural gas utilities, gas marketing and midstream; issuer profile and Item1. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "ENR",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-04",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+          "scope_note": "Cover explicitly identifies Missouri incorporation and St. Louis, Missouri principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Missouri",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "St. Louis, Missouri",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+          "scope_note": "Basis of presentation and MD&A Non-GAAP Financial Measures explicitly U.S. GAAP."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+          "scope_note": "Household/specialty batteries, portable lights and auto-care products; Note1 Description of Business. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "BGS",
+      "document_period_end": "2026-07-04",
+      "document_publication_date": "2026-08-12",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+          "scope_note": "Cover explicitly identifies Delaware incorporation and Parsippany, New Jersey principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "Parsippany, New Jersey",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+          "scope_note": "Basis of Presentation explicitly accounting principles generally accepted in United States."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+          "scope_note": "Shelf-stable and frozen foods manufacture/distribution; Note1. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "SENEA",
+      "document_period_end": "2025-12-27",
+      "document_publication_date": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+          "scope_note": "Cover explicitly identifies New York incorporation and Fairport, New York principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "New York",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "Fairport, New York",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+          "scope_note": "Interim basis disclosure explicitly identifies United States GAAP."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+          "scope_note": "Vegetable, fruit and snack operating segments; segment disclosure. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "USNA",
+      "document_period_end": "2026-07-04",
+      "document_publication_date": "2026-08-13",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+          "scope_note": "Cover explicitly identifies Utah incorporation and Salt Lake City, Utah principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Utah",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "Salt Lake City, Utah",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+          "scope_note": "Basis of presentation explicitly U.S. GAAP, reader line468."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+          "scope_note": "Consumer nutritional supplements, foods and personal care; Core Nutritional is 84% of six-month sales, Note segment disclosures and MD&A. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": true,
+      "holdout_exposure_status": "no_match_in_audited_repository_text; external_prior_exposure_unknown; not_verified_unseen"
+    },
+    {
+      "ticker": "NNBR",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+          "scope_note": "Cover explicitly identifies Delaware incorporation and Charlotte, North Carolina principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Delaware",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "Charlotte, North Carolina",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+          "scope_note": "Note1 Basis of Presentation explicitly U.S. GAAP."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+          "scope_note": "Diversified industrial precision components/assemblies; Note1 Nature of Business. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "PETS",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+          "scope_note": "Cover explicitly identifies Florida incorporation and Delray Beach, Florida principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Florida",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "Delray Beach, Florida",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+          "scope_note": "Basis of Presentation and Consolidation explicitly United States GAAP."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+          "scope_note": "Pet medications, health products and supplies retail; MD&A Overview and product-line description. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "CCBG",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-29",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "adjudicated_from_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000024/ccbg-20260630.htm",
+          "scope_note": "Cover explicitly identifies Florida incorporation and Tallahassee, Florida principal executive office; legal country US, not tax-residence certification."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Florida",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000024/ccbg-20260630.htm",
+          "scope_note": "Filing cover state of incorporation."
+        },
+        "principal_executive_office": {
+          "value": "Tallahassee, Florida",
+          "status": "verified_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000024/ccbg-20260630.htm",
+          "scope_note": "Filing cover principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000007/R9.htm",
+          "scope_note": "Annual 2025 Note1 explicitly United States accounting principles; current interim report basis says GAAP without country. Annual period December31,2025; filed February27,2026."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000024/ccbg-20260630.htm",
+          "scope_note": "Banking and banking-related services through Capital City Bank; Nature of Operations. Analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000024/ccbg-20260630.htm",
+          "scope_note": "No new tag assignments in this metadata pass."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    },
+    {
+      "ticker": "RY",
+      "document_period_end": "2026-07-31",
+      "document_publication_date": "2026-08-27",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "CA",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/ar_2024_e.pdf",
+          "scope_note": "Annual report 2024 Note1, printed page153, explicitly parent Royal Bank of Canada incorporated and domiciled in Canada under Bank Act. Period October31,2024; dated corroboration, not universal current-continuity audit. Q3 2026 report independently confirms Toronto corporate headquarters."
+        },
+        "incorporation_jurisdiction": {
+          "value": "Canada",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/ar_2024_e.pdf",
+          "scope_note": "Annual report 2024 Note1, printed page153, explicitly parent Royal Bank of Canada incorporated and domiciled in Canada under Bank Act. Period October31,2024; dated corroboration, not universal current-continuity audit. Q3 2026 report independently confirms Toronto corporate headquarters."
+        },
+        "principal_executive_office": {
+          "value": "200 Bay Street, Toronto, Ontario, Canada",
+          "status": "verified_primary",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+          "scope_note": "Corporate headquarters in shareholder information."
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "verified_explicit_primary",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+          "scope_note": "MD&A About this report explicitly IFRS as issued by IASB; report period July31,2026."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapping_from_primary_business",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+          "scope_note": "Personal/commercial banking, wealth management, insurance and capital markets segments; analyst mapping, not licensed GICS assignment."
+        },
+        "complexity_tags": {
+          "value": [],
+          "status": "valid_empty_not_exhaustively_assessed",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+          "scope_note": "No new tag assignments."
+        }
+      },
+      "unresolved_fields": [],
+      "reserved_holdout": false,
+      "holdout_exposure_status": "development_pool_not_claimed_unseen"
+    }
+  ],
+  "sources": [
+    {
+      "ticker": "SR",
+      "url": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+      "document_period_end": "2025-09-30",
+      "document_publication_date": null,
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "ENR",
+      "url": "https://www.sec.gov/Archives/edgar/data/1632790/000163279026000076/enr-20260630.htm",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-08-04",
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "BGS",
+      "url": "https://www.sec.gov/Archives/edgar/data/1278027/000110465926094525/bgs-20260704x10q.htm",
+      "document_period_end": "2026-07-04",
+      "document_publication_date": "2026-08-12",
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "SENEA",
+      "url": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+      "document_period_end": "2025-12-27",
+      "document_publication_date": null,
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "USNA",
+      "url": "https://www.sec.gov/Archives/edgar/data/896264/000089626426000056/usna-20260704.htm",
+      "document_period_end": "2026-07-04",
+      "document_publication_date": "2026-08-13",
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "NNBR",
+      "url": "https://www.sec.gov/Archives/edgar/data/918541/000091854126000064/nnbr-20260630.htm",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": null,
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "PETS",
+      "url": "https://www.sec.gov/Archives/edgar/data/1040130/000104013026000041/pets-20260630.htm",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": null,
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "CCBG",
+      "url": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000024/ccbg-20260630.htm",
+      "document_period_end": "2026-06-30",
+      "document_publication_date": "2026-07-29",
+      "scope": "Primary filing cover, accounting basis and business description; null publication date means not separately extracted, not inferred from period."
+    },
+    {
+      "ticker": "RY",
+      "url": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+      "document_period_end": "2026-07-31",
+      "document_publication_date": "2026-08-27",
+      "scope": "Q3 report accounting basis, business segments and headquarters; MD&A dated August26, earnings release calendar August27."
+    },
+    {
+      "ticker": "RY",
+      "url": "https://www.rbc.com/investor-relations/_assets-custom/pdf/ar_2024_e.pdf",
+      "document_period_end": "2024-10-31",
+      "document_publication_date": null,
+      "scope": "Note1 explicitly incorporated and domiciled in Canada; exact publication date not separately extracted."
+    },
+    {
+      "ticker": "CCBG",
+      "url": "https://www.sec.gov/Archives/edgar/data/726601/000072660126000007/R9.htm",
+      "document_period_end": "2025-12-31",
+      "document_publication_date": "2026-02-27",
+      "scope": "Extracted annual Note1 explicit US accounting principles; full10K exceeds tool content limit."
+    }
+  ],
+  "date_scope": "Dated primary statements support scoped metadata; no universal current-continuity audit, price/valuation certification or holdout exposure attestation.",
+  "counts": {
+    "assigned": 9,
+    "required_metadata_complete": 9,
+    "required_fields_unresolved": 0
+  },
+  "source_attempts": [
+    {
+      "ticker": "USNA",
+      "result": "Accession directory inaccessible and full submission over4MB; actual index and individual10Q succeeded."
+    },
+    {
+      "ticker": "CCBG",
+      "result": "Annual full10K over4MB; actual extracted Note1 R9 succeeded."
+    },
+    {
+      "ticker": "RY",
+      "result": "SEC issuer directory and attempted annual/AIF PDF paths inaccessible; quarterly issuer PDF succeeded, legal incorporation not yet extracted. Resolved legal-country gap through actual 2024 annual report Note1; failed attempts retained as superseded."
+    }
+  ]
+}

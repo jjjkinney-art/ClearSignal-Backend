@@ -1,0 +1,1709 @@
+{
+  "artifact_type": "preserved_prior_secondary_observations",
+  "original_commit": "3a51236519d26a65845de97bd281db146654506c",
+  "original_created_at": "2026-10-11T23:20:42Z",
+  "archived_at": "2026-10-11T23:33:19Z",
+  "note": "Earlier page observations retained unchanged. Mutable source updates do not imply earlier observations were fabricated; exact original retrieval timestamps/excerpts were not captured and are not invented here.",
+  "observations": [
+    {
+      "ticker_candidate": "AAPL",
+      "display_company_observed": "Apple",
+      "market_cap_observation": {
+        "display_amount": "4.91",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 4910000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/aapl/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "MSFT",
+      "display_company_observed": "Microsoft",
+      "market_cap_observation": {
+        "display_amount": "3.97",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 3970000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/msft/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NVDA",
+      "display_company_observed": "NVIDIA",
+      "market_cap_observation": {
+        "display_amount": "5.54",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 5540000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nvda/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ASML",
+      "display_company_observed": "ASML Holding",
+      "market_cap_observation": {
+        "display_amount": "688.72",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 688720000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/asml/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "JPM",
+      "display_company_observed": "JPMorgan Chase",
+      "market_cap_observation": {
+        "display_amount": "885.15",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 885150000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/jpm/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "V",
+      "display_company_observed": "Visa",
+      "market_cap_observation": {
+        "display_amount": "707.53",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 707530000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/v/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "XOM",
+      "display_company_observed": "ExxonMobil Holdings",
+      "market_cap_observation": {
+        "display_amount": "694.67",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 694670000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/xom/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "COST",
+      "display_company_observed": "Costco",
+      "market_cap_observation": {
+        "display_amount": "419.61",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 419610000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/cost/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "LLY",
+      "display_company_observed": "Eli Lilly",
+      "market_cap_observation": {
+        "display_amount": "1.05",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 1050000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/lly/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "BA",
+      "display_company_observed": "Boeing",
+      "market_cap_observation": {
+        "display_amount": "150.46",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 150460000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ba/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "PLTR",
+      "display_company_observed": "Palantir",
+      "market_cap_observation": {
+        "display_amount": "502.36",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 502360000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/pltr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "TSLA",
+      "display_company_observed": "Tesla",
+      "market_cap_observation": {
+        "display_amount": "1.51",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 1510000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/tsla/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AON",
+      "display_company_observed": "Aon plc",
+      "market_cap_observation": {
+        "display_amount": "58.28",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 58280000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/aon/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AJG",
+      "display_company_observed": "Arthur J. Gallagher & Co.",
+      "market_cap_observation": {
+        "display_amount": "59.65",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 59650000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ajg/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "DTE",
+      "display_company_observed": "DTE Energy Company",
+      "market_cap_observation": {
+        "display_amount": "26.41",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 26410000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/dte/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "PCAR",
+      "display_company_observed": "PACCAR",
+      "market_cap_observation": {
+        "display_amount": "56.87",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 56870000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/pcar/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ODFL",
+      "display_company_observed": "Old Dominion Freight Line",
+      "market_cap_observation": {
+        "display_amount": "37.73",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 37730000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/odfl/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "VTR",
+      "display_company_observed": "Ventas",
+      "market_cap_observation": {
+        "display_amount": "42.27",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 42270000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-06",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/vtr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AMZN",
+      "display_company_observed": "Amazon",
+      "market_cap_observation": {
+        "display_amount": "2.83",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 2830000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/amzn/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "GOOGL",
+      "display_company_observed": "Alphabet",
+      "market_cap_observation": {
+        "display_amount": "4.3",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 4300000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/googl/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "META",
+      "display_company_observed": "Meta Platforms",
+      "market_cap_observation": {
+        "display_amount": "1.83",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 1830000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/meta/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "WMT",
+      "display_company_observed": "Walmart",
+      "market_cap_observation": {
+        "display_amount": "883.42",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 883420000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/wmt/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "PG",
+      "display_company_observed": "Procter & Gamble",
+      "market_cap_observation": {
+        "display_amount": "351.26",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 351260000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/pg/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NEE",
+      "display_company_observed": "NextEra Energy",
+      "market_cap_observation": {
+        "display_amount": "161.41",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 161410000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nee/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "LIN",
+      "display_company_observed": "Linde",
+      "market_cap_observation": {
+        "display_amount": "222.99",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 222990000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/lin/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AMT",
+      "display_company_observed": "American Tower",
+      "market_cap_observation": {
+        "display_amount": "84.92",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 84920000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/amt/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NVS",
+      "display_company_observed": "Novartis AG",
+      "market_cap_observation": {
+        "display_amount": "272.48",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 272480000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nvs/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "JNJ",
+      "display_company_observed": "Johnson & Johnson",
+      "market_cap_observation": {
+        "display_amount": "630.04",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 630040000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/jnj/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "KO",
+      "display_company_observed": "The Coca-Cola Company",
+      "market_cap_observation": {
+        "display_amount": "378.84",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 378840000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ko/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SHW",
+      "display_company_observed": "SHW",
+      "market_cap_observation": {
+        "display_amount": "77.07",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 77070000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/shw/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ETSY",
+      "display_company_observed": "Etsy, Inc.",
+      "market_cap_observation": {
+        "display_amount": "7.04",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 7040000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/etsy/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ACHC",
+      "display_company_observed": "Acadia Healthcare Company",
+      "market_cap_observation": {
+        "display_amount": "2.72",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 2720000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/achc/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ACMR",
+      "display_company_observed": "ACM Research",
+      "market_cap_observation": {
+        "display_amount": "4.97",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4970000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/acmr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "MAN",
+      "display_company_observed": "ManpowerGroup",
+      "market_cap_observation": {
+        "display_amount": "2.45",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 2450000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/man/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ENS",
+      "display_company_observed": "EnerSys",
+      "market_cap_observation": {
+        "display_amount": "6.48",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 6480000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ens/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "INGR",
+      "display_company_observed": "Ingredion",
+      "market_cap_observation": {
+        "display_amount": "6",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 6000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ingr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "KBR",
+      "display_company_observed": "KBR, Inc.",
+      "market_cap_observation": {
+        "display_amount": "4.46",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4460000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/kbr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AVT",
+      "display_company_observed": "Avnet",
+      "market_cap_observation": {
+        "display_amount": "8.15",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 8150000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/avt/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "VNT",
+      "display_company_observed": "Vontier",
+      "market_cap_observation": {
+        "display_amount": "4.36",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4360000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/vnt/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "RHI",
+      "display_company_observed": "Robert Half",
+      "market_cap_observation": {
+        "display_amount": "3.41",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3410000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/rhi/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "BKH",
+      "display_company_observed": "Black Hills",
+      "market_cap_observation": {
+        "display_amount": "5.8",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 5800000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/bkh/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "WDFC",
+      "display_company_observed": "WD-40 Company",
+      "market_cap_observation": {
+        "display_amount": "2.71",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 2710000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/wdfc/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "OGS",
+      "display_company_observed": "ONE Gas",
+      "market_cap_observation": {
+        "display_amount": "4.58",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4580000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-06",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ogs/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AWR",
+      "display_company_observed": "AWR",
+      "market_cap_observation": {
+        "display_amount": "3.23",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3230000000,
+        "currency": "USD",
+        "source_as_of": "2026-09-28",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/awr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SWX",
+      "display_company_observed": "Southwest Gas Holdings",
+      "market_cap_observation": {
+        "display_amount": "6.02",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 6020000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-08",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/swx/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "MAT",
+      "display_company_observed": "Mattel",
+      "market_cap_observation": {
+        "display_amount": "4.77",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4770000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/mat/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "LEVI",
+      "display_company_observed": "Levi Strauss & Co.",
+      "market_cap_observation": {
+        "display_amount": "7.17",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 7170000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/levi/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "GEF",
+      "display_company_observed": "Greif",
+      "market_cap_observation": {
+        "display_amount": "4.65",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4650000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/gef/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SON",
+      "display_company_observed": "Sonoco Products Company",
+      "market_cap_observation": {
+        "display_amount": "4.74",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4740000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/son/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "FUL",
+      "display_company_observed": "H.B. Fuller Company",
+      "market_cap_observation": {
+        "display_amount": "2.72",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 2720000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-08",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ful/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ASH",
+      "display_company_observed": "Ashland",
+      "market_cap_observation": {
+        "display_amount": "3.24",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3240000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-08",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ash/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "CWT",
+      "display_company_observed": "CWT",
+      "market_cap_observation": {
+        "display_amount": "2.84",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 2840000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-02",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/cwt/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "CBU",
+      "display_company_observed": "CBU",
+      "market_cap_observation": {
+        "display_amount": "3.08",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3080000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/cbu/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "BANF",
+      "display_company_observed": "BancFirst",
+      "market_cap_observation": {
+        "display_amount": "3.57",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3570000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/banf/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NHI",
+      "display_company_observed": "National Health Investors",
+      "market_cap_observation": {
+        "display_amount": "3.18",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3180000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nhi/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "IAC",
+      "display_company_observed": "People",
+      "market_cap_observation": {
+        "display_amount": "3.04",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3040000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/iac/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NOG",
+      "display_company_observed": "Northern Oil and Gas",
+      "market_cap_observation": {
+        "display_amount": "2.63",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 2630000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nog/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "HAE",
+      "display_company_observed": "Haemonetics",
+      "market_cap_observation": {
+        "display_amount": "5.4",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 5400000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/hae/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "KAI",
+      "display_company_observed": "Kadant",
+      "market_cap_observation": {
+        "display_amount": "3.08",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 3080000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/kai/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SR",
+      "display_company_observed": "Spire",
+      "market_cap_observation": {
+        "display_amount": "4.64",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 4640000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/sr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ASGN",
+      "display_company_observed": "Everforth",
+      "market_cap_observation": {
+        "display_amount": "1.53",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1530000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/asgn/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NSP",
+      "display_company_observed": "Insperity",
+      "market_cap_observation": {
+        "display_amount": "1.86",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1860000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nsp/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NWN",
+      "display_company_observed": "NWN",
+      "market_cap_observation": {
+        "display_amount": "1.99",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1990000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-06",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nwn/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ENR",
+      "display_company_observed": "Energizer Holdings",
+      "market_cap_observation": {
+        "display_amount": "1.51",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1510000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-02",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/enr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AIN",
+      "display_company_observed": "Albany International",
+      "market_cap_observation": {
+        "display_amount": "1.75",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1750000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ain/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "JBLU",
+      "display_company_observed": "JetBlue Airways",
+      "market_cap_observation": {
+        "display_amount": "1.45",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1450000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/jblu/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SWBI",
+      "display_company_observed": "Smith & Wesson Brands",
+      "market_cap_observation": {
+        "display_amount": "650.62",
+        "display_scale": "million",
+        "normalized_rounded_usd": 650620000,
+        "currency": "USD",
+        "source_as_of": "2026-10-07",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/swbi/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "BGS",
+      "display_company_observed": "B&G Foods",
+      "market_cap_observation": {
+        "display_amount": "195.06",
+        "display_scale": "million",
+        "normalized_rounded_usd": 195060000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/bgs/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "GCI",
+      "display_company_observed": "USA TODAY Co.",
+      "market_cap_observation": {
+        "display_amount": "993.76",
+        "display_scale": "million",
+        "normalized_rounded_usd": 993760000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/gci/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "HBB",
+      "display_company_observed": "HBB",
+      "market_cap_observation": {
+        "display_amount": "470.48",
+        "display_scale": "million",
+        "normalized_rounded_usd": 470480000,
+        "currency": "USD",
+        "source_as_of": "2026-10-08",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/hbb/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "VLGEA",
+      "display_company_observed": "Village Super Market",
+      "market_cap_observation": {
+        "display_amount": "651.92",
+        "display_scale": "million",
+        "normalized_rounded_usd": 651920000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/vlgea/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SENEA",
+      "display_company_observed": "Seneca Foods",
+      "market_cap_observation": {
+        "display_amount": "1.21",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1210000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/senea/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "CAL",
+      "display_company_observed": "Caleres",
+      "market_cap_observation": {
+        "display_amount": "416.82",
+        "display_scale": "million",
+        "normalized_rounded_usd": 416820000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/cal/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ANGO",
+      "display_company_observed": "AngioDynamics",
+      "market_cap_observation": {
+        "display_amount": "484.47",
+        "display_scale": "million",
+        "normalized_rounded_usd": 484470000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ango/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "UTMD",
+      "display_company_observed": "Utah Medical Products",
+      "market_cap_observation": {
+        "display_amount": "237.32",
+        "display_scale": "million",
+        "normalized_rounded_usd": 237320000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/utmd/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "USNA",
+      "display_company_observed": "USANA Health Sciences",
+      "market_cap_observation": {
+        "display_amount": "274.75",
+        "display_scale": "million",
+        "normalized_rounded_usd": 274750000,
+        "currency": "USD",
+        "source_as_of": "2026-10-07",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/usna/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "MLR",
+      "display_company_observed": "Miller Industries",
+      "market_cap_observation": {
+        "display_amount": "595.54",
+        "display_scale": "million",
+        "normalized_rounded_usd": 595540000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/mlr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "GRC",
+      "display_company_observed": "The Gorman-Rupp Company",
+      "market_cap_observation": {
+        "display_amount": "1.95",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 1950000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/grc/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "MTRX",
+      "display_company_observed": "Matrix Service Company",
+      "market_cap_observation": {
+        "display_amount": "297.91",
+        "display_scale": "million",
+        "normalized_rounded_usd": 297910000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/mtrx/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NNBR",
+      "display_company_observed": "NN, Inc.",
+      "market_cap_observation": {
+        "display_amount": "370.29",
+        "display_scale": "million",
+        "normalized_rounded_usd": 370290000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nnbr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "PLOW",
+      "display_company_observed": "Douglas Dynamics",
+      "market_cap_observation": {
+        "display_amount": "904.39",
+        "display_scale": "million",
+        "normalized_rounded_usd": 904390000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/plow/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SGC",
+      "display_company_observed": "SGC",
+      "market_cap_observation": {
+        "display_amount": "210",
+        "display_scale": "million",
+        "normalized_rounded_usd": 210000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-07",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/sgc/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "JOUT",
+      "display_company_observed": "Johnson Outdoors",
+      "market_cap_observation": {
+        "display_amount": "457.85",
+        "display_scale": "million",
+        "normalized_rounded_usd": 457850000,
+        "currency": "USD",
+        "source_as_of": "2026-09-18",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/jout/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "PETS",
+      "display_company_observed": "PetMed Express",
+      "market_cap_observation": {
+        "display_amount": "27.05",
+        "display_scale": "million",
+        "normalized_rounded_usd": 27050000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/pets/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NATH",
+      "display_company_observed": "Nathan's Famous",
+      "market_cap_observation": {
+        "display_amount": "415.87",
+        "display_scale": "million",
+        "normalized_rounded_usd": 415870000,
+        "currency": "USD",
+        "source_as_of": "2026-10-02",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/nath/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "RELL",
+      "display_company_observed": "Richardson Electronics",
+      "market_cap_observation": {
+        "display_amount": "309.29",
+        "display_scale": "million",
+        "normalized_rounded_usd": 309290000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/rell/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "ACNB",
+      "display_company_observed": "ACNB Corporation",
+      "market_cap_observation": {
+        "display_amount": "633.59",
+        "display_scale": "million",
+        "normalized_rounded_usd": 633590000,
+        "currency": "USD",
+        "source_as_of": "2026-09-30",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/acnb/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "CCBG",
+      "display_company_observed": "Capital City Bank Group",
+      "market_cap_observation": {
+        "display_amount": "818.94",
+        "display_scale": "million",
+        "normalized_rounded_usd": 818940000,
+        "currency": "USD",
+        "source_as_of": "2026-10-01",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ccbg/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "NGS",
+      "display_company_observed": "NGS",
+      "market_cap_observation": {
+        "display_amount": "426.93",
+        "display_scale": "million",
+        "normalized_rounded_usd": 426930000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ngs/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "FRPH",
+      "display_company_observed": "FRP Holdings",
+      "market_cap_observation": {
+        "display_amount": "380.7",
+        "display_scale": "million",
+        "normalized_rounded_usd": 380700000,
+        "currency": "USD",
+        "source_as_of": "2026-10-08",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/frph/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "AA",
+      "display_company_observed": "Alcoa",
+      "market_cap_observation": {
+        "display_amount": "11.14",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 11140000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/aa/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "DOCU",
+      "display_company_observed": "DocuSign",
+      "market_cap_observation": {
+        "display_amount": "13.29",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 13290000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/docu/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "TSM",
+      "display_company_observed": "TSMC",
+      "market_cap_observation": {
+        "display_amount": "2.07",
+        "display_scale": "trillion",
+        "normalized_rounded_usd": 2070000000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/tsm/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SAP",
+      "display_company_observed": "SAP SE",
+      "market_cap_observation": {
+        "display_amount": "247.43",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 247430000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/sap/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "SONY",
+      "display_company_observed": "Sony Group",
+      "market_cap_observation": {
+        "display_amount": "141.45",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 141450000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/sony/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "TM",
+      "display_company_observed": "Toyota Motor",
+      "market_cap_observation": {
+        "display_amount": "216.5",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 216500000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/tm/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "RY",
+      "display_company_observed": "Royal Bank of Canada",
+      "market_cap_observation": {
+        "display_amount": "265.64",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 265640000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ry/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "BHP",
+      "display_company_observed": "BHP Group",
+      "market_cap_observation": {
+        "display_amount": "216.16",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 216160000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/bhp/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "UL",
+      "display_company_observed": "Unilever",
+      "market_cap_observation": {
+        "display_amount": "133.17",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 133170000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/ul/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    },
+    {
+      "ticker_candidate": "EQNR",
+      "display_company_observed": "Equinor ASA",
+      "market_cap_observation": {
+        "display_amount": "103.81",
+        "display_scale": "billion",
+        "normalized_rounded_usd": 103810000000,
+        "currency": "USD",
+        "source_as_of": "2026-10-09",
+        "retrieved_on": "2026-10-11",
+        "source_url": "https://stockanalysis.com/stocks/eqnr/market-cap/",
+        "source_type": "secondary_public_aggregator",
+        "extraction": "market_cap_summary_statement",
+        "independently_verified": false,
+        "same_date_historical_table_reconciled": false
+      }
+    }
+  ]
+}

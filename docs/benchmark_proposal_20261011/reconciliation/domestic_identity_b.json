@@ -1,0 +1,1771 @@
+{
+  "schema_version": 1,
+  "scope": "domestic_identity_b",
+  "created_at_utc": "2026-10-11T23:47:17Z",
+  "assigned_count": 44,
+  "current_identity_verified_count": 44,
+  "assigned_duplicate_cik_groups": [],
+  "policy": "Current identity metadata research only. User-approved provisional secondary cap policy is not overridden by these scope limitations. This artifact does not independently audit cap values, certify admissions, or require exact primary cap replication. Exact historical share-count replication is a disclosed limitation, NOT an additional admission gate. Security-label confirmation is distinguished from full class-inventory evidence.",
+  "sources": {
+    "sec_current": {
+      "url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "publisher": "SEC",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:43:12Z",
+        "2026-10-11T23:46:40Z"
+      ],
+      "scope": "Current issuer-name/CIK/ticker/exchange tuples actually observed through web open/find. No security-class description or historical Oct9 snapshot."
+    },
+    "xom_reorganization": {
+      "url": "https://investor.exxonmobil.com/sec-filings/all-sec-filings/content/0000034088-26-000093/xom-20260630.htm",
+      "publisher": "ExxonMobil, issuer-hosted SEC filing",
+      "period": "2026-06-30",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Explanatory note and Note1: July1 2026 reorganization; EMC exchanged one common share for one EMHC common share, $0.001 par; successor remained NYSE XOM. Group business/assets/liabilities/reporting basis unchanged."
+    },
+    "ppli_rename": {
+      "url": "https://ir.people-incorporated.com/news-releases/news-release-details/iac-now-people-incorporated-new-ticker-symbol",
+      "publisher": "People Incorporated",
+      "publication_date": "2026-06-04",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Issuer confirms IAC legal rename and Nasdaq common-stock ticker PPLI effective June4 2026; unchanged CUSIP."
+    },
+    "tday_rename": {
+      "url": "https://www.usatodayco.com/pr/gannett-rebrands-to-usa-today-co/",
+      "publisher": "USA TODAY Co.",
+      "publication_date": "2025-11-04",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Issuer announced Gannett rename and NYSE common-stock ticker TDAY effective November18 2025."
+    },
+    "wmt_transfer": {
+      "url": "https://www.nasdaq.com/press-release/walmart-debuts-nasdaq-marking-its-first-day-trading-2025-12-09",
+      "publisher": "Walmart release hosted by Nasdaq",
+      "publication_date": "2025-12-09",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Issuer confirms completed Nasdaq transfer of common stock and bonds."
+    },
+    "senea_classes": {
+      "url": "https://www.sec.gov/Archives/edgar/data/88948/000143774926003202/senea20251227_10q.htm",
+      "publisher": "SEC",
+      "period": "2025-12-27",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Cover lists common ClassA SENEA and common ClassB SENEB, both Nasdaq Global Select Market, $0.25 par."
+    },
+    "vlgea_classes": {
+      "url": "https://www.sec.gov/Archives/edgar/data/103595/000010359525000015/vlgea-20250726.htm",
+      "publisher": "SEC",
+      "period": "2025-07-26",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Cover identifies VLGEA as Nasdaq ClassA common stock; outstanding ClassA and ClassB shares. Older dated evidence, not Oct9 2026 share counts."
+    },
+    "pltr_classes": {
+      "url": "https://www.sec.gov/Archives/edgar/data/1321655/000132165526000019/pltr-20260423.htm",
+      "publisher": "SEC",
+      "period": "2026-04-06 voting record date",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:46:40Z",
+        "2026-10-11T23:47:17Z"
+      ],
+      "scope": "Proxy confirms outstanding common ClassA, ClassB and ClassF; B convertible one-for-one to A. No Oct9 cap-method verification."
+    },
+    "man_class_followup": {
+      "url": "https://investor.manpowergroup.com/static-files/233c1c8f-7726-4dff-b60a-0ca05edf7073",
+      "publisher": "Issuer or issuer-linked SEC filing",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "2025 annual report: MAN NYSE common stock; balance sheet one common-stock line, preferred authorized but none issued."
+    },
+    "msft_class_followup": {
+      "url": "https://www.microsoft.com/investor/reports/ar25/index.html",
+      "publisher": "Issuer or issuer-linked SEC filing",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "2025 annual report: MSFT Nasdaq common stock; balance sheet and stockholders-equity note report one common-stock category."
+    },
+    "nhi_class_followup": {
+      "url": "https://s205.q4cdn.com/302521515/files/doc_financials/2025/ar/NHI-ARS-2025-4-1-26-002.pdf",
+      "publisher": "Issuer or issuer-linked SEC filing",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "2025 annual report: NHI NYSE common stock; equity issuance discussion checked. Complete outstanding equity inventory not resolved by excerpts."
+    },
+    "sr_class_followup": {
+      "url": "https://s25.q4cdn.com/231862843/files/doc_financials/2025/SR016_10K_2025_Web-Ready.pdf",
+      "publisher": "Issuer or issuer-linked SEC filing",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "2025 annual report cover: SR $1-par common; SR.PRA depositary interests in preferred are separate. Subsidiary common stock owned by parent; do not count subsidiaries as separate issuers."
+    },
+    "tsla_class_followup": {
+      "url": "https://assets-ir.tesla.com/tesla-contents/IR/TSLA-Q4-2025-Update.pdf",
+      "publisher": "Issuer or issuer-linked SEC filing",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Issuer Q4 2025 update reports common-stock EPS/share category; this is not a full class-inventory certification."
+    },
+    "meta_class_followup": {
+      "url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680123000013/meta-20221231.htm",
+      "publisher": "Issuer or issuer-linked SEC filing",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "2022 annual filing: ClassA and ClassB common with identical liquidation/dividend rights and B-to-A conversion; old source requires current inventory reconciliation."
+    },
+    "man_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/man",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: ManpowerGroup Common Stock (MAN). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "mat_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/mat",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Mattel, Inc. Common Stock (MAT). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "meta_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/meta",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Meta Platforms, Inc. Class A Common Stock (META). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "msft_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/msft",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Microsoft Corporation (MSFT). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "nhi_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/nhi",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: National Health Investors, Inc. Common Stock (NHI). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "nsp_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/nsp",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Insperity, Inc. Common Stock (NSP). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "odfl_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/odfl",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Old Dominion Freight Line, Inc. Common Stock (ODFL). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "ogs_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/ogs",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: ONE Gas, Inc. Common Stock (OGS). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "pcar_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/pcar",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: PACCAR Inc. Common Stock (PCAR). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "son_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/son",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Sonoco Products Company Common Stock (SON). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "sr_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/sr",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Spire Inc. Common Stock (SR). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "swx_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/swx",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Southwest Gas Holdings, Inc. Common Stock (DE) (SWX). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "tsla_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/tsla",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Tesla, Inc. (TSLA). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    },
+    "vnt_nasdaq_security": {
+      "url": "https://www.nasdaq.com/market-activity/stocks/vnt",
+      "publisher": "Nasdaq",
+      "retrieved_utc_interval": [
+        "2026-10-11T23:47:17Z",
+        "2026-10-11T23:49:38Z"
+      ],
+      "scope": "Observed security page title: Vontier Corporation Common Stock (VNT). For NYSE issuers this is exchange-publisher metadata, not listing-exchange attestation or full class inventory."
+    }
+  },
+  "access_limits": [
+    "SEC direct shell request returned tunnel403; SEC free web access succeeded.",
+    "Bounded additional primary searches did not establish complete share-class inventory for every issuer; no absence-of-other-class inference.",
+    "Searches for RELL/META/V class evidence returned irrelevant results; no class facts inferred from them."
+  ],
+  "preservation": {
+    "holdout20": "unchanged",
+    "external_prior_exposure": "unknown",
+    "company_answer_generation": false,
+    "paid_calls": false,
+    "existing_files_modified": false
+  },
+  "rows": [
+    {
+      "ticker": "LLY",
+      "current_identity": {
+        "cik": "0000059478",
+        "name": "ELI LILLY & Co",
+        "ticker": "LLY",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "MAN",
+      "current_identity": {
+        "cik": "0000871763",
+        "name": "ManpowerGroup Inc.",
+        "ticker": "MAN",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "man_class_followup",
+        "man_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "2025 annual report: MAN NYSE common stock; balance sheet one common-stock line, preferred authorized but none issued.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Combine dated single-common-class evidence with approved provisional secondary total-company cap policy; no issuer-specific contrary class evidence found in reviewed sections."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "single_common_class_evidence",
+      "primary_source_attempt": "Nasdaq security page successfully opened; scope limited to observed title.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "MAT",
+      "current_identity": {
+        "cik": "0000063276",
+        "name": "MATTEL INC /DE/",
+        "ticker": "MAT",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "mat_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Mattel, Inc. Common Stock (MAT)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Annual-report searches located issuer investor pages and older SEC report; current Nasdaq common-stock security label verified.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "META",
+      "current_identity": {
+        "cik": "0001326801",
+        "name": "Meta Platforms, Inc.",
+        "ticker": "META",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "meta_class_followup",
+        "meta_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "2022 annual filing: ClassA and ClassB common with identical liquidation/dividend rights and B-to-A conversion; old source requires current inventory reconciliation.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "dated_multiclass_evidence",
+      "primary_source_attempt": "Nasdaq security page successfully opened; scope limited to observed title.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "MLR",
+      "current_identity": {
+        "cik": "0000924822",
+        "name": "MILLER INDUSTRIES INC /TN/",
+        "ticker": "MLR",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "MSFT",
+      "current_identity": {
+        "cik": "0000789019",
+        "name": "MICROSOFT CORP",
+        "ticker": "MSFT",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "msft_class_followup",
+        "msft_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "2025 annual report: MSFT Nasdaq common stock; balance sheet and stockholders-equity note report one common-stock category.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Combine dated single-common-class evidence with approved provisional secondary total-company cap policy; no issuer-specific contrary class evidence found in reviewed sections."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "single_common_class_evidence",
+      "primary_source_attempt": "2026 annual URL returned404; SEC submissions URL inaccessible. 2025 issuer annual report successfully read.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "MTRX",
+      "current_identity": {
+        "cik": "0000866273",
+        "name": "MATRIX SERVICE CO",
+        "ticker": "MTRX",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NATH",
+      "current_identity": {
+        "cik": "0000069733",
+        "name": "NATHANS FAMOUS, INC.",
+        "ticker": "NATH",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NEE",
+      "current_identity": {
+        "cik": "0000753308",
+        "name": "NEXTERA ENERGY INC",
+        "ticker": "NEE",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NGS",
+      "current_identity": {
+        "cik": "0001084991",
+        "name": "NATURAL GAS SERVICES GROUP INC",
+        "ticker": "NGS",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NHI",
+      "current_identity": {
+        "cik": "0000877860",
+        "name": "NATIONAL HEALTH INVESTORS INC",
+        "ticker": "NHI",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "nhi_class_followup",
+        "nhi_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "2025 annual report: NHI NYSE common stock; equity issuance discussion checked. Complete outstanding equity inventory not resolved by excerpts.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Nasdaq security page successfully opened; scope limited to observed title.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NNBR",
+      "current_identity": {
+        "cik": "0000918541",
+        "name": "NN INC",
+        "ticker": "NNBR",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NOG",
+      "current_identity": {
+        "cik": "0001104485",
+        "name": "NORTHERN OIL & GAS, INC.",
+        "ticker": "NOG",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NSP",
+      "current_identity": {
+        "cik": "0001000753",
+        "name": "INSPERITY, INC.",
+        "ticker": "NSP",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "nsp_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Insperity, Inc. Common Stock (NSP)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Annual-report search did not establish a current issuer-linked filing; current Nasdaq common-stock security label verified.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "NVDA",
+      "current_identity": {
+        "cik": "0001045810",
+        "name": "NVIDIA CORP",
+        "ticker": "NVDA",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "ODFL",
+      "current_identity": {
+        "cik": "0000878927",
+        "name": "OLD DOMINION FREIGHT LINE, INC.",
+        "ticker": "ODFL",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "odfl_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Old Dominion Freight Line, Inc. Common Stock (ODFL)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Annual-report search returned1996 filing, not relied upon; current Nasdaq common-stock security label verified.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "OGS",
+      "current_identity": {
+        "cik": "0001587732",
+        "name": "ONE Gas, Inc.",
+        "ticker": "OGS",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "ogs_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "ONE Gas, Inc. Common Stock (OGS)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Issuer FAQ and2026release located; full annual class inventory not obtained. Current Nasdaq common-stock security label verified.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "PCAR",
+      "current_identity": {
+        "cik": "0000075362",
+        "name": "PACCAR INC",
+        "ticker": "PCAR",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "pcar_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "PACCAR Inc. Common Stock (PCAR)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Issuer https://www.paccar.com/media/slob3gnu/2025-annual-report-final.pdf returned only3lines; common-stock find no match. Nasdaq common-security title verified.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "PETS",
+      "current_identity": {
+        "cik": "0001040130",
+        "name": "PETMED EXPRESS INC",
+        "ticker": "PETS",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "PG",
+      "current_identity": {
+        "cik": "0000080424",
+        "name": "PROCTER & GAMBLE Co",
+        "ticker": "PG",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "PLOW",
+      "current_identity": {
+        "cik": "0001287213",
+        "name": "DOUGLAS DYNAMICS, INC",
+        "ticker": "PLOW",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "PLTR",
+      "current_identity": {
+        "cik": "0001321655",
+        "name": "Palantir Technologies Inc.",
+        "ticker": "PLTR",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "pltr_classes"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "Class A, Class B and Class F common shares; count issuer once.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "equal_displayed_values",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "PPLI",
+      "current_identity": {
+        "cik": "0001800227",
+        "name": "People Inc",
+        "ticker": "PPLI",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "ppli_rename"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "Listed common stock confirmed by rename release; complete common-class inventory not checked.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "equal_displayed_values",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "RELL",
+      "current_identity": {
+        "cik": "0000355948",
+        "name": "RICHARDSON ELECTRONICS, LTD.",
+        "ticker": "RELL",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "RGR",
+      "current_identity": {
+        "cik": "0000095029",
+        "name": "STURM RUGER & CO INC",
+        "ticker": "RGR",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "RHI",
+      "current_identity": {
+        "cik": "0000315213",
+        "name": "ROBERT HALF INC.",
+        "ticker": "RHI",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SENEA",
+      "current_identity": {
+        "cik": "0000088948",
+        "name": "Seneca Foods Corp",
+        "ticker": "SENEA",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "senea_classes"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "Class A (SENEA) and Class B (SENEB) common stock both listed; count issuer once.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "equal_displayed_values",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SGC",
+      "current_identity": {
+        "cik": "0000095574",
+        "name": "SUPERIOR GROUP OF COMPANIES, INC.",
+        "ticker": "SGC",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SHW",
+      "current_identity": {
+        "cik": "0000089800",
+        "name": "SHERWIN WILLIAMS CO",
+        "ticker": "SHW",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SON",
+      "current_identity": {
+        "cik": "0000091767",
+        "name": "SONOCO PRODUCTS CO",
+        "ticker": "SON",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "son_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Sonoco Products Company Common Stock (SON)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Issuer annual-report page opened; 2025 PDF https://s204.q4cdn.com/935421280/files/doc_financials/2025/ar/2025_SON_Annual-Report_031626.pdf rejected by web tool: content length15770408 too large.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SR",
+      "current_identity": {
+        "cik": "0001126956",
+        "name": "SPIRE INC",
+        "ticker": "SR",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "sr_class_followup",
+        "sr_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "2025 annual report cover: SR $1-par common; SR.PRA depositary interests in preferred are separate. Subsidiary common stock owned by parent; do not count subsidiaries as separate issuers.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "common_vs_preferred_and_subsidiary_mapping",
+      "primary_source_attempt": "Nasdaq security page successfully opened; scope limited to observed title.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SWBI",
+      "current_identity": {
+        "cik": "0001092796",
+        "name": "SMITH & WESSON BRANDS, INC.",
+        "ticker": "SWBI",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "SWX",
+      "current_identity": {
+        "cik": "0001692115",
+        "name": "Southwest Gas Holdings, Inc.",
+        "ticker": "SWX",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "swx_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Southwest Gas Holdings, Inc. Common Stock (DE) (SWX)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Issuer annual-report page https://www.swgasholdings.com/financial-information/annual-reports-proxy-materials opened; click2025 annual report returned internal error. Issuer page confirms holding-company reorganization effective2017-01-01.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "TDAY",
+      "current_identity": {
+        "cik": "0001579684",
+        "name": "USA TODAY Co., Inc.",
+        "ticker": "TDAY",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "tday_rename"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "NYSE common stock confirmed by issuer rename release; complete class inventory not checked.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "TSLA",
+      "current_identity": {
+        "cik": "0001318605",
+        "name": "Tesla, Inc.",
+        "ticker": "TSLA",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "tsla_class_followup",
+        "tsla_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Issuer Q4 2025 update reports common-stock EPS/share category; this is not a full class-inventory certification.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Nasdaq security page successfully opened; scope limited to observed title.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "USNA",
+      "current_identity": {
+        "cik": "0000896264",
+        "name": "USANA HEALTH SCIENCES INC",
+        "ticker": "USNA",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "UTMD",
+      "current_identity": {
+        "cik": "0000706698",
+        "name": "UTAH MEDICAL PRODUCTS INC",
+        "ticker": "UTMD",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "V",
+      "current_identity": {
+        "cik": "0001403161",
+        "name": "VISA INC.",
+        "ticker": "V",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "VLGEA",
+      "current_identity": {
+        "cik": "0000103595",
+        "name": "VILLAGE SUPER MARKET INC",
+        "ticker": "VLGEA",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "vlgea_classes"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "Listed Class A and additional Class B common shares; count issuer once.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "VNT",
+      "current_identity": {
+        "cik": "0001786842",
+        "name": "Vontier Corp",
+        "ticker": "VNT",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "vnt_nasdaq_security"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": "Vontier Corporation Common Stock (VNT)",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "primary_class_review_status": "security_class_only",
+      "primary_source_attempt": "Issuer presentations andSEC2025release located; full annual class inventory not obtained. Current Nasdaq common-stock security label verified.",
+      "cap_review_priority": "equal_displayed_values",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "VTR",
+      "current_identity": {
+        "cik": "0000740260",
+        "name": "Ventas, Inc.",
+        "ticker": "VTR",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "WDFC",
+      "current_identity": {
+        "cik": "0000105132",
+        "name": "WD 40 CO",
+        "ticker": "WDFC",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange"
+      ],
+      "security_class_observation": null,
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Security class and complete common-equity class inventory not established by current SEC bulk mapping.",
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "cap_conflict_or_rounding_unresolved",
+      "primary_class_review_status": "not_attempted_beyond_identity_due_cap_conflict",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "WMT",
+      "current_identity": {
+        "cik": "0000104169",
+        "name": "Walmart Inc.",
+        "ticker": "WMT",
+        "exchange": "Nasdaq"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "wmt_transfer"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "Nasdaq common stock transfer confirmed; no complete capitalization inventory checked.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "equal_displayed_values",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    },
+    {
+      "ticker": "XOM",
+      "current_identity": {
+        "cik": "0002115436",
+        "name": "ExxonMobil Holdings Corp",
+        "ticker": "XOM",
+        "exchange": "NYSE"
+      },
+      "verification_status": "current_identity_verified",
+      "source_refs": [
+        "sec_current",
+        "xom_reorganization"
+      ],
+      "verified": [
+        "current ticker-to-company mapping",
+        "current CIK",
+        "current exchange",
+        "additional dated issuer/security observation"
+      ],
+      "security_class_observation": "Successor common stock $0.001 par, one-for-one continuation of predecessor common stock.",
+      "other_observed_current_sec_tickers_same_cik": [],
+      "duplicate_within_assigned44": [],
+      "historical_oct9_identity": "Current bulk mapping alone does not establish historical date; dated supplemental evidence is separately scoped where present.",
+      "total_company_cap_basis_verified": false,
+      "remaining_gaps": [
+        "Secondary cap source inclusion of all economic common-equity classes not independently established in this bounded check."
+      ],
+      "admission_decision": "parent_combined_review_required",
+      "cap_review_priority": "equal_displayed_values",
+      "primary_class_review_status": "dated_security_or_multiclass_evidence",
+      "limitations": [
+        "Exact Oct9 share counts/cap arithmetic not independently audited; this is not a provisional-admission gate."
+      ]
+    }
+  ],
+  "updated_at_utc": "2026-10-11T23:49:38Z",
+  "followup_summary": {
+    "equal_cap_priority_rows": 19,
+    "priority_rows_with_security_or_class_evidence": 19,
+    "full_primary_cap_arithmetic_required": false,
+    "exact_cap_audited": false,
+    "admissions_made": 0
+  }
+}

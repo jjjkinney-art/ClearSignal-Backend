@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "ticker": "GRC",
+  "reviewed_at": "2026-10-12T00:02:39+00:00",
+  "scope": "Additional boundary check; not one of45 summary/history conflicts",
+  "primary_source": "https://www.sec.gov/Archives/edgar/data/42682/000119312526317911/grc-20260630.htm",
+  "primary_filing_date": "2026-07-27",
+  "primary_shares_as_of": "2026-07-27",
+  "common_shares_outstanding": 26410243,
+  "primary_security": "Common Shares without par value, NYSE GRC",
+  "price_source": "https://stockanalysis.com/stocks/grc/statistics/",
+  "price_observed_date": "2026-10-09",
+  "regular_close_usd": "73.99",
+  "after_hours_usd_excluded": "73.90",
+  "calculation": {
+    "formula": "26410243 * 73.99",
+    "usd": "1954093879.57",
+    "classification": "provisional_reported_share_estimate_using_Oct9_regular_close",
+    "share_count_date_is_price_date": false
+  },
+  "summary_and_history_display_usd": 1950000000,
+  "approved_mid_boundary_usd": 2000000000,
+  "display_distance_to_boundary_usd": 50000000,
+  "calculated_distance_to_boundary_usd": "45906120.43",
+  "tier_from_both_displays_and_reported_share_estimate": "small_micro",
+  "known_tier_crossing": false,
+  "limitation": "July27 primary shares are not asserted as exactOct9 shares. No count reconciliation throughOct9 or canonical admission is implied. This corroborates the observed small-cap tier without inventing a tolerance.",
+  "canonical_admitted": false,
+  "execution_authorized": false
+}

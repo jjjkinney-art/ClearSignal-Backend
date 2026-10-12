@@ -1,0 +1,910 @@
+{
+  "schema_version": 1,
+  "status": "completed_primary_metadata_review",
+  "scope": "Public primary-source metadata only. No cap selection, admission, answer captures or holdout changes. Sector values are analyst mappings, not GICS claims.",
+  "rows": [
+    {
+      "ticker": "AON",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "IE",
+          "status": "verified_primary",
+          "source_ref": "AON_filing",
+          "scope_note": "Ireland incorporation and Dublin principal office, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "AON_filing",
+          "scope_note": "Note 1 US GAAP, line 587."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "AON_filing",
+          "scope_note": "Risk advisory and insurance brokerage; commercial risk solutions."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "AON_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/315293/000162828026050610/aon-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/315293/000162828026050610/aon-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "ODFL",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "ODFL_filing",
+          "scope_note": "Virginia incorporation; Thomasville, North Carolina office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "ODFL_filing",
+          "scope_note": "Note 1, line 396."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "ODFL_filing",
+          "scope_note": "LTL motor carrier and transportation services."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "ODFL_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/878927/000087892726000023/odfl-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/878927/000087892726000023/odfl-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "META",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "META_filing",
+          "scope_note": "Delaware incorporation; Menlo Park principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "META_filing",
+          "scope_note": "Note 1, line 439."
+        },
+        "sector": {
+          "value": "Communication Services",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "META_filing",
+          "scope_note": "Facebook/Instagram advertising platforms."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "META_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026050705/meta-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026050705/meta-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "LIN",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "IE",
+          "status": "verified_primary",
+          "source_ref": "LIN_filing",
+          "scope_note": "Ireland incorporation; principal executive offices in United States and United Kingdom."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "LIN_annual",
+          "scope_note": "2025 annual report Note 1, principles of consolidation explicitly US GAAP. Ireland legal incorporation; UK tax residence not conflated with domicile."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "LIN_filing",
+          "scope_note": "Industrial gases products and distribution."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "LIN_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1707925/000162828026051289/lin-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        },
+        {
+          "id": "LIN_annual",
+          "url": "https://www.sec.gov/Archives/edgar/data/1707925/000162828026011430/lin-20251231.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1707925/000162828026051289/lin-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1707925/000162828026011430/lin-20251231.htm",
+          "outcome": "Primary metadata read successful."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "KO",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "KO_filing",
+          "scope_note": "Delaware incorporation; Atlanta, Georgia office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "KO_filing",
+          "scope_note": "Note 1, line 317."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "KO_filing",
+          "scope_note": "Ready-to-drink beverage business."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "KO_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/21344/000162828026050503/ko-20260703.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/21344/000162828026050503/ko-20260703.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "KBR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "KBR_filing",
+          "scope_note": "Delaware incorporation; Houston, Texas office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "KBR_filing",
+          "scope_note": "Basis of presentation line 851 and US GAAP glossary."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "KBR_filing",
+          "scope_note": "Government mission support and industrial process technology services."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "KBR_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1357615/000135761526000172/kbr-20260703.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1357615/000135761526000172/kbr-20260703.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "BKH",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "BKH_cover",
+          "scope_note": "South Dakota incorporation and Rapid City office, rendered filing cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "BKH_basis",
+          "scope_note": "Issuer basis-of-presentation prose explicitly states US GAAP; no inference from taxonomy names."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "BKH_business",
+          "scope_note": "Regulated electric and natural gas utility rate proceedings and operations."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "BKH_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/bkh-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        },
+        {
+          "id": "BKH_cover",
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/R1.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        },
+        {
+          "id": "BKH_basis",
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/R11.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        },
+        {
+          "id": "BKH_business",
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/R12.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/bkh-20260630.htm",
+          "outcome": "Primary document unavailable or metadata extraction incomplete."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/R1.htm",
+          "outcome": "Primary metadata read successful."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/R11.htm",
+          "outcome": "Primary metadata read successful."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1130464/000119312526337444/R12.htm",
+          "outcome": "Primary metadata read successful."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "SWX",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "SWX_filing",
+          "scope_note": "Holding company Delaware incorporation; Las Vegas, Nevada office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "SWX_filing",
+          "scope_note": "Basis of presentation line 733 explicitly U.S. GAAP."
+        },
+        "sector": {
+          "value": "Utilities",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "SWX_filing",
+          "scope_note": "Regulated natural gas utility operations."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "SWX_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1692115/000169211526000112/swx-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1692115/000169211526000112/swx-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "SON",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "SON_corrected_quarterly",
+          "scope_note": "Cover: South Carolina incorporation; Hartsville, South Carolina executive office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "SON_corrected_quarterly",
+          "scope_note": "Results of Operations explicitly states financial statements prepared in conformity with U.S. generally accepted accounting principles, line2070."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "SON_corrected_quarterly",
+          "scope_note": "Consumer Packaging and Industrial Paper Packaging operating segments; analyst mapping, not GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "SON_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/91767/000009176726000041/son-20260628.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        },
+        {
+          "id": "SON_business",
+          "url": "https://www.sonoco.com/na",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        },
+        {
+          "id": "SON_corrected_quarterly",
+          "url": "https://www.sec.gov/Archives/edgar/data/91767/000009176726000038/son-20260628.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Quarter ended June 28, 2026; filed July 28, 2026."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/91767/000009176726000041/son-20260628.htm",
+          "outcome": "Primary document unavailable or metadata extraction incomplete."
+        },
+        {
+          "url": "https://www.sonoco.com/na",
+          "outcome": "Primary metadata read successful."
+        },
+        {
+          "url": "https://s204.q4cdn.com/935421280/files/doc_financials/2025/ar/2025_SON_Annual-Report_031626.pdf",
+          "outcome": "Web fetch failed: PDF exceeds tool content size; shell download failed proxy 403."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/91767/000009176726000041/",
+          "outcome": "SEC accession directory and alternate document retrieval unavailable; no missing facts inferred."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/91767/000009176726000038/son-20260628.htm",
+          "outcome": "Actual 10Q accession recovered from archive by parent; all three metadata fields read successfully. Earlier 000041 was wrong filing/path, not external source unavailability."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "CBU",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "CBU_cover",
+          "scope_note": "Delaware incorporation and Syracuse, New York office, rendered filing cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "CBU_basis",
+          "scope_note": "Issuer basis-of-presentation prose explicitly states US GAAP; no inference from taxonomy names."
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "CBU_filing",
+          "scope_note": "Issuer July 28 earnings release identifies banking, employee benefits, insurance and wealth management businesses."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "CBU_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/723188/000110465926087355/tm2621422d1_ex99-1.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        },
+        {
+          "id": "CBU_cover",
+          "url": "https://www.sec.gov/Archives/edgar/data/723188/000110465926092717/R1.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        },
+        {
+          "id": "CBU_basis",
+          "url": "https://www.sec.gov/Archives/edgar/data/723188/000110465926092717/R9.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/723188/000110465926087355/tm2621422d1_ex99-1.htm",
+          "outcome": "Primary document unavailable or metadata extraction incomplete."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/723188/000110465926092717/R1.htm",
+          "outcome": "Primary metadata read successful."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/723188/000110465926092717/R9.htm",
+          "outcome": "Primary metadata read successful."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "NOG",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "NOG_filing",
+          "scope_note": "Delaware incorporation, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "NOG_filing",
+          "scope_note": "Basis of presentation line 664."
+        },
+        "sector": {
+          "value": "Energy",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "NOG_filing",
+          "scope_note": "Oil and gas production and sales."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "NOG_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1104485/000110448526000032/nog-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1104485/000110448526000032/nog-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "EFOR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "EFOR_filing",
+          "scope_note": "Delaware incorporation; Glen Allen, Virginia office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "EFOR_quarterly",
+          "scope_note": "Note 1 basis of presentation explicitly US GAAP."
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "EFOR_quarterly",
+          "scope_note": "Technology/digital engineering, commercial and federal IT solutions; analyst mapping, not GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "EFOR_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000047/asgn-20260729.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        },
+        {
+          "id": "EFOR_quarterly",
+          "url": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000050/asgn-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Primary source metadata observation; see period in source."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000047/asgn-20260729.htm",
+          "outcome": "Primary document read and metadata searches."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/890564/000089056426000050/asgn-20260630.htm",
+          "outcome": "Primary metadata read successful."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "AIN",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "AIN_filing",
+          "scope_note": "Delaware incorporation, cover."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "AIN_filing",
+          "scope_note": "Note 1, line 348."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "AIN_filing",
+          "scope_note": "Machine clothing industrial belts and engineered composites."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "AIN_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/819793/000162828026052329/ain-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/819793/000162828026052329/ain-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "TDAY",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "TDAY_filing",
+          "scope_note": "Delaware incorporation; Pittsford, New York office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "TDAY_filing",
+          "scope_note": "Note 1, line 397."
+        },
+        "sector": {
+          "value": "Communication Services",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "TDAY_filing",
+          "scope_note": "USA TODAY Media/Newsquest publishing and LocaliQ digital advertising."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "TDAY_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1579684/000157968426000047/tday-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1579684/000157968426000047/tday-20260630.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "CAL",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "CAL_filing",
+          "scope_note": "New York incorporation; St. Louis, Missouri principal office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "CAL_filing",
+          "scope_note": "Note 1 lines 465 and 475."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "CAL_filing",
+          "scope_note": "Branded footwear and footwear retail."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "CAL_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/14707/000001470726000144/cal-20260801x10q.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/14707/000001470726000144/cal-20260801x10q.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "MLR",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "MLR_filing",
+          "scope_note": "Tennessee incorporation; Ooltewah, Tennessee office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "MLR_filing",
+          "scope_note": "Note 1, line 482."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "MLR_filing",
+          "scope_note": "Manufacture of towing and recovery equipment."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "MLR_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/924822/000110465926091141/mlr-20260630x10q.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/924822/000110465926091141/mlr-20260630x10q.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "PLOW",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "PLOW_filing",
+          "scope_note": "Delaware incorporation; Milwaukee, Wisconsin office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "PLOW_filing",
+          "scope_note": "Basis of presentation line 421."
+        },
+        "sector": {
+          "value": "Industrials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "PLOW_filing",
+          "scope_note": "Work truck equipment, snow and ice control attachments."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "PLOW_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1287213/000143774926025435/plow20260630_10q.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1287213/000143774926025435/plow20260630_10q.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "NATH",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "NATH_filing",
+          "scope_note": "Delaware incorporation; Jericho, New York office."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "NATH_filing",
+          "scope_note": "Note 1, line 401."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "NATH_filing",
+          "scope_note": "Restaurant brand, franchising and licensed/branded food distribution; analyst mapping includes mixed business model."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "NATH_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/69733/000143774926026427/nath20260628_10q.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/69733/000143774926026427/nath20260628_10q.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "NGS",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "US",
+          "status": "verified_primary",
+          "source_ref": "NGS_corrected_quarterly",
+          "scope_note": "Cover Texas incorporation and Southlake, Texas executive office. Note17: July20,2026 Colorado-to-Texas redomestication; both US."
+        },
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "verified_primary",
+          "source_ref": "NGS_corrected_quarterly",
+          "scope_note": "Note2 principles of consolidation explicitly states accounting principles generally accepted in United States."
+        },
+        "sector": {
+          "value": "Energy",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "NGS_corrected_quarterly",
+          "scope_note": "Note1: compression equipment rental and services for oil/gas production and processing; analyst business mapping, not GICS."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "NGS_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000081/ngs-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        },
+        {
+          "id": "NGS_corrected_quarterly",
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000079/ngs-20260630.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Quarter ended June 30, 2026; filed August 10; cover and Note17 include July20 redomestication."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000081/ngs-20260630.htm",
+          "outcome": "Primary document unavailable or metadata extraction incomplete."
+        },
+        {
+          "url": "https://ir.ngsgi.com/financial-information/annual-reports-and-proxy",
+          "outcome": "Issuer annual report fallback unavailable."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000081/",
+          "outcome": "SEC accession directory and alternate document retrieval unavailable; no missing facts inferred."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1084991/000108499126000079/ngs-20260630.htm",
+          "outcome": "Actual 10Q accession recovered from archive by parent; all three fields read successfully. Earlier 000081 path was an incorrect document guess, not evidence issuer filing unavailable."
+        }
+      ],
+      "execution_authorized": false
+    },
+    {
+      "ticker": "BHP",
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "AU",
+          "status": "verified_primary",
+          "source_ref": "BHP_filing",
+          "scope_note": "Victoria, Australia incorporation, annual report cover."
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "verified_primary",
+          "source_ref": "BHP_filing",
+          "scope_note": "Consolidated financial statements IFRS as issued by IASB, line 327."
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapped_from_primary_business_description",
+          "source_ref": "BHP_filing",
+          "scope_note": "Copper, iron ore and coal mining."
+        }
+      },
+      "unresolved_fields": [],
+      "sources": [
+        {
+          "id": "BHP_filing",
+          "url": "https://www.sec.gov/Archives/edgar/data/811809/000119312526355840/d54971d6k.htm",
+          "retrieved_on_utc": "2026-10-12",
+          "source_period_scope": "Filing period in URL; metadata evidence, not independent corporate-event continuity through October 9."
+        }
+      ],
+      "actual_attempts": [
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/811809/000119312526355840/d54971d6k.htm",
+          "outcome": "Primary document read and metadata searches."
+        }
+      ],
+      "execution_authorized": false
+    }
+  ],
+  "summary": {
+    "rows": 20,
+    "complete_rows": 20,
+    "supported_fields": 60,
+    "unresolved_fields": 0,
+    "remaining": {}
+  }
+}

@@ -1,0 +1,559 @@
+{
+  "artifact_type": "domestic_remaining_cap_followup",
+  "schema_version": 1,
+  "research_started_at_utc": "2026-10-11T23:56:08Z",
+  "completed_at_utc": "2026-10-12T00:04:24Z",
+  "scope": "Eight assigned domestic cap conflicts. Public metadata only; holdout AJG/VTR/RHI provenance research only. No answer captures, quality tuning, paid calls, commits, or admissions.",
+  "policy": "Approved provisional secondary values remain permissible. Exact October 9 independently audited share reconstruction is NOT an added universal gate. Existing conflicts require explicit source/convention adjudication; tiny differences are not auto-resolved.",
+  "summary": {
+    "reviewed": 8,
+    "dated_primary_share_proxies": 7,
+    "conflicts_resolved": 0,
+    "rows_admitted": 0,
+    "proxy_tickers": [
+      "NVDA",
+      "AJG",
+      "VTR",
+      "PG",
+      "NEE",
+      "SHW",
+      "RHI"
+    ],
+    "remaining_tickers": [
+      "V"
+    ]
+  },
+  "concrete_policy_option": "Explicitly designate a dated historical total-company cap series as source of record, including its common-class aggregation convention, or adopt disclosed-date common-share proxies multiplied by October 9 close with both dates retained. This is a methodological choice, not an independent verification that competing provider fields agree. For Visa resolve common-equivalent classes; for PG clarify preferred scope. No source chosen here.",
+  "rows": [
+    {
+      "ticker": "NVDA",
+      "reserved_holdout": false,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/nvda/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:39Z",
+        "summary_usd": "5540000000000",
+        "historical_row_usd": "5530000000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "10000000000",
+        "difference_percent_of_historical": "0.1808318264014466546112115732368896925859"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/nvda/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "229.28",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "24162595952.54710397766922540125610607118",
+        "historical_cap_divided_by_close": "24118981158.40893230983949755757152826239",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-second-quarter-fiscal-2027",
+          "kind": "issuer_release",
+          "finding": "Quarter ended July 26, 2026. Located weighted-average diluted share computation, not a current point-in-time share count; excluded from cap arithmetic."
+        },
+        {
+          "url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+          "kind": "issuer_index_attempt",
+          "finding": "Rendered index did not expose a usable current filing share count in this bounded check."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-08-26",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports 24.1 billion common shares; disclosed precision is 0.1 billion, not exact individual shares.",
+          "outstanding_common_shares": "24100000000",
+          "measurement_date": "2026-08-21"
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "24100000000",
+        "share_measurement_date": "2026-08-21",
+        "share_basis": "Cover reports 24.1 billion common shares; disclosed precision is 0.1 billion, not exact individual shares.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "5525648000000.00",
+        "calculated_minus_summary_usd": "-14352000000.00",
+        "calculated_minus_historical_usd": "-4352000000.00",
+        "conditional_nearest_display_unit_usd": "5530000000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      },
+      "next_decision_or_source_needed": "Primary share-count access gap resolved via SEC archive. May select this explicitly dated common-equity proxy under an approved source/convention decision; no missing primary cover count remains. NVIDIA disclosed share count is coarse (24.1 billion); preserve that precision and do not infer a rounding resolution."
+    },
+    {
+      "ticker": "V",
+      "reserved_holdout": false,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/v/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:39Z",
+        "summary_usd": "707530000000",
+        "historical_row_usd": "707750000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "220000000",
+        "difference_percent_of_historical": "0.03108442246555987283645354998233839632639"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/v/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "385.45",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "1835594759.372162407575561032559346218705",
+        "historical_cap_divided_by_close": "1836165520.819820988455052535996886755740",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://investor.visa.com/stock-information/class-b-c-stock-info/default.aspx",
+          "kind": "issuer_class_information",
+          "finding": "At September 18, 2026, Class B-1, B-2 and B-3 conversion rates into Class A are 1.5400, 1.4924 and 1.4773. Class C converts at 4.0 Class A shares per Class C. Restricted classes must not be summed as unadjusted Class A units."
+        },
+        {
+          "url": "https://investor.visa.com/financial-information/quarterly-earnings/default.aspx",
+          "kind": "issuer_index_attempt",
+          "finding": "Rendered index did not supply usable current class-specific outstanding counts."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/1403161/000140316126000104/v-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "filed_on": "2026-07-28",
+          "shares_as_of": "2026-07-21",
+          "finding": "Cover provides class-specific common shares; these are not October 9 counts."
+        }
+      ],
+      "provisional_estimate": null,
+      "next_decision_or_source_needed": "Class counts obtained. Accept a dated reported-share convention and restricted-class conversion-parity valuation explicitly, or obtain October 9 class counts/ratios and a documented total-company valuation basis. Neither vendor cap is reconciled.",
+      "class_equivalent_estimate": {
+        "shares_as_of": "2026-07-21",
+        "counts": {
+          "A": 1704112694,
+          "B1": 2180148,
+          "B2": 486669,
+          "B3": 60589871,
+          "C": 17059152
+        },
+        "conversion_ratios_as_of": "2026-09-18",
+        "class_A_equivalent_ratios": {
+          "A": "1",
+          "B1": "1.5400",
+          "B2": "1.4924",
+          "B3": "1.4773",
+          "C": "4"
+        },
+        "class_A_equivalents": "1865942451.1639",
+        "price_as_of": "2026-10-09",
+        "class_A_close_usd": "385.45",
+        "total_proxy_usd": "719227517801.125255",
+        "class_A_component_usd": "656850237902.30",
+        "limitation": "July counts, September conversion ratios and October price are mixed-date inputs. Conversion parity for restricted classes is a provisional valuation convention, not observed class prices. Class A alone supports a large-tier dated estimate but is not total-company capitalization.",
+        "convention_approved": false,
+        "exact_oct9_cap_verified": false
+      }
+    },
+    {
+      "ticker": "AJG",
+      "reserved_holdout": true,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/ajg/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:42Z",
+        "summary_usd": "59650000000",
+        "historical_row_usd": "59640000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "10000000",
+        "difference_percent_of_historical": "0.01676727028839704896042924211938296445339"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/ajg/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "232.70",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "256338633.4336055006446067898581865062312",
+        "historical_cap_divided_by_close": "256295659.6476149548775247099269445638161",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://investor.ajg.com/news/news-details/2026/Arthur-J--Gallagher--Co--Announces-Second-Quarter-2026-Financial-Results/default.aspx",
+          "kind": "issuer_release",
+          "publication_date": "2026-07-30",
+          "finding": "June 30, 2026 period-end common shares: 256,341 thousand. This is a point-in-time count; basic/diluted weighted averages are different measures."
+        },
+        {
+          "url": "https://www.nasdaq.com/market-activity/stocks/ajg/historical",
+          "kind": "exchange_publisher_history_attempt",
+          "finding": "Common-stock security label visible; historical-price data unavailable in rendered page."
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "256341000",
+        "share_measurement_date": "2026-06-30",
+        "share_basis": "Period-end company common shares; count displayed in thousands.",
+        "formula": "observed primary point-in-time common shares * secondary October 9 close",
+        "calculated_usd": "59650550700.00",
+        "calculated_minus_summary_usd": "550700.00",
+        "calculated_minus_historical_usd": "10550700.00",
+        "conditional_nearest_display_unit_usd": "59650000000",
+        "conditional_display_matches": "summary",
+        "conditions": "Mixed measurement dates, explicitly provisional. HALF_UP nearest display-unit illustration is not verified provider rounding. No proof count unchanged through October 9, no proof this is the latest disclosed count, and no proof of the provider discrepancy cause. Source precedence/convention decision required before selection."
+      },
+      "next_decision_or_source_needed": "May adopt a disclosed June 30 common-share proxy times October 9 close as a provisional estimate. Confirm preferred source/convention and count precision; do not claim source discrepancy resolved or count exact to individual shares."
+    },
+    {
+      "ticker": "VTR",
+      "reserved_holdout": true,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/vtr/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:44Z",
+        "summary_usd": "42360000000",
+        "historical_row_usd": "42080000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "280000000",
+        "difference_percent_of_historical": "0.6653992395437262357414448669201520912548"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/vtr/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "82.04",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "516333495.8556801560214529497805948317894",
+        "historical_cap_divided_by_close": "512920526.5724037055095075572891272549976",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://s203.q4cdn.com/581756553/files/doc_financials/2026/q2/Ventas_Second_Quarter_2026_Earnings_Presentation.pdf",
+          "kind": "issuer_presentation",
+          "publication_date": "2026-07-28",
+          "finding": "Q2 diluted weighted-average shares and full-year share guidance are not point-in-time common shares; excluded from cap arithmetic."
+        },
+        {
+          "url": "https://s203.q4cdn.com/581756553/files/doc_financials/2025/ar/2025_VTR_AnnualReport.pdf",
+          "kind": "issuer_annual_report",
+          "finding": "Equity-forward agreements can settle physically, in cash, or net shares. Outstanding forwards are not automatically issued common shares."
+        },
+        {
+          "url": "https://ir.ventasreit.com/financials/quarterly-results/default.aspx",
+          "kind": "issuer_index_attempt",
+          "finding": "Rendered dynamic index supplied no usable current quarterly filing share count."
+        },
+        {
+          "url": "https://www.nasdaq.com/market-activity/stocks/vtr/historical",
+          "kind": "exchange_publisher_history_attempt",
+          "finding": "Common-stock security label visible; historical-price data unavailable in rendered page."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/740260/000074026026000024/vtr-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-07-30",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports company common shares. June 30 balance sheet reports preferred stock unissued; do not add unsettled forwards or subsidiary OP interests.",
+          "outstanding_common_shares": "512946359",
+          "measurement_date": "2026-07-28"
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "512946359",
+        "share_measurement_date": "2026-07-28",
+        "share_basis": "Cover reports company common shares. June 30 balance sheet reports preferred stock unissued; do not add unsettled forwards or subsidiary OP interests.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "42082119292.36",
+        "calculated_minus_summary_usd": "-277880707.64",
+        "calculated_minus_historical_usd": "2119292.36",
+        "conditional_nearest_display_unit_usd": "42080000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      },
+      "next_decision_or_source_needed": "Primary share-count access gap resolved via SEC archive. May select this explicitly dated common-equity proxy under an approved source/convention decision; no missing primary cover count remains. Compare calculated value with provider fields before choosing a value; no automatic tolerance or admission."
+    },
+    {
+      "ticker": "PG",
+      "reserved_holdout": false,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/pg/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:44Z",
+        "summary_usd": "351260000000",
+        "historical_row_usd": "351520000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "260000000",
+        "difference_percent_of_historical": "0.07396449704142011834319526627218934911243"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/pg/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "151.23",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "2322687297.493883488725781921576406797593",
+        "historical_cap_divided_by_close": "2324406533.095285326985386497388084374793",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://assets.ctfassets.net/oggad6svuzkv/4JHQenYzRCrXokDMBfqJAg/5f464a615be36bfa994338568825b735/FY2526_10-K_Accessible_final.pdf",
+          "kind": "issuer_hosted_10K",
+          "locator": "Cover page; preferred-stock notes",
+          "finding": "Cover reports 2,324,433,060 common shares at July 31, 2026, PG on NYSE. ESOP Series A and B convertible preferred each convert one-for-one to common; these are distinct preferred instruments."
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "2324433060",
+        "share_measurement_date": "2026-07-31",
+        "share_basis": "Common shares only; not an as-converted preferred equity estimate.",
+        "formula": "observed primary point-in-time common shares * secondary October 9 close",
+        "calculated_usd": "351524011663.80",
+        "calculated_minus_summary_usd": "264011663.80",
+        "calculated_minus_historical_usd": "4011663.80",
+        "conditional_nearest_display_unit_usd": "351520000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Mixed measurement dates, explicitly provisional. HALF_UP nearest display-unit illustration is not verified provider rounding. No proof count unchanged through October 9, no proof this is the latest disclosed count, and no proof of the provider discrepancy cause. Source precedence/convention decision required before selection."
+      },
+      "next_decision_or_source_needed": "May adopt July 31 common-share proxy times October 9 close if common-equity market capitalization is the chosen convention. Explicitly settle whether total-company equity means common equity across common classes or includes convertible preferred; do not add preferred book value as share count."
+    },
+    {
+      "ticker": "NEE",
+      "reserved_holdout": false,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/nee/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:44Z",
+        "summary_usd": "161410000000",
+        "historical_row_usd": "161400000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "10000000",
+        "difference_percent_of_historical": "0.006195786864931846344485749690210656753408"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/nee/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "77.38",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "2085939519.255621607650555699147066425433",
+        "historical_cap_divided_by_close": "2085810286.895838718014990953734815197726",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://www.nexteraenergy.com/FinancialResults",
+          "kind": "issuer_results_attempt",
+          "finding": "Web reader returned URL inaccessible; no primary share-count observation obtained."
+        },
+        {
+          "url": "https://www.investor.nexteraenergy.com/financial-information/quarterly-results",
+          "kind": "issuer_results_attempt",
+          "finding": "Web reader returned URL inaccessible."
+        },
+        {
+          "url": "https://www.investor.nexteraenergy.com/financial-information/financial-results",
+          "kind": "issuer_results_attempt",
+          "finding": "Web reader returned URL inaccessible."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/753308/000075330826000060/nee-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-07-24",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports NEE common shares separately from wholly owned FPL shares; subsidiary shares excluded.",
+          "outstanding_common_shares": "2085803189",
+          "measurement_date": "2026-06-30"
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "2085803189",
+        "share_measurement_date": "2026-06-30",
+        "share_basis": "Cover reports NEE common shares separately from wholly owned FPL shares; subsidiary shares excluded.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "161399450764.82",
+        "calculated_minus_summary_usd": "-10549235.18",
+        "calculated_minus_historical_usd": "-549235.18",
+        "conditional_nearest_display_unit_usd": "161400000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      },
+      "next_decision_or_source_needed": "Primary share-count access gap resolved via SEC archive. May select this explicitly dated common-equity proxy under an approved source/convention decision; no missing primary cover count remains. Compare calculated value with provider fields before choosing a value; no automatic tolerance or admission."
+    },
+    {
+      "ticker": "SHW",
+      "reserved_holdout": false,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/shw/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:46Z",
+        "summary_usd": "77070000000",
+        "historical_row_usd": "77530000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "460000000",
+        "difference_percent_of_historical": "0.5933187153359989681413646330452727976267"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/shw/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "319.36",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "241326402.8056112224448897795591182364729",
+        "historical_cap_divided_by_close": "242766783.5671342685370741482965931863727",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://investors.sherwin-williams.com/press-releases/press-release-details/2026/The-Sherwin-Williams-Company-Reports-2026-Second-Quarter-Financial-Results/default.aspx",
+          "kind": "issuer_release",
+          "publication_date": "2026-07-28",
+          "finding": "Release provides Q2 basic/diluted weighted-average shares, not a usable point-in-time common-share count; excluded from cap arithmetic."
+        },
+        {
+          "url": "https://investors.sherwin-williams.com/stock-information/historical-price-lookup/default.aspx",
+          "kind": "issuer_price_attempt",
+          "finding": "Dynamic rendered price lookup did not expose an October 9 price."
+        },
+        {
+          "url": "https://www.sec.gov/Archives/edgar/data/89800/000008980026000049/shw-20260630.htm",
+          "kind": "SEC_10Q_cover",
+          "publication_date": "2026-07-28",
+          "retrieved_date_utc": "2026-10-12",
+          "finding": "Cover reports company common shares outstanding, distinct from weighted-average EPS shares.",
+          "outstanding_common_shares": "242758151",
+          "measurement_date": "2026-06-30"
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "242758151",
+        "share_measurement_date": "2026-06-30",
+        "share_basis": "Cover reports company common shares outstanding, distinct from weighted-average EPS shares.",
+        "formula": "primary disclosed common shares * secondary October 9 close",
+        "calculated_usd": "77527243103.36",
+        "calculated_minus_summary_usd": "457243103.36",
+        "calculated_minus_historical_usd": "-2756896.64",
+        "conditional_nearest_display_unit_usd": "77530000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Dated provisional common-equity estimate; no claim shares unchanged through October 9. HALF_UP illustration is not confirmed provider rounding or proof of discrepancy cause. No exact October 9 audit gate imposed."
+      },
+      "next_decision_or_source_needed": "Primary share-count access gap resolved via SEC archive. May select this explicitly dated common-equity proxy under an approved source/convention decision; no missing primary cover count remains. Compare calculated value with provider fields before choosing a value; no automatic tolerance or admission."
+    },
+    {
+      "ticker": "RHI",
+      "reserved_holdout": true,
+      "status": "unresolved_pending_source_or_convention_adjudication",
+      "eligible_to_execute": false,
+      "selected_value_usd": null,
+      "prior_cap_observations": {
+        "source_url": "https://stockanalysis.com/stocks/rhi/market-cap/",
+        "retrieved_at_utc": "2026-10-11T23:32:48Z",
+        "summary_usd": "3410000000",
+        "historical_row_usd": "3470000000",
+        "both_labeled_date": "2026-10-09",
+        "absolute_difference_usd": "60000000",
+        "difference_percent_of_historical": "1.729106628242074927953890489913544668588"
+      },
+      "price_observation": {
+        "url": "https://stockanalysis.com/stocks/rhi/history/",
+        "source_type": "secondary_history",
+        "session_retrieval_window_utc": [
+          "2026-10-11T23:56:08Z",
+          "2026-10-12T00:00:11Z"
+        ],
+        "date": "2026-10-09",
+        "close_usd": "33.93",
+        "primary_exchange_close_independently_verified": false
+      },
+      "diagnostic_implied_common_equivalent_shares": {
+        "summary_cap_divided_by_close": "100501031.5355142941349837901562039493074",
+        "historical_cap_divided_by_close": "102269378.1314470969643383436486884762747",
+        "warning": "Arithmetic diagnostics only; neither is an observed share count."
+      },
+      "primary_evidence": [
+        {
+          "url": "https://www.roberthalf.com/content/dam/roberthalf/documents/us/en/indexed/investor-center/form-10q/RHI%20Q2%202026%2010Q%20-2026-08-04-11-10.pdf",
+          "kind": "issuer_hosted_10Q",
+          "locator": "Cover page and balance sheet page 2",
+          "finding": "Cover reports 102,361,828 common shares as of July 31, 2026; RHI common stock is registered on NYSE. June 30 balance sheet reports 102,361,829 common shares and no issued preferred shares."
+        },
+        {
+          "url": "https://www.nasdaq.com/market-activity/stocks/rhi/historical",
+          "kind": "exchange_publisher_history_attempt",
+          "finding": "Common-stock security label visible; historical-price data unavailable in rendered page."
+        }
+      ],
+      "provisional_estimate": {
+        "observed_primary_shares": "102361828",
+        "share_measurement_date": "2026-07-31",
+        "share_basis": "Cover-page company common shares; no preferred issued at June 30.",
+        "formula": "observed primary point-in-time common shares * secondary October 9 close",
+        "calculated_usd": "3473136824.04",
+        "calculated_minus_summary_usd": "63136824.04",
+        "calculated_minus_historical_usd": "3136824.04",
+        "conditional_nearest_display_unit_usd": "3470000000",
+        "conditional_display_matches": "historical_row",
+        "conditions": "Mixed measurement dates, explicitly provisional. HALF_UP nearest display-unit illustration is not verified provider rounding. No proof count unchanged through October 9, no proof this is the latest disclosed count, and no proof of the provider discrepancy cause. Source precedence/convention decision required before selection."
+      },
+      "next_decision_or_source_needed": "May adopt the disclosed July 31 common-share proxy times October 9 close provisionally after source adjudication. Do not use diluted weighted averages or assert this count remained unchanged through October 9."
+    }
+  ],
+  "SEC_followup": "All four requested cover counts obtained through SEC archive directory -> issuer accession -> 10-Q. Prior issuer-site failures retained as attempt history and superseded for share-count availability."
+}

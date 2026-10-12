@@ -1,0 +1,892 @@
+{
+  "schema_version": 1,
+  "artifact_type": "approved_classification_only_international_evidence",
+  "created_at": "2026-10-12T00:32:57Z",
+  "target_date": "2026-10-09",
+  "scope": [
+    "ASML",
+    "NVS",
+    "SAP",
+    "SONY",
+    "TM",
+    "RY",
+    "BHP",
+    "UL"
+  ],
+  "policy": "Documented older primary net common count plus October9 USD close permitted for tier classification only. No independent exact-cap audit imposed. Unresolved counts excluded.",
+  "registry_unchanged": true,
+  "holdouts_unchanged": true,
+  "holdout_exposure_outside_audited_repositories": "unknown",
+  "admitted_tier_evidence_count": 8,
+  "full_registry_admission_count": 0,
+  "limitations": [
+    "Secondary October9 prices reused under approved provisional-source policy; not independently exchange verified.",
+    "Reporting dates differ from publication dates and target date. No claim of exact October9 shares, valuation, or answer quality.",
+    "Company common count converted once using ADS ratio; duplicate venue/receipt counts not added.",
+    "No paid APIs, model answers, canonical registry modifications, commit or push."
+  ],
+  "sources": [
+    {
+      "source_id": "NVS_REPORT",
+      "url": "https://www.novartis.com/sites/novartis_com/files/novartis-annual-report-2025.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-02-04",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "PDF p105 / printed p102: issued 2,112,421,867 minus treasury 204,270,188. Net excludes company/subsidiary/controlled-foundation treasury; not EPS weighted average.",
+      "excerpt": "1 908 151 679"
+    },
+    {
+      "source_id": "NVS_PUBLICATION",
+      "url": "https://www.globenewswire.com/news-release/2026/02/04/3231748/0/en/novartis-delivered-high-single-digit-sales-growth-achieved-40-core-margin-and-further-advanced-the-pipeline-in-2025.html",
+      "source_type": "issuer_distributed_release",
+      "publication_date": "2026-02-04",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "excerpt": "Novartis issued its 2025 Annual Report today"
+    },
+    {
+      "source_id": "SAP_REPORT",
+      "url": "https://www.sap.com/docs/download/investors/2025/sap-2025-annual-report-form-20f.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-02-26",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "PDF pp2\u20133: cover count 1,228,504,232 explicitly includes 60,945,184 treasury. Deduct treasury even though SAP legally calls these outstanding. One ADS represents one ordinary.",
+      "excerpt": "Including 60,945,184 treasury shares."
+    },
+    {
+      "source_id": "SAP_PUBLICATION",
+      "url": "https://www.sec.gov/Archives/edgar/data/1000184/000110465926020058/0001104659-26-020058-index.htm",
+      "source_type": "regulator_filing_index",
+      "publication_date": "2026-02-26",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "excerpt": "2026-02-26"
+    },
+    {
+      "source_id": "SONY_REPORT",
+      "url": "https://www.sony.com/en/SonyInfo/IR/library/FY2025_20F_PDF.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-06-18",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "PDF cover: common outstanding 5,907,667,254. ADS count is a subset and not added. One ADS represents one common.",
+      "excerpt": "5,907,667,254",
+      "business_evidence_locator": "Game and network services, music and pictures alongside electronics and image sensors; annual20F pp151\u2013152. Entertainment-oriented benchmark mapping, not an assertion all segments are communications."
+    },
+    {
+      "source_id": "SONY_PUBLICATION",
+      "url": "https://www.sec.gov/Archives/edgar/data/313838/000119312526274893/0001193125-26-274893-index.htm",
+      "source_type": "regulator_filing_index",
+      "publication_date": "2026-06-18",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "excerpt": "2026-06-18"
+    },
+    {
+      "source_id": "TM_REPORT",
+      "url": "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-06-10",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+      "excerpt": "2,761,602,986",
+      "business_evidence_locator": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+      "correction_verified_on_utc": "2026-10-12"
+    },
+    {
+      "source_id": "TM_PUBLICATION",
+      "url": "https://www.sec.gov/Archives/edgar/data/1094517/000119312526264811/0001193125-26-264811-index.htm",
+      "source_type": "regulator_filing_index",
+      "publication_date": "2026-06-10",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "excerpt": "2026-06-10"
+    },
+    {
+      "source_id": "RY_REPORT",
+      "url": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-08-27",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "PDF p42: August21 net common outstanding 1,384,429,799, net of 380,968 treasury shares. Preferred capital excluded. Direct NYSE common, no ADR multiplier.",
+      "excerpt": "1,384,429,799"
+    },
+    {
+      "source_id": "UL_REPORT",
+      "url": "https://www.unilever.com/files/unilever-annual-report-on-form-20-f-2025.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-03-12",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
+      "excerpt": "2,181,005,247",
+      "business_evidence_locator": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+      "correction_verified_on_utc": "2026-10-12"
+    },
+    {
+      "source_id": "UL_PUBLICATION",
+      "url": "https://www.sec.gov/Archives/edgar/data/217410/000021741026000007/0000217410-26-000007-index.htm",
+      "source_type": "regulator_filing_index",
+      "publication_date": "2026-03-12",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "excerpt": "2026-03-12"
+    },
+    {
+      "source_id": "ASML_REPORT",
+      "url": "https://www.globenewswire.com/news-release/2026/02/25/3244245/0/en/asml-publishes-2025-annual-reports.html",
+      "source_type": "issuer_distributed_release",
+      "publication_date": "2026-02-25",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "ASML annual-report release; BHP interim report; count not established.",
+      "excerpt": "US GAAP"
+    },
+    {
+      "source_id": "BHP_REPORT",
+      "url": "https://www.bhp.com/-/media/documents/media/reports-and-presentations/2026/260217_bhpresultsforthehalfyearended31dec2025_exchangerelease.pdf",
+      "source_type": "issuer_primary",
+      "publication_date": "2026-02-17",
+      "retrieved_at": "2026-10-12T00:32:57Z",
+      "retrieval_timestamp_semantics": "Research batch completion, not individual request time or publication time.",
+      "locator": "ASML annual-report release; BHP interim report; count not established.",
+      "excerpt": "17 February 2026"
+    },
+    {
+      "source_id": "ASML_DATED_COUNT_REPORT",
+      "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011377/asml-2025xannualxreportx.htm",
+      "type": "issuer_annual_report_filed_with_SEC",
+      "publication_date": "2026-02-25",
+      "retrieved_at_utc": "2026-10-12T00:44:09.529746+00:00",
+      "locator": "Company financial statements, Note 11 Shareholders equity, footnote 2; printed page 331",
+      "count_date": "2025-12-31",
+      "issued_common_count": 388147674,
+      "treasury_common_count": 2730009,
+      "net_common_count": 385417665,
+      "scope_note": "Dated reported common shares, excluding treasury; classification only with separately sourced October 9 close. Not exact October 9 shares or verified answer valuation."
+    },
+    {
+      "source_id": "BHP_DATED_COUNT_REPORT",
+      "url": "https://www.sec.gov/Archives/edgar/data/811809/000119312526355840/d54971d6k.htm",
+      "type": "issuer_annual_report_filed_with_SEC",
+      "publication_date": "2026-08-18",
+      "retrieved_at_utc": "2026-10-12T00:44:09.529771+00:00",
+      "locator": "Consolidated Financial Statements, Note 17 Share capital; printed page 160",
+      "count_date": "2026-06-30",
+      "issued_common_count": 5081391706,
+      "treasury_common_count": 1228608,
+      "net_common_count": 5080163098,
+      "scope_note": "Dated reported common shares, excluding treasury; classification only with separately sourced October 9 close. Not exact October 9 shares or verified answer valuation."
+    }
+  ],
+  "rows": [
+    {
+      "ticker": "ASML",
+      "cik": "0000937966",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2025-12-31",
+      "primary_publication_date": "2026-02-25",
+      "publication_source_ref": "ASML_DATED_COUNT_REPORT",
+      "net_common_count": 385417665,
+      "count_source_ref": "ASML_DATED_COUNT_REPORT",
+      "count_basis": "Issued ordinary shares less treasury ordinary shares; explicit issued and outstanding count in company equity note.",
+      "price_date": "2026-10-09",
+      "price_usd": "1780.34",
+      "price_source_ref": "international_cap_followup.json#ASML_PRICE",
+      "underlying_common_per_us_security": 1,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "registered ordinary shares",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "direct share; no depositary conversion",
+        "evidence": [
+          "ASML"
+        ],
+        "company_count_mapping": "One ordinary equity interest traded via registered Nasdaq and Euronext shares; do not sum venue counts. Authorized cumulative preference capital is not evidence of issued common shares.",
+        "notes": "Current share-page inconsistent labels remain excluded. Dated annual company-equity note independently reconciles issued, outstanding and treasury counts; see ASML_DATED_COUNT_REPORT."
+      },
+      "identity_source_ref": "international_identity_review.json#ASML",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "686174485706.10",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": null,
+          "status": "not_extracted",
+          "source_ref": null
+        },
+        "reporting_basis": {
+          "value": "US GAAP primary annual financial reporting; IFRS-EU separate Dutch statutory report. Do not copy legacy IFRS into SEC reporting basis.",
+          "status": "verified_primary_scoped",
+          "source_ref": "ASML_REPORT"
+        },
+        "business_description": {
+          "value": "Semiconductor manufacturing hardware, software and services.",
+          "status": "verified_primary",
+          "source_ref": "ASML_REPORT"
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "ASML_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [],
+      "limitations": [
+        "Reported count is dated 2025-12-31; not an assertion of exact October 9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "reporting_basis": {
+          "value": "US_GAAP",
+          "status": "primary_issuer_release_verified",
+          "source_ref": "https://www.globenewswire.com/news-release/2026/02/25/3244245/0/en/asml-publishes-2025-annual-reports.html",
+          "scope_note": "US GAAP primary annual financial reporting; IFRS-EU separate Dutch statutory report. Do not copy legacy IFRS into SEC reporting basis."
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.globenewswire.com/news-release/2026/02/25/3244245/0/en/asml-publishes-2025-annual-reports.html",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Semiconductor manufacturing hardware, software and services."
+        }
+      },
+      "superseded_count_access_gaps": {
+        "status": "resolved_by_dated_primary_report",
+        "prior_remaining_gaps": [
+          "ASML dated annual net-count table inaccessible in this bounded pass; current share page has reversed/inconsistent labels. Need dated annual share table, not a guessed correction."
+        ],
+        "prior_blocked_reason": "ASML dated annual net-count table inaccessible in this bounded pass; current share page has reversed/inconsistent labels. Need dated annual share table, not a guessed correction.",
+        "resolution_source_ref": "ASML_DATED_COUNT_REPORT"
+      }
+    },
+    {
+      "ticker": "NVS",
+      "cik": "0001114448",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2025-12-31",
+      "primary_publication_date": "2026-02-04",
+      "publication_source_ref": "NVS_PUBLICATION",
+      "net_common_count": 1908151679,
+      "count_source_ref": "NVS_REPORT",
+      "count_basis": "PDF p105 / printed p102: issued 2,112,421,867 minus treasury 204,270,188. Net excludes company/subsidiary/controlled-foundation treasury; not EPS weighted average.",
+      "price_date": "2026-10-09",
+      "price_usd": "143.75",
+      "price_source_ref": "international_cap_followup.json#NVS_PRICE",
+      "underlying_common_per_us_security": 1,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADR",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "NVS",
+          "NVS_FAQ"
+        ],
+        "company_count_mapping": "One Novartis AG ordinary share per ADR. US ADR and Swiss underlying represent one issuer; do not sum receipt and underlying counts.",
+        "notes": "Issuer FAQ footnote under 2025/2024/2023 ADR table confirms one share per ADR; no independent continuity verification through October 9."
+      },
+      "identity_source_ref": "international_identity_review.json#NVS",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "274296803856.25",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": null,
+          "status": "not_extracted",
+          "source_ref": null
+        },
+        "reporting_basis": {
+          "value": null,
+          "status": "not_extracted",
+          "source_ref": null
+        },
+        "business_description": {
+          "value": "Innovative medicines across cardiovascular-renal-metabolic, immunology, neuroscience and oncology.",
+          "status": "verified_primary",
+          "source_ref": "NVS_PUBLICATION"
+        },
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "NVS_PUBLICATION"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares."
+      ],
+      "limitations": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "sector": {
+          "value": "Health Care",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.globenewswire.com/news-release/2026/02/04/3231748/0/en/novartis-delivered-high-single-digit-sales-growth-achieved-40-core-margin-and-further-advanced-the-pipeline-in-2025.html",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Innovative medicines across cardiovascular-renal-metabolic, immunology, neuroscience and oncology."
+        }
+      }
+    },
+    {
+      "ticker": "SAP",
+      "cik": "0001000184",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2025-12-31",
+      "primary_publication_date": "2026-02-26",
+      "publication_source_ref": "SAP_PUBLICATION",
+      "net_common_count": 1167559048,
+      "count_source_ref": "SAP_REPORT",
+      "count_basis": "PDF pp2\u20133: cover count 1,228,504,232 explicitly includes 60,945,184 treasury. Deduct treasury even though SAP legally calls these outstanding. One ADS represents one ordinary.",
+      "price_date": "2026-10-09",
+      "price_usd": "214.78",
+      "price_source_ref": "international_cap_followup.json#SAP_PRICE",
+      "underlying_common_per_us_security": 1,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADR",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "SAP"
+        ],
+        "company_count_mapping": "One ordinary share per ADR; same issuer across German ordinary and US depositary interests.",
+        "notes": "Undated issuer page proves observed mapping, not historical continuity."
+      },
+      "identity_source_ref": "international_identity_review.json#SAP",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "250768332329.44",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": "Germany (jurisdiction of incorporation, cover)",
+          "status": "verified_primary_scoped",
+          "source_ref": "SAP_REPORT"
+        },
+        "reporting_basis": {
+          "value": "IFRS as issued by IASB; cover p3 and p147 also EU endorsement compliance.",
+          "status": "verified_primary_scoped",
+          "source_ref": "SAP_REPORT"
+        },
+        "business_description": {
+          "value": "Cloud, software licenses/support and services revenue categories.",
+          "status": "verified_primary",
+          "source_ref": "SAP_REPORT"
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "SAP_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares."
+      ],
+      "limitations": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "Germany",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sap.com/docs/download/investors/2025/sap-2025-annual-report-form-20f.pdf",
+          "scope_note": "Germany (jurisdiction of incorporation, cover)"
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sap.com/docs/download/investors/2025/sap-2025-annual-report-form-20f.pdf",
+          "scope_note": "IFRS as issued by IASB; cover p3 and p147 also EU endorsement compliance."
+        },
+        "sector": {
+          "value": "Information Technology",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sap.com/docs/download/investors/2025/sap-2025-annual-report-form-20f.pdf",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Cloud, software licenses/support and services revenue categories."
+        }
+      }
+    },
+    {
+      "ticker": "SONY",
+      "cik": "0000313838",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2026-03-31",
+      "primary_publication_date": "2026-06-18",
+      "publication_source_ref": "SONY_PUBLICATION",
+      "net_common_count": 5907667254,
+      "count_source_ref": "SONY_REPORT",
+      "count_basis": "PDF cover: common outstanding 5,907,667,254. ADS count is a subset and not added. One ADS represents one common.",
+      "price_date": "2026-10-09",
+      "price_usd": "24.12",
+      "price_source_ref": "international_cap_followup.json#SONY_PRICE",
+      "underlying_common_per_us_security": 1,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "SONY"
+        ],
+        "company_count_mapping": "One common share per ADS. March 2026 report separately shows common and ADS counts; do not add them or use only ADS count for company total.",
+        "notes": "Sony Financial Group spin-off ADR terms are not Sony ADS terms."
+      },
+      "identity_source_ref": "international_identity_review.json#SONY",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "142492934166.48",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": "Japan (jurisdiction of incorporation, cover)",
+          "status": "verified_primary_scoped",
+          "source_ref": "SONY_REPORT"
+        },
+        "reporting_basis": {
+          "value": "IFRS as issued by IASB; cover and note2 p134.",
+          "status": "verified_primary_scoped",
+          "source_ref": "SONY_REPORT"
+        },
+        "business_description": {
+          "value": "Game and network services, music and pictures alongside electronics and image sensors; annual20F pp151\u2013152. Entertainment-oriented benchmark mapping, not an assertion all segments are communications.",
+          "status": "verified_primary",
+          "source_ref": "SONY_REPORT"
+        },
+        "sector": {
+          "value": "Communication Services",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "SONY_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares."
+      ],
+      "limitations": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "Japan",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sony.com/en/SonyInfo/IR/library/FY2025_20F_PDF.pdf",
+          "scope_note": "Japan (jurisdiction of incorporation, cover)"
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.sony.com/en/SonyInfo/IR/library/FY2025_20F_PDF.pdf",
+          "scope_note": "IFRS as issued by IASB; cover and note2 p134."
+        },
+        "sector": {
+          "value": "Communication Services",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.sony.com/en/SonyInfo/IR/library/FY2025_20F_PDF.pdf",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Game and network services, music and pictures alongside electronics and image sensors; annual20F pp151\u2013152. Entertainment-oriented benchmark mapping, not an assertion all segments are communications."
+        }
+      }
+    },
+    {
+      "ticker": "TM",
+      "cik": "0001094517",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2026-03-31",
+      "primary_publication_date": "2026-06-10",
+      "publication_source_ref": "TM_PUBLICATION",
+      "net_common_count": 13033384474,
+      "count_source_ref": "TM_REPORT",
+      "count_basis": "PDF zero-based page index 227 / printed F-70, note 26(2): issued 15,794,987,460 minus treasury INCLUDING stock-grant ESOP 2,761,602,986 = 13,033,384,474. One ADS represents ten common. Later tender/retirement not assumed captured.",
+      "price_date": "2026-10-09",
+      "price_usd": "185.30",
+      "price_source_ref": "international_cap_followup.json#TM_PRICE",
+      "underlying_common_per_us_security": 10,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 10,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "TM"
+        ],
+        "company_count_mapping": "Ten common shares per ADS; underlying Japanese ordinary and US receipt are one issuer.",
+        "notes": "Do not use March or June 2026 issued counts as October 9 counts."
+      },
+      "identity_source_ref": "international_identity_review.json#TM",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "241508614303.22",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": "Japan (jurisdiction of incorporation, cover)",
+          "status": "verified_primary_scoped",
+          "source_ref": "TM_REPORT"
+        },
+        "reporting_basis": {
+          "value": "IFRS as issued by IASB; cover.",
+          "status": "verified_primary_scoped",
+          "source_ref": "TM_REPORT"
+        },
+        "business_description": {
+          "value": "Automotive operations explicitly identified as most significant business segment; annual20F p82.",
+          "status": "verified_primary",
+          "source_ref": "TM_REPORT"
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "TM_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares."
+      ],
+      "limitations": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "Japan",
+          "status": "primary_filing_verified",
+          "source_ref": "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+          "scope_note": "Japan (jurisdiction of incorporation, cover)"
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "primary_filing_verified",
+          "source_ref": "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+          "scope_note": "IFRS as issued by IASB; cover."
+        },
+        "sector": {
+          "value": "Consumer Discretionary",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://global.toyota/pages/global_toyota/ir/library/sec/20-F_202603_final.pdf",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Automotive operations explicitly identified as most significant business segment; annual20F p82."
+        }
+      },
+      "issued_common_count": 15794987460,
+      "treasury_common_components": {
+        "treasury_including_stock_grant_ESOP": 2761602986
+      }
+    },
+    {
+      "ticker": "RY",
+      "cik": "0001000275",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2026-08-21",
+      "primary_publication_date": "2026-08-27",
+      "publication_source_ref": "RY_REPORT",
+      "net_common_count": 1384429799,
+      "count_source_ref": "RY_REPORT",
+      "count_basis": "PDF p42: August21 net common outstanding 1,384,429,799, net of 380,968 treasury shares. Preferred capital excluded. Direct NYSE common, no ADR multiplier.",
+      "price_date": "2026-10-09",
+      "price_usd": "191.91",
+      "price_source_ref": "international_cap_followup.json#RY_PRICE",
+      "underlying_common_per_us_security": 1,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "common shares",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "direct share; no depositary conversion",
+        "evidence": [
+          "RY"
+        ],
+        "company_count_mapping": "Issuer common-share dividend notice identifies TSX and NYSE RY; same common equity across venues. Preferred shares listed separately.",
+        "notes": "Page includes August 27, 2026 common dividend notice. Full issued-class inventory not audited."
+      },
+      "identity_source_ref": "international_identity_review.json#RY",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "265685922726.09",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": null,
+          "status": "not_extracted",
+          "source_ref": null
+        },
+        "reporting_basis": {
+          "value": "IAS34 interim financial statements; p43. This does not independently establish full annual basis.",
+          "status": "verified_primary_scoped",
+          "source_ref": "RY_REPORT"
+        },
+        "business_description": {
+          "value": "Personal and commercial banking, wealth management and capital markets.",
+          "status": "verified_primary",
+          "source_ref": "RY_REPORT"
+        },
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "RY_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares."
+      ],
+      "limitations": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "sector": {
+          "value": "Financials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.rbc.com/investor-relations/_assets-custom/pdf/2026q3_report.pdf",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Personal and commercial banking, wealth management and capital markets."
+        }
+      }
+    },
+    {
+      "ticker": "BHP",
+      "cik": "0000811809",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2026-06-30",
+      "primary_publication_date": "2026-08-18",
+      "publication_source_ref": "BHP_DATED_COUNT_REPORT",
+      "net_common_count": 5080163098,
+      "count_source_ref": "BHP_DATED_COUNT_REPORT",
+      "count_basis": "Issued ordinary shares less treasury ordinary shares; explicit shares held by the public; ESOP treasury shares excluded.",
+      "price_date": "2026-10-09",
+      "price_usd": "86.74",
+      "price_source_ref": "international_cap_followup.json#BHP_PRICE",
+      "underlying_common_per_us_security": 2,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADS",
+        "underlying_common_shares_per_us_security": 2,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "BHP"
+        ],
+        "company_count_mapping": "Two BHP Group Limited ordinary shares per ADS; ASX/London/Johannesburg venues do not represent additional companies.",
+        "notes": "Historical dual-listed-company structure not independently audited here."
+      },
+      "identity_source_ref": "international_identity_review.json#BHP",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "220326673560.26",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": null,
+          "status": "not_extracted",
+          "source_ref": null
+        },
+        "reporting_basis": {
+          "value": "IAS34 and AASB134 interim statements; p33.",
+          "status": "verified_primary_scoped",
+          "source_ref": "BHP_REPORT"
+        },
+        "business_description": {
+          "value": "Copper, iron ore and coal mining; potash development.",
+          "status": "verified_primary",
+          "source_ref": "BHP_REPORT"
+        },
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "BHP_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [],
+      "limitations": [
+        "Reported count is dated 2026-06-30; not an assertion of exact October 9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "sector": {
+          "value": "Materials",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.bhp.com/-/media/documents/media/reports-and-presentations/2026/260217_bhpresultsforthehalfyearended31dec2025_exchangerelease.pdf",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Copper, iron ore and coal mining; potash development."
+        }
+      },
+      "superseded_count_access_gaps": {
+        "status": "resolved_by_dated_primary_report",
+        "prior_remaining_gaps": [
+          "BHP primary half-year report accessed but point-in-time net common count not located; annual20F download returned internal error. Need dated total issued less employee-trust/treasury count."
+        ],
+        "prior_blocked_reason": "BHP primary half-year report accessed but point-in-time net common count not located; annual20F download returned internal error. Need dated total issued less employee-trust/treasury count.",
+        "resolution_source_ref": "BHP_DATED_COUNT_REPORT"
+      }
+    },
+    {
+      "ticker": "UL",
+      "cik": "0000217410",
+      "admitted_tier_evidence": true,
+      "tier": "large",
+      "primary_count_date": "2025-12-31",
+      "primary_publication_date": "2026-03-12",
+      "publication_source_ref": "UL_PUBLICATION",
+      "net_common_count": 2179482192,
+      "count_source_ref": "UL_REPORT",
+      "count_basis": "PDF zero-based page indices 153/169 (printed 147/163), notes 4C and 15B: issued 2,181,005,247 minus employee-benefit-trust PLC shares 1,208,143 and PLC/subsidiary-held PLC treasury shares 314,912 = 2,179,482,192. Both holdings are deducted from other reserves; December buyback cancellation did not eliminate compensation-plan treasury holdings. ADR1:1 per earlier issuer identity review.",
+      "price_date": "2026-10-09",
+      "price_usd": "62.26",
+      "price_source_ref": "international_cap_followup.json#UL_PRICE",
+      "underlying_common_per_us_security": 1,
+      "identity_basis": {
+        "status": "verified_primary_security_mapping",
+        "instrument": "ADR",
+        "underlying_common_shares_per_us_security": 1,
+        "ratio_semantics": "underlying common shares per depositary security",
+        "evidence": [
+          "UL"
+        ],
+        "company_count_mapping": "One PLC underlying share per ADR; same issuer across underlying and receipt.",
+        "notes": "Undated issued-share count is not October 9 proof."
+      },
+      "identity_source_ref": "international_identity_review.json#UL",
+      "calculation": {
+        "formula": "dated net common count / underlying common per US security * 2026-10-09 US regular close USD",
+        "result_usd": "135694561273.92",
+        "meaning": "Classification-only dated-count estimate; not exact October9 market capitalization."
+      },
+      "metadata_fields": {
+        "domicile": {
+          "value": "United Kingdom (PLC legal entity, p211)",
+          "status": "verified_primary_scoped",
+          "source_ref": "UL_REPORT"
+        },
+        "reporting_basis": {
+          "value": "IFRS as issued by IASB; cover.",
+          "status": "verified_primary_scoped",
+          "source_ref": "UL_REPORT"
+        },
+        "business_description": {
+          "value": "Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27.",
+          "status": "verified_primary",
+          "source_ref": "UL_REPORT"
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "UL_REPORT"
+        },
+        "tags": {
+          "value": [],
+          "status": "not_adjudicated",
+          "source_ref": null
+        }
+      },
+      "full_registry_admitted": false,
+      "answer_valuation_verified": false,
+      "exact_oct9_cap_verified": false,
+      "remaining_gaps": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares."
+      ],
+      "limitations": [
+        "Full metadata/tag admission separately required; older count not represented as October9 shares.",
+        "Tier evidence does not grant full registry admission or answer valuation verification."
+      ],
+      "blocked_reason": null,
+      "registry_metadata_adjudicated": {
+        "domicile": {
+          "value": "United Kingdom",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.unilever.com/files/unilever-annual-report-on-form-20-f-2025.pdf",
+          "scope_note": "United Kingdom (PLC legal entity, p211)"
+        },
+        "reporting_basis": {
+          "value": "IFRS",
+          "status": "primary_filing_verified",
+          "source_ref": "https://www.unilever.com/files/unilever-annual-report-on-form-20-f-2025.pdf",
+          "scope_note": "IFRS as issued by IASB; cover."
+        },
+        "sector": {
+          "value": "Consumer Staples",
+          "status": "analyst_mapping_from_primary_business_evidence",
+          "source_ref": "https://www.unilever.com/files/unilever-annual-report-on-form-20-f-2025.pdf",
+          "scope_note": "Benchmark sector adjudication from primary business description; not verified GICS assignment. Beauty/personal care, home care and foods consumer products; annual20F pp18\u201321 and27."
+        }
+      },
+      "issued_common_count": 2181005247,
+      "treasury_common_components": {
+        "employee_benefit_trust_PLC": 1208143,
+        "PLC_and_subsidiaries_PLC": 314912
+      }
+    }
+  ],
+  "sector_adjudication_note": "Eight analyst sector mappings supported by primary business evidence; no proprietary GICS verification claimed. Count and other metadata blockers remain independent."
+}

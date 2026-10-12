@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "ticker": "TDAY",
+  "retrieved_at": "2026-10-11T23:59:07Z",
+  "status": "primary_share_basis_and_proxy_calculation_established; exact_Oct9_reconciliation_pending",
+  "sources": [
+    {
+      "id": "primary_10q",
+      "url": "https://www.sec.gov/Archives/edgar/data/1579684/000157968426000047/tday-20260630.htm",
+      "filed_on": "2026-08-06",
+      "share_count_as_of": "2026-08-03",
+      "common_shares_outstanding": 146817941,
+      "security": "Common Stock $0.01 par NYSE TDAY",
+      "balance_sheet_as_of": "2026-06-30",
+      "preferred_issued_and_outstanding": 0,
+      "scope": "Same common-share number also appears on June30 balance sheet; August3 cover is later observation. Potential convertible debt is not treated as presently outstanding common equity."
+    },
+    {
+      "id": "dated_price",
+      "url": "https://stockanalysis.com/stocks/tday/history/",
+      "provider_label": "S&P Global Market Intelligence",
+      "price_as_of": "2026-10-09",
+      "close_usd": "6.82",
+      "adjusted_close_usd": "6.82",
+      "scope": "Secondary daily price row and4pmEDT header agree."
+    },
+    {
+      "id": "statistics",
+      "url": "https://stockanalysis.com/stocks/tday/statistics/",
+      "page_last_updated": "2026-10-11",
+      "displayed_shares": "145.71M",
+      "share_count_measurement_date": null,
+      "provider_label": "S&P Global Market Intelligence",
+      "scope": "Explicit share-class/total-shares both145.71M; observation date is not share-count effective date."
+    },
+    {
+      "id": "cap_conflict",
+      "url": "https://stockanalysis.com/stocks/tday/market-cap/",
+      "summary_as_of": "2026-10-09",
+      "historical_as_of": "2026-10-09",
+      "summary_usd": "993760000",
+      "historical_usd": "1000000000",
+      "provider_label": "Nasdaq Data Link"
+    }
+  ],
+  "calculations": {
+    "primary_reported_shares_times_Oct9_close": {
+      "formula": "146817941 * 6.82",
+      "result_usd": "1001298357.62",
+      "classification": "dated_share_proxy_not_exact_same_date_total_equity",
+      "price_date": "2026-10-09",
+      "share_date": "2026-08-03",
+      "rounds_to_historical_display": "1.00B",
+      "inference": "Compatible with historical table using a reported share count; does not establish actual vendor mechanism."
+    },
+    "secondary_displayed_shares_times_close": {
+      "formula": "145710000 * 6.82",
+      "result_usd": "993742200.00",
+      "classification": "rounded_secondary_consistency_check_not_primary_derivation"
+    },
+    "summary_implied_shares": "145712609.9706744868035190616",
+    "historical_implied_shares": "146627565.9824046920821114370",
+    "absolute_conflict_usd": "6240000",
+    "absolute_conflict_percent_of_summary": "0.6279182096280792142972146192"
+  },
+  "materiality": {
+    "summary_tier": "small_micro",
+    "historical_tier": "small_micro",
+    "primary_reported_share_proxy_tier": "small_micro",
+    "tier_crossing": false,
+    "not_in_19_tiny_precision_cases": true,
+    "difference_cause": "not_source_confirmed; share-count/date/basis issue remains plausible, not a demonstrated display-rounding-only case"
+  },
+  "remaining_fact_needed": "Oct9 effective issued/outstanding common shares or documented provider basis/date that reconciles145.71M vs August3 primary146817941. August3 is the latest primary share count verified in this follow-up, not a claim that no later disclosure exists. Do not substitute diluted weighted-average EPS shares.",
+  "smallest_source_choice": {
+    "preferred": "Obtain a free issuer/SEC disclosure with a later common-share count and corporate-action reconciliation throughOct9; retain both cap observations until supported.",
+    "alternative_requires_approval": "Use latest-public-primary-share-count \u00d7 Oct9 close as a explicitly labeled point-in-time reported-share estimate rather than claiming exactOct9 outstanding equity; not adopted here.",
+    "paid_access_requested": false
+  },
+  "access_limits": [
+    "SEC submissions JSON inaccessible in web tool. SEC archive directory and actual10-Q accessible and used instead.",
+    "Issuer SEC feed and press-release index rendered only selector controls.",
+    "Guessed issuerQ2 release path inaccessible; not treated as evidence."
+  ],
+  "cap_conflict_resolved": false,
+  "company_admitted": false,
+  "execution_authorized": false
+}
