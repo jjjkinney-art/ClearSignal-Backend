@@ -1,5 +1,10 @@
 # Six-case pilot: transport and credential readiness
 
+Follow-on implementation: [integrated offline pilot rehearsal](INTEGRATED_OFFLINE_PILOT.md).
+It tests the transport and ledger hazards below using synthetic exchanges in the
+actual pipeline. The historical static audit and live prerequisites below remain
+distinct from that offline evidence; no live credentials or tariffs are verified.
+
 Static audit based on main `98e4663f6e27e776bc0294e29a2f1cbb791624db` and the inspected local dependency versions: OpenAI 2.32.0, HTTPX 0.28.1,
 httpcore 1.0.9, urllib3 2.8.0 and requests 2.32.5. Top-level requirements pin
 OpenAI/HTTPX/requests; httpcore/urllib3 are resolved transitive dependencies. No credentials, prices, account entitlements or live

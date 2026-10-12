@@ -10,6 +10,7 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import time
 from uuid import uuid4
 
 
@@ -42,6 +43,13 @@ def validate_cases(cases):
 
 class BudgetError(ValueError):
     pass
+
+
+class RateLimitDelay(BudgetError):
+    """A pending claim must wait outside the SQLite transaction."""
+    def __init__(self, seconds):
+        super().__init__('SEC claim rate limit; retry this unclaimed reservation later')
+        self.seconds = seconds
 
 
 def digest(value):
@@ -93,8 +101,24 @@ def count(value):
 
 
 def validate_policy(policy):
-    if not isinstance(policy, dict) or policy.get('schema_version') != 1:
+    if not isinstance(policy, dict) or type(policy.get('schema_version')) is not int or policy['schema_version'] not in (1, 2):
         raise BudgetError('unsupported policy')
+    rehearsal = policy['schema_version'] == 2
+    if rehearsal:
+        # This additional policy mode is explicitly non-executable. Its rates
+        # illustrate API usage; they do not assert verified account charges.
+        if (policy.get('purpose') != 'offline_six_case_rehearsal'
+                or any(policy.get(k) is not False for k in (
+                    'execution_allowed', 'spending_authorized', 'tariffs_verified',
+                    'all_incremental_charges_accounted'))):
+            raise BudgetError('offline rehearsal policy must deny live authority')
+        from validation.pilot_policy import policy_for
+        try:
+            expected = policy_for(policy['code_binding'], policy['dependencies'])
+        except (KeyError, TypeError, ValueError):
+            raise BudgetError('invalid fixed rehearsal policy') from None
+        if digest(policy) != digest(expected):
+            raise BudgetError('rehearsal policy is fixed; separate review required')
     for key in ('pilot_id', 'approval_reference', 'configuration_version', 'pricing_review_reference'):
         if not isinstance(policy.get(key), str) or not policy[key].strip():
             raise BudgetError(f'{key} is required')
@@ -115,7 +139,8 @@ def validate_policy(policy):
     for route, price in rates.items():
         if not isinstance(route, str) or not route or not isinstance(price, dict):
             raise BudgetError('invalid priced route')
-        if price.get('currency') != 'USD' or price.get('all_incremental_charges_accounted') is not True:
+        if (price.get('currency') != 'USD'
+                or price.get('all_incremental_charges_accounted') is not (False if rehearsal else True)):
             raise BudgetError('unknown currency or provider charges')
         if set(price) != {'currency', 'all_incremental_charges_accounted', 'request_usd', 'input_token_usd', 'output_token_usd', 'maximum_input_tokens', 'maximum_output_tokens'}:
             raise BudgetError('unsupported charge categories')
@@ -123,6 +148,26 @@ def validate_policy(policy):
         count(price.get('maximum_output_tokens'))
         for key in ('request_usd', 'input_token_usd', 'output_token_usd'):
             money(price[key])
+    if rehearsal:
+        quotas = policy.get('quotas', {})
+        groups = quotas.get('groups', {})
+        per_case = quotas.get('per_case', {})
+        overall = quotas.get('overall', {})
+        if (set(quotas) != {'groups', 'per_case', 'overall', 'sec_per_second'}
+                or set(groups) != {'model', 'sec'} or set(overall) != set(groups)
+                or set(per_case) != set(cases) or quotas['sec_per_second'] != 10
+                or any(type(v) is not list or not v or len(v) != len(set(v))
+                       for v in groups.values())
+                or set(groups['model']) & set(groups['sec'])
+                or set(groups['model'] + groups['sec']) != set(rates)):
+            raise BudgetError('complete disjoint rehearsal quota groups required')
+        for limits in [overall, *per_case.values()]:
+            if not isinstance(limits, dict):
+                raise BudgetError('invalid rehearsal quotas')
+            for value in limits.values():
+                count(value)
+        if any(set(limits) != set(rates) | set(groups) for limits in per_case.values()):
+            raise BudgetError('every case requires explicit group and route quotas')
     return budget
 
 
@@ -145,12 +190,15 @@ class AttemptLedger:
         elif not self.path.is_file():
             raise BudgetError("existing pilot ledger missing; refusing budget reset")
         self.policy_hash = digest(self.policy)
+        self._file_identity = (self.path.stat().st_dev, self.path.stat().st_ino)
         with self.transaction() as db:
             if create:
                 db.execute(f'PRAGMA user_version={LEDGER_SCHEMA_VERSION}')
                 db.execute('CREATE TABLE IF NOT EXISTS policy (id INTEGER PRIMARY KEY CHECK(id=1), hash TEXT NOT NULL, halted TEXT)')
                 db.execute('CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, case_id TEXT UNIQUE NOT NULL, status TEXT NOT NULL)')
                 db.execute('CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_run TEXT NOT NULL, route TEXT NOT NULL, reserve INTEGER NOT NULL, input_bound INTEGER NOT NULL, output_bound INTEGER NOT NULL, status TEXT NOT NULL, actual INTEGER, request_sha256 TEXT)')
+                if self.policy['schema_version'] == 2:
+                    db.execute('CREATE TABLE sec_claims (attempt_id TEXT PRIMARY KEY, claimed_ns INTEGER NOT NULL)')
             else:
                 # No implicit migrations or resets, including prior accounting-only ledgers.
                 if db.execute('PRAGMA user_version').fetchone()[0] != LEDGER_SCHEMA_VERSION:
@@ -164,6 +212,11 @@ class AttemptLedger:
                 db.execute('INSERT INTO policy VALUES (1,?,NULL)', (self.policy_hash,))
             elif row[0] != self.policy_hash:
                 raise BudgetError('ledger policy/configuration mismatch; cannot reset budget')
+            if not create and self.policy['schema_version'] == 2:
+                db.execute('SELECT attempt_id,claimed_ns FROM sec_claims LIMIT 0')
+                # A fresh process/object may inspect and settle old claims, but
+                # never silently resume dispatch after a crash or restart.
+                db.execute("UPDATE policy SET halted=COALESCE(halted,'reopen_requires_review') WHERE id=1")
 
     @property
     def policy(self):
@@ -172,6 +225,13 @@ class AttemptLedger:
 
     @contextmanager
     def transaction(self):
+        if self.policy['schema_version'] == 2:
+            try:
+                stat = self.path.stat()
+            except OSError:
+                raise BudgetError('existing rehearsal ledger unavailable; no reset') from None
+            if (stat.st_dev, stat.st_ino) != self._file_identity:
+                raise BudgetError('rehearsal ledger file replaced; no reset')
         db = sqlite3.connect(self.path.as_uri() + '?mode=rw', uri=True, timeout=10, isolation_level=None)
         try:
             db.execute('PRAGMA synchronous=FULL')
@@ -188,6 +248,40 @@ class AttemptLedger:
         row = db.execute('SELECT hash,halted FROM policy WHERE id=1').fetchone()
         if row is None or row[0] != self.policy_hash or row[1]:
             raise BudgetError('pilot halted or policy mismatched')
+
+    def require_active(self):
+        with self.transaction() as db:
+            self.active(db)
+
+    def halt(self, reason='rehearsal_failure'):
+        """Persist a fixed, non-secret failure code, including before any claim."""
+        if reason not in {'rehearsal_failure', 'stage_timeout', 'pool_failure',
+                          'invalid_request', 'invalid_response', 'configuration_drift',
+                          'offline_network_attempt', 'fixture_failure', 'identity_mismatch'}:
+            raise BudgetError('unsupported halt reason')
+        with self.transaction() as db:
+            db.execute('UPDATE policy SET halted=COALESCE(halted,?) WHERE id=1', (reason,))
+
+    def _check_quotas(self, db, case_run, route, *, additional):
+        if self.policy['schema_version'] != 2:
+            return
+        quotas = self.policy['quotas']
+        case = db.execute('SELECT case_id FROM cases WHERE id=?', (case_run,)).fetchone()
+        if case is None or route not in self.policy['prices']:
+            raise BudgetError('unknown rehearsal case or route')
+        limits = quotas['per_case'][case[0]]
+        route_count = db.execute('SELECT COUNT(*) FROM attempts WHERE case_run=? AND route=?',
+                                 (case_run, route)).fetchone()[0]
+        if route_count + additional > limits[route]:
+            raise BudgetError('rehearsal stage quota exceeded; slots cannot transfer')
+        group = next(name for name, routes in quotas['groups'].items() if route in routes)
+        routes = quotas['groups'][group]
+        marks = ','.join('?' for _ in routes)
+        case_count = db.execute(f'SELECT COUNT(*) FROM attempts WHERE case_run=? AND route IN ({marks})',
+                                (case_run, *routes)).fetchone()[0]
+        total = db.execute(f'SELECT COUNT(*) FROM attempts WHERE route IN ({marks})', routes).fetchone()[0]
+        if case_count + additional > limits[group] or total + additional > quotas['overall'][group]:
+            raise BudgetError('rehearsal category quota exceeded')
 
     def begin_case(self, case_id):
         if case_id not in self.policy['approved_case_ids']:
@@ -213,9 +307,19 @@ class AttemptLedger:
                 + count(output_tokens) * money(price['output_token_usd']))
 
     def reserve(self, case_run, route, *, input_bound, output_bound, request_sha256=None):
+        if self.policy['schema_version'] == 2:
+            price = self.policy['prices'].get(route)
+            if (request_sha256 is None or price is None
+                    or type(input_bound) is not int or type(output_bound) is not int
+                    or input_bound != price['maximum_input_tokens']
+                    or output_bound != price['maximum_output_tokens']):
+                self.halt('invalid_request')
+                raise BudgetError('rehearsal requires the full fixed route reservation')
         if request_sha256 is not None and (type(request_sha256) is not str
                 or len(request_sha256) != 64
                 or any(c not in '0123456789abcdef' for c in request_sha256)):
+            if self.policy['schema_version'] == 2:
+                self.halt('invalid_request')
             raise BudgetError('invalid request digest')
         failure = None
         attempt_id = str(uuid4())
@@ -226,6 +330,7 @@ class AttemptLedger:
             spent, attempts = db.execute('SELECT COALESCE(SUM(reserve),0),COUNT(*) FROM attempts').fetchone()
             try:
                 cost = self.priced(route, input_bound, output_bound)
+                self._check_quotas(db, case_run, route, additional=1)
                 if spent + cost > self.budget or attempts >= self.policy['maximum_attempts']:
                     raise BudgetError('reservation exceeds pilot cost/attempt limit')
             except BudgetError as exc:
@@ -241,6 +346,19 @@ class AttemptLedger:
     def claim_dispatch(self, attempt_id, *, case_run, route, request_sha256,
                        input_bound, output_bound):
         """Commit a one-shot claim before dispatch; ambiguous claims cannot replay."""
+        try:
+            return self._claim_dispatch(attempt_id, case_run=case_run, route=route,
+                                        request_sha256=request_sha256,
+                                        input_bound=input_bound, output_bound=output_bound)
+        except RateLimitDelay:
+            raise
+        except BudgetError:
+            if self.policy['schema_version'] == 2:
+                self.halt('invalid_request')
+            raise
+
+    def _claim_dispatch(self, attempt_id, *, case_run, route, request_sha256,
+                        input_bound, output_bound):
         count(input_bound)
         count(output_bound)
         with self.transaction() as db:
@@ -252,6 +370,15 @@ class AttemptLedger:
                 raise BudgetError('dispatch binding mismatch or reservation already claimed')
             if not db.execute("SELECT 1 FROM cases WHERE id=? AND status='active'", (case_run,)).fetchone():
                 raise BudgetError('case is not active')
+            self._check_quotas(db, case_run, route, additional=0)
+            if (self.policy['schema_version'] == 2
+                    and route in self.policy['quotas']['groups']['sec']):
+                now = time.monotonic_ns()
+                recent = db.execute('SELECT claimed_ns FROM sec_claims WHERE claimed_ns>? ORDER BY claimed_ns',
+                                    (now - 1_000_000_000,)).fetchall()
+                if len(recent) >= self.policy['quotas']['sec_per_second']:
+                    raise RateLimitDelay(max(0.001, (recent[0][0] + 1_000_000_000 - now) / 1_000_000_000))
+                db.execute('INSERT INTO sec_claims VALUES (?,?)', (attempt_id, now))
             db.execute("UPDATE attempts SET status='claimed' WHERE id=?", (attempt_id,))
 
     def halt_dispatch(self, attempt_id):
@@ -279,7 +406,7 @@ class AttemptLedger:
                     raise BudgetError('usage exceeded reserved bound')
             except BudgetError:
                 failure = 'missing_or_excess_usage'
-                db.execute('UPDATE policy SET halted=? WHERE id=1', (failure,))
+                db.execute('UPDATE policy SET halted=COALESCE(halted,?) WHERE id=1', (failure,))
                 db.execute("UPDATE attempts SET status='unknown' WHERE id=?", (attempt_id,))
             else:
                 db.execute("UPDATE attempts SET status='settled',actual=? WHERE id=?", (actual, attempt_id))

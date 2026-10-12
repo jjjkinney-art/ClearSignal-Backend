@@ -1,5 +1,10 @@
 # Frozen SEC + OpenAI pilot preparation
 
+The pure preflight described here remains unchanged. The separate
+[integrated offline rehearsal](INTEGRATED_OFFLINE_PILOT.md) now exercises its
+frozen cases through the real pipeline with invented credentials and blocked
+networking. It does not enable live execution.
+
 `python -m validation.pilot_preflight` produces a non-executable preparation
 artifact for exactly ASML, ACHC and NPK, each with `core_thesis` and
 `decision_threshold`. It reads only the three frozen v2 setup files. It does not
