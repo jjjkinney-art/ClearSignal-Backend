@@ -86,9 +86,14 @@ class BenchmarkTransport(httpx.BaseTransport):
             fixture = self._responses[self._index]
             try:
                 response = self._mock.handle_request(frozen)
+                self._ledger.settle(attempt, input_tokens=fixture.input_units,
+                                    output_tokens=fixture.output_units)
+            except BaseException:
+                # No usable completion: halt durably, including for a reopened
+                # ledger or a fresh wrapper with unconsumed response fixtures.
+                self._ledger.halt_dispatch(attempt)
+                raise
             finally:
                 # No replay after a claimed dispatch, including an ambiguous failure.
                 self._index += 1
-            self._ledger.settle(attempt, input_tokens=fixture.input_units,
-                                output_tokens=fixture.output_units)
             return response

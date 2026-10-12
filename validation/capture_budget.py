@@ -254,6 +254,19 @@ class AttemptLedger:
                 raise BudgetError('case is not active')
             db.execute("UPDATE attempts SET status='claimed' WHERE id=?", (attempt_id,))
 
+    def halt_dispatch(self, attempt_id):
+        """Persist a caught post-claim failure without releasing claim or reserve.
+
+        A hard process/disk failure can still leave a claimed ambiguous attempt;
+        this handles exceptions the cooperating transport can actually catch.
+        """
+        with self.transaction() as db:
+            row = db.execute('SELECT request_sha256,status FROM attempts WHERE id=?',
+                             (attempt_id,)).fetchone()
+            if row is None or row[0] is None or row[1] not in ('claimed', 'unknown', 'settled'):
+                raise BudgetError('post-claim failure requires a claimed bound attempt')
+            db.execute("UPDATE policy SET halted=COALESCE(halted,'post_claim_failure') WHERE id=1")
+
     def settle(self, attempt_id, *, input_tokens=None, output_tokens=None):
         failure = None
         with self.transaction() as db:

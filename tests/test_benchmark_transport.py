@@ -246,14 +246,15 @@ def test_input_boundary_and_shared_attempt_limit(book):
 
 
 def test_mock_failure_preserves_claim_and_no_old_attempt_replay(book, monkeypatch):
-    adapter = transport(book)
+    adapter = transport(book, response(), response())
     def fail(request):
         raise RuntimeError('simulated crash after claim')
     monkeypatch.setattr(adapter._mock, 'handle_request', fail)
     with pytest.raises(RuntimeError):
         adapter.handle_request(request())
     assert book[0].summary()['unresolved_attempts'] == 1
-    with pytest.raises(BudgetError, match='exhausted'):
+    assert book[0].summary()['halted'] == 'post_claim_failure'
+    with pytest.raises(BudgetError, match='halted'):
         adapter.handle_request(request())
     assert book[0].summary()['attempts'] == 1
 
@@ -305,3 +306,26 @@ def test_wrapper_subclass_cannot_replace_internal_handler():
         class NetworkWrapper(BenchmarkTransport):
             def _respond(self, request):
                 pytest.fail('override must not be supported')
+
+
+def test_malformed_response_halts_fresh_wrapper_and_reopened_ledger(book):
+    ledger, run = book
+    malformed = FixtureResponse(307, b'{}', 1, 1, 'https://fixture.invalid/Ā')
+    adapter = transport(book, malformed, response())
+    with pytest.raises(UnicodeEncodeError):
+        adapter.handle_request(request())
+    before = ledger.summary()
+    assert before['halted'] == 'post_claim_failure'
+    assert before['attempts'] == before['unresolved_attempts'] == 1
+    with sqlite3.connect(ledger.path) as db:
+        attempt, status = db.execute('SELECT id,status FROM attempts').fetchone()
+    assert status == 'claimed'
+    for candidate in (adapter, transport(book),
+                      transport((AttemptLedger(ledger.path, ledger.policy), run))):
+        with pytest.raises(BudgetError, match='halted'):
+            candidate.handle_request(request())
+    assert ledger.summary() == before
+    # A known late completion may still settle, but cannot clear the halt/refund.
+    ledger.settle(attempt, input_tokens=1, output_tokens=1)
+    assert ledger.summary()['halted'] == 'post_claim_failure'
+    assert ledger.summary()['reserved_nanousd'] == before['reserved_nanousd']

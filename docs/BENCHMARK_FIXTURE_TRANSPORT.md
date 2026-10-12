@@ -35,8 +35,9 @@ there is no implicit migration, reset or overwrite. A bound reservation can only
 settle after a successful one-shot claim. The accounting-only unbound API remains
 available for existing offline tests, but cannot claim or dispatch requests.
 Policy hash verification and request binding precede claims. Already claimed
-reservations cannot replay, even after restart. Missing or excessive usage halts
-new reservations; late claimed responses may settle after a halt. Reservations
+reservations cannot replay, even after restart. Caught post-claim exceptions (including response construction) durably halt
+new reservations while preserving the claim and reserve, even after reopening or
+constructing another wrapper. Missing or excessive usage also halts reservations; late claimed responses may settle after a halt. Reservations
 never refund. Crash-before-claim reservations remain charged; crash-after-claim
 states remain ambiguous and unresolved until explicit settlement/review. The
 wrapper does not automatically recover or replay either state. A caller may
