@@ -293,3 +293,12 @@ def test_risk_only_request_uses_annual_without_generic_metrics(monkeypatch):
     monkeypatch.setattr(live, 'fetch_public_document', lambda *a, **k: annual)
     items = live.fetch_live_issuer_kpi_evidence('AAPL', question='Which source supports Services operating risks?')
     assert len(items) == 2 and all(item.risk_disclosures for item in items)
+
+
+@pytest.fixture(autouse=True)
+def frozen_issuer_directory(monkeypatch):
+    # Source composition also checks reporting coverage; never fetch its directory.
+    monkeypatch.setattr(
+        "app.services.providers.sec_provider._load_ticker_cik_map",
+        lambda: {"AAPL": "0000320193"},
+    )

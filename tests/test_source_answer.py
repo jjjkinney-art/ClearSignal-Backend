@@ -326,3 +326,12 @@ def test_operating_risk_question_does_not_require_user_to_say_evidence():
         [_evidence("Revenue", "SEC EDGAR", "Consolidated revenue rose in the latest reported quarter.")])
     assert result["status"] == "insufficient_claim_evidence"
     assert not thesis.bull_thesis
+
+
+@pytest.fixture(autouse=True)
+def frozen_issuer_directory(monkeypatch):
+    # Source composition also checks reporting coverage; never fetch its directory.
+    monkeypatch.setattr(
+        "app.services.providers.sec_provider._load_ticker_cik_map",
+        lambda: {"AAPL": "0000320193"},
+    )
