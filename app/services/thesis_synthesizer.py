@@ -3184,7 +3184,7 @@ def _call_with_json_enforcement(
             # name differs.
             raw = _synthesis_client_for_request().call(prompt, **call_kwargs)
         except Exception as exc:
-            logger.warning("[thesis_synthesizer] model call failed attempt=%d: %r", attempt, exc)
+            logger.warning("[thesis_synthesizer] model call failed attempt=%d: %s", attempt, type(exc).__name__)
             time.sleep(backoff_factor * (2 ** (attempt - 1)))
             continue
 

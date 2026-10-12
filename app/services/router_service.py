@@ -994,7 +994,7 @@ def _collect_investment_evidence(futures, *, source_evidence_view=False):
             try:
                 results[key] = future.result()
             except Exception as exc:
-                logger.warning('[router] evidence task %s failed: %r', key, exc)
+                logger.warning('[router] evidence task %s failed: %r', key, type(exc).__name__)
                 results[key] = []
         else:
             cap = 20 if source_evidence_view and key in documents else 10
@@ -1067,7 +1067,7 @@ def _run_investment_pipeline(
         try:
             return _fmp_provider.fetch_company_evidence(ticker) or []
         except Exception as _e:
-            logger.warning("[router] fmp evidence failed for %s: %r", ticker, _e)
+            logger.warning("[router] fmp evidence failed for %s: %r", ticker, type(_e).__name__)
             return []
 
     def _fetch_sec():
@@ -1141,7 +1141,7 @@ def _run_investment_pipeline(
         try:
             return _news_provider.fetch_company_news(ticker) or []
         except Exception as _e:
-            logger.warning("[router] news/company failed for %s: %r", ticker, _e)
+            logger.warning("[router] news/company failed for %s: %r", ticker, type(_e).__name__)
             return []
 
     def _fetch_news_macro():
@@ -1150,7 +1150,7 @@ def _run_investment_pipeline(
         try:
             return _news_provider.fetch_macro_news(detected_topics) or []
         except Exception as _e:
-            logger.warning("[router] news/macro failed: %r", _e)
+            logger.warning("[router] news/macro failed: %r", type(_e).__name__)
             return []
 
     def _fetch_fred_evidence():
@@ -1164,7 +1164,7 @@ def _run_investment_pipeline(
         try:
             return fetch_valuation_ratios(ticker) or []
         except Exception as _e:
-            logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, _e)
+            logger.warning("[router] fetch_valuation_ratios failed for %s: %r", ticker, type(_e).__name__)
             return []
 
     def _fetch_analyst_estimates():
@@ -1173,7 +1173,7 @@ def _run_investment_pipeline(
         try:
             return fetch_analyst_estimates(ticker) or []
         except Exception as _e:
-            logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, _e)
+            logger.warning("[router] fetch_analyst_estimates failed for %s: %r", ticker, type(_e).__name__)
             return []
 
     # Evidence-task key -> external provider name, for observability records.
@@ -1281,7 +1281,7 @@ def _run_investment_pipeline(
             _ev_futures_map, source_evidence_view=is_source_answer_request(question),
         )
     except Exception as _pool_exc:
-        logger.warning("[router] evidence pool error (%r) — falling back to sequential", _pool_exc)
+        logger.warning("[router] evidence pool error (%r) — falling back to sequential", type(_pool_exc).__name__)
         for k, fn in _ev_tasks.items():
             try:
                 _ev_results[k] = fn()
@@ -1513,7 +1513,7 @@ def _run_investment_pipeline(
                     try:
                         _agent_results[name] = fut.result()
                     except Exception as exc:
-                        logger.warning("[router] %s_agent failed for %s: %r", name, ticker, exc)
+                        logger.warning("[router] %s_agent failed for %s: %r", name, ticker, type(exc).__name__)
                         _agent_results[name] = _agent_defaults[name]
                 else:
                     logger.warning("[router] %s_agent abandoned (>%.0fs wall cap) for %s", name, _AGENT_WALL_CAP_S, ticker)
@@ -1524,7 +1524,7 @@ def _run_investment_pipeline(
                     )
                     _agent_results[name] = _agent_defaults[name]
         except Exception as _pool_exc:
-            logger.warning("[router] agent pool error for %s (%r)", ticker, _pool_exc)
+            logger.warning("[router] agent pool error for %s (%r)", ticker, type(_pool_exc).__name__)
             _agent_results = {name: _agent_defaults[name] for name in _agent_tasks}
         finally:
             _agent_pool.shutdown(wait=False)
@@ -1628,7 +1628,7 @@ def _run_investment_pipeline(
                     except Exception as exc:
                         logger.warning(
                             "[router] synthesize_thesis raised for %s (attempt %d): %r",
-                            ticker, _syn_attempt + 1, exc,
+                            ticker, _syn_attempt + 1, type(exc).__name__,
                         )
                 else:
                     logger.warning(
@@ -1638,7 +1638,7 @@ def _run_investment_pipeline(
             except Exception as _syn_exc:
                 logger.warning(
                     "[router] synthesis pool error for %s (attempt %d): %r",
-                    ticker, _syn_attempt + 1, _syn_exc,
+                    ticker, _syn_attempt + 1, type(_syn_exc).__name__,
                 )
             finally:
                 _syn_pool.shutdown(wait=False)

@@ -19,6 +19,10 @@ import time
 import uuid
 from typing import Any, List, Dict, Optional
 
+from .provider_diagnostics import install_provider_transport_guards
+
+install_provider_transport_guards()
+
 try:
     from openai import OpenAI, APITimeoutError, APIConnectionError, APIError
     _OPENAI_AVAILABLE = True

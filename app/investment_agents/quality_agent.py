@@ -276,9 +276,9 @@ def run_quality_agent(
         return result
     except Exception as exc:
         logger.warning(
-            "[%s] LLM call failed for %s: %r",
+            "[%s] LLM call failed for %s: %s",
             _AGENT_NAME,
             company.ticker,
-            exc,
+            type(exc).__name__,
         )
-        return _empty_output(f"LLM error: {exc}")
+        return _empty_output("Model request failed.")

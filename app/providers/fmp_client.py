@@ -13,6 +13,10 @@ from __future__ import annotations
 import logging
 from typing import Optional, Dict, List
 
+from ..provider_diagnostics import install_provider_transport_guards
+
+install_provider_transport_guards()
+
 import requests  # type: ignore
 
 logger = logging.getLogger(__name__)

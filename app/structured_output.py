@@ -240,7 +240,7 @@ def get_structured_response(
             logger.warning(
                 json.dumps({
                     "event": "model_call_failed",
-                    "error": str(exc),
+                    "error": type(exc).__name__,
                     "attempt": attempt,
                 })
             )
