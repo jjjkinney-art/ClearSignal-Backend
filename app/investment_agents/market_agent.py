@@ -272,4 +272,4 @@ def run_market_agent(
             company.ticker,
             type(exc).__name__,
         )
-        return _empty_output(f"LLM error: {exc}")
+        return _empty_output("Model request failed.")

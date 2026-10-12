@@ -1,5 +1,6 @@
 """Synthetic transport/exception probes. Network is blocked by the test runner."""
 import importlib
+import json
 import logging
 import socket
 from concurrent.futures import Future
@@ -144,6 +145,22 @@ def test_agent_failure_handler_omits_propagated_exception(monkeypatch, capsys, c
     monkeypatch.setattr(module, 'get_structured_response', fail)
     result = getattr(module, 'run_' + agent + '_agent')(CompanyContext(ticker='AAPL', company_name='Apple'), evidence)
     assert result.confidence == 0
+    # The fallback reaches captured output and the next model prompt, even at
+    # confidence zero. Check both boundaries, not only the logger.
+    serialized = json.dumps(result.model_dump())
+    assert SECRET not in serialized
+    assert SECRET[:4] not in serialized
+    assert result.overall.endswith('Model request failed.')
+    from app.schemas import ValuationView, MacroSensitivity, RiskProfile, MarketContext, QualityAssessment
+    from app.services.thesis_synthesizer import _build_synthesis_prompt
+    outputs = dict(valuation=ValuationView(), macro=MacroSensitivity(), risk=RiskProfile(),
+                   market=MarketContext(), quality=QualityAssessment())
+    outputs[agent] = result
+    prompt = _build_synthesis_prompt(CompanyContext(ticker='AAPL', company_name='Apple'),
+                                     evidence=[], **outputs)
+    assert 'Model request failed.' in prompt
+    assert SECRET not in prompt
+    assert SECRET[:4] not in prompt
     assert_private(capsys, caplog)
     assert 'RuntimeError' in caplog.text
 

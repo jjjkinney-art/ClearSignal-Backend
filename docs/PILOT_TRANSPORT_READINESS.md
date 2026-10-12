@@ -11,8 +11,11 @@ are not a USD ceiling or authorization to run the pilot.
 PR269 removed key prefixes and raw provider errors inside the four provider
 clients. Remaining reachable sinks were `structured_output` retries, investment
 agent fallback handlers, synthesis retries and investment-router provider/future
-handlers. They now retain exception class instead of exception text. Exceptions,
-request construction, retry counts and fallback behavior are unchanged.
+handlers. Logs now retain exception class instead of exception text. The five specialist
+fallback objects use a fixed failure message, preventing exception details from
+entering captured output or the next synthesis prompt even at zero confidence.
+Exception propagation, request construction, retry counts and failure confidence
+are unchanged.
 
 OpenAI's pinned SDK filters Authorization headers in one request-options log,
 but that does not protect arbitrary error bodies, URLs, response headers or
