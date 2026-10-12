@@ -696,7 +696,7 @@ def run_question_answerer(
         return answer
     except Exception as exc:
         logger.warning(
-            "[question_answerer] failed for %s intent=%s: %r",
-            company.ticker, intent, exc,
+            "[question_answerer] failed for %s intent=%s: %s",
+            company.ticker, intent, type(exc).__name__,
         )
         return ""
