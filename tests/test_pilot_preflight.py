@@ -132,7 +132,7 @@ def test_request_drift_rejected(request_data, change):
 
 
 @pytest.mark.parametrize("change", ["v1", "identity", "admission", "holdout", "question", "authorization"])
-def test_changed_setup_cannot_be_blessed_by_recomputed_metadata(copied_setup, change):
+def test_changed_setup_cannot_be_blessed_by_recomputed_metadata(copied_setup, change, monkeypatch):
     registry_path = copied_setup / "issuer_registry.v2.json"
     manifest_path = copied_setup / "company_quality_manifest.v2.json"
     metadata_path = copied_setup / "company_quality_manifest.v2.metadata.json"
@@ -146,13 +146,41 @@ def test_changed_setup_cannot_be_blessed_by_recomputed_metadata(copied_setup, ch
     elif change == "holdout": metadata["reserved_holdouts"].append("NPK")
     elif change == "question": manifest["cases"][0]["question"] = "changed"
     elif change == "authorization": metadata["execution_authorized"] = True
-    registry_path.write_text(json.dumps(registry))
-    manifest_path.write_text(json.dumps(manifest))
-    for path in (registry_path, manifest_path):
+    # Preserve every untouched artifact byte-for-byte: otherwise a metadata-only
+    # mutation would accidentally fail the earlier registry hash check.
+    changed = []
+    if change in {"v1", "identity", "admission"}:
+        registry_path.write_text(json.dumps(registry))
+        changed.append(registry_path)
+    elif change == "question":
+        manifest_path.write_text(json.dumps(manifest))
+        changed.append(manifest_path)
+    for path in changed:
         metadata["artifact_sha256"]["validation/" + path.name] = hashlib.sha256(path.read_bytes()).hexdigest()
     metadata_path.write_text(json.dumps(metadata))
+    expected_mismatches = [path.name for path in changed] + [metadata_path.name]
+    actual_mismatches = []
+    for name, expected in FROZEN_SETUP_SHA256.items():
+        actual = (copied_setup / name).read_bytes()
+        if hashlib.sha256(actual).hexdigest() != expected:
+            actual_mismatches.append(name)
+        if name not in expected_mismatches:
+            assert actual == (SETUP_DIR / name).read_bytes()
+    assert actual_mismatches == expected_mismatches
+    read_artifacts = []
+    original_read_bytes = Path.read_bytes
+
+    def record_read(path):
+        if path.parent == copied_setup:
+            read_artifacts.append(path.name)
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", record_read)
     with pytest.raises(PilotPreflightError, match="binding changed"):
         preflight(setup_dir=copied_setup)
+    ordered_names = list(FROZEN_SETUP_SHA256)
+    # A later metadata rejection must not mask a skipped registry/manifest gate.
+    assert read_artifacts == ordered_names[:ordered_names.index(expected_mismatches[0]) + 1]
 
 
 def test_exact_snapshot_can_be_relocated(copied_setup):
