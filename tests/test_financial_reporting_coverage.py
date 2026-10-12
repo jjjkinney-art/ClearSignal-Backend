@@ -31,7 +31,7 @@ def test_newer_filing_makes_older_comparisons_partial_without_replacing_facts(qu
     second = apply_source_answer_gate(thesis, question, material, references=refs)
     assert first == second
     assert first['status'] == 'partial'
-    assert {'latest-period revenue', 'latest-period operating income'}.issubset(first['unanswered_parts'])
+    assert {'latest-period revenue (as reported)', 'latest-period operating income'}.issubset(first['unanswered_parts'])
     coverage = first['reporting_coverage']
     assert coverage['latest_discovered_reporting_period'] == '2025-09-30'
     assert coverage['filing_reference_id'] == 'E3'

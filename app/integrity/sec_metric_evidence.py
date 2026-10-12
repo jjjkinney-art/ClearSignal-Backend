@@ -11,6 +11,7 @@ from ..providers.sec_fact_policy import ANNUAL_FORM_PREFIXES, REPORTING_CURRENCI
 from ..schemas import RetrievedEvidence
 from .provenance import Provenance, QuantitativeClaim
 from .sec_fact_binding import bind_sec_fact
+from .sec_metric_labels import metric_label, income_attribution
 
 
 def _scaled(value: int | float, *, prefix: str = "", suffix: str = "") -> str:
@@ -136,6 +137,8 @@ def _verified_claim(
         "currency": record.unit if record.unit in REPORTING_CURRENCIES else "USD" if record.unit == "USD/shares" else None,
         "label": record.label,
     })
+    if attribution := income_attribution(record.concept):
+        output["income_attribution"] = attribution
     if record.inline_binding is not None:
         output["inline_binding"] = dict(record.inline_binding)
     return output
@@ -205,14 +208,28 @@ def comparable_metric_evidence(
     prior = _latest_unambiguous_fact(comparable, include_start=True)
     if prior is None:
         return None
+    cash_flow = current.concept == "NetCashProvidedByUsedInOperatingActivities"
     if prior.value == 0:
         return None
 
+    metric_name = metric_label(metric_name, current.concept)
     change = ((Decimal(str(current.value)) - Decimal(str(prior.value)))
               / abs(Decimal(str(prior.value))) * 100)
     direction = "increased" if change >= 0 else "decreased"
+    movement = f"{metric_name} {direction} {abs(change):.1f}%"
+    if cash_flow:
+        if current.value < 0 and prior.value < 0:
+            used_change = -change
+            direction = "increased" if used_change > 0 else "decreased" if used_change < 0 else "was unchanged"
+            movement = (f"cash used in operating activities {direction}"
+                        + (f" {abs(used_change):.1f}%" if used_change else ""))
+        elif current.value == 0 or (current.value < 0) != (prior.value < 0):
+            def cash_state(value):
+                return "cash used" if value < 0 else "cash provided" if value > 0 else "zero net cash flow"
+            movement = f"operating cash flow moved from {cash_state(prior.value)} to {cash_state(current.value)}"
+    amount_join = "; signed amounts: " if cash_flow and (current.value <= 0 or prior.value <= 0) else " to "
     summary = (
-        f"{ticker} {metric_name} {direction} {abs(change):.1f}% to "
+        f"{ticker} {movement}{amount_join}"
         f"{_value(current.value, unit)} for the period {current.start} to {current.end}, from "
         f"{_value(prior.value, unit)} in the comparable prior-year period "
         f"{prior.start} to {prior.end}."
