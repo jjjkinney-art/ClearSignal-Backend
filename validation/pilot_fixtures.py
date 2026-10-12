@@ -18,6 +18,8 @@ SCENARIOS = frozenset({
     'socket_attempt', 'unknown_dns', 'sdk_copy_valid',
     'custom_request_header', 'concurrent_usage_failure',
     'sec_post', 'sec_body', 'sec_response_identity_mismatch',
+    'agent_submit_failure', 'synthesis_submit_failure', 'synthesis_running_submit_failure',
+    'evidence_constructor_failure', 'agents_constructor_failure', 'synthesis_constructor_failure',
 })
 
 

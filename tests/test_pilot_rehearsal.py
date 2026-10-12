@@ -31,9 +31,14 @@ def test_actual_six_case_pipeline_completes_with_zero_network(rehearsals, scenar
     assert result['network_attempts'] == result['external_dispatches'] == 0
     assert result['diagnostics_canary_clean']
     assert result['sec_configured_contact_applied']
+    assert result['isolated_home'] is True
+    assert result['netrc_open_attempts'] == 0
+    assert result['sec_authorization_header_absent'] is True
     assert all(count > 0 for count in result['transport_entries'].values())
     assert result['ledger']['unresolved_attempts'] == 0
     assert result['ledger']['halted'] is None
+    assert result['submission_tracking']['registered'] == result['submission_tracking']['completed']
+    assert result['submission_tracking']['ambiguous_submissions'] == 0
     assert [case['case_id'] for case in result['completed_cases']] == [
         case['case_id'] for case in preflight()['cases']]
     npk = [case for case in result['completed_cases'] if case['identity']['ticker'] == 'NPK']
@@ -119,6 +124,25 @@ def test_integrated_faults_halt_without_fallback_dispatch_or_refund(rehearsals, 
         assert sum(event['case_id'] == 'ACHC:decision_threshold' for event in models) == 6
         assert not any(event['case_id'] == 'ACHC:decision_threshold'
                        and event['route'] == 'model/synthesis' for event in models)
+    if scenario.endswith('_constructor_failure'):
+        assert before['halted'] == 'pool_failure'
+        assert result['submission_tracking']['constructor_failures'] == 1
+    if scenario in {'agent_submit_failure', 'synthesis_submit_failure', 'synthesis_running_submit_failure'}:
+        tracking = result['submission_tracking']
+        assert before['halted'] == 'pool_failure'
+        assert tracking['ambiguous_submissions'] == 1
+        assert tracking['registered'] == tracking['completed']
+        assert before['unresolved_attempts'] == 0
+        if scenario == 'agent_submit_failure':
+            target = [event for event in models if event['case_id'] == 'ACHC:decision_threshold']
+            assert [event['route'] for event in target] == ['model/valuation']
+            assert tracking['queued_submissions_fenced'] == 1
+        elif scenario == 'synthesis_submit_failure':
+            assert not any(event['route'] == 'model/synthesis' for event in models)
+            assert tracking['queued_submissions_fenced'] == 1
+        else:
+            assert sum(event['route'] == 'model/synthesis' for event in models) == 1
+            assert tracking['queued_submissions_fenced'] == 0
     for path in output.rglob('*'):
         if path.is_file():
             assert not any(value.encode() in path.read_bytes() for value in SECRET_CANARIES)
@@ -145,11 +169,20 @@ def test_parent_configuration_and_credentials_are_not_inherited(tmp_path, monkey
                 'HTTPS_PROXY', 'OPENAI_BASE_URL', 'OPENAI_LOG', 'AGENT_MODEL', 'SYNTHESIS_MODEL'):
         monkeypatch.setenv(key, parent_canary)
     monkeypatch.setenv('CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED', 'true')
+    sentinel_home = tmp_path / 'sentinel-home'
+    sentinel_home.mkdir()
+    for name in ('.netrc', '_netrc'):
+        (sentinel_home / name).write_text('machine data.sec.gov login invented-user password ' + parent_canary)
+    monkeypatch.setenv('HOME', str(sentinel_home))
+    monkeypatch.setenv('NETRC', str(sentinel_home / '.netrc'))
     (tmp_path / '.env').write_text('OPENAI_API_KEY=' + parent_canary)
     monkeypatch.chdir(tmp_path)
     result = run_rehearsal(tmp_path / 'new-isolated-child')
     assert result['status'] == 'complete'
     assert result['network_attempts'] == 0
+    assert result['isolated_home'] is True
+    assert result['netrc_open_attempts'] == 0
+    assert result['sec_authorization_header_absent'] is True
     for path in (tmp_path / 'new-isolated-child').rglob('*'):
         if path.is_file():
             assert parent_canary.encode() not in path.read_bytes()

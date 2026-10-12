@@ -7,6 +7,7 @@ from concurrent import futures
 from contextvars import ContextVar
 from io import BytesIO
 import json
+import netrc
 import os
 from pathlib import Path
 from threading import Barrier, Event, Lock
@@ -43,8 +44,10 @@ class PilotBoundary:
         self.sec_route_calls = {}
         self.transport_entries = {'openai_mock': 0, 'urllib': 0, 'requests': 0}
         self.blocked_after_halt = 0
+        self.constructor_failures = self.ambiguous_submissions = self.queued_submissions_fenced = 0
         self.inflight = self.max_inflight = 0
         self.sec_contact_applied = True
+        self.sec_authorization_header_absent = True
         self.settings = None
         self.model_clients = []
         self.concurrent_agents = Barrier(6)
@@ -70,6 +73,7 @@ class PilotBoundary:
                     or self.settings.sec_user_agent != SYNTHETIC_CONTACT
                     or self.settings.fmp_api_key or self.settings.fred_api_key
                     or os.environ.get('CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED') != 'false'
+                    or os.environ.get('HOME') != str(Path.cwd().resolve() / 'isolated-home')
                     or Path('.env').exists()):
                 self.refuse('configuration_drift')
             for client in self.model_clients:
@@ -93,6 +97,30 @@ class PilotBoundary:
         original_init = openai.OpenAI.__init__
         original_create = Completions.create
         original_send = httpx.Client.send
+        original_session_init = requests.sessions.Session.__init__
+        original_prepare = requests.sessions.Session.prepare_request
+        original_executor_init = owner.original_executor.__init__
+
+        def executor_init(pool, *args, **kwargs):
+            original_executor_init(pool, *args, **kwargs)
+            if owner.once({str(getattr(pool, 'kind', '')) + '_constructor_failure'}):
+                raise RuntimeError('invented executor construction failure')
+
+        def session_init(session, *args, **kwargs):
+            original_session_init(session, *args, **kwargs)
+            session.trust_env = False
+
+        def prepare(session, request):
+            # This must run before Session.prepare_request can discover netrc.
+            # Reject changed/copied sessions that re-enable ambient authority.
+            if session.trust_env is not False:
+                owner.refuse('configuration_drift')
+            return original_prepare(session, request)
+
+        def no_netrc(*args, **kwargs):
+            # Also fences requests' imported aliases and aliases saved before
+            # bridge installation that eventually invoke stdlib netrc.netrc.
+            owner.refuse('configuration_drift')
 
         def sdk_init(client, *args, **kwargs):
             if (args or set(kwargs) - {'api_key', 'timeout', 'max_retries', 'http_client',
@@ -157,9 +185,15 @@ class PilotBoundary:
         self._patch(openai.OpenAI, '__init__', sdk_init)
         self._patch(Completions, 'create', create)
         self._patch(httpx.Client, 'send', send)
+        self._patch(requests.sessions.Session, '__init__', session_init)
+        self._patch(requests.sessions.Session, 'prepare_request', prepare)
+        self._patch(requests.sessions, 'get_netrc_auth', no_netrc)
+        self._patch(requests.utils, 'get_netrc_auth', no_netrc)
+        self._patch(netrc, 'netrc', no_netrc)
         self._patch(requests.sessions.Session, 'send', request_send)
         self._patch(urllib_request, 'urlopen', self.sec_urlopen)
         self._patch(urllib_request.OpenerDirector, 'open', opener_open)
+        self._patch(owner.original_executor, '__init__', executor_init)
 
         class PipelinePool(owner.original_executor):
             def __init__(pool, max_workers=None, *args, **kwargs):
@@ -183,8 +217,27 @@ class PilotBoundary:
                 if max_workers != expected or args or kwargs:
                     owner.refuse()
                 pool.submitted = 0
-                super().__init__(max_workers=max_workers)
+                try:
+                    super().__init__(max_workers=max_workers)
+                except BaseException:
+                    owner.constructor_failures += 1
+                    owner.refuse('pool_failure')
                 owner.pools.append(pool)
+
+            def _adjust_thread_count(pool):
+                # Faults occur INSIDE the actual CPython submit, after it queues
+                # the WorkItem. No injected refusal preempts the real failure.
+                if (pool.kind == 'agents' and pool.submitted == 2
+                        and owner.case['identity']['ticker'] == 'ACHC'
+                        and owner.scenario == 'agent_submit_failure'):
+                    owner.claimed.wait(2)
+                    raise RuntimeError('invented thread start failure after queueing')
+                if pool.kind == 'synthesis' and owner.scenario == 'synthesis_submit_failure':
+                    raise RuntimeError('invented thread start failure after queueing')
+                super()._adjust_thread_count()
+                if pool.kind == 'synthesis' and owner.scenario == 'synthesis_running_submit_failure':
+                    owner.claimed.wait(2)
+                    raise RuntimeError('invented submit failure with running work')
 
             def submit(pool, fn, /, *args, **kwargs):
                 owner.active()
@@ -197,8 +250,17 @@ class PilotBoundary:
                     owner.refuse('pool_failure')
                 name = pool.names[index]
                 stage = 'evidence.' + name if pool.kind == 'evidence' else name
+                # Track work BEFORE handing it to an executor. submit may queue
+                # executable work and then raise without returning its Future.
+                tracked = futures.Future()
+                ticket = {'started': False, 'fenced': False}
+                owner.futures.append(tracked)
 
                 def run():
+                    with owner.lock:
+                        if ticket['fenced']:
+                            return None  # Ambiguously queued work may wake later.
+                        ticket['started'] = True
                     token = owner.stage.set(stage)
                     try:
                         owner.active()
@@ -209,11 +271,23 @@ class PilotBoundary:
                         raise BudgetError('offline pipeline worker failed') from None
                     finally:
                         owner.stage.reset(token)
+                        tracked.set_result(None)
 
-                future = super().submit(run)
+                try:
+                    future = super().submit(run)
+                except BaseException:
+                    # Durable fence first, before router fallback/another pool.
+                    owner.ledger.halt('pool_failure')
+                    owner.release.set()
+                    with owner.lock:
+                        owner.ambiguous_submissions += 1
+                        if not ticket['started']:
+                            ticket['fenced'] = True
+                            owner.queued_submissions_fenced += 1
+                            tracked.set_result(None)
+                    raise BudgetError('offline executor submission failed') from None
                 future._pilot_stage = stage
                 future._pilot_pool = pool.kind
-                owner.futures.append(future)
                 return future
 
         def wait(items, timeout=None, return_when=futures.ALL_COMPLETED):
@@ -266,7 +340,10 @@ class PilotBoundary:
         is_model = route.startswith('model/')
         target = ((self.scenario in {'evidence_timeout', 'partial_pool_failure'} and not is_model)
                   or (self.scenario == 'agent_timeout' and is_model and route != 'model/synthesis')
-                  or (self.scenario == 'synthesis_timeout' and route == 'model/synthesis'))
+                  or (self.scenario in {'synthesis_timeout', 'synthesis_running_submit_failure'}
+                      and route == 'model/synthesis')
+                  or (self.scenario == 'agent_submit_failure'
+                      and self.case['identity']['ticker'] == 'ACHC' and route == 'model/valuation'))
         if target and self.once({self.scenario}):
             self.claimed.set()
             self.release.wait(2)
@@ -431,6 +508,7 @@ class PilotBoundary:
             self.transport_entries['requests'] += 1
         if type(request) is not requests.PreparedRequest:
             self.refuse()
+        self.sec_authorization_header_absent &= 'Authorization' not in request.headers
         if set(name.lower() for name in request.headers) - {'user-agent', 'accept', 'accept-encoding', 'connection'}:
             self.refuse()
         contact = self.settings.sec_user_agent

@@ -15,6 +15,16 @@ document admission check receives a fixed synthetic public DNS answer for the
 three reviewed SEC hosts; it never resolves them. SDK platform metadata is also
 fixed to avoid its `uname` subprocess. `.env` reads/writes are refused.
 
+The child also receives a fresh empty HOME. Requests sessions disable `trust_env`
+at construction and reject re-enabling it before request preparation. Both
+requests netrc-discovery aliases and stdlib netrc parsing are fenced before
+application imports, with an audit-level `.netrc`/`_netrc` open refusal as defense
+in depth. This prevents credential discovery before the synthetic send boundary;
+clearing HOME alone would allow the operating-system passwd-home fallback.
+Synthetic sentinel-home tests cover new/copied sessions, changed sessions and
+saved library aliases, asserting zero file reads, zero passwd fallback and no
+SEC Authorization header. No real credential files are inspected.
+
 No production source, provider settings, deployment or access controls change.
 Application pools still use real concurrent workers. Application total attempts
 remain one. The benchmark explicitly overrides the SDK's production default of
@@ -27,7 +37,7 @@ not a sandbox against arbitrary hostile Python or a compromised filesystem.
 
 ## Immutable scope and reservations
 
-The worker verifies the frozen setup, source binding and exact audited versions:
+The worker requires CPython 3.11.9 and verifies the frozen setup, source binding and exact audited versions:
 OpenAI 2.32.0, HTTPX 0.28.1, httpcore 1.0.9, requests 2.32.5 and urllib3 2.8.0.
 Dependency drift fails preflight instead of silently changing the policy. No
 transitive dependency pins in the production requirements are changed here.
@@ -91,6 +101,16 @@ unknown request or ambiguous response halts further work before the original
 sequential/second-synthesis fallback can claim again. An already claimed late
 response can still settle after halt; pending reservations remain retained.
 No new case starts until every worker drains and every claim settles.
+
+Executor construction and underlying `submit()` failures also durably halt.
+Each submission has a tracking ticket before it enters the actual executor:
+CPython can queue work and then raise while starting a thread, without returning
+that work's Future. On such an ambiguous failure, queued tickets are fenced
+before their function can run; already-running tickets remain tracked through
+late completion. Synthetic faults are injected inside the actual submission,
+after queueing, for partial agent work and queued/running synthesis work. The
+artifact reports these ambiguous and fenced submissions separately from provider
+claims; no synthetic future is mistaken for proof that queued work never existed.
 
 Reopening this rehearsal policy always halts, even if the previous process
 appeared complete. A crashed claim cannot replay. Existing output directories,

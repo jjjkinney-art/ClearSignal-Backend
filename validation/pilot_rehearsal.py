@@ -30,6 +30,8 @@ def source_binding():
 
 
 def prepare_policy():
+    if sys.implementation.name != 'cpython' or sys.version_info[:3] != (3, 11, 9):
+        raise BudgetError('rehearsal requires the audited CPython 3.11.9 runtime')
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT,
                               env={'PATH': '/usr/bin:/bin'}, capture_output=True,
                               text=True, check=True).stdout.strip()
@@ -43,11 +45,14 @@ def run_rehearsal(output_dir, *, scenario='happy'):
     policy = prepare_policy()
     output = Path(output_dir).resolve()
     output.mkdir(parents=False, exist_ok=False)  # No overwrite, resume or reset.
+    isolated_home = output / 'isolated-home'
+    isolated_home.mkdir(mode=0o700)
     request = {'policy': policy, 'scenario': scenario}
     (output / 'request.json').write_text(json.dumps(request, sort_keys=True))
     # Construct from constants; do not copy, print, hash or inspect the caller's
     # environment. The key/contact here are invented fixtures, never real values.
     environment = {'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
+                   'HOME': str(isolated_home),
                    'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                    'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'}
     code = ('import sys; sys.path.insert(0, ' + repr(str(ROOT)) + '); '

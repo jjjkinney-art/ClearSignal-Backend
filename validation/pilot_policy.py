@@ -44,6 +44,7 @@ def policy_for(code_binding, dependencies):
             limits['model/synthesis'] = 2
         per_case[case['case_id']] = limits
     configuration = {
+        'python_implementation': 'cpython', 'python_version': '3.11.9',
         'settings': dict(PILOT_SETTINGS), 'variant': 'control',
         'service_tier': 'default', 'n': 1, 'stream': False,
         'sdk_max_retries': 0, 'transport_retries': 0, 'redirects': False,

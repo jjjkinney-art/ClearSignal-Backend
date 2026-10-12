@@ -14,17 +14,23 @@ import traceback
 
 
 def main():
-    if not sys.flags.isolated or not sys.flags.dont_write_bytecode:
+    if (not sys.flags.isolated or not sys.flags.dont_write_bytecode
+            or sys.implementation.name != 'cpython' or sys.version_info[:3] != (3, 11, 9)):
         return 2
     # Defense in depth for accidental direct invocation of this internal entry.
     # Only this isolated child environment changes; caller values are not read.
     from validation.pilot_fixtures import SYNTHETIC_KEY, SYNTHETIC_CONTACT
+    output = Path.cwd().resolve()
+    isolated_home = output / 'isolated-home'
+    if isolated_home.is_symlink() or not isolated_home.is_dir() or any(isolated_home.iterdir()):
+        return 2
     os.environ.clear()
     os.environ.update({'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
+                       'HOME': str(isolated_home),
                        'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                        'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'})
-    output = Path.cwd().resolve()
     blocked = []
+    netrc_reads = []
     holder = []
 
     def deny(event='unreviewed_dns'):
@@ -41,7 +47,13 @@ def main():
         if event == 'import' and args[0] == 'app.main':
             raise RuntimeError('server entrypoint is prohibited')
         if event == 'open' and isinstance(args[0], (str, bytes)):
-            path = Path(args[0]).resolve()
+            raw_path = Path(args[0])
+            if raw_path.name in {'.netrc', '_netrc'}:
+                netrc_reads.append('netrc_open_blocked')
+                if holder:
+                    holder[0].ledger.halt('configuration_drift')
+                raise RuntimeError('netrc access is prohibited')
+            path = raw_path.resolve()
             if path.name == '.env' or path.name.startswith('.env.'):
                 if holder:
                     holder[0].ledger.halt('configuration_drift')
@@ -154,8 +166,17 @@ def main():
         'transport_entries': boundary.transport_entries,
         'max_concurrent_claims': boundary.max_inflight,
         'blocked_after_halt': boundary.blocked_after_halt,
+        'submission_tracking': {
+            'registered': len(boundary.futures),
+            'completed': sum(future.done() for future in boundary.futures),
+            'constructor_failures': boundary.constructor_failures,
+            'ambiguous_submissions': boundary.ambiguous_submissions,
+            'queued_submissions_fenced': boundary.queued_submissions_fenced,
+        },
         'sec_configured_contact_applied': boundary.sec_contact_applied,
         'diagnostics_canary_clean': diagnostic_clean,
+        'isolated_home': True, 'netrc_open_attempts': len(netrc_reads),
+        'sec_authorization_header_absent': boundary.sec_authorization_header_absent,
         'coverage_gaps': preflight()['coverage_gaps'],
         'excluded_providers': ['fmp', 'newsapi', 'fred'],
         'external_dispatches': 0, 'network_attempts': len(blocked), 'blocked_operations': blocked,
