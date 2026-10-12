@@ -1,6 +1,6 @@
 """Offline attempt-accounting foundation, NOT an executable provider budget cap.
 
-A future audited transport must reserve every physical attempt before dispatch.
+The offline fixture transport reserves and claims each simulated attempt.
 No production/capture runner imports this module. No network or app imports.
 """
 from contextlib import contextmanager
@@ -15,6 +15,7 @@ from uuid import uuid4
 
 PILOT_CASES = frozenset(f'{ticker}:{question}' for ticker in ('ASML', 'ACHC', 'NPK')
                         for question in ('core_thesis', 'decision_threshold'))
+LEDGER_SCHEMA_VERSION = 2
 SETUP_FILES = ('issuer_registry.v2.json', 'company_quality_manifest.v2.json',
                'company_quality_manifest.v2.metadata.json')
 
@@ -130,7 +131,7 @@ class AttemptLedger:
 
     Reservations are NEVER refunded, even after cancellation/timeout/settlement.
     This intentionally conservative rule covers late work, but only for attempts
-    that a future transport actually routes through this ledger. Policy prices
+    that a cooperating transport actually routes through this ledger. Policy prices
     and input/output upper bounds are trusted reviewed inputs, not inferred here.
     """
     def __init__(self, path, policy, *, create=False):
@@ -146,13 +147,16 @@ class AttemptLedger:
         self.policy_hash = digest(self.policy)
         with self.transaction() as db:
             if create:
+                db.execute(f'PRAGMA user_version={LEDGER_SCHEMA_VERSION}')
                 db.execute('CREATE TABLE IF NOT EXISTS policy (id INTEGER PRIMARY KEY CHECK(id=1), hash TEXT NOT NULL, halted TEXT)')
                 db.execute('CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, case_id TEXT UNIQUE NOT NULL, status TEXT NOT NULL)')
-                db.execute('CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_run TEXT NOT NULL, route TEXT NOT NULL, reserve INTEGER NOT NULL, input_bound INTEGER NOT NULL, output_bound INTEGER NOT NULL, status TEXT NOT NULL, actual INTEGER)')
+                db.execute('CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_run TEXT NOT NULL, route TEXT NOT NULL, reserve INTEGER NOT NULL, input_bound INTEGER NOT NULL, output_bound INTEGER NOT NULL, status TEXT NOT NULL, actual INTEGER, request_sha256 TEXT)')
             else:
-                # Never recreate missing state on restart. Trusted storage is required.
+                # No implicit migrations or resets, including prior accounting-only ledgers.
+                if db.execute('PRAGMA user_version').fetchone()[0] != LEDGER_SCHEMA_VERSION:
+                    raise BudgetError('unsupported ledger schema; explicit review required')
                 db.execute('SELECT id,case_id,status FROM cases LIMIT 0')
-                db.execute('SELECT id,case_run,route,reserve,input_bound,output_bound,status,actual FROM attempts LIMIT 0')
+                db.execute('SELECT id,case_run,route,reserve,input_bound,output_bound,status,actual,request_sha256 FROM attempts LIMIT 0')
             row = db.execute('SELECT hash FROM policy WHERE id=1').fetchone()
             if row is None and not create:
                 raise BudgetError('existing ledger has no policy; refusing budget reset')
@@ -208,7 +212,11 @@ class AttemptLedger:
         return (money(price['request_usd']) + count(input_tokens) * money(price['input_token_usd'])
                 + count(output_tokens) * money(price['output_token_usd']))
 
-    def reserve(self, case_run, route, *, input_bound, output_bound):
+    def reserve(self, case_run, route, *, input_bound, output_bound, request_sha256=None):
+        if request_sha256 is not None and (type(request_sha256) is not str
+                or len(request_sha256) != 64
+                or any(c not in '0123456789abcdef' for c in request_sha256)):
+            raise BudgetError('invalid request digest')
         failure = None
         attempt_id = str(uuid4())
         with self.transaction() as db:
@@ -224,17 +232,46 @@ class AttemptLedger:
                 failure = str(exc)
                 db.execute('UPDATE policy SET halted=? WHERE id=1', (failure,))
             else:
-                db.execute("INSERT INTO attempts VALUES (?,?,?,?,?,?,'pending',NULL)",
-                           (attempt_id, case_run, route, cost, input_bound, output_bound))
+                db.execute("INSERT INTO attempts VALUES (?,?,?,?,?,?,'pending',NULL,?)",
+                           (attempt_id, case_run, route, cost, input_bound, output_bound, request_sha256))
         if failure:
             raise BudgetError(failure)
-        return attempt_id  # Only now may an audited transport dispatch ONE attempt.
+        return attempt_id  # Bound dispatch must additionally claim this reservation.
+
+    def claim_dispatch(self, attempt_id, *, case_run, route, request_sha256,
+                       input_bound, output_bound):
+        """Commit a one-shot claim before dispatch; ambiguous claims cannot replay."""
+        count(input_bound)
+        count(output_bound)
+        with self.transaction() as db:
+            self.active(db)
+            row = db.execute('SELECT case_run,route,request_sha256,input_bound,output_bound,status '
+                             'FROM attempts WHERE id=?', (attempt_id,)).fetchone()
+            expected = (case_run, route, request_sha256, input_bound, output_bound, 'pending')
+            if row is None or row[2] is None or tuple(row) != expected:
+                raise BudgetError('dispatch binding mismatch or reservation already claimed')
+            if not db.execute("SELECT 1 FROM cases WHERE id=? AND status='active'", (case_run,)).fetchone():
+                raise BudgetError('case is not active')
+            db.execute("UPDATE attempts SET status='claimed' WHERE id=?", (attempt_id,))
+
+    def halt_dispatch(self, attempt_id):
+        """Persist a caught post-claim failure without releasing claim or reserve.
+
+        A hard process/disk failure can still leave a claimed ambiguous attempt;
+        this handles exceptions the cooperating transport can actually catch.
+        """
+        with self.transaction() as db:
+            row = db.execute('SELECT request_sha256,status FROM attempts WHERE id=?',
+                             (attempt_id,)).fetchone()
+            if row is None or row[0] is None or row[1] not in ('claimed', 'unknown', 'settled'):
+                raise BudgetError('post-claim failure requires a claimed bound attempt')
+            db.execute("UPDATE policy SET halted=COALESCE(halted,'post_claim_failure') WHERE id=1")
 
     def settle(self, attempt_id, *, input_tokens=None, output_tokens=None):
         failure = None
         with self.transaction() as db:
-            row = db.execute('SELECT route,input_bound,output_bound,status,reserve FROM attempts WHERE id=?', (attempt_id,)).fetchone()
-            if row is None or row[3] != 'pending':
+            row = db.execute('SELECT route,input_bound,output_bound,status,reserve,request_sha256 FROM attempts WHERE id=?', (attempt_id,)).fetchone()
+            if row is None or row[3] != ('claimed' if row[5] is not None else 'pending'):
                 raise BudgetError('attempt missing or already settled')
             try:
                 actual = self.priced(row[0], input_tokens, output_tokens)
