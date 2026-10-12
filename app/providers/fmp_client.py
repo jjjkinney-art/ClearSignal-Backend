@@ -27,8 +27,8 @@ def _get(url: str) -> Optional[dict | list]:
         resp = requests.get(url, timeout=10)
         resp.raise_for_status()
         return resp.json()
-    except Exception as exc:
-        logger.warning(f"FMP request failed: {exc}")
+    except Exception:
+        logger.warning("FMP request failed")
         return None
 
 

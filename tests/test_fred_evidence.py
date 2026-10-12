@@ -14,7 +14,7 @@ Coverage:
   - run_general_finance_agent() still returns a valid GeneralFinanceAnswer
     when FRED raises an exception (resilience test)
   - FRED request URL and params are correctly formed (TestFredRequestParams)
-  - 400 HTTPError reads response body for diagnostics (TestFredRequestParams)
+  - 400 HTTPError keeps status but omits response body from diagnostics (TestFredRequestParams)
   - Startup diagnostic helper prints key presence (TestStartupDiagnostics)
 """
 
@@ -797,11 +797,11 @@ class TestFredRequestParams:
         out = capsys.readouterr().out
         # Full key must not appear in stdout
         assert full_key not in out
-        # But a masked version (first 4 chars) should appear
-        assert "supe..." in out
+        # No credential prefix should appear either.
+        assert full_key[:4] not in out
 
-    def test_400_error_reads_response_body(self, monkeypatch, capsys):
-        """When FRED returns 400, the response body must be printed for diagnosis."""
+    def test_400_error_omits_response_body(self, monkeypatch, capsys):
+        """When FRED returns 400, retain its status without echoing its body."""
         monkeypatch.setenv("FRED_API_KEY", "badkey")
         error_payload = b'{"error_code":400,"error_message":"Bad api_key."}'
         from urllib.error import HTTPError
@@ -816,9 +816,10 @@ class TestFredRequestParams:
 
         assert result == []  # still returns [] gracefully
         out = capsys.readouterr().out
-        # The 400 status and the error body must be visible in diagnostic output
+        # Retain the status; provider error text can echo credentials.
         assert "400" in out
-        assert "Bad Request" in out or "Bad api_key" in out
+        assert "Bad Request" not in out
+        assert "Bad api_key" not in out
 
     def test_400_does_not_crash(self, monkeypatch):
         """A 400 response must be handled gracefully — no exception propagation."""

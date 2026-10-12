@@ -97,9 +97,9 @@ def search_ticker(company_name: str) -> str:
             logger.debug("FMP ticker search '%s' → %s", company_name, symbol)
             return symbol
     except (HTTPError, URLError) as exc:
-        logger.warning("FMP search network error for '%s': %r", company_name, exc)
+        logger.warning("FMP search network error for '%s'", company_name)
     except Exception as exc:
-        logger.warning("FMP search error for '%s': %r", company_name, exc)
+        logger.warning("FMP search error for '%s'", company_name)
     return ""
 
 
@@ -152,9 +152,9 @@ def fetch_company_profile(symbol: str) -> List[RetrievedEvidence]:
             relevance_score=0.92,
         )]
     except (HTTPError, URLError) as exc:
-        logger.warning("FMP profile network error for %s: %r", symbol, exc)
+        logger.warning("FMP profile network error for %s", symbol)
     except Exception as exc:
-        logger.warning("FMP profile error for %s: %r", symbol, exc)
+        logger.warning("FMP profile error for %s", symbol)
     return []
 
 
@@ -199,9 +199,9 @@ def fetch_price_change(symbol: str) -> List[RetrievedEvidence]:
             relevance_score=0.88,
         )]
     except (HTTPError, URLError) as exc:
-        logger.warning("FMP price-change network error for %s: %r", symbol, exc)
+        logger.warning("FMP price-change network error for %s", symbol)
     except Exception as exc:
-        logger.warning("FMP price-change error for %s: %r", symbol, exc)
+        logger.warning("FMP price-change error for %s", symbol)
     return []
 
 
@@ -253,9 +253,9 @@ def fetch_income_metrics(symbol: str) -> List[RetrievedEvidence]:
             relevance_score=0.87,
         )]
     except (HTTPError, URLError) as exc:
-        logger.warning("FMP income-statement network error for %s: %r", symbol, exc)
+        logger.warning("FMP income-statement network error for %s", symbol)
     except Exception as exc:
-        logger.warning("FMP income-statement error for %s: %r", symbol, exc)
+        logger.warning("FMP income-statement error for %s", symbol)
     return []
 
 
@@ -300,9 +300,9 @@ def fetch_debt_metrics(symbol: str) -> List[RetrievedEvidence]:
             relevance_score=0.82,
         )]
     except (HTTPError, URLError) as exc:
-        logger.warning("FMP balance-sheet network error for %s: %r", symbol, exc)
+        logger.warning("FMP balance-sheet network error for %s", symbol)
     except Exception as exc:
-        logger.warning("FMP balance-sheet error for %s: %r", symbol, exc)
+        logger.warning("FMP balance-sheet error for %s", symbol)
     return []
 
 
@@ -363,9 +363,9 @@ def fetch_earnings_calendar(symbol: str) -> List[RetrievedEvidence]:
             ))
         return evidence
     except (HTTPError, URLError) as exc:
-        logger.warning("FMP earnings-calendar network error for %s: %r", symbol, exc)
+        logger.warning("FMP earnings-calendar network error for %s", symbol)
     except Exception as exc:
-        logger.warning("FMP earnings-calendar error for %s: %r", symbol, exc)
+        logger.warning("FMP earnings-calendar error for %s", symbol)
     return []
 
 
@@ -450,7 +450,7 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
                 relevance_score=0.95,
             ))
     except Exception as exc:
-        logger.debug("FMP valuation ratios failed for %s: %r", symbol, exc)
+        logger.debug("FMP valuation ratios failed for %s", symbol)
 
     try:
         url = f"{_FMP_BASE}/v3/key-metrics-ttm/{quote(symbol)}?apikey={api_key}"
@@ -489,7 +489,7 @@ def fetch_valuation_ratios(symbol: str) -> List[RetrievedEvidence]:
                 relevance_score=0.90,
             ))
     except Exception as exc:
-        logger.debug("FMP key-metrics-ttm failed for %s: %r", symbol, exc)
+        logger.debug("FMP key-metrics-ttm failed for %s", symbol)
 
     return evidence
 
@@ -561,7 +561,7 @@ def fetch_analyst_estimates(symbol: str) -> List[RetrievedEvidence]:
                     relevance_score=0.92,
                 ))
     except Exception as exc:
-        logger.debug("FMP analyst estimates failed for %s: %r", symbol, exc)
+        logger.debug("FMP analyst estimates failed for %s", symbol)
 
     try:
         url = f"{_FMP_BASE}/v4/price-target-consensus?symbol={quote(symbol)}&apikey={api_key}"
@@ -597,7 +597,7 @@ def fetch_analyst_estimates(symbol: str) -> List[RetrievedEvidence]:
                     relevance_score=0.93,
                 ))
     except Exception as exc:
-        logger.debug("FMP price-target-consensus failed for %s: %r", symbol, exc)
+        logger.debug("FMP price-target-consensus failed for %s", symbol)
 
     return evidence
 

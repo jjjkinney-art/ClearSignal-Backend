@@ -242,3 +242,42 @@ class TestGracefulFailure:
         _patch_fetch(monkeypatch, "not a dict")
         # Should not raise — returns empty gracefully
         assert news_provider.fetch_company_news("Apple") == []
+
+
+@pytest.mark.parametrize('outcome', ['ok', 'non_ok', 'http_error', 'url_error', 'unexpected'])
+@pytest.mark.parametrize('key', ['ZXQV_fixture_secret+/=?&', 'ZQ'])
+def test_request_diagnostics_never_expose_key_or_echoed_url(monkeypatch, capsys, caplog, outcome, key):
+    """Synthetic credentials only; intercept before any network operation."""
+    from urllib.error import HTTPError, URLError
+    from urllib.parse import parse_qs, quote_plus, urlsplit
+
+    monkeypatch.setenv('NEWS_API_KEY', key)
+    captured = []
+
+    def fake_fetch(url, timeout=8):
+        captured.append(url)
+        assert parse_qs(urlsplit(url).query)['apiKey'] == [key]
+        if outcome == 'http_error':
+            raise HTTPError(url, 401, url, {}, None)
+        if outcome == 'url_error':
+            raise URLError(url)
+        if outcome == 'unexpected':
+            raise RuntimeError(url)
+        if outcome == 'non_ok':
+            return {'status': url, 'code': key, 'message': url}
+        return {'status': 'ok', 'articles': [{'title': 'Synthetic headline'}]}
+
+    monkeypatch.setattr(news_provider, '_fetch_json', fake_fetch)
+    result = news_provider._request_news('Synthetic company', 3)
+    assert bool(result) == (outcome == 'ok')
+    assert len(captured) == 1
+    output = capsys.readouterr()
+    diagnostics = output.out + output.err + caplog.text
+    assert 'NewsAPI' in diagnostics
+    assert key not in diagnostics
+    assert key[:4] not in diagnostics
+    assert quote_plus(key) not in diagnostics
+    assert captured[0] not in diagnostics
+    assert 'apiKey=' not in diagnostics
+    if outcome == 'http_error':
+        assert '401' in diagnostics

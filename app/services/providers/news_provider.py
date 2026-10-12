@@ -114,38 +114,30 @@ def _request_news(query: str, page_size: int) -> List[dict]:
     })
     url = f"{_NEWS_BASE}?{params}"
 
-    # Mask key in diagnostic — show only first 4 chars
-    key_hint = (api_key[:4] + "...") if len(api_key) >= 4 else "***"
-    safe_params = urlencode({
-        "q":        query,
-        "apiKey":   key_hint,
-        "sortBy":   "publishedAt",
-        "pageSize": page_size,
-        "language": "en",
-    })
-    print(f"[DIAG] NewsAPI REQUEST: {_NEWS_BASE}?{safe_params}")
+    # Never log credential-bearing URLs, key fragments or provider error text.
+    # Errors may echo the request URL, including its apiKey query parameter.
+    print("[DIAG] NewsAPI REQUEST: /v2/everything")
 
     try:
         data = _fetch_json(url)
         status = data.get("status", "")
         if status != "ok":
-            code = data.get("code", "")
-            msg  = data.get("message", "")
-            logger.warning("NewsAPI error status=%s code=%s: %s", status, code, msg)
-            print(f"[DIAG] NewsAPI: non-ok status={status!r} code={code!r} msg={msg!r}")
+            logger.warning("NewsAPI returned a non-ok response")
+            print("[DIAG] NewsAPI: non-ok response")
             return []
         articles = data.get("articles", [])
         # Filter out articles with empty/removed content
         return [a for a in articles if a.get("title") and "[Removed]" not in a.get("title", "")]
     except HTTPError as exc:
-        logger.warning("NewsAPI HTTP %d: %s", exc.code, exc.reason)
-        print(f"[DIAG] NewsAPI: HTTP {exc.code}: {exc.reason!r}")
-    except URLError as exc:
-        logger.warning("NewsAPI network error: %r", exc.reason)
-        print(f"[DIAG] NewsAPI: network error: {exc.reason!r}")
-    except Exception as exc:
-        logger.warning("NewsAPI unexpected error: %r", exc)
-        print(f"[DIAG] NewsAPI: unexpected error: {exc!r}")
+        code = exc.code if type(exc.code) is int else "unknown"
+        logger.warning("NewsAPI HTTP %s", code)
+        print(f"[DIAG] NewsAPI: HTTP {code}")
+    except URLError:
+        logger.warning("NewsAPI network error")
+        print("[DIAG] NewsAPI: network error")
+    except Exception:
+        logger.warning("NewsAPI unexpected error")
+        print("[DIAG] NewsAPI: unexpected error")
     return []
 
 
