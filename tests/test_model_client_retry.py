@@ -258,3 +258,32 @@ class TestServerErrorRetries:
                 client.call("test")
 
         assert client._client.chat.completions.create.call_count == 2
+
+
+@pytest.mark.parametrize('outcome', ['timeout', 'connection', 401, 429, 500, 'unexpected'])
+def test_model_error_logs_omit_provider_text(caplog, capsys, outcome):
+    import httpx
+    from openai import APIError, APIConnectionError, APITimeoutError
+
+    secret = 'ZXQV_synthetic_only'
+    request = httpx.Request('POST', 'https://api.openai.com/v1/chat/completions')
+    if outcome == 'timeout':
+        error = APITimeoutError(request=request)
+        error.args = (secret,)
+    elif outcome == 'connection':
+        error = APIConnectionError(message=secret, request=request)
+    elif outcome == 'unexpected':
+        error = RuntimeError(secret)
+    else:
+        error = APIError(secret, request=request, body={'message': secret})
+        error.status_code = outcome
+    client = _make_client(max_retries=1)
+    client._client.chat.completions.create.side_effect = error
+    with pytest.raises(type(error)) as raised:
+        client.call('synthetic prompt')
+    assert raised.value is error  # Preserve error propagation and retry semantics.
+    output = capsys.readouterr()
+    logs = output.out + output.err + caplog.text
+    assert secret not in logs
+    assert secret[:4] not in logs
+    assert type(error).__name__ in caplog.text

@@ -212,7 +212,7 @@ class ModelClient:
                         "event": "model_call_retry",
                         "request_id": request_id,
                         "attempt": attempt,
-                        "error": str(exc),
+                        "error": type(exc).__name__,
                     })
                 )
                 if attempt == self.max_retries:
@@ -248,7 +248,7 @@ class ModelClient:
                             "request_id": request_id,
                             "attempt": attempt,
                             "retry_after_secs": sleep_secs,
-                            "error": str(exc),
+                            "error": type(exc).__name__,
                         })
                     )
                     if attempt == self.max_retries:
@@ -267,7 +267,7 @@ class ModelClient:
                             "request_id": request_id,
                             "attempt": attempt,
                             "status_code": status_code,
-                            "error": str(exc),
+                            "error": type(exc).__name__,
                         })
                     )
                     raise
@@ -279,7 +279,7 @@ class ModelClient:
                         "request_id": request_id,
                         "attempt": attempt,
                         "status_code": status_code,
-                        "error": str(exc),
+                        "error": type(exc).__name__,
                     })
                 )
                 if attempt == self.max_retries:
@@ -291,7 +291,7 @@ class ModelClient:
                         "event": "model_call_failure",
                         "request_id": request_id,
                         "attempt": attempt,
-                        "error": str(exc),
+                        "error": type(exc).__name__,
                     })
                 )
                 raise

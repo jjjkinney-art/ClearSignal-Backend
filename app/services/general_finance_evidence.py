@@ -401,20 +401,8 @@ def fetch_fred_series(series_id: str, limit: int = 5) -> List[dict]:
     }
     url = f"{_FRED_BASE}/series/observations?{urlencode(req_params)}"
 
-    # ── Diagnostic: log the request with a masked API key ─────────────────────
-    # Show only the first 4 characters so the real key never appears in logs.
-    key_hint = (api_key[:4] + "...") if len(api_key) >= 4 else "***"
-    safe_params = urlencode({
-        "series_id": series_id,
-        "api_key": key_hint,
-        "file_type": "json",
-        "sort_order": "desc",
-        "limit": str(limit),
-    })
-    print(
-        f"[DIAG] FRED REQUEST — {_FRED_BASE}/series/observations?{safe_params} "
-        f"(key_len={len(api_key)})"
-    )
+    # Credential-bearing URLs and provider error bodies must never enter logs.
+    print("[DIAG] FRED REQUEST: /fred/series/observations")
 
     try:
         with urlopen(url, timeout=8) as resp:
@@ -425,29 +413,17 @@ def fetch_fred_series(series_id: str, limit: int = 5) -> List[dict]:
             if o.get("value") not in (".", None, "")
         ]
     except HTTPError as exc:
-        # Read the error body — FRED includes a human-readable reason for 400s
-        # (e.g. "Bad Request. Variable api_key is not correctly formatted.").
-        error_body = ""
-        try:
-            error_body = exc.read().decode("utf-8", errors="replace")
-        except Exception:
-            pass
-        logger.warning(
-            "FRED HTTP %d for %s: %s | body: %s",
-            exc.code, series_id, exc.reason, error_body[:500],
-        )
-        print(
-            f"[DIAG] FRED HTTP {exc.code} for {series_id}: {exc.reason!r} "
-            f"| body: {error_body[:500]!r}"
-        )
+        code = exc.code if type(exc.code) is int else "unknown"
+        logger.warning("FRED HTTP %s", code)
+        print(f"[DIAG] FRED HTTP {code}")
         return []
-    except URLError as exc:
-        logger.warning("FRED network error for %s: %r", series_id, exc.reason)
-        print(f"[DIAG] FRED NETWORK ERROR for {series_id}: {exc.reason!r}")
+    except URLError:
+        logger.warning("FRED network error")
+        print("[DIAG] FRED NETWORK ERROR")
         return []
-    except Exception as exc:
-        logger.warning("FRED unexpected error for %s: %r", series_id, exc)
-        print(f"[DIAG] FRED UNEXPECTED ERROR for {series_id}: {exc!r}")
+    except Exception:
+        logger.warning("FRED unexpected error")
+        print("[DIAG] FRED UNEXPECTED ERROR")
         return []
 
 
@@ -634,7 +610,7 @@ def retrieve_general_finance_evidence(question: str) -> List[RetrievedEvidence]:
         print("=" * 60 + "\n")
         return []
 
-    print(f"[DIAG] FRED_API_KEY: SET (len={len(api_key)})")
+    print("[DIAG] FRED_API_KEY: SET")
 
     # ── [1] NORMALIZED QUERY ──────────────────────────────────────────────────
     normalized = normalize_macro_query(question)
