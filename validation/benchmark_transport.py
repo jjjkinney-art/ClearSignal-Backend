@@ -55,9 +55,12 @@ class BenchmarkTransport(httpx.BaseTransport):
         with self._lock:
             if type(request) is not httpx.Request or type(request.stream) is not httpx.ByteStream:
                 raise BudgetError('exact HTTPX request with in-memory byte stream required')
-            if (request.method != 'POST' or str(request.url) != 'https://fixture.invalid/v1/chat/completions'):
-                raise BudgetError('unknown fixture operation or redirect route')
+            # Snapshot first; validate and dispatch only this private copy.
             body = request.read()
+            frozen = httpx.Request(request.method, str(request.url),
+                                   headers=list(request.headers.multi_items()), content=body)
+            if (frozen.method != 'POST' or str(frozen.url) != 'https://fixture.invalid/v1/chat/completions'):
+                raise BudgetError('unknown fixture operation or redirect route')
             try:
                 payload = json.loads(body)
             except (ValueError, UnicodeError):
@@ -72,9 +75,6 @@ class BenchmarkTransport(httpx.BaseTransport):
                     raise BudgetError('only plain text fixture messages supported')
             if self._index >= len(self._responses):
                 raise BudgetError('fixture responses exhausted')
-            # Clone before binding; dispatch never reads mutable caller state again.
-            frozen = httpx.Request(request.method, str(request.url),
-                                   headers=list(request.headers.multi_items()), content=body)
             fingerprint = digest({'method': frozen.method, 'url': str(frozen.url),
                                   'headers': list(frozen.headers.multi_items()),
                                   'body_sha256': hashlib.sha256(body).hexdigest()})

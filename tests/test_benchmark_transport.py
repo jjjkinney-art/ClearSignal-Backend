@@ -151,7 +151,16 @@ def test_freezes_request_before_reservation(book, monkeypatch):
         original._content = b'changed'
         return reserve(**kwargs)
     monkeypatch.setattr(book[0], 'reserve', mutate_after_binding)
-    assert transport(book).handle_request(original).status_code == 200
+    adapter = transport(book)
+    dispatch = adapter._mock.handle_request
+    def inspect_frozen(sent):
+        assert sent is not original
+        assert str(sent.url) == 'https://fixture.invalid/v1/chat/completions'
+        assert 'x-mutated' not in sent.headers
+        assert json.loads(sent.content)['messages'][0]['content'] == 'hello'
+        return dispatch(sent)
+    monkeypatch.setattr(adapter._mock, 'handle_request', inspect_frozen)
+    assert adapter.handle_request(original).status_code == 200
     assert book[0].summary()['attempts'] == 1
 
 
