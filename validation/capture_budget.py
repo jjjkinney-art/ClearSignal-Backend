@@ -105,18 +105,16 @@ def validate_policy(policy):
         raise BudgetError('unsupported policy')
     rehearsal = policy['schema_version'] == 2
     if rehearsal:
-        # This additional policy mode is explicitly non-executable. Its rates
-        # illustrate API usage; they do not assert verified account charges.
-        if (policy.get('purpose') not in {'offline_six_case_rehearsal', 'disabled_live_adapter_validation'}
-                or any(policy.get(k) is not False for k in (
-                    'execution_allowed', 'spending_authorized', 'tariffs_verified',
-                    'all_incremental_charges_accounted'))):
-            raise BudgetError('offline rehearsal policy must deny live authority')
         from validation.pilot_policy import policy_for
         try:
-            expected = policy_for(policy['code_binding'], policy['dependencies'],
-                                  mode=('offline' if policy['purpose'] == 'offline_six_case_rehearsal'
-                                        else 'live_adapter_validation'))
+            purpose = policy['purpose']
+            modes = {'offline_six_case_rehearsal': 'offline',
+                     'disabled_live_adapter_validation': 'live_adapter_validation',
+                     'approved_six_case_pilot': 'approved'}
+            mode = modes[purpose]
+            extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}
+                     if mode == 'approved' else {})
+            expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
         except (KeyError, TypeError, ValueError):
             raise BudgetError('invalid fixed rehearsal policy') from None
         if digest(policy) != digest(expected):
@@ -383,6 +381,21 @@ class AttemptLedger:
                 db.execute('INSERT INTO sec_claims VALUES (?,?)', (attempt_id, now))
             db.execute("UPDATE attempts SET status='claimed' WHERE id=?", (attempt_id,))
 
+    def claim_native_dispatch(self, attempt_id, *, case_run, route, request_sha256):
+        """Consume an approved claim once across gates/contexts, before native I/O."""
+        if self.policy.get('purpose') != 'approved_six_case_pilot':
+            raise BudgetError('native dispatch requires approved policy')
+        with self.transaction() as db:
+            self.active(db)
+            row = db.execute('SELECT case_run,route,request_sha256,status FROM attempts WHERE id=?',
+                             (attempt_id,)).fetchone()
+            if row is None or tuple(row) != (case_run, route, request_sha256, 'claimed'):
+                raise BudgetError('native dispatch binding mismatch')
+            db.execute('CREATE TABLE IF NOT EXISTS native_dispatches (attempt_id TEXT PRIMARY KEY)')
+            if db.execute('SELECT 1 FROM native_dispatches WHERE attempt_id=?', (attempt_id,)).fetchone():
+                raise BudgetError('native dispatch already consumed')
+            db.execute('INSERT INTO native_dispatches VALUES (?)', (attempt_id,))
+
     def halt_dispatch(self, attempt_id):
         """Persist a caught post-claim failure without releasing claim or reserve.
 
@@ -430,7 +443,8 @@ class AttemptLedger:
         return dict(policy_sha256=self.policy_hash, budget_nanousd=self.budget,
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,
-                    executable_provider_adapter=False, hard_usd_cap_established=False)
+                    executable_provider_adapter=self.policy.get('purpose') == 'approved_six_case_pilot',
+                    hard_usd_cap_established=False)
 
 
 def preflight(policy, case_id):

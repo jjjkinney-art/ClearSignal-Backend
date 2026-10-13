@@ -29,22 +29,28 @@ def source_binding():
                    for path in files})
 
 
-def prepare_policy(*, mode="offline"):
+def prepare_policy(*, mode="offline", approval=None, execution=None):
     if sys.implementation.name != 'cpython' or sys.version_info[:3] != (3, 11, 9):
         raise BudgetError('rehearsal requires the audited CPython 3.11.9 runtime')
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT,
                               env={'PATH': '/usr/bin:/bin'}, capture_output=True,
                               text=True, check=True).stdout.strip()
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
-    return policy_for({'revision': revision, 'source_sha256': source_binding()}, dependencies, mode=mode)
+    return policy_for({'revision': revision, 'source_sha256': source_binding()}, dependencies, mode=mode, approval=approval, execution=execution)
 
 
-def run_rehearsal(output_dir, *, scenario='happy', mode='offline'):
-    scenarios = LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS
+def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None, execution=None):
+    scenarios = {'approved'} if mode == 'approved' else (LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS)
     if type(scenario) is not str or scenario not in scenarios:
         raise BudgetError('unknown immutable rehearsal scenario')
-    policy = prepare_policy(mode=mode)
+    policy = prepare_policy(mode=mode, approval=approval, execution=execution)
+    if mode == 'approved':
+        from validation.pilot_approved import runtime_values, verify_network_configuration
+        verify_network_configuration(execution)
+        runtime = runtime_values()
     output = Path(output_dir).resolve()
+    if mode == 'approved' and str(output) != approval['output_dir']:
+        raise BudgetError('approval is bound to one fresh output directory')
     output.mkdir(parents=False, exist_ok=False)  # No overwrite, resume or reset.
     isolated_home = output / 'isolated-home'
     isolated_home.mkdir(mode=0o700)
@@ -56,6 +62,12 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline'):
                    'HOME': str(isolated_home),
                    'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                    'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'}
+    if mode == 'approved':
+        environment.update(OPENAI_API_KEY=runtime['bearer_placeholder'], SEC_USER_AGENT=runtime['sec_contact'])
+        for name in execution['proxy_selectors']:
+            environment[name] = execution['proxy']
+        for name in execution['ca_selectors']:
+            environment[name] = execution['ca_identity']['path']
     code = ('import sys; sys.path.insert(0, ' + repr(str(ROOT)) + '); '
             'from validation._pilot_worker import main; raise SystemExit(main())')
     try:
@@ -83,6 +95,12 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline'):
                     'tariffs_verified': False, 'hard_usd_cap_established': False,
                     'launch_ready': False, 'quality_status': 'not_adjudicated',
                     'external_dispatches': 0, 'network_attempts': None}
+        if mode == 'approved':
+            artifact.update(artifact_type='approved_six_case_pilot', execution_allowed=True,
+                            spending_authorized=True, approval_reference=approval['reference'],
+                            external_dispatches=None,
+                            usage_source='provider_reported_protocol_units_not_invoice',
+                            dispatch_count_status='worker_incomplete_unknown; consult durable claims')
         # Exclusive publication; never replace a prior artifact with a success.
         if not artifact_path.exists():
             with artifact_path.open('x') as stream:

@@ -1,0 +1,16 @@
+{
+  "approval_status": "pending",
+  "code_binding": {
+    "revision": "e6099dbfa2a349986569a7fa2f207c071ec13915",
+    "source_sha256": "e1ca3adce70b1d48cb28e69d40436219119a55a81197355dee35900cd699d5b6"
+  },
+  "execution_configuration": null,
+  "illustrative_model_allocation_usd": "0.5105664",
+  "invoice_ceiling_established": false,
+  "ledger_allowance_usd": "0.52",
+  "model_attempts": 24,
+  "output_dir": "/workspace/clearsignal-approved-run",
+  "purpose": "approved_six_case_pilot",
+  "schema_version": 1,
+  "sec_gets": 30
+}

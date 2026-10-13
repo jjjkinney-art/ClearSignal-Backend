@@ -73,3 +73,40 @@ class SyntheticNetworkBackend:
 
     def connect_unix_socket(self, *args, **kwargs):
         raise AssertionError('Unix sockets prohibited')
+
+
+class SyntheticProxyStream:
+    """Test-only CONNECT responder; never a socket or resolver."""
+    def __init__(self, owner):
+        self.tunnel = SyntheticStream(owner)
+        self.connect_request = bytearray()
+        self.remaining = b'HTTP/1.1 200 Connection established\r\n\r\n'
+
+    @property
+    def request(self):
+        return self.tunnel.request
+
+    def write(self, buffer, timeout=None):
+        self.connect_request.extend(buffer)
+
+    def read(self, max_bytes, timeout=None):
+        chunk, self.remaining = self.remaining[:max_bytes], self.remaining[max_bytes:]
+        return chunk
+
+    def start_tls(self, ssl_context, server_hostname=None, timeout=None):
+        return self.tunnel
+
+    def get_extra_info(self, info):
+        return None
+
+    def close(self):
+        pass
+
+
+class SyntheticProxyBackend(SyntheticNetworkBackend):
+    def connect_tcp(self, host, port, timeout=None, local_address=None, socket_options=None):
+        if (host, port) != ('proxy', 8080):
+            raise AssertionError('unexpected proxy destination')
+        if self.owner.once({'wire_connect_failure'}):
+            raise httpcore.ConnectError('invented proxy connection failure')
+        return SyntheticProxyStream(self.owner)

@@ -39,6 +39,7 @@ class FrozenModelRequest(NamedTuple):
 class PilotBoundary:
     def __init__(self, ledger, scenario):
         self.ledger, self.scenario = ledger, scenario
+        self.contact = SYNTHETIC_CONTACT
         self.cases = preflight()['cases']
         self.identities = [case['identity'] for case in self.cases[::2]]
         self.case = self.case_run = None
@@ -79,7 +80,7 @@ class PilotBoundary:
             raise
         if self.settings is not None:
             if (any(getattr(self.settings, key) != value for key, value in PILOT_SETTINGS.items())
-                    or self.settings.sec_user_agent != SYNTHETIC_CONTACT
+                    or self.settings.sec_user_agent != self.contact
                     or self.settings.fmp_api_key or self.settings.fred_api_key
                     or os.environ.get('CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED') != 'false'
                     or os.environ.get('HOME') != str(Path.cwd().resolve() / 'isolated-home')
@@ -393,6 +394,7 @@ class PilotBoundary:
                     result[key] = value
                 return result
             payload = json.loads(snapshot.body, object_pairs_hook=unique_object)
+            self.validate_request_values(snapshot.body, payload)
             stage = self.stage.get()
             inputs, outputs = validate_model_payload(payload, stage)
             expected_timeout = 55.0 if stage == 'synthesis' else 15.0
@@ -450,6 +452,10 @@ class PilotBoundary:
             raise BudgetError('model fixture response refused') from None
         finally:
             self.done()
+
+    def validate_request_values(self, raw, payload):
+        """Additional runtime-only exclusions supplied by approved boundaries."""
+        pass
 
     def model_exchange(self, snapshot, stage):
         return 200, model_fixture(stage, self.case['identity'])

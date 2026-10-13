@@ -15,6 +15,8 @@ import traceback
 
 def safe_result(result, canaries):
     data = result.model_dump(mode='json')
+    from validation.pilot_policy import reject_runtime_values
+    reject_runtime_values(data, canaries)
     encoded = json.dumps(data, allow_nan=False)
     if len(encoded.encode()) > 4 * 1024 * 1024 or any(value in encoded for value in canaries):
         from validation.capture_budget import BudgetError
@@ -33,11 +35,31 @@ def main():
     isolated_home = output / 'isolated-home'
     if isolated_home.is_symlink() or not isolated_home.is_dir() or any(isolated_home.iterdir()):
         return 2
+    request = json.loads((output / 'request.json').read_text())
+    policy, scenario = request['policy'], request['scenario']
+    approved = policy.get('purpose') == 'approved_six_case_pilot'
+    execution = policy.get('execution_configuration') if approved else None
+    if approved:
+        # Bind the actual directory before imports, ledger creation, or network setup.
+        approval = policy.get('approval')
+        approved_output = approval.get('output_dir') if type(approval) is dict else None
+        if (type(approved_output) is not str or str(output) != approved_output
+                or Path(approved_output).resolve() != Path(approved_output)
+                or not Path(approved_output).samefile(Path.cwd())):
+            return 2
+        # Runtime-only values and fixed reviewed selectors. Never serialize/hash.
+        preserved = {name: os.environ[name] for name in (
+            'OPENAI_API_KEY', 'SEC_USER_AGENT', 'HTTP_PROXY', 'HTTPS_PROXY',
+            'http_proxy', 'https_proxy', 'SSL_CERT_FILE', 'REQUESTS_CA_BUNDLE') if name in os.environ}
     os.environ.clear()
     os.environ.update({'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
                        'HOME': str(isolated_home),
                        'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                        'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'})
+    if approved:
+        os.environ.pop('OPENAI_API_KEY', None)
+        os.environ.pop('SEC_USER_AGENT', None)
+        os.environ.update(preserved)
     blocked = []
     netrc_reads = []
     holder = []
@@ -51,7 +73,15 @@ def main():
         raise RuntimeError('offline worker prohibits external operations')
 
     def audit(event, args):
-        if event.startswith('socket.') or event in {'subprocess.Popen', 'os.system', 'os.posix_spawn'}:
+        if event.startswith('socket.'):
+            if approved and holder:
+                try:
+                    holder[0].gate.audit(event, args)
+                except Exception:
+                    deny(event)
+            else:
+                deny(event)
+        if event in {'subprocess.Popen', 'os.system', 'os.posix_spawn'}:
             deny(event)
         if event == 'import' and args[0] == 'app.main':
             raise RuntimeError('server entrypoint is prohibited')
@@ -77,7 +107,11 @@ def main():
         'Linux', 'offline', '0', 'offline', 'x86_64', 'offline')
     sys.addaudithook(audit)
 
+    original_dns = socket.getaddrinfo
+
     def synthetic_dns(host, port, *args, **kwargs):
+        if approved and holder and holder[0].gate.current.get() is not None:
+            return holder[0].gate.dns(host, port, *args, **kwargs)
         if host not in {'www.sec.gov', 'data.sec.gov', 'efts.sec.gov'} or port != 443:
             deny()
         # Invented public-address fixture for the production SSRF admission
@@ -92,19 +126,25 @@ def main():
     from validation.pilot_rehearsal import source_binding
     from validation.pilot_boundary import PilotBoundary
 
-    request = json.loads((output / 'request.json').read_text())
-    policy, scenario = request['policy'], request['scenario']
     scenarios = LIVE_SCENARIOS if policy['purpose'] == 'disabled_live_adapter_validation' else SCENARIOS
+    if approved:
+        scenarios = {'approved'}
     if scenario not in scenarios:
         return 2
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
     actual_policy = policy_for({'revision': policy['code_binding']['revision'],
                                 'source_sha256': source_binding()}, dependencies,
-                               mode=('live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'))
+                               mode=('approved' if approved else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
+                               approval=policy.get('approval'), execution=execution)
     if digest(policy) != digest(actual_policy):
         return 2
     ledger = AttemptLedger(output / 'ledger.sqlite', actual_policy, create=True)
-    if policy['purpose'] == 'disabled_live_adapter_validation':
+    if approved:
+        from validation.pilot_approved import ApprovedBoundary
+        boundary = ApprovedBoundary(ledger)
+        runtime = boundary.runtime
+        boundary.gate.resolve = original_dns
+    elif policy['purpose'] == 'disabled_live_adapter_validation':
         from validation.pilot_live import LiveAdapterBoundary
         boundary = LiveAdapterBoundary(ledger, scenario)
     else:
@@ -150,8 +190,8 @@ def main():
                 ledger.finish_case(boundary.case_run)
                 completed = {'case_id': case['case_id'], 'identity': case['identity'],
                              'pipeline_returned': True}
-                if policy['purpose'] == 'disabled_live_adapter_validation':
-                    completed['answer_and_evidence'] = safe_result(result, SECRET_CANARIES)
+                if approved or policy['purpose'] == 'disabled_live_adapter_validation':
+                    completed['answer_and_evidence'] = safe_result(result, (*SECRET_CANARIES, *(tuple(runtime.values()) if approved else ())))
                 cases.append(completed)
         except BaseException as exc:
             ledger.halt('rehearsal_failure')
@@ -164,7 +204,7 @@ def main():
                 tb = tb.tb_next
         finally:
             boundary.close()
-    diagnostic_clean = not any(value in diagnostics.getvalue() for value in SECRET_CANARIES)
+    diagnostic_clean = not any(value in diagnostics.getvalue() for value in (*SECRET_CANARIES, *(tuple(runtime.values()) if approved else ())))
     diagnostics.close()
     if not diagnostic_clean:
         ledger.halt('fixture_failure')
@@ -206,6 +246,15 @@ def main():
         'hard_usd_cap_established': False, 'launch_ready': False,
         'quality_status': 'not_adjudicated',
     }
+    if approved:
+        artifact.update(artifact_type='approved_six_case_pilot',
+                        external_dispatches=boundary.gate.dispatched,
+                        dispatch_count_status='native_exchange_entries_including_connection_failures',
+                        usage_source='provider_reported_protocol_units_not_invoice',
+                        execution_allowed=True, spending_authorized=True,
+                        approval_reference=policy['approval_reference'],
+                        execution_configuration_sha256=digest(execution),
+                        authentication_verified=False)
     with (output / 'artifact.json').open('x') as stream:
         json.dump(artifact, stream, indent=2, sort_keys=True)
     return 0
