@@ -1,5 +1,6 @@
 """Invented, internal fixtures only. No external fixture files or callbacks."""
 import json
+from types import MappingProxyType
 
 from validation.pilot_policy import MODEL_SNAPSHOT
 
@@ -76,4 +77,9 @@ def model_fixture(stage, identity):
                          'finish_reason': 'stop'}],
             'usage': {'prompt_tokens': 100, 'completion_tokens': 32, 'total_tokens': 132}}
 
-LIVE_SCENARIOS = SCENARIOS | frozenset({'wire_redirect', 'wire_connect_failure', 'wire_read_failure'})
+# Invented bodies sized around the reviewed SEC document envelope. The registry
+# metadata is real; the bytes never are, so the canonical hash cannot match.
+REVIEWED_DOCUMENT_SCENARIOS = MappingProxyType({'reviewed_document_admitted': 16 * 1024 * 1024 + 1,
+                                                'reviewed_document_oversize': 30_000_001})
+LIVE_SCENARIOS = SCENARIOS | frozenset({'wire_redirect', 'wire_connect_failure', 'wire_read_failure',
+                                        *REVIEWED_DOCUMENT_SCENARIOS})

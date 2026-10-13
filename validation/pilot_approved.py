@@ -299,6 +299,7 @@ class ApprovedBoundary(LiveAdapterBoundary):
         self.wire = OwnedHTTPTransport(gate=self.gate, execution=execution, runtime=self.runtime)
         self.wire._wire._pool._network_backend = ScopedBackend(self.wire._wire._pool._network_backend, self.gate)
         self.documents = {}
+        self.document_filings = {}
         self.grants = ContextVar('claimed_dispatch_snapshot', default=None)
 
     def active(self):
