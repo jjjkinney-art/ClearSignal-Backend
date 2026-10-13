@@ -199,6 +199,7 @@ class AttemptLedger:
                 db.execute('CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_run TEXT NOT NULL, route TEXT NOT NULL, reserve INTEGER NOT NULL, input_bound INTEGER NOT NULL, output_bound INTEGER NOT NULL, status TEXT NOT NULL, actual INTEGER, request_sha256 TEXT)')
                 if self.policy['schema_version'] == 2:
                     db.execute('CREATE TABLE sec_claims (attempt_id TEXT PRIMARY KEY, claimed_ns INTEGER NOT NULL)')
+                    db.execute('CREATE TABLE first_transport_failure (id INTEGER PRIMARY KEY CHECK(id=1), attempt_id TEXT NOT NULL, route TEXT NOT NULL, stage TEXT NOT NULL, code TEXT NOT NULL)')
                     db.execute('CREATE TABLE first_sec_refusal (id INTEGER PRIMARY KEY CHECK(id=1), attempt_id TEXT NOT NULL, route TEXT NOT NULL, stage TEXT NOT NULL, code TEXT NOT NULL)')
             else:
                 # No implicit migrations or resets, including prior accounting-only ledgers.
@@ -286,6 +287,27 @@ class AttemptLedger:
             exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='first_sec_refusal'").fetchone()
             if first and exists:
                 db.execute('INSERT INTO first_sec_refusal VALUES (1,?,?,?,?)',
+                           (attempt_id, route, stage, code))
+
+    def record_transport_failure(self, attempt_id, route, stage, code):
+        from validation.pilot_live import TRANSPORT_FAILURE_CODES
+        if (type(code) is not str or code not in TRANSPORT_FAILURE_CODES
+                or type(route) is not str or type(stage) is not str
+                or type(attempt_id) is not str
+                or not ((route in {'sec/directory', 'sec/submissions', 'sec/facts', 'sec/document'}
+                         and stage in {'evidence.sec', 'evidence.sec_metrics',
+                                       'evidence.thesis_disclosures', 'evidence.filing_metrics'})
+                        or (stage in {'valuation', 'macro', 'risk', 'market', 'quality',
+                                      'question_answerer', 'synthesis'} and route == 'model/' + stage))):
+            raise BudgetError('invalid transport failure metadata')
+        with self.transaction() as db:
+            row = db.execute('SELECT route,status FROM attempts WHERE id=?', (attempt_id,)).fetchone()
+            if row != (route, 'claimed'):
+                raise BudgetError('transport failure requires exact claimed attempt')
+            first = db.execute("UPDATE policy SET halted='post_claim_failure' WHERE id=1 AND halted IS NULL").rowcount
+            exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='first_transport_failure'").fetchone()
+            if first and exists:
+                db.execute('INSERT INTO first_transport_failure VALUES (1,?,?,?,?)',
                            (attempt_id, route, stage, code))
 
     def _check_quotas(self, db, case_run, route, *, additional):
@@ -468,7 +490,10 @@ class AttemptLedger:
             halted = db.execute('SELECT halted FROM policy WHERE id=1').fetchone()[0]
             exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='first_sec_refusal'").fetchone()
             refusal = db.execute('SELECT attempt_id,route,stage,code FROM first_sec_refusal WHERE id=1').fetchone() if exists else None
-        return dict(first_sec_refusal=dict(zip(('attempt_id', 'route', 'stage', 'code'), refusal)) if refusal else None,
+            exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='first_transport_failure'").fetchone()
+            transport = db.execute('SELECT attempt_id,route,stage,code FROM first_transport_failure WHERE id=1').fetchone() if exists else None
+        return dict(first_transport_failure=dict(zip(('attempt_id', 'route', 'stage', 'code'), transport)) if transport else None,
+                    first_sec_refusal=dict(zip(('attempt_id', 'route', 'stage', 'code'), refusal)) if refusal else None,
                     policy_sha256=self.policy_hash, budget_nanousd=self.budget,
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,

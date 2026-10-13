@@ -157,6 +157,7 @@ def main():
     failure = None
     trace = []
     boundary.install()
+    cleanup_failed = False
     with redirect_stdout(diagnostics), redirect_stderr(diagnostics):
         try:
             from app.config import settings
@@ -203,7 +204,11 @@ def main():
                               'line': tb.tb_lineno})
                 tb = tb.tb_next
         finally:
-            boundary.close()
+            try:
+                boundary.close()
+            except BaseException:
+                cleanup_failed = True
+                ledger.halt('rehearsal_failure')
     diagnostic_clean = not any(value in diagnostics.getvalue() for value in (*SECRET_CANARIES, *(tuple(runtime.values()) if approved else ())))
     diagnostics.close()
     if not diagnostic_clean:
@@ -217,6 +222,7 @@ def main():
                           else 'integrated_offline_pilot_rehearsal'),
         'status': 'complete' if len(cases) == 6 and not summary['halted'] else 'halted',
         'scenario': scenario, 'failure_class': failure, 'failure_locations': trace,
+        'cleanup_failure': 'boundary_close' if cleanup_failed else None,
         'code_binding': policy['code_binding'], 'dependencies': dependencies,
         'setup_sha256': policy['setup_sha256'], 'policy_sha256': digest(policy),
         'configuration': policy['configuration'], 'quotas': policy['quotas'],

@@ -7,6 +7,7 @@ always blocks sockets and supplies an internal fake network backend.
 """
 import json
 import re
+import ssl
 from types import MappingProxyType
 
 import httpx
@@ -16,6 +17,42 @@ from validation.pilot_boundary import PilotBoundary
 from validation.pilot_fixtures import SECRET_CANARIES, SYNTHETIC_CONTACT, SYNTHETIC_KEY
 
 MAX_RESPONSE_BYTES = 16 * 1024 * 1024
+
+
+TRANSPORT_FAILURE_CODES = frozenset({
+    'request_gate', 'request_build', 'dispatch_gate', 'connect_timeout', 'connect_error',
+    'proxy_error', 'tls_error', 'write_timeout', 'write_error', 'read_timeout', 'read_error',
+    'pool_timeout', 'protocol_error', 'transport_other', 'http_redirect', 'http_auth',
+    'http_throttled', 'http_client_error', 'http_server_error', 'http_other_status',
+    'response_encoding', 'response_size', 'response_json', 'response_reflection', 'response_close',
+})
+
+
+class TransportFailure(BudgetError):
+    def __init__(self, code):
+        if type(code) is not str or code not in TRANSPORT_FAILURE_CODES:
+            raise BudgetError('invalid transport failure code')
+        self.code = code
+        super().__init__('owned HTTP exchange failed')
+
+
+def transport_failure_code(exc):
+    # Inspect types only; never copy exception messages, headers or request objects.
+    current = exc
+    for _ in range(8):
+        if isinstance(current, ssl.SSLError):
+            return 'tls_error'
+        current = getattr(current, '__cause__', None)
+        if current is None:
+            break
+    for kind, code in ((httpx.ProxyError, 'proxy_error'),
+                       (httpx.ConnectTimeout, 'connect_timeout'), (httpx.ConnectError, 'connect_error'),
+                       (httpx.WriteTimeout, 'write_timeout'), (httpx.WriteError, 'write_error'),
+                       (httpx.ReadTimeout, 'read_timeout'), (httpx.ReadError, 'read_error'),
+                       (httpx.PoolTimeout, 'pool_timeout'), (httpx.ProtocolError, 'protocol_error')):
+        if isinstance(exc, kind):
+            return code
+    return 'transport_other'
 
 
 def json_object(raw):
@@ -53,7 +90,10 @@ class OwnedHTTPTransport:
         if self.gate is None and type(self._wire._pool._network_backend) is not SyntheticNetworkBackend:
             raise BudgetError('real provider execution remains disabled')
         if self.gate is not None:
-            self.gate.validate_request(method, url, body)
+            try:
+                self.gate.validate_request(method, url, body)
+            except BaseException:
+                raise TransportFailure('request_gate') from None
         headers = {'Accept': 'application/json', 'Accept-Encoding': 'identity'}
         if method == 'POST' and url == 'https://api.openai.com/v1/chat/completions':
             headers.update({'Authorization': 'Bearer ' + (self.runtime['bearer_placeholder'] if self.runtime else SYNTHETIC_KEY),
@@ -62,36 +102,58 @@ class OwnedHTTPTransport:
             headers['User-Agent'] = self.runtime['sec_contact'] if self.runtime else SYNTHETIC_CONTACT
         else:
             raise BudgetError('unsupported owned transport operation')
-        request = httpx.Request(method, url, headers=headers, content=body,
-                                extensions={'timeout': dict.fromkeys(('connect', 'read', 'write', 'pool'), timeout)})
+        try:
+            request = httpx.Request(method, url, headers=headers, content=body,
+                                    extensions={'timeout': dict.fromkeys(('connect', 'read', 'write', 'pool'), timeout)})
+        except BaseException:
+            raise TransportFailure('request_build') from None
         response = None
+        failure = None
+        phase = 'dispatch_gate'
+        result = None
         try:
             if self.gate is not None:
                 self.gate.record_dispatch()
+            phase = 'transport_other'
             response = self._wire.handle_request(request)
             if response.status_code != 200:
-                raise BudgetError('unsuccessful response; dispatch cannot be retried')
+                status = response.status_code
+                code = ('http_redirect' if 300 <= status < 400 else
+                        'http_auth' if status in {401, 403} else
+                        'http_throttled' if status == 429 else
+                        'http_client_error' if 400 <= status < 500 else
+                        'http_server_error' if 500 <= status < 600 else 'http_other_status')
+                raise TransportFailure(code)
             if response.headers.get('content-encoding', 'identity') != 'identity':
-                raise BudgetError('compressed response is unsupported')
+                raise TransportFailure('response_encoding')
             content = bytearray()
             for chunk in response.iter_raw():
                 if len(content) + len(chunk) > MAX_RESPONSE_BYTES:
-                    raise BudgetError('response size bound exceeded')
+                    raise TransportFailure('response_size')
                 content.extend(chunk)
             media = response.headers.get('content-type', '').split(';')[0]
             if self.runtime is not None:
                 from validation.pilot_policy import reject_runtime_values
-                reject_runtime_values(json_object(bytes(content)) if media == 'application/json' else None,
-                                      (*SECRET_CANARIES, *self.runtime.values()), raw=bytes(content))
+                phase = 'response_json'
+                parsed = json_object(bytes(content)) if media == 'application/json' else None
+                phase = 'response_reflection'
+                reject_runtime_values(parsed, (*SECRET_CANARIES, *self.runtime.values()), raw=bytes(content))
             elif any(canary.encode() in content for canary in SECRET_CANARIES):
-                raise BudgetError('response contains an invented credential canary')
-            return media, bytes(content)
-        except BaseException:
-            # Do not expose provider bodies, headers, URLs or exception values.
-            raise BudgetError('owned HTTP exchange failed') from None
+                raise TransportFailure('response_reflection')
+            result = media, bytes(content)
+        except BaseException as exc:
+            failure = (exc.code if type(exc) is TransportFailure else
+                       transport_failure_code(exc) if phase == 'transport_other' else phase)
         finally:
             if response is not None:
-                response.close()
+                try:
+                    response.close()
+                except BaseException:
+                    if failure is None:
+                        failure = 'response_close'
+        if failure is not None:
+            raise TransportFailure(failure) from None
+        return result
 
     def close(self):
         self._wire.close()
@@ -113,7 +175,10 @@ class LiveAdapterBoundary(PilotBoundary):
                                          timeout=55.0 if stage == 'synthesis' else 15.0)
         if media != 'application/json':
             self.refuse('invalid_response')
-        return 200, json_object(body)
+        try:
+            return 200, json_object(body)
+        except BaseException:
+            raise TransportFailure('response_json') from None
 
     def sec_document_urls(self):
         with self.lock:
@@ -132,7 +197,10 @@ class LiveAdapterBoundary(PilotBoundary):
             return media, content
         if media != 'application/json':
             self.refuse_sec_response('sec_media_type')
-        data = json_object(content)
+        try:
+            data = json_object(content)
+        except BaseException:
+            raise TransportFailure('response_json') from None
         if route == 'sec/directory':
             # Full directories are valid; every frozen ticker must occur once
             # with its exact CIK. Other issuers never become authorized routes.
