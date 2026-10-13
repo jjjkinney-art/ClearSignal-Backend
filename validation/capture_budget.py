@@ -107,14 +107,16 @@ def validate_policy(policy):
     if rehearsal:
         # This additional policy mode is explicitly non-executable. Its rates
         # illustrate API usage; they do not assert verified account charges.
-        if (policy.get('purpose') != 'offline_six_case_rehearsal'
+        if (policy.get('purpose') not in {'offline_six_case_rehearsal', 'disabled_live_adapter_validation'}
                 or any(policy.get(k) is not False for k in (
                     'execution_allowed', 'spending_authorized', 'tariffs_verified',
                     'all_incremental_charges_accounted'))):
             raise BudgetError('offline rehearsal policy must deny live authority')
         from validation.pilot_policy import policy_for
         try:
-            expected = policy_for(policy['code_binding'], policy['dependencies'])
+            expected = policy_for(policy['code_binding'], policy['dependencies'],
+                                  mode=('offline' if policy['purpose'] == 'offline_six_case_rehearsal'
+                                        else 'live_adapter_validation'))
         except (KeyError, TypeError, ValueError):
             raise BudgetError('invalid fixed rehearsal policy') from None
         if digest(policy) != digest(expected):

@@ -12,8 +12,8 @@ import subprocess
 import sys
 
 from validation.capture_budget import AttemptLedger, BudgetError, digest
-from validation.pilot_fixtures import SCENARIOS, SYNTHETIC_CONTACT, SYNTHETIC_KEY
-from validation.pilot_policy import AUDITED_DEPENDENCIES, policy_for
+from validation.pilot_fixtures import LIVE_SCENARIOS, SCENARIOS, SYNTHETIC_CONTACT, SYNTHETIC_KEY
+from validation.pilot_policy import AUDITED_DEPENDENCIES, RUN_DEADLINE_SECONDS, policy_for
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,20 +29,21 @@ def source_binding():
                    for path in files})
 
 
-def prepare_policy():
+def prepare_policy(*, mode="offline"):
     if sys.implementation.name != 'cpython' or sys.version_info[:3] != (3, 11, 9):
         raise BudgetError('rehearsal requires the audited CPython 3.11.9 runtime')
     revision = subprocess.run(['git', 'rev-parse', 'HEAD'], cwd=ROOT,
                               env={'PATH': '/usr/bin:/bin'}, capture_output=True,
                               text=True, check=True).stdout.strip()
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
-    return policy_for({'revision': revision, 'source_sha256': source_binding()}, dependencies)
+    return policy_for({'revision': revision, 'source_sha256': source_binding()}, dependencies, mode=mode)
 
 
-def run_rehearsal(output_dir, *, scenario='happy'):
-    if type(scenario) is not str or scenario not in SCENARIOS:
+def run_rehearsal(output_dir, *, scenario='happy', mode='offline'):
+    scenarios = LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS
+    if type(scenario) is not str or scenario not in scenarios:
         raise BudgetError('unknown immutable rehearsal scenario')
-    policy = prepare_policy()
+    policy = prepare_policy(mode=mode)
     output = Path(output_dir).resolve()
     output.mkdir(parents=False, exist_ok=False)  # No overwrite, resume or reset.
     isolated_home = output / 'isolated-home'
@@ -59,7 +60,7 @@ def run_rehearsal(output_dir, *, scenario='happy'):
             'from validation._pilot_worker import main; raise SystemExit(main())')
     try:
         child = subprocess.run([sys.executable, '-I', '-B', '-c', code], cwd=output,
-                               env=environment, capture_output=True, timeout=120)
+                               env=environment, capture_output=True, timeout=RUN_DEADLINE_SECONDS)
         failed = child.returncode != 0
     except subprocess.TimeoutExpired:
         failed = True
@@ -74,7 +75,8 @@ def run_rehearsal(output_dir, *, scenario='happy'):
                 summary = AttemptLedger(ledger_path, policy).summary()
             except (BudgetError, OSError):
                 pass
-        artifact = {'artifact_type': 'integrated_offline_pilot_rehearsal',
+        artifact = {'artifact_type': ('disabled_live_adapter_validation' if mode == 'live_adapter_validation'
+                                     else 'integrated_offline_pilot_rehearsal'),
                     'status': 'worker_incomplete', 'ledger': summary,
                     'code_binding': policy['code_binding'], 'policy_sha256': digest(policy),
                     'execution_allowed': False, 'spending_authorized': False,
@@ -93,13 +95,13 @@ def run_rehearsal(output_dir, *, scenario='happy'):
     return json.loads(artifact_path.read_text())
 
 
-def main(argv=None):
+def main(argv=None, *, mode="offline"):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', required=True, type=Path)
-    parser.add_argument('--scenario', choices=sorted(SCENARIOS), default='happy')
+    parser.add_argument('--scenario', choices=sorted(LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS), default='happy')
     args = parser.parse_args(argv)
     try:
-        result = run_rehearsal(args.output_dir, scenario=args.scenario)
+        result = run_rehearsal(args.output_dir, scenario=args.scenario, mode=mode)
     except Exception:
         parser.exit(2, 'Offline rehearsal refused; no execution or reset authorized.\n')
     print(json.dumps(result, indent=2, sort_keys=True))

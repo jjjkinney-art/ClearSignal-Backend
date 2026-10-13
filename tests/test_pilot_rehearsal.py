@@ -42,6 +42,7 @@ def test_actual_six_case_pipeline_completes_with_zero_network(rehearsals, scenar
     assert [case['case_id'] for case in result['completed_cases']] == [
         case['case_id'] for case in preflight()['cases']]
     npk = [case for case in result['completed_cases'] if case['identity']['ticker'] == 'NPK']
+    assert all('answer_and_evidence' not in case for case in result['completed_cases'])
     assert len(npk) == 2
     assert all(case['identity']['cik'] == '0000080172' for case in npk)
     counts = Counter(event['route'].split('/')[0] for event in result['claims'])
@@ -90,7 +91,11 @@ def test_integrated_faults_halt_without_fallback_dispatch_or_refund(rehearsals, 
     assert result['network_attempts'] == (1 if scenario in {'socket_attempt', 'unknown_dns'} else 0)
     assert result['diagnostics_canary_clean']
     assert result['execution_allowed'] is False
-    assert result['ledger']['attempts'] == len(result['claims'])
+    # Another worker may reserve before halt, then be fenced before claiming.
+    # That reservation remains charged; it must never appear as a dispatch.
+    with sqlite3.connect(output / 'ledger.sqlite') as db:
+        pending = db.execute("SELECT COUNT(*) FROM attempts WHERE status='pending'").fetchone()[0]
+    assert result['ledger']['attempts'] == len(result['claims']) + pending
     assert len(result['completed_cases']) < 6
     before = result['ledger']
     policy = json.loads((output / 'request.json').read_text())['policy']

@@ -6,11 +6,13 @@ This is cooperative rehearsal assurance, not a sandbox for arbitrary Python.
 from concurrent import futures
 from contextvars import ContextVar
 from io import BytesIO
+import hashlib
 import json
 import netrc
 import os
 from pathlib import Path
 from threading import Barrier, Event, Lock
+from typing import NamedTuple
 from unittest.mock import patch
 from urllib import request as urllib_request
 
@@ -25,6 +27,13 @@ from validation.pilot_fixtures import (
 )
 from validation.pilot_policy import PILOT_SETTINGS, response_usage, validate_model_payload
 from validation.pilot_preflight import preflight
+
+
+class FrozenModelRequest(NamedTuple):
+    """Private immutable wire values, captured before validation and claiming."""
+    method: str
+    url: str
+    body: bytes
 
 
 class PilotBoundary:
@@ -367,12 +376,14 @@ class PilotBoundary:
         self.active()
         try:
             if (type(request) is not httpx.Request or type(request.stream) is not httpx.ByteStream
-                    or request.method != 'POST'
-                    or str(request.url) != 'https://api.openai.com/v1/chat/completions'
                     or set(request.extensions) - {'timeout'}):
                 self.refuse()
-            body = request.read()
-            if any(canary.encode() in body for canary in SECRET_CANARIES):
+            snapshot = FrozenModelRequest(request.method, str(request.url), request.read())
+            if (type(snapshot.method) is not str or type(snapshot.body) is not bytes
+                    or snapshot.method != 'POST'
+                    or snapshot.url != 'https://api.openai.com/v1/chat/completions'):
+                self.refuse()
+            if any(canary.encode() in snapshot.body for canary in SECRET_CANARIES):
                 self.refuse()
             def unique_object(pairs):
                 result = {}
@@ -381,7 +392,7 @@ class PilotBoundary:
                         raise BudgetError('duplicate request field')
                     result[key] = value
                 return result
-            payload = json.loads(body, object_pairs_hook=unique_object)
+            payload = json.loads(snapshot.body, object_pairs_hook=unique_object)
             stage = self.stage.get()
             inputs, outputs = validate_model_payload(payload, stage)
             expected_timeout = 55.0 if stage == 'synthesis' else 15.0
@@ -390,15 +401,15 @@ class PilotBoundary:
                     or any(value != expected_timeout for value in timeout.values())):
                 self.refuse('configuration_drift')
             # Credentials, contact values and ALL headers are intentionally absent.
-            fingerprint = digest({'method': request.method, 'url': str(request.url),
-                                  'body': payload, 'stage': stage})
+            fingerprint = digest({'method': snapshot.method, 'url': snapshot.url,
+                                  'body_sha256': hashlib.sha256(snapshot.body).hexdigest(),
+                                  'stage': stage})
             attempt = self.claim('model/' + stage, fingerprint, inputs, outputs)
         except (BudgetError, ValueError, UnicodeError, TypeError):
             self.ledger.halt('invalid_request')
             raise BudgetError('model request refused') from None
         try:
-            data = model_fixture(stage, self.case['identity'])
-            status = 200
+            status, data = self.model_exchange(snapshot, stage)
             if (self.case['identity']['ticker'] == 'ACHC'
                     and self.once({'concurrent_usage_failure'})):
                 data.pop('usage')
@@ -429,12 +440,25 @@ class PilotBoundary:
                 self.refuse('invalid_response')
             usage = response_usage(data, outputs)
             self.ledger.settle(attempt, input_tokens=usage[0], output_tokens=usage[1])
+            with self.lock:
+                event = next(item for item in self.events if item['attempt_id'] == attempt)
+                event['usage'] = {'input_tokens': usage[0], 'output_tokens': usage[1],
+                                  'model': data['model'], 'service_tier': data['service_tier']}
             return httpx.Response(status, content=encoded)
         except BaseException:
             self.ledger.halt_dispatch(attempt)
             raise BudgetError('model fixture response refused') from None
         finally:
             self.done()
+
+    def model_exchange(self, snapshot, stage):
+        return 200, model_fixture(stage, self.case['identity'])
+
+    def sec_document_urls(self):
+        return {document_url(self.case['identity'])}
+
+    def sec_content(self, route, url):
+        return sec_fixture(route, self.case['identity'], self.identities)
 
     def sec_route(self, method, url, body):
         self.active()
@@ -443,7 +467,7 @@ class PilotBoundary:
             'https://www.sec.gov/files/company_tickers.json': 'sec/directory',
             f'https://data.sec.gov/submissions/CIK{identity["cik"]}.json': 'sec/submissions',
             f'https://data.sec.gov/api/xbrl/companyfacts/CIK{identity["cik"]}.json': 'sec/facts',
-            document_url(identity): 'sec/document',
+            **{url: 'sec/document' for url in self.sec_document_urls()},
         }
         if self.once({'unknown_sec_route'}):
             url = 'https://unreviewed.invalid/'
@@ -468,7 +492,7 @@ class PilotBoundary:
                               'stage': self.stage.get()})
         attempt = self.claim(route, fingerprint, 0, 0)
         try:
-            media_type, content = sec_fixture(route, self.case['identity'], self.identities)
+            media_type, content = self.sec_content(route, url)
             if self.once({'sec_redirect'}):
                 self.refuse('invalid_response')  # No Location or redirect is followed.
             if route == 'sec/directory':
@@ -476,7 +500,7 @@ class PilotBoundary:
                 if self.once({'sec_identity_mismatch'}):
                     data['0']['cik_str'] = 1
                 actual = {row['ticker']: str(row['cik_str']).zfill(10) for row in data.values()}
-                if actual != {item['ticker']: item['cik'] for item in self.identities}:
+                if any(actual.get(item['ticker']) != item['cik'] for item in self.identities):
                     self.refuse('identity_mismatch')
             elif route in {'sec/submissions', 'sec/facts'}:
                 data = json.loads(content)
