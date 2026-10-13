@@ -75,3 +75,5 @@ def model_fixture(stage, identity):
             'choices': [{'index': 0, 'message': {'role': 'assistant', 'content': content},
                          'finish_reason': 'stop'}],
             'usage': {'prompt_tokens': 100, 'completion_tokens': 32, 'total_tokens': 132}}
+
+LIVE_SCENARIOS = SCENARIOS | frozenset({'wire_redirect', 'wire_connect_failure', 'wire_read_failure'})

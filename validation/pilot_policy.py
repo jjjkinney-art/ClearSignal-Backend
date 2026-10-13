@@ -24,8 +24,10 @@ PILOT_SETTINGS = MappingProxyType({
 })
 
 
-def policy_for(code_binding, dependencies):
+def policy_for(code_binding, dependencies, *, mode="offline"):
     """No caller-supplied limits, rates, routes, approval or configuration."""
+    if mode not in {"offline", "live_adapter_validation"}:
+        raise BudgetError("unsupported pilot mode")
     setup = preflight()
     if dependencies != dict(AUDITED_DEPENDENCIES):
         raise BudgetError('dependency audit changed; separate review required')
@@ -66,8 +68,9 @@ def policy_for(code_binding, dependencies):
             'maximum_output_tokens': (1536 if route == 'model/synthesis' else 4096) if model else 0,
         }
     return {
-        'schema_version': 2, 'purpose': 'offline_six_case_rehearsal',
-        'pilot_id': 'frozen-v2-six-case-offline-rehearsal',
+        'schema_version': 2, 'purpose': ('offline_six_case_rehearsal' if mode == 'offline' else 'disabled_live_adapter_validation'),
+        'pilot_id': ('frozen-v2-six-case-offline-rehearsal' if mode == 'offline'
+                     else 'frozen-v2-six-case-disabled-live-adapter'),
         'approval_reference': 'NO_SPENDING_AUTHORITY',
         'configuration_version': digest(configuration),
         'pricing_review_reference': 'ILLUSTRATIVE_PUBLIC_STANDARD_TEXT_RATES_ONLY',
@@ -135,7 +138,9 @@ def response_usage(data, output_bound):
     if (type(choices) is not list or len(choices) != 1 or type(choices[0]) is not dict
             or choices[0].get('index') != 0 or choices[0].get('finish_reason') != 'stop'
             or type(choices[0].get('message')) is not dict
-            or set(choices[0]['message']) != {'role', 'content'}
+            or not {'role', 'content'} <= set(choices[0]['message']) <= {'role', 'content', 'refusal', 'annotations'}
+            or choices[0]['message'].get('refusal') is not None
+            or choices[0]['message'].get('annotations', []) != []
             or choices[0]['message']['role'] != 'assistant'
             or type(choices[0]['message']['content']) is not str):
         raise BudgetError('only a single complete plain text choice is supported')
@@ -157,3 +162,8 @@ def response_usage(data, output_bound):
             if type(value) is not int or value < 0 or (value > inputs if unit == 'cached_tokens' else value != 0):
                 raise BudgetError('unsupported additional charge units')
     return inputs, outputs
+
+
+# Frozen pipeline wall caps: source evidence; threshold evidence, agents, synthesis.
+# Add the existing three-second worker drain for each case, plus startup allowance.
+RUN_DEADLINE_SECONDS = 3 * (20 + 3) + 3 * (10 + 16 + 56 + 42 + 3) + 30

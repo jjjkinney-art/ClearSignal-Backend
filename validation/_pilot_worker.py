@@ -13,6 +13,15 @@ import sys
 import traceback
 
 
+def safe_result(result, canaries):
+    data = result.model_dump(mode='json')
+    encoded = json.dumps(data, allow_nan=False)
+    if len(encoded.encode()) > 4 * 1024 * 1024 or any(value in encoded for value in canaries):
+        from validation.capture_budget import BudgetError
+        raise BudgetError('result artifact refused')
+    return data
+
+
 def main():
     if (not sys.flags.isolated or not sys.flags.dont_write_bytecode
             or sys.implementation.name != 'cpython' or sys.version_info[:3] != (3, 11, 9)):
@@ -78,22 +87,28 @@ def main():
     socket.getaddrinfo = synthetic_dns
     from validation.capture_budget import AttemptLedger, BudgetError, digest
     from validation.pilot_policy import AUDITED_DEPENDENCIES, policy_for
-    from validation.pilot_fixtures import SECRET_CANARIES, SCENARIOS
+    from validation.pilot_fixtures import SECRET_CANARIES, SCENARIOS, LIVE_SCENARIOS
     from validation.pilot_preflight import preflight
     from validation.pilot_rehearsal import source_binding
     from validation.pilot_boundary import PilotBoundary
 
     request = json.loads((output / 'request.json').read_text())
     policy, scenario = request['policy'], request['scenario']
-    if scenario not in SCENARIOS:
+    scenarios = LIVE_SCENARIOS if policy['purpose'] == 'disabled_live_adapter_validation' else SCENARIOS
+    if scenario not in scenarios:
         return 2
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
     actual_policy = policy_for({'revision': policy['code_binding']['revision'],
-                                'source_sha256': source_binding()}, dependencies)
+                                'source_sha256': source_binding()}, dependencies,
+                               mode=('live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'))
     if digest(policy) != digest(actual_policy):
         return 2
     ledger = AttemptLedger(output / 'ledger.sqlite', actual_policy, create=True)
-    boundary = PilotBoundary(ledger, scenario)
+    if policy['purpose'] == 'disabled_live_adapter_validation':
+        from validation.pilot_live import LiveAdapterBoundary
+        boundary = LiveAdapterBoundary(ledger, scenario)
+    else:
+        boundary = PilotBoundary(ledger, scenario)
     holder.append(boundary)
     diagnostics = StringIO()
     log_handler = logging.StreamHandler(diagnostics)
@@ -133,8 +148,11 @@ def main():
                 if result.company != case['identity']['ticker']:
                     boundary.refuse('identity_mismatch')
                 ledger.finish_case(boundary.case_run)
-                cases.append({'case_id': case['case_id'], 'identity': case['identity'],
-                              'pipeline_returned': True})
+                completed = {'case_id': case['case_id'], 'identity': case['identity'],
+                             'pipeline_returned': True}
+                if policy['purpose'] == 'disabled_live_adapter_validation':
+                    completed['answer_and_evidence'] = safe_result(result, SECRET_CANARIES)
+                cases.append(completed)
         except BaseException as exc:
             ledger.halt('rehearsal_failure')
             failure = type(exc).__name__
@@ -155,7 +173,8 @@ def main():
     summary = ledger.summary()
     counts = Counter(event['route'] for event in boundary.events)
     artifact = {
-        'artifact_type': 'integrated_offline_pilot_rehearsal',
+        'artifact_type': ('disabled_live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation'
+                          else 'integrated_offline_pilot_rehearsal'),
         'status': 'complete' if len(cases) == 6 and not summary['halted'] else 'halted',
         'scenario': scenario, 'failure_class': failure, 'failure_locations': trace,
         'code_binding': policy['code_binding'], 'dependencies': dependencies,

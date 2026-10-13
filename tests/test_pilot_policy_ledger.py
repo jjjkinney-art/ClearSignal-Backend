@@ -13,10 +13,10 @@ from validation.pilot_policy import (
 )
 
 
-@pytest.fixture
-def policy():
+@pytest.fixture(params=["offline", "live_adapter_validation"])
+def policy(request):
     return policy_for({'revision': 'unit-fixture', 'source_sha256': 'unit-fixture'},
-                      dict(AUDITED_DEPENDENCIES))
+                      dict(AUDITED_DEPENDENCIES), mode=request.param)
 
 
 @pytest.fixture
