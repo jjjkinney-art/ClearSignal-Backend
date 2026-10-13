@@ -151,6 +151,7 @@ class LiveAdapterBoundary(PilotBoundary):
             if any(type(field) is not list for field in fields) or len({len(field) for field in fields}) != 1:
                 self.refuse_sec_response('sec_recent_array_shape')
             urls = set()
+            excluded_documents = 0
             for form, accession, document in zip(*fields):
                 if form not in {'10-K', '10-Q', '20-F', '40-F', '6-K', '8-K'}:
                     continue
@@ -158,9 +159,15 @@ class LiveAdapterBoundary(PilotBoundary):
                     self.refuse_sec_response('sec_accession_syntax')
                 if (type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
                         or '..' in document):
-                    self.refuse_sec_response('sec_document_syntax')
+                    # Metadata can remain useful without a fetchable document.
+                    # Only exact validated filenames enter the network allowlist.
+                    excluded_documents += 1
+                    continue
                 urls.add(f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-", "")}/{document}')
             with self.lock:
+                attempt, _, _ = self.sec_attempt.get()
+                event = next(item for item in self.events if item['attempt_id'] == attempt)
+                event['sec_document_exclusions'] = excluded_documents
                 previous = self.documents.setdefault(cik, frozenset(urls))
                 if previous != urls:
                     self.refuse('configuration_drift')

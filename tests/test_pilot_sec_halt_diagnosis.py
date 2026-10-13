@@ -6,8 +6,7 @@ from validation.capture_budget import BudgetError
 from validation.pilot_fixtures import sec_fixture, SECRET_CANARIES
 
 @pytest.mark.parametrize('fault', ['media_case', 'media_whitespace', 'media_other',
-                                  'array_length', 'array_type', 'accession',
-                                  'document_empty', 'document_uppercase'])
+                                  'array_length', 'array_type', 'accession'])
 def test_distinct_sec_validation_failures_preserve_first_allowlisted_cause(boundary, monkeypatch, fault):
     identity = boundary.case['identity']
     _, raw = sec_fixture('sec/submissions', identity, boundary.identities)
@@ -20,8 +19,6 @@ def test_distinct_sec_validation_failures_preserve_first_allowlisted_cause(bound
     elif fault == 'array_length': recent['accessionNumber'] = []
     elif fault == 'array_type': recent['form'] = '20-F'
     elif fault == 'accession': recent['accessionNumber'][0] = 'not-an-accession'
-    elif fault == 'document_empty': recent['primaryDocument'][0] = ''
-    elif fault == 'document_uppercase': recent['primaryDocument'][0] = 'annual.HTM'
     writes = install_protocol(monkeypatch, boundary, data, media=media)
     with pytest.raises(BudgetError):
         boundary.sec_exchange('GET', f'https://data.sec.gov/submissions/CIK{identity["cik"]}.json', None)
