@@ -7,6 +7,7 @@ always blocks sockets and supplies an internal fake network backend.
 """
 import json
 import re
+from types import MappingProxyType
 
 import httpx
 
@@ -35,25 +36,38 @@ class OwnedHTTPTransport:
     only the socket backend, exercising HTTPX/httpcore's actual HTTP protocol path.
     All calls must be made after the boundary's atomic dispatch claim.
     """
-    def __init__(self):
-        self._wire = httpx.HTTPTransport(retries=0, trust_env=False, proxy=None)
+    def __init__(self, *, gate=None, execution=None, runtime=None):
+        self.gate = gate
+        self.execution = MappingProxyType(dict(execution)) if execution is not None else None
+        self.runtime = MappingProxyType(dict(runtime)) if runtime is not None else None
+        if gate is not None:
+            from validation.pilot_approved import verify_network_configuration
+            context = verify_network_configuration(execution, tls=True)
+            gate.tls_context = context
+            self._wire = httpx.HTTPTransport(retries=0, trust_env=False, proxy=execution['proxy'], verify=context)
+        else:
+            self._wire = httpx.HTTPTransport(retries=0, trust_env=False, proxy=None)
 
     def exchange(self, method, url, *, body=b'', timeout=10.0):
         from validation._pilot_wire_fixtures import SyntheticNetworkBackend
-        if type(self._wire._pool._network_backend) is not SyntheticNetworkBackend:
+        if self.gate is None and type(self._wire._pool._network_backend) is not SyntheticNetworkBackend:
             raise BudgetError('real provider execution remains disabled')
+        if self.gate is not None:
+            self.gate.validate_request(method, url, body)
         headers = {'Accept': 'application/json', 'Accept-Encoding': 'identity'}
         if method == 'POST' and url == 'https://api.openai.com/v1/chat/completions':
-            headers.update({'Authorization': 'Bearer ' + SYNTHETIC_KEY,
+            headers.update({'Authorization': 'Bearer ' + (self.runtime['bearer_placeholder'] if self.runtime else SYNTHETIC_KEY),
                             'Content-Type': 'application/json'})
         elif method == 'GET' and url.startswith(('https://www.sec.gov/', 'https://data.sec.gov/')):
-            headers['User-Agent'] = SYNTHETIC_CONTACT
+            headers['User-Agent'] = self.runtime['sec_contact'] if self.runtime else SYNTHETIC_CONTACT
         else:
             raise BudgetError('unsupported owned transport operation')
         request = httpx.Request(method, url, headers=headers, content=body,
                                 extensions={'timeout': dict.fromkeys(('connect', 'read', 'write', 'pool'), timeout)})
         response = None
         try:
+            if self.gate is not None:
+                self.gate.record_dispatch()
             response = self._wire.handle_request(request)
             if response.status_code != 200:
                 raise BudgetError('unsuccessful response; dispatch cannot be retried')
@@ -64,9 +78,14 @@ class OwnedHTTPTransport:
                 if len(content) + len(chunk) > MAX_RESPONSE_BYTES:
                     raise BudgetError('response size bound exceeded')
                 content.extend(chunk)
-            if any(canary.encode() in content for canary in SECRET_CANARIES):
+            media = response.headers.get('content-type', '').split(';')[0]
+            if self.runtime is not None:
+                from validation.pilot_policy import reject_runtime_values
+                reject_runtime_values(json_object(bytes(content)) if media == 'application/json' else None,
+                                      (*SECRET_CANARIES, *self.runtime.values()), raw=bytes(content))
+            elif any(canary.encode() in content for canary in SECRET_CANARIES):
                 raise BudgetError('response contains an invented credential canary')
-            return response.headers.get('content-type', '').split(';')[0], bytes(content)
+            return media, bytes(content)
         except BaseException:
             # Do not expose provider bodies, headers, URLs or exception values.
             raise BudgetError('owned HTTP exchange failed') from None

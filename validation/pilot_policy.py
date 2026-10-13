@@ -24,10 +24,16 @@ PILOT_SETTINGS = MappingProxyType({
 })
 
 
-def policy_for(code_binding, dependencies, *, mode="offline"):
+def policy_for(code_binding, dependencies, *, mode="offline", approval=None, execution=None):
     """No caller-supplied limits, rates, routes, approval or configuration."""
-    if mode not in {"offline", "live_adapter_validation"}:
+    if mode not in {"offline", "live_adapter_validation", "approved"}:
         raise BudgetError("unsupported pilot mode")
+    if mode == 'approved':
+        from validation.pilot_approved import validate_execution, validate_approval
+        validate_execution(execution)
+        validate_approval(approval, code_binding, execution)
+    elif approval is not None or execution is not None:
+        raise BudgetError('authority is exclusive to approved mode')
     setup = preflight()
     if dependencies != dict(AUDITED_DEPENDENCIES):
         raise BudgetError('dependency audit changed; separate review required')
@@ -67,7 +73,7 @@ def policy_for(code_binding, dependencies, *, mode="offline"):
             'maximum_input_tokens': CONTEXT_TOKENS if model else 0,
             'maximum_output_tokens': (1536 if route == 'model/synthesis' else 4096) if model else 0,
         }
-    return {
+    policy = {
         'schema_version': 2, 'purpose': ('offline_six_case_rehearsal' if mode == 'offline' else 'disabled_live_adapter_validation'),
         'pilot_id': ('frozen-v2-six-case-offline-rehearsal' if mode == 'offline'
                      else 'frozen-v2-six-case-disabled-live-adapter'),
@@ -86,6 +92,12 @@ def policy_for(code_binding, dependencies, *, mode="offline"):
         'execution_allowed': False, 'spending_authorized': False,
         'tariffs_verified': False, 'all_incremental_charges_accounted': False,
     }
+    if mode == 'approved':
+        policy.update(purpose='approved_six_case_pilot', pilot_id=approval['run_id'],
+                      approval_reference=approval['reference'], approval=approval,
+                      execution_configuration=execution, execution_allowed=True,
+                      spending_authorized=True)
+    return policy
 
 
 def validate_model_payload(payload, stage):
@@ -167,3 +179,38 @@ def response_usage(data, output_bound):
 # Frozen pipeline wall caps: source evidence; threshold evidence, agents, synthesis.
 # Add the existing three-second worker drain for each case, plus startup allowance.
 RUN_DEADLINE_SECONDS = 3 * (20 + 3) + 3 * (10 + 16 + 56 + 42 + 3) + 30
+
+
+def reject_runtime_values(payload, values, *, raw=None):
+    """Exclude runtime-only strings before hashing or serializing decoded data."""
+    if raw is not None and any(value.encode('utf-8') in raw for value in values):
+        raise BudgetError('runtime-only value in provider data')
+    def unique_object(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise BudgetError('duplicate nested provider field')
+            result[key] = value
+        return result
+    pending = [payload]
+    while pending:
+        item = pending.pop()
+        if isinstance(item, str):
+            if any(value in item for value in values):
+                raise BudgetError('runtime-only value in provider data')
+            # Model content can itself contain a serialized JSON object/string.
+            if item.lstrip().startswith(('{', '[', '"')):
+                try:
+                    import json
+                    pending.append(json.loads(item, object_pairs_hook=unique_object))
+                except BudgetError:
+                    raise
+                except RecursionError:
+                    raise BudgetError('nested provider data exceeds decoding limit') from None
+                except ValueError:
+                    pass
+        elif isinstance(item, dict):
+            pending.extend(item.keys())
+            pending.extend(item.values())
+        elif isinstance(item, list):
+            pending.extend(item)
