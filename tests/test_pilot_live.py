@@ -159,6 +159,11 @@ def test_sec_protocol_rejection_is_durable(boundary, monkeypatch, fault):
     elif fault == 'encoded_path':
         data['filings']['recent']['primaryDocument'] = ['%2e%2e/report.htm']
     writes = install_protocol(monkeypatch, boundary, data, status=status)
+    if fault == 'encoded_path':
+        boundary.sec_exchange('GET', url, None)
+        assert not boundary.sec_document_urls()
+        assert boundary.events[0]['sec_document_exclusions'] == 1
+        url = f'https://www.sec.gov/Archives/edgar/data/{int(identity["cik"])}/000095017026012345/%2e%2e/report.htm'
     with pytest.raises(BudgetError):
         boundary.sec_exchange('GET', url, None)
     assert boundary.ledger.summary()['halted']
