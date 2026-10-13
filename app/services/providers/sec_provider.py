@@ -38,12 +38,14 @@ Every function returns ``[]`` on any network, parsing, or rate-limit error.
 
 from __future__ import annotations
 
+import copy
 import datetime
 import json
 import logging
 import re
 from typing import Dict, List, Optional
 from threading import Lock
+import time
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
@@ -72,6 +74,21 @@ _FORM_LABELS: dict = {
 _ticker_cik_cache: Optional[Dict[str, str]] = None
 _ticker_cik_lock = Lock()
 
+# One shared full company_tickers.json response for every directory consumer.
+# This layer only deduplicates the fetch: each consumer still applies its own
+# semantic validation and keeps its own cache and failure policy. A response is
+# reused only by callers on the same fetch path (URL, fetch function and urllib
+# entry points) and only while younger than the caller's maximum age.
+DIRECTORY_RESPONSE_MAX_AGE_SECONDS = 3600
+_directory_lock = Lock()
+_directory_response = None  # (binding, fetched_at, generation, full response)
+_directory_completed = 0    # fetches finished, successfully or not
+_directory_failure = None   # (completion number, binding) of the latest failure
+
+
+class DirectoryUnavailable(RuntimeError):
+    """No eligible shared SEC directory response could be obtained."""
+
 # Canonical ticker symbols, including class suffixes (e.g. BRK.B).
 _TICKER_RE = re.compile(r"^[A-Z][A-Z0-9]{0,11}(?:[.-][A-Z0-9]{1,4})?$")
 
@@ -83,6 +100,68 @@ def _fetch_json(url: str, timeout: int = 10):
     req = Request(url, headers={"User-Agent": _USER_AGENT})
     with urlopen(req, timeout=timeout) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def _directory_binding() -> tuple:
+    """The fetch path a cached directory response came from.
+
+    Swapping the fetch function or any urllib entry point (a test transport,
+    the pilot bridge, a different process configuration) makes earlier
+    responses ineligible instead of silently reusing them.
+    """
+    import urllib.request as urllib_request
+    return (_COMPANY_TICKERS_URL, _fetch_json, urlopen,
+            urllib_request.urlopen, urllib_request.OpenerDirector.open)
+
+
+def shared_company_tickers(*, max_age: float, timeout: int):
+    """Return ``(response copy, fetched_at, generation)`` for one full directory.
+
+    Concurrent callers share one fetch. Waiters for a fetch that failed receive
+    that failure instead of fetching again; a later caller may retry. Only a
+    non-empty JSON object is retained, and every caller gets its own deep copy.
+    ``fetched_at`` is a ``time.monotonic()`` reading taken before the request.
+    """
+    global _directory_response, _directory_completed, _directory_failure
+    # Read before waiting: a fetch that completes while this caller waits is
+    # one this caller shares, including its failure.
+    seen = _directory_completed
+    binding = _directory_binding()
+    with _directory_lock:
+        now = time.monotonic()
+        held = _directory_response
+        if held is not None and held[0] == binding and 0 <= now - held[1] < max_age:
+            return copy.deepcopy(held[3]), held[1], held[2]
+        if _directory_completed != seen and _directory_failure == (_directory_completed, binding):
+            raise DirectoryUnavailable("shared SEC directory fetch failed")
+        attempt = _directory_completed + 1
+        try:
+            data = _fetch_json(_COMPANY_TICKERS_URL, timeout=timeout)
+            if not isinstance(data, dict) or not data:
+                raise ValueError("SEC directory response is not a non-empty object")
+            _directory_response = (binding, now, attempt, copy.deepcopy(data))
+            return data, now, attempt
+        except BaseException:
+            _directory_failure = (attempt, binding)
+            raise
+        finally:
+            _directory_completed = attempt
+
+
+def discard_shared_company_tickers(generation: int) -> None:
+    """Drop one shared response a consumer rejected, never a newer one."""
+    global _directory_response
+    with _directory_lock:
+        if _directory_response is not None and _directory_response[2] == generation:
+            _directory_response = None
+
+
+def _reset_shared_company_tickers() -> None:
+    """Forget the shared response (cold-directory rehearsal and tests)."""
+    global _directory_response, _directory_failure
+    with _directory_lock:
+        _directory_response = None
+        _directory_failure = None
 
 
 def _years_ago(n: int) -> str:
@@ -170,7 +249,7 @@ def _fetch_ticker_cik_map() -> Dict[str, str]:
 
     print("[DIAG] SEC EDGAR: loading ticker→CIK map from company_tickers.json …")
     try:
-        data = _fetch_json(_COMPANY_TICKERS_URL, timeout=15)
+        data, _, _ = shared_company_tickers(max_age=DIRECTORY_RESPONSE_MAX_AGE_SECONDS, timeout=15)
         mapping: Dict[str, str] = {}
         for entry in data.values():
             ticker  = str(entry.get("ticker", "")).upper().strip()

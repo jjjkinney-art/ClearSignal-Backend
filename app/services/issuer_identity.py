@@ -16,6 +16,9 @@ _cache = None
 _expires_at = 0.0
 _retry_at = 0.0
 _lock = Lock()
+# (fetched_at, generation) of the shared response the last fetch returned.
+# Written and read only while holding _lock.
+_fetched = None
 DIRECTORY_TTL_SECONDS = 3600
 
 
@@ -74,7 +77,7 @@ def parse_directory(data: object) -> Directory:
 
 
 def _load_directory() -> Directory:
-    global _cache, _expires_at, _retry_at
+    global _cache, _expires_at, _retry_at, _fetched
     now = time.monotonic()
     if _cache is not None and now < _expires_at:
         return _cache
@@ -86,11 +89,18 @@ def _load_directory() -> Directory:
             return _cache
         if now < _retry_at:
             return Directory({}, {})
+        _fetched = None
         try:
             directory = parse_directory(_fetch_directory_json())
+            fetched_at, generation = _fetched or (now, None)
             if not directory.symbols:
+                if generation is not None:
+                    # Let the next eligible attempt fetch again, not reuse it.
+                    from .providers.sec_provider import discard_shared_company_tickers
+                    discard_shared_company_tickers(generation)
                 raise ValueError("empty issuer directory")
-            _cache, _expires_at, _retry_at = directory, now + DIRECTORY_TTL_SECONDS, 0.0
+            # Freshness runs from when SEC served the response, not from reuse.
+            _cache, _expires_at, _retry_at = directory, fetched_at + DIRECTORY_TTL_SECONDS, 0.0
             return directory
         except Exception as exc:
             _retry_at = now + 30
@@ -100,8 +110,12 @@ def _load_directory() -> Directory:
 
 
 def _fetch_directory_json():
-    from .providers.sec_provider import _fetch_json, _COMPANY_TICKERS_URL
-    return _fetch_json(_COMPANY_TICKERS_URL, timeout=5)
+    """The full SEC directory, shared with the ticker/CIK map when eligible."""
+    global _fetched
+    from .providers.sec_provider import shared_company_tickers
+    data, fetched_at, generation = shared_company_tickers(max_age=DIRECTORY_TTL_SECONDS, timeout=5)
+    _fetched = (fetched_at, generation)
+    return data
 
 
 def exact_issuer(value: str, directory: Directory) -> Issuer | None:
