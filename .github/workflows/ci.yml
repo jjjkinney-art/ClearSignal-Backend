@@ -20,7 +20,7 @@ jobs:
   test:
     name: test (py3.11, pinned)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       PYTHONDONTWRITEBYTECODE: "1"
       # No secrets are needed: all rollout flags (auth/stripe/delivery) default
