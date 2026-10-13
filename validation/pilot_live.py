@@ -119,14 +119,19 @@ class LiveAdapterBoundary(PilotBoundary):
         with self.lock:
             return set(self.documents.get(self.case['identity']['cik'], ()))
 
+    def refuse_sec_response(self, code):
+        attempt, route, stage = self.sec_attempt.get()
+        self.ledger.record_sec_refusal(attempt, route, stage, code)
+        self.refuse('invalid_response')
+
     def sec_content(self, route, url):
         media, content = self.wire.exchange('GET', url)
         if route == 'sec/document':
             if media not in {'text/html', 'text/plain'}:
-                self.refuse('invalid_response')
+                self.refuse_sec_response('sec_media_type')
             return media, content
         if media != 'application/json':
-            self.refuse('invalid_response')
+            self.refuse_sec_response('sec_media_type')
         data = json_object(content)
         if route == 'sec/directory':
             # Full directories are valid; every frozen ticker must occur once
@@ -144,15 +149,16 @@ class LiveAdapterBoundary(PilotBoundary):
             recent = data['filings']['recent']
             fields = [recent[key] for key in ('form', 'accessionNumber', 'primaryDocument')]
             if any(type(field) is not list for field in fields) or len({len(field) for field in fields}) != 1:
-                self.refuse('invalid_response')
+                self.refuse_sec_response('sec_recent_array_shape')
             urls = set()
             for form, accession, document in zip(*fields):
                 if form not in {'10-K', '10-Q', '20-F', '40-F', '6-K', '8-K'}:
                     continue
-                if (type(accession) is not str or not re.fullmatch(r'[0-9]{10}-[0-9]{2}-[0-9]{6}', accession)
-                        or type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
+                if type(accession) is not str or not re.fullmatch(r'[0-9]{10}-[0-9]{2}-[0-9]{6}', accession):
+                    self.refuse_sec_response('sec_accession_syntax')
+                if (type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
                         or '..' in document):
-                    self.refuse('invalid_response')
+                    self.refuse_sec_response('sec_document_syntax')
                 urls.add(f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-", "")}/{document}')
             with self.lock:
                 previous = self.documents.setdefault(cik, frozenset(urls))
