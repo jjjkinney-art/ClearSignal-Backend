@@ -135,6 +135,24 @@ Branch source binding: `e2ac3aa37b82212e30e9e5070c30401630c3194d77e030336d49f83f
 
 ## Not established and live-verification requirements
 
+### Hosted CI ordering correction
+
+The initial PR #280 hosted run failed only the new historical-halt-shape
+assertion: a fast document-size refusal fenced the concurrent facts request
+before dispatch, yielding five claims rather than six. This is valid
+production fencing, not evidence that the envelope failed to enforce its cap.
+The five later grouped gates were skipped, not passed, on that initial run.
+
+The historical-footprint test now explicitly orders only its isolated
+synthetic child: the document request waits, with a three-second test-only
+bound, for the five successful SEC exchanges to return. It also exercises
+an adversarial ordering where facts waits for the document task to arrive.
+The original exact six-claim, one-unresolved, no-model and first-cause
+assertions remain. No production code, stage deadline or dispatch policy
+changes for this correction. Independent Linux checks passed the prior
+228-test focused suite after adding the ordering barrier, then the final
+envelope test file passed all 74 cases including the adversarial variant.
+
 Offline tests do not prove the real filing is at most 30,000,000 bytes,
 downloads within the SEC operation timeouts and stage supervision, carries
 an accepted media type, or matches the registered canonical hash. A

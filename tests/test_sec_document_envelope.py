@@ -652,10 +652,52 @@ def test_isolated_pipeline_settles_the_reviewed_document(tmp_path):
             assert not any(canary.encode() in path.read_bytes() for canary in SECRET_CANARIES)
 
 
-def test_isolated_pipeline_reviewed_overflow_reproduces_the_halt_shape(tmp_path):
-    from validation.pilot_rehearsal import run_rehearsal
+@pytest.mark.parametrize('facts_after_document', [False, True])
+def test_isolated_pipeline_reviewed_overflow_reproduces_the_halt_shape(tmp_path, monkeypatch, facts_after_document):
+    from validation import pilot_rehearsal
+    # Reproduce the historical ordering explicitly. A fast declared-size
+    # refusal can otherwise fence the concurrent facts task before it claims,
+    # which is correct production behavior but a different run footprint.
+    # Only this isolated synthetic child is instrumented; production dispatch,
+    # quotas, timeouts and halt/fencing behavior stay unchanged.
+    original_run = pilot_rehearsal.subprocess.run
+    injection = """from collections import Counter
+from threading import Event, Lock
+from validation.pilot_live import LiveAdapterBoundary
+_original_exchange = LiveAdapterBoundary.sec_exchange
+_settled_routes, _settled_lock, _pre_document = Counter(), Lock(), Event()
+_document_entered = Event()
+def _ordered_exchange(self, method, url, body):
+    if self.scenario != 'reviewed_document_oversize':
+        return _original_exchange(self, method, url, body)
+    if url == 'https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/asml-20251231.htm':
+        _document_entered.set()
+        if not _pre_document.wait(3):
+            raise AssertionError('synthetic document ordering prerequisite missing')
+    if _facts_after_document and '/companyfacts/' in url:
+        if not _document_entered.wait(3):
+            raise AssertionError('synthetic document arrival prerequisite missing')
+    result = _original_exchange(self, method, url, body)
+    route = ('sec/directory' if url.endswith('company_tickers.json') else
+             'sec/submissions' if '/submissions/' in url else
+             'sec/facts' if '/companyfacts/' in url else 'sec/document')
+    with _settled_lock:
+        _settled_routes[route] += 1
+        if _settled_routes == Counter({'sec/directory': 1, 'sec/facts': 1, 'sec/submissions': 3}):
+            _pre_document.set()
+    return result
+LiveAdapterBoundary.sec_exchange = _ordered_exchange
+"""
+    injection = '_facts_after_document = ' + repr(facts_after_document) + '\n' + injection
+    def ordered_run(args, *a, **k):
+        if '-c' in args and 'from validation._pilot_worker import main' in args[-1]:
+            args = list(args)
+            prefix, suffix = args[-1].split('from validation._pilot_worker import main', 1)
+            args[-1] = prefix + '\n' + injection + '\nfrom validation._pilot_worker import main' + suffix
+        return original_run(args, *a, **k)
+    monkeypatch.setattr(pilot_rehearsal.subprocess, 'run', ordered_run)
     output = tmp_path / 'oversize'
-    result = run_rehearsal(output, scenario='reviewed_document_oversize', mode='live_adapter_validation')
+    result = pilot_rehearsal.run_rehearsal(output, scenario='reviewed_document_oversize', mode='live_adapter_validation')
     ledger = result['ledger']
     assert result['status'] == 'halted' and result['completed_cases'] == []
     assert ledger['halted'] == 'post_claim_failure'
