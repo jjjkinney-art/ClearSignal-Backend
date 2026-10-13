@@ -46,7 +46,11 @@ def test_actual_six_case_pipeline_completes_with_zero_network(rehearsals, scenar
     assert len(npk) == 2
     assert all(case['identity']['cik'] == '0000080172' for case in npk)
     counts = Counter(event['route'].split('/')[0] for event in result['claims'])
-    assert counts == {'model': 16, 'sec': 27}
+    # Risk extraction reuses the case's own directory response: one directory
+    # GET per case (previously ASML:core_thesis made a second one).
+    assert counts == {'model': 16, 'sec': 26}
+    directories = Counter(event['case_id'] for event in result['claims'] if event['route'] == 'sec/directory')
+    assert directories == dict.fromkeys((case['case_id'] for case in preflight()['cases']), 1)
     for case in preflight()['cases']:
         case_id = case['case_id']
         limits = result['quotas']['per_case'][case_id]

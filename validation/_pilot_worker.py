@@ -174,6 +174,7 @@ def main():
                 boundary.begin(case)
                 # Rehearse the conservative cold-directory allowance each case.
                 sec_provider._ticker_cik_cache = None
+                sec_provider._reset_shared_company_tickers()
                 if scenario == 'dotenv_drift':
                     (output / '.env').write_text('INVENTED_FIXTURE=true')
                 if scenario == 'socket_attempt':
