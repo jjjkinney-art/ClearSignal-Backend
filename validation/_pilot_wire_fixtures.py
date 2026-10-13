@@ -3,7 +3,7 @@ import json
 
 import httpcore
 
-from validation.pilot_fixtures import model_fixture, sec_fixture
+from validation.pilot_fixtures import REVIEWED_DOCUMENT_SCENARIOS, model_fixture, sec_fixture
 
 
 class SyntheticStream:
@@ -11,6 +11,7 @@ class SyntheticStream:
         self.owner = owner
         self.request = bytearray()
         self.response = None
+        self.offset = 0
 
     def write(self, buffer, timeout=None):
         self.request.extend(buffer)
@@ -32,6 +33,8 @@ class SyntheticStream:
                          'sec/submissions' if '/submissions/' in target else
                          'sec/facts' if '/companyfacts/' in target else 'sec/document')
                 media, content = sec_fixture(route, owner.case['identity'], owner.identities)
+                reviewed = (owner.scenario in REVIEWED_DOCUMENT_SCENARIOS
+                            and owner.case['identity']['ticker'] == 'ASML')
                 if route == 'sec/directory':
                     data = json.loads(content)
                     data['999'] = {'ticker': 'OTHER', 'cik_str': 123456, 'title': 'Invented unrelated issuer'}
@@ -41,7 +44,14 @@ class SyntheticStream:
                     # Accession submitter can legitimately differ from issuer CIK.
                     data['filings']['recent']['accessionNumber'] = ['0000950170-26-012345']
                     data['filings']['recent']['primaryDocument'] = ['issuer-20251231.htm']
+                    if reviewed:
+                        # The exact reviewed registry filing metadata, nothing else.
+                        data['filings']['recent'].update(
+                            form=['20-F'], filingDate=['2026-02-25'],
+                            accessionNumber=['0001628280-26-011378'], primaryDocument=['asml-20251231.htm'])
                     content = json.dumps(data).encode()
+                elif reviewed and route == 'sec/document':
+                    content = b'<html>' + b'a' * (REVIEWED_DOCUMENT_SCENARIOS[owner.scenario] - 6)
             status = b'200 OK'
             extra = b''
             if owner.once({'wire_redirect'}):
@@ -49,7 +59,9 @@ class SyntheticStream:
             self.response = (b'HTTP/1.1 ' + status + b'\r\nContent-Type: ' + media.encode()
                              + b'\r\nContent-Length: ' + str(len(content)).encode()
                              + b'\r\nConnection: close\r\n' + extra + b'\r\n' + content)
-        result, self.response = self.response[:max_bytes], self.response[max_bytes:]
+        # Offset reads: large invented bodies stay linear-time to serve.
+        result = self.response[self.offset:self.offset + max_bytes]
+        self.offset += len(result)
         return result
 
     def start_tls(self, ssl_context, server_hostname=None, timeout=None):
