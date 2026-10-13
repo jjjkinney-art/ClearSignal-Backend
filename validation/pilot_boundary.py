@@ -44,6 +44,7 @@ class PilotBoundary:
         self.identities = [case['identity'] for case in self.cases[::2]]
         self.case = self.case_run = None
         self.stage = ContextVar('offline_pilot_stage', default='outside_pipeline')
+        self.sec_attempt = ContextVar('pilot_sec_attempt', default=None)
         self.patches, self.pools, self.futures = [], [], []
         self.pool_index = 0
         self.lock = Lock()
@@ -497,6 +498,7 @@ class PilotBoundary:
         fingerprint = digest({'method': method, 'url': url, 'route': route,
                               'stage': self.stage.get()})
         attempt = self.claim(route, fingerprint, 0, 0)
+        token = self.sec_attempt.set((attempt, route, self.stage.get()))
         try:
             media_type, content = self.sec_content(route, url)
             if self.once({'sec_redirect'}):
@@ -520,6 +522,7 @@ class PilotBoundary:
             self.ledger.halt_dispatch(attempt)
             raise BudgetError('SEC fixture response refused') from None
         finally:
+            self.sec_attempt.reset(token)
             self.done()
 
     def sec_urlopen(self, request, data=None, timeout=None, **kwargs):

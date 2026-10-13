@@ -199,6 +199,7 @@ class AttemptLedger:
                 db.execute('CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_run TEXT NOT NULL, route TEXT NOT NULL, reserve INTEGER NOT NULL, input_bound INTEGER NOT NULL, output_bound INTEGER NOT NULL, status TEXT NOT NULL, actual INTEGER, request_sha256 TEXT)')
                 if self.policy['schema_version'] == 2:
                     db.execute('CREATE TABLE sec_claims (attempt_id TEXT PRIMARY KEY, claimed_ns INTEGER NOT NULL)')
+                    db.execute('CREATE TABLE first_sec_refusal (id INTEGER PRIMARY KEY CHECK(id=1), attempt_id TEXT NOT NULL, route TEXT NOT NULL, stage TEXT NOT NULL, code TEXT NOT NULL)')
             else:
                 # No implicit migrations or resets, including prior accounting-only ledgers.
                 if db.execute('PRAGMA user_version').fetchone()[0] != LEDGER_SCHEMA_VERSION:
@@ -261,6 +262,31 @@ class AttemptLedger:
             raise BudgetError('unsupported halt reason')
         with self.transaction() as db:
             db.execute('UPDATE policy SET halted=COALESCE(halted,?) WHERE id=1', (reason,))
+
+    def record_sec_refusal(self, attempt_id, route, stage, code):
+        """Atomically attach allowlisted context only to the first durable halt."""
+        codes = {
+            'sec_media_type': {'sec/directory', 'sec/submissions', 'sec/facts', 'sec/document'},
+            'sec_recent_array_shape': {'sec/submissions'},
+            'sec_accession_syntax': {'sec/submissions'},
+            'sec_document_syntax': {'sec/submissions'},
+        }
+        if (type(code) is not str or code not in codes or type(route) is not str
+                or route not in codes[code] or type(stage) is not str
+                or stage not in {'evidence.sec', 'evidence.sec_metrics',
+                                 'evidence.thesis_disclosures', 'evidence.filing_metrics'}
+                or type(attempt_id) is not str):
+            raise BudgetError('invalid SEC refusal metadata')
+        with self.transaction() as db:
+            row = db.execute('SELECT route,status FROM attempts WHERE id=?', (attempt_id,)).fetchone()
+            if row != (route, 'claimed'):
+                raise BudgetError('SEC refusal requires its exact claimed attempt')
+            first = db.execute("UPDATE policy SET halted='invalid_response' WHERE id=1 AND halted IS NULL").rowcount
+            # Legacy ledgers remain readable without migration or cause invention.
+            exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='first_sec_refusal'").fetchone()
+            if first and exists:
+                db.execute('INSERT INTO first_sec_refusal VALUES (1,?,?,?,?)',
+                           (attempt_id, route, stage, code))
 
     def _check_quotas(self, db, case_run, route, *, additional):
         if self.policy['schema_version'] != 2:
@@ -440,7 +466,10 @@ class AttemptLedger:
         with self.transaction() as db:
             reserved, actual, total, pending = db.execute("SELECT COALESCE(SUM(reserve),0),COALESCE(SUM(actual),0),COUNT(*),COALESCE(SUM(status!='settled'),0) FROM attempts").fetchone()
             halted = db.execute('SELECT halted FROM policy WHERE id=1').fetchone()[0]
-        return dict(policy_sha256=self.policy_hash, budget_nanousd=self.budget,
+            exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='first_sec_refusal'").fetchone()
+            refusal = db.execute('SELECT attempt_id,route,stage,code FROM first_sec_refusal WHERE id=1').fetchone() if exists else None
+        return dict(first_sec_refusal=dict(zip(('attempt_id', 'route', 'stage', 'code'), refusal)) if refusal else None,
+                    policy_sha256=self.policy_hash, budget_nanousd=self.budget,
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,
                     executable_provider_adapter=self.policy.get('purpose') == 'approved_six_case_pilot',
