@@ -106,9 +106,17 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
             with artifact_path.open('x') as stream:
                 json.dump(artifact, stream, indent=2)
         else:
-            # A nonzero exit after publication is incomplete too; never return
-            # a different state than the on-disk review artifact.
-            artifact_path.write_text(json.dumps(artifact, indent=2))
+            # Preserve the published terminal evidence byte-for-byte. The
+            # launcher verdict is separate so an abnormal exit cannot turn
+            # a worker's publication into success or erase its diagnostics.
+            try:
+                terminal = json.loads(artifact_path.read_text())
+                if type(terminal) is dict:
+                    artifact['worker_terminal_evidence'] = terminal
+            except (ValueError, OSError):
+                pass
+            with (output / 'launcher-failure.json').open('x') as stream:
+                json.dump(artifact, stream, indent=2)
         return artifact
     return json.loads(artifact_path.read_text())
 

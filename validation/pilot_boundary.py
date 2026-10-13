@@ -448,7 +448,10 @@ class PilotBoundary:
                 event['usage'] = {'input_tokens': usage[0], 'output_tokens': usage[1],
                                   'model': data['model'], 'service_tier': data['service_tier']}
             return httpx.Response(status, content=encoded)
-        except BaseException:
+        except BaseException as exc:
+            from validation.pilot_live import TransportFailure
+            if type(exc) is TransportFailure:
+                self.ledger.record_transport_failure(attempt, 'model/' + stage, stage, exc.code)
             self.ledger.halt_dispatch(attempt)
             raise BudgetError('model fixture response refused') from None
         finally:
@@ -518,7 +521,10 @@ class PilotBoundary:
                     self.refuse('identity_mismatch')
             self.ledger.settle(attempt, input_tokens=0, output_tokens=0)
             return media_type, content
-        except BaseException:
+        except BaseException as exc:
+            from validation.pilot_live import TransportFailure
+            if type(exc) is TransportFailure:
+                self.ledger.record_transport_failure(attempt, route, self.sec_attempt.get()[2], exc.code)
             self.ledger.halt_dispatch(attempt)
             raise BudgetError('SEC fixture response refused') from None
         finally:
