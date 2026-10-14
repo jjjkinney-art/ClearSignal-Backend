@@ -37,7 +37,7 @@ def main():
         return 2
     request = json.loads((output / 'request.json').read_text())
     policy, scenario = request['policy'], request['scenario']
-    approved = policy.get('purpose') == 'approved_six_case_pilot'
+    approved = policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot'}
     execution = policy.get('execution_configuration') if approved else None
     if approved:
         # Bind the actual directory before imports, ledger creation, or network setup.
@@ -127,7 +127,7 @@ def main():
     from validation.pilot_rehearsal import source_binding
     from validation.pilot_boundary import PilotBoundary
 
-    monitoring = policy['purpose'] == 'disabled_source_monitoring_validation'
+    monitoring = policy['purpose'] in {'disabled_source_monitoring_validation', 'approved_source_monitoring_pilot'}
     adapter = monitoring or policy['purpose'] == 'disabled_live_adapter_validation'
     scenarios = SOURCE_MONITORING_SCENARIOS if monitoring else LIVE_SCENARIOS if adapter else SCENARIOS
     if approved:
@@ -137,7 +137,7 @@ def main():
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
     actual_policy = policy_for({'revision': policy['code_binding']['revision'],
                                 'source_sha256': source_binding()}, dependencies,
-                               mode=('approved' if approved else 'source_monitoring' if monitoring else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
+                               mode=('approved_source_monitoring' if approved and monitoring else 'approved' if approved else 'source_monitoring' if monitoring else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
                                approval=policy.get('approval'), execution=execution)
     if digest(policy) != digest(actual_policy):
         return 2
@@ -258,9 +258,10 @@ def main():
     }
     if monitoring:
         artifact.update(artifact_type='disabled_source_monitoring_validation',
-                        logical_tasks=boundary.logical_tasks)
+                        logical_tasks=boundary.logical_tasks,
+                        illustrative_maximum_model_allocation_usd='0')
     if approved:
-        artifact.update(artifact_type='approved_six_case_pilot',
+        artifact.update(artifact_type=policy['purpose'],
                         external_dispatches=boundary.gate.dispatched,
                         dispatch_count_status='native_exchange_entries_including_connection_failures',
                         usage_source='provider_reported_protocol_units_not_invoice',
