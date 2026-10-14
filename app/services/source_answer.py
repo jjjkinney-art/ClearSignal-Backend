@@ -96,11 +96,21 @@ def _restrict_evidence_thesis(thesis: object, answer: str, claims: list[dict],
 
 def is_source_answer_request(question: str) -> bool:
     """Detect explicit attribution requests and operating-risk evidence views."""
+    from ..config import settings
     return bool(
+        (settings.decision_monitoring_inputs_enabled and is_decision_monitoring_request(question))
+        or
         _SOURCE_REQUEST_RE.search(question or "")
         or _NATURAL_EVIDENCE_REQUEST_RE.search(question or "")
         or _RISK_REQUEST_RE.search(question or "")
     )
+
+
+def is_decision_monitoring_request(question: str) -> bool:
+    """Financial decision questions require verified inputs, not generated cutoffs."""
+    return bool(re.search(
+        r"\b(?:decision thresholds?|quantitative thresholds?|bull.?bear boundaries)\b"
+        r"|\b(?:attractive or unattractive)\b", question or "", re.I))
 
 
 def _claim_text(item: object) -> str | None:
@@ -143,9 +153,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     # evidence derivation. No producer currently supplies a validated numeric
     # decision-boundary contract. Withhold the entire generated investment view
     # so the same unsupported values cannot survive in prose or snapshots.
-    threshold_request = bool(re.search(
-        r"\b(?:decision thresholds?|quantitative thresholds?|bull.?bear boundaries)\b"
-        r"|\b(?:attractive or unattractive)\b", question or "", re.I))
+    threshold_request = is_decision_monitoring_request(question)
     generated_thresholds = bool(getattr(thesis, "threshold_zones", None)
                                 or getattr(thesis, "decision_thresholds", None))
     withheld_thresholds = getattr(thesis, "one_sentence_thesis", "") in {

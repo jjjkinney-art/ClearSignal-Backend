@@ -53,6 +53,7 @@ def main():
             'http_proxy', 'https_proxy', 'SSL_CERT_FILE', 'REQUESTS_CA_BUNDLE') if name in os.environ}
     os.environ.clear()
     os.environ.update({'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
+                       'DECISION_MONITORING_INPUTS_ENABLED': 'false',
                        'HOME': str(isolated_home),
                        'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                        'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'})

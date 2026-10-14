@@ -59,6 +59,7 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
     # Construct from constants; do not copy, print, hash or inspect the caller's
     # environment. The key/contact here are invented fixtures, never real values.
     environment = {'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
+                   'DECISION_MONITORING_INPUTS_ENABLED': 'false',
                    'HOME': str(isolated_home),
                    'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                    'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'}

@@ -240,3 +240,26 @@ def test_historical_broad_thesis_does_not_fetch_current_disclosures(isolated_pip
     router._run_investment_pipeline(CompanyContext(ticker="AAPL", company_name="Apple"),
         "What is the investment thesis for Apple? Cite material claims.",
         "historical-thesis", as_of="2026-09-26", side_effects_enabled=False)
+
+
+def test_decision_monitoring_fetches_verified_inputs_and_skips_models(isolated_pipeline, monkeypatch):
+    from app.services import verified_sec_metric_service
+    from test_financial_thesis_foundation import evidence
+    items = [evidence('Revenues', 'revenue', current=200, prior=100),
+             evidence('OperatingIncomeLoss', 'operating income', current=40, prior=10)]
+    requested = []
+    def fetch(*args, **kwargs):
+        requested.append(kwargs['question'])
+        return items
+    monkeypatch.setattr(verified_sec_metric_service, 'fetch_verified_metric_evidence', fetch)
+    monkeypatch.setattr(router._sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': '320193'})
+    question = 'Explain decision thresholds, evidence and uncertainty without inventing figures.'
+    response = router._run_investment_pipeline(
+        CompanyContext(ticker='AAPL', company_name='Apple'), question,
+        'decision-monitoring', side_effects_enabled=False)
+    assert requested == [question]
+    assert isolated_pipeline == []
+    assert response.routing['response_mode'] == 'source_evidence'
+    answer = response.answer
+    assert answer['source_answer']['monitoring_benchmarks'][0]['benchmark_percent'] == '20.0'
+    assert answer['investment_thesis']['decision_thresholds'] == []

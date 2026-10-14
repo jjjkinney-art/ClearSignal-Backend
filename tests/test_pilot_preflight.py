@@ -187,10 +187,12 @@ def test_exact_snapshot_can_be_relocated(copied_setup):
     assert preflight(setup_dir=copied_setup) == preflight()
 
 
-def test_synthetic_inventory_matches_actual_question_gates_and_no_fred_dispatch():
+@pytest.mark.parametrize('input_routing', ['false', 'true'])
+def test_synthetic_inventory_matches_actual_question_gates_and_no_fred_dispatch(input_routing):
     offline_python('''
 import copy
-from validation.pilot_preflight import preflight
+from validation.pilot_preflight import preflight, PilotPreflightError
+from app.config import settings
 from app.services.source_answer import is_source_answer_request
 from app.services.live_issuer_kpi_service import requested_issuer_kpi_aliases
 from app.services.issuer_risk_evidence import requested_risk_topic
@@ -220,9 +222,18 @@ for case in preflight()['cases']:
     assert fred.retrieve_general_finance_evidence(question) == []
     inventory[case['case_id']] = observed
 assert not attempts
-assert preflight(route_inventory=inventory)['execution_allowed'] is False
+if settings.decision_monitoring_inputs_enabled:
+    try:
+        preflight(route_inventory=inventory)
+    except PilotPreflightError as exc:
+        assert 'logical route inventory' in str(exc)
+    else:
+        raise AssertionError('production input routing must not fit the frozen pilot inventory')
+else:
+    assert preflight(route_inventory=inventory)['execution_allowed'] is False
 assert 'app.main' not in sys.modules
-''', extra_env={"FRED_API_KEY": "invented-preflight-fred-key"})
+''', extra_env={"FRED_API_KEY": "invented-preflight-fred-key",
+               "DECISION_MONITORING_INPUTS_ENABLED": input_routing})
 
 
 def test_router_task_fanout_requires_inventory_review_on_drift():

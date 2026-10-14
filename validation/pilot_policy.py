@@ -21,6 +21,7 @@ PILOT_SETTINGS = MappingProxyType({
     'agent_max_retries': 1, 'synthesis_max_retries': 1,
     'agent_timeout': 15.0, 'synthesis_timeout': 55.0,
     'enable_data_retrieval': False,
+    'decision_monitoring_inputs_enabled': False,
 })
 
 
