@@ -148,9 +148,29 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         r"|\b(?:attractive or unattractive)\b", question or "", re.I))
     generated_thresholds = bool(getattr(thesis, "threshold_zones", None)
                                 or getattr(thesis, "decision_thresholds", None))
-    withheld_thresholds = getattr(thesis, "one_sentence_thesis", "") == (
-        "Decision threshold evidence is insufficient; the thesis remains unverified.")
+    withheld_thresholds = getattr(thesis, "one_sentence_thesis", "") in {
+        "Decision threshold evidence is insufficient; the thesis remains unverified.",
+        "Dated Financial monitoring evidence was retrieved; its implications for the thesis remain unverified.",
+    }
     if threshold_request or withheld_thresholds or (generated_thresholds and not is_source_answer_request(question)):
+        from .decision_monitoring_evidence import build_decision_monitoring
+        material = list(items)
+        monitoring = build_decision_monitoring(str(getattr(thesis, "ticker", "")),
+                                               material, references)
+        if monitoring:
+            foundation = monitoring['foundation']
+            _restrict_evidence_thesis(thesis, monitoring['answer'], foundation['claims'],
+                                     foundation['selected_items'], enough=True,
+                                     scope="Financial monitoring")
+            thesis.confidence_score = 0.0
+            thesis.score_source = "not_assessed_evidence_view"
+            thesis.conviction_dimensions = {}
+            return {'status': 'partial', 'claims': foundation['claims'],
+                    'reason': 'Rebuilt financial benchmark; investment boundaries remain unverified.',
+                    'monitoring_benchmarks': monitoring['benchmarks'],
+                    'inferences': monitoring['calculations'],
+                    'unanswered_parts': ['valuation decision boundaries', 'expected returns',
+                                         'operating KPI breakpoints', 'quantified earnings impact']}
         answer = (
             "This run did not establish evidence-backed numerical decision thresholds. "
             "Filing links and model-generated assumptions do not establish valuation "
