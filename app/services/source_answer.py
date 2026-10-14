@@ -139,6 +139,37 @@ def _requested_bound_metric(item: object, ticker: str, question: str) -> bool:
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
                              *, references: list[dict] | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""
+    # Parsed units/order and a model-supplied 'derived' label are not an
+    # evidence derivation. No producer currently supplies a validated numeric
+    # decision-boundary contract. Withhold the entire generated investment view
+    # so the same unsupported values cannot survive in prose or snapshots.
+    threshold_request = bool(re.search(
+        r"\b(?:decision thresholds?|quantitative thresholds?|bull.?bear boundaries)\b"
+        r"|\b(?:attractive or unattractive)\b", question or "", re.I))
+    generated_thresholds = bool(getattr(thesis, "threshold_zones", None)
+                                or getattr(thesis, "decision_thresholds", None))
+    withheld_thresholds = getattr(thesis, "one_sentence_thesis", "") == (
+        "Decision threshold evidence is insufficient; the thesis remains unverified.")
+    if threshold_request or withheld_thresholds or (generated_thresholds and not is_source_answer_request(question)):
+        answer = (
+            "This run did not establish evidence-backed numerical decision thresholds. "
+            "Filing links and model-generated assumptions do not establish valuation "
+            "boundaries, operating breakpoints or earnings impacts. To calculate a "
+            "threshold, this answer needs dated, company-specific inputs, explicit "
+            "scenario assumptions and a reproducible calculation tied to those inputs. "
+            "No numerical investment boundary or attractiveness conclusion is verified."
+        )
+        _restrict_evidence_thesis(thesis, answer, [], [], enough=False,
+                                 scope="Decision threshold")
+        # Confidence retained for ordinary evidence views must not communicate
+        # assessed conviction for this unavailable decision.
+        thesis.confidence_score = 0.0
+        thesis.score_source = "not_assessed_evidence_view"
+        thesis.conviction_dimensions = {}
+        return {"status": "insufficient_claim_evidence", "claims": [],
+                "reason": "No validated producer-bound decision-threshold derivation is available.",
+                "unanswered_parts": ["numerical decision thresholds", "valuation and expected returns",
+                                     "quantified earnings impact"]}
     if not is_source_answer_request(question):
         return None
 
