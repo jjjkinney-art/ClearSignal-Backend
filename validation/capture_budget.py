@@ -111,10 +111,11 @@ def validate_policy(policy):
             modes = {'offline_six_case_rehearsal': 'offline',
                      'disabled_live_adapter_validation': 'live_adapter_validation',
                      'disabled_source_monitoring_validation': 'source_monitoring',
-                     'approved_six_case_pilot': 'approved'}
+                     'approved_six_case_pilot': 'approved',
+                     'approved_source_monitoring_pilot': 'approved_source_monitoring'}
             mode = modes[purpose]
             extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}
-                     if mode == 'approved' else {})
+                     if mode in {'approved', 'approved_source_monitoring'} else {})
             expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
         except (KeyError, TypeError, ValueError):
             raise BudgetError('invalid fixed rehearsal policy') from None
@@ -432,7 +433,7 @@ class AttemptLedger:
 
     def claim_native_dispatch(self, attempt_id, *, case_run, route, request_sha256):
         """Consume an approved claim once across gates/contexts, before native I/O."""
-        if self.policy.get('purpose') != 'approved_six_case_pilot':
+        if self.policy.get('purpose') not in {'approved_six_case_pilot', 'approved_source_monitoring_pilot'}:
             raise BudgetError('native dispatch requires approved policy')
         with self.transaction() as db:
             self.active(db)
@@ -498,7 +499,7 @@ class AttemptLedger:
                     policy_sha256=self.policy_hash, budget_nanousd=self.budget,
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,
-                    executable_provider_adapter=self.policy.get('purpose') == 'approved_six_case_pilot',
+                    executable_provider_adapter=self.policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot'},
                     hard_usd_cap_established=False)
 
 

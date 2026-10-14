@@ -40,18 +40,19 @@ def prepare_policy(*, mode="offline", approval=None, execution=None):
 
 
 def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None, execution=None):
-    scenarios = ({'approved'} if mode == 'approved' else SOURCE_MONITORING_SCENARIOS
+    approved = mode in {'approved', 'approved_source_monitoring'}
+    scenarios = ({'approved'} if approved else SOURCE_MONITORING_SCENARIOS
                  if mode == 'source_monitoring' else LIVE_SCENARIOS
                  if mode == 'live_adapter_validation' else SCENARIOS)
     if type(scenario) is not str or scenario not in scenarios:
         raise BudgetError('unknown immutable rehearsal scenario')
     policy = prepare_policy(mode=mode, approval=approval, execution=execution)
-    if mode == 'approved':
+    if approved:
         from validation.pilot_approved import runtime_values, verify_network_configuration
         verify_network_configuration(execution)
         runtime = runtime_values()
     output = Path(output_dir).resolve()
-    if mode == 'approved' and str(output) != approval['output_dir']:
+    if approved and str(output) != approval['output_dir']:
         raise BudgetError('approval is bound to one fresh output directory')
     output.mkdir(parents=False, exist_ok=False)  # No overwrite, resume or reset.
     isolated_home = output / 'isolated-home'
@@ -65,7 +66,7 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
                    'HOME': str(isolated_home),
                    'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                    'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'}
-    if mode == 'approved':
+    if approved:
         environment.update(OPENAI_API_KEY=runtime['bearer_placeholder'], SEC_USER_AGENT=runtime['sec_contact'])
         for name in execution['proxy_selectors']:
             environment[name] = execution['proxy']
@@ -100,8 +101,8 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
                     'external_dispatches': 0, 'network_attempts': None}
         if mode == 'source_monitoring':
             artifact['artifact_type'] = 'disabled_source_monitoring_validation'
-        if mode == 'approved':
-            artifact.update(artifact_type='approved_six_case_pilot', execution_allowed=True,
+        if approved:
+            artifact.update(artifact_type=policy['purpose'], execution_allowed=True,
                             spending_authorized=True, approval_reference=approval['reference'],
                             external_dispatches=None,
                             usage_source='provider_reported_protocol_units_not_invoice',

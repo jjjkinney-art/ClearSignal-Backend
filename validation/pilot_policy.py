@@ -27,15 +27,16 @@ PILOT_SETTINGS = MappingProxyType({
 
 def policy_for(code_binding, dependencies, *, mode="offline", approval=None, execution=None):
     """No caller-supplied limits, rates, routes, approval or configuration."""
-    if mode not in {"offline", "live_adapter_validation", "approved", "source_monitoring"}:
+    if mode not in {"offline", "live_adapter_validation", "approved", "source_monitoring", "approved_source_monitoring"}:
         raise BudgetError("unsupported pilot mode")
-    if mode == 'approved':
+    approved = mode in {'approved', 'approved_source_monitoring'}
+    monitoring = mode in {'source_monitoring', 'approved_source_monitoring'}
+    if approved:
         from validation.pilot_approved import validate_execution, validate_approval
         validate_execution(execution)
-        validate_approval(approval, code_binding, execution)
+        validate_approval(approval, code_binding, execution, monitoring=monitoring)
     elif approval is not None or execution is not None:
         raise BudgetError('authority is exclusive to approved mode')
-    monitoring = mode == "source_monitoring"
     setup = preflight()
     if dependencies != dict(AUDITED_DEPENDENCIES):
         raise BudgetError('dependency audit changed; separate review required')
@@ -105,8 +106,8 @@ def policy_for(code_binding, dependencies, *, mode="offline", approval=None, exe
         policy.update(purpose='disabled_source_monitoring_validation',
                       pilot_id='frozen-v2-six-case-source-monitoring', maximum_attempts=33)
         policy['quotas']['overall'] = {'model': 0, 'sec': 33}
-    if mode == 'approved':
-        policy.update(purpose='approved_six_case_pilot', pilot_id=approval['run_id'],
+    if approved:
+        policy.update(purpose='approved_source_monitoring_pilot' if monitoring else 'approved_six_case_pilot', pilot_id=approval['run_id'],
                       approval_reference=approval['reference'], approval=approval,
                       execution_configuration=execution, execution_allowed=True,
                       spending_authorized=True)
