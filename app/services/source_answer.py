@@ -174,10 +174,10 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             thesis.score_source = "not_assessed_evidence_view"
             thesis.conviction_dimensions = {}
             return {'status': 'partial', 'claims': foundation['claims'],
-                    'reason': 'Rebuilt financial benchmark; investment boundaries remain unverified.',
+                    'reason': 'Rebuilt financial monitoring evidence; investment boundaries remain unverified.',
                     'monitoring_benchmarks': monitoring['benchmarks'],
                     'inferences': monitoring['calculations'],
-                    'unanswered_parts': ['valuation decision boundaries', 'expected returns',
+                    'unanswered_parts': monitoring.get('unanswered_parts', []) + ['valuation decision boundaries', 'expected returns',
                                          'operating KPI breakpoints', 'quantified earnings impact']}
         answer = (
             "This run did not establish evidence-backed numerical decision thresholds. "
