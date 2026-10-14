@@ -197,6 +197,9 @@ class Settings(BaseSettings):
     # filings.  Defaults to False to avoid external calls unless explicitly
     # requested.
     enable_data_retrieval: bool = False
+    # Production financial-monitoring route. Frozen pilots explicitly disable
+    # this until their input-fetch policy and approval are separately reviewed.
+    decision_monitoring_inputs_enabled: bool = True
 
     # Optional API key for Financial Modeling Prep.  When provided and
     # ``enable_data_retrieval`` is True, the backend will include this

@@ -282,6 +282,11 @@ def _requested_metrics(question: str | None, *, include_defaults: bool = True) -
     if not normalized:
         return _METRICS if include_defaults else ()
     from .financial_thesis_foundation import is_broad_thesis_request, CORE_METRICS
+    from .source_answer import is_decision_monitoring_request
+    if include_defaults and is_decision_monitoring_request(normalized):
+        # Match only the consolidated quantities the monitoring producer can
+        # reconstruct. No estimates, valuation ratios or arbitrary KPI guesses.
+        return tuple(metric for metric in _METRICS if metric[1] in CORE_METRICS)
     if include_defaults and is_broad_thesis_request(normalized):
         return tuple(metric for metric in _METRICS if metric[1] in CORE_METRICS)
     if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", normalized):
