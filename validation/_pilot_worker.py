@@ -53,7 +53,7 @@ def main():
             'http_proxy', 'https_proxy', 'SSL_CERT_FILE', 'REQUESTS_CA_BUNDLE') if name in os.environ}
     os.environ.clear()
     os.environ.update({'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
-                       'DECISION_MONITORING_INPUTS_ENABLED': 'false',
+                       'DECISION_MONITORING_INPUTS_ENABLED': str(policy['configuration']['settings']['decision_monitoring_inputs_enabled']).lower(),
                        'HOME': str(isolated_home),
                        'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                        'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'})
@@ -122,12 +122,14 @@ def main():
     socket.getaddrinfo = synthetic_dns
     from validation.capture_budget import AttemptLedger, BudgetError, digest
     from validation.pilot_policy import AUDITED_DEPENDENCIES, policy_for
-    from validation.pilot_fixtures import SECRET_CANARIES, SCENARIOS, LIVE_SCENARIOS
+    from validation.pilot_fixtures import SECRET_CANARIES, SCENARIOS, LIVE_SCENARIOS, SOURCE_MONITORING_SCENARIOS
     from validation.pilot_preflight import preflight
     from validation.pilot_rehearsal import source_binding
     from validation.pilot_boundary import PilotBoundary
 
-    scenarios = LIVE_SCENARIOS if policy['purpose'] == 'disabled_live_adapter_validation' else SCENARIOS
+    monitoring = policy['purpose'] == 'disabled_source_monitoring_validation'
+    adapter = monitoring or policy['purpose'] == 'disabled_live_adapter_validation'
+    scenarios = SOURCE_MONITORING_SCENARIOS if monitoring else LIVE_SCENARIOS if adapter else SCENARIOS
     if approved:
         scenarios = {'approved'}
     if scenario not in scenarios:
@@ -135,7 +137,7 @@ def main():
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
     actual_policy = policy_for({'revision': policy['code_binding']['revision'],
                                 'source_sha256': source_binding()}, dependencies,
-                               mode=('approved' if approved else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
+                               mode=('approved' if approved else 'source_monitoring' if monitoring else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
                                approval=policy.get('approval'), execution=execution)
     if digest(policy) != digest(actual_policy):
         return 2
@@ -145,7 +147,7 @@ def main():
         boundary = ApprovedBoundary(ledger)
         runtime = boundary.runtime
         boundary.gate.resolve = original_dns
-    elif policy['purpose'] == 'disabled_live_adapter_validation':
+    elif adapter:
         from validation.pilot_live import LiveAdapterBoundary
         boundary = LiveAdapterBoundary(ledger, scenario)
     else:
@@ -193,7 +195,7 @@ def main():
                 ledger.finish_case(boundary.case_run)
                 completed = {'case_id': case['case_id'], 'identity': case['identity'],
                              'pipeline_returned': True}
-                if approved or policy['purpose'] == 'disabled_live_adapter_validation':
+                if approved or adapter:
                     completed['answer_and_evidence'] = safe_result(result, (*SECRET_CANARIES, *(tuple(runtime.values()) if approved else ())))
                 cases.append(completed)
         except BaseException as exc:
@@ -254,6 +256,9 @@ def main():
         'hard_usd_cap_established': False, 'launch_ready': False,
         'quality_status': 'not_adjudicated',
     }
+    if monitoring:
+        artifact.update(artifact_type='disabled_source_monitoring_validation',
+                        logical_tasks=boundary.logical_tasks)
     if approved:
         artifact.update(artifact_type='approved_six_case_pilot',
                         external_dispatches=boundary.gate.dispatched,

@@ -110,6 +110,7 @@ def validate_policy(policy):
             purpose = policy['purpose']
             modes = {'offline_six_case_rehearsal': 'offline',
                      'disabled_live_adapter_validation': 'live_adapter_validation',
+                     'disabled_source_monitoring_validation': 'source_monitoring',
                      'approved_six_case_pilot': 'approved'}
             mode = modes[purpose]
             extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}

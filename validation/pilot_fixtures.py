@@ -83,3 +83,21 @@ REVIEWED_DOCUMENT_SCENARIOS = MappingProxyType({'reviewed_document_admitted': 16
                                                 'reviewed_document_oversize': 30_000_001})
 LIVE_SCENARIOS = SCENARIOS | frozenset({'wire_redirect', 'wire_connect_failure', 'wire_read_failure',
                                         *REVIEWED_DOCUMENT_SCENARIOS})
+
+
+# Separate invented financial inputs for the source-monitoring variant only.
+SOURCE_MONITORING_SCENARIOS = LIVE_SCENARIOS | frozenset({'monitoring_financial_inputs'})
+
+
+def monitoring_fact_fixture(identity):
+    facts = {}
+    for concept, amounts in {'Revenues': (100, 200), 'OperatingIncomeLoss': (10, 40)}.items():
+        rows = []
+        for year, value in zip((2024, 2025), amounts):
+            rows.append({'start': f'{year}-01-01', 'end': f'{year}-12-31',
+                         'val': value, 'accn': f"{identity['cik']}-{str(year + 1)[-2:]}-000001",
+                         'filed': f'{year + 1}-03-01', 'form': '10-K',
+                         'fy': year, 'fp': 'FY'})
+        facts[concept] = {'label': concept, 'units': {'USD': rows}}
+    return {'cik': int(identity['cik']), 'entityName': identity['company_name'],
+            'facts': {'us-gaap': facts}}

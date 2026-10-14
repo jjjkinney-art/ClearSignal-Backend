@@ -27,7 +27,7 @@ PILOT_SETTINGS = MappingProxyType({
 
 def policy_for(code_binding, dependencies, *, mode="offline", approval=None, execution=None):
     """No caller-supplied limits, rates, routes, approval or configuration."""
-    if mode not in {"offline", "live_adapter_validation", "approved"}:
+    if mode not in {"offline", "live_adapter_validation", "approved", "source_monitoring"}:
         raise BudgetError("unsupported pilot mode")
     if mode == 'approved':
         from validation.pilot_approved import validate_execution, validate_approval
@@ -35,6 +35,7 @@ def policy_for(code_binding, dependencies, *, mode="offline", approval=None, exe
         validate_approval(approval, code_binding, execution)
     elif approval is not None or execution is not None:
         raise BudgetError('authority is exclusive to approved mode')
+    monitoring = mode == "source_monitoring"
     setup = preflight()
     if dependencies != dict(AUDITED_DEPENDENCIES):
         raise BudgetError('dependency audit changed; separate review required')
@@ -48,7 +49,11 @@ def policy_for(code_binding, dependencies, *, mode="offline", approval=None, exe
         limits.update({'model': 0 if source else 8, 'sec': 8 if source else 2,
                        'sec/directory': 2 if source else 1, 'sec/submissions': 3 if source else 1,
                        'sec/facts': 1 if source else 0, 'sec/document': 2 if source else 0})
-        if not source:
+        if monitoring:
+            limits.update(model=0, sec=8 if source else 3)
+            if not source:
+                limits['sec/facts'] = 1
+        if not source and not monitoring:
             limits.update({route: 1 for route in MODEL_ROUTES})
             limits['model/synthesis'] = 2
         per_case[case['case_id']] = limits
@@ -63,6 +68,9 @@ def policy_for(code_binding, dependencies, *, mode="offline", approval=None, exe
         'input_admission': 'utf8_bpe_upper_bound_with_64_token_per_message_and_reply_margin',
         'token_framing_verified_for_live': False,
     }
+    if monitoring:
+        configuration['variant'] = 'source_monitoring'
+        configuration['settings']['decision_monitoring_inputs_enabled'] = True
     prices = {}
     for route in (*MODEL_ROUTES, *SEC_ROUTES):
         model = route.startswith('model/')
@@ -93,6 +101,10 @@ def policy_for(code_binding, dependencies, *, mode="offline", approval=None, exe
         'execution_allowed': False, 'spending_authorized': False,
         'tariffs_verified': False, 'all_incremental_charges_accounted': False,
     }
+    if monitoring:
+        policy.update(purpose='disabled_source_monitoring_validation',
+                      pilot_id='frozen-v2-six-case-source-monitoring', maximum_attempts=33)
+        policy['quotas']['overall'] = {'model': 0, 'sec': 33}
     if mode == 'approved':
         policy.update(purpose='approved_six_case_pilot', pilot_id=approval['run_id'],
                       approval_reference=approval['reference'], approval=approval,
