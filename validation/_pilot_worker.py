@@ -155,7 +155,10 @@ def main():
     holder.append(boundary)
     diagnostics = StringIO()
     log_handler = logging.StreamHandler(diagnostics)
-    logging.getLogger().handlers = [log_handler]
+    from validation.thesis_diagnostics import ThesisDiagnosticCollector
+    thesis_diagnostics = ThesisDiagnosticCollector()
+    logging.getLogger().handlers = [log_handler, thesis_diagnostics]
+    logging.getLogger('app.services.thesis_disclosures').setLevel(logging.INFO)
     cases = []
     failure = None
     trace = []
@@ -174,6 +177,7 @@ def main():
                 model_client.max_retries = 2
             boundary.active()
             for case in boundary.cases:
+                thesis_diagnostics.begin(case['case_id'])
                 boundary.begin(case)
                 # Rehearse the conservative cold-directory allowance each case.
                 sec_provider._ticker_cik_cache = None
@@ -244,6 +248,7 @@ def main():
         },
         'sec_configured_contact_applied': boundary.sec_contact_applied,
         'diagnostics_canary_clean': diagnostic_clean,
+        'thesis_disclosure_diagnostics': thesis_diagnostics.snapshot(),
         'isolated_home': True, 'netrc_open_attempts': len(netrc_reads),
         'sec_authorization_header_absent': boundary.sec_authorization_header_absent,
         'coverage_gaps': preflight()['coverage_gaps'],
