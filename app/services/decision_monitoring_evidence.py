@@ -15,7 +15,30 @@ def build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     calculations = [row for row in foundation['inferences']
                     if row['kind'] == 'operating_margin_calculation']
     if not calculations:
-        return None
+        # Missing operating income must not discard other independently rebuilt
+        # comparisons. Do not use this path to bypass mismatched margin inputs.
+        if 'operating income' not in foundation['unanswered_parts']:
+            return None
+        observations = [row for row in foundation['inferences']
+                        if row['kind'] == 'financial_inference']
+        answer = 'Evidence-backed financial monitoring (partial)\n\n'
+        answer += '\n\n'.join(row['claim'] + f" [{row['reference_id']}]"
+                              for row in foundation['claims'])
+        answer += '\n\nMonitoring conditions\n' + '\n\n'.join(
+            row['text'] + ' ' + ' '.join(f'[{ref}]' for ref in row['reference_ids'])
+            + ' ' + row['conditional_test'] for row in observations)
+        answer += ('\n\nOperating income was not verified, so no operating margin '
+                   'or margin benchmark has been calculated. Pretax income, if '
+                   'shown, is supplementary profitability context and does not '
+                   'establish operating income. Evaluate each comparison against '
+                   'its own reporting period; these observations do not establish '
+                   'a common-period ratio or causal relationship. They do not '
+                   'determine whether the stock is attractive or unattractive. '
+                   'Valuation boundaries, expected returns, operating KPI '
+                   'breakpoints and quantified earnings impacts remain unverified.')
+        return {'answer': answer, 'benchmarks': [], 'calculations': observations,
+                'foundation': foundation,
+                'unanswered_parts': ['operating income', 'operating margin']}
     benchmarks = []
     for row in calculations:
         benchmarks.append({
