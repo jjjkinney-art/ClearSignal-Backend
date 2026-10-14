@@ -261,7 +261,7 @@ class OwnedHTTPTransport:
 class LiveAdapterBoundary(PilotBoundary):
     """Reuse the integrated pipeline fences, quotas, claims and settlement."""
     def __init__(self, ledger, scenario):
-        if ledger.policy.get('purpose') != 'disabled_live_adapter_validation':
+        if ledger.policy.get('purpose') not in {'disabled_live_adapter_validation', 'disabled_source_monitoring_validation'}:
             raise BudgetError('explicit disabled live-adapter policy required')
         super().__init__(ledger, scenario)
         self.wire = OwnedHTTPTransport()

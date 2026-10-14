@@ -12,7 +12,7 @@ import subprocess
 import sys
 
 from validation.capture_budget import AttemptLedger, BudgetError, digest
-from validation.pilot_fixtures import LIVE_SCENARIOS, SCENARIOS, SYNTHETIC_CONTACT, SYNTHETIC_KEY
+from validation.pilot_fixtures import SOURCE_MONITORING_SCENARIOS, LIVE_SCENARIOS, SCENARIOS, SYNTHETIC_CONTACT, SYNTHETIC_KEY
 from validation.pilot_policy import AUDITED_DEPENDENCIES, RUN_DEADLINE_SECONDS, policy_for
 
 
@@ -40,7 +40,9 @@ def prepare_policy(*, mode="offline", approval=None, execution=None):
 
 
 def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None, execution=None):
-    scenarios = {'approved'} if mode == 'approved' else (LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS)
+    scenarios = ({'approved'} if mode == 'approved' else SOURCE_MONITORING_SCENARIOS
+                 if mode == 'source_monitoring' else LIVE_SCENARIOS
+                 if mode == 'live_adapter_validation' else SCENARIOS)
     if type(scenario) is not str or scenario not in scenarios:
         raise BudgetError('unknown immutable rehearsal scenario')
     policy = prepare_policy(mode=mode, approval=approval, execution=execution)
@@ -59,7 +61,7 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
     # Construct from constants; do not copy, print, hash or inspect the caller's
     # environment. The key/contact here are invented fixtures, never real values.
     environment = {'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
-                   'DECISION_MONITORING_INPUTS_ENABLED': 'false',
+                   'DECISION_MONITORING_INPUTS_ENABLED': str(policy['configuration']['settings']['decision_monitoring_inputs_enabled']).lower(),
                    'HOME': str(isolated_home),
                    'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                    'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'}
@@ -96,6 +98,8 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
                     'tariffs_verified': False, 'hard_usd_cap_established': False,
                     'launch_ready': False, 'quality_status': 'not_adjudicated',
                     'external_dispatches': 0, 'network_attempts': None}
+        if mode == 'source_monitoring':
+            artifact['artifact_type'] = 'disabled_source_monitoring_validation'
         if mode == 'approved':
             artifact.update(artifact_type='approved_six_case_pilot', execution_allowed=True,
                             spending_authorized=True, approval_reference=approval['reference'],
@@ -125,7 +129,7 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
 def main(argv=None, *, mode="offline"):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', required=True, type=Path)
-    parser.add_argument('--scenario', choices=sorted(LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS), default='happy')
+    parser.add_argument('--scenario', choices=sorted(SOURCE_MONITORING_SCENARIOS if mode == 'source_monitoring' else LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS), default='happy')
     args = parser.parse_args(argv)
     try:
         result = run_rehearsal(args.output_dir, scenario=args.scenario, mode=mode)

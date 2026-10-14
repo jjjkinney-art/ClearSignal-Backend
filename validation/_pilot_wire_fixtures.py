@@ -35,6 +35,9 @@ class SyntheticStream:
                 media, content = sec_fixture(route, owner.case['identity'], owner.identities)
                 reviewed = (owner.scenario in REVIEWED_DOCUMENT_SCENARIOS
                             and owner.case['identity']['ticker'] == 'ASML')
+                if route == 'sec/facts' and owner.monitoring and owner.scenario == 'monitoring_financial_inputs':
+                    from validation.pilot_fixtures import monitoring_fact_fixture
+                    content = json.dumps(monitoring_fact_fixture(owner.case['identity'])).encode()
                 if route == 'sec/directory':
                     data = json.loads(content)
                     data['999'] = {'ticker': 'OTHER', 'cik_str': 123456, 'title': 'Invented unrelated issuer'}

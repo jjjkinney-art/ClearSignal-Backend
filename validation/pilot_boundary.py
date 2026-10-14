@@ -25,7 +25,7 @@ from validation.capture_budget import BudgetError, RateLimitDelay, digest
 from validation.pilot_fixtures import (
     SECRET_CANARIES, SYNTHETIC_CONTACT, document_url, model_fixture, sec_fixture,
 )
-from validation.pilot_policy import PILOT_SETTINGS, response_usage, validate_model_payload
+from validation.pilot_policy import response_usage, validate_model_payload
 from validation.pilot_preflight import preflight
 
 
@@ -46,6 +46,8 @@ class PilotBoundary:
         self.stage = ContextVar('offline_pilot_stage', default='outside_pipeline')
         self.sec_attempt = ContextVar('pilot_sec_attempt', default=None)
         self.patches, self.pools, self.futures = [], [], []
+        self.monitoring = ledger.policy['configuration']['variant'] == 'source_monitoring'
+        self.logical_tasks = []
         self.pool_index = 0
         self.lock = Lock()
         self.claimed = Event()
@@ -80,7 +82,7 @@ class PilotBoundary:
                 self.blocked_after_halt += 1
             raise
         if self.settings is not None:
-            if (any(getattr(self.settings, key) != value for key, value in PILOT_SETTINGS.items())
+            if (any(getattr(self.settings, key) != value for key, value in self.ledger.policy['configuration']['settings'].items())
                     or self.settings.sec_user_agent != self.contact
                     or self.settings.fmp_api_key or self.settings.fred_api_key
                     or os.environ.get('CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED') != 'false'
@@ -210,12 +212,15 @@ class PilotBoundary:
             def __init__(pool, max_workers=None, *args, **kwargs):
                 owner.active()
                 owner.pool_index += 1
-                source = owner.case['case_id'].endswith(':core_thesis')
+                core = owner.case['case_id'].endswith(':core_thesis')
+                source = core or owner.monitoring
                 if owner.pool_index == 1:
                     pool.kind = 'evidence'
                     pool.names = ['fmp', 'sec', 'news_co', 'news_macro', 'fred', 'valuation', 'estimates']
                     if source:
-                        pool.names += ['sec_metrics', 'thesis_disclosures', 'filing_metrics']
+                        pool.names += ['sec_metrics']
+                    if core:
+                        pool.names += ['thesis_disclosures', 'filing_metrics']
                     expected = len(pool.names)
                 elif not source and owner.pool_index == 2:
                     pool.kind = 'agents'
@@ -260,6 +265,30 @@ class PilotBoundary:
                     owner.claimed.wait(1)
                     owner.refuse('pool_failure')
                 name = pool.names[index]
+                if owner.monitoring:
+                    expected = {'fmp': '_fetch_fmp', 'sec': '_fetch_sec',
+                                'news_co': '_fetch_news_company', 'news_macro': '_fetch_news_macro',
+                                'fred': '_fetch_fred_evidence', 'valuation': '_fetch_valuation_ratios',
+                                'estimates': '_fetch_analyst_estimates', 'sec_metrics': '_fetch_sec_metrics',
+                                'thesis_disclosures': '_fetch_thesis_disclosures',
+                                'filing_metrics': '_fetch_filing_metrics'}
+                    # The router submits observability.bind(_observed(...)).
+                    # Inspect only the two fixed wrappers' fn cells; never execute
+                    # callbacks or infer identity from positional order alone.
+                    target = fn
+                    for module, qualname in (('app.observability', 'bind.<locals>._wrapped'),
+                                             ('app.services.router_service', '_run_investment_pipeline.<locals>._observed.<locals>._run')):
+                        if (getattr(target, '__module__', None) != module
+                                or getattr(target, '__qualname__', None) != qualname):
+                            owner.refuse('configuration_drift')
+                        cells = dict(zip(target.__code__.co_freevars, target.__closure__ or ()))
+                        target = cells['fn'].cell_contents if 'fn' in cells else None
+                    if (getattr(target, '__module__', None) != 'app.services.router_service'
+                            or getattr(target, '__name__', None) != expected.get(name)):
+                        owner.refuse('configuration_drift')
+                    owner.logical_tasks.append({'case_id': owner.case['case_id'],
+                                                'stage': 'evidence.' + name,
+                                                'function': target.__name__})
                 stage = 'evidence.' + name if pool.kind == 'evidence' else name
                 # Track work BEFORE handing it to an executor. submit may queue
                 # executable work and then raise without returning its Future.
