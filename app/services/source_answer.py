@@ -176,6 +176,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             return {'status': 'partial', 'claims': foundation['claims'],
                     'reason': 'Rebuilt financial monitoring evidence; investment boundaries remain unverified.',
                     'monitoring_benchmarks': monitoring['benchmarks'],
+                    'reporting_period_coverage': monitoring.get('reporting_period_coverage'),
                     'inferences': monitoring['calculations'],
                     'unanswered_parts': monitoring.get('unanswered_parts', []) + ['valuation decision boundaries', 'expected returns',
                                          'operating KPI breakpoints', 'quantified earnings impact']}

@@ -1,8 +1,88 @@
 """Rebuilt financial monitoring benchmarks, never bull/bear price targets."""
+from datetime import date
+import re
+
 from .financial_thesis_foundation import build_financial_foundation
 
 
 def build_decision_monitoring(ticker, items, references, *, expected_cik=None):
+    result = _build_decision_monitoring(ticker, items, references, expected_cik=expected_cik)
+    if result is None:
+        return None
+    coverage = _newer_filing_coverage(result['foundation'], items, references)
+    if coverage:
+        result['reporting_period_coverage'] = coverage
+        result['unanswered_parts'] = result.get('unanswered_parts', []) + [
+            'financial comparisons for the newer listed filing period']
+        result['answer'] += (
+            '\n\nReporting-period coverage: a retrieved filing listing identifies '
+            f"a newer reporting period ending {coverage['newer_listed_period_end']} "
+            + ' '.join(f'[{ref}]' for ref in coverage['filing_reference_ids'])
+            + '. Some cited financial comparisons cover older periods, as dated above. '
+            'The newer filing listing does not verify its financial amounts. '
+            'Comparisons for that newer period remain unverified in this answer.')
+    return result
+
+
+def _newer_filing_coverage(foundation, items, references):
+    """Metadata can identify a coverage gap, never authorize newer metric values."""
+    from .thesis_disclosures import _business_issuer_url
+    selected = [item for item in foundation['selected_items'] if item.verified_claims]
+    if not selected:
+        return None
+    issuer = re.match(r'^https://www\.sec\.gov/Archives/edgar/data/([0-9]+)/', selected[0].url or '')
+    if not issuer:
+        return None
+    def bound_reference(item):
+        matches = [ref for ref in references
+            if ref.get('title') == item.title.strip()[:300]
+            and ref.get('source') == item.source.strip()[:120]
+            and ref.get('url') == item.url and ref.get('published_at') == item.timestamp
+            and re.fullmatch(r'E[1-9]\d*', str(ref.get('id', '')))]
+        if len(matches) != 1:
+            return None
+        ref = matches[0]
+        return ref if sum(other.get('id') == ref['id'] for other in references) == 1 else None
+    listings = []
+    for item in items:
+        if (item.claim_type != 'filing_metadata' or item.source != 'SEC EDGAR'
+                or item.source_type != 'regulatory_filing' or item.source_tier != 'primary'
+                or item.extraction_method != 'publisher_feed'
+                or item.document_type not in {'10-Q', '10-Q/A', '10-K', '10-K/A', '20-F', '20-F/A'}
+                or item.freshness_status in {'stale', 'conflicting', 'superseded', 'unavailable'}
+                or item.availability_status != 'available'
+                or not _business_issuer_url(item.url, issuer[1])):
+            continue
+        try:
+            end, filed = date.fromisoformat(item.reporting_period_end), date.fromisoformat(item.timestamp)
+            if (end.isoformat() != item.reporting_period_end or filed.isoformat() != item.timestamp
+                    or not end <= filed <= date.today()):
+                continue
+        except (TypeError, ValueError):
+            continue
+        ref = bound_reference(item)
+        if (ref and ref.get('claim_type') == 'filing_metadata'
+                and ref.get('document_type') == item.document_type
+                and ref.get('reporting_period_end') == item.reporting_period_end):
+            listings.append((item.reporting_period_end, ref['id']))
+    if not listings:
+        return None
+    latest = max(end for end, _ in listings)
+    older = []
+    for item in selected:
+        current = item.verified_claims[0]
+        ref = bound_reference(item)
+        if ref and current['period_end'] < latest:
+            older.append({'metric': current['metric'], 'period_end': current['period_end'],
+                          'reference_id': ref['id']})
+    if not older:
+        return None
+    return {'status': 'newer_filing_metadata_available', 'newer_listed_period_end': latest,
+            'filing_reference_ids': sorted({ref for end, ref in listings if end == latest}),
+            'older_comparisons': older}
+
+
+def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     # The existing producer rechecks identity, raw facts, periods, currencies,
     # filing versions, summary and citation bindings. Model annotations cannot
     # authorize a monitoring benchmark.
