@@ -200,6 +200,9 @@ class Settings(BaseSettings):
     # Production financial-monitoring route. Frozen pilots explicitly disable
     # this until their input-fetch policy and approval are separately reviewed.
     decision_monitoring_inputs_enabled: bool = True
+    # Additional filing retrieval for broad monitoring questions. Opt-in only;
+    # existing frozen pilots have no document slots for this path.
+    decision_monitoring_filing_fallback_enabled: bool = False
 
     # Optional API key for Financial Modeling Prep.  When provided and
     # ``enable_data_retrieval`` is True, the backend will include this
