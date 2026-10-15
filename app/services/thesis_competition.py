@@ -74,11 +74,17 @@ def extract_competition_descriptions(document, *, ticker, cik):
             if not _qualifies(quote) or quote in seen:
                 continue
             offset = start + left
-            ref = ClaimDocumentReference(
-                reference_id=f'document:{document.content_hash}:competition:{offset}',
-                title=document.title or f'{ticker} {document.document_type}', provider='SEC EDGAR',
-                url=document.final_url, published_at=document.published_at, section=section,
-                content_hash=document.content_hash, quote=quote).to_dict()
+            try:
+                ref = ClaimDocumentReference(
+                    reference_id=f'document:{document.content_hash}:competition:{offset}',
+                    title=document.title or f'{ticker} {document.document_type}', provider='SEC EDGAR',
+                    url=document.final_url, published_at=document.published_at, section=section,
+                    content_hash=document.content_hash, quote=quote).to_dict()
+            except (TypeError, ValueError):
+                # A business-section reference has a stricter quote bound than
+                # risk context. Withhold this complete candidate; do not clip it
+                # or discard independently validated business and risk evidence.
+                continue
             value = dict(claim_kind='issuer_competition_description', ticker=ticker, quote=quote,
                          start_offset=offset, end_offset=offset + len(quote), document_ref=ref,
                          document_type=document.document_type)
