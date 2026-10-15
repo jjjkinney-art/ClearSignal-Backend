@@ -1,0 +1,44 @@
+{
+  "admitted_count": 1,
+  "coverage": {
+    "complete_business_model": false,
+    "facets": [
+      {
+        "facet": "activities",
+        "label": "Products, services and operating activities",
+        "reference_ids": [],
+        "status": "not_verified"
+      },
+      {
+        "facet": "revenue_model",
+        "label": "How the issuer generates revenue",
+        "reference_ids": [],
+        "status": "not_verified"
+      },
+      {
+        "facet": "customers_and_channels",
+        "label": "Customers and distribution channels",
+        "reference_ids": [
+          "E1"
+        ],
+        "status": "source_description_present"
+      },
+      {
+        "facet": "segments",
+        "label": "Reported segment structure",
+        "reference_ids": [],
+        "status": "not_verified"
+      }
+    ],
+    "limitation": "These are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.",
+    "scope": "sampled_issuer_descriptions"
+  },
+  "exact_span_reproduced": true,
+  "limitation": "Saved body replay only; no new live document or full six-case pilot was executed.",
+  "live_requests": 0,
+  "local_response_fixture_uses": 1,
+  "quote": "\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.",
+  "source_body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+  "source_capture_library_id": "libfile_c29a29060af081918236d670982119d9",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm"
+}

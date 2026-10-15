@@ -247,7 +247,8 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
                                     else 1 if _NAMED_SEGMENT_STRUCTURE.match(row[1]) else 0,
                                     row[0]))
     result = []
-    for offset, quote in candidates[:2]:
+    from .business_context import complementary_candidates
+    for offset, quote in complementary_candidates(candidates):
         try:
             ref = ClaimDocumentReference(reference_id=f"document:{document.content_hash}:business:{offset}",
                 title=document.title or f"{ticker} {document.document_type}", provider="SEC EDGAR", url=document.final_url,
@@ -301,6 +302,7 @@ def bound_business_description(item, *, ticker, cik):
                 or item.source != "SEC EDGAR" or item.source_type != "regulatory_filing"
                 or item.source_tier != "primary" or item.claim_type != "reported_fact"
                 or item.document_type not in {"10-K", "20-F", "10-Q"} or value.get("document_type", "10-K") != item.document_type or item.section != section or item.extraction_method != "html"
+                or item.availability_status != 'available'
                 or item.freshness_status in {"unavailable", "conflicting", "superseded", "stale"}
                 or item.summary != _business_summary(value)):
             return None

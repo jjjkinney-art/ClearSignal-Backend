@@ -44,6 +44,15 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Business-context increment (16 October 2026 Auckland): the next shared change
+uses complementary already qualified descriptions within the existing two-quote
+cap and exposes source-bound activity/revenue/customer-channel/segment coverage.
+A distribution sentence cannot clear full business-model completeness, and
+customer revenue cannot stand in for issuer revenue. Offline NPK saved-body
+replay preserves the exact admitted channel quote and leaves other facets open.
+This is an implementation/review increment, not new live or full business-model
+acceptance. See [bound business context](BUSINESS_CONTEXT_COVERAGE_20261016.md).
+
 1. Audit and extend shared issuer identity, official source discovery, document
    retrieval, sector metrics and topic extraction. Prefer fixes that transfer to
    unseen companies over an ever-growing collection of ticker-specific patches.
