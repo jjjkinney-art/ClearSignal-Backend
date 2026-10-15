@@ -169,3 +169,9 @@ ApprovedBoundary.__init__ = synthetic_init
     assert result['diagnostics_canary_clean']
     assert result['sec_authorization_header_absent']
     assert len(result['logical_tasks']) == 54
+    diagnostics = result['thesis_disclosure_diagnostics']
+    assert [row['case_id'] for row in diagnostics] == [
+        'ASML:core_thesis', 'ACHC:core_thesis', 'NPK:core_thesis']
+    assert all(row['stage'] in {'extraction', 'annual_discovery', 'quarterly_discovery',
+                                'quarterly_document', 'annual_document', 'identity'}
+               for row in diagnostics)

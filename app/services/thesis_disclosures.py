@@ -10,7 +10,7 @@ from .issuer_risk_evidence import (
     RISK_TOPICS, IssuerRiskProfile, _issuer_url, bound_issuer_risk,
     extract_issuer_risk_evidence,
 )
-from .public_document_ingestion import fetch_public_document
+from .public_document_ingestion import fetch_public_document, PublicDocumentError
 from .thesis_risk_relevance import eligible_thesis_risk_quote
 from .sec_risk_sections import complete_business_window, risk_sentence_spans, business_section_label
 from .reviewed_annual_layouts import reviewed_annual_layout, layout_binding
@@ -317,20 +317,36 @@ def bound_thesis_risk(item, *, ticker):
 
 
 def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
+    # Structured status/counts only; never persist prose, URLs or exception text.
+    stats = {"stage": "eligibility", "status": "not_requested"}
+    items = _fetch_thesis_disclosures(ticker, question=question, user_agent=user_agent,
+                                     stats=stats)
+    stats.update(business_count=sum(bool(item.business_disclosures) for item in items),
+                 competition_count=sum(bool(getattr(item, 'competition_disclosures', [])) for item in items),
+                 risk_count=sum(bool(item.risk_disclosures) for item in items))
+    logger.info("thesis disclosure retrieval diagnostic",
+                extra={"thesis_disclosure_diagnostics": stats})
+    return items
+
+
+def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
     """Annual context, or one current quarter plus authorized historical risks."""
     if not requests_thesis_disclosures(ticker, question):
         return []
     quarterly_business = []
     try:
+        stats.update(stage="identity", status="identity_unavailable")
         cik = sec_provider._load_ticker_cik_map().get(ticker)
         if not cik:
             return []
+        stats.update(stage="annual_discovery", status="annual_metadata_absent")
         filings = sec_provider.fetch_recent_filings(ticker, forms=["10-K", "20-F"],
             limit=1, years_back=2, prefer_results=False) or []
         relationship = None
         if filings:
             filing = filings[0]
         else:
+            stats.update(stage="quarterly_discovery", status="annual_metadata_absent")
             # Current issuer context must come from its own filing, never an
             # inherited predecessor description. One bounded quarterly attempt.
             quarters = sec_provider.fetch_recent_filings(ticker, forms=["10-Q"],
@@ -338,6 +354,7 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
             if quarters and quarters[0].document_type == "10-Q":
                 quarter = quarters[0]
                 try:
+                    stats["stage"] = "quarterly_document"
                     quarterly_document = fetch_public_document(quarter.url, user_agent=user_agent,
                         publisher="SEC EDGAR", published_at=quarter.timestamp, document_type="10-Q",
                         source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
@@ -345,6 +362,7 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
                     quarterly_business = extract_business_descriptions(quarterly_document,
                         ticker=ticker, cik=cik)
                 except Exception as exc:
+                    stats["status"] = "quarterly_document_unavailable"
                     logger.warning("quarterly business context unavailable for %s: %s", ticker, type(exc).__name__)
             # Reuse the exact reviewed document authorization. It permits
             # historical risks only, never inherited business or metric facts.
@@ -353,14 +371,18 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
                 return quarterly_business
             filing, relationship = predecessor
         if filing.document_type not in {"10-K", "20-F"}:
+            stats["status"] = "unsupported_form"
             return []
+        stats.update(stage="annual_document", status="document_unavailable")
         document = fetch_public_document(filing.url, user_agent=user_agent, publisher="SEC EDGAR",
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
             preserve_sec_business=True, extract_tables=False)
         diagnostics = {}
+        stats.update(stage="extraction", status="extraction_complete")
         business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
                     if relationship is None else [])
+        stats["business_extraction"] = diagnostics
         from .thesis_competition import extract_competition_descriptions
         competition = (extract_competition_descriptions(document, ticker=ticker, cik=cik)
                        if relationship is None else [])
@@ -382,5 +404,9 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
         risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
         return (quarterly_business + business)[:2] + competition + risks[:2]
     except Exception as exc:
+        stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
+        if isinstance(exc, PublicDocumentError):
+            stats["document_failure_kind"] = exc.failure_kind
+            stats["http_status"] = exc.http_status
         logger.warning("thesis disclosures unavailable for %s: %s", ticker, type(exc).__name__)
         return quarterly_business
