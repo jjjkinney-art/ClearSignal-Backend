@@ -1,0 +1,195 @@
+{
+  "acceptance_targets": {
+    "account_leakage_allowed": 0,
+    "denominator": "all frozen scheduled cases; failed, missing, gap-only and unreviewed cases cannot count as useful-answer passes",
+    "fabricated_material_sources_allowed": 0,
+    "independent_review": "primary-document factual/citation adjudication plus existing two-reviewer blind analytical rubric and disagreement resolution",
+    "issuer_level_stop_ship_failures_allowed": 0,
+    "issuer_period_contamination_allowed": 0,
+    "material_claim_source_binding_minimum": "1.00",
+    "material_numerical_accuracy_minimum": "0.95",
+    "partial_answer_rule": "partial status neither passes nor fails usefulness automatically; review the exact question and unresolved requested parts",
+    "useful_cited_answer_minimum_by_market_cap": "0.90",
+    "useful_cited_answer_minimum_by_question_family": "0.90"
+  },
+  "artifact_type": "offline_company_quality_expansion_proposal",
+  "blocking_requirements": [
+    "A 39-GET six-case approval does not cover 80 or 100 companies; all eleven live approvals are consumed.",
+    "Audit actual route/stage inventory for every proposed family and source complexity before setting fixed physical quotas.",
+    "Review code, dependencies, configuration, retention, deadlines and spending terms for a new bounded executor/package.",
+    "Do not assume source-only core/threshold behavior validates model-backed routes or the other four question families.",
+    "No finite benchmark proves every public company works; publish verified market/source scope and gaps."
+  ],
+  "captures_executed_by_this_plan": 0,
+  "classification_as_of": "2026-10-09",
+  "classification_scope": "frozen dated cohort labels; not current market values",
+  "development": {
+    "by_market_cap": {
+      "mega_large": 34,
+      "mid": 23,
+      "small_micro": 23
+    },
+    "case_count": 480,
+    "issuer_count": 80
+  },
+  "development_issuers": [
+    "AA",
+    "AAPL",
+    "ACHC",
+    "ACMR",
+    "ACNB",
+    "AIN",
+    "AMT",
+    "AMZN",
+    "ASH",
+    "ASML",
+    "AWR",
+    "BA",
+    "BANF",
+    "BGS",
+    "BHP",
+    "CAL",
+    "CBU",
+    "CCBG",
+    "COST",
+    "CWT",
+    "DOCU",
+    "EFOR",
+    "ENR",
+    "EQNR",
+    "ETSY",
+    "FRPH",
+    "FUL",
+    "GEF",
+    "GOOGL",
+    "GRC",
+    "HAE",
+    "INGR",
+    "JBLU",
+    "JNJ",
+    "JPM",
+    "KAI",
+    "KO",
+    "LEVI",
+    "LIN",
+    "LLY",
+    "MAN",
+    "MAT",
+    "META",
+    "MLR",
+    "MSFT",
+    "NATH",
+    "NEE",
+    "NGS",
+    "NHI",
+    "NNBR",
+    "NOG",
+    "NPK",
+    "NSP",
+    "NVDA",
+    "NVS",
+    "PETS",
+    "PG",
+    "PLOW",
+    "PLTR",
+    "PPLI",
+    "RELL",
+    "RGR",
+    "RY",
+    "SAP",
+    "SGC",
+    "SHW",
+    "SON",
+    "SONY",
+    "SR",
+    "SWBI",
+    "SWX",
+    "TDAY",
+    "TM",
+    "TSLA",
+    "TSM",
+    "UL",
+    "V",
+    "WDFC",
+    "WMT",
+    "XOM"
+  ],
+  "execution_authorized": false,
+  "execution_readiness": "blocked_pending_reviewed_executor_and_separate_approval",
+  "external_prior_holdout_exposure": "unknown",
+  "launch_ready": false,
+  "matrix_sha256": "cb6ae37a7a778f234285175a747e9b439bf6cb4c73f4a4cb8f0c44f548e54c32",
+  "production_activation_authorized": false,
+  "quality_pass_rate": null,
+  "quality_status": "not_adjudicated",
+  "question_families": [
+    "core_thesis",
+    "decision_threshold",
+    "structural_risk",
+    "financial_trends",
+    "operating_metrics",
+    "recent_developments"
+  ],
+  "registry_sha256": "9f10edd59c91b42ef85ca53c4c3fafff1a4d319da2ffa5b6050aeec303ef6325",
+  "reservation_sha256": "16009367c2ce33ff23c8d64ce5a46d2b44625dc1ce87f32271d825b4ea688b93",
+  "reserved_holdout": {
+    "by_market_cap": {
+      "mega_large": 6,
+      "mid": 7,
+      "small_micro": 7
+    },
+    "case_count": 120,
+    "issuer_count": 20
+  },
+  "schema_version": 1,
+  "setup_file_sha256": {
+    "company_quality_manifest.v2.json": "f7f4b3bf630e309b1250162df0b200f9e00a12fd950428050566c2c002c1d1f8",
+    "company_quality_manifest.v2.metadata.json": "eec99ce3a5f8e336e58d7234a5105432746bdf0d14dd5ad9a27a52c83853e264",
+    "fixtures.v2.json": "c09c60313b482590702119b3eb96f9c4045f9e8f698a7f11d99127d9ccb71066",
+    "issuer_registry.v2.json": "7acd7a369a2321e40626b9ae803ad63739690e1dc93652c41a952c278dd74842"
+  },
+  "spending_authorized": false,
+  "stages": [
+    {
+      "case_count": 6,
+      "id": "offline_pilot_quality",
+      "requirement": "preserve execution success separately from question completeness and independent review",
+      "scope": "existing ASML/ACHC/NPK core_thesis and decision_threshold answers"
+    },
+    {
+      "case_count": 160,
+      "families": [
+        "core_thesis",
+        "decision_threshold"
+      ],
+      "id": "development_core_and_threshold",
+      "issuer_count": 80,
+      "requirement": "fix demonstrated shared completeness gaps before approving broader capture"
+    },
+    {
+      "case_count": 480,
+      "id": "development_all_families",
+      "issuer_count": 80,
+      "requirement": "full six-family development matrix; prior 160 are a subset, not 160 extra passes"
+    },
+    {
+      "case_count": 120,
+      "id": "reserved_holdout",
+      "issuer_count": 20,
+      "requirement": "freeze product, prompts and grading references before separately approved holdout execution; no tuning on its answers"
+    },
+    {
+      "id": "signed_in_acceptance",
+      "requirement": "separate account isolation, personalization, saved thesis, save/reopen, latency and freshness acceptance"
+    }
+  ],
+  "total": {
+    "by_market_cap": {
+      "mega_large": 40,
+      "mid": 30,
+      "small_micro": 30
+    },
+    "case_count": 600,
+    "issuer_count": 100
+  }
+}

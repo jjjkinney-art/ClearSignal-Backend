@@ -27,6 +27,21 @@ The 33/33 deployed risk-evidence result validates specific issuer/topic cases;
 it does not establish reliable answers across all questions or public companies.
 A safe gap is honest handling, but is not a successful useful-answer result.
 
+**Current gate — 16 October 2026 Auckland:** PR295's separately approved
+source-only development pilot completed all six ASML/ACHC/NPK cases, using 34
+of 39 SEC GETs, zero models and no unresolved claims. ACHC monitoring admitted
+June 2026 filing comparisons; NPK retained the previously missing business
+description. These close the demonstrated pilot-path freshness/extraction
+increments, not production activation or universal answer quality. All six
+answers remain partial, with competitive assessment, valuation/decision
+boundaries and risk materiality unresolved. The existing version 2 benchmark is
+already 100 issuers/600 questions, with 480 development and 120 reserved holdout
+cases; it must be reused rather than rebuilt or silently reclassified. The next
+gate is shared question-completeness work, independent source/usefulness review,
+and a separately reviewed bounded development expansion before held-out and
+signed-in acceptance. All eleven live approvals are consumed. See the
+[pilot gap review and expansion proposal](quality_gate_20261016/README.md).
+
 **Implementation and acceptance order:**
 
 1. Audit and extend shared issuer identity, official source discovery, document
