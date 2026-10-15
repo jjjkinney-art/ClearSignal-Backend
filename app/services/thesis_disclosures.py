@@ -45,6 +45,16 @@ _CURRENT_REVENUE_MODEL = re.compile(
     r"(?:sales of (?:subscriptions|(?:our )?products|services)|"
     r"marketplace activities|(?:transaction|subscription|licensing|service) fees|"
     r"(?:professional (?:and other )?(?:non-subscription )?|subscription )services)\b", re.I)
+# A complete passive product-channel statement still describes current business.
+# Full-match a narrow channel grammar; do not admit arbitrary product prose,
+# infer a segment identity, or clip promotional/forward-looking clauses.
+_CURRENT_PRODUCT_DISTRIBUTION = re.compile(
+    r"^(?:\ufeff\s*)?(?:Our )?Products are sold "
+    r"(?:primarily |principally )?"
+    r"(?:in [A-Za-z][A-Za-z ,'-]{2,100} )?"
+    r"(?:directly to (?:retailers|wholesalers|customers|consumers)"
+    r"(?: and (?:also )?through (?:independent )?(?:distributors|retailers|wholesalers))?"
+    r"|through (?:independent )?(?:distributors|retailers|wholesalers))\.$", re.I)
 _NAMED_ISSUER_ACTIVITY = re.compile(
     r"^(?P<subject>[a-z][a-z&'\u2019 .-]{1,79}?)\s+"
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
@@ -158,6 +168,7 @@ def _business_quote_rejection(quote):
     if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
              or _customer_purpose_activity(quote)
              or _CURRENT_REVENUE_MODEL.match(quote)
+             or _CURRENT_PRODUCT_DISTRIBUTION.fullmatch(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
              or _REPORTED_SEGMENT_LIST.fullmatch(quote)
              or _NAMED_SEGMENT_STRUCTURE.match(quote))
