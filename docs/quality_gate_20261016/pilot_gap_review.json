@@ -1,0 +1,166 @@
+{
+  "artifact_type": "unblinded_development_pilot_gap_review",
+  "cases": [
+    {
+      "answer_canonical_sha256": "f806e250511e187d7a2fd95d9f4c568a35fefa8e76644e06eb4b1ef023f4e2c5",
+      "blind_usefulness_review": "pending",
+      "case_id": "ASML:core_thesis",
+      "claims_by_kind": {
+        "issuer_business_description": 1,
+        "issuer_competition_description": 2,
+        "issuer_disclosed_risk": 2,
+        "reported_financial_comparison": 4
+      },
+      "declared_unanswered_parts": [
+        "competitive position",
+        "valuation and expected returns",
+        "risk materiality, likelihood and effect on the investment case"
+      ],
+      "factual_source_adjudication": "pending_independent_primary_document_review",
+      "observed_completeness": "requested_parts_unresolved",
+      "question": "What is the investment thesis for ASML Holding NV, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+      "source_answer_status": "partial",
+      "unblinded_content_finding": "Financial comparisons, margin arithmetic and issuer business/competition/risk context are present. Relative competitive strength, valuation and materiality remain unresolved; the financial foundation does not complete the requested investment thesis."
+    },
+    {
+      "answer_canonical_sha256": "9f03cbb62b069a006a93d658da2f51fd57e390f6d3fcf7c454a3d10055325658",
+      "blind_usefulness_review": "pending",
+      "case_id": "ASML:decision_threshold",
+      "claims_by_kind": {
+        "reported_financial_comparison": 4
+      },
+      "declared_unanswered_parts": [
+        "valuation decision boundaries",
+        "expected returns",
+        "operating KPI breakpoints",
+        "quantified earnings impact"
+      ],
+      "factual_source_adjudication": "pending_independent_primary_document_review",
+      "observed_completeness": "requested_parts_unresolved",
+      "question": "Which valuation and operating assumptions would make ASML Holding NV attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+      "source_answer_status": "partial",
+      "unblinded_content_finding": "The historical operating-margin benchmark is reproducible. It is not a valuation or attractiveness boundary; no supported investment decision threshold is demonstrated."
+    },
+    {
+      "answer_canonical_sha256": "b1b85834d984aa89bbab82e85968dea0a38ba4cb6e821e25d4d4db724f21ec58",
+      "blind_usefulness_review": "pending",
+      "case_id": "ACHC:core_thesis",
+      "claims_by_kind": {
+        "issuer_business_description": 2,
+        "issuer_disclosed_risk": 2,
+        "reported_financial_comparison": 3,
+        "supplementary_profitability_comparison": 1
+      },
+      "declared_unanswered_parts": [
+        "operating income",
+        "competitive position",
+        "valuation and expected returns",
+        "risk materiality, likelihood and effect on the investment case"
+      ],
+      "factual_source_adjudication": "pending_independent_primary_document_review",
+      "observed_completeness": "requested_parts_unresolved",
+      "question": "What is the investment thesis for Acadia Healthcare Company, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+      "source_answer_status": "partial",
+      "unblinded_content_finding": "Current Q2 financial comparisons and business/risk descriptions are present. Operating income, competitive position, valuation and risk materiality remain unresolved. Mixed quarterly and six-month durations are disclosed."
+    },
+    {
+      "answer_canonical_sha256": "f4ae8ba5864c17275df24da90d78433e1f26f4beb6ff57a6b865a4e262736501",
+      "blind_usefulness_review": "pending",
+      "case_id": "ACHC:decision_threshold",
+      "claims_by_kind": {
+        "reported_financial_comparison": 3,
+        "supplementary_profitability_comparison": 1
+      },
+      "declared_unanswered_parts": [
+        "operating income",
+        "operating margin",
+        "valuation decision boundaries",
+        "expected returns",
+        "operating KPI breakpoints",
+        "quantified earnings impact"
+      ],
+      "factual_source_adjudication": "pending_independent_primary_document_review",
+      "observed_completeness": "requested_parts_unresolved",
+      "question": "Which valuation and operating assumptions would make Acadia Healthcare Company, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+      "source_answer_status": "partial",
+      "unblinded_content_finding": "Current comparisons replace the older monitoring periods. Operating income and margin remain unverified; no margin benchmark is invented. Valuation and operating decision boundaries remain unresolved."
+    },
+    {
+      "answer_canonical_sha256": "e5a3bf92a05e9d95be529a45ded6ac2baf2614d432ef96dc492c99803bb1569e",
+      "blind_usefulness_review": "pending",
+      "case_id": "NPK:core_thesis",
+      "claims_by_kind": {
+        "issuer_business_description": 1,
+        "issuer_disclosed_risk": 2,
+        "reported_financial_comparison": 4
+      },
+      "declared_unanswered_parts": [
+        "competitive position",
+        "valuation and expected returns",
+        "risk materiality, likelihood and effect on the investment case"
+      ],
+      "factual_source_adjudication": "pending_independent_primary_document_review",
+      "observed_completeness": "requested_parts_unresolved",
+      "question": "What is the investment thesis for National Presto Industries, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+      "source_answer_status": "partial",
+      "unblinded_content_finding": "The admitted distribution-channel sentence repairs one extraction gap but does not describe the full product/segment business model. Competitive assessment, valuation, causal margin drivers and risk materiality remain unresolved."
+    },
+    {
+      "answer_canonical_sha256": "880b85727d42a24719fe40dbfaffae9530ee280ee2b0c43376209e6a2808ac60",
+      "blind_usefulness_review": "pending",
+      "case_id": "NPK:decision_threshold",
+      "claims_by_kind": {
+        "reported_financial_comparison": 4
+      },
+      "declared_unanswered_parts": [
+        "valuation decision boundaries",
+        "expected returns",
+        "operating KPI breakpoints",
+        "quantified earnings impact"
+      ],
+      "factual_source_adjudication": "pending_independent_primary_document_review",
+      "observed_completeness": "requested_parts_unresolved",
+      "question": "Which valuation and operating assumptions would make National Presto Industries, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+      "source_answer_status": "partial",
+      "unblinded_content_finding": "The historical margin benchmark is reproducible, but its breach is not an evidenced buy/sell or valuation boundary. Operating KPI breakpoints and quantified impacts remain unresolved."
+    }
+  ],
+  "code_binding": {
+    "revision": "a59e26bcbf1d6d5ecaeccd95e239d65f4880fdec",
+    "source_sha256": "e42098869aac941b34b5611fc89cd0e1d988101586b91d1f4f34b8933604ba68"
+  },
+  "execution_result": {
+    "completed_cases": 6,
+    "model_attempts": 0,
+    "sec_cap": 39,
+    "sec_gets": 34,
+    "tracked_tasks_completed": 57,
+    "unresolved_claims": 0
+  },
+  "further_execution_authorized": false,
+  "input_artifact_sha256": "8981da9b668f51735423b58de8d4878315f6cef2271a42899687cd52fef2b6cd",
+  "input_library_file_id": "libfile_23099c4959048191a6c30d396f0ad36f",
+  "launch_ready": false,
+  "limitations": [
+    "Arithmetic reproduction and reference presence do not independently establish financial-statement truth or citation entailment.",
+    "No raw ASML body or standalone validation receipt is retained for independent hash replay.",
+    "The other session reports historical preservation; this session verified the identical inventory but cannot rehash remote historical bytes.",
+    "This six-case source-only development run is neither a blind usefulness sample nor a test of personalized, signed-in or model-backed product paths.",
+    "A partial label does not itself establish usefulness failure; these findings identify unresolved requested parts without manufacturing a formal quality pass rate."
+  ],
+  "live_approvals_consumed": 11,
+  "offline_verification": {
+    "ledger_integrity": "ok",
+    "persisted_comparison_claims_checked": 24,
+    "reproduced_financial_pairs": 25,
+    "reproduced_margin_calculations": 4,
+    "reproduced_monitoring_benchmarks": 2,
+    "stage_and_case_caps": "passed"
+  },
+  "quality_pass_rate": null,
+  "quality_status": "not_adjudicated",
+  "review_date": "2026-10-16",
+  "reviewer": "ClearSignal regular session assistant; not an independent blind reviewer",
+  "run_id": "monitoring-freshness-a59e26bc-20261015-01",
+  "schema_version": 1
+}
