@@ -112,7 +112,9 @@ def validate_policy(policy):
                      'disabled_live_adapter_validation': 'live_adapter_validation',
                      'disabled_source_monitoring_validation': 'source_monitoring',
                      'approved_six_case_pilot': 'approved',
-                     'approved_source_monitoring_pilot': 'approved_source_monitoring'}
+                     'approved_source_monitoring_pilot': 'approved_source_monitoring',
+                     'disabled_monitoring_freshness_validation': 'freshness',
+                     'approved_monitoring_freshness_pilot': 'approved_freshness'}
             mode = modes.get(purpose)
             if purpose == 'approved_two_source_diagnostic_capture':
                 from validation.source_capture import policy_for as capture_policy
@@ -121,7 +123,7 @@ def validate_policy(policy):
             elif mode is None:
                 raise ValueError('unknown policy purpose')
             extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}
-                     if mode in {'approved', 'approved_source_monitoring'} else {})
+                     if mode in {'approved', 'approved_source_monitoring', 'approved_freshness'} else {})
             if purpose != 'approved_two_source_diagnostic_capture':
                 expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
         except (KeyError, TypeError, ValueError):
@@ -206,6 +208,8 @@ class AttemptLedger:
                 db.execute('CREATE TABLE IF NOT EXISTS policy (id INTEGER PRIMARY KEY CHECK(id=1), hash TEXT NOT NULL, halted TEXT)')
                 db.execute('CREATE TABLE IF NOT EXISTS cases (id TEXT PRIMARY KEY, case_id TEXT UNIQUE NOT NULL, status TEXT NOT NULL)')
                 db.execute('CREATE TABLE IF NOT EXISTS attempts (id TEXT PRIMARY KEY, case_run TEXT NOT NULL, route TEXT NOT NULL, reserve INTEGER NOT NULL, input_bound INTEGER NOT NULL, output_bound INTEGER NOT NULL, status TEXT NOT NULL, actual INTEGER, request_sha256 TEXT)')
+                if self.policy.get('stage_quotas') is not None:
+                    db.execute('CREATE TABLE stage_reservations (attempt_id TEXT PRIMARY KEY, stage TEXT NOT NULL)')
                 if self.policy['schema_version'] == 2:
                     db.execute('CREATE TABLE sec_claims (attempt_id TEXT PRIMARY KEY, claimed_ns INTEGER NOT NULL)')
                     db.execute('CREATE TABLE first_transport_failure (id INTEGER PRIMARY KEY CHECK(id=1), attempt_id TEXT NOT NULL, route TEXT NOT NULL, stage TEXT NOT NULL, code TEXT NOT NULL)')
@@ -216,6 +220,8 @@ class AttemptLedger:
                     raise BudgetError('unsupported ledger schema; explicit review required')
                 db.execute('SELECT id,case_id,status FROM cases LIMIT 0')
                 db.execute('SELECT id,case_run,route,reserve,input_bound,output_bound,status,actual,request_sha256 FROM attempts LIMIT 0')
+                if self.policy.get('stage_quotas') is not None:
+                    db.execute('SELECT attempt_id,stage FROM stage_reservations LIMIT 0')
             row = db.execute('SELECT hash FROM policy WHERE id=1').fetchone()
             if row is None and not create:
                 raise BudgetError('existing ledger has no policy; refusing budget reset')
@@ -363,7 +369,10 @@ class AttemptLedger:
         return (money(price['request_usd']) + count(input_tokens) * money(price['input_token_usd'])
                 + count(output_tokens) * money(price['output_token_usd']))
 
-    def reserve(self, case_run, route, *, input_bound, output_bound, request_sha256=None):
+    def reserve(self, case_run, route, *, input_bound, output_bound, request_sha256=None, stage=None):
+        if stage is not None and type(stage) is not str:
+            self.halt('invalid_request')
+            raise BudgetError('invalid stage binding')
         if self.policy['schema_version'] == 2:
             price = self.policy['prices'].get(route)
             if (request_sha256 is None or price is None
@@ -388,6 +397,17 @@ class AttemptLedger:
             try:
                 cost = self.priced(route, input_bound, output_bound)
                 self._check_quotas(db, case_run, route, additional=1)
+                if 'stage_quotas' in self.policy:
+                    case_id = db.execute('SELECT case_id FROM cases WHERE id=?', (case_run,)).fetchone()[0]
+                    stages = self.policy['stage_quotas'][case_id]
+                    limit = stages.get(stage, {}).get(route, 0) if type(stage) is str else 0
+                    used = db.execute('SELECT COUNT(*) FROM stage_reservations s JOIN attempts a '
+                                      'ON a.id=s.attempt_id WHERE a.case_run=? AND a.route=? AND s.stage=?',
+                                      (case_run, route, stage)).fetchone()[0]
+                    if not limit or used >= limit:
+                        raise BudgetError('nontransferable stage quota exceeded')
+                elif stage is not None:
+                    raise BudgetError('stage binding is exclusive to freshness policy')
                 if spent + cost > self.budget or attempts >= self.policy['maximum_attempts']:
                     raise BudgetError('reservation exceeds pilot cost/attempt limit')
             except BudgetError as exc:
@@ -396,6 +416,8 @@ class AttemptLedger:
             else:
                 db.execute("INSERT INTO attempts VALUES (?,?,?,?,?,?,'pending',NULL,?)",
                            (attempt_id, case_run, route, cost, input_bound, output_bound, request_sha256))
+                if 'stage_quotas' in self.policy:
+                    db.execute('INSERT INTO stage_reservations VALUES (?,?)', (attempt_id, stage))
         if failure:
             raise BudgetError(failure)
         return attempt_id  # Bound dispatch must additionally claim this reservation.
@@ -441,7 +463,7 @@ class AttemptLedger:
     def claim_native_dispatch(self, attempt_id, *, case_run, route, request_sha256):
         """Consume an approved claim once across gates/contexts, before native I/O."""
         if self.policy.get('purpose') not in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
-                                                 'approved_two_source_diagnostic_capture'}:
+                                                 'approved_two_source_diagnostic_capture', 'approved_monitoring_freshness_pilot'}:
             raise BudgetError('native dispatch requires approved policy')
         with self.transaction() as db:
             self.active(db)
@@ -508,7 +530,7 @@ class AttemptLedger:
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,
                     executable_provider_adapter=self.policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
-                                                 'approved_two_source_diagnostic_capture'},
+                                                 'approved_two_source_diagnostic_capture', 'approved_monitoring_freshness_pilot'},
                     hard_usd_cap_established=False)
 
 

@@ -27,6 +27,10 @@ PILOT_SETTINGS = MappingProxyType({
 
 def policy_for(code_binding, dependencies, *, mode="offline", approval=None, execution=None):
     """No caller-supplied limits, rates, routes, approval or configuration."""
+    if mode in {'freshness', 'approved_freshness'}:
+        from validation.pilot_freshness import policy_for as freshness_policy
+        return freshness_policy(code_binding, dependencies, approved=mode == 'approved_freshness',
+                                approval=approval, execution=execution)
     if mode not in {"offline", "live_adapter_validation", "approved", "source_monitoring", "approved_source_monitoring"}:
         raise BudgetError("unsupported pilot mode")
     approved = mode in {'approved', 'approved_source_monitoring'}

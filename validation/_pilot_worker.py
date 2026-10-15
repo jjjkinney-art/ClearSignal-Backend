@@ -37,7 +37,7 @@ def main():
         return 2
     request = json.loads((output / 'request.json').read_text())
     policy, scenario = request['policy'], request['scenario']
-    approved = policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot'}
+    approved = policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot', 'approved_monitoring_freshness_pilot'}
     execution = policy.get('execution_configuration') if approved else None
     if approved:
         # Bind the actual directory before imports, ledger creation, or network setup.
@@ -54,6 +54,7 @@ def main():
     os.environ.clear()
     os.environ.update({'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
                        'DECISION_MONITORING_INPUTS_ENABLED': str(policy['configuration']['settings']['decision_monitoring_inputs_enabled']).lower(),
+                       'DECISION_MONITORING_FILING_FALLBACK_ENABLED': str(policy['configuration']['settings'].get('decision_monitoring_filing_fallback_enabled', False)).lower(),
                        'HOME': str(isolated_home),
                        'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                        'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'})
@@ -127,9 +128,11 @@ def main():
     from validation.pilot_rehearsal import source_binding
     from validation.pilot_boundary import PilotBoundary
 
-    monitoring = policy['purpose'] in {'disabled_source_monitoring_validation', 'approved_source_monitoring_pilot'}
+    freshness = policy['purpose'] in {'disabled_monitoring_freshness_validation', 'approved_monitoring_freshness_pilot'}
+    monitoring = freshness or policy['purpose'] in {'disabled_source_monitoring_validation', 'approved_source_monitoring_pilot'}
     adapter = monitoring or policy['purpose'] == 'disabled_live_adapter_validation'
-    scenarios = SOURCE_MONITORING_SCENARIOS if monitoring else LIVE_SCENARIOS if adapter else SCENARIOS
+    from validation.pilot_freshness import SCENARIOS as FRESHNESS_SCENARIOS
+    scenarios = FRESHNESS_SCENARIOS if freshness else SOURCE_MONITORING_SCENARIOS if monitoring else LIVE_SCENARIOS if adapter else SCENARIOS
     if approved:
         scenarios = {'approved'}
     if scenario not in scenarios:
@@ -137,7 +140,7 @@ def main():
     dependencies = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
     actual_policy = policy_for({'revision': policy['code_binding']['revision'],
                                 'source_sha256': source_binding()}, dependencies,
-                               mode=('approved_source_monitoring' if approved and monitoring else 'approved' if approved else 'source_monitoring' if monitoring else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
+                               mode=('approved_freshness' if approved and freshness else 'freshness' if freshness else 'approved_source_monitoring' if approved and monitoring else 'approved' if approved else 'source_monitoring' if monitoring else 'live_adapter_validation' if policy['purpose'] == 'disabled_live_adapter_validation' else 'offline'),
                                approval=policy.get('approval'), execution=execution)
     if digest(policy) != digest(actual_policy):
         return 2
@@ -265,6 +268,8 @@ def main():
         artifact.update(artifact_type='disabled_source_monitoring_validation',
                         logical_tasks=boundary.logical_tasks,
                         illustrative_maximum_model_allocation_usd='0')
+    if freshness:
+        artifact['artifact_type'] = policy['purpose']
     if approved:
         artifact.update(artifact_type=policy['purpose'],
                         external_dispatches=boundary.gate.dispatched,
