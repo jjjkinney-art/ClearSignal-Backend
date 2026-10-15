@@ -113,10 +113,17 @@ def validate_policy(policy):
                      'disabled_source_monitoring_validation': 'source_monitoring',
                      'approved_six_case_pilot': 'approved',
                      'approved_source_monitoring_pilot': 'approved_source_monitoring'}
-            mode = modes[purpose]
+            mode = modes.get(purpose)
+            if purpose == 'approved_two_source_diagnostic_capture':
+                from validation.source_capture import policy_for as capture_policy
+                expected = capture_policy(policy['code_binding'], policy['dependencies'],
+                                          policy['approval'], policy['execution_configuration'])
+            elif mode is None:
+                raise ValueError('unknown policy purpose')
             extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}
                      if mode in {'approved', 'approved_source_monitoring'} else {})
-            expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
+            if purpose != 'approved_two_source_diagnostic_capture':
+                expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
         except (KeyError, TypeError, ValueError):
             raise BudgetError('invalid fixed rehearsal policy') from None
         if digest(policy) != digest(expected):
@@ -433,7 +440,8 @@ class AttemptLedger:
 
     def claim_native_dispatch(self, attempt_id, *, case_run, route, request_sha256):
         """Consume an approved claim once across gates/contexts, before native I/O."""
-        if self.policy.get('purpose') not in {'approved_six_case_pilot', 'approved_source_monitoring_pilot'}:
+        if self.policy.get('purpose') not in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
+                                                 'approved_two_source_diagnostic_capture'}:
             raise BudgetError('native dispatch requires approved policy')
         with self.transaction() as db:
             self.active(db)
@@ -499,7 +507,8 @@ class AttemptLedger:
                     policy_sha256=self.policy_hash, budget_nanousd=self.budget,
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,
-                    executable_provider_adapter=self.policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot'},
+                    executable_provider_adapter=self.policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
+                                                 'approved_two_source_diagnostic_capture'},
                     hard_usd_cap_established=False)
 
 
