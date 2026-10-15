@@ -47,16 +47,18 @@ Tests run on CPython 3.11.9 with audited dependencies, invented credentials and 
 - New variant suite: 16 passed.
 - Policy, approval, capture-budget and application freshness suites: 177 passed.
 - Existing source-monitoring suite: 20 passed.
+- Two-source capture suite: 42 passed.
+- Remaining netrc-isolation, reviewed-envelope, owned-transport and integrated-rehearsal group: 157 passed. Total completed local regression tests: 412.
+- Import smoke: 135 routes.
 - Timeout and redirect cases also passed separately (2 tests already included in the new 16).
 - For a fixed invented binding/configuration, all five pre-existing policy generators produce dictionaries identical to the base implementation: offline, live_adapter_validation, source_monitoring, approved and approved_source_monitoring.
 - The actual isolated synthetic pipeline completed all six cases, with zero models or unresolved claims. The newer domestic inline filing supplies four 2025-12-31 comparisons instead of older 2024-12-31 facts. Its persisted references bind the filing URL and dates; their generic extraction_method label is not evidence of the parsing route by itself.
 - Stage-ledger rows are checked against fixed caps. A document requested from the wrong stage is refused before its native exchange. Old approval manifests cannot authorize this variant. Missing approval cannot launch the approved entrypoint.
 
-An earlier combined run hit the repository's 30-second per-test watchdog during execution-service instability. It is not counted as a pass; the completed rerun of all 16 new tests passed in 24.32 seconds. Subsequent execution-service disconnects interrupted compatibility work; only completed results are counted. Remaining compatibility and hosted CI results must be reviewed before merge.
+An earlier combined run hit the repository's 30-second per-test watchdog during execution-service instability. It is not counted as a pass; the completed rerun of all 16 new tests passed in 24.32 seconds. Subsequent execution-service disconnects interrupted compatibility work; only completed results are counted. The final compatibility group completed successfully in 437.07 seconds. Required hosted CI results must still be reviewed before merge.
 
 ## Remaining limits and next gate
 
 Synthetic data does not establish ACHC's live financial freshness, ASML/NPK live completion, foreign-filing coverage, complete thesis quality or launch readiness. A historical margin remains a monitoring benchmark, never a buy/sell threshold or valuation.
 
 Review the exact diff and required hosted CI before merge. After merge, a separate session may prepare a package against the exact merged commit and its own validated environment, then stop for fresh single-run authorization. Do not execute a pilot from this review document.
-
