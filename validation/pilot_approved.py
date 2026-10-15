@@ -22,6 +22,7 @@ from validation.capture_budget import BudgetError, digest
 
 PURPOSE = 'approved_six_case_pilot'
 MONITORING_PURPOSE = 'approved_source_monitoring_pilot'
+FRESHNESS_PURPOSE = 'approved_monitoring_freshness_pilot'
 HOSTS = {'api.openai.com', 'www.sec.gov', 'data.sec.gov'}
 PROXY = 'http://proxy:8080'
 PROXY_SELECTORS = ('HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy')
@@ -92,7 +93,7 @@ def verify_network_configuration(config, *, tls=False):
         raise BudgetError('reviewed proxy or CA configuration changed') from None
 
 
-def manifest_for(binding, execution, output_dir, *, monitoring=False):
+def manifest_for(binding, execution, output_dir, *, monitoring=False, freshness=False):
     manifest = {'schema_version': 1, 'purpose': PURPOSE, 'code_binding': binding,
             'execution_configuration': execution, 'approval_status': 'pending',
             'output_dir': str(Path(output_dir).resolve()),
@@ -102,16 +103,24 @@ def manifest_for(binding, execution, output_dir, *, monitoring=False):
     if monitoring:
         manifest.update(purpose=MONITORING_PURPOSE, model_attempts=0, sec_gets=33,
                         illustrative_model_allocation_usd='0', variant='source_monitoring')
+    if freshness:
+        if not monitoring:
+            raise BudgetError('freshness requires source monitoring')
+        from validation.pilot_freshness import stage_quotas
+        from validation.pilot_preflight import preflight
+        manifest.update(purpose=FRESHNESS_PURPOSE, sec_gets=39, variant='source_monitoring_freshness',
+                        stage_quotas=stage_quotas([c['case_id'] for c in preflight()['cases']]),
+                        filing_fallback_enabled=True)
     return manifest
 
 
-def validate_approval(approval, binding, execution, *, monitoring=False):
+def validate_approval(approval, binding, execution, *, monitoring=False, freshness=False):
     keys = {'reference', 'run_id', 'manifest_sha256', 'execution_allowed', 'spending_authorized', 'output_dir'}
     if (type(approval) is not dict or set(approval) != keys
             or approval['execution_allowed'] is not True or approval['spending_authorized'] is not True
             or type(approval['output_dir']) is not str
             or approval['output_dir'] != str(Path(approval['output_dir']).resolve())
-            or approval['manifest_sha256'] != digest(manifest_for(binding, execution, approval['output_dir'], monitoring=monitoring))
+            or approval['manifest_sha256'] != digest(manifest_for(binding, execution, approval['output_dir'], monitoring=monitoring, freshness=freshness))
             or not all(type(approval[k]) is str and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}', approval[k])
                        for k in ('reference', 'run_id'))
             or approval['reference'] in {'NO_SPENDING_AUTHORITY', 'pending'}):
@@ -294,7 +303,7 @@ from validation.pilot_live import LiveAdapterBoundary, OwnedHTTPTransport
 
 class ApprovedBoundary(LiveAdapterBoundary):
     def __init__(self, ledger):
-        if ledger.policy.get('purpose') not in {PURPOSE, MONITORING_PURPOSE}:
+        if ledger.policy.get('purpose') not in {PURPOSE, MONITORING_PURPOSE, FRESHNESS_PURPOSE}:
             raise BudgetError('approved schema2 policy required')
         PilotBoundary.__init__(self, ledger, 'approved')
         execution = ledger.policy['execution_configuration']
@@ -356,7 +365,7 @@ class ApprovedBoundary(LiveAdapterBoundary):
         self.wire.close()
 
 
-def main(argv=None, *, monitoring=False):
+def main(argv=None, *, monitoring=False, freshness=False):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', required=True, type=Path)
     parser.add_argument('--approval', type=Path)
@@ -374,7 +383,7 @@ def main(argv=None, *, monitoring=False):
             if execution is not None:
                 validate_execution(execution)
             with args.manifest.open('x') as stream:
-                json.dump(manifest_for(binding, execution, args.output_dir, monitoring=monitoring), stream, indent=2, sort_keys=True)
+                json.dump(manifest_for(binding, execution, args.output_dir, monitoring=monitoring, freshness=freshness), stream, indent=2, sort_keys=True)
             return 0
         if args.approval is None or args.output_dir is None or args.execution_config is not None:
             raise BudgetError('manifest, separate approval and fresh output directory required')
@@ -382,12 +391,12 @@ def main(argv=None, *, monitoring=False):
         approval = json.loads(args.approval.read_text())
         execution = manifest['execution_configuration']
         validate_execution(execution)
-        if manifest != manifest_for(binding, execution, args.output_dir, monitoring=monitoring):
+        if manifest != manifest_for(binding, execution, args.output_dir, monitoring=monitoring, freshness=freshness):
             raise BudgetError('manifest or source binding changed')
-        validate_approval(approval, binding, execution, monitoring=monitoring)
+        validate_approval(approval, binding, execution, monitoring=monitoring, freshness=freshness)
         if approval['output_dir'] != manifest['output_dir']:
             raise BudgetError('approval output directory mismatch')
-        result = run_rehearsal(args.output_dir, scenario='approved', mode='approved_source_monitoring' if monitoring else 'approved',
+        result = run_rehearsal(args.output_dir, scenario='approved', mode='approved_freshness' if freshness else 'approved_source_monitoring' if monitoring else 'approved',
                                approval=approval, execution=execution)
     except Exception:
         parser.exit(2, 'Approved pilot refused; matching approval and verified configuration required.\n')

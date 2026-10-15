@@ -55,6 +55,13 @@ class SyntheticStream:
                     content = json.dumps(data).encode()
                 elif reviewed and route == 'sec/document':
                     content = b'<html>' + b'a' * (REVIEWED_DOCUMENT_SCENARIOS[owner.scenario] - 6)
+            if (getattr(owner, 'freshness', False)
+                    and owner.scenario == 'freshness_financial_inputs' and method == 'GET'):
+                from validation.pilot_freshness import financial_fixture
+                if route == 'sec/facts':
+                    media, content = 'application/json', financial_fixture(owner.case['identity'], facts=True)
+                elif route == 'sec/document' and owner.case['identity']['ticker'] != 'ASML':
+                    media, content = 'text/html', financial_fixture(owner.case['identity'], facts=False)
             status = b'200 OK'
             extra = b''
             if owner.once({'wire_redirect'}):

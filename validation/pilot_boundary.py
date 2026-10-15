@@ -46,7 +46,8 @@ class PilotBoundary:
         self.stage = ContextVar('offline_pilot_stage', default='outside_pipeline')
         self.sec_attempt = ContextVar('pilot_sec_attempt', default=None)
         self.patches, self.pools, self.futures = [], [], []
-        self.monitoring = ledger.policy['configuration']['variant'] == 'source_monitoring'
+        self.freshness = ledger.policy['configuration']['variant'] == 'source_monitoring_freshness'
+        self.monitoring = self.freshness or ledger.policy['configuration']['variant'] == 'source_monitoring'
         self.logical_tasks = []
         self.pool_index = 0
         self.lock = Lock()
@@ -83,6 +84,7 @@ class PilotBoundary:
             raise
         if self.settings is not None:
             if (any(getattr(self.settings, key) != value for key, value in self.ledger.policy['configuration']['settings'].items())
+                    or getattr(self.settings, 'decision_monitoring_filing_fallback_enabled', False) is not self.freshness
                     or self.settings.sec_user_agent != self.contact
                     or self.settings.fmp_api_key or self.settings.fred_api_key
                     or os.environ.get('CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED') != 'false'
@@ -221,6 +223,8 @@ class PilotBoundary:
                         pool.names += ['sec_metrics']
                     if core:
                         pool.names += ['thesis_disclosures', 'filing_metrics']
+                    elif owner.freshness:
+                        pool.names += ['filing_metrics']
                     expected = len(pool.names)
                 elif not source and owner.pool_index == 2:
                     pool.kind = 'agents'
@@ -362,7 +366,7 @@ class PilotBoundary:
         self.active()
         binding = dict(case_run=self.case_run, route=route, request_sha256=fingerprint,
                        input_bound=inputs, output_bound=outputs)
-        attempt = self.ledger.reserve(**binding)
+        attempt = self.ledger.reserve(**binding, **({'stage': self.stage.get()} if self.freshness else {}))
         while True:
             try:
                 self.active()

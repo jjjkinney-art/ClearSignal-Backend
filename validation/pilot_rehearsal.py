@@ -40,8 +40,9 @@ def prepare_policy(*, mode="offline", approval=None, execution=None):
 
 
 def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None, execution=None):
-    approved = mode in {'approved', 'approved_source_monitoring'}
-    scenarios = ({'approved'} if approved else SOURCE_MONITORING_SCENARIOS
+    approved = mode in {'approved', 'approved_source_monitoring', 'approved_freshness'}
+    from validation.pilot_freshness import SCENARIOS as FRESHNESS_SCENARIOS
+    scenarios = ({'approved'} if approved else FRESHNESS_SCENARIOS if mode == 'freshness' else SOURCE_MONITORING_SCENARIOS
                  if mode == 'source_monitoring' else LIVE_SCENARIOS
                  if mode == 'live_adapter_validation' else SCENARIOS)
     if type(scenario) is not str or scenario not in scenarios:
@@ -63,6 +64,7 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
     # environment. The key/contact here are invented fixtures, never real values.
     environment = {'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1',
                    'DECISION_MONITORING_INPUTS_ENABLED': str(policy['configuration']['settings']['decision_monitoring_inputs_enabled']).lower(),
+                   'DECISION_MONITORING_FILING_FALLBACK_ENABLED': str(policy['configuration']['settings'].get('decision_monitoring_filing_fallback_enabled', False)).lower(),
                    'HOME': str(isolated_home),
                    'OPENAI_API_KEY': SYNTHETIC_KEY, 'SEC_USER_AGENT': SYNTHETIC_CONTACT,
                    'CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED': 'false'}
@@ -99,8 +101,8 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
                     'tariffs_verified': False, 'hard_usd_cap_established': False,
                     'launch_ready': False, 'quality_status': 'not_adjudicated',
                     'external_dispatches': 0, 'network_attempts': None}
-        if mode == 'source_monitoring':
-            artifact['artifact_type'] = 'disabled_source_monitoring_validation'
+        if mode in {'source_monitoring', 'freshness'}:
+            artifact['artifact_type'] = policy['purpose']
         if approved:
             artifact.update(artifact_type=policy['purpose'], execution_allowed=True,
                             spending_authorized=True, approval_reference=approval['reference'],
@@ -130,7 +132,8 @@ def run_rehearsal(output_dir, *, scenario='happy', mode='offline', approval=None
 def main(argv=None, *, mode="offline"):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output-dir', required=True, type=Path)
-    parser.add_argument('--scenario', choices=sorted(SOURCE_MONITORING_SCENARIOS if mode == 'source_monitoring' else LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS), default='happy')
+    from validation.pilot_freshness import SCENARIOS as FRESHNESS_SCENARIOS
+    parser.add_argument('--scenario', choices=sorted(FRESHNESS_SCENARIOS if mode == 'freshness' else SOURCE_MONITORING_SCENARIOS if mode == 'source_monitoring' else LIVE_SCENARIOS if mode == 'live_adapter_validation' else SCENARIOS), default='happy')
     args = parser.parse_args(argv)
     try:
         result = run_rehearsal(args.output_dir, scenario=args.scenario, mode=mode)
