@@ -20,6 +20,14 @@ FILING_METRICS = {**CORE_METRICS, **SUPPLEMENTARY_METRICS}
 logger = logging.getLogger(__name__)
 
 
+def _monitoring_filing_request(question):
+    """Separate rollout switch: existing frozen monitoring quotas stay intact."""
+    from .source_answer import is_decision_monitoring_request
+    return (getattr(settings, 'decision_monitoring_inputs_enabled', False) is True
+            and getattr(settings, 'decision_monitoring_filing_fallback_enabled', False) is True
+            and is_decision_monitoring_request(question))
+
+
 def requests_filing_metrics(ticker, question):
     if requests_thesis_disclosures(ticker, question):
         return True
@@ -29,6 +37,8 @@ def requests_filing_metrics(ticker, question):
     if (requested_issuer_kpi_aliases(question)
             or re.search(r'\b(?:services|segments?|app store|icloud|apple music|digital content)\b', question, re.I)):
         return False
+    if _monitoring_filing_request(question):
+        return True
     core = {c for aliases in FILING_METRICS.values() for c in aliases}
     return any(unit == 'USD' and kind == 'duration' and set(concepts) & core
                for concepts, _, _, unit, kind in _requested_metrics(question, include_defaults=False))
@@ -78,7 +88,7 @@ def evidence_from_filing(document, filing, *, ticker, cik):
 
 
 def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
-    """Runs alongside Company Facts inside the router's existing 10s ceiling.
+    """Runs alongside Company Facts within the router's existing collection caps.
 
     At most one primary document, no ticker overrides, no historical backfill,
     no arithmetic substitute for absent standard operating-income facts.
@@ -115,7 +125,7 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         (logger.info if items else logger.warning)(
             'Latest filing metrics %s: period=%s observations=%d comparisons=%d',
             ticker, filing.reporting_period_end, len(document.inline_xbrl_facts), len(items))
-        if requests_thesis_disclosures(ticker, question):
+        if requests_thesis_disclosures(ticker, question) or _monitoring_filing_request(question):
             return items
         from .verified_sec_metric_service import _requested_metrics
         requested = {f'us-gaap:{concept}' for concepts, _, _, _, _ in
