@@ -296,6 +296,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
               "issuer_competition_description": 0}
     current_risks = 0
+    business_descriptions = []
     seen = set()
     for index, item in enumerate(items, start=1):
         value = (bound_business_description(item, ticker=ticker, cik=expected_cik)
@@ -319,6 +320,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         elif value["claim_kind"] == "issuer_disclosed_risk":
             current_risks += 1
         disclosures.append(row)
+        if value['claim_kind'] == 'issuer_business_description':
+            business_descriptions.append((value['quote'], reference_id))
         if value['claim_kind'] == 'issuer_disclosed_risk':
             interpretation = _risk_monitoring_inference(value, reference_id)
             if interpretation:
@@ -341,9 +344,15 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}"
             for row in risk_interpretations)
         interpretations.extend(risk_interpretations)
+    from .business_context import coverage_from_bound_descriptions, render_business_coverage
+    business_coverage = coverage_from_bound_descriptions(business_descriptions)
+    if business_descriptions:
+        answer += '\n\nBusiness context coverage\n' + render_business_coverage(business_coverage)
     unanswered = missing + ["competitive position" if counts["issuer_business_description"] else
                             "business model and competitive position", "valuation and expected returns",
                             "issuer-disclosed operating-risk mechanisms"]
+    if business_descriptions:
+        unanswered.append('business model completeness')
     if counts["issuer_disclosed_risk"]:
         unanswered.remove("issuer-disclosed operating-risk mechanisms")
         if not current_risks:
@@ -354,4 +363,5 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                "recommendation. Unverified requested parts: " + "; ".join(unanswered) + ".")
     return {"answer": answer, "claims": rows, "selected_items": selected,
             "inferences": interpretations, "unanswered_parts": unanswered,
+            "business_context_coverage": business_coverage,
             "common_reporting_period": len(periods) == 1}

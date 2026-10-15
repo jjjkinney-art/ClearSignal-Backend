@@ -232,6 +232,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
                     "claims": foundation["claims"], "inferences": foundation["inferences"],
                     "unanswered_parts": foundation["unanswered_parts"],
                     "common_reporting_period": foundation["common_reporting_period"],
+                    "business_context_coverage": foundation["business_context_coverage"],
                     **({"reporting_coverage": coverage} if coverage else {})}
     from .verified_sec_metric_service import _requested_metrics
     requested_metrics = _requested_metrics(question, include_defaults=False)
