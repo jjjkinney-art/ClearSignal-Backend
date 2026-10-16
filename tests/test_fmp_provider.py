@@ -129,11 +129,12 @@ class TestFetchCompanyProfile:
         _patch_fetch(monkeypatch, _PROFILE_PAYLOAD)
         assert "AAPL" in fmp_provider.fetch_company_profile("AAPL")[0].title
 
-    def test_title_contains_market_cap(self, monkeypatch):
+    def test_profile_title_does_not_promote_undated_market_cap(self, monkeypatch):
         _patch_key(monkeypatch)
         _patch_fetch(monkeypatch, _PROFILE_PAYLOAD)
         title = fmp_provider.fetch_company_profile("AAPL")[0].title
-        assert "2.70T" in title or "Mkt Cap" in title
+        assert 'Company profile' in title
+        assert '2.70T' not in title and 'Mkt Cap' not in title
 
     def test_summary_contains_sector(self, monkeypatch):
         _patch_key(monkeypatch)
