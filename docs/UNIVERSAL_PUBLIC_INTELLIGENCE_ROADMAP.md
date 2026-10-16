@@ -44,6 +44,15 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Raw quote mapping increment (17 October 2026 Auckland): map bounded saved FMP
+stable-quote JSON with exact numeric tokens, Unix quote time, symbol, provider
+exchange label and raw hash/field bindings. Keep currency, issuer/security/share
+and split basis, trade/close kind and session unresolved. A mapped candidate is
+not admitted and cannot enter existing price-to-EPS arithmetic. Official schema
+review does not grant live provider access. Next: actual security/basis and
+observation semantics, followed by EPS compatibility and independent useful-answer
+acceptance. See [raw quote mapping review](FMP_QUOTE_CAPTURE_MAPPING_20261017.md).
+
 Dated-price contract increment (16 October 2026 Auckland): audit bounded saved
 normalized quote bytes against a receipt, exact supplied security/currency/share
 basis, explicit UTC chronology and an analysis-relative freshness tolerance.
