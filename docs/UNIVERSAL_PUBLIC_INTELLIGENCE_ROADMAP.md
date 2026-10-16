@@ -44,6 +44,13 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Market-price boundary repair (16 October 2026 Auckland): remove undated profile
+price/market-cap/P-E/beta snapshots and the misuse of IPO date as evidence time.
+Keep profile context and unknown freshness, require matching unambiguous symbols,
+and document the still-needed quote/security/currency/timestamp source contract.
+This repair does not admit market prices or connect valuation scenarios to
+production answers. See [profile-price review](FMP_PROFILE_PRICE_BOUNDARY_20261016.md).
+
 Valuation foundation increment (16 October 2026 Auckland): bridge a reconstructed
 annual USD diluted-EPS source pair to explicitly supplied hypothetical price and
 scenario assumptions in the existing offline calculator. Preserve fiscal-year

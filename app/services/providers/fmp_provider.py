@@ -11,7 +11,7 @@ returns an unexpected payload — callers never need to catch exceptions.
 Capabilities
 ------------
 search_ticker(company_name)          → best-matching ticker symbol (str)
-fetch_company_profile(symbol)        → market cap, PE, price, sector / industry
+fetch_company_profile(symbol)        → undated company-profile context only
 fetch_price_change(symbol)           → 1-day through 1-year % changes
 fetch_income_metrics(symbol)         → revenue, margins, earnings
 fetch_debt_metrics(symbol)           → total debt, net debt, debt/equity
@@ -24,6 +24,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import re
 from decimal import Decimal, localcontext
 import os
 from typing import List, Optional
@@ -104,51 +105,51 @@ def search_ticker(company_name: str) -> str:
 
 
 def fetch_company_profile(symbol: str) -> List[RetrievedEvidence]:
-    """Fetch company profile: price, market cap, P/E, sector, industry."""
+    """Fetch undated profile context, never a dated price/valuation observation.
+
+    This endpoint's IPO date is not a quote/publication timestamp. Snapshot
+    values lack the explicit trade, currency and share-basis contract required
+    for valuation, so neither numbers nor current-price labels are emitted.
+    """
     api_key = _get_api_key()
-    if not api_key or not symbol:
+    if not api_key or not isinstance(symbol, str):
+        return []
+    symbol = symbol.strip().upper()
+    if not re.fullmatch(r'[A-Z0-9][A-Z0-9.-]{0,31}', symbol):
         return []
     url = f"{_FMP_BASE}/v3/profile/{quote(symbol)}?apikey={api_key}"
     try:
         data = _fetch_json(url)
-        if not data or not isinstance(data, list):
+        if not isinstance(data, list) or len(data) != 1 or not isinstance(data[0], dict):
             return []
         p = data[0]
-
-        company_name  = p.get("companyName", symbol)
-        price         = p.get("price")
-        mkt_cap       = p.get("mktCap")
-        pe            = p.get("pe")
-        sector        = p.get("sector", "")
-        industry      = p.get("industry", "")
-        exchange      = p.get("exchangeShortName", "")
-        beta          = p.get("beta")
-        description   = p.get("description", "")
-        ipo_date      = p.get("ipoDate", "")
-
-        mc_str  = _fmt_market_cap(mkt_cap)
-        pe_str  = f"{pe:.1f}" if pe else "N/A"
-        price_s = f"${price:.2f}" if price else "N/A"
-
-        title = (
-            f"{company_name} ({symbol}) — "
-            f"Price: {price_s} | Mkt Cap: {mc_str} | P/E: {pe_str}"
-        )
-        summary_parts = [
-            f"{company_name} ({symbol}) trades on {exchange}.",
-            f"Sector: {sector} / Industry: {industry}.",
-            f"Current price: {price_s}.  Market cap: {mc_str}.  Trailing P/E: {pe_str}.",
-        ]
-        if beta is not None:
-            summary_parts.append(f"Beta: {beta:.2f} (market sensitivity).")
+        # Exact normalized symbol agreement is necessary but does not establish
+        # issuer CIK, exchange/share-class identity or a market observation.
+        if not isinstance(p.get('symbol'), str) or p['symbol'].strip().upper() != symbol:
+            return []
+        def text(key, limit):
+            value = p.get(key)
+            return value.strip()[:limit] if isinstance(value, str) else ''
+        company_name = text('companyName', 300) or symbol
+        sector, industry = text('sector', 120), text('industry', 120)
+        exchange, description = text('exchangeShortName', 120), text('description', 300)
+        title = f'{company_name} ({symbol}) — Company profile'
+        summary_parts = [f'{company_name} ({symbol}) — provider company-profile context.']
+        if exchange:
+            summary_parts.append(f'Listed exchange in profile: {exchange}.')
+        if sector or industry:
+            summary_parts.append(f'Sector: {sector or "unspecified"} / Industry: {industry or "unspecified"}.')
         if description:
-            summary_parts.append(description[:300])
+            summary_parts.append(description)
 
         return [RetrievedEvidence(
             title=title,
             source="Financial Modeling Prep",
             summary=" ".join(summary_parts),
-            timestamp=ipo_date,
+            timestamp='',
+            source_type='market_data', source_tier='authoritative_secondary',
+            claim_type='unknown', document_type='Company profile',
+            extraction_method='structured_api',
             relevance_score=0.92,
         )]
     except (HTTPError, URLError) as exc:
