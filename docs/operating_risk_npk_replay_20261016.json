@@ -1,0 +1,65 @@
+{
+  "baseline_mechanism_count": 0,
+  "body_bytes": 1404517,
+  "claims_unchanged": true,
+  "exact_risk_span_reproduced": true,
+  "limitations": [
+    "Saved-body/financial-fact replay, not a fresh pilot or independent factual adjudication.",
+    "Reference IDs belong to this replay, not the historical run.",
+    "Inputs are exposed development evidence; no holdout was used."
+  ],
+  "live_requests": 0,
+  "local_response_fixture_uses": 1,
+  "mechanism": {
+    "causal_attribution_established": false,
+    "condition": "New laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals)",
+    "conditional_test": "Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.",
+    "financial_context": [
+      {
+        "current_period_end": "2026-07-05",
+        "current_period_start": "2026-04-06",
+        "metric": "operating income",
+        "prior_period_end": "2025-06-29",
+        "prior_period_start": "2025-03-31",
+        "reference_id": "E2",
+        "role": "profitability_context_only"
+      },
+      {
+        "current_period_end": "2026-07-05",
+        "current_period_start": "2026-04-06",
+        "metric": "net income attributable to parent",
+        "prior_period_end": "2025-06-29",
+        "prior_period_start": "2025-03-31",
+        "reference_id": "E3",
+        "role": "profitability_context_only"
+      }
+    ],
+    "kind": "operating_risk_monitoring_inference",
+    "materiality_assessed": false,
+    "measure_equivalence_established": false,
+    "modality": "can",
+    "potential_effect": "significantly increase the Company\u2019s costs and risks and reduce profitability",
+    "reference_ids": [
+      "E7",
+      "E2",
+      "E3"
+    ],
+    "risk_filed_at": "2026-03-13",
+    "risk_reference_id": "E7",
+    "scope": "Cybersecurity",
+    "source_quote": "New laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.",
+    "text": "Issuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E7]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]."
+  },
+  "new_mechanism_count": 1,
+  "scope": "exposed_saved_NPK_development_replay",
+  "source_artifact_sha256": "8981da9b668f51735423b58de8d4878315f6cef2271a42899687cd52fef2b6cd",
+  "source_body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+  "source_url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+  "unanswered_parts": [
+    "competitive position",
+    "valuation and expected returns",
+    "business model completeness",
+    "risk materiality, likelihood and effect on the investment case"
+  ],
+  "unanswered_parts_unchanged": true
+}

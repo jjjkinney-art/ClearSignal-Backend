@@ -294,6 +294,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
+    operating_mechanisms = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
               "issuer_competition_description": 0}
     current_risks = 0
@@ -324,6 +325,11 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         if value['claim_kind'] == 'issuer_business_description':
             business_descriptions.append((value['quote'], reference_id))
         if value['claim_kind'] == 'issuer_disclosed_risk':
+            from .operating_risk_mechanisms import operating_risk_mechanism
+            mechanism = operating_risk_mechanism(value, reference_id, core_comparisons,
+                                                  filed_at=item.timestamp)
+            if mechanism:
+                operating_mechanisms.append(mechanism)
             interpretation = _risk_monitoring_inference(value, reference_id)
             if interpretation:
                 risk_interpretations.append(interpretation)
@@ -354,6 +360,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         from .risk_financial_monitoring import render_risk_financial_links
         answer += '\n\nRisk-to-financial monitoring questions\n' + render_risk_financial_links(risk_financial_links)
         interpretations.extend(risk_financial_links)
+    if operating_mechanisms:
+        answer += '\n\nDisclosed operating mechanisms and monitoring\n' + '\n\n'.join(
+            row['text'] + ' ' + row['conditional_test'] for row in operating_mechanisms)
+        interpretations.extend(operating_mechanisms)
     from .business_context import coverage_from_bound_descriptions, render_business_coverage
     business_coverage = coverage_from_bound_descriptions(business_descriptions)
     if business_descriptions:
