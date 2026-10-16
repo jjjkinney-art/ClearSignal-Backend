@@ -97,8 +97,15 @@ def _risk_monitoring_inference(value, reference_id):
             'conditional_test': test, 'reference_ids': [reference_id]}
 
 
-def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
+def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
+             expected_unit: str | None = None):
     """Recheck both facts and the displayed summary with the existing producer."""
+    # The offline valuation bridge may reconstruct only this explicit per-share
+    # concept. Ordinary financial-foundation callers retain monetary units.
+    if expected_unit is not None and (expected_unit != 'USD/shares'
+            or concepts != ('EarningsPerShareDiluted',) or name != 'diluted EPS'):
+        return None
+    allowed_units = REPORTING_CURRENCIES if expected_unit is None else (expected_unit,)
     if (getattr(item, "source", None) != "SEC EDGAR — structured XBRL fact"
             or getattr(item, "source_type", None) != "regulatory_filing"
             or getattr(item, "source_tier", None) != "primary"
@@ -113,6 +120,8 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
     try:
         for claim in claims:
             ref = claim["document_ref"]
+            if claim.get('unit') not in allowed_units:
+                return None
             inline = claim.get("inline_binding")
             if inline is not None:
                 # Filing facts retain the source observation, hash and exact
@@ -132,7 +141,8 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple):
             if (not match or int(match[1]) != int(cik) or match[3] not in concepts
                     or claim["ticker"] != ticker or claim["provenance"] != "reported"
                     or claim["metric"] != f"us-gaap:{match[3]}"
-                    or claim["unit"] not in REPORTING_CURRENCIES or claim.get("currency") != claim["unit"]
+                    or claim["unit"] not in allowed_units
+                    or claim.get("currency") != ('USD' if claim['unit'] == 'USD/shares' else claim['unit'])
                     or claim["scope"] != "consolidated"
                     or ref["provider"] != "SEC EDGAR"
                     or date.fromisoformat(ref["published_at"]) > date.today()

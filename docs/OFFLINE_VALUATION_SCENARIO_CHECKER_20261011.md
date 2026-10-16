@@ -34,8 +34,8 @@ defaulted; unexpected fields and mode-incompatible operands are rejected.
 
 Entry and exit EPS bases must match exactly: issuer, currency, GAAP/adjusted
 accounting, adjustment definition, earnings scope (`total_operations` or
-`continuing_operations`), basic/diluted shares, trailing/forward
-12-month period basis, and split basis. GAAP uses adjustment_definition `none`;
+`continuing_operations`), basic/diluted shares, trailing/forward 12-month or
+explicit fiscal-year period basis, and split basis. GAAP uses adjustment_definition `none`;
 adjusted EPS requires a nonempty identical definition. These comparisons check
 caller assertions, not the truth of financial statements. The period basis
 never becomes an observation or publication date.
@@ -99,3 +99,9 @@ in isolated Python 3.11.17 with pytest. Repository application conftest was
 excluded. Production wiring,
 source verification, model-output validation, full application regression and
 live acceptance are not claimed. Review/CI must confirm the repository runtime.
+
+16 October follow-up: the calculator also accepts the explicit `fiscal_year`
+period basis, which never becomes current TTM or forward EPS. The separate
+[source-anchored bridge](SOURCE_ANCHORED_VALUATION_20261016.md) reconstructs an
+annual diluted-EPS source anchor and keeps hypothetical prices/scenario inputs
+as user assumptions. It remains offline and adds no production valuation route.
