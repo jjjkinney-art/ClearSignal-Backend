@@ -44,6 +44,15 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Risk-to-financial monitoring increment (16 October 2026 Auckland): connect an
+already bound issuer risk to surviving reported comparisons only when its
+explicit effect names those financial families. Preserve each period and
+concept label; keep causality, measure equivalence, likelihood and materiality
+unverified. This does not yet cover the more complex six PR295 risk excerpts,
+improve their quality scores, or establish a complete investment thesis. See
+[bounded link review](RISK_FINANCIAL_MONITORING_LINKS_20261016.md). No live run
+or expanded benchmark is authorized by this increment.
+
 Business-context increment (16 October 2026 Auckland): the next shared change
 uses complementary already qualified descriptions within the existing two-quote
 cap and exposes source-bound activity/revenue/customer-channel/segment coverage.

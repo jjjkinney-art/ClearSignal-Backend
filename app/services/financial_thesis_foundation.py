@@ -293,6 +293,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .thesis_competition import bound_competition_description
     disclosures = []
     risk_interpretations = []
+    risk_financial_links = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
               "issuer_competition_description": 0}
     current_risks = 0
@@ -326,6 +327,11 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             interpretation = _risk_monitoring_inference(value, reference_id)
             if interpretation:
                 risk_interpretations.append(interpretation)
+                from .risk_financial_monitoring import risk_financial_link
+                link = risk_financial_link(interpretation, core_comparisons,
+                                           filed_at=item.timestamp)
+                if link:
+                    risk_financial_links.append(link)
         rows.append(row)
         selected.append(item)
         seen.add(value["quote"])
@@ -344,6 +350,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}"
             for row in risk_interpretations)
         interpretations.extend(risk_interpretations)
+    if risk_financial_links:
+        from .risk_financial_monitoring import render_risk_financial_links
+        answer += '\n\nRisk-to-financial monitoring questions\n' + render_risk_financial_links(risk_financial_links)
+        interpretations.extend(risk_financial_links)
     from .business_context import coverage_from_bound_descriptions, render_business_coverage
     business_coverage = coverage_from_bound_descriptions(business_descriptions)
     if business_descriptions:
