@@ -72,8 +72,8 @@ def _basis(value):
         raise ValuationContractError('earnings_scope must be total_operations or continuing_operations')
     if value['share_basis'] not in ('basic', 'diluted'):
         raise ValuationContractError('share_basis must be basic or diluted')
-    if value['period_basis'] not in ('trailing_12_months', 'forward_12_months'):
-        raise ValuationContractError('period_basis must specify trailing or forward 12 months')
+    if value['period_basis'] not in ('trailing_12_months', 'forward_12_months', 'fiscal_year'):
+        raise ValuationContractError('period_basis must specify trailing/forward 12 months or fiscal_year')
 
 
 def _evaluate_scenario(payload):

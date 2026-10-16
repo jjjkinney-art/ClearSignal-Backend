@@ -44,6 +44,14 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Valuation foundation increment (16 October 2026 Auckland): bridge a reconstructed
+annual USD diluted-EPS source pair to explicitly supplied hypothetical price and
+scenario assumptions in the existing offline calculator. Preserve fiscal-year
+dates and citations without labeling the anchor current TTM or forward EPS.
+Market prices, security/split basis and future valuation inputs remain unverified;
+no production answer route, attractiveness boundary or new pilot is enabled.
+See [source-anchored valuation review](SOURCE_ANCHORED_VALUATION_20261016.md).
+
 Operating-mechanism increment (16 October 2026 Auckland): recognize an explicitly
 disclosed conditional increase in issuer costs and reduction in profitability
 after final risk binding. Keep the complete quote and modal and use verified
