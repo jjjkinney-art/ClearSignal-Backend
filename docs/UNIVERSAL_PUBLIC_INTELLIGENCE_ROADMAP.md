@@ -44,6 +44,16 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Operating-mechanism increment (16 October 2026 Auckland): recognize an explicitly
+disclosed conditional increase in issuer costs and reduction in profitability
+after final risk binding. Keep the complete quote and modal and use verified
+income comparisons as context only, without inferring a cost effect or margin.
+Saved NPK HTML/financial-fact replay adds one such monitoring inference while
+preserving factual claims and unanswered gaps; ACHC's wording has a synthetic
+source-fixture regression, not a full real-filing replay. Broader mechanisms,
+valuation, materiality and independent quality acceptance remain open. See
+[operating-mechanism review](OPERATING_RISK_MECHANISMS_20261016.md).
+
 Risk-to-financial monitoring increment (16 October 2026 Auckland): connect an
 already bound issuer risk to surviving reported comparisons only when its
 explicit effect names those financial families. Preserve each period and
