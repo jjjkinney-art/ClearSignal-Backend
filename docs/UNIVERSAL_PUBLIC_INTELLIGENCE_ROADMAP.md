@@ -44,6 +44,16 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Dated-price contract increment (16 October 2026 Auckland): audit bounded saved
+normalized quote bytes against a receipt, exact supplied security/currency/share
+basis, explicit UTC chronology and an analysis-relative freshness tolerance.
+This is offline consistency only: no provider adapter, security-master authority,
+approved market freshness policy, admitted price, EPS compatibility or production
+valuation route. The hypothetical-price calculator still rejects source-price
+assertions. Next: reviewed raw-provider mapping and actual security/EPS basis,
+followed by independent development/holdout and signed-in acceptance. See
+[dated-price contract review](DATED_PRICE_CAPTURE_CONTRACT_20261016.md).
+
 Market-price boundary repair (16 October 2026 Auckland): remove undated profile
 price/market-cap/P-E/beta snapshots and the misuse of IPO date as evidence time.
 Keep profile context and unknown freshness, require matching unambiguous symbols,
