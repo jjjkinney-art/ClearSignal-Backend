@@ -44,6 +44,15 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Listed split reconciliation increment (18 October 2026 Auckland): map saved
+split events with raw field/receipt bindings and compute exact listed-event share
+factors under explicit already-adjusted calendar-basis assumptions. Avoid applying
+events already in the assumed EPS basis. Empty, pre-basis-only or future-only
+lists never establish an identity factor; completeness and split compatibility
+remain unverified even with successful conditional algebra. No EPS/price value
+or production gate is changed. Next: actual interval and EPS-basis proof plus
+quote-unit/admission work. See [listed split review](LISTED_SPLIT_RECONCILIATION_20261018.md).
+
 Filed share-class increment (17 October 2026 Auckland): bind a same-row/context
 common-stock title, ticker and exchange declaration from a saved primary filing
 to the EPS source's same accession/form/date/period. Replay the already retained
