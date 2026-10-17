@@ -89,7 +89,8 @@ def _source_eps(ticker, cik, items, references, scenario_date):
             'concept': current['metric'], 'period_start': current['period_start'],
             'period_end': current['period_end'], 'filed_at': current['document_ref']['published_at'],
             'document_ref': deepcopy(current['document_ref']),
-            'period_basis': 'fiscal_year', 'source_consistency_reconstructed': True,
+            'period_basis': 'fiscal_year', 'document_type': rebuilt.document_type,
+            'source_consistency_reconstructed': True,
             'independently_adjudicated': False}
 
 

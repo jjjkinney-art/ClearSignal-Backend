@@ -44,6 +44,15 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Filed share-class increment (17 October 2026 Auckland): bind a same-row/context
+common-stock title, ticker and exchange declaration from a saved primary filing
+to the EPS source's same accession/form/date/period. Replay the already retained
+NPK body successfully without a new request. This establishes a declaration as
+filed, not current security, quote-unit, split or class-specific EPS compatibility.
+No event-list/absence-of-split shortcut or valuation arithmetic is enabled. Next:
+complete corporate-action and class/unit proof, then independent quote admission
+and useful-answer acceptance. See [filed-class review](FILED_SHARE_CLASS_BINDING_20261017.md).
+
 Quote/profile/EPS increment (17 October 2026 Auckland): link independently parsed
 saved stable-profile currency/CIK/identifier/flags to the exact quote symbol and
 exchange label and a reconstructed annual USD diluted-EPS reference. Keep provider
