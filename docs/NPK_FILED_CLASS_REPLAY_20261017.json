@@ -1,0 +1,79 @@
+{
+  "base_commit": "38b611c9983f3a272f2520fe0432fb456cee8730",
+  "replay_kind": "offline_existing_capture_not_a_pilot",
+  "live_requests": 0,
+  "metadata_inputs": {
+    "expected_cik": "0000080172",
+    "expected_symbol": "NPK",
+    "form": "10-K",
+    "filed_at": "2026-03-13",
+    "reporting_period_end": "2025-12-31"
+  },
+  "receipt_file_sha256": "16e5b48527efb09be82a14a3d538f2056107f8cc247d228ce239d8bdd37ae189",
+  "source_body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+  "source_body_bytes": 1404517,
+  "source_body_and_receipt_unchanged": true,
+  "result": {
+    "extracted": true,
+    "admitted": false,
+    "launch_ready": false,
+    "classification": "offline_filed_common_share_class",
+    "declared_security": {
+      "title": "$1.00 par value common stock",
+      "trading_symbol": "NPK",
+      "exchange_label": "New York Stock Exchange",
+      "issuer_cik": "0000080172",
+      "context_id": "d_2025-01-01_2025-12-31",
+      "form": "10-K",
+      "filed_at": "2026-03-13",
+      "reporting_period_end": "2025-12-31"
+    },
+    "raw_binding": {
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+      "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+      "body_bytes": 1404517,
+      "fields": {
+        "Security12bTitle": {
+          "concept": "Security12bTitle",
+          "namespace": "http://xbrl.sec.gov/dei/2025",
+          "text": "$1.00 par value common stock",
+          "fact_id": "ixv-11175",
+          "context_id": "d_2025-01-01_2025-12-31",
+          "row": 1487,
+          "format": ""
+        },
+        "TradingSymbol": {
+          "concept": "TradingSymbol",
+          "namespace": "http://xbrl.sec.gov/dei/2025",
+          "text": "NPK",
+          "fact_id": "ixv-11176",
+          "context_id": "d_2025-01-01_2025-12-31",
+          "row": 1487,
+          "format": ""
+        },
+        "SecurityExchangeName": {
+          "concept": "SecurityExchangeName",
+          "namespace": "http://xbrl.sec.gov/dei/2025",
+          "text": "New York Stock Exchange",
+          "fact_id": "ixv-11177",
+          "context_id": "d_2025-01-01_2025-12-31",
+          "row": 1487,
+          "format": "ixt-sec:exchnameen"
+        }
+      }
+    },
+    "current_listing_verified": false,
+    "quote_unit_verified": false,
+    "split_compatibility_verified": false,
+    "eps_class_compatibility_verified": false,
+    "independently_adjudicated": false,
+    "limitations": [
+      "Title/symbol/exchange are declared in this filing, not proof of the current listing.",
+      "Hash and supplied metadata establish byte consistency, not source origin authenticity.",
+      "Context dimensions and exchange transformations are not interpreted as class-member or exchange equivalence.",
+      "No absence-of-split search, corporate-action completeness, quote-unit or EPS-class proof is supplied.",
+      "No price/EPS ratio, evidence admission or investment threshold is authorized."
+    ]
+  },
+  "scope_note": "Actual saved NPK body extraction only; no actual quote/profile/EPS combination or full-answer adjudication."
+}
