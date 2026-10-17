@@ -44,6 +44,15 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Quote/profile/EPS increment (17 October 2026 Auckland): link independently parsed
+saved stable-profile currency/CIK/identifier/flags to the exact quote symbol and
+exchange label and a reconstructed annual USD diluted-EPS reference. Keep provider
+field consistency distinct from verified security, quote unit, share/split basis
+and historical mapping validity. No price-to-EPS ratio or admitted observation is
+created; production paths remain unchanged. Next: actual share/corporate-action
+compatibility and an admissible price observation before valuation or expanded
+quality acceptance. See [three-source binding review](QUOTE_PROFILE_EPS_BINDING_20261017.md).
+
 Raw quote mapping increment (17 October 2026 Auckland): map bounded saved FMP
 stable-quote JSON with exact numeric tokens, Unix quote time, symbol, provider
 exchange label and raw hash/field bindings. Keep currency, issuer/security/share
