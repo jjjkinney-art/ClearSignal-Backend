@@ -36,8 +36,16 @@ def args(raw=None):
         'filed_at': '2026-02-20', 'reporting_period_end': '2025-12-31'}
 
 
+def combined_body(raw=None):
+    raw = body() if raw is None else raw
+    raw = raw.replace(b'<body>', b'<body xmlns:gaap="http://fasb.org/us-gaap/2025" xmlns:iso="http://www.xbrl.org/2003/iso4217">')
+    unit = b'<xbrli:unit id="epsunit"><xbrli:divide><xbrli:unitNumerator><xbrli:measure>iso:USD</xbrli:measure></xbrli:unitNumerator><xbrli:unitDenominator><xbrli:measure>xbrli:shares</xbrli:measure></xbrli:unitDenominator></xbrli:divide></xbrli:unit>'
+    fact = b'<ix:nonFraction id="filedEPS" name="gaap:EarningsPerShareDiluted" contextRef="c1" unitRef="epsunit" decimals="INF">5.00</ix:nonFraction>'
+    return raw.replace(b'</ix:resources>', unit+b'</ix:resources>').replace(b'</body>', fact+b'</body>')
+
+
 def combined(a=None, inputs=None):
-    a = args() if a is None else a
+    a = args(combined_body()) if a is None else a
     return assess_filed_share_basis(binding_inputs() if inputs is None else inputs,
         a['body'], a['receipt'], form=a['form'], filed_at=a['filed_at'], reporting_period_end=a['reporting_period_end'])
 
@@ -245,7 +253,7 @@ def test_already_passing_reports_or_event_lists_are_not_accepted_instead_of_raw_
 
 
 def test_fabricated_matching_receipt_is_not_origin_verification_or_split_clearance():
-    a = args(body('Class B common stock'))
+    a = args(combined_body(body('Class B common stock')))
     a['receipt']['unused_secret'] = 'CANARY'
     r = combined(a)
     assert r['binding_passed'] and not r['split_compatibility_verified']
