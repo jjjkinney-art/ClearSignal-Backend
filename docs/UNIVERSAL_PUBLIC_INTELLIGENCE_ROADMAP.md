@@ -44,6 +44,14 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Filed EPS-basis inspection increment (18 October 2026 Auckland): retain exact
+USD-per-share units, annual basic/diluted facts and EPS policy text from saved
+primary filings. The NPK replay establishes basic EPS and participating-securities
+policy context, without promoting basic EPS into diluted EPS or inferring a split
+cutoff from period/filing dates. Current quote unit, class-specific EPS rights,
+complete corporate-action coverage and independent useful-answer acceptance
+remain open. No production admission changes. See [EPS-basis review](FILED_EPS_BASIS_INSPECTION_20261018.md).
+
 Listed split reconciliation increment (18 October 2026 Auckland): map saved
 split events with raw field/receipt bindings and compute exact listed-event share
 factors under explicit already-adjusted calendar-basis assumptions. Avoid applying
