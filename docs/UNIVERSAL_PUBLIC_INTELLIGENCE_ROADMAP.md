@@ -44,6 +44,14 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Filed EPS cross-check increment (20 October 2026 Auckland): strengthen the
+existing offline quote/profile/EPS-to-filing binding so current diluted-EPS value
+and calendar period must agree with the filing's literal USD-per-share facts.
+Metadata-only matches, equal-valued basic EPS and conflicting filing facts do not
+pass. Reproduced the earlier metadata-only acceptance gap using invented
+values; no live wrong-answer claim follows. Split interval, class rights, quote
+admission and independent useful-answer gates remain open. See [EPS cross-check review](FILED_EPS_VALUE_CROSSCHECK_20261020.md).
+
 Filed EPS-basis inspection increment (18 October 2026 Auckland): retain exact
 USD-per-share units, annual basic/diluted facts and EPS policy text from saved
 primary filings. The NPK replay establishes basic EPS and participating-securities
