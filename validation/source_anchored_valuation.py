@@ -32,7 +32,8 @@ def _assumption(value):
         raise ValuationContractError('scenario operands must be explicit user assumptions, not source-price assertions')
 
 
-def _source_eps(ticker, cik, items, references, scenario_date):
+def _annual_eps_context(ticker, cik, items, references, scenario_date):
+    """Reconstruct signed annual EPS as source context, not positive-P/E authority."""
     if (not isinstance(cik, str) or not cik.isdigit() or int(cik) == 0
             or not isinstance(references, list) or not references
             or not all(isinstance(ref, dict) for ref in references)):
@@ -83,8 +84,6 @@ def _source_eps(ticker, cik, items, references, scenario_date):
     rebuilt, reference_id = candidates[0]
     current = rebuilt.verified_claims[0]
     value = Decimal(str(current['raw_value']))
-    if value <= 0:
-        raise ValuationContractError('this positive-P/E scenario requires positive annual EPS')
     return {'value': format(value, 'f'), 'unit': 'USD/shares', 'reference_id': reference_id,
             'concept': current['metric'], 'period_start': current['period_start'],
             'period_end': current['period_end'], 'filed_at': current['document_ref']['published_at'],
@@ -92,6 +91,14 @@ def _source_eps(ticker, cik, items, references, scenario_date):
             'period_basis': 'fiscal_year', 'document_type': rebuilt.document_type,
             'source_consistency_reconstructed': True,
             'independently_adjudicated': False}
+
+
+def _source_eps(ticker, cik, items, references, scenario_date):
+    """Keep the existing positive-P/E bridge and quote-binding contract strict."""
+    eps = _annual_eps_context(ticker, cik, items, references, scenario_date)
+    if Decimal(eps['value']) <= 0:
+        raise ValuationContractError('this positive-P/E scenario requires positive annual EPS')
+    return eps
 
 
 def evaluate_source_anchored_scenario(ticker, items, references, *, expected_cik,

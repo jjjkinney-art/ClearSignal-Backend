@@ -44,6 +44,16 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+Nonpositive-EPS increment (20 October 2026 Auckland): the retained ACHC facts
+reconstruct a 2025 annual diluted loss per share of 12.16 USD. A separate offline
+recovery scenario retains that loss as context and uses explicit hypothetical
+future positive EPS, entry price, exit multiple and horizon; it computes no
+current P/E, growth from a loss, normalization, recovery probability or forecast.
+Existing positive-P/E guards remain strict. The six saved pilot answers contain
+no explicit admitted EPS claim, and ASML's EUR/20-F and NPK's basic-EPS paths need
+supported coverage. Shared production wiring, adequate market/basis sources and
+freshly approved acceptance remain necessary. See [loss-aware framework and finite next sequence](EARNINGS_RECOVERY_SCENARIO_20261020.md).
+
 Filed EPS cross-check increment (20 October 2026 Auckland): strengthen the
 existing offline quote/profile/EPS-to-filing binding so current diluted-EPS value
 and calendar period must agree with the filing's literal USD-per-share facts.
