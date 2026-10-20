@@ -44,6 +44,16 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+20 October offline account acceptance increment: exercise the conditional
+scenario route through real JWT signature verification, database-backed beta
+admission and local owner resolution, including revoked/uninvited identities,
+distinct local IDs and simultaneous separate-user assumptions. Only local test
+keys, disposable databases and invented SEC records are used. This strengthens
+offline account-boundary evidence; no runtime setting or product code changes.
+Actual provider/identity infrastructure, basis coverage, source/usefulness
+adjudication and separately approved live acceptance remain open. See
+[scenario account-boundary acceptance](CONDITIONAL_SCENARIO_ACCOUNT_ACCEPTANCE_20261020.md).
+
 20 October application integration increment: a separate explicit conditional
 valuation endpoint is implemented behind a default-off feature flag. It rebuilds
 annual USD diluted EPS from server-owned SEC sources and uses the same canonical
