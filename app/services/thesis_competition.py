@@ -11,6 +11,19 @@ from .sec_risk_sections import (
     risk_section_label, risk_sentence_spans, MAX_ISSUER_RISK_SECTION_CHARS,
 )
 
+# Explicit segment subject only: do not resolve "it", "this segment" or a
+# preceding heading into an issuer-wide statement. Leading SEC BOM characters
+# remain in the exact quote and offsets; this grammar does not remove them.
+_NAMED_SEGMENT_COMPETITION = re.compile(
+    r'^(?:\ufeff\s*)*The (?P<label>[A-Z][A-Za-z]*(?:(?: |/|-| & )[A-Za-z]+){0,5}) segment '
+    r'competes (?:for its business )?(?:(?:primarily|principally) )?'
+    r'(?:on the basis of|based on|with|against) \S')
+
+
+def _segment_scope(quote):
+    match = _NAMED_SEGMENT_COMPETITION.match(quote)
+    return {'kind': 'named_segment', 'label': match['label']} if match else None
+
 
 def _qualifies(quote):
     if not isinstance(quote, str) or not 40 <= len(quote) <= 450 or not quote.endswith('.'):
@@ -22,7 +35,7 @@ def _qualifies(quote):
     if re.search(r'\b(?:employees|personnel|workforce|recruit\w*|talent|'
                  r'software developers|sales professionals)\b', quote, re.I):
         return False
-    return bool(re.match(
+    return bool(_segment_scope(quote) or re.match(
         r'^We (?:(?:also|primarily|principally) )?compete (?:(?:primarily|principally) )?'
         r'(?:with|against|on the basis of|based on) \S|'
         r'^We (?:also )?face competition from \S|'
@@ -35,7 +48,9 @@ def _qualifies(quote):
 def _summary(value):
     return (f'{value["ticker"]} described competition in its {value["document_type"]} filed '
             f'{value["document_ref"]["published_at"]}: “{value["quote"]}” '
-            'This is issuer-reported competitive context; relative strength, market share and durable advantage remain unverified.')
+            + ('This is issuer-reported context for the named segment, not a company-wide competitive assessment; '
+               if value.get('competition_scope') else 'This is issuer-reported competitive context; ')
+            + 'relative strength, market share and durable advantage remain unverified.')
 
 
 def extract_competition_descriptions(document, *, ticker, cik):
@@ -73,6 +88,11 @@ def extract_competition_descriptions(document, *, ticker, cik):
                 quote = document.text[start + left:start + right]
             if not _qualifies(quote) or quote in seen:
                 continue
+            scope = _segment_scope(quote)
+            if scope and section != business_section_label(document.document_type, layout):
+                # A third-party segment mentioned in risk prose does not gain
+                # the current issuer's business-section context.
+                continue
             offset = start + left
             try:
                 ref = ClaimDocumentReference(
@@ -88,6 +108,8 @@ def extract_competition_descriptions(document, *, ticker, cik):
             value = dict(claim_kind='issuer_competition_description', ticker=ticker, quote=quote,
                          start_offset=offset, end_offset=offset + len(quote), document_ref=ref,
                          document_type=document.document_type)
+            if scope:
+                value['competition_scope'] = scope
             if layout:
                 value['reviewed_layout'] = layout_binding(layout, document.content_hash)
             result.append(RetrievedEvidence(
@@ -141,6 +163,10 @@ def bound_competition_description(item, *, ticker, cik):
                 or item.extraction_method != 'html'
                 or item.freshness_status in {'unavailable', 'conflicting', 'superseded', 'stale'}
                 or item.availability_status != 'available' or item.summary != _summary(value)):
+            return None
+        scope = _segment_scope(value['quote'])
+        if value.get('competition_scope') != scope or (scope and
+                ref['section'] != business_section_label(item.document_type, layout)):
             return None
     except (KeyError, TypeError, ValueError, AttributeError):
         return None
