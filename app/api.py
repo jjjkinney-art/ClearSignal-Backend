@@ -1516,6 +1516,38 @@ async def ask_question(request: QuestionRequest, http_request: Request):
         progressive_requested as _progressive_requested,
     )
     _progressive: bool = _progressive_requested(http_request.headers.get("accept"))
+    # A reference identifies one saved turn, not a fresh analysis. Authenticate
+    # and run preflight above before reading this owner-scoped historical copy.
+    # Return its original post-integrity payload before any provider/model work.
+    from .config import settings as _replay_settings
+    if (_replay_settings.auth_enabled and request.research_conversation_id
+            and request.research_request_ref):
+        _saved_response = None
+        try:
+            from .db.connection import get_session_factory as _replay_factory
+            from .services.research_conversations import get_completed_response as _completed_response
+            _replay_sessions = _replay_factory()
+            if _replay_sessions is not None:
+                async with _replay_sessions() as _replay_session:
+                    _saved_response = await _completed_response(
+                        _replay_session, user_id=_acting_user_id,
+                        conversation_id=request.research_conversation_id,
+                        request_ref=request.research_request_ref,
+                    )
+        except Exception:
+            logger.warning("[ask] saved research retry could not be read")
+        if _saved_response is not None:
+            async def _replay_saved_turn():
+                if _progressive:
+                    yield _encode_frame(_final_frame(_saved_response))
+                else:
+                    yield _json.dumps(_saved_response).encode()
+            return StreamingResponse(
+                _replay_saved_turn(),
+                media_type=_PROGRESS_MEDIA if _progressive else _LEGACY_MEDIA,
+                headers={"X-Accel-Buffering": "no", "Cache-Control": "no-store",
+                         "X-Research-Turn-Replayed": "true"},
+            )
     # Poll cadence while the pipeline runs in the executor. 100 ms keeps the
     # first real transition (routing completes at ~18 ms, retrieval at ~101 ms)
     # well inside the 250 ms target while costing ~210 brief lock acquisitions
@@ -2313,10 +2345,70 @@ async def ask_question(request: QuestionRequest, http_request: Request):
             except Exception as _obs_exc:
                 logger.debug("[ask] observability block failed (non-fatal): %r", _obs_exc)
 
+            from .config import settings as _history_settings
+            _canonical_replayed = False
+
+            # Save a completed research turn only when the authenticated client
+            # supplied an explicit account-owned conversation id. Both messages
+            # share one transaction and the assistant snapshot is the exact
+            # post-integrity payload emitted below. Foreign/missing ids remain
+            # indistinguishable and never fall back to a shared ticker store.
+            if (
+                _history_settings.auth_enabled
+                and request.research_conversation_id
+            ):
+                try:
+                    from .db.connection import get_session_factory as _conversation_factory
+                    from .services.research_conversations import (
+                        append_completed_turn as _append_completed_turn,
+                        get_completed_response as _canonical_completed_response,
+                    )
+                    _research_factory = _conversation_factory()
+                    if _research_factory is not None:
+                        async with _research_factory() as _research_session:
+                            _saved_turn = await _append_completed_turn(
+                                _research_session,
+                                user_id=_acting_user_id,
+                                conversation_id=request.research_conversation_id,
+                                question=request.question,
+                                response=_result_dict,
+                                request_ref=request.research_request_ref or _obs_request_id,
+                            )
+                            if _saved_turn:
+                                _canonical_response = await _canonical_completed_response(
+                                    _research_session, user_id=_acting_user_id,
+                                    conversation_id=request.research_conversation_id,
+                                    request_ref=request.research_request_ref or _obs_request_id,
+                                )
+                                await _research_session.commit()
+                                if _canonical_response is not None:
+                                    # A concurrent/retried writer may have won.
+                                    # Emit that saved payload rather than a result
+                                    # which History would never show.
+                                    _canonical_replayed = _canonical_response != _result_dict
+                                    _result_dict = _canonical_response
+                except Exception:
+                    logger.warning("[ask] account-owned research turn could not be saved")
+                    # A competing completed turn may now be visible after this
+                    # transaction rolled back. One owner-scoped read recovers
+                    # that original result; it does not retry provider work.
+                    if request.research_request_ref:
+                        try:
+                            async with _research_factory() as _retry_session:
+                                _canonical_response = await _canonical_completed_response(
+                                    _retry_session, user_id=_acting_user_id,
+                                    conversation_id=request.research_conversation_id,
+                                    request_ref=request.research_request_ref,
+                                )
+                            if _canonical_response is not None:
+                                _canonical_replayed = True
+                                _result_dict = _canonical_response
+                        except Exception:
+                            logger.warning("[ask] saved research retry recovery unavailable")
+
             # Persist only the authenticated owner's thesis, before emitting the
             # final answer. This never calls the legacy shared ticker memory path.
-            from .config import settings as _history_settings
-            if _history_settings.auth_enabled:
+            if _history_settings.auth_enabled and not _canonical_replayed:
                 try:
                     from .db.connection import get_session_factory as _history_factory
                     from .services.owned_research import save_thesis as _save_owned_thesis
@@ -2332,40 +2424,10 @@ async def ask_question(request: QuestionRequest, http_request: Request):
                 except Exception:
                     logger.warning("[ask] account-owned thesis could not be saved")
 
-            # Save a completed research turn only when the authenticated client
-            # supplied an explicit account-owned conversation id. Both messages
-            # share one transaction and the assistant snapshot is the exact
-            # post-integrity payload emitted below. Foreign/missing ids remain
-            # indistinguishable and never fall back to a shared ticker store.
-            if (
-                _history_settings.auth_enabled
-                and request.research_conversation_id
-            ):
-                try:
-                    from .db.connection import get_session_factory as _conversation_factory
-                    from .services.research_conversations import (
-                        append_completed_turn as _append_completed_turn,
-                    )
-                    _research_factory = _conversation_factory()
-                    if _research_factory is not None:
-                        async with _research_factory() as _research_session:
-                            _saved_turn = await _append_completed_turn(
-                                _research_session,
-                                user_id=_acting_user_id,
-                                conversation_id=request.research_conversation_id,
-                                question=request.question,
-                                response=_result_dict,
-                                request_ref=request.research_request_ref or _obs_request_id,
-                            )
-                            if _saved_turn:
-                                await _research_session.commit()
-                except Exception:
-                    logger.warning("[ask] account-owned research turn could not be saved")
-
             # Persist only server-produced eligible thesis notice previews.
             # This is an owner-scoped in-product inbox record. No outbound
             # delivery path is invoked here.
-            if _history_settings.auth_enabled:
+            if _history_settings.auth_enabled and not _canonical_replayed:
                 try:
                     _notice_preview = (
                         _result_dict.get("routing", {})

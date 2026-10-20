@@ -278,6 +278,44 @@ def assistant_text_from_response(response: dict) -> str:
     return json.dumps(answer if answer is not None else {}, ensure_ascii=False, sort_keys=True)
 
 
+async def get_completed_response(session, *, user_id: str, conversation_id: str,
+                                 request_ref: str) -> Optional[dict]:
+    """Read one owner's original completed response; never a new analysis.
+
+    A request reference identifies one conversation turn. Reusing it returns
+    the first persisted response; a different question needs a new reference.
+    Deleted, foreign, missing and unsupported snapshots are not replayable.
+    """
+    owner = _owner(user_id)
+    ref = (request_ref or "").strip()[:100]
+    if not ref:
+        return None
+    row = (await session.execute(select(ResearchMessage).join(
+        ResearchConversation, ResearchConversation.id == ResearchMessage.conversation_id,
+    ).where(
+        ResearchConversation.id == conversation_id,
+        ResearchConversation.user_id == owner,
+        ResearchConversation.deleted_at.is_(None),
+        ResearchMessage.conversation_id == conversation_id,
+        ResearchMessage.user_id == owner,
+        ResearchMessage.request_ref == ref,
+        ResearchMessage.role == "assistant",
+    ))).scalar_one_or_none()
+    if row is None or row.snapshot_version != RESPONSE_SNAPSHOT_VERSION:
+        return None
+    snapshot = row.displayed_snapshot
+    if (not isinstance(snapshot, dict)
+            or snapshot.get("response_version") != RESPONSE_SNAPSHOT_VERSION
+            or not isinstance(snapshot.get("response"), dict)
+            or "error" in snapshot["response"]):
+        return None
+    encoded = json.dumps(snapshot, ensure_ascii=False, allow_nan=False)
+    if len(encoded.encode("utf-8")) > MAX_SNAPSHOT_BYTES:
+        return None
+    # Detach mutable JSON from the ORM row and prevent non-JSON data escaping.
+    return json.loads(encoded)["response"]
+
+
 async def append_completed_turn(session, *, user_id: str, conversation_id: str,
                                 question: str, response: dict,
                                 request_ref: Optional[str] = None) -> bool:

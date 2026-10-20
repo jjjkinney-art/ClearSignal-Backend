@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**20 October completed-turn retry repair and owned HTTP acceptance (offline):**
+Normal authenticated `/ask` now returns the first saved response when its explicit
+owner/conversation/request reference is retried, preserving citations and History
+instead of displaying an unsaved recomputation. A new reference refreshes the
+analysis. Six retained ASML/NPK fact answers passed real signed local HTTP,
+owned save/reopen, exact no-fetch retry and cross-owner denial checks. See
+`OWNED_ANNUAL_EPS_ASK_20261020.md`. This is bounded backend acceptance with local
+accounts/SQLite and injected external context; production browser/auth/billing,
+concurrent dispatch and broad personalized usefulness remain open. Competition,
+valuation/decision boundaries, risk materiality and development/holdout quality
+acceptance remain launch priorities. No live execution or new spending authority.
+
 **20 October normal annual EPS research integration (offline):** the ordinary
 research fact path now handles explicit annual basic/diluted USD/EUR EPS with
 same-filing annual Assets anchors and reconstructed citations. Actual saved
