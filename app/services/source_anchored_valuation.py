@@ -10,7 +10,7 @@ from decimal import (Context, Decimal, DecimalException, localcontext, ROUND_HAL
                      InvalidOperation, DivisionByZero, Overflow)
 import re
 
-from app.providers.sec_fact_policy import ANNUAL_FORM_PREFIXES
+from app.providers.sec_fact_policy import ANNUAL_FORM_PREFIXES, REPORTING_CURRENCIES
 from app.services.financial_thesis_foundation import _rebuild
 from app.services.conditional_valuation_math import (
     ValuationContractError, _object, _operand, _basis, evaluate_scenario,
@@ -32,10 +32,13 @@ def _assumption(value):
         raise ValuationContractError('scenario operands must be explicit user assumptions, not source-price assertions')
 
 
-def _annual_eps_context(ticker, cik, items, references, scenario_date, *, share_basis="diluted"):
+def _annual_eps_context(ticker, cik, items, references, scenario_date, *, share_basis="diluted", currency="USD"):
     """Reconstruct signed annual EPS as source context, not positive-P/E authority."""
     if not isinstance(share_basis, str) or share_basis not in ('basic', 'diluted'):
         raise ValuationContractError('explicit supported source share basis required')
+    if not isinstance(currency, str) or currency not in REPORTING_CURRENCIES:
+        raise ValuationContractError('explicit supported reporting currency required')
+    unit = currency + '/shares'
     concept = 'EarningsPerShareBasic' if share_basis == 'basic' else 'EarningsPerShareDiluted'
     if (not isinstance(cik, str) or not cik.isdigit() or int(cik) == 0
             or not isinstance(references, list) or not references
@@ -52,7 +55,7 @@ def _annual_eps_context(ticker, cik, items, references, scenario_date, *, share_
                    for row in claims):
             continue
         rebuilt = _rebuild(item, ticker=ticker, cik=cik, name=share_basis + ' EPS',
-            concepts=(concept,), expected_unit='USD/shares')
+            concepts=(concept,), expected_unit=unit)
         if (rebuilt is None or getattr(item, 'availability_status', None) != 'available'
                 or not isinstance(item.document_type, str)
                 or item.document_type != rebuilt.document_type
@@ -87,7 +90,7 @@ def _annual_eps_context(ticker, cik, items, references, scenario_date, *, share_
     rebuilt, reference_id = candidates[0]
     current = rebuilt.verified_claims[0]
     value = Decimal(str(current['raw_value']))
-    return {'value': format(value, 'f'), 'unit': 'USD/shares', 'reference_id': reference_id,
+    return {'value': format(value, 'f'), 'unit': unit, 'currency': currency, 'reference_id': reference_id,
             'concept': current['metric'], 'share_basis': share_basis, 'period_start': current['period_start'],
             'period_end': current['period_end'], 'filed_at': current['document_ref']['published_at'],
             'document_ref': deepcopy(current['document_ref']),
@@ -96,9 +99,9 @@ def _annual_eps_context(ticker, cik, items, references, scenario_date, *, share_
             'independently_adjudicated': False}
 
 
-def _source_eps(ticker, cik, items, references, scenario_date, *, share_basis="diluted"):
+def _source_eps(ticker, cik, items, references, scenario_date, *, share_basis="diluted", currency="USD"):
     """Keep the existing positive-P/E bridge and quote-binding contract strict."""
-    eps = _annual_eps_context(ticker, cik, items, references, scenario_date, share_basis=share_basis)
+    eps = _annual_eps_context(ticker, cik, items, references, scenario_date, share_basis=share_basis, currency=currency)
     if Decimal(eps['value']) <= 0:
         raise ValuationContractError('this positive-P/E scenario requires positive annual EPS')
     return eps
@@ -107,25 +110,27 @@ def _source_eps(ticker, cik, items, references, scenario_date, *, share_basis="d
 def evaluate_source_anchored_scenario(ticker, items, references, *, expected_cik,
                                       assumptions, evaluated_at):
     """Original diluted-EPS entry point; basic EPS never satisfies it."""
-    return _evaluate_source_anchored_scenario(ticker, items, references, expected_cik=expected_cik,
-        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='diluted')
+    return evaluate_explicit_annual_eps_scenario(ticker, items, references, expected_cik=expected_cik,
+        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='diluted', currency='USD')
 
 
 def evaluate_basic_source_anchored_scenario(ticker, items, references, *, expected_cik,
                                             assumptions, evaluated_at):
     """Separate explicit basic-EPS hypothesis; never conversion to diluted EPS."""
-    return _evaluate_source_anchored_scenario(ticker, items, references, expected_cik=expected_cik,
-        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='basic')
+    return evaluate_explicit_annual_eps_scenario(ticker, items, references, expected_cik=expected_cik,
+        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='basic', currency='USD')
 
 
-def _evaluate_source_anchored_scenario(ticker, items, references, *, expected_cik,
-                                      assumptions, evaluated_at, share_basis):
+def evaluate_explicit_annual_eps_scenario(ticker, items, references, *, expected_cik,
+                                      assumptions, evaluated_at, share_basis, currency):
     """Keep the observed fiscal EPS separate from every hypothetical operand.
 
     No source observation may be asserted for price/exit multiple/return/growth.
     Share/split/earnings-scope compatibility remains an explicit user assertion.
     """
     try:
+        if not isinstance(currency, str) or currency not in REPORTING_CURRENCIES:
+            raise ValuationContractError('explicit supported reporting currency required')
         if not isinstance(assumptions, dict):
             raise ValuationContractError('explicit scenario assumption object required')
         mode = assumptions.get('mode')
@@ -141,19 +146,19 @@ def _evaluate_source_anchored_scenario(ticker, items, references, *, expected_ci
             raise ValuationContractError('explicit underlying-common-share price assumption required; no ADR conversion')
         basis = assumptions['eps_basis']
         _basis(basis)
-        if (basis['issuer'] != ticker or basis['currency'] != 'USD'
+        if (basis['issuer'] != ticker or basis['currency'] != currency
                 or basis['share_basis'] != share_basis or basis['accounting'] != 'gaap'
                 or basis['period_basis'] != 'fiscal_year'
-                or (share_basis == 'basic' and basis['earnings_scope'] != 'total_operations')):
-            raise ValuationContractError('annual USD GAAP EPS basis must match the explicitly selected source share basis and issuer')
+                or ((share_basis == 'basic' or currency == 'EUR') and basis['earnings_scope'] != 'total_operations')):
+            raise ValuationContractError('annual same-currency GAAP EPS basis must match the explicitly selected source share basis and issuer')
         for key in ('price', 'exit_pe', 'horizon', rate_key):
             _assumption(assumptions[key])
         _object(assumptions['exit_pe'], {'value', 'unit', 'provenance'}, 'exit_pe assumption')
-        price = _operand(assumptions['price'], unit='USD/share')
+        price = _operand(assumptions['price'], unit=currency + '/share')
         exit_multiple = _operand(assumptions['exit_pe'], unit='x')
         if price <= 0:
             raise ValuationContractError('explicit positive hypothetical price required')
-        eps = _source_eps(ticker, expected_cik, items, references, scenario_date, share_basis=share_basis)
+        eps = _source_eps(ticker, expected_cik, items, references, scenario_date, share_basis=share_basis, currency=currency)
         with localcontext(Context(prec=50, rounding=ROUND_HALF_EVEN, Emin=-999999,
                                   Emax=999999, traps=[InvalidOperation, DivisionByZero, Overflow])):
             entry_pe = price / Decimal(eps['value'])

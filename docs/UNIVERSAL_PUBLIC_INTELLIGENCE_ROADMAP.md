@@ -44,6 +44,17 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+20 October EUR/20-F increment: support explicitly requested US-GAAP annual basic
+or diluted EPS in EUR/shares and 20-F/20-F/A within the default-off scenario
+endpoint. Preserve exact reporting-currency/form anchors and unconverted
+hypothetical underlying-share prices; no FX/ADR conversion or IFRS inference.
+Original USD entry points and quote/basis inspectors remain strict. New EUR
+coverage is synthetic-tested; actual ASML EPS availability is not established.
+The retained ACHC USD replay remains compatible. Source adequacy, separately
+approved live acceptance, independent usefulness review and the existing cohort
+benchmark remain the next acceptance gates. See
+[EUR annual-EPS support and limitations](EUR_ANNUAL_EPS_SCENARIOS_20261020.md).
+
 20 October explicit basic-EPS increment: the default-off scenario endpoint can
 now use a separately selected annual USD GAAP basic-EPS comparison for positive
 growth/required-growth or nonpositive recovery hypotheses. Basic and diluted

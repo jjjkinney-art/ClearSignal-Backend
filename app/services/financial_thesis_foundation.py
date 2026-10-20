@@ -11,7 +11,7 @@ import re
 
 from ..integrity.sec_metric_evidence import comparable_metric_evidence
 from ..providers.sec_client import SecFactRecord
-from ..providers.sec_fact_policy import REPORTING_CURRENCIES
+from ..providers.sec_fact_policy import REPORTING_CURRENCIES, PER_SHARE_UNITS
 
 CORE_METRICS = {
     "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
@@ -102,7 +102,7 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
     """Recheck both facts and the displayed summary with the existing producer."""
     # Explicit scenario bridges reconstruct one exact named per-share concept.
     # No mixed basic/diluted family; ordinary foundation callers retain money.
-    if expected_unit is not None and (expected_unit != 'USD/shares'
+    if expected_unit is not None and (expected_unit not in PER_SHARE_UNITS
             or (concepts, name) not in (
                 (('EarningsPerShareDiluted',), 'diluted EPS'),
                 (('EarningsPerShareBasic',), 'basic EPS'))):
@@ -144,7 +144,7 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
                     or claim["ticker"] != ticker or claim["provenance"] != "reported"
                     or claim["metric"] != f"us-gaap:{match[3]}"
                     or claim["unit"] not in allowed_units
-                    or claim.get("currency") != ('USD' if claim['unit'] == 'USD/shares' else claim['unit'])
+                    or claim.get("currency") != (claim['unit'].split('/')[0] if claim['unit'] in PER_SHARE_UNITS else claim['unit'])
                     or claim["scope"] != "consolidated"
                     or ref["provider"] != "SEC EDGAR"
                     or date.fromisoformat(ref["published_at"]) > date.today()

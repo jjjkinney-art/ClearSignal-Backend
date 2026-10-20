@@ -13,7 +13,7 @@ from math import isfinite
 from typing import Optional
 
 from ..providers.sec_client import SecFactRecord
-from ..providers.sec_fact_policy import PERIODIC_FORMS, REPORTING_CURRENCIES
+from ..providers.sec_fact_policy import PERIODIC_FORMS, REPORTING_CURRENCIES, PER_SHARE_UNITS
 from .provenance import ClaimDocumentReference, Provenance, QuantitativeClaim
 
 
@@ -82,7 +82,7 @@ def bind_sec_fact(
 
     # The displayed text must denote the same unscaled value. A raw_value
     # of one million paired with "$9M" must never inherit the fact's link.
-    if record.unit not in (*REPORTING_CURRENCIES, "shares", "USD/shares"):
+    if record.unit not in (*REPORTING_CURRENCIES, "shares", *PER_SHARE_UNITS):
         return None
     displayed = format(Decimal(str(record.value)), ",f")
     if "." in displayed:
@@ -93,8 +93,10 @@ def bind_sec_fact(
         expected_display = f"{displayed} EUR"
     elif record.unit == "shares":
         expected_display = f"{displayed} shares"
-    else:
+    elif record.unit == "USD/shares":
         expected_display = f"${displayed} per share"
+    else:
+        expected_display = f"{displayed} EUR per share"
     if claim.value_text != expected_display:
         return None
 

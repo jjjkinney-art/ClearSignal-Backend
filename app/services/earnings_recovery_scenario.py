@@ -9,6 +9,7 @@ from decimal import Context, Decimal, DecimalException, localcontext, ROUND_HALF
 from decimal import InvalidOperation, DivisionByZero, Overflow
 from fractions import Fraction
 
+from app.providers.sec_fact_policy import REPORTING_CURRENCIES
 from app.services.source_anchored_valuation import _annual_eps_context, _assumption, _calendar
 from app.services.conditional_valuation_math import ValuationContractError, _basis, _object, _operand, _provenance
 
@@ -19,25 +20,27 @@ MODE = 'evaluate_earnings_recovery_scenario'
 def evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
                                assumptions, evaluated_at):
     """Original diluted-EPS loss context; basic EPS never satisfies it."""
-    return _evaluate_earnings_recovery(ticker, items, references, expected_cik=expected_cik,
-        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='diluted')
+    return evaluate_explicit_annual_eps_recovery(ticker, items, references, expected_cik=expected_cik,
+        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='diluted', currency='USD')
 
 
 def evaluate_basic_earnings_recovery(ticker, items, references, *, expected_cik,
                                      assumptions, evaluated_at):
     """Explicit basic-EPS loss context and future basic-EPS hypothesis."""
-    return _evaluate_earnings_recovery(ticker, items, references, expected_cik=expected_cik,
-        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='basic')
+    return evaluate_explicit_annual_eps_recovery(ticker, items, references, expected_cik=expected_cik,
+        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='basic', currency='USD')
 
 
-def _evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
-                               assumptions, evaluated_at, share_basis):
+def evaluate_explicit_annual_eps_recovery(ticker, items, references, *, expected_cik,
+                               assumptions, evaluated_at, share_basis, currency):
     """Scenario price = assumed positive future EPS × assumed exit multiple.
 
     No growth rate is calculated from the reported loss or zero EPS. The result
     is a price-only sensitivity to invented/explicit inputs, not expected return.
     """
     try:
+        if not isinstance(currency, str) or currency not in REPORTING_CURRENCIES:
+            raise ValuationContractError('explicit supported reporting currency required')
         _object(assumptions, {'mode', 'scenario_as_of', 'price', 'price_per_underlying_common_share',
             'eps_basis', 'target_eps', 'target_fiscal_period', 'exit_pe', 'horizon', 'distributions'}, 'recovery assumptions')
         if assumptions['mode'] != MODE or assumptions['distributions'] != 'excluded':
@@ -49,14 +52,14 @@ def _evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
             raise ValuationContractError('explicit underlying common-share price assumption required')
         basis = assumptions['eps_basis']
         _basis(basis)
-        if (basis['issuer'] != ticker or basis['currency'] != 'USD'
+        if (basis['issuer'] != ticker or basis['currency'] != currency
                 or basis['accounting'] != 'gaap' or basis['share_basis'] != share_basis
                 or basis['period_basis'] != 'fiscal_year' or basis['earnings_scope'] != 'total_operations'):
-            raise ValuationContractError('same-issuer USD GAAP full-year total-operations basis must match the selected EPS share basis')
+            raise ValuationContractError('same-issuer same-currency GAAP full-year total-operations basis must match the selected EPS share basis')
         for key in ('price', 'target_eps', 'exit_pe', 'horizon'):
             _assumption(assumptions[key])
-        price = _operand(assumptions['price'], unit='USD/share')
-        target = _operand(assumptions['target_eps'], unit='USD/shares')
+        price = _operand(assumptions['price'], unit=currency + '/share')
+        target = _operand(assumptions['target_eps'], unit=currency + '/shares')
         multiple = _operand(assumptions['exit_pe'], unit='x')
         if price <= 0 or target <= 0 or multiple <= 0:
             raise ValuationContractError('positive hypothetical price, future EPS and exit P/E required')
@@ -77,7 +80,7 @@ def _evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
                 or not 300 <= (end - start).days + 1 <= 380
                 or (terminal_date - end).days > 380):
             raise ValuationContractError('explicit future full fiscal year ending by terminal date required')
-        eps = _annual_eps_context(ticker, expected_cik, items, references, scenario, share_basis=share_basis)
+        eps = _annual_eps_context(ticker, expected_cik, items, references, scenario, share_basis=share_basis, currency=currency)
         if Decimal(eps['value']) > 0:
             raise ValuationContractError('this recovery context requires reported nonpositive annual EPS')
         # Two <=66-character decimal operands have an exact finite product at 150 digits.
@@ -108,7 +111,7 @@ def _evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
             'supplied_assumptions': deepcopy(assumptions),
             'terminal_valuation_date': terminal_date.isoformat(), 'values': values,
             'formula': 'terminal_price = assumed_future_fiscal_EPS * assumed_exit_PE; price_factor = terminal_price / assumed_price; annualized_price_change = price_factor^(1 / years) - 1',
-            'numeric_contract': {'terminal_price_unit': 'USD/share', 'price_factor': 'dimensionless',
+            'numeric_contract': {'terminal_price_unit': currency + '/share', 'price_factor': 'dimensionless',
                 'change_units': 'fractions_not_percentages', 'precision_digits': 50,
                 'terminal_product_exact': True, 'rounding': 'ROUND_HALF_EVEN'},
             'market_pe_verified': False, 'earnings_recovery_probability_assessed': False,
