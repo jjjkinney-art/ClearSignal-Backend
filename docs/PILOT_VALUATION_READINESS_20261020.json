@@ -1,0 +1,208 @@
+{
+  "review": "offline_visible_answer_claim_inventory_not_independent_quality_adjudication",
+  "source_artifact_sha256": "8981da9b668f51735423b58de8d4878315f6cef2271a42899687cd52fef2b6cd",
+  "source_artifact_unchanged": true,
+  "all_historical_files_revalidated": false,
+  "cases": [
+    {
+      "case_id": "ASML:core_thesis",
+      "status": "partial",
+      "reported_eps_claim_count": 0,
+      "unanswered_parts": [
+        "competitive position",
+        "valuation and expected returns",
+        "risk materiality, likelihood and effect on the investment case"
+      ],
+      "first_four_financial_references": [
+        {
+          "id": "E1",
+          "title": "ASML revenue from contracts with customers excluding assessed taxes: 32.7B EUR (2025-12-31)",
+          "document_type": "20-F"
+        },
+        {
+          "id": "E2",
+          "title": "ASML operating income: 11.3B EUR (2025-12-31)",
+          "document_type": "20-F"
+        },
+        {
+          "id": "E3",
+          "title": "ASML net income attributable to parent: 9.6B EUR (2025-12-31)",
+          "document_type": "20-F"
+        },
+        {
+          "id": "E4",
+          "title": "ASML operating cash flow: 12.7B EUR (2025-12-31)",
+          "document_type": "20-F"
+        }
+      ]
+    },
+    {
+      "case_id": "ASML:decision_threshold",
+      "status": "partial",
+      "reported_eps_claim_count": 0,
+      "unanswered_parts": [
+        "valuation decision boundaries",
+        "expected returns",
+        "operating KPI breakpoints",
+        "quantified earnings impact"
+      ],
+      "first_four_financial_references": [
+        {
+          "id": "E1",
+          "title": "ASML revenue from contracts with customers excluding assessed taxes: 32.7B EUR (2025-12-31)",
+          "document_type": "20-F"
+        },
+        {
+          "id": "E2",
+          "title": "ASML operating income: 11.3B EUR (2025-12-31)",
+          "document_type": "20-F"
+        },
+        {
+          "id": "E3",
+          "title": "ASML net income attributable to parent: 9.6B EUR (2025-12-31)",
+          "document_type": "20-F"
+        },
+        {
+          "id": "E4",
+          "title": "ASML operating cash flow: 12.7B EUR (2025-12-31)",
+          "document_type": "20-F"
+        }
+      ]
+    },
+    {
+      "case_id": "ACHC:core_thesis",
+      "status": "partial",
+      "reported_eps_claim_count": 0,
+      "unanswered_parts": [
+        "operating income",
+        "competitive position",
+        "valuation and expected returns",
+        "risk materiality, likelihood and effect on the investment case"
+      ],
+      "first_four_financial_references": [
+        {
+          "id": "E1",
+          "title": "ACHC revenue from contracts with customers excluding assessed taxes: $865.8M (2026-06-30)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E2",
+          "title": "ACHC net income attributable to parent: $10.9M (2026-06-30)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E3",
+          "title": "ACHC operating cash flow: $223.6M (2026-06-30)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E4",
+          "title": "ACHC pretax income: $22M (2026-06-30)",
+          "document_type": "10-Q"
+        }
+      ]
+    },
+    {
+      "case_id": "ACHC:decision_threshold",
+      "status": "partial",
+      "reported_eps_claim_count": 0,
+      "unanswered_parts": [
+        "operating income",
+        "operating margin",
+        "valuation decision boundaries",
+        "expected returns",
+        "operating KPI breakpoints",
+        "quantified earnings impact"
+      ],
+      "first_four_financial_references": [
+        {
+          "id": "E1",
+          "title": "ACHC revenue from contracts with customers excluding assessed taxes: $865.8M (2026-06-30)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E2",
+          "title": "ACHC net income attributable to parent: $10.9M (2026-06-30)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E3",
+          "title": "ACHC operating cash flow: $223.6M (2026-06-30)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E4",
+          "title": "ACHC pretax income: $22M (2026-06-30)",
+          "document_type": "10-Q"
+        }
+      ]
+    },
+    {
+      "case_id": "NPK:core_thesis",
+      "status": "partial",
+      "reported_eps_claim_count": 0,
+      "unanswered_parts": [
+        "competitive position",
+        "valuation and expected returns",
+        "risk materiality, likelihood and effect on the investment case"
+      ],
+      "first_four_financial_references": [
+        {
+          "id": "E1",
+          "title": "NPK revenue (as reported): $146.6M (2026-07-05)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E2",
+          "title": "NPK operating income: $19.4M (2026-07-05)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E3",
+          "title": "NPK net income attributable to parent: $15.9M (2026-07-05)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E4",
+          "title": "NPK operating cash flow: $44.1M (2026-07-05)",
+          "document_type": "10-Q"
+        }
+      ]
+    },
+    {
+      "case_id": "NPK:decision_threshold",
+      "status": "partial",
+      "reported_eps_claim_count": 0,
+      "unanswered_parts": [
+        "valuation decision boundaries",
+        "expected returns",
+        "operating KPI breakpoints",
+        "quantified earnings impact"
+      ],
+      "first_four_financial_references": [
+        {
+          "id": "E1",
+          "title": "NPK revenue (as reported): $146.6M (2026-07-05)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E2",
+          "title": "NPK operating income: $19.4M (2026-07-05)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E3",
+          "title": "NPK net income attributable to parent: $15.9M (2026-07-05)",
+          "document_type": "10-Q"
+        },
+        {
+          "id": "E4",
+          "title": "NPK operating cash flow: $44.1M (2026-07-05)",
+          "document_type": "10-Q"
+        }
+      ]
+    }
+  ],
+  "live_execution_performed": false,
+  "new_spending_authority": false
+}

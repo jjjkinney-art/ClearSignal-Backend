@@ -1,0 +1,221 @@
+{
+  "replay": "offline_retained_companyfacts_with_invented_recovery_assumptions",
+  "source_body_sha256": "b1d48d703acb9cf3f60aaa852af3b91f4c463c554bf1a3d1bbf0ae55d0e977a3",
+  "source_receipt_sha256": "78a7c0def1eab8dd18eb1cfe065ff4e21b5c24b4f96f15825a22993edd603f28",
+  "source_body_bytes": 3457609,
+  "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001520697.json",
+  "capture_timestamp": "2026-10-15T09:24:44.166394+00:00",
+  "body_and_receipt_unchanged": true,
+  "all_historical_ledgers_revalidated": false,
+  "assumptions_are_actual_user_choices": false,
+  "assumptions_are_forecasts": false,
+  "response_references_are_new_offline_reconstructions_not_original_pilot_admissions": true,
+  "reported_comparison": "ACHC diluted EPS decreased 537.4% to $-12.16 per share for the period 2025-01-01 to 2025-12-31, from $2.78 per share in the comparable prior-year period 2024-01-01 to 2024-12-31.",
+  "producer_claims": [
+    {
+      "value_text": "$-12.16 per share",
+      "provenance": "reported",
+      "as_of": "2025-12-31",
+      "confidence": null,
+      "assumptions": null,
+      "stale": false,
+      "raw_value": -12.16,
+      "unit": "USD/shares",
+      "source": "10-K",
+      "source_date_unavailable": false,
+      "ticker": "ACHC",
+      "metric": "us-gaap:EarningsPerShareDiluted",
+      "derivation": null,
+      "freshness_status": null,
+      "polarity": null,
+      "assumptions_inferred": false,
+      "document_ref": {
+        "reference_id": "sec:1520697:0001193125-26-078266:us-gaap:EarningsPerShareDiluted",
+        "title": "10-K filed 2026-02-27 \u00b7 Earnings Per Share, Diluted",
+        "provider": "SEC EDGAR",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/0001193125-26-078266-index.htm",
+        "published_at": "2026-02-27"
+      },
+      "rendered": "$-12.16 per share (as of 2025-12-31)",
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "period": "FY2025",
+      "scope": "consolidated",
+      "currency": "USD",
+      "label": "Earnings Per Share, Diluted"
+    },
+    {
+      "value_text": "$2.78 per share",
+      "provenance": "reported",
+      "as_of": "2024-12-31",
+      "confidence": null,
+      "assumptions": null,
+      "stale": false,
+      "raw_value": 2.78,
+      "unit": "USD/shares",
+      "source": "10-K",
+      "source_date_unavailable": false,
+      "ticker": "ACHC",
+      "metric": "us-gaap:EarningsPerShareDiluted",
+      "derivation": null,
+      "freshness_status": null,
+      "polarity": null,
+      "assumptions_inferred": false,
+      "document_ref": {
+        "reference_id": "sec:1520697:0001193125-26-078266:us-gaap:EarningsPerShareDiluted",
+        "title": "10-K filed 2026-02-27 \u00b7 Earnings Per Share, Diluted",
+        "provider": "SEC EDGAR",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/0001193125-26-078266-index.htm",
+        "published_at": "2026-02-27"
+      },
+      "rendered": "$2.78 per share (as of 2024-12-31)",
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "period": "FY2024",
+      "scope": "consolidated",
+      "currency": "USD",
+      "label": "Earnings Per Share, Diluted"
+    }
+  ],
+  "offline_reconstructed_response_references": [
+    {
+      "id": "E1",
+      "title": "ACHC diluted EPS: $-12.16 per share (2025-12-31)",
+      "source": "SEC EDGAR \u2014 structured XBRL fact",
+      "published_at": "2026-02-27",
+      "url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/0001193125-26-078266-index.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-K",
+      "reporting_period_start": "2025-01-01",
+      "reporting_period_end": "2025-12-31",
+      "filed_at": "2026-02-27",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": null,
+      "page": null,
+      "extraction_method": "structured_xbrl",
+      "freshness_status": "current",
+      "status_reason": "evidence is 231 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    }
+  ],
+  "scenario": {
+    "available": true,
+    "status": "partial",
+    "classification": "source_anchored_conditional_earnings_recovery_scenario",
+    "mode": "evaluate_earnings_recovery_scenario",
+    "admitted": false,
+    "launch_ready": false,
+    "source_eps": {
+      "value": "-12.16",
+      "unit": "USD/shares",
+      "reference_id": "E1",
+      "concept": "us-gaap:EarningsPerShareDiluted",
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "filed_at": "2026-02-27",
+      "document_ref": {
+        "reference_id": "sec:1520697:0001193125-26-078266:us-gaap:EarningsPerShareDiluted",
+        "title": "10-K filed 2026-02-27 \u00b7 Earnings Per Share, Diluted",
+        "provider": "SEC EDGAR",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/0001193125-26-078266-index.htm",
+        "published_at": "2026-02-27"
+      },
+      "period_basis": "fiscal_year",
+      "document_type": "10-K",
+      "source_consistency_reconstructed": true,
+      "independently_adjudicated": false
+    },
+    "source_eps_role": "reported_nonpositive_fiscal_context_only",
+    "source_eps_used_in_scenario_arithmetic": false,
+    "supplied_assumptions": {
+      "mode": "evaluate_earnings_recovery_scenario",
+      "scenario_as_of": "2026-10-16",
+      "distributions": "excluded",
+      "price_per_underlying_common_share": true,
+      "price": {
+        "value": "64",
+        "unit": "USD/share",
+        "provenance": {
+          "kind": "user_assumption",
+          "reference": "Explicit invented research scenario"
+        }
+      },
+      "exit_pe": {
+        "value": "25",
+        "unit": "x",
+        "provenance": {
+          "kind": "user_assumption",
+          "reference": "Explicit invented research scenario"
+        }
+      },
+      "horizon": {
+        "value": 2,
+        "unit": "years",
+        "provenance": {
+          "kind": "user_assumption",
+          "reference": "Explicit invented research scenario"
+        }
+      },
+      "eps_basis": {
+        "issuer": "ACHC",
+        "currency": "USD",
+        "accounting": "gaap",
+        "adjustment_definition": "none",
+        "share_basis": "diluted",
+        "period_basis": "fiscal_year",
+        "earnings_scope": "total_operations",
+        "split_basis": "User assumes identical unconverted underlying common-share basis"
+      },
+      "target_eps": {
+        "value": "4",
+        "unit": "USD/shares",
+        "provenance": {
+          "kind": "user_assumption",
+          "reference": "Invented positive future EPS, not a forecast"
+        }
+      },
+      "target_fiscal_period": {
+        "start": "2027-01-01",
+        "end": "2027-12-31"
+      }
+    },
+    "terminal_valuation_date": "2028-10-16",
+    "values": {
+      "assumed_terminal_price": "100",
+      "terminal_price_factor": "1.5625",
+      "cumulative_price_change": "0.5625",
+      "annualized_price_change": "0.2500000000000000000000000000000000000000000000000"
+    },
+    "formula": "terminal_price = assumed_future_fiscal_EPS * assumed_exit_PE; price_factor = terminal_price / assumed_price; annualized_price_change = price_factor^(1 / years) - 1",
+    "numeric_contract": {
+      "terminal_price_unit": "USD/share",
+      "price_factor": "dimensionless",
+      "change_units": "fractions_not_percentages",
+      "precision_digits": 50,
+      "terminal_product_exact": true,
+      "rounding": "ROUND_HALF_EVEN"
+    },
+    "market_pe_verified": false,
+    "earnings_recovery_probability_assessed": false,
+    "basis_verification": "currency/share/split/earnings compatibility remains explicit user assumption",
+    "unanswered_parts": [
+      "observed market price and security/share/split compatibility",
+      "source-supported future earnings and exit valuation",
+      "recovery likelihood, expected total returns and investment attractiveness"
+    ],
+    "limitations": [
+      "Reported nonpositive EPS is retained as context, not divided into price or used as a growth denominator.",
+      "Future positive EPS, entry price, exit P/E and horizon are explicit hypothetical user assumptions.",
+      "No normalized/adjusted EPS, current P/E, EPS growth rate, recovery probability or forecast is established.",
+      "The target fiscal year is explicitly dated; it is not reported, TTM or source-supported forward EPS.",
+      "The 300\u2013380-day annual duration and 380-day terminal lag are computational contract bounds, not market policy.",
+      "Only conditional price change is calculated; distributions, dilution paths, funding needs and transaction costs are not modeled.",
+      "Source reconstruction is consistency, not independent factual adjudication or application evidence admission."
+    ]
+  }
+}
