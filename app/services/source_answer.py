@@ -97,7 +97,10 @@ def _restrict_evidence_thesis(thesis: object, answer: str, claims: list[dict],
 def is_source_answer_request(question: str) -> bool:
     """Detect explicit attribution requests and operating-risk evidence views."""
     from ..config import settings
+    from .annual_eps_research import annual_eps_request
     return bool(
+        annual_eps_request(question) is not None
+        or
         (settings.decision_monitoring_inputs_enabled and is_decision_monitoring_request(question))
         or
         _SOURCE_REQUEST_RE.search(question or "")
@@ -202,12 +205,23 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
     if not is_source_answer_request(question):
         return None
 
+    from .annual_eps_research import build_annual_eps_answer
+    material = list(items)
+    # Explicit annual per-share facts use their own reconstruction, rather than
+    # letting unrelated monetary evidence or model prose fill a missing basis.
+    eps = build_annual_eps_answer(str(getattr(thesis, "ticker", "")), question, material, references)
+    if eps is not None:
+        _restrict_evidence_thesis(thesis, eps['answer'], eps['claims'], eps['selected_items'],
+                                 enough=bool(eps['claims']), scope="Annual EPS")
+        return {'status': eps['status'], 'claims': eps['claims'],
+                'reason': ('Explicit annual EPS facts reconstructed with share basis, reporting currency and citation bindings.'
+                           if eps['claims'] else 'No reconstructed annual EPS comparison qualified for the requested basis and currency.'),
+                'unanswered_parts': eps['unanswered_parts']}
     from .services_risk_evidence import bound_services_risk
     from .issuer_risk_evidence import bound_issuer_risk, requested_risk_profile
     from .services_revenue_evidence import requests_services_revenue
     from .evidence_references import _evidence_url
 
-    material = list(items)
     from .financial_thesis_foundation import is_broad_thesis_request, build_financial_foundation
     requested_thesis = is_broad_thesis_request(question)
     from .live_issuer_kpi_service import requested_issuer_kpi_aliases

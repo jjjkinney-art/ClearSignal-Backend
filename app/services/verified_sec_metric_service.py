@@ -339,6 +339,12 @@ def fetch_verified_metric_evidence(
     cik = _load_ticker_cik_map().get(ticker)
     if not cik or not cik.isdigit():
         return []
+    from .annual_eps_research import annual_eps_request, fetch_annual_eps
+    eps_request = annual_eps_request(question)
+    if eps_request is not None:
+        return fetch_annual_eps(ticker, cik, eps_request, boundary,
+            get_company_fact_records_for_concept_units,
+            getattr(settings, "sec_user_agent", "") or "")
     metrics = _requested_metrics(question)
     from .financial_thesis_foundation import requests_profitability_context, financial_metric_label
     supplementary = next(metric for metric in _METRICS if metric[1] == "pretax income")
