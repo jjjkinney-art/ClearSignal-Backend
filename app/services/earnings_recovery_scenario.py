@@ -18,6 +18,20 @@ MODE = 'evaluate_earnings_recovery_scenario'
 
 def evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
                                assumptions, evaluated_at):
+    """Original diluted-EPS loss context; basic EPS never satisfies it."""
+    return _evaluate_earnings_recovery(ticker, items, references, expected_cik=expected_cik,
+        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='diluted')
+
+
+def evaluate_basic_earnings_recovery(ticker, items, references, *, expected_cik,
+                                     assumptions, evaluated_at):
+    """Explicit basic-EPS loss context and future basic-EPS hypothesis."""
+    return _evaluate_earnings_recovery(ticker, items, references, expected_cik=expected_cik,
+        assumptions=assumptions, evaluated_at=evaluated_at, share_basis='basic')
+
+
+def _evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
+                               assumptions, evaluated_at, share_basis):
     """Scenario price = assumed positive future EPS × assumed exit multiple.
 
     No growth rate is calculated from the reported loss or zero EPS. The result
@@ -36,9 +50,9 @@ def evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
         basis = assumptions['eps_basis']
         _basis(basis)
         if (basis['issuer'] != ticker or basis['currency'] != 'USD'
-                or basis['accounting'] != 'gaap' or basis['share_basis'] != 'diluted'
+                or basis['accounting'] != 'gaap' or basis['share_basis'] != share_basis
                 or basis['period_basis'] != 'fiscal_year' or basis['earnings_scope'] != 'total_operations'):
-            raise ValuationContractError('same-issuer USD GAAP diluted full-year total-operations basis required')
+            raise ValuationContractError('same-issuer USD GAAP full-year total-operations basis must match the selected EPS share basis')
         for key in ('price', 'target_eps', 'exit_pe', 'horizon'):
             _assumption(assumptions[key])
         price = _operand(assumptions['price'], unit='USD/share')
@@ -63,7 +77,7 @@ def evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
                 or not 300 <= (end - start).days + 1 <= 380
                 or (terminal_date - end).days > 380):
             raise ValuationContractError('explicit future full fiscal year ending by terminal date required')
-        eps = _annual_eps_context(ticker, expected_cik, items, references, scenario)
+        eps = _annual_eps_context(ticker, expected_cik, items, references, scenario, share_basis=share_basis)
         if Decimal(eps['value']) > 0:
             raise ValuationContractError('this recovery context requires reported nonpositive annual EPS')
         # Two <=66-character decimal operands have an exact finite product at 150 digits.
@@ -104,6 +118,7 @@ def evaluate_earnings_recovery(ticker, items, references, *, expected_cik,
                 'recovery likelihood, expected total returns and investment attractiveness'],
             'limitations': ['Reported nonpositive EPS is retained as context, not divided into price or used as a growth denominator.',
                 'Future positive EPS, entry price, exit P/E and horizon are explicit hypothetical user assumptions.',
+                'Historical and assumed future EPS use the explicitly requested ' + share_basis + ' basis; no conversion or dilution forecast is established.',
                 'No normalized/adjusted EPS, current P/E, EPS growth rate, recovery probability or forecast is established.',
                 'The target fiscal year is explicitly dated; it is not reported, TTM or source-supported forward EPS.',
                 'The 300–380-day annual duration and 380-day terminal lag are computational contract bounds, not market policy.',

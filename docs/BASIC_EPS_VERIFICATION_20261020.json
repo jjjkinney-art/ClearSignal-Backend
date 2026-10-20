@@ -1,0 +1,23 @@
+{
+  "base_commit": "5727952069e5d7f5ade2f2aba26d5ae933ecdbad",
+  "runtime": "CPython 3.11.9, existing pinned dependencies",
+  "local_related_tests_passed": 1471,
+  "synthetic_pilot_tests_passed": 36,
+  "distinct_tests_passed": 1507,
+  "new_tests": 49,
+  "collection_count": 18147,
+  "collection_errors": 0,
+  "import_routes": 136,
+  "live_requests": 0,
+  "feature_activated": false,
+  "external_socket_dns_connect_denied": true,
+  "asgi_local_AF_UNIX_constructors_allowed": true,
+  "warning_assessment": "One final combined run reported an AnyIO worker-thread teardown warning in an unchanged request test; affected module passed 41/41 without warnings in separate baseline and branch runs. Cause not established; no claim this is fixed or branch-caused. Existing Starlette/AnyIO deprecation warning also remains.",
+  "original_logs": {
+    "related_suite": "........................................................................ [  4%]\n........................................................................ [  9%]\n........................................................................ [ 14%]\n........................................................................ [ 19%]\n........................................................................ [ 24%]\n........................................................................ [ 29%]\n........................................................................ [ 34%]\n........................................................................ [ 39%]\n........................................................................ [ 44%]\n........................................................................ [ 48%]\n........................................................................ [ 53%]\n........................................................................ [ 58%]\n........................................................................ [ 63%]\n........................................................................ [ 68%]\n........................................................................ [ 73%]\n........................................................................ [ 78%]\n........................................................................ [ 83%]\n........................................................................ [ 88%]\n........................................................................ [ 92%]\n........................................................................ [ 97%]\n...............................                                          [100%]\n=============================== warnings summary ===============================\ntests/test_conditional_valuation_api.py::test_as_of_excludes_later_restated_rows_and_does_not_mutate_inputs\n  /workspace/scratch/a974112f317d/ClearSignal-basic-eps-scenarios/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['AnyIO worker thread']\n    warnings.warn(\n\ntests/test_launch_security.py::TestAskEndpointWiring::test_anonymous_ask_rejected_when_auth_enabled\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1471 passed, 2 warnings in 26.35s\n",
+    "new_basic_suite": ".................................................                        [100%]\n49 passed in 0.61s\n",
+    "synthetic_pilot": "....................................                                     [100%]\n36 passed in 21.90s\n",
+    "baseline_affected_module": ".........................................                                [100%]\n41 passed in 0.72s\n",
+    "branch_affected_module": ".........................................                                [100%]\n41 passed in 0.71s\n"
+  }
+}

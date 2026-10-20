@@ -44,6 +44,17 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+20 October explicit basic-EPS increment: the default-off scenario endpoint can
+now use a separately selected annual USD GAAP basic-EPS comparison for positive
+growth/required-growth or nonpositive recovery hypotheses. Basic and diluted
+concepts remain distinct, with no fallback or relabeling; the original diluted
+entry points and quote binding remain strict. A retained ACHC Company Facts
+replay preserves the different basic/diluted prior values. This repairs a general
+scenario-contract limitation, not confirmed current NPK source availability or
+ASML EUR/20-F coverage. Activation, live/source/usefulness acceptance and the
+existing broader benchmark remain separate. See
+[explicit basic-EPS scenarios](EXPLICIT_BASIC_EPS_SCENARIOS_20261020.md).
+
 20 October offline account acceptance increment: exercise the conditional
 scenario route through real JWT signature verification, database-backed beta
 admission and local owner resolution, including revoked/uninvited identities,

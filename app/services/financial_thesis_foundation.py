@@ -100,10 +100,12 @@ def _risk_monitoring_inference(value, reference_id):
 def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
              expected_unit: str | None = None):
     """Recheck both facts and the displayed summary with the existing producer."""
-    # The offline valuation bridge may reconstruct only this explicit per-share
-    # concept. Ordinary financial-foundation callers retain monetary units.
+    # Explicit scenario bridges reconstruct one exact named per-share concept.
+    # No mixed basic/diluted family; ordinary foundation callers retain money.
     if expected_unit is not None and (expected_unit != 'USD/shares'
-            or concepts != ('EarningsPerShareDiluted',) or name != 'diluted EPS'):
+            or (concepts, name) not in (
+                (('EarningsPerShareDiluted',), 'diluted EPS'),
+                (('EarningsPerShareBasic',), 'basic EPS'))):
         return None
     allowed_units = REPORTING_CURRENCIES if expected_unit is None else (expected_unit,)
     if (getattr(item, "source", None) != "SEC EDGAR — structured XBRL fact"
