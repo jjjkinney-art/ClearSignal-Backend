@@ -47,6 +47,11 @@ except Exception:
 
 router = APIRouter()
 
+# Registered consistently; its handler is disabled before any provider access
+# unless separately activated. This does not alter /ask or scenario read routes.
+from .routers.conditional_valuation import router as _conditional_valuation_router
+router.include_router(_conditional_valuation_router)
+
 # Phase 10C · Slice 7 — delivery preferences sub-router
 try:
     from .routers.delivery_preferences import router as _delivery_prefs_router

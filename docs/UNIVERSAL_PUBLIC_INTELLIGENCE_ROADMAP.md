@@ -44,6 +44,20 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+20 October application integration increment: a separate explicit conditional
+valuation endpoint is implemented behind a default-off feature flag. It rebuilds
+annual USD diluted EPS from server-owned SEC sources and uses the same canonical
+positive-EPS or loss-context calculators as offline validation. Current UTC issuer
+identity, strict request bodies, account admission, expensive-route rate limits
+and explicit gaps remain required. No deployment setting or live pilot changed.
+The saved ACHC source passed an offline ASGI replay with invented assumptions;
+this does not establish current quote compatibility, real account acceptance or
+useful answers across the cohort. ASML EUR/20-F and NPK basic-only coverage remain
+outside this first request path. Required next gates are review/CI, separately
+approved activation/live acceptance, source/usefulness adjudication and the
+existing development benchmark before reserved holdouts. See
+[conditional scenario integration](CONDITIONAL_VALUATION_API_20261020.md).
+
 Nonpositive-EPS increment (20 October 2026 Auckland): the retained ACHC facts
 reconstruct a 2025 annual diluted loss per share of 12.16 USD. A separate offline
 recovery scenario retains that loss as context and uses explicit hypothetical
