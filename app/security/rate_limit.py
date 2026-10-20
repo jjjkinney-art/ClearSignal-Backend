@@ -29,6 +29,7 @@ EXEMPT_PATHS = frozenset(
 EXPENSIVE_ROUTES = frozenset(
     {
         ("POST", "/analyze"),
+        ("POST", "/research/valuation-scenarios"),
         ("POST", "/pipeline/run"),
         ("POST", "/events/process"),
         ("POST", "/portfolio/insights/refresh"),

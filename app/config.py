@@ -203,6 +203,9 @@ class Settings(BaseSettings):
     # Additional filing retrieval for broad monitoring questions. Opt-in only;
     # existing frozen pilots have no document slots for this path.
     decision_monitoring_filing_fallback_enabled: bool = False
+    # Separate explicit-assumption HTTP path. Activation requires source/usage
+    # review; never enabled by a request or the existing monitoring flags.
+    conditional_valuation_scenarios_enabled: bool = False
 
     # Optional API key for Financial Modeling Prep.  When provided and
     # ``enable_data_retrieval`` is True, the backend will include this

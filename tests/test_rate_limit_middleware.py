@@ -66,9 +66,10 @@ async def _dispatch(monkeypatch, request, user_id="user-a"):
 
 
 class TestIdentityAwareLimits:
-    async def test_expensive_ip_limit_returns_429_and_retry_after(self, monkeypatch):
-        assert (await _dispatch(monkeypatch, _request(), "user-a")).status_code == 200
-        response = await _dispatch(monkeypatch, _request(), "user-b")
+    @pytest.mark.parametrize("path", ["/analyze", "/research/valuation-scenarios", "/research/valuation-scenarios/"])
+    async def test_expensive_ip_limit_returns_429_and_retry_after(self, monkeypatch, path):
+        assert (await _dispatch(monkeypatch, _request(path=path), "user-a")).status_code == 200
+        response = await _dispatch(monkeypatch, _request(path=path), "user-b")
         assert response.status_code == 429
         assert int(response.headers["Retry-After"]) >= 1
 
@@ -78,11 +79,12 @@ class TestIdentityAwareLimits:
         assert (await _dispatch(monkeypatch, first, "user-a")).status_code == 200
         assert (await _dispatch(monkeypatch, second, "user-b")).status_code == 429
 
-    async def test_expensive_user_limit_spans_ips(self, monkeypatch, _limits):
+    @pytest.mark.parametrize("path", ["/analyze", "/research/valuation-scenarios"])
+    async def test_expensive_user_limit_spans_ips(self, monkeypatch, _limits, path):
         _limits.rate_limit_expensive_per_ip_per_min = 100
         _limits.rate_limit_expensive_per_user_per_min = 1
-        assert (await _dispatch(monkeypatch, _request(ip="203.0.113.1"))).status_code == 200
-        assert (await _dispatch(monkeypatch, _request(ip="203.0.113.2"))).status_code == 429
+        assert (await _dispatch(monkeypatch, _request(path=path, ip="203.0.113.1"))).status_code == 200
+        assert (await _dispatch(monkeypatch, _request(path=path, ip="203.0.113.2"))).status_code == 429
 
     async def test_non_expensive_route_uses_global_user_budget(self, monkeypatch, _limits):
         _limits.rate_limit_per_user_per_min = 1
