@@ -1,0 +1,752 @@
+{
+  "base_commit": "ba6c70df35c84b94ffab30c9419a416f13a63438",
+  "date_auckland": "2026-10-21",
+  "kind": "retained_evidence_final_gate_wording_replay",
+  "body_hashes": {
+    "filing": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "facts": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "archive_inventory_entries_verified": 19,
+  "external_requests": 0,
+  "model_calls": 0,
+  "retained_fact_substitutions": 1,
+  "paraphrases_checked": 12,
+  "canonical_question": "What is the investment thesis for NPK? Cite material claims.",
+  "canonical_source_answer": {
+    "status": "partial",
+    "reason": "Producer-bound financial foundation; broader investment case remains unverified.",
+    "claims": [
+      {
+        "claim": "NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29.",
+        "reference_id": "E1",
+        "claim_kind": "reported_financial_comparison"
+      },
+      {
+        "claim": "NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29.",
+        "reference_id": "E2",
+        "claim_kind": "reported_financial_comparison"
+      },
+      {
+        "claim": "NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29.",
+        "reference_id": "E3",
+        "claim_kind": "reported_financial_comparison"
+      },
+      {
+        "claim": "NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29.",
+        "reference_id": "E4",
+        "claim_kind": "reported_financial_comparison"
+      },
+      {
+        "claim": "NPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified.",
+        "reference_id": "E5",
+        "claim_kind": "issuer_business_description"
+      },
+      {
+        "claim": "NPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified.",
+        "reference_id": "E6",
+        "claim_kind": "issuer_competition_description",
+        "competition_scope": {
+          "kind": "named_segment",
+          "label": "Defense"
+        }
+      },
+      {
+        "claim": "NPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact.",
+        "reference_id": "E7",
+        "claim_kind": "issuer_disclosed_risk"
+      },
+      {
+        "claim": "NPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact.",
+        "reference_id": "E8",
+        "claim_kind": "issuer_disclosed_risk"
+      }
+    ],
+    "inferences": [
+      {
+        "kind": "financial_inference",
+        "metric": "revenue (as reported)",
+        "signal": "supporting",
+        "text": "Reported revenue (as reported) is higher than the comparable prior-year amount.",
+        "reference_ids": [
+          "E1"
+        ],
+        "conditional_test": "A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."
+      },
+      {
+        "kind": "financial_inference",
+        "metric": "operating income",
+        "signal": "supporting",
+        "text": "Reported operating income is higher than the comparable prior-year amount.",
+        "reference_ids": [
+          "E2"
+        ],
+        "conditional_test": "A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."
+      },
+      {
+        "kind": "financial_inference",
+        "metric": "net income attributable to parent",
+        "signal": "supporting",
+        "text": "Reported net income attributable to parent is higher than the comparable prior-year amount.",
+        "reference_ids": [
+          "E3"
+        ],
+        "conditional_test": "A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."
+      },
+      {
+        "kind": "financial_inference",
+        "metric": "operating cash flow",
+        "signal": "supporting",
+        "text": "Reported operating cash flow is higher than the comparable prior-year amount.",
+        "reference_ids": [
+          "E4"
+        ],
+        "conditional_test": "A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast."
+      },
+      {
+        "kind": "operating_margin_calculation",
+        "provenance": "derived",
+        "metric": "operating margin",
+        "signal": "context_only",
+        "formula": "operating_income / revenue * 100",
+        "change_formula": "current_margin_percent - prior_margin_percent",
+        "change_unit": "percentage_points",
+        "change_percentage_points": "8.182135807310396983584347264690320707242",
+        "direction": "widened",
+        "current": {
+          "period_start": "2026-04-06",
+          "period_end": "2026-07-05",
+          "currency": "USD",
+          "margin_percent": "13.24319899587983301045048978144014843516",
+          "revenue": {
+            "raw_value": "146596000",
+            "reference_id": "E1",
+            "document_ref": {
+              "reference_id": "sec:80172:0001437749-26-027999:us-gaap:Revenues",
+              "title": "10-Q filed 2026-08-14 \u00b7 Revenues",
+              "provider": "SEC EDGAR",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+              "published_at": "2026-08-14"
+            }
+          },
+          "operating_income": {
+            "raw_value": "19414000",
+            "reference_id": "E2",
+            "document_ref": {
+              "reference_id": "sec:80172:0001437749-26-027999:us-gaap:OperatingIncomeLoss",
+              "title": "10-Q filed 2026-08-14 \u00b7 Operating Income (Loss)",
+              "provider": "SEC EDGAR",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+              "published_at": "2026-08-14"
+            }
+          }
+        },
+        "prior": {
+          "period_start": "2025-03-31",
+          "period_end": "2025-06-29",
+          "currency": "USD",
+          "margin_percent": "5.061063188569436026866142516749827727918",
+          "revenue": {
+            "raw_value": "120449000",
+            "reference_id": "E1",
+            "document_ref": {
+              "reference_id": "sec:80172:0001437749-26-027999:us-gaap:Revenues",
+              "title": "10-Q filed 2026-08-14 \u00b7 Revenues",
+              "provider": "SEC EDGAR",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+              "published_at": "2026-08-14"
+            }
+          },
+          "operating_income": {
+            "raw_value": "6096000",
+            "reference_id": "E2",
+            "document_ref": {
+              "reference_id": "sec:80172:0001437749-26-027999:us-gaap:OperatingIncomeLoss",
+              "title": "10-Q filed 2026-08-14 \u00b7 Operating Income (Loss)",
+              "provider": "SEC EDGAR",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+              "published_at": "2026-08-14"
+            }
+          }
+        },
+        "reference_ids": [
+          "E1",
+          "E2"
+        ],
+        "text": "Calculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified.",
+        "conditional_test": "A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast."
+      },
+      {
+        "kind": "operating_risk_monitoring_inference",
+        "scope": "Cybersecurity",
+        "condition": "New laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals)",
+        "potential_effect": "significantly increase the Company\u2019s costs and risks and reduce profitability",
+        "modality": "can",
+        "source_quote": "New laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.",
+        "risk_reference_id": "E8",
+        "risk_filed_at": "2026-03-13",
+        "financial_context": [
+          {
+            "metric": "operating income",
+            "reference_id": "E2",
+            "role": "profitability_context_only",
+            "current_period_start": "2026-04-06",
+            "current_period_end": "2026-07-05",
+            "prior_period_start": "2025-03-31",
+            "prior_period_end": "2025-06-29"
+          },
+          {
+            "metric": "net income attributable to parent",
+            "reference_id": "E3",
+            "role": "profitability_context_only",
+            "current_period_start": "2026-04-06",
+            "current_period_end": "2026-07-05",
+            "prior_period_start": "2025-03-31",
+            "prior_period_end": "2025-06-29"
+          }
+        ],
+        "reference_ids": [
+          "E8",
+          "E2",
+          "E3"
+        ],
+        "causal_attribution_established": false,
+        "materiality_assessed": false,
+        "measure_equivalence_established": false,
+        "text": "Issuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3].",
+        "conditional_test": "Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold."
+      }
+    ],
+    "unanswered_parts": [
+      "competitive position",
+      "valuation and expected returns",
+      "business model completeness",
+      "risk materiality, likelihood and effect on the investment case"
+    ],
+    "common_reporting_period": false,
+    "business_context_coverage": {
+      "scope": "sampled_issuer_descriptions",
+      "complete_business_model": false,
+      "facets": [
+        {
+          "facet": "activities",
+          "label": "Products, services and operating activities",
+          "status": "not_verified",
+          "reference_ids": []
+        },
+        {
+          "facet": "revenue_model",
+          "label": "How the issuer generates revenue",
+          "status": "not_verified",
+          "reference_ids": []
+        },
+        {
+          "facet": "customers_and_channels",
+          "label": "Customers and distribution channels",
+          "status": "source_description_present",
+          "reference_ids": [
+            "E5"
+          ]
+        },
+        {
+          "facet": "segments",
+          "label": "Reported segment structure",
+          "status": "not_verified",
+          "reference_ids": []
+        }
+      ],
+      "limitation": "These are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified."
+    }
+  },
+  "canonical_direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case.",
+  "references": [
+    {
+      "id": "E1",
+      "title": "NPK revenue (as reported): $146.6M (2026-07-05)",
+      "source": "SEC EDGAR \u2014 structured XBRL fact",
+      "published_at": "2026-08-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-Q",
+      "reporting_period_start": "2026-04-06",
+      "reporting_period_end": "2026-07-05",
+      "filed_at": "2026-08-14",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": null,
+      "page": null,
+      "extraction_method": "structured_xbrl",
+      "freshness_status": "current",
+      "status_reason": "evidence is 68 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E2",
+      "title": "NPK operating income: $19.4M (2026-07-05)",
+      "source": "SEC EDGAR \u2014 structured XBRL fact",
+      "published_at": "2026-08-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-Q",
+      "reporting_period_start": "2026-04-06",
+      "reporting_period_end": "2026-07-05",
+      "filed_at": "2026-08-14",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": null,
+      "page": null,
+      "extraction_method": "structured_xbrl",
+      "freshness_status": "current",
+      "status_reason": "evidence is 68 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E3",
+      "title": "NPK net income attributable to parent: $15.9M (2026-07-05)",
+      "source": "SEC EDGAR \u2014 structured XBRL fact",
+      "published_at": "2026-08-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-Q",
+      "reporting_period_start": "2026-04-06",
+      "reporting_period_end": "2026-07-05",
+      "filed_at": "2026-08-14",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": null,
+      "page": null,
+      "extraction_method": "structured_xbrl",
+      "freshness_status": "current",
+      "status_reason": "evidence is 68 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E4",
+      "title": "NPK operating cash flow: $44.1M (2026-07-05)",
+      "source": "SEC EDGAR \u2014 structured XBRL fact",
+      "published_at": "2026-08-14",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926027999/0001437749-26-027999-index.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-Q",
+      "reporting_period_start": "2026-01-01",
+      "reporting_period_end": "2026-07-05",
+      "filed_at": "2026-08-14",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": null,
+      "page": null,
+      "extraction_method": "structured_xbrl",
+      "freshness_status": "current",
+      "status_reason": "evidence is 68 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E5",
+      "title": "NPK business description \u00b7 2026-03-13 \u00b7 1",
+      "source": "SEC EDGAR",
+      "published_at": "2026-03-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-K",
+      "reporting_period_start": null,
+      "reporting_period_end": null,
+      "filed_at": "2026-03-13",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": "Item 1. Business",
+      "page": null,
+      "extraction_method": "html",
+      "freshness_status": "current",
+      "status_reason": "evidence is 222 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E6",
+      "title": "NPK competition description \u00b7 2026-03-13 \u00b7 1",
+      "source": "SEC EDGAR",
+      "published_at": "2026-03-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-K",
+      "reporting_period_start": null,
+      "reporting_period_end": null,
+      "filed_at": "2026-03-13",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": "Item 1. Business",
+      "page": null,
+      "extraction_method": "html",
+      "freshness_status": "current",
+      "status_reason": "evidence is 222 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E7",
+      "title": "NPK Supply chain risk disclosure \u00b7 2026-03-13 \u00b7 1",
+      "source": "SEC EDGAR",
+      "published_at": "2026-03-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-K",
+      "reporting_period_start": null,
+      "reporting_period_end": null,
+      "filed_at": "2026-03-13",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": "Item 1A. Risk Factors",
+      "page": null,
+      "extraction_method": "html",
+      "freshness_status": "current",
+      "status_reason": "evidence is 222 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    },
+    {
+      "id": "E8",
+      "title": "NPK Cybersecurity risk disclosure \u00b7 2026-03-13 \u00b7 1",
+      "source": "SEC EDGAR",
+      "published_at": "2026-03-13",
+      "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+      "inspectable": true,
+      "source_type": "regulatory_filing",
+      "source_tier": "primary",
+      "claim_type": "reported_fact",
+      "document_type": "10-K",
+      "reporting_period_start": null,
+      "reporting_period_end": null,
+      "filed_at": "2026-03-13",
+      "retrieved_at": null,
+      "observed_at": null,
+      "section": "Item 1A. Risk Factors",
+      "page": null,
+      "extraction_method": "html",
+      "freshness_status": "current",
+      "status_reason": "evidence is 222 days old",
+      "conflict_group_id": null,
+      "supersedes_reference_id": null
+    }
+  ],
+  "integrity": {
+    "schema_version": 1,
+    "overall_status": "current",
+    "as_of": null,
+    "evaluated_at": "2026-10-21T00:00:00+00:00",
+    "counts": {
+      "unavailable": 0,
+      "stale": 0,
+      "conflicting": 0,
+      "superseded": 0,
+      "unknown": 0,
+      "current": 8
+    },
+    "has_material_conflict": false,
+    "conflicts": [],
+    "admission": {
+      "input_count": 8,
+      "admitted_count": 8,
+      "blocked_count": 0,
+      "blocked_reference_ids": [],
+      "stale_admitted": 0
+    }
+  },
+  "results": [
+    {
+      "question": "Explain the investment thesis for NPK. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Please outline an investment thesis for NPK. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Summarize the investment thesis for NPK. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Summarise the investment thesis for NPK. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Give me an investment thesis for NPK. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Provide the investment thesis for NPK. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "What is NPK's investment thesis? Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "What is NPK\u2019s investment thesis? Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "What's NPK's investment thesis? Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "What\u2019s the investment thesis for NPK? Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Explain NPK's investment thesis. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    },
+    {
+      "question": "Please summarize NPK's investment thesis and what supports it. Cite material claims.",
+      "baseline": {
+        "status": "attributed",
+        "claim_count": 3,
+        "unanswered_parts": [],
+        "result_sha256": "6f8a1de7e0015cd7d2d81c0cc9e4e68fa88b29ae61428b609004cdaa6b0412dc",
+        "direct_answer": "1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]"
+      },
+      "candidate": {
+        "status": "partial",
+        "claim_count": 8,
+        "unanswered_parts": [
+          "competitive position",
+          "valuation and expected returns",
+          "business model completeness",
+          "risk materiality, likelihood and effect on the investment case"
+        ],
+        "result_sha256": "8cd13d981d5300e4d70cfe1a161db7f7f2773be198bb0c59042d6e1acf4773c6",
+        "direct_answer": "Financial thesis foundation (partial)\n\nConditional financial case: sustaining the favorable reported trends in revenue (as reported) [E1], operating income [E2], net income attributable to parent [E3], operating cash flow [E4] would support the financial foundation of the investment case.\n\nReported evidence\n1. NPK revenue (as reported) increased 21.7% to $146.6M for the period 2026-04-06 to 2026-07-05, from $120.4M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E1]\n\n2. NPK operating income increased 218.5% to $19.4M for the period 2026-04-06 to 2026-07-05, from $6.1M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E2]\n\n3. NPK net income attributable to parent increased 207.9% to $15.9M for the period 2026-04-06 to 2026-07-05, from $5.2M in the comparable prior-year period 2025-03-31 to 2025-06-29. [E3]\n\n4. NPK operating cash flow increased 2762.8% to $44.1M for the period 2026-01-01 to 2026-07-05, from $1.5M in the comparable prior-year period 2025-01-01 to 2025-06-29. [E4]\n\nInterpretation and conditional tests\nReported revenue (as reported) is higher than the comparable prior-year amount. [E1] A future comparable revenue (as reported) below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating income is higher than the comparable prior-year amount. [E2] A future comparable operating income below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported net income attributable to parent is higher than the comparable prior-year amount. [E3] A future comparable net income attributable to parent below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nReported operating cash flow is higher than the comparable prior-year amount. [E4] A future comparable operating cash flow below the cited current amount would weaken this financial assumption; this is a monitoring condition, not a forecast.\n\nOperating-margin evidence for competitive assessment\nCalculated operating margin widened by 8.18 percentage points: 13.24% for 2026-04-06 to 2026-07-05, versus 5.06% for 2025-03-31 to 2025-06-29. Formula: operating income / revenue \u00d7 100, using the cited consolidated reported amounts in each period; displayed margins are rounded to two decimals. This is within-issuer profitability evidence, not a peer comparison or proof of pricing power, market share or durable competitive advantage. The drivers of the margin change remain unverified. [E1] [E2] A future comparable margin below the cited current margin would weaken the profitability assumption. Review pricing, costs and product mix, and comparable peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.\n\nOfficial business, competition and sampled risk context\nNPK described its business in its 10-K filed 2026-03-13: \u201c\ufeff Products are sold primarily in the United States and Canada directly to retailers and also through independent distributors.\u201d This is an issuer description; competitive advantage and future performance remain unverified. [E5]\n\nNPK described competition in its 10-K filed 2026-03-13: \u201c\ufeff \ufeff The Defense segment competes for its business primarily on the basis of technical competence, product quality, manufacturing experience, and price.\u201d This is issuer-reported context for the named segment, not a company-wide competitive assessment; relative strength, market share and durable advantage remain unverified. [E6]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cPerformance failure can occur from a myriad of factors, which include late shipments due to the inability to secure requisite raw materials or components or strikes or other labor unrest, equipment failures or quality issues, which result in products that do not meet specifications, etc.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E7]\n\nNPK disclosed in its 10-K filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d This is an issuer disclosure, not an independent assessment of whether the described effects occurred or will occur, or of their financial impact. [E8]\nThese short excerpts are partial context, not a complete business model or a ranking of the most material risks. Disclosed possibilities do not establish occurrence, probability or a quantified effect on the financial case.\n\nDisclosed operating mechanisms and monitoring\nIssuer-stated cost/profitability mechanism, filed 2026-03-13: \u201cNew laws, regulations or procurement requirements or changes to current ones (for example, regulations related to cybersecurity and related certification requirements, specialty metals, and conflict minerals) can significantly increase the Company\u2019s costs and risks and reduce profitability.\u201d [E8]. Reported profitability context to examine: operating income for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E2]; net income attributable to parent for 2026-04-06 to 2026-07-05, against 2025-03-31 to 2025-06-29 [E3]. Research test: seek evidence of the disclosed operating condition and cost movements, then assess future like-for-like profitability alongside that evidence. The quoted possibility does not establish occurrence, likelihood or materiality. Profitability comparisons are context, not a measurement of this cost effect; they do not establish common periods, identical definitions, causality or a quantified earnings impact. Improving results do not establish that the risk is resolved. This is a monitoring question, not a forecast or a buy/sell threshold.\n\nBusiness context coverage\nProducts, services and operating activities: not verified in the admitted descriptions.\nHow the issuer generates revenue: not verified in the admitted descriptions.\nCustomers and distribution channels: sampled issuer description [E5].\nReported segment structure: not verified in the admitted descriptions.\nThese are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.\n\nThe operating-margin comparison uses matched revenue and operating-income periods and filing versions. No cash-conversion ratio or causal relationship has been established. Other metrics cover different reporting durations or end dates.\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell recommendation. Unverified requested parts: competitive position; valuation and expected returns; business model completeness; risk materiality, likelihood and effect on the investment case."
+      }
+    }
+  ],
+  "limitations": [
+    "This retained-data replay exercises the final source gate, not full HTTP/JWT/database/browser or fresh retrieval acceptance.",
+    "Synthetic tests separately exercise normal pipeline retrieval selection and model skipping; retained facts/disclosures are assembled once for identical-evidence comparison.",
+    "Directory identity, filing metadata and HTTP response are injected; hashes do not independently establish SEC origin or current-source availability.",
+    "The baseline comparison substitutes only the committed broad-thesis selector, leaving current admission/composition unchanged.",
+    "Broader competitive assessment, valuation, risk materiality, independent usefulness review and development/holdout acceptance remain unresolved.",
+    "No live approval, new spending, capture or historical ledger write; full historical inventories are not revalidated here."
+  ]
+}
