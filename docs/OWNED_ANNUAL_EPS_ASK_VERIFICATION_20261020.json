@@ -1,0 +1,142 @@
+{
+  "base_commit": "d1ed1fcac959f52d71b67cc5022da9dcfd7392b7",
+  "runtime": "CPython 3.11.9; pinned requirements.txt",
+  "network": "External socket/DNS/connect audit events denied; local AF_UNIX construction permitted for ASGI/event loops.",
+  "credentials": "Invented JWT key/accounts and placeholder provider environment only; no live provider credentials.",
+  "results": {
+    "new_tests_passed": 22,
+    "related_tests_passed": 266,
+    "source_tests_passed": 386,
+    "collected": 18365,
+    "import_routes": 136,
+    "offline_retained_cases": 6,
+    "exact_saved_reopens": 6,
+    "exact_no_fetch_retries": 6,
+    "foreign_owner_denials": 6,
+    "live_requests": 0,
+    "models": 0
+  },
+  "log_records": {
+    "focused": {
+      "original_log_sha256": "c545a064c75ea0392d2bfe772ea1f2ee356270ba1dd131b2a00722dcf93e7de0",
+      "log": "......................                                                   [100%]\n22 passed in 20.47s\n"
+    },
+    "related": {
+      "original_log_sha256": "2d4e1ecb12ad546c0cf68d77eaedf8e0f559f8bce2582a8a8173ac6054295232",
+      "log": "........................................................................ [ 27%]\n........................................................................ [ 54%]\n........................................................................ [ 81%]\n..................................................                       [100%]\n=============================== warnings summary ===============================\n../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n266 passed, 1 warning in 38.53s\n"
+    },
+    "source": {
+      "original_log_sha256": "c5b09d950b12b459d7a1edff21d9fcaab796b57935184cc1c5e73853924a0f6c",
+      "log": "........................................................................ [ 18%]\n........................................................................ [ 37%]\n........................................................................ [ 55%]\n........................................................................ [ 74%]\n........................................................................ [ 93%]\n..........................                                               [100%]\n=============================== warnings summary ===============================\ntests/test_source_evidence_latency.py::test_broad_cited_thesis_returns_partial_financial_foundation_without_models[NetIncomeLoss-net income-ACHC-1520697]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-1_2']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_broad_cited_thesis_returns_partial_financial_foundation_without_models[OperatingIncomeLoss-operating income-ACHC-1520697]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-3_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[AA]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-9_0', 'ThreadPoolExecutor-9_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[LLY]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-16_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[V]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-19_0', 'ThreadPoolExecutor-19_1', 'ThreadPoolExecutor-19_2']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[LQDT]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-23_0']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[MOD]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-25_0']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[SLG]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-28_2']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[CRM]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-31_0']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[A]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-33_1']\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n386 passed, 10 warnings in 6.31s\n"
+    },
+    "collection": {
+      "original_log_sha256": "09ebf763f7b2fdba5381a188af43d4cebcfac68bd80e806abb97c329fd063cc3",
+      "log": "../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nSKIPPED [1] tests/test_analysis.py:12: Obsolete test module superseded by test_backend\n18365 tests collected in 29.64s\n",
+      "log_scope": "Last eight lines only; SHA-256 covers the original full collection log."
+    },
+    "import": {
+      "original_log_sha256": "d03ce11ec441b8a812861ef2b514e0157f941fe9774df450f1018ab1a360079d",
+      "log": "2026-10-20T07:47:15 | INFO | app.main | [cors] origins=['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'] credentials=True production=False\n[conviction_modeler] MATRIX_CONVICTION_MODEL_ACTIVE schema=7-linear-4i matrix_enabled=True durability_high=0.6 durability_mid=0.4\nroutes: 136\n"
+    },
+    "baseline_retry_failure": {
+      "original_log_sha256": "36a2d2e61da8b512bcd7832441e51ec1d64a4675275a808da4d88d8a39d5ee3c",
+      "log": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_________________ test_retried_turn_keeps_first_saved_snapshot _________________\ntests/test_owned_annual_eps_ask.py:135: in test_retried_turn_keeps_first_saved_snapshot\n    assert second==first and not models and len(calls)==1\nE   AssertionError: assert ({'_observabil...: 'ZQXB', ...} == {'_observabil...: 'ZQXB', ...}\nE     \nE     Omitting 2 identical items, use -vv to show\nE     Differing items:\nE     {'request_id': '0a0b1778-6275-4ad8-9e89-6f3e046f99b0'} != {'request_id': 'a6543341-d703-4cdf-8c11-da49e05ecf85'}\nE     {'answer': {'backend_version': 'matrix-conviction-v1/7-linear-4i', 'calculated_sec_metrics': [], 'evidence_integrity':...eported_fact', 'conflict_group_id': None, 'document_type': '20-F', 'extraction_method': 'structured_xbrl', ...}], ...}} != {'answer': {'backend_version': 'matrix-conviction-v1/7-linear-4i', 'calculated_sec_metrics': [], 'evidence_integrity':...eported_fact', 'conflict_group_id': None...\nE     \nE     ...Full output truncated (4 lines hidden), use '-vv' to show)\n----------------------------- Captured stdout call -----------------------------\n[TIMING] [ZQXB] intent_detection=0.00s question_intent='investment_thesis'\n[TIMING] [ZQXB] evidence_retrieval(parallel)=0.03s fmp=0 sec=0 news_co=0 news_macro=0 fred=0 val_ratios=0 estimates=0 issuer_kpis=0 total=1\n[DIAG] INVESTMENT PIPELINE [ZQXB]: profile=not_found\n[BACKEND_FINAL_RESPONSE] [ZQXB] confidence=0.0000 setup_label='monitoring required' score_source=not_assessed_evidence_view fragility_mult=1.0000 conviction_dims=0 reasoning_len=0 [PRODUCTION_SANITIZE] confidence_reasoning=STRIPPED [HEADLINE_CONFIDENCE_SOURCE] used_legacy_formatter=False hard_fail_phrase=False one_sentence_thesis='Dated Annual EPS evidence was retrieved; its implications f\n[TIMING] [ZQXB] intent_detection=0.00s question_intent='investment_thesis'\n[TIMING] [ZQXB] evidence_retrieval(parallel)=0.02s fmp=0 sec=0 news_co=0 news_macro=0 fred=0 val_ratios=0 estimates=0 issuer_kpis=0 total=1\n[DIAG] INVESTMENT PIPELINE [ZQXB]: profile=not_found\n[BACKEND_FINAL_RESPONSE] [ZQXB] confidence=0.0000 setup_label='monitoring required' score_source=not_assessed_evidence_view fragility_mult=1.0000 conviction_dims=0 reasoning_len=0 [PRODUCTION_SANITIZE] confidence_reasoning=STRIPPED [HEADLINE_CONFIDENCE_SOURCE] used_legacy_formatter=False hard_fail_phrase=False one_sentence_thesis='Dated Annual EPS evidence was retrieved; its implications f\n=========================== short test summary info ============================\nFAILED tests/test_owned_annual_eps_ask.py::test_retried_turn_keeps_first_saved_snapshot\n1 failed in 2.95s\n"
+    }
+  },
+  "grouped_ci_replicas": [
+    {
+      "name": "Launch-security & reproducibility",
+      "exit_code": 0,
+      "command_args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_launch_security.py",
+        "tests/test_launch_access_policy.py",
+        "tests/test_rate_limit_middleware.py",
+        "tests/test_dependency_pinning.py"
+      ],
+      "original_log_sha256": "4aabce075adf4086aee8d2eec926d186e4e8e807105e8f69de9673522c64f873",
+      "log": "........................................................................ [ 86%]\n...........                                                              [100%]\n=============================== warnings summary ===============================\ntests/test_launch_security.py::TestAskEndpointWiring::test_anonymous_ask_rejected_when_auth_enabled\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n83 passed, 1 warning in 2.13s\n"
+    },
+    {
+      "name": "Production router regression",
+      "exit_code": 0,
+      "command_args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_health_head.py",
+        "tests/test_portfolio_router.py",
+        "tests/test_scenario_router.py",
+        "tests/test_notifications_router.py",
+        "tests/test_watchlist_db_backed.py",
+        "tests/test_watchlist_scope_service.py",
+        "tests/test_auth_scoping.py",
+        "tests/test_brief_material_change_service.py"
+      ],
+      "original_log_sha256": "3d80cddebfac90fe192b79fdfd4ee55e298e86e2f1e459b34deba7c026ebcb62",
+      "log": "........................................................................ [ 82%]\n...............                                                          [100%]\n=============================== warnings summary ===============================\ntests/test_health_head.py::TestHeadRequests::test_head_returns_200[/]\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n87 passed, 1 warning in 16.45s\n"
+    },
+    {
+      "name": "Auth & billing",
+      "exit_code": 0,
+      "command_args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_alembic_migrations.py",
+        "tests/test_services/test_auth_routes.py",
+        "tests/test_services/test_auth_middleware.py",
+        "tests/test_services/test_billing_routes.py",
+        "tests/test_services/test_billing_observability.py",
+        "tests/test_billing_checkout_webhook.py",
+        "tests/test_services/test_stripe_service.py",
+        "tests/test_services/test_webhook_service.py"
+      ],
+      "original_log_sha256": "d934cb88f5927e23fac9572b93b872d15d843f1a608a73b64995b56aa82f4a7b",
+      "log": "........................................................................ [ 32%]\n........................................................................ [ 65%]\n........................................................................ [ 97%]\n.....                                                                    [100%]\n=============================== warnings summary ===============================\n../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n221 passed, 1 warning in 22.69s\n"
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "exit_code": 0,
+      "command_args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_conviction_integration.py",
+        "tests/test_conviction_modeler.py",
+        "tests/test_directional_stance.py"
+      ],
+      "original_log_sha256": "2261a36b0cec088dec0d5fdedae90d429890f1dee54ebeb937e631981b3992cf",
+      "log": "........................................................................ [ 40%]\n........................................................................ [ 80%]\n..................................                                       [100%]\n178 passed in 2.39s\n"
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "exit_code": 0,
+      "command_args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_company_detection.py",
+        "tests/test_company_routing.py",
+        "tests/test_question_anchored_valuation.py",
+        "tests/test_comparative_ranking.py",
+        "tests/test_production_acceptance_validator.py",
+        "tests/test_beta_launch_validator.py",
+        "tests/benchmark/v4_analog_usefulness.py",
+        "tests/benchmark/v9_blind_analyst_evaluation.py"
+      ],
+      "original_log_sha256": "a75f2ebcc26a7a52415b3af9fd6586c7204c90506a52dfdf170d45e07de7c974",
+      "log": "........................................................................ [ 36%]\n........................................................................ [ 73%]\n...................................................                      [100%]\n195 passed in 4.05s\n"
+    }
+  ],
+  "notes": [
+    "Clean base regression intentionally fails; final branch focused/related/source selections pass.",
+    "Related suite has one Starlette/AnyIO deprecation warning; source selection has ten existing executor teardown warning-class occurrences. They are not suppressed or claimed fixed. Prior PR316 baseline verification documents this warning class.",
+    "Full repository per-file regression and hosted CI are pending for the published head; local grouped checks are not hosted CI.",
+    "Archive inventory (19 entries), both retained body receipts/lengths/hashes verified in replay. No full historical run inventory revalidated in this checkout.",
+    "Local SQL database, injected directory and unrelated provider fixtures do not establish production, external JWT, billing or browser acceptance."
+  ],
+  "replay_sha256": "644aaa95cb60d6d6395e195d9d77bc858c3d4e818e684394fd3d23312507b3af"
+}

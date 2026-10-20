@@ -1,0 +1,2322 @@
+{
+  "base_commit": "d1ed1fcac959f52d71b67cc5022da9dcfd7392b7",
+  "kind": "offline_retained_body_signed_ask_owned_save_reopen",
+  "archive_hashes_verified": 19,
+  "body_hashes": {
+    "ASML": "28be6fd0f5608350ec396ae5d5097e45da95f4f29ad3fbd19aac328a15cce3d4",
+    "NPK": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "external_requests": 0,
+  "model_calls": 0,
+  "saved_source_substitutions": 6,
+  "offline_completed_responses": 6,
+  "cases": [
+    {
+      "ticker": "ASML",
+      "basis": "basic",
+      "currency": "EUR",
+      "http_status": 200,
+      "exact_display_snapshot_preserved": true,
+      "assistant_text_matches_display": true,
+      "other_owner_reopen_status": 404,
+      "completed_retry_exact_no_fetch": true,
+      "response": {
+        "company": "ASML",
+        "request_id": "468efc2e-8b6e-4f29-b324-19f15a3d3f03",
+        "agents_used": [
+          "source_answer"
+        ],
+        "answer": {
+          "investment_thesis": {
+            "ticker": "ASML",
+            "company_name": "ASML Holding N.V.",
+            "bull_thesis": "",
+            "bear_thesis": "",
+            "key_drivers": [],
+            "key_risks": [],
+            "valuation_view": "",
+            "valuation_reference": "",
+            "estimate_watch": "",
+            "macro_sensitivity": "",
+            "confidence_score": 0.0,
+            "confidence_reasoning": "",
+            "what_changes_the_thesis": [],
+            "direct_answer": "1. ASML basic EPS increased 28.5% to 24.73 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.25 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "conclusion": "1. ASML basic EPS increased 28.5% to 24.73 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.25 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "evidence_count": 1,
+            "generated_at": "2026-10-20T11:45:05.694128+00:00",
+            "consistency_warnings": [],
+            "top_signals": [],
+            "top_risks": [],
+            "secondary_signals": [],
+            "one_sentence_thesis": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "compressed_thesis": null,
+            "what_changed": [],
+            "thesis_trend": "unclear",
+            "change_drivers": [],
+            "expectation_regime": "",
+            "expectation_shift_severity": "none",
+            "thesis_evolution": "",
+            "core_debate": "",
+            "core_market_debate": "",
+            "dominant_dimension": "",
+            "valuation_stance": "",
+            "question_intent": "investment_thesis",
+            "core_takeaway": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "dominant_driver": "",
+            "what_increases_conviction": "",
+            "conviction_dimensions": {},
+            "setup_label": "monitoring required",
+            "fragility_multiplier_applied": 1.0,
+            "asymmetry_multiplier_applied": 1.0,
+            "score_source": "not_assessed_evidence_view",
+            "directional_stance": "",
+            "directional_stance_reasoning": "",
+            "verdict_rationale": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "analysis_foundation_evidence": [
+              "ASML basic EPS increased 28.5% to 24.73 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.25 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31."
+            ],
+            "analysis_foundation_constraints": [
+              "Only the cited observations are supported. Future growth, risk likelihood, quantified financial impact, and a directional thesis change remain unverified."
+            ],
+            "analysis_foundation_sources": [
+              "SEC EDGAR \u2014 structured XBRL fact"
+            ],
+            "thesis_version_id": "",
+            "previous_thesis_version_id": "",
+            "change_vector": {},
+            "monitored_drivers": [],
+            "evidence_freshness": {},
+            "quantitative_claims": [
+              {
+                "value_text": "24.73 EUR per share",
+                "provenance": "reported",
+                "as_of": "2025-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 24.73,
+                "unit": "EUR/shares",
+                "source": "20-F",
+                "source_date_unavailable": false,
+                "ticker": "ASML",
+                "metric": "us-gaap:EarningsPerShareBasic",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                  "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "published_at": "2026-02-25"
+                },
+                "rendered": "24.73 EUR per share (as of 2025-12-31)",
+                "period_start": "2025-01-01",
+                "period_end": "2025-12-31",
+                "period": "FY2025",
+                "scope": "consolidated",
+                "currency": "EUR",
+                "label": "Earnings Per Share, Basic"
+              },
+              {
+                "value_text": "19.25 EUR per share",
+                "provenance": "reported",
+                "as_of": "2024-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 19.25,
+                "unit": "EUR/shares",
+                "source": "20-F",
+                "source_date_unavailable": false,
+                "ticker": "ASML",
+                "metric": "us-gaap:EarningsPerShareBasic",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                  "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "published_at": "2026-02-25"
+                },
+                "rendered": "19.25 EUR per share (as of 2024-12-31)",
+                "period_start": "2024-01-01",
+                "period_end": "2024-12-31",
+                "period": "FY2024",
+                "scope": "consolidated",
+                "currency": "EUR",
+                "label": "Earnings Per Share, Basic"
+              }
+            ],
+            "decision_thresholds": [],
+            "claim_provenance_summary": {
+              "reported": 2
+            },
+            "memory_context": null,
+            "historical_evidence": {
+              "analogs": [],
+              "retrieval_note": "No strong historical analog found for this setup."
+            },
+            "catalyst_calendar": null,
+            "runtime_version": {},
+            "why_not": "",
+            "threshold_zones": [],
+            "_integrity": {
+              "ok": true,
+              "status": "clean",
+              "severity_counts": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+              },
+              "valuation_state": "undetermined",
+              "price_label": "Valuation Unclear",
+              "decision_threshold_coverage": null,
+              "violations": [],
+              "caveats": []
+            }
+          },
+          "backend_version": "matrix-conviction-v1/7-linear-4i",
+          "verified_sec_facts": [
+            {
+              "value_text": "24.73 EUR per share",
+              "provenance": "reported",
+              "as_of": "2025-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 24.73,
+              "unit": "EUR/shares",
+              "source": "20-F",
+              "source_date_unavailable": false,
+              "ticker": "ASML",
+              "metric": "us-gaap:EarningsPerShareBasic",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                "published_at": "2026-02-25"
+              },
+              "rendered": "24.73 EUR per share (as of 2025-12-31)",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "period": "FY2025",
+              "scope": "consolidated",
+              "currency": "EUR",
+              "label": "Earnings Per Share, Basic"
+            },
+            {
+              "value_text": "19.25 EUR per share",
+              "provenance": "reported",
+              "as_of": "2024-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 19.25,
+              "unit": "EUR/shares",
+              "source": "20-F",
+              "source_date_unavailable": false,
+              "ticker": "ASML",
+              "metric": "us-gaap:EarningsPerShareBasic",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                "published_at": "2026-02-25"
+              },
+              "rendered": "19.25 EUR per share (as of 2024-12-31)",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "period": "FY2024",
+              "scope": "consolidated",
+              "currency": "EUR",
+              "label": "Earnings Per Share, Basic"
+            }
+          ],
+          "calculated_sec_metrics": [],
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "ASML basic EPS: 24.73 EUR per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-02-25",
+              "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "20-F",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-02-25",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 237 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "evidence_integrity": {
+            "schema_version": 1,
+            "overall_status": "current",
+            "as_of": null,
+            "evaluated_at": "2026-10-20T11:45:05.693261+00:00",
+            "counts": {
+              "stale": 0,
+              "unknown": 0,
+              "conflicting": 0,
+              "current": 1,
+              "superseded": 0,
+              "unavailable": 0
+            },
+            "has_material_conflict": false,
+            "conflicts": [],
+            "admission": {
+              "input_count": 1,
+              "admitted_count": 1,
+              "blocked_count": 0,
+              "blocked_reference_ids": [],
+              "stale_admitted": 0
+            }
+          },
+          "source_answer": {
+            "status": "attributed",
+            "claims": [
+              {
+                "claim": "ASML basic EPS increased 28.5% to 24.73 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.25 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31.",
+                "reference_id": "E1",
+                "claim_kind": "reported_financial_comparison"
+              }
+            ],
+            "reason": "Explicit annual EPS facts reconstructed with share basis, reporting currency and citation bindings.",
+            "unanswered_parts": []
+          }
+        },
+        "routing": {
+          "pipeline": "investment_thesis",
+          "detected_ticker": "ASML",
+          "detected_company": "ASML Holding N.V.",
+          "evidence_count": 1,
+          "evidence_blocked_count": 0,
+          "pipeline_elapsed_s": 0.05,
+          "response_mode": "source_evidence",
+          "personalization": {
+            "applied": false
+          },
+          "research_memory": {
+            "applied": false,
+            "status": "not_selected"
+          }
+        },
+        "_observability": {
+          "request_id": "bf400d59",
+          "total_duration_ms": 87.52,
+          "backend_version": "7-linear-4i",
+          "build_commit": "unknown",
+          "environment": "development",
+          "stages": [
+            {
+              "stage": "routing",
+              "status": "ok",
+              "duration_ms": 0.05,
+              "started_offset_ms": 17.01
+            },
+            {
+              "stage": "retrieval_total",
+              "status": "ok",
+              "duration_ms": 39.78,
+              "started_offset_ms": 17.16
+            },
+            {
+              "stage": "integrity_validation",
+              "status": "ok",
+              "duration_ms": 5.58,
+              "started_offset_ms": 81.85
+            }
+          ],
+          "model_calls": [],
+          "provider_calls": [
+            {
+              "provider": "fmp",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fred",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_valuation",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_estimates",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 19.59,
+              "result_count": 1,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            }
+          ],
+          "token_totals": {
+            "input_tokens": null,
+            "output_tokens": null,
+            "total_tokens": null
+          },
+          "synthesis_variant": "control",
+          "synthesis_model_variant": "control",
+          "synthesis_model": "gpt-4o-mini",
+          "synthesis_provider": "openai",
+          "risk_variant": "risk_control"
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "diluted",
+      "currency": "EUR",
+      "http_status": 200,
+      "exact_display_snapshot_preserved": true,
+      "assistant_text_matches_display": true,
+      "other_owner_reopen_status": 404,
+      "completed_retry_exact_no_fetch": true,
+      "response": {
+        "company": "ASML",
+        "request_id": "514789e5-e435-4b27-b6cb-7512e5455528",
+        "agents_used": [
+          "source_answer"
+        ],
+        "answer": {
+          "investment_thesis": {
+            "ticker": "ASML",
+            "company_name": "ASML Holding N.V.",
+            "bull_thesis": "",
+            "bear_thesis": "",
+            "key_drivers": [],
+            "key_risks": [],
+            "valuation_view": "",
+            "valuation_reference": "",
+            "estimate_watch": "",
+            "macro_sensitivity": "",
+            "confidence_score": 0.0,
+            "confidence_reasoning": "",
+            "what_changes_the_thesis": [],
+            "direct_answer": "1. ASML diluted EPS increased 28.4% to 24.71 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.24 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "conclusion": "1. ASML diluted EPS increased 28.4% to 24.71 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.24 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "evidence_count": 1,
+            "generated_at": "2026-10-20T11:45:05.818822+00:00",
+            "consistency_warnings": [],
+            "top_signals": [],
+            "top_risks": [],
+            "secondary_signals": [],
+            "one_sentence_thesis": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "compressed_thesis": null,
+            "what_changed": [],
+            "thesis_trend": "unclear",
+            "change_drivers": [],
+            "expectation_regime": "",
+            "expectation_shift_severity": "none",
+            "thesis_evolution": "",
+            "core_debate": "",
+            "core_market_debate": "",
+            "dominant_dimension": "",
+            "valuation_stance": "",
+            "question_intent": "investment_thesis",
+            "core_takeaway": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "dominant_driver": "",
+            "what_increases_conviction": "",
+            "conviction_dimensions": {},
+            "setup_label": "monitoring required",
+            "fragility_multiplier_applied": 1.0,
+            "asymmetry_multiplier_applied": 1.0,
+            "score_source": "not_assessed_evidence_view",
+            "directional_stance": "",
+            "directional_stance_reasoning": "",
+            "verdict_rationale": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "analysis_foundation_evidence": [
+              "ASML diluted EPS increased 28.4% to 24.71 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.24 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31."
+            ],
+            "analysis_foundation_constraints": [
+              "Only the cited observations are supported. Future growth, risk likelihood, quantified financial impact, and a directional thesis change remain unverified."
+            ],
+            "analysis_foundation_sources": [
+              "SEC EDGAR \u2014 structured XBRL fact"
+            ],
+            "thesis_version_id": "",
+            "previous_thesis_version_id": "",
+            "change_vector": {},
+            "monitored_drivers": [],
+            "evidence_freshness": {},
+            "quantitative_claims": [
+              {
+                "value_text": "24.71 EUR per share",
+                "provenance": "reported",
+                "as_of": "2025-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 24.71,
+                "unit": "EUR/shares",
+                "source": "20-F",
+                "source_date_unavailable": false,
+                "ticker": "ASML",
+                "metric": "us-gaap:EarningsPerShareDiluted",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                  "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "published_at": "2026-02-25"
+                },
+                "rendered": "24.71 EUR per share (as of 2025-12-31)",
+                "period_start": "2025-01-01",
+                "period_end": "2025-12-31",
+                "period": "FY2025",
+                "scope": "consolidated",
+                "currency": "EUR",
+                "label": "Earnings Per Share, Diluted"
+              },
+              {
+                "value_text": "19.24 EUR per share",
+                "provenance": "reported",
+                "as_of": "2024-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 19.24,
+                "unit": "EUR/shares",
+                "source": "20-F",
+                "source_date_unavailable": false,
+                "ticker": "ASML",
+                "metric": "us-gaap:EarningsPerShareDiluted",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                  "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "published_at": "2026-02-25"
+                },
+                "rendered": "19.24 EUR per share (as of 2024-12-31)",
+                "period_start": "2024-01-01",
+                "period_end": "2024-12-31",
+                "period": "FY2024",
+                "scope": "consolidated",
+                "currency": "EUR",
+                "label": "Earnings Per Share, Diluted"
+              }
+            ],
+            "decision_thresholds": [],
+            "claim_provenance_summary": {
+              "reported": 2
+            },
+            "memory_context": null,
+            "historical_evidence": {
+              "analogs": [],
+              "retrieval_note": "No strong historical analog found for this setup."
+            },
+            "catalyst_calendar": null,
+            "runtime_version": {},
+            "why_not": "",
+            "threshold_zones": [],
+            "_integrity": {
+              "ok": true,
+              "status": "clean",
+              "severity_counts": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+              },
+              "valuation_state": "undetermined",
+              "price_label": "Valuation Unclear",
+              "decision_threshold_coverage": null,
+              "violations": [],
+              "caveats": []
+            }
+          },
+          "backend_version": "matrix-conviction-v1/7-linear-4i",
+          "verified_sec_facts": [
+            {
+              "value_text": "24.71 EUR per share",
+              "provenance": "reported",
+              "as_of": "2025-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 24.71,
+              "unit": "EUR/shares",
+              "source": "20-F",
+              "source_date_unavailable": false,
+              "ticker": "ASML",
+              "metric": "us-gaap:EarningsPerShareDiluted",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                "published_at": "2026-02-25"
+              },
+              "rendered": "24.71 EUR per share (as of 2025-12-31)",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "period": "FY2025",
+              "scope": "consolidated",
+              "currency": "EUR",
+              "label": "Earnings Per Share, Diluted"
+            },
+            {
+              "value_text": "19.24 EUR per share",
+              "provenance": "reported",
+              "as_of": "2024-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 19.24,
+              "unit": "EUR/shares",
+              "source": "20-F",
+              "source_date_unavailable": false,
+              "ticker": "ASML",
+              "metric": "us-gaap:EarningsPerShareDiluted",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                "published_at": "2026-02-25"
+              },
+              "rendered": "19.24 EUR per share (as of 2024-12-31)",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "period": "FY2024",
+              "scope": "consolidated",
+              "currency": "EUR",
+              "label": "Earnings Per Share, Diluted"
+            }
+          ],
+          "calculated_sec_metrics": [],
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "ASML diluted EPS: 24.71 EUR per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-02-25",
+              "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "20-F",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-02-25",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 237 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "evidence_integrity": {
+            "schema_version": 1,
+            "overall_status": "current",
+            "as_of": null,
+            "evaluated_at": "2026-10-20T11:45:05.818149+00:00",
+            "counts": {
+              "stale": 0,
+              "unknown": 0,
+              "conflicting": 0,
+              "current": 1,
+              "superseded": 0,
+              "unavailable": 0
+            },
+            "has_material_conflict": false,
+            "conflicts": [],
+            "admission": {
+              "input_count": 1,
+              "admitted_count": 1,
+              "blocked_count": 0,
+              "blocked_reference_ids": [],
+              "stale_admitted": 0
+            }
+          },
+          "source_answer": {
+            "status": "attributed",
+            "claims": [
+              {
+                "claim": "ASML diluted EPS increased 28.4% to 24.71 EUR per share for the period 2025-01-01 to 2025-12-31, from 19.24 EUR per share in the comparable prior-year period 2024-01-01 to 2024-12-31.",
+                "reference_id": "E1",
+                "claim_kind": "reported_financial_comparison"
+              }
+            ],
+            "reason": "Explicit annual EPS facts reconstructed with share basis, reporting currency and citation bindings.",
+            "unanswered_parts": []
+          }
+        },
+        "routing": {
+          "pipeline": "investment_thesis",
+          "detected_ticker": "ASML",
+          "detected_company": "ASML Holding N.V.",
+          "evidence_count": 1,
+          "evidence_blocked_count": 0,
+          "pipeline_elapsed_s": 0.03,
+          "response_mode": "source_evidence",
+          "personalization": {
+            "applied": false
+          },
+          "research_memory": {
+            "applied": false,
+            "status": "not_selected"
+          }
+        },
+        "_observability": {
+          "request_id": "0c77fbf3",
+          "total_duration_ms": 32.31,
+          "backend_version": "7-linear-4i",
+          "build_commit": "unknown",
+          "environment": "development",
+          "stages": [
+            {
+              "stage": "routing",
+              "status": "ok",
+              "duration_ms": 0.06,
+              "started_offset_ms": 2.38
+            },
+            {
+              "stage": "retrieval_total",
+              "status": "ok",
+              "duration_ms": 23.24,
+              "started_offset_ms": 2.55
+            },
+            {
+              "stage": "integrity_validation",
+              "status": "ok",
+              "duration_ms": 0.2,
+              "started_offset_ms": 32.02
+            }
+          ],
+          "model_calls": [],
+          "provider_calls": [
+            {
+              "provider": "fmp",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fred",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_valuation",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_estimates",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 18.26,
+              "result_count": 1,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            }
+          ],
+          "token_totals": {
+            "input_tokens": null,
+            "output_tokens": null,
+            "total_tokens": null
+          },
+          "synthesis_variant": "control",
+          "synthesis_model_variant": "control",
+          "synthesis_model": "gpt-4o-mini",
+          "synthesis_provider": "openai",
+          "risk_variant": "risk_control"
+        }
+      }
+    },
+    {
+      "ticker": "NPK",
+      "basis": "basic",
+      "currency": "USD",
+      "http_status": 200,
+      "exact_display_snapshot_preserved": true,
+      "assistant_text_matches_display": true,
+      "other_owner_reopen_status": 404,
+      "completed_retry_exact_no_fetch": true,
+      "response": {
+        "company": "NPK",
+        "request_id": "711a9fe8-4f2d-4a8c-86eb-58c8edaf8cee",
+        "agents_used": [
+          "source_answer"
+        ],
+        "answer": {
+          "investment_thesis": {
+            "ticker": "NPK",
+            "company_name": "NATIONAL PRESTO INDUSTRIES INC",
+            "bull_thesis": "",
+            "bear_thesis": "",
+            "key_drivers": [],
+            "key_risks": [],
+            "valuation_view": "",
+            "valuation_reference": "",
+            "estimate_watch": "",
+            "macro_sensitivity": "",
+            "confidence_score": 0.0,
+            "confidence_reasoning": "",
+            "what_changes_the_thesis": [],
+            "direct_answer": "1. NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "conclusion": "1. NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "evidence_count": 1,
+            "generated_at": "2026-10-20T11:45:05.944056+00:00",
+            "consistency_warnings": [],
+            "top_signals": [],
+            "top_risks": [],
+            "secondary_signals": [],
+            "one_sentence_thesis": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "compressed_thesis": null,
+            "what_changed": [],
+            "thesis_trend": "unclear",
+            "change_drivers": [],
+            "expectation_regime": "",
+            "expectation_shift_severity": "none",
+            "thesis_evolution": "",
+            "core_debate": "",
+            "core_market_debate": "",
+            "dominant_dimension": "",
+            "valuation_stance": "",
+            "question_intent": "investment_thesis",
+            "core_takeaway": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "dominant_driver": "",
+            "what_increases_conviction": "",
+            "conviction_dimensions": {},
+            "setup_label": "monitoring required",
+            "fragility_multiplier_applied": 1.0,
+            "asymmetry_multiplier_applied": 1.0,
+            "score_source": "not_assessed_evidence_view",
+            "directional_stance": "",
+            "directional_stance_reasoning": "",
+            "verdict_rationale": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "analysis_foundation_evidence": [
+              "NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31."
+            ],
+            "analysis_foundation_constraints": [
+              "Only the cited observations are supported. Future growth, risk likelihood, quantified financial impact, and a directional thesis change remain unverified."
+            ],
+            "analysis_foundation_sources": [
+              "SEC EDGAR \u2014 structured XBRL fact"
+            ],
+            "thesis_version_id": "",
+            "previous_thesis_version_id": "",
+            "change_vector": {},
+            "monitored_drivers": [],
+            "evidence_freshness": {},
+            "quantitative_claims": [
+              {
+                "value_text": "$4.63 per share",
+                "provenance": "reported",
+                "as_of": "2025-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 4.63,
+                "unit": "USD/shares",
+                "source": "10-K",
+                "source_date_unavailable": false,
+                "ticker": "NPK",
+                "metric": "us-gaap:EarningsPerShareBasic",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                  "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                  "published_at": "2026-03-13"
+                },
+                "rendered": "$4.63 per share (as of 2025-12-31)",
+                "period_start": "2025-01-01",
+                "period_end": "2025-12-31",
+                "period": "FY2025",
+                "scope": "consolidated",
+                "currency": "USD",
+                "label": "Earnings Per Share, Basic"
+              },
+              {
+                "value_text": "$5.82 per share",
+                "provenance": "reported",
+                "as_of": "2024-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 5.82,
+                "unit": "USD/shares",
+                "source": "10-K",
+                "source_date_unavailable": false,
+                "ticker": "NPK",
+                "metric": "us-gaap:EarningsPerShareBasic",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                  "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                  "published_at": "2026-03-13"
+                },
+                "rendered": "$5.82 per share (as of 2024-12-31)",
+                "period_start": "2024-01-01",
+                "period_end": "2024-12-31",
+                "period": "FY2024",
+                "scope": "consolidated",
+                "currency": "USD",
+                "label": "Earnings Per Share, Basic"
+              }
+            ],
+            "decision_thresholds": [],
+            "claim_provenance_summary": {
+              "reported": 2
+            },
+            "memory_context": null,
+            "historical_evidence": {
+              "analogs": [],
+              "retrieval_note": "No strong historical analog found for this setup."
+            },
+            "catalyst_calendar": null,
+            "runtime_version": {},
+            "why_not": "",
+            "threshold_zones": [],
+            "_integrity": {
+              "ok": true,
+              "status": "clean",
+              "severity_counts": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+              },
+              "valuation_state": "undetermined",
+              "price_label": "Valuation Unclear",
+              "decision_threshold_coverage": null,
+              "violations": [],
+              "caveats": []
+            }
+          },
+          "backend_version": "matrix-conviction-v1/7-linear-4i",
+          "verified_sec_facts": [
+            {
+              "value_text": "$4.63 per share",
+              "provenance": "reported",
+              "as_of": "2025-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 4.63,
+              "unit": "USD/shares",
+              "source": "10-K",
+              "source_date_unavailable": false,
+              "ticker": "NPK",
+              "metric": "us-gaap:EarningsPerShareBasic",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                "published_at": "2026-03-13"
+              },
+              "rendered": "$4.63 per share (as of 2025-12-31)",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "period": "FY2025",
+              "scope": "consolidated",
+              "currency": "USD",
+              "label": "Earnings Per Share, Basic"
+            },
+            {
+              "value_text": "$5.82 per share",
+              "provenance": "reported",
+              "as_of": "2024-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 5.82,
+              "unit": "USD/shares",
+              "source": "10-K",
+              "source_date_unavailable": false,
+              "ticker": "NPK",
+              "metric": "us-gaap:EarningsPerShareBasic",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                "published_at": "2026-03-13"
+              },
+              "rendered": "$5.82 per share (as of 2024-12-31)",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "period": "FY2024",
+              "scope": "consolidated",
+              "currency": "USD",
+              "label": "Earnings Per Share, Basic"
+            }
+          ],
+          "calculated_sec_metrics": [],
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "NPK basic EPS: $4.63 per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-03-13",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "10-K",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-03-13",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 221 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "evidence_integrity": {
+            "schema_version": 1,
+            "overall_status": "current",
+            "as_of": null,
+            "evaluated_at": "2026-10-20T11:45:05.943168+00:00",
+            "counts": {
+              "stale": 0,
+              "unknown": 0,
+              "conflicting": 0,
+              "current": 1,
+              "superseded": 0,
+              "unavailable": 0
+            },
+            "has_material_conflict": false,
+            "conflicts": [],
+            "admission": {
+              "input_count": 1,
+              "admitted_count": 1,
+              "blocked_count": 0,
+              "blocked_reference_ids": [],
+              "stale_admitted": 0
+            }
+          },
+          "source_answer": {
+            "status": "attributed",
+            "claims": [
+              {
+                "claim": "NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31.",
+                "reference_id": "E1",
+                "claim_kind": "reported_financial_comparison"
+              }
+            ],
+            "reason": "Explicit annual EPS facts reconstructed with share basis, reporting currency and citation bindings.",
+            "unanswered_parts": []
+          }
+        },
+        "routing": {
+          "pipeline": "investment_thesis",
+          "detected_ticker": "NPK",
+          "detected_company": "NATIONAL PRESTO INDUSTRIES INC",
+          "evidence_count": 1,
+          "evidence_blocked_count": 0,
+          "pipeline_elapsed_s": 0.05,
+          "response_mode": "source_evidence",
+          "personalization": {
+            "applied": false
+          },
+          "research_memory": {
+            "applied": false,
+            "status": "not_selected"
+          }
+        },
+        "_observability": {
+          "request_id": "d5b26f33",
+          "total_duration_ms": 76.79,
+          "backend_version": "7-linear-4i",
+          "build_commit": "unknown",
+          "environment": "development",
+          "stages": [
+            {
+              "stage": "routing",
+              "status": "ok",
+              "duration_ms": 0.05,
+              "started_offset_ms": 11.83
+            },
+            {
+              "stage": "retrieval_total",
+              "status": "ok",
+              "duration_ms": 50.54,
+              "started_offset_ms": 11.97
+            },
+            {
+              "stage": "integrity_validation",
+              "status": "ok",
+              "duration_ms": 0.22,
+              "started_offset_ms": 76.47
+            }
+          ],
+          "model_calls": [],
+          "provider_calls": [
+            {
+              "provider": "fmp",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fred",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_valuation",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_estimates",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 31.59,
+              "result_count": 1,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            }
+          ],
+          "token_totals": {
+            "input_tokens": null,
+            "output_tokens": null,
+            "total_tokens": null
+          },
+          "synthesis_variant": "control",
+          "synthesis_model_variant": "control",
+          "synthesis_model": "gpt-4o-mini",
+          "synthesis_provider": "openai",
+          "risk_variant": "risk_control"
+        }
+      }
+    },
+    {
+      "ticker": "NPK",
+      "basis": "diluted",
+      "currency": "USD",
+      "http_status": 200,
+      "exact_display_snapshot_preserved": true,
+      "assistant_text_matches_display": true,
+      "other_owner_reopen_status": 404,
+      "completed_retry_exact_no_fetch": true,
+      "response": {
+        "company": "NPK",
+        "request_id": "d5d1c53f-f2ff-4495-9687-df764c5e1165",
+        "agents_used": [
+          "source_answer"
+        ],
+        "answer": {
+          "investment_thesis": {
+            "ticker": "NPK",
+            "company_name": "NATIONAL PRESTO INDUSTRIES INC",
+            "bull_thesis": "",
+            "bear_thesis": "",
+            "key_drivers": [],
+            "key_risks": [],
+            "valuation_view": "",
+            "valuation_reference": "",
+            "estimate_watch": "",
+            "macro_sensitivity": "",
+            "confidence_score": 0.0,
+            "confidence_reasoning": "",
+            "what_changes_the_thesis": [],
+            "direct_answer": "No source-bound annual EPS comparison qualified for the explicitly requested share basis and reporting currency.\n\nUnverified requested parts: annual diluted EPS.\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "conclusion": "No source-bound annual EPS comparison qualified for the explicitly requested share basis and reporting currency.\n\nUnverified requested parts: annual diluted EPS.\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "evidence_count": 0,
+            "generated_at": "2026-10-20T11:45:06.083932+00:00",
+            "consistency_warnings": [],
+            "top_signals": [],
+            "top_risks": [],
+            "secondary_signals": [],
+            "one_sentence_thesis": "Annual EPS evidence is insufficient; the thesis remains unverified.",
+            "compressed_thesis": null,
+            "what_changed": [],
+            "thesis_trend": "unclear",
+            "change_drivers": [],
+            "expectation_regime": "",
+            "expectation_shift_severity": "none",
+            "thesis_evolution": "",
+            "core_debate": "",
+            "core_market_debate": "",
+            "dominant_dimension": "",
+            "valuation_stance": "",
+            "question_intent": "investment_thesis",
+            "core_takeaway": "Annual EPS evidence is insufficient; the thesis remains unverified.",
+            "dominant_driver": "",
+            "what_increases_conviction": "",
+            "conviction_dimensions": {},
+            "setup_label": "insufficient conviction",
+            "fragility_multiplier_applied": 1.0,
+            "asymmetry_multiplier_applied": 1.0,
+            "score_source": "not_assessed_evidence_view",
+            "directional_stance": "",
+            "directional_stance_reasoning": "",
+            "verdict_rationale": "Annual EPS evidence is insufficient; the thesis remains unverified.",
+            "analysis_foundation_evidence": [],
+            "analysis_foundation_constraints": [
+              "Only the cited observations are supported. Future growth, risk likelihood, quantified financial impact, and a directional thesis change remain unverified."
+            ],
+            "analysis_foundation_sources": [],
+            "thesis_version_id": "",
+            "previous_thesis_version_id": "",
+            "change_vector": {},
+            "monitored_drivers": [],
+            "evidence_freshness": {},
+            "quantitative_claims": [],
+            "decision_thresholds": [],
+            "claim_provenance_summary": {},
+            "memory_context": null,
+            "historical_evidence": {
+              "analogs": [],
+              "retrieval_note": "No strong historical analog found for this setup."
+            },
+            "catalyst_calendar": null,
+            "runtime_version": {},
+            "why_not": "",
+            "threshold_zones": [],
+            "_integrity": {
+              "ok": true,
+              "status": "clean",
+              "severity_counts": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+              },
+              "valuation_state": "undetermined",
+              "price_label": "Valuation Unclear",
+              "decision_threshold_coverage": null,
+              "violations": [],
+              "caveats": []
+            }
+          },
+          "backend_version": "matrix-conviction-v1/7-linear-4i",
+          "verified_sec_facts": [],
+          "calculated_sec_metrics": [],
+          "evidence_references": [],
+          "evidence_integrity": {
+            "schema_version": 1,
+            "overall_status": "unavailable",
+            "as_of": null,
+            "evaluated_at": "2026-10-20T11:45:06.083102+00:00",
+            "counts": {
+              "stale": 0,
+              "unknown": 0,
+              "conflicting": 0,
+              "current": 0,
+              "superseded": 0,
+              "unavailable": 0
+            },
+            "has_material_conflict": false,
+            "conflicts": [],
+            "admission": {
+              "input_count": 0,
+              "admitted_count": 0,
+              "blocked_count": 0,
+              "blocked_reference_ids": [],
+              "stale_admitted": 0
+            }
+          },
+          "source_answer": {
+            "status": "insufficient_claim_evidence",
+            "claims": [],
+            "reason": "No reconstructed annual EPS comparison qualified for the requested basis and currency.",
+            "unanswered_parts": [
+              "annual diluted EPS"
+            ]
+          }
+        },
+        "routing": {
+          "pipeline": "investment_thesis",
+          "detected_ticker": "NPK",
+          "detected_company": "NATIONAL PRESTO INDUSTRIES INC",
+          "evidence_count": 0,
+          "evidence_blocked_count": 0,
+          "pipeline_elapsed_s": 0.05,
+          "response_mode": "source_evidence",
+          "personalization": {
+            "applied": false
+          },
+          "research_memory": {
+            "applied": false,
+            "status": "not_selected"
+          }
+        },
+        "_observability": {
+          "request_id": "aedaa986",
+          "total_duration_ms": 74.37,
+          "backend_version": "7-linear-4i",
+          "build_commit": "unknown",
+          "environment": "development",
+          "stages": [
+            {
+              "stage": "routing",
+              "status": "ok",
+              "duration_ms": 0.05,
+              "started_offset_ms": 11.13
+            },
+            {
+              "stage": "retrieval_total",
+              "status": "ok",
+              "duration_ms": 51.44,
+              "started_offset_ms": 11.33
+            },
+            {
+              "stage": "integrity_validation",
+              "status": "ok",
+              "duration_ms": 0.2,
+              "started_offset_ms": 74.02
+            }
+          ],
+          "model_calls": [],
+          "provider_calls": [
+            {
+              "provider": "fmp",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fred",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_valuation",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_estimates",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 28.13,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            }
+          ],
+          "token_totals": {
+            "input_tokens": null,
+            "output_tokens": null,
+            "total_tokens": null
+          },
+          "synthesis_variant": "control",
+          "synthesis_model_variant": "control",
+          "synthesis_model": "gpt-4o-mini",
+          "synthesis_provider": "openai",
+          "risk_variant": "risk_control"
+        }
+      }
+    },
+    {
+      "ticker": "NPK",
+      "basis": "basic and diluted",
+      "currency": "USD",
+      "http_status": 200,
+      "exact_display_snapshot_preserved": true,
+      "assistant_text_matches_display": true,
+      "other_owner_reopen_status": 404,
+      "completed_retry_exact_no_fetch": true,
+      "response": {
+        "company": "NPK",
+        "request_id": "893cbbd0-ec43-4cba-b6fd-65652c5e8e92",
+        "agents_used": [
+          "source_answer"
+        ],
+        "answer": {
+          "investment_thesis": {
+            "ticker": "NPK",
+            "company_name": "NATIONAL PRESTO INDUSTRIES INC",
+            "bull_thesis": "",
+            "bear_thesis": "",
+            "key_drivers": [],
+            "key_risks": [],
+            "valuation_view": "",
+            "valuation_reference": "",
+            "estimate_watch": "",
+            "macro_sensitivity": "",
+            "confidence_score": 0.0,
+            "confidence_reasoning": "",
+            "what_changes_the_thesis": [],
+            "direct_answer": "1. NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nUnverified requested parts: annual diluted EPS.\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "conclusion": "1. NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31. [E1]\n\nUnverified requested parts: annual diluted EPS.\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "evidence_count": 1,
+            "generated_at": "2026-10-20T11:45:06.206809+00:00",
+            "consistency_warnings": [],
+            "top_signals": [],
+            "top_risks": [],
+            "secondary_signals": [],
+            "one_sentence_thesis": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "compressed_thesis": null,
+            "what_changed": [],
+            "thesis_trend": "unclear",
+            "change_drivers": [],
+            "expectation_regime": "",
+            "expectation_shift_severity": "none",
+            "thesis_evolution": "",
+            "core_debate": "",
+            "core_market_debate": "",
+            "dominant_dimension": "",
+            "valuation_stance": "",
+            "question_intent": "investment_thesis",
+            "core_takeaway": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "dominant_driver": "",
+            "what_increases_conviction": "",
+            "conviction_dimensions": {},
+            "setup_label": "monitoring required",
+            "fragility_multiplier_applied": 1.0,
+            "asymmetry_multiplier_applied": 1.0,
+            "score_source": "not_assessed_evidence_view",
+            "directional_stance": "",
+            "directional_stance_reasoning": "",
+            "verdict_rationale": "Dated Annual EPS evidence was retrieved; its implications for the thesis remain unverified.",
+            "analysis_foundation_evidence": [
+              "NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31."
+            ],
+            "analysis_foundation_constraints": [
+              "Only the cited observations are supported. Future growth, risk likelihood, quantified financial impact, and a directional thesis change remain unverified."
+            ],
+            "analysis_foundation_sources": [
+              "SEC EDGAR \u2014 structured XBRL fact"
+            ],
+            "thesis_version_id": "",
+            "previous_thesis_version_id": "",
+            "change_vector": {},
+            "monitored_drivers": [],
+            "evidence_freshness": {},
+            "quantitative_claims": [
+              {
+                "value_text": "$4.63 per share",
+                "provenance": "reported",
+                "as_of": "2025-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 4.63,
+                "unit": "USD/shares",
+                "source": "10-K",
+                "source_date_unavailable": false,
+                "ticker": "NPK",
+                "metric": "us-gaap:EarningsPerShareBasic",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                  "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                  "published_at": "2026-03-13"
+                },
+                "rendered": "$4.63 per share (as of 2025-12-31)",
+                "period_start": "2025-01-01",
+                "period_end": "2025-12-31",
+                "period": "FY2025",
+                "scope": "consolidated",
+                "currency": "USD",
+                "label": "Earnings Per Share, Basic"
+              },
+              {
+                "value_text": "$5.82 per share",
+                "provenance": "reported",
+                "as_of": "2024-12-31",
+                "confidence": null,
+                "assumptions": null,
+                "stale": false,
+                "raw_value": 5.82,
+                "unit": "USD/shares",
+                "source": "10-K",
+                "source_date_unavailable": false,
+                "ticker": "NPK",
+                "metric": "us-gaap:EarningsPerShareBasic",
+                "derivation": null,
+                "freshness_status": null,
+                "polarity": null,
+                "assumptions_inferred": false,
+                "document_ref": {
+                  "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                  "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                  "provider": "SEC EDGAR",
+                  "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                  "published_at": "2026-03-13"
+                },
+                "rendered": "$5.82 per share (as of 2024-12-31)",
+                "period_start": "2024-01-01",
+                "period_end": "2024-12-31",
+                "period": "FY2024",
+                "scope": "consolidated",
+                "currency": "USD",
+                "label": "Earnings Per Share, Basic"
+              }
+            ],
+            "decision_thresholds": [],
+            "claim_provenance_summary": {
+              "reported": 2
+            },
+            "memory_context": null,
+            "historical_evidence": {
+              "analogs": [],
+              "retrieval_note": "No strong historical analog found for this setup."
+            },
+            "catalyst_calendar": null,
+            "runtime_version": {},
+            "why_not": "",
+            "threshold_zones": [],
+            "_integrity": {
+              "ok": true,
+              "status": "clean",
+              "severity_counts": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+              },
+              "valuation_state": "undetermined",
+              "price_label": "Valuation Unclear",
+              "decision_threshold_coverage": null,
+              "violations": [],
+              "caveats": []
+            }
+          },
+          "backend_version": "matrix-conviction-v1/7-linear-4i",
+          "verified_sec_facts": [
+            {
+              "value_text": "$4.63 per share",
+              "provenance": "reported",
+              "as_of": "2025-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 4.63,
+              "unit": "USD/shares",
+              "source": "10-K",
+              "source_date_unavailable": false,
+              "ticker": "NPK",
+              "metric": "us-gaap:EarningsPerShareBasic",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                "published_at": "2026-03-13"
+              },
+              "rendered": "$4.63 per share (as of 2025-12-31)",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "period": "FY2025",
+              "scope": "consolidated",
+              "currency": "USD",
+              "label": "Earnings Per Share, Basic"
+            },
+            {
+              "value_text": "$5.82 per share",
+              "provenance": "reported",
+              "as_of": "2024-12-31",
+              "confidence": null,
+              "assumptions": null,
+              "stale": false,
+              "raw_value": 5.82,
+              "unit": "USD/shares",
+              "source": "10-K",
+              "source_date_unavailable": false,
+              "ticker": "NPK",
+              "metric": "us-gaap:EarningsPerShareBasic",
+              "derivation": null,
+              "freshness_status": null,
+              "polarity": null,
+              "assumptions_inferred": false,
+              "document_ref": {
+                "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                "provider": "SEC EDGAR",
+                "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                "published_at": "2026-03-13"
+              },
+              "rendered": "$5.82 per share (as of 2024-12-31)",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "period": "FY2024",
+              "scope": "consolidated",
+              "currency": "USD",
+              "label": "Earnings Per Share, Basic"
+            }
+          ],
+          "calculated_sec_metrics": [],
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "NPK basic EPS: $4.63 per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-03-13",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "10-K",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-03-13",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 221 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "evidence_integrity": {
+            "schema_version": 1,
+            "overall_status": "current",
+            "as_of": null,
+            "evaluated_at": "2026-10-20T11:45:06.206081+00:00",
+            "counts": {
+              "stale": 0,
+              "unknown": 0,
+              "conflicting": 0,
+              "current": 1,
+              "superseded": 0,
+              "unavailable": 0
+            },
+            "has_material_conflict": false,
+            "conflicts": [],
+            "admission": {
+              "input_count": 1,
+              "admitted_count": 1,
+              "blocked_count": 0,
+              "blocked_reference_ids": [],
+              "stale_admitted": 0
+            }
+          },
+          "source_answer": {
+            "status": "partial",
+            "claims": [
+              {
+                "claim": "NPK basic EPS decreased 20.4% to $4.63 per share for the period 2025-01-01 to 2025-12-31, from $5.82 per share in the comparable prior-year period 2024-01-01 to 2024-12-31.",
+                "reference_id": "E1",
+                "claim_kind": "reported_financial_comparison"
+              }
+            ],
+            "reason": "Explicit annual EPS facts reconstructed with share basis, reporting currency and citation bindings.",
+            "unanswered_parts": [
+              "annual diluted EPS"
+            ]
+          }
+        },
+        "routing": {
+          "pipeline": "investment_thesis",
+          "detected_ticker": "NPK",
+          "detected_company": "NATIONAL PRESTO INDUSTRIES INC",
+          "evidence_count": 1,
+          "evidence_blocked_count": 0,
+          "pipeline_elapsed_s": 0.05,
+          "response_mode": "source_evidence",
+          "personalization": {
+            "applied": false
+          },
+          "research_memory": {
+            "applied": false,
+            "status": "not_selected"
+          }
+        },
+        "_observability": {
+          "request_id": "95e3396e",
+          "total_duration_ms": 66.54,
+          "backend_version": "7-linear-4i",
+          "build_commit": "unknown",
+          "environment": "development",
+          "stages": [
+            {
+              "stage": "routing",
+              "status": "ok",
+              "duration_ms": 0.06,
+              "started_offset_ms": 13.87
+            },
+            {
+              "stage": "retrieval_total",
+              "status": "ok",
+              "duration_ms": 43.01,
+              "started_offset_ms": 13.99
+            },
+            {
+              "stage": "integrity_validation",
+              "status": "ok",
+              "duration_ms": 0.34,
+              "started_offset_ms": 66.08
+            }
+          ],
+          "model_calls": [],
+          "provider_calls": [
+            {
+              "provider": "fmp",
+              "stage": "retrieval",
+              "duration_ms": 0.01,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fred",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_valuation",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_estimates",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 22.93,
+              "result_count": 1,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            }
+          ],
+          "token_totals": {
+            "input_tokens": null,
+            "output_tokens": null,
+            "total_tokens": null
+          },
+          "synthesis_variant": "control",
+          "synthesis_model_variant": "control",
+          "synthesis_model": "gpt-4o-mini",
+          "synthesis_provider": "openai",
+          "risk_variant": "risk_control"
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "basic",
+      "currency": "USD",
+      "http_status": 200,
+      "exact_display_snapshot_preserved": true,
+      "assistant_text_matches_display": true,
+      "other_owner_reopen_status": 404,
+      "completed_retry_exact_no_fetch": true,
+      "response": {
+        "company": "ASML",
+        "request_id": "c2002fb5-2fa7-4e71-a30c-3e12c34639cb",
+        "agents_used": [
+          "source_answer"
+        ],
+        "answer": {
+          "investment_thesis": {
+            "ticker": "ASML",
+            "company_name": "ASML Holding N.V.",
+            "bull_thesis": "",
+            "bear_thesis": "",
+            "key_drivers": [],
+            "key_risks": [],
+            "valuation_view": "",
+            "valuation_reference": "",
+            "estimate_watch": "",
+            "macro_sensitivity": "",
+            "confidence_score": 0.0,
+            "confidence_reasoning": "",
+            "what_changes_the_thesis": [],
+            "direct_answer": "No source-bound annual EPS comparison qualified for the explicitly requested share basis and reporting currency.\n\nUnverified requested parts: annual basic EPS.\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "conclusion": "No source-bound annual EPS comparison qualified for the explicitly requested share basis and reporting currency.\n\nUnverified requested parts: annual basic EPS.\n\nThese are dated reported annual EPS comparisons, not current TTM or forward EPS. Basic and diluted EPS are distinct; no substitution, FX or ADR conversion is performed. Market price, share/split compatibility, future earnings, valuation boundaries and expected returns remain unverified.",
+            "evidence_count": 0,
+            "generated_at": "2026-10-20T11:45:06.291839+00:00",
+            "consistency_warnings": [],
+            "top_signals": [],
+            "top_risks": [],
+            "secondary_signals": [],
+            "one_sentence_thesis": "Annual EPS evidence is insufficient; the thesis remains unverified.",
+            "compressed_thesis": null,
+            "what_changed": [],
+            "thesis_trend": "unclear",
+            "change_drivers": [],
+            "expectation_regime": "",
+            "expectation_shift_severity": "none",
+            "thesis_evolution": "",
+            "core_debate": "",
+            "core_market_debate": "",
+            "dominant_dimension": "",
+            "valuation_stance": "",
+            "question_intent": "investment_thesis",
+            "core_takeaway": "Annual EPS evidence is insufficient; the thesis remains unverified.",
+            "dominant_driver": "",
+            "what_increases_conviction": "",
+            "conviction_dimensions": {},
+            "setup_label": "insufficient conviction",
+            "fragility_multiplier_applied": 1.0,
+            "asymmetry_multiplier_applied": 1.0,
+            "score_source": "not_assessed_evidence_view",
+            "directional_stance": "",
+            "directional_stance_reasoning": "",
+            "verdict_rationale": "Annual EPS evidence is insufficient; the thesis remains unverified.",
+            "analysis_foundation_evidence": [],
+            "analysis_foundation_constraints": [
+              "Only the cited observations are supported. Future growth, risk likelihood, quantified financial impact, and a directional thesis change remain unverified."
+            ],
+            "analysis_foundation_sources": [],
+            "thesis_version_id": "",
+            "previous_thesis_version_id": "",
+            "change_vector": {},
+            "monitored_drivers": [],
+            "evidence_freshness": {},
+            "quantitative_claims": [],
+            "decision_thresholds": [],
+            "claim_provenance_summary": {},
+            "memory_context": null,
+            "historical_evidence": {
+              "analogs": [],
+              "retrieval_note": "No strong historical analog found for this setup."
+            },
+            "catalyst_calendar": null,
+            "runtime_version": {},
+            "why_not": "",
+            "threshold_zones": [],
+            "_integrity": {
+              "ok": true,
+              "status": "clean",
+              "severity_counts": {
+                "high": 0,
+                "medium": 0,
+                "low": 0
+              },
+              "valuation_state": "undetermined",
+              "price_label": "Valuation Unclear",
+              "decision_threshold_coverage": null,
+              "violations": [],
+              "caveats": []
+            }
+          },
+          "backend_version": "matrix-conviction-v1/7-linear-4i",
+          "verified_sec_facts": [],
+          "calculated_sec_metrics": [],
+          "evidence_references": [],
+          "evidence_integrity": {
+            "schema_version": 1,
+            "overall_status": "unavailable",
+            "as_of": null,
+            "evaluated_at": "2026-10-20T11:45:06.290646+00:00",
+            "counts": {
+              "stale": 0,
+              "unknown": 0,
+              "conflicting": 0,
+              "current": 0,
+              "superseded": 0,
+              "unavailable": 0
+            },
+            "has_material_conflict": false,
+            "conflicts": [],
+            "admission": {
+              "input_count": 0,
+              "admitted_count": 0,
+              "blocked_count": 0,
+              "blocked_reference_ids": [],
+              "stale_admitted": 0
+            }
+          },
+          "source_answer": {
+            "status": "insufficient_claim_evidence",
+            "claims": [],
+            "reason": "No reconstructed annual EPS comparison qualified for the requested basis and currency.",
+            "unanswered_parts": [
+              "annual basic EPS"
+            ]
+          }
+        },
+        "routing": {
+          "pipeline": "investment_thesis",
+          "detected_ticker": "ASML",
+          "detected_company": "ASML Holding N.V.",
+          "evidence_count": 0,
+          "evidence_blocked_count": 0,
+          "pipeline_elapsed_s": 0.02,
+          "response_mode": "source_evidence",
+          "personalization": {
+            "applied": false
+          },
+          "research_memory": {
+            "applied": false,
+            "status": "not_selected"
+          }
+        },
+        "_observability": {
+          "request_id": "79896577",
+          "total_duration_ms": 27.51,
+          "backend_version": "7-linear-4i",
+          "build_commit": "unknown",
+          "environment": "development",
+          "stages": [
+            {
+              "stage": "routing",
+              "status": "ok",
+              "duration_ms": 0.05,
+              "started_offset_ms": 2.04
+            },
+            {
+              "stage": "retrieval_total",
+              "status": "ok",
+              "duration_ms": 18.38,
+              "started_offset_ms": 2.15
+            },
+            {
+              "stage": "integrity_validation",
+              "status": "ok",
+              "duration_ms": 0.19,
+              "started_offset_ms": 27.21
+            }
+          ],
+          "model_calls": [],
+          "provider_calls": [
+            {
+              "provider": "fmp",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "news",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fred",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_valuation",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "fmp_estimates",
+              "stage": "retrieval",
+              "duration_ms": 0.0,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            },
+            {
+              "provider": "sec_edgar",
+              "stage": "retrieval",
+              "duration_ms": 14.44,
+              "result_count": 0,
+              "status": "ok",
+              "cache": null,
+              "retry_count": 0,
+              "error_class": null
+            }
+          ],
+          "token_totals": {
+            "input_tokens": null,
+            "output_tokens": null,
+            "total_tokens": null
+          },
+          "synthesis_variant": "control",
+          "synthesis_model_variant": "control",
+          "synthesis_model": "gpt-4o-mini",
+          "synthesis_provider": "openai",
+          "risk_variant": "risk_control"
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local invented HS256 JWT keys and beta accounts; no real Supabase/provider authentication or production environment acceptance.",
+    "Directory identity and unrelated provider/profile results are injected; retained Company Facts bytes use the real parser and research pipeline.",
+    "Disposable SQLite persists exact emitted response snapshots; production database/migrations/browser UI are not exercised.",
+    "Broader thesis/decision-threshold completeness, inferred personalization and benchmark adjudication remain open.",
+    "No capture approval is reused; historical ledgers remain untouched and are not independently revalidated here."
+  ]
+}
