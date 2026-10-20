@@ -8,6 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**20 October normal annual EPS research integration (offline):** the ordinary
+research fact path now handles explicit annual basic/diluted USD/EUR EPS with
+same-filing annual Assets anchors and reconstructed citations. Actual saved
+ASML/NPK bodies produce six checked pipeline responses, including explicit
+missing diluted/currency slots, with zero models or external requests. See
+`EXPLICIT_ANNUAL_EPS_RESEARCH_20261020.md`. This is a bounded fact-answer fix;
+valuation assumptions/thresholds, broad thesis completeness, personalized
+save/reopen and benchmark acceptance remain separate open gates. No endpoint
+activation, new live approval or claim of launch readiness follows.
+
 **20 October retained-source replay:** PR314's separately approved capture
 completed two SEC facts GETs with no models. Offline application replay now
 produces six partial explicit scenarios from actual ASML EUR basic/diluted and
