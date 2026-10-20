@@ -1,7 +1,7 @@
-"""Offline attempt-accounting foundation, NOT an executable provider budget cap.
+"""Attempt accounting for offline rehearsals and exact reviewed capture profiles.
 
-The offline fixture transport reserves and claims each simulated attempt.
-No production/capture runner imports this module. No network or app imports.
+This module grants no authority by itself and establishes no invoice ceiling.
+Native dispatch requires a fixed approved profile; import performs no network I/O.
 """
 from contextlib import contextmanager
 from decimal import Decimal, InvalidOperation
@@ -120,11 +120,15 @@ def validate_policy(policy):
                 from validation.source_capture import policy_for as capture_policy
                 expected = capture_policy(policy['code_binding'], policy['dependencies'],
                                           policy['approval'], policy['execution_configuration'])
+            elif purpose == 'approved_eps_source_adequacy_capture':
+                from validation.eps_source_capture import policy_for as eps_capture_policy
+                expected = eps_capture_policy(policy['code_binding'], policy['dependencies'],
+                                              policy['approval'], policy['execution_configuration'])
             elif mode is None:
                 raise ValueError('unknown policy purpose')
             extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}
                      if mode in {'approved', 'approved_source_monitoring', 'approved_freshness'} else {})
-            if purpose != 'approved_two_source_diagnostic_capture':
+            if purpose not in {'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture'}:
                 expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
         except (KeyError, TypeError, ValueError):
             raise BudgetError('invalid fixed rehearsal policy') from None
@@ -463,7 +467,7 @@ class AttemptLedger:
     def claim_native_dispatch(self, attempt_id, *, case_run, route, request_sha256):
         """Consume an approved claim once across gates/contexts, before native I/O."""
         if self.policy.get('purpose') not in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
-                                                 'approved_two_source_diagnostic_capture', 'approved_monitoring_freshness_pilot'}:
+                                                 'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture', 'approved_monitoring_freshness_pilot'}:
             raise BudgetError('native dispatch requires approved policy')
         with self.transaction() as db:
             self.active(db)
@@ -530,7 +534,7 @@ class AttemptLedger:
                     reserved_nanousd=reserved, known_actual_nanousd=actual,
                     attempts=total, unresolved_attempts=pending, halted=halted,
                     executable_provider_adapter=self.policy.get('purpose') in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
-                                                 'approved_two_source_diagnostic_capture', 'approved_monitoring_freshness_pilot'},
+                                                 'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture', 'approved_monitoring_freshness_pilot'},
                     hard_usd_cap_established=False)
 
 
