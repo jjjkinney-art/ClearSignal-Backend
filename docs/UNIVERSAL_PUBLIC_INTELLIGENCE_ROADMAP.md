@@ -8,6 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**21 October source-thesis wording parity (offline):** explicit source requests
+using “Explain …” or possessive company wording now retain the same partial
+financial foundation and unanswered thesis parts as the canonical prompt.
+Previously these could fall through to an attributed fact list with no broader
+gaps declared. Twelve retained-data paraphrases match the canonical result;
+52 new tests preserve scoped questions, saved/comparative tasks and ordinary
+model-backed analysis. See `SOURCE_THESIS_PARAPHRASES_20261021.md`. This fixes
+question handling, not competition/valuation/risk-materiality completeness or
+the broader company-quality gate. No live authority or coverage percentage.
+
 **21 October named-segment competitive context (offline):** a shared explicit
 segment-subject rule preserves competition context previously missed in the
 retained NPK filing. The exact segment quote, scope and citation survive the

@@ -43,8 +43,36 @@ PRETAX_LIMITATION = ("The cited pretax-income comparison is supplementary profit
     "or an operating margin. Operating income remains unverified.")
 
 
+_THESIS_REUSE_OR_COMPARISON = re.compile(
+    r"\b(?:my|our|your|his|her|their|saved|selected|previous|prior|original|portfolio|"
+    r"compare|comparison|versus|vs|strengthened|weakened|changed|since)\b", re.I)
+_THESIS_OBJECT_END = r"(?=\s*(?:$|[?!.,;:]|\b(?:for|of|and)\b))"
+_THESIS_IMPERATIVE = re.compile(
+    r"^(?:please\s+)?(?:explain|outline|summari[sz]e|give|provide)\s+"
+    r"(?:me\s+)?(?:(?:the|a|an)\s+)?investment thesis\b" + _THESIS_OBJECT_END, re.I)
+_THESIS_POSSESSIVE = re.compile(
+    r"^(?:please\s+)?(?:what\s+is|what['’]s|explain|outline|summari[sz]e|give|provide)\s+"
+    r"(?:me\s+)?(?P<subject>[^?!;:\n]{1,100}?)['’]s investment thesis\b" + _THESIS_OBJECT_END, re.I)
+
+
 def is_broad_thesis_request(question: str) -> bool:
-    return bool(re.search(r"\bwhat\s+is\s+(?:the\s+)?investment thesis\b", question or "", re.I))
+    """Recognize bounded thesis paraphrases, not a change-of-thesis task.
+
+    This classifies question scope only. It does not resolve issuer identity,
+    authorize a source route, or remove the caller's segment/risk/KPI guards.
+    Preserve the legacy form; new forms exclude personal/saved/comparative tasks.
+    """
+    text = re.sub(r"\s+", " ", question or "").strip()
+    if re.search(r"\bwhat\s+is\s+(?:the\s+)?investment thesis\b", text, re.I):
+        return True
+    if _THESIS_REUSE_OR_COMPARISON.search(text):
+        return False
+    if re.match(r"^what['’]s\s+the\s+investment thesis\b" + _THESIS_OBJECT_END, text, re.I):
+        return True
+    if _THESIS_IMPERATIVE.match(text):
+        return True
+    match = _THESIS_POSSESSIVE.match(text)
+    return bool(match and not re.match(r"^(?:why|how|whether|when|what)\b", match['subject'], re.I))
 
 
 def _risk_monitoring_inference(value, reference_id):
