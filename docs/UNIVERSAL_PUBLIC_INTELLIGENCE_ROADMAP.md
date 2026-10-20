@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**20 October retained-source replay:** PR314's separately approved capture
+completed two SEC facts GETs with no models. Offline application replay now
+produces six partial explicit scenarios from actual ASML EUR basic/diluted and
+NPK USD basic annual EPS. NPK outdated diluted and unsupported currencies remain
+gaps; positive EPS is rejected as loss/recovery context. Fourteen replay checks
+and 188 related regressions passed. See
+`RETAINED_EPS_APPLICATION_REPLAY_20261020.md`. This closes these exact source-to-
+scenario paths only; normal answer composition, independent usefulness review,
+development/holdout benchmarks and signed-in personalized save/reopen acceptance
+remain open. Production scenario activation is unchanged. Twelve live approvals
+are consumed; no further live execution follows from this replay.
+
 **Launch requirement:** users researching companies across the market-cap
 spectrum must receive similarly high-quality, personalized research, whether
 an issuer is small/micro-cap, mid-cap or large-cap. JetBlue and Smith & Wesson
