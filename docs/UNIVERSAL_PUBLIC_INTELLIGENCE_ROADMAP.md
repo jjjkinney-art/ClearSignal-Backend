@@ -44,6 +44,17 @@ signed-in acceptance. All eleven live approvals are consumed. See the
 
 **Implementation and acceptance order:**
 
+20 October source-adequacy preparation increment: a separate, approval-gated
+capture variant fixes two Company Facts GETs (ASML/NPK), zero models and one
+nontransferable slot per issuer, retaining existing deadlines and transport
+safeguards. It can retain approved public bodies/receipts and replay bounded
+annual EPS candidate diagnostics. It is tested offline only; no actual execution
+configuration/approval package or new live run has been validated here. Next:
+review/CI, exact-commit executor package, separate execution/spending/retention
+approval, then actual source-candidate review before complete-answer acceptance
+and broader development benchmarking. See
+[EPS source capture review](EPS_SOURCE_CAPTURE_REVIEW_20261020.md).
+
 20 October EUR/20-F increment: support explicitly requested US-GAAP annual basic
 or diluted EPS in EUR/shares and 20-F/20-F/A within the default-off scenario
 endpoint. Preserve exact reporting-currency/form anchors and unconverted
