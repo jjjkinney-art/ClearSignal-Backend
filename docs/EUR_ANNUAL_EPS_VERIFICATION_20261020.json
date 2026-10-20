@@ -1,0 +1,68 @@
+{
+  "base_commit": "bdd9ed812454b1d72a7c50cd9c592d56252b509e",
+  "runtime": "CPython 3.11.9, existing pinned dependencies",
+  "related_tests_passed": 1555,
+  "synthetic_pilot_tests_passed": 36,
+  "distinct_tests_passed": 1591,
+  "new_eur_and_cleanup_tests": 69,
+  "collection_count": 18216,
+  "collection_errors": 0,
+  "import_routes": 136,
+  "runtime_warnings_promoted_to_errors_in_final_related_run": true,
+  "actual_asml_companyfacts_eps_replay": false,
+  "live_requests": 0,
+  "feature_activated": false,
+  "cleanup_mutation_detected": true,
+  "test_source_restored_before_final_checks": true,
+  "network_policy": "IP sockets, DNS and connect denied; local AF_UNIX constructors allowed for ASGI. Synthetic pilot denied all socket events.",
+  "usd_retained_source_compatibility": {
+    "source_body_sha256": "b1d48d703acb9cf3f60aaa852af3b91f4c463c554bf1a3d1bbf0ae55d0e977a3",
+    "source_receipt_sha256": "78a7c0def1eab8dd18eb1cfe065ff4e21b5c24b4f96f15825a22993edd603f28",
+    "body_bytes": 3457609,
+    "body_and_receipt_unchanged": true,
+    "source_eps": {
+      "value": "-12.16",
+      "unit": "USD/shares",
+      "currency": "USD",
+      "reference_id": "E1",
+      "concept": "us-gaap:EarningsPerShareDiluted",
+      "share_basis": "diluted",
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "filed_at": "2026-02-27",
+      "document_ref": {
+        "reference_id": "sec:1520697:0001193125-26-078266:us-gaap:EarningsPerShareDiluted",
+        "title": "10-K filed 2026-02-27 \u00b7 Earnings Per Share, Diluted",
+        "provider": "SEC EDGAR",
+        "url": "https://www.sec.gov/Archives/edgar/data/1520697/000119312526078266/0001193125-26-078266-index.htm",
+        "published_at": "2026-02-27"
+      },
+      "period_basis": "fiscal_year",
+      "document_type": "10-K",
+      "source_consistency_reconstructed": true,
+      "independently_adjudicated": false
+    },
+    "values": {
+      "assumed_terminal_price": "100",
+      "terminal_price_factor": "1.5625",
+      "cumulative_price_change": "0.5625",
+      "annualized_price_change": "0.2500000000000000000000000000000000000000000000000"
+    },
+    "reporting_currency": "USD",
+    "fx_conversion_performed": false,
+    "adr_conversion_performed": false,
+    "limitations": [
+      "No external dispatch, live pilot, JWT acceptance or production activation.",
+      "Directory, authenticated request state and UTC clock injected for offline replay.",
+      "Assumptions are invented demonstrations, not actual user choices or forecasts.",
+      "Source references are new offline reconstructions, not original pilot admissions.",
+      "Historical ledgers not revalidated in this checkout."
+    ]
+  },
+  "original_logs": {
+    "focused_before_cleanup": "........................................................................ [ 17%]\n........................................................................ [ 34%]\n........................................................................ [ 51%]\n........................................................................ [ 69%]\n........................................................................ [ 86%]\n.........................................................                [100%]\n=============================== warnings summary ===============================\ntests/test_eur_annual_eps_scenarios.py::test_http_preserves_form_currency_concept_units_and_hypothesis[20-F/A-evaluate_growth_scenario-basic]\ntests/test_eur_annual_eps_scenarios.py::test_http_preserves_form_currency_concept_units_and_hypothesis[20-F/A-evaluate_growth_scenario-diluted]\ntests/test_eur_annual_eps_scenarios.py::test_http_preserves_form_currency_concept_units_and_hypothesis[10-K-solve_required_earnings_growth-basic]\ntests/test_eur_annual_eps_scenarios.py::test_http_preserves_form_currency_concept_units_and_hypothesis[10-K-evaluate_earnings_recovery_scenario-basic]\ntests/test_eur_annual_eps_scenarios.py::test_http_does_not_fall_back_to_other_currency[EUR-USD]\ntests/test_conditional_valuation_api.py::test_currency_latest_period_identity_and_source_pair_gaps_are_not_filled[<lambda>-annual_reporting_currency1]\n  /workspace/scratch/a974112f317d/ClearSignal-eur-annual-eps/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['AnyIO worker thread']\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n417 passed, 6 warnings in 3.03s\n",
+    "final_related": "........................................................................ [  4%]\n........................................................................ [  9%]\n........................................................................ [ 13%]\n........................................................................ [ 18%]\n........................................................................ [ 23%]\n........................................................................ [ 27%]\n........................................................................ [ 32%]\n........................................................................ [ 37%]\n........................................................................ [ 41%]\n........................................................................ [ 46%]\n........................................................................ [ 50%]\n........................................................................ [ 55%]\n........................................................................ [ 60%]\n........................................................................ [ 64%]\n........................................................................ [ 69%]\n........................................................................ [ 74%]\n........................................................................ [ 78%]\n........................................................................ [ 83%]\n........................................................................ [ 87%]\n........................................................................ [ 92%]\n........................................................................ [ 97%]\n...........................................                              [100%]\n=============================== warnings summary ===============================\ntests/test_launch_security.py::TestAskEndpointWiring::test_anonymous_ask_rejected_when_auth_enabled\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n1555 passed, 1 warning in 26.21s\n",
+    "synthetic_pilot": "....................................                                     [100%]\n36 passed in 22.32s\n",
+    "cleanup_removal_mutation_expected_failure": "F                                                                        [100%]\n=================================== FAILURES ===================================\n_ test_request_harness_waits_for_its_worker_exit_without_disabling_leak_checks _\ntests/test_eur_annual_eps_scenarios.py:242: in test_request_harness_waits_for_its_worker_exit_without_disabling_leak_checks\n    assert join_started.wait(timeout=5), 'Request harness did not join its stopped worker'\nE   AssertionError: Request harness did not join its stopped worker\nE   assert False\nE    +  where False = wait(timeout=5)\nE    +    where wait = <threading.Event at 0x7f5b24985150: unset>.wait\n=========================== short test summary info ============================\nFAILED tests/test_eur_annual_eps_scenarios.py::test_request_harness_waits_for_its_worker_exit_without_disabling_leak_checks\n1 failed in 5.48s\n"
+  }
+}

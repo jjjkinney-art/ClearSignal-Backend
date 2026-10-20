@@ -7,7 +7,7 @@ from decimal import Decimal
 from typing import Sequence
 
 from ..providers.sec_client import SecFactRecord
-from ..providers.sec_fact_policy import ANNUAL_FORM_PREFIXES, REPORTING_CURRENCIES
+from ..providers.sec_fact_policy import ANNUAL_FORM_PREFIXES, REPORTING_CURRENCIES, PER_SHARE_UNITS
 from ..schemas import RetrievedEvidence
 from .provenance import Provenance, QuantitativeClaim
 from .sec_fact_binding import bind_sec_fact
@@ -39,6 +39,9 @@ def _value(value: int | float, unit: str) -> str:
     if unit == "USD/shares":
         amount = Decimal(str(value))
         return f"${amount:,.2f} per share"
+    if unit == "EUR/shares":
+        amount = Decimal(str(value))
+        return f"{amount:,.2f} EUR per share"
     raise ValueError("unsupported SEC fact unit")
 
 
@@ -107,6 +110,8 @@ def _verified_claim(
         value_text = f"{exact} shares"
     elif record.unit == "USD/shares":
         value_text = f"${exact} per share"
+    elif record.unit == "EUR/shares":
+        value_text = f"{exact} EUR per share"
     else:
         return None
     claim = QuantitativeClaim(
@@ -134,7 +139,7 @@ def _verified_claim(
                   else f"year-to-date period {record.start} to {record.end}")
         ),
         "scope": "consolidated",
-        "currency": record.unit if record.unit in REPORTING_CURRENCIES else "USD" if record.unit == "USD/shares" else None,
+        "currency": record.unit if record.unit in REPORTING_CURRENCIES else record.unit.split("/")[0] if record.unit in PER_SHARE_UNITS else None,
         "label": record.label,
     })
     if attribution := income_attribution(record.concept):
@@ -150,7 +155,7 @@ def comparable_metric_evidence(
 ) -> RetrievedEvidence | None:
     """Return a latest-versus-prior-period fact, or fail closed on ambiguity."""
     if (not ticker or not expected_cik.isdigit() or not concepts or not metric_name
-            or unit not in {*REPORTING_CURRENCIES, "shares", "USD/shares"}):
+            or unit not in {*REPORTING_CURRENCIES, "shares", *PER_SHARE_UNITS}):
         return None
     eligible = [
         record for record in records

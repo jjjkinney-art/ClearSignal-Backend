@@ -2,6 +2,7 @@
 import asyncio
 from copy import deepcopy
 import json
+import threading
 from dataclasses import replace
 from datetime import date
 
@@ -58,7 +59,18 @@ def post(data=None,raw=None,uid='owner',denied=False,headers=None):
         async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app),base_url='https://test.invalid') as client:
             return await client.post('/research/valuation-scenarios',content=raw if raw is not None else json.dumps(payload() if data is None else data),
                 headers={'content-type':'application/json',**(headers or {})})
-    return asyncio.run(go())
+    workers_before=set(threading.enumerate())
+    try:
+        return asyncio.run(go())
+    finally:
+        # asyncio root-task completion signals AnyIO workers to stop, but does
+        # not join them. Bound and verify this request harness's own cleanup;
+        # keep the global thread-leak guard and production deadlines intact.
+        workers=[t for t in threading.enumerate() if t not in workers_before
+                 and t.name=='AnyIO worker thread']
+        for worker in workers:
+            worker.join(timeout=5)
+        assert not any(worker.is_alive() for worker in workers), 'Scenario test worker failed to stop'
 
 
 def test_default_is_off_and_old_imports_are_exact_compatibility_objects():
@@ -158,7 +170,7 @@ def test_stream_overflow_is_checked_when_declared_length_is_absent_or_misleading
 
 @pytest.mark.parametrize('change,stage',[
     (lambda rows:[replace(x,cik='9999999') for x in rows],'annual_diluted_eps'),
-    (lambda rows:[replace(x,form='20-F') for x in rows],'annual_diluted_eps'),
+    (lambda rows:[replace(x,form='6-K') for x in rows],'annual_diluted_eps'),
     (lambda rows:[x for x in rows if x.concept!='Assets'],'latest_annual_reporting_period'),
     (lambda rows:[replace(x,unit='EUR') if x.concept=='Assets' else x for x in rows],'annual_reporting_currency'),
     (lambda rows:rows+[replace(rows[-1],unit='EUR')],'annual_reporting_currency'),
