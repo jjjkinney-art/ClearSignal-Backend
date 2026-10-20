@@ -8,6 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**21 October named-segment competitive context (offline):** a shared explicit
+segment-subject rule preserves competition context previously missed in the
+retained NPK filing. The exact segment quote, scope and citation survive the
+normal core-thesis pipeline; no company-wide advantage is inferred and the
+answer remains partial. See `NAMED_SEGMENT_COMPETITION_20261021.md`. Retained
+before/after replay and 28 new tests cover the narrow increment. Independent
+source/usefulness review, company-level competition, valuation/risk materiality
+and the existing development/holdout benchmark remain open. No live run or
+spending authority is created and no new coverage percentage is claimed.
+
 **20 October completed-turn retry repair and owned HTTP acceptance (offline):**
 Normal authenticated `/ask` now returns the first saved response when its explicit
 owner/conversation/request reference is retried, preserving citations and History

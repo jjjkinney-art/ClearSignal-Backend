@@ -329,6 +329,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             reference_id = ref["id"]
         row = {"claim": item.summary, "reference_id": reference_id,
                "claim_kind": value["claim_kind"]}
+        if value.get('competition_scope'):
+            # Preserve the source's segment boundary through the final answer;
+            # this does not fill the company-level competitive-position gap.
+            row['competition_scope'] = dict(value['competition_scope'])
         if value.get("issuer_relationship"):
             row["issuer_relationship"] = value["issuer_relationship"]
         elif value["claim_kind"] == "issuer_disclosed_risk":

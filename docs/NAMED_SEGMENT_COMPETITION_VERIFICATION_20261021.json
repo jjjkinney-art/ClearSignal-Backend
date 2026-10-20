@@ -1,0 +1,166 @@
+{
+  "base_commit": "daa095f3c1038be2a228d9b958cbcbf07e3e1f3e",
+  "date_auckland": "2026-10-21",
+  "results": {
+    "new_tests": 28,
+    "new_plus_existing_competition_tests": 62,
+    "related_tests": 595,
+    "collection": 18393,
+    "import_routes": 136,
+    "baseline_competition_claims": 0,
+    "candidate_competition_claims": 1,
+    "preserved_financial_comparisons": 4,
+    "preserved_business_descriptions": 1,
+    "preserved_risks": 2,
+    "external_provider_requests": 0,
+    "model_calls": 0
+  },
+  "runtime": "CPython 3.11.9; all 20 direct requirement pins match",
+  "network_guard_source": "import sys,socket\nsys.path[:0]=['.','tests']\nsocket.has_ipv6=False\ndef guard(event,args):\n    if event.startswith('socket.') and not (event=='socket.__new__' and args[1]==socket.AF_UNIX):\n        raise RuntimeError('external network forbidden during offline validation')\nsys.addaudithook(guard)\nimport pytest\nraise SystemExit(pytest.main(sys.argv[1:]))\n",
+  "test_environment": {
+    "PATH": "/usr/bin:/bin",
+    "OPENAI_API_KEY": "TEST_ONLY",
+    "SEC_USER_AGENT": "Test contact@example.invalid"
+  },
+  "focused_files": [
+    "tests/test_segment_competition_context.py",
+    "tests/test_thesis_competition.py"
+  ],
+  "related_files": [
+    "tests/test_segment_competition_context.py",
+    "tests/test_thesis_competition.py",
+    "tests/test_competition_reference_failure.py",
+    "tests/test_thesis_disclosures.py",
+    "tests/test_financial_thesis_foundation.py",
+    "tests/test_business_context_coverage.py",
+    "tests/test_product_distribution_business.py",
+    "tests/test_risk_financial_monitoring.py",
+    "tests/test_operating_risk_mechanisms.py",
+    "tests/test_issuer_risk_evidence.py",
+    "tests/test_source_evidence_latency.py",
+    "tests/test_owned_annual_eps_ask.py"
+  ],
+  "pytest_invocation": "env -i [test_environment] /PATH/TO/PINNED/python -I -B /PATH/TO/network_guard.py -q [files]",
+  "logs": {
+    "focused": {
+      "original_log_sha256": "df7a4606cf6378ee8dce000d76cd3dd829c4753cedf2ff914f549e4911694b69",
+      "log": "..............................................................           [100%]\n62 passed in 0.70s\n"
+    },
+    "related": {
+      "original_log_sha256": "bd1275f09ddd3f31446474f0a25b6b5acb76b7096ff44fd0a6aa39f6a873a1b8",
+      "log": "........................................................................ [ 12%]\n........................................................................ [ 24%]\n........................................................................ [ 36%]\n........................................................................ [ 48%]\n........................................................................ [ 60%]\n........................................................................ [ 72%]\n........................................................................ [ 84%]\n........................................................................ [ 96%]\n...................                                                      [100%]\n=============================== warnings summary ===============================\ntests/test_source_evidence_latency.py::test_broad_cited_thesis_returns_partial_financial_foundation_without_models[NetIncomeLoss-net income-ACHC-1520697]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-1_0', 'ThreadPoolExecutor-1_2', 'ThreadPoolExecutor-1_3']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_broad_cited_thesis_returns_partial_financial_foundation_without_models[OperatingIncomeLoss-operating income-AAPL-320193]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-2_3']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[AAPL]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-4_0', 'ThreadPoolExecutor-4_1', 'ThreadPoolExecutor-4_2']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[MSFT]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-5_0', 'ThreadPoolExecutor-5_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[AA]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-9_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[WDFC]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-12_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[COST]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-14_1', 'ThreadPoolExecutor-14_2']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[XOM]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-18_0', 'ThreadPoolExecutor-18_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[CRM]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-31_0', 'ThreadPoolExecutor-31_1']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[KHC]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-32_0']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_every_cohort_question_skips_models_and_returns_honest_gap[NVO]\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-36_2']\n    warnings.warn(\n\ntests/test_source_evidence_latency.py::test_historical_replay_does_not_fetch_current_release\n  <checkout>/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-50_0']\n    warnings.warn(\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n595 passed, 12 warnings in 23.63s\n"
+    },
+    "collection": {
+      "original_log_sha256": "69a2277ba4e3585c8e9207cc4393684305896ce1e2296636e5b5ff2ae821bf2e",
+      "log": "../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n=========================== short test summary info ============================\nSKIPPED [1] tests/test_analysis.py:12: Obsolete test module superseded by test_backend\n18393 tests collected in 28.28s\n",
+      "log_scope": "Last eight lines; hash covers original full log."
+    },
+    "import": {
+      "original_log_sha256": "023ef8cf6e08c7ffd8c774417ca5d85c6af4b1dbab6ab0c3a2f7d41b9796569e",
+      "log": "2026-10-20T17:29:56 | INFO | app.main | [cors] origins=['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'] credentials=True production=False\n[conviction_modeler] MATRIX_CONVICTION_MODEL_ACTIVE schema=7-linear-4i matrix_enabled=True durability_high=0.6 durability_mid=0.4\nroutes: 136\n"
+    },
+    "runtime_pins": {
+      "original_log_sha256": "24b092595727b0449dd79727a6a42c8720694dc2fd9253b80739e32a9787085b",
+      "log": "runtime: 3.11.9 direct pins checked: 20 mismatches: []\n"
+    },
+    "retained_replay": {
+      "original_log_sha256": "5083095bcedfa1a5e8df9307c9c09fcd07f1e628dbac0d7d8a637b44d9ebc6b9",
+      "log": "[conviction_modeler] MATRIX_CONVICTION_MODEL_ACTIVE schema=7-linear-4i matrix_enabled=True durability_high=0.6 durability_mid=0.4\n{\"baseline_competition_claims\": 0, \"candidate_competition_claims\": 1, \"external_requests\": 0, \"model_calls\": 0, \"still_partial\": true}\n"
+    }
+  },
+  "ci_group_replicas": [
+    {
+      "name": "Launch-security & reproducibility",
+      "args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_launch_security.py",
+        "tests/test_launch_access_policy.py",
+        "tests/test_rate_limit_middleware.py",
+        "tests/test_dependency_pinning.py"
+      ],
+      "exit_code": 0,
+      "original_log_sha256": "b82a8d822e75e44973ee1e9b605fc04cf7f47849e4f60bfc4efec951ce42454d",
+      "log": "........................................................................ [ 86%]\n...........                                                              [100%]\n=============================== warnings summary ===============================\ntests/test_launch_security.py::TestAskEndpointWiring::test_anonymous_ask_rejected_when_auth_enabled\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n83 passed, 1 warning in 2.15s\n"
+    },
+    {
+      "name": "Production router regression",
+      "args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_health_head.py",
+        "tests/test_portfolio_router.py",
+        "tests/test_scenario_router.py",
+        "tests/test_notifications_router.py",
+        "tests/test_watchlist_db_backed.py",
+        "tests/test_watchlist_scope_service.py",
+        "tests/test_auth_scoping.py",
+        "tests/test_brief_material_change_service.py"
+      ],
+      "exit_code": 0,
+      "original_log_sha256": "4cc9d2a4108f70fccf0c6f0b292621feed1e37d479f489f61413be9d9de4b5ce",
+      "log": "........................................................................ [ 82%]\n...............                                                          [100%]\n=============================== warnings summary ===============================\ntests/test_health_head.py::TestHeadRequests::test_head_returns_200[/]\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n87 passed, 1 warning in 17.45s\n"
+    },
+    {
+      "name": "Auth & billing",
+      "args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_alembic_migrations.py",
+        "tests/test_services/test_auth_routes.py",
+        "tests/test_services/test_auth_middleware.py",
+        "tests/test_services/test_billing_routes.py",
+        "tests/test_services/test_billing_observability.py",
+        "tests/test_billing_checkout_webhook.py",
+        "tests/test_services/test_stripe_service.py",
+        "tests/test_services/test_webhook_service.py"
+      ],
+      "exit_code": 0,
+      "original_log_sha256": "0098919bf2d81e0890cbef60242c7c8876cb67347f9e3afe806dc5630fcd3222",
+      "log": "........................................................................ [ 32%]\n........................................................................ [ 65%]\n........................................................................ [ 97%]\n.....                                                                    [100%]\n=============================== warnings summary ===============================\n../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51\n  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.\n    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n221 passed, 1 warning in 20.67s\n"
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_conviction_integration.py",
+        "tests/test_conviction_modeler.py",
+        "tests/test_directional_stance.py"
+      ],
+      "exit_code": 0,
+      "original_log_sha256": "8c70c7c1abd7796d1a9623b39274220424e5e635fb20782d7f00e7ceece47c3e",
+      "log": "........................................................................ [ 40%]\n........................................................................ [ 80%]\n..................................                                       [100%]\n178 passed in 1.55s\n"
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "args": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_company_detection.py",
+        "tests/test_company_routing.py",
+        "tests/test_question_anchored_valuation.py",
+        "tests/test_comparative_ranking.py",
+        "tests/test_production_acceptance_validator.py",
+        "tests/test_beta_launch_validator.py",
+        "tests/benchmark/v4_analog_usefulness.py",
+        "tests/benchmark/v9_blind_analyst_evaluation.py"
+      ],
+      "exit_code": 0,
+      "original_log_sha256": "6fc89a21c6155951ec6b403e2f396ae7db292e5f8d5bc543e5911fbf7d5ec872",
+      "log": "........................................................................ [ 36%]\n........................................................................ [ 73%]\n...................................................                      [100%]\n195 passed in 2.35s\n"
+    }
+  ],
+  "replay_sha256": "79317e9f0d60ffdd82082261eb73c3411909bad581a01d272ed0926914c3f1c1",
+  "limitations": [
+    "Hosted CI and full isolated-per-file regression pending on published head.",
+    "Combined related selection retains 12 known executor teardown warning-class occurrences; none suppressed or claimed fixed.",
+    "Retained body/receipt integrity is verified, not independent source-origin authenticity, fresh source access or launch acceptance.",
+    "No new live approval or full historical run inventory revalidation; existing records untouched."
+  ]
+}
