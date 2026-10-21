@@ -1,0 +1,250 @@
+{
+  "base_commit": "4a4dc586bca2c6db2642e35ed1741a002b234404",
+  "runtime": "CPython 3.11.9",
+  "matching_direct_requirement_pins": 20,
+  "source_files_sha256": {
+    "app/services/conditional_scenario_explanation.py": "d6dac45797a6dd3a90d30a477e86b5e43f9f578af00e729f1e943a2e09331614",
+    "app/services/conditional_valuation_service.py": "52ad42d79b7a512fdbdf3d0006e58f3c4363722139c484b1ba32cebcfe10dc0c",
+    "tests/test_conditional_scenario_explanation.py": "ce949f521df5cde2f967138789576d4b5f6de6926b413aecbbcd8408500710f3",
+    "scripts/replay_retained_eps_scenarios.py": "64d21decd18f443abd52473420cefb288d2c0b507a665ee9a5924118c973d7ef",
+    "docs/CONDITIONAL_SCENARIO_EXPLANATION_20261021.md": "7cfc483c90af8052594d3ba252e16a7c1a9ce695ed3b5bdf43464f471592c565",
+    "docs/CONDITIONAL_SCENARIO_EXPLANATION_REPLAY_20261021.json": "35d2795337b3d98f77dbc55299dbb8061c6595e8bee41272bd622724cc970add",
+    "docs/UNIVERSAL_PUBLIC_INTELLIGENCE_ROADMAP.md": "c072147f8f2b53e571e3a9e6b8d0099a1507d2c4f05cf87f44050e3ada35ef61"
+  },
+  "validation": [
+    {
+      "name": "new focused tests: 29 passed",
+      "log_sha256": "6a75f1b4d7a7c1b4f91c267d0200ebb54e0db8b722aad09bad7808123b8f5f4b",
+      "log_tail": [
+        ".............................                                            [100%]",
+        "29 passed in 0.70s"
+      ]
+    },
+    {
+      "name": "related scenario/account/source/math tests: 406 passed (includes focused tests)",
+      "log_sha256": "729650a4cd176303b17e17cd8dd697de3b1a54ea70a9b151b83faa40aef60409",
+      "log_tail": [
+        "........................................................................ [ 17%]",
+        "........................................................................ [ 35%]",
+        "........................................................................ [ 53%]",
+        "........................................................................ [ 70%]",
+        "........................................................................ [ 88%]",
+        "..............................................                           [100%]",
+        "406 passed in 25.97s"
+      ]
+    },
+    {
+      "name": "14-case retained HTTP replay: 6 explanations; 3 source gaps; 3 recovery rejections; 2 feature/auth guards",
+      "log_sha256": "43bc27a31784bcb8472dd8835340dcac0726d4165777d13dbba41fe64f6bb916",
+      "log_tail": [
+        "{\"cases\": 14, \"successful_scenarios\": 6, \"explicit_source_gaps\": 3, \"positive_eps_recovery_rejections\": 3, \"feature_and_auth_checks\": 2, \"external_requests\": 0, \"body_hashes_unchanged\": true}"
+      ]
+    }
+  ],
+  "ci_replica_and_collection": [
+    {
+      "name": "Launch-security & reproducibility",
+      "returncode": 0,
+      "tail": [
+        "...........                                                              [100%]",
+        "=============================== warnings summary ===============================",
+        "tests/test_launch_security.py::TestAskEndpointWiring::test_anonymous_ask_rejected_when_auth_enabled",
+        "  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.",
+        "    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]",
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "83 passed, 1 warning in 3.73s"
+      ],
+      "log_sha256": "3325c51879ff6fa42e8fcfc1456a40762c4c47495d0f26fea503441d39ee9a5f"
+    },
+    {
+      "name": "Production router regression",
+      "returncode": 0,
+      "tail": [
+        "...............                                                          [100%]",
+        "=============================== warnings summary ===============================",
+        "tests/test_health_head.py::TestHeadRequests::test_head_returns_200[/]",
+        "  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.",
+        "    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]",
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "87 passed, 1 warning in 26.20s"
+      ],
+      "log_sha256": "e1af26db48c2385ee6ba7fe4ab180204d2d2c54958134814bf077801bad55721"
+    },
+    {
+      "name": "Auth & billing",
+      "returncode": 0,
+      "tail": [
+        ".....                                                                    [100%]",
+        "=============================== warnings summary ===============================",
+        "../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51",
+        "  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.",
+        "    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]",
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "221 passed, 1 warning in 29.23s"
+      ],
+      "log_sha256": "549854232155e83818e42bdee4a0a58223b4c2c9e0ccacd637ef8c6703b50d83"
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "returncode": 0,
+      "tail": [
+        "........................................................................ [ 40%]",
+        "........................................................................ [ 80%]",
+        "..................................                                       [100%]",
+        "178 passed in 2.11s"
+      ],
+      "log_sha256": "a2a2ba57eea6a40c8b8bf21c70bf8edceea733a3ee879403fb4e783a0b7f1d2a"
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "returncode": 0,
+      "tail": [
+        "...................................................                      [100%]",
+        "=============================== warnings summary ===============================",
+        "tests/test_question_anchored_valuation.py::TestRouterPipelineIntentFlow::test_pipeline_stamps_question_intent_on_thesis",
+        "  /workspace/scratch/a974112f317d/ClearSignal-scenario-explanation/conftest.py:388: RuntimeWarning: Test left non-daemon threads alive: ['ThreadPoolExecutor-23_0', 'ThreadPoolExecutor-23_1']",
+        "    warnings.warn(",
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "195 passed, 1 warning in 3.24s"
+      ],
+      "log_sha256": "6b66ce6ab5ac11475c27eb4d5b023833843f36251e3f6abec577f47dfa5e449a"
+    },
+    {
+      "name": "collection",
+      "returncode": 0,
+      "tail": [
+        "",
+        "=============================== warnings summary ===============================",
+        "../ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51",
+        "  /workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/lib/python3.11/site-packages/starlette/testclient.py:51: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.",
+        "    _PortalFactoryType = Callable[[], AbstractContextManager[anyio.abc.BlockingPortal]]",
+        "",
+        "-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html",
+        "18474 tests collected in 34.51s"
+      ],
+      "log_sha256": "d3c09b5403fbb7b9ea1a3d9b894f2cdd1b85883a149d87226c539ba87117c13d"
+    },
+    {
+      "name": "import_smoke",
+      "returncode": 0,
+      "output": "[conviction_modeler] MATRIX_CONVICTION_MODEL_ACTIVE schema=7-linear-4i matrix_enabled=True durability_high=0.6 durability_mid=0.4\nroutes: 136\n2026-10-20T21:18:08 | INFO | app.main | [cors] origins=['http://localhost:3000', 'http://localhost:5173', 'http://127.0.0.1:3000', 'http://127.0.0.1:5173'] credentials=True production=False\n"
+    }
+  ],
+  "ci_group_commands": [
+    {
+      "name": "Launch-security & reproducibility",
+      "arguments": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_launch_security.py",
+        "tests/test_launch_access_policy.py",
+        "tests/test_rate_limit_middleware.py",
+        "tests/test_dependency_pinning.py"
+      ]
+    },
+    {
+      "name": "Production router regression",
+      "arguments": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_health_head.py",
+        "tests/test_portfolio_router.py",
+        "tests/test_scenario_router.py",
+        "tests/test_notifications_router.py",
+        "tests/test_watchlist_db_backed.py",
+        "tests/test_watchlist_scope_service.py",
+        "tests/test_auth_scoping.py",
+        "tests/test_brief_material_change_service.py"
+      ]
+    },
+    {
+      "name": "Auth & billing",
+      "arguments": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_alembic_migrations.py",
+        "tests/test_services/test_auth_routes.py",
+        "tests/test_services/test_auth_middleware.py",
+        "tests/test_services/test_billing_routes.py",
+        "tests/test_services/test_billing_observability.py",
+        "tests/test_billing_checkout_webhook.py",
+        "tests/test_services/test_stripe_service.py",
+        "tests/test_services/test_webhook_service.py"
+      ]
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "arguments": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_conviction_integration.py",
+        "tests/test_conviction_modeler.py",
+        "tests/test_directional_stance.py"
+      ]
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "arguments": [
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_company_detection.py",
+        "tests/test_company_routing.py",
+        "tests/test_question_anchored_valuation.py",
+        "tests/test_comparative_ranking.py",
+        "tests/test_production_acceptance_validator.py",
+        "tests/test_beta_launch_validator.py",
+        "tests/benchmark/v4_analog_usefulness.py",
+        "tests/benchmark/v9_blind_analyst_evaluation.py"
+      ]
+    }
+  ],
+  "test_execution": {
+    "interpreter": "/workspace/scratch/a974112f317d/ClearSignal-monitoring-live/.venv/bin/python",
+    "argv_prefix": [
+      "-I",
+      "-B",
+      "/tmp/clearsignal_scenario_guard.py"
+    ],
+    "environment": {
+      "PATH": "/usr/bin:/bin",
+      "OPENAI_API_KEY": "TEST_ONLY",
+      "SEC_USER_AGENT": "Test contact@example.invalid"
+    },
+    "ambient_environment_removed": true,
+    "network_guard": "Python audit hook rejects socket events except AF_UNIX socket construction; socket.has_ipv6=False; sys.path adds checkout and tests; pytest.main receives arguments. No real credential files or live provider/model requests are used.",
+    "related_arguments": [
+      "-q",
+      "tests/test_conditional_scenario_explanation.py",
+      "tests/test_conditional_valuation_api.py",
+      "tests/test_conditional_valuation_account_boundary.py",
+      "tests/test_source_anchored_valuation.py",
+      "tests/test_basic_eps_scenarios.py",
+      "tests/test_eur_annual_eps_scenarios.py",
+      "tests/test_earnings_recovery_scenario.py",
+      "tests/test_valuation_scenario_checker.py"
+    ]
+  },
+  "retained_response_parity": {
+    "baseline": "docs/ASML_NPK_RETAINED_EPS_APPLICATION_REPLAY_20261020.json",
+    "baseline_sha256": "a11a482657a900a04d7805f273801b021e5903bf08cde78182ea2659dc4e924d",
+    "cases": 14,
+    "assertion": "Remove only response.explanation from new cases; all 14 case objects equal baseline exactly as JSON values."
+  },
+  "limitations": [
+    "Offline checks, not hosted CI. Full isolated-per-file repository regression is delegated to required hosted CI before merge.",
+    "One release-closure group reported an existing ThreadPoolExecutor teardown warning. The guard was not suppressed and policy deadlines were not changed.",
+    "Retained body integrity and producer consistency are not independent origin/factual adjudication.",
+    "Scenario feature default remains false. No /ask integration, persistence, activation, live execution or new spending authority.",
+    "All twelve prior live approvals remain consumed; complete historical inventories were not independently revalidated here.",
+    "No broader company-quality percentage or launch acceptance established."
+  ]
+}

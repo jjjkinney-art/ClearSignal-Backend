@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**21 October explicit-scenario explanations (offline):** the separate,
+default-disabled scenario endpoint now composes historical EPS citations,
+explicit assumptions and conditional growth/required-growth/recovery results.
+Display rounding is marked and exact calculation values are preserved. Six
+retained ASML/NPK scenarios exercise this presentation without live requests;
+source gaps remain explicit. See `CONDITIONAL_SCENARIO_EXPLANATION_20261021.md`.
+This is a presentation increment, not `/ask` integration, production activation,
+expected-return/attractiveness assessment or broad-company launch acceptance.
+User assumption entry, owned persistence, independent usefulness review and the
+frozen development/holdout benchmark remain open; no new live authority follows.
+
 **21 October source-thesis wording parity (offline):** explicit source requests
 using “Explain …” or possessive company wording now retain the same partial
 financial foundation and unanswered thesis parts as the canonical prompt.
