@@ -24,8 +24,8 @@ holdout answers to choose a repair. All twelve live approvals remain consumed.
 ## Content assessment of exposed development evidence
 
 This is an unblinded engineering assessment, not an independent usefulness
-review, blind score, factual adjudication or new benchmark run. No new source
-bytes were downloaded and no source-origin authenticity was established here.
+review, blind score, factual adjudication or new benchmark run. Previously retained source bytes were recovered later in this session; no new
+provider request or source-origin authenticity was established here.
 The existing six-case pilot and later replays are separate evidence; this
 assessment does not imply that all six pilot questions were rerun on current main.
 
@@ -97,6 +97,50 @@ development execution, frozen candidate/holdouts and signed-in personalization
 acceptance in the order already defined in `quality_gate_20261016/README.md`.
 This adds no new acceptance framework or execution authority.
 
+## Retained Business-section diagnosis completed in this session
+
+Recovered the repository-recorded PR292 archive
+`libfile_c29a29060af081918236d670982119d9`. The filing matches its retained
+receipt: 1,404,517 bytes and SHA-256
+`8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1`.
+Its receipt explicitly says independent origin verification is false.
+
+A standard-library diagnostic compiled unchanged selected definitions from the
+current ingestion/extraction modules and ran the existing section/sentence
+boundary functions. The complete normalized Business window is `[5751, 31290)`;
+164 sentence spans were examined. This is an isolated predicate diagnostic,
+not a full application replay: heading removal, exact named-issuer exceptions,
+producer selection, final admission and saved responses were not executed.
+Offsets below refer to the full normalized text, not raw HTML bytes or an
+arbitrary clipped excerpt. The diagnosis is limited to these definitions; no
+product behavior changed.
+
+| Normalized start offset | Passage context | Generic rejection | Implication |
+| --- | --- | --- | --- |
+| 6104 | Explicit Housewares/Small Appliance segment activities, followed by consumer-benefit language | `subject_or_activity` | Scope is explicit, but admitting the whole sentence as neutral business description needs promotional-language review. Do not clip out the factual-looking start. |
+| 6567 | Pronoun-led Defense manufacturing description, including ammunition calibers and multiple activities | `length` | The sentence exceeds the current cap; numbers also require distinguishing product specifications from financial facts. A higher cap alone would not resolve subject/basis safety. |
+| 7388 | “The segment also markets” product list | `subject_or_activity` | Exact segment identity is not stated in this sentence. Existing rejection is intentional; no identity may be guessed. |
+| 8201 | Dated sales exposure for cast and noncast/thermal products | `length` | The source contains potentially relevant numerical economics. It needs the numerical extraction/binding contract, not this qualitative sentence path. |
+| 9354 | Product distribution-channel sentence | admitted by generic predicate | Confirms why the replay contains channels while missing other facets. |
+| 15675 | Named subsidiary manufacturing activities for DOD customers/contractors | `subject_or_activity` | A subsidiary is not the exact directory issuer. Supporting parent/segment/subsidiary relationships needs explicit binding, not relaxed exact-issuer matching. |
+| 20827 | Explicit Safety segment composition naming Rely Innovations | `subject_or_activity` | A promising shared, explicitly scoped composition grammar to investigate; it would describe structure, not automatically operating activities or revenue. |
+| 30003 | Dated Defense backlog values | `numeric_or_forward_looking` | A potentially useful operating indicator exists in the retained text; preserve the issuer's definition and period/unit/segment bindings before admitting it. |
+
+This narrows the finding: absence of business economics in the output is NOT
+absence of relevant disclosure in this retained source. Several routes are
+involved—explicit segment composition, long/mixed prose, numerical disclosures
+and subsidiary relationships. The two-item selection cap is not established as
+the cause by this isolated diagnostic. It would be wrong to remove the numeric
+filter or reuse a subsidiary statement as an issuer-wide fact.
+
+The next product slice should investigate explicit named-segment composition
+with a separate structure-only role and exact source/final scope binding. Verify
+its actual retained-source extraction and unseen/adversarial synthetic forms
+before proposing merge. That bounded slice still would not complete products,
+revenue drivers, segment economics or competitive assessment. Numerical segment
+sales/backlog extraction is separate substantive follow-up. No new live request
+or benchmark execution is needed to investigate these retained passages.
+
 ## Reproducible input bindings and checks
 
 SHA-256 of the exact committed input files inspected in this session:
@@ -109,7 +153,8 @@ SHA-256 of the exact committed input files inspected in this session:
 
 These bind the reviewed repository artifacts, not source authenticity, freshness,
 or independent correctness. JSON parsing and word counting used the standard
-library only. Documentation-only change: no product tests rerun or historical
+library only. The isolated diagnostic also verified body hash/length and examined 164 sentence
+spans; this is not a full pipeline replay. Documentation-only change: no product tests rerun or historical
 test totals claimed as new results. No financial-provider/model requests,
 spending, source-body retention, benchmark changes, runtime/dependency changes,
 production activation or old-ledger resumption occurred. Broad-company quality
