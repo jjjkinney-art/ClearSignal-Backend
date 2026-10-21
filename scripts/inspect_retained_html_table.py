@@ -46,14 +46,16 @@ class TableInventory(HTMLParser):
             self.stack.append(table)
         elif self.stack and tag == 'tr':
             table = self.stack[-1]
+            if table['_row'] is not None or table['_cell'] is not None:
+                raise ValueError('unclosed row or cell before new row')
             row = {'html_start': self.source_position(), 'cells': []}
             table['rows'].append(row)
             table['_row'] = row
             table['_cell'] = None
         elif self.stack and tag in {'td', 'th'}:
             table = self.stack[-1]
-            if table['_row'] is None:
-                return
+            if table['_row'] is None or table['_cell'] is not None:
+                raise ValueError('cell outside row or unclosed preceding cell')
             cell = {'tag': tag, 'attributes': {k: v for k, v in attrs.items() if k in {'id', 'colspan', 'rowspan', 'headers', 'scope'}}, 'html_start': self.source_position(),
                     'html_end': None, 'text': '', 'inline_facts': [], '_parts': []}
             table['_row']['cells'].append(cell)
@@ -77,14 +79,20 @@ class TableInventory(HTMLParser):
         if not self.stack:
             return
         table = self.stack[-1]
-        if tag in {'td', 'th'} and table['_cell'] is not None:
+        if tag in {'td', 'th'}:
             cell = table['_cell']
+            if cell is None or cell['tag'] != tag:
+                raise ValueError('unmatched cell closing tag')
             cell['html_end'] = self.source.index('>', self.source_position()) + 1
-            cell['text'] = clean(' '.join(cell.pop('_parts')))
+            cell['text'] = clean(''.join(cell.pop('_parts')))
             table['_cell'] = None
         elif tag == 'tr':
+            if table['_row'] is None or table['_cell'] is not None:
+                raise ValueError('unmatched row or unclosed cell')
             table['_row'] = None
         elif tag == 'table':
+            if table['_row'] is not None or table['_cell'] is not None:
+                raise ValueError('unclosed row or cell before table end')
             table['html_end'] = self.source.index('>', self.source_position()) + 1
             self.stack.pop()
 

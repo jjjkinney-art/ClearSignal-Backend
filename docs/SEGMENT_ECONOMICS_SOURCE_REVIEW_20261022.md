@@ -134,10 +134,36 @@ Selected tables containing nested tables are refused; an innermost table can
 be selected explicitly. CSS/presentation attributes are omitted from the map.
 This is a review helper, not a general HTML or XBRL financial parser.
 
-Eight focused tests pass on Python 3.11.9 with external sockets denied. They
+Fourteen focused tests pass on Python 3.11.9 with external sockets denied. They
 cover exact Unicode source spans/hashes, entity decoding, sign/scale/context
 attribute preservation, colspan structure, hash/length/media mismatches,
 incomplete tables/cells, nested selection and invalid indices. The retained
 source map was regenerated and compared canonically, and all 544 selected cell
 spans were checked against the original HTML. No production module changes.
-Hosted CI remains a separate check after publication.
+The initial head passed hosted CI run `39601628048` (all 15 job steps).
+The review correction below requires fresh hosted CI at the corrected head.
+
+
+## Review correction
+
+Review of the inspection helper found two defects outside production code.
+Joining HTML text callbacks with inserted spaces could alter a numeric display
+literal split across inline markup (`<b>9</b>,292` became `9 ,292`). It now joins
+adjacent fragments exactly before collapsing existing whitespace. The helper
+also accepted some mismatched or implicitly closed cell/row tags despite its
+stated incomplete-structure rejection. It now requires matched cell tags and
+explicit row/cell closure, refusing malformed structures rather than completing
+them heuristically.
+
+Six additional regression cases cover split inline number text, mismatched
+closing tags, missing row closure, a new row before closure, cells outside rows
+and a new cell before closure. All fourteen tests pass with sockets denied.
+The corrected retained-source map changes seven selected cell whitespace strings
+and several table previews; all original source spans, table hashes, row/cell
+counts, inline attributes and numeric characters are unchanged. The seven cells
+contain loss-parenthesis display text, now without inserted leading spaces.
+Neither version normalizes their signs or amounts into financial claims.
+
+The source review remains unblinded and the production segment-economics
+implementation remains outstanding. The initial CI success is not a pass for
+the corrected head; fresh hosted CI must complete before merge.

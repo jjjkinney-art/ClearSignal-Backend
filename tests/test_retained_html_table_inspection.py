@@ -57,3 +57,20 @@ def test_nested_tables_require_explicit_innermost_selection():
 def test_invalid_index_cannot_select_another_table():
     with pytest.raises(ValueError, match='index'):
         inspect('<table></table>', -1)
+
+
+def test_inline_markup_does_not_insert_spaces_into_source_literals():
+    source = '<table><tr><td><b>9</b>,<span>292</span>.<i>50</i></td></tr></table>'
+    assert inspect(source)['selected_table']['rows'][0]['cells'][0]['text'] == '9,292.50'
+
+
+@pytest.mark.parametrize('source', [
+    '<table><tr><td>x</th></tr></table>',
+    '<table><tr><td>x</td></table>',
+    '<table><tr><td>x<tr><td>y</td></tr></table>',
+    '<table><td>x</td></table>',
+    '<table><tr><td>x<td>y</td></tr></table>',
+])
+def test_rejects_mismatched_or_implicitly_closed_table_structure(source):
+    with pytest.raises(ValueError):
+        inspect(source)
