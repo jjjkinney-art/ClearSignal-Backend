@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**21 October historical segment order context (offline):** one bounded pair of
+complete Business-section sentences can preserve explicit dated segment contract
+backlog amounts and their adjacent issuer definition. The ordinary retained NPK
+replay adds one Defense order-context claim while preserving all nine existing
+claims/citations, business coverage, inferences and gaps. Values retain printed
+symbols with unknown currency code; no growth, revenue conversion, forecast or
+valuation is inferred. See `SEGMENT_ORDER_CONTEXT_20261021.md`. Independent
+usefulness review, substantive products/revenue/segment economics and the existing
+development/holdout and signed-in launch gates remain open. No new live authority
+or activation follows.
+
 **21 October named-segment composition (offline):** the shared business producer
 can retain an explicit named segment's present composition without treating it
 as issuer-wide activities, ownership proof or revenue economics. The retained NPK

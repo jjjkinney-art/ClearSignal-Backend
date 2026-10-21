@@ -117,6 +117,10 @@ class RetrievedEvidence(BaseModel):
         default_factory=list,
         description="Producer-bound issuer competition descriptions; not independently verified advantages or market shares.",
     )
+    operating_disclosures: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Producer-bound historical operating-context quotes; not revenue, forecasts or normalized financial facts.",
+    )
     risk_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Producer-bound qualitative risk quotes; not verified outcomes or quantitative facts.",
