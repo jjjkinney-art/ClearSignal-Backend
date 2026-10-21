@@ -106,3 +106,19 @@ risk materiality and competitive strength still need substantive work. Independe
 factual/usefulness adjudication, development/holdout validation and signed-in
 personalized acceptance remain open. No company pass rate or launch-readiness
 percentage follows from this replay.
+
+## Review correction: serialization contract
+
+The first hosted run (`39584080230`, head `46e40ee`) completed the isolated
+regression loop with one failing file: `test_general_finance_evidence.py`.
+Its explicit serialization-key assertion had not been updated for the intended
+additive `operating_disclosures` field. The same failure reproduced locally
+(one failed, 42 passed). The contract test now names that field and checks its
+empty-list default, retaining the exact-key assertion. No runtime code, evidence
+admission rule or archived response changed in this correction.
+
+The corrected schema module plus the prior related suites pass 598 tests with
+external sockets denied. Original source/replay hashes and the nine-to-ten
+claim comparison were checked again. The correction record in the verification
+JSON preserves the failed run, before/after log hashes and exact changed test.
+A new hosted full run is still required; the original failed run is not a pass.

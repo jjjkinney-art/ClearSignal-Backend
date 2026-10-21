@@ -13,9 +13,10 @@
     "app/services/financial_thesis_foundation.py": "cb23f07b3ec18469541eca056f69d36afdbc7bb5591be17f35066e4f2cc85d32",
     "tests/test_segment_order_context.py": "54519ab5cdc4773d35c1b7cf22c3dbf35839890bd0ca59e7c121e1e39e36220f",
     "scripts/replay_retained_order_context.py": "59ba66faceb6ec3efe33fd6463749c2fcd4489b75fffa685405893f3ef1178a3",
-    "docs/SEGMENT_ORDER_CONTEXT_20261021.md": "43cf3a88d666a2ce7acd23439afb0b9215884a513416949df760a2a18f03b3c1",
+    "docs/SEGMENT_ORDER_CONTEXT_20261021.md": "bca8b39bd59dc11694a47c339007e2fd9d0b1c1ea4c687cf3a94d0c038706b18",
     "docs/SEGMENT_ORDER_CONTEXT_REPLAY_20261021.json": "7537ed02f5b28150dcbc70d2bc9b7ae6dc23d0f2e0be3eca8d500503113147f6",
-    "docs/UNIVERSAL_PUBLIC_INTELLIGENCE_ROADMAP.md": "d390b6a09a7f2bd625f56c41f9428fb2fabe89a5a3453591ff2b5dd17f2d575c"
+    "docs/UNIVERSAL_PUBLIC_INTELLIGENCE_ROADMAP.md": "d390b6a09a7f2bd625f56c41f9428fb2fabe89a5a3453591ff2b5dd17f2d575c",
+    "tests/test_general_finance_evidence.py": "6757d32ae0a4a402ef4fc4f55ab9e5ebe35ffde73d8238de62eebe049c17c58d"
   },
   "local_ci_groups": [
     {
@@ -163,5 +164,31 @@
     "The new evidence field is additive; supported thesis context increases by at most one excerpt from the same source document. No new fetch, normalization or forecast.",
     "Retained source responses and directory/date identity are injected; source origin and current availability are not independently established.",
     "No production auth/storage/browser, independent usefulness, development/holdout or broad-company launch pass."
-  ]
+  ],
+  "serialization_contract_correction": {
+    "failed_head": "46e40ee636d9a8a7ef83d38549f5e9837ec0891c",
+    "failed_workflow_run": 39584080230,
+    "failed_job": 119168538720,
+    "failed_test": "tests/test_general_finance_evidence.py::TestRetrievedEvidenceSchema::test_serialization",
+    "local_before": "1 failed, 42 passed",
+    "before_log_sha256": "7d1f9b351b9d912ca07e8ee74f1aa649608e95027cea7733baa2fca741976c08",
+    "fix": "Include the intended additive operating_disclosures field in the exact serialized key set and assert its empty-list default.",
+    "runtime_files_changed": [],
+    "corrected_related_passed": 598,
+    "corrected_related_files": [
+      "tests/test_general_finance_evidence.py",
+      "tests/test_segment_order_context.py",
+      "tests/test_named_segment_composition.py",
+      "tests/test_business_context_coverage.py",
+      "tests/test_thesis_disclosures.py",
+      "tests/test_product_distribution_business.py",
+      "tests/test_financial_thesis_foundation.py",
+      "tests/test_thesis_competition.py",
+      "tests/test_source_thesis_paraphrases.py",
+      "tests/test_source_answer.py"
+    ],
+    "corrected_related_log_sha256": "2096781a1a21b6a19bd60b04f2f455872b43c03d498f91050f1fd3c9954cdfab",
+    "source_and_retained_replay_hashes_rechecked": true,
+    "hosted_full_ci": "required on corrected head"
+  }
 }
