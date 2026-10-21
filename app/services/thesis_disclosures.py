@@ -363,6 +363,7 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
                                      stats=stats)
     stats.update(business_count=sum(bool(item.business_disclosures) for item in items),
                  competition_count=sum(bool(getattr(item, 'competition_disclosures', [])) for item in items),
+                 operating_context_count=sum(bool(item.operating_disclosures) for item in items),
                  risk_count=sum(bool(item.risk_disclosures) for item in items))
     logger.info("thesis disclosure retrieval diagnostic",
                 extra={"thesis_disclosure_diagnostics": stats})
@@ -426,6 +427,9 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         from .thesis_competition import extract_competition_descriptions
         competition = (extract_competition_descriptions(document, ticker=ticker, cik=cik)
                        if relationship is None else [])
+        from .segment_order_context import extract_order_context
+        orders = (extract_order_context(document, ticker=ticker, cik=cik)
+                  if relationship is None else [])
         if relationship is not None:
             diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
@@ -442,7 +446,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                     risks.append(item)
         # Source order, never an assertion that these are the most material risks.
         risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + competition + risks[:2]
+        return (quarterly_business + business)[:2] + competition + risks[:2] + orders
     except Exception as exc:
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):

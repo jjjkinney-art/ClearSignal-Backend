@@ -1,0 +1,194 @@
+{
+  "base_commit": "1d1f0b7dfb0875b70f58e87497219114ecc57be2",
+  "runtime": "CPython 3.11.9",
+  "direct_requirement_pins_unchanged": 20,
+  "new_tests": 54,
+  "related_passed": 555,
+  "collection": 18621,
+  "import_routes": 136,
+  "source_files_sha256": {
+    "app/schemas.py": "4d67120de4593d5e5ef8cf63e346d58cb20f2dbc1eae934a0a6a594870ae3726",
+    "app/services/segment_order_context.py": "3f7d7c1504b10a23269055b04ea67c1a10ddb95d091c3927ba6cd7feee8a5264",
+    "app/services/thesis_disclosures.py": "fb1b55eb0398b4f60d3a7b3b4f474bce9edb1e9fb218894d003c24fbb625b8d3",
+    "app/services/financial_thesis_foundation.py": "cb23f07b3ec18469541eca056f69d36afdbc7bb5591be17f35066e4f2cc85d32",
+    "tests/test_segment_order_context.py": "54519ab5cdc4773d35c1b7cf22c3dbf35839890bd0ca59e7c121e1e39e36220f",
+    "scripts/replay_retained_order_context.py": "59ba66faceb6ec3efe33fd6463749c2fcd4489b75fffa685405893f3ef1178a3",
+    "docs/SEGMENT_ORDER_CONTEXT_20261021.md": "bca8b39bd59dc11694a47c339007e2fd9d0b1c1ea4c687cf3a94d0c038706b18",
+    "docs/SEGMENT_ORDER_CONTEXT_REPLAY_20261021.json": "7537ed02f5b28150dcbc70d2bc9b7ae6dc23d0f2e0be3eca8d500503113147f6",
+    "docs/UNIVERSAL_PUBLIC_INTELLIGENCE_ROADMAP.md": "d390b6a09a7f2bd625f56c41f9428fb2fabe89a5a3453591ff2b5dd17f2d575c",
+    "tests/test_general_finance_evidence.py": "6757d32ae0a4a402ef4fc4f55ab9e5ebe35ffde73d8238de62eebe049c17c58d"
+  },
+  "local_ci_groups": [
+    {
+      "name": "Launch-security & reproducibility",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_launch_security.py",
+        "tests/test_launch_access_policy.py",
+        "tests/test_rate_limit_middleware.py",
+        "tests/test_dependency_pinning.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "b6fe6ec2bb9d840b1e07e033edb3288dbcde57669f180a7333c6d5122eb3e039",
+      "result": "83 passed, 1 warning in 3.74s"
+    },
+    {
+      "name": "Production router regression",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_health_head.py",
+        "tests/test_portfolio_router.py",
+        "tests/test_scenario_router.py",
+        "tests/test_notifications_router.py",
+        "tests/test_watchlist_db_backed.py",
+        "tests/test_watchlist_scope_service.py",
+        "tests/test_auth_scoping.py",
+        "tests/test_brief_material_change_service.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "b51e7d31930992a46ea5360642ba1708eae7cd593027588fc031d4e5f1d555bb",
+      "result": "87 passed, 1 warning in 22.35s"
+    },
+    {
+      "name": "Auth & billing",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_alembic_migrations.py",
+        "tests/test_services/test_auth_routes.py",
+        "tests/test_services/test_auth_middleware.py",
+        "tests/test_services/test_billing_routes.py",
+        "tests/test_services/test_billing_observability.py",
+        "tests/test_billing_checkout_webhook.py",
+        "tests/test_services/test_stripe_service.py",
+        "tests/test_services/test_webhook_service.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "8d9dffb9e74af27de655fb31a253b78eb6bad7344a39b25efe27d45c083c30f4",
+      "result": "221 passed, 2 warnings in 33.02s"
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_conviction_integration.py",
+        "tests/test_conviction_modeler.py",
+        "tests/test_directional_stance.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "21b668341d4447159d43fb3c9c55c8a211fdd7d29738640c2182466f6c5a280a",
+      "result": "178 passed in 2.92s"
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_company_detection.py",
+        "tests/test_company_routing.py",
+        "tests/test_question_anchored_valuation.py",
+        "tests/test_comparative_ranking.py",
+        "tests/test_production_acceptance_validator.py",
+        "tests/test_beta_launch_validator.py",
+        "tests/benchmark/v4_analog_usefulness.py",
+        "tests/benchmark/v9_blind_analyst_evaluation.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "aacbb6cea87032d096787def0b0eca4bba8cff3e6f09511020e31d6dc0431fd6",
+      "result": "195 passed in 4.67s"
+    }
+  ],
+  "related_files": [
+    "tests/test_segment_order_context.py",
+    "tests/test_named_segment_composition.py",
+    "tests/test_business_context_coverage.py",
+    "tests/test_thesis_disclosures.py",
+    "tests/test_product_distribution_business.py",
+    "tests/test_financial_thesis_foundation.py",
+    "tests/test_thesis_competition.py",
+    "tests/test_source_thesis_paraphrases.py",
+    "tests/test_source_answer.py"
+  ],
+  "related_log_sha256": "b2a7262cf877d3d4ba2e484e0b4d27825eafcdaab9019f92034aae874c3a86d8",
+  "collection_log_sha256": "5e0c3bfb2b753281b2a8351aa8377c2dadc5462230d97159907197d1d1828676",
+  "final_replay_canonical_sha256": "043fb2648903ebc89e73901b9a76a763887f49fb4a7fc2e33d3ba56fcf56d272",
+  "final_replay_equals_report_after_canonical_json": true,
+  "test_command_prefix": [
+    "python",
+    "-I",
+    "-B",
+    "<socket audit guard>",
+    "-q",
+    "-o",
+    "addopts="
+  ],
+  "validation_environment": {
+    "cleared": true,
+    "OPENAI_API_KEY": "TEST_ONLY",
+    "SEC_USER_AGENT": "Test contact@example.invalid",
+    "external_sockets": "denied; AF_UNIX construction permitted for local runtime"
+  },
+  "warnings": [
+    "Existing Starlette/AnyIO deprecation in three CI groups and collection; not suppressed or claimed repaired."
+  ],
+  "limitations": [
+    "All local groups and related tests passed; hosted full isolated-per-file repository CI is still required on the published head.",
+    "The new evidence field is additive; supported thesis context increases by at most one excerpt from the same source document. No new fetch, normalization or forecast.",
+    "Retained source responses and directory/date identity are injected; source origin and current availability are not independently established.",
+    "No production auth/storage/browser, independent usefulness, development/holdout or broad-company launch pass."
+  ],
+  "serialization_contract_correction": {
+    "failed_head": "46e40ee636d9a8a7ef83d38549f5e9837ec0891c",
+    "failed_workflow_run": 39584080230,
+    "failed_job": 119168538720,
+    "failed_test": "tests/test_general_finance_evidence.py::TestRetrievedEvidenceSchema::test_serialization",
+    "local_before": "1 failed, 42 passed",
+    "before_log_sha256": "7d1f9b351b9d912ca07e8ee74f1aa649608e95027cea7733baa2fca741976c08",
+    "fix": "Include the intended additive operating_disclosures field in the exact serialized key set and assert its empty-list default.",
+    "runtime_files_changed": [],
+    "corrected_related_passed": 598,
+    "corrected_related_files": [
+      "tests/test_general_finance_evidence.py",
+      "tests/test_segment_order_context.py",
+      "tests/test_named_segment_composition.py",
+      "tests/test_business_context_coverage.py",
+      "tests/test_thesis_disclosures.py",
+      "tests/test_product_distribution_business.py",
+      "tests/test_financial_thesis_foundation.py",
+      "tests/test_thesis_competition.py",
+      "tests/test_source_thesis_paraphrases.py",
+      "tests/test_source_answer.py"
+    ],
+    "corrected_related_log_sha256": "2096781a1a21b6a19bd60b04f2f455872b43c03d498f91050f1fd3c9954cdfab",
+    "source_and_retained_replay_hashes_rechecked": true,
+    "hosted_full_ci": "required on corrected head"
+  }
+}
