@@ -1,0 +1,6250 @@
+{
+  "kind": "unblinded_retained_html_table_source_map",
+  "source": {
+    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "body_bytes": 1404517,
+    "independent_origin_verification": false
+  },
+  "offset_basis": "zero-based half-open character offsets in strict UTF-8 decoded raw HTML",
+  "tables": [
+    {
+      "table_index": 0,
+      "html_start": 107620,
+      "html_end": 112932,
+      "raw_html_utf8_sha256": "81fe9bfa661d730aba05d653787691ab2ff2d07ff8f5419e733e9f68aabf2986",
+      "row_count": 7,
+      "nested_table_indices": [],
+      "text_preview": "Wisconsin 39-0494170 (State or other jurisdiction of (IRS Employer incorporation or organization) Identification Number) ﻿ 3925 North Hastings Way Eau Claire , Wisconsin 54703-3703 (Address of principal executive offices"
+    },
+    {
+      "table_index": 1,
+      "html_start": 113950,
+      "html_end": 118854,
+      "raw_html_utf8_sha256": "2d5d4b24ac0003f8b7c7c8ebbaa390f0159a3da02228975703e2ec5129e01555",
+      "row_count": 3,
+      "nested_table_indices": [],
+      "text_preview": "﻿ Trading Name of each exchange Title of each class Symbol(s) on which registered $1.00 par value common stock NPK New York Stock Exchange"
+    },
+    {
+      "table_index": 2,
+      "html_start": 129786,
+      "html_end": 146218,
+      "raw_html_utf8_sha256": "1949d632544095676bfb343ae8cb607008fe7fde73822e47ece3013f31d0dcda",
+      "row_count": 32,
+      "nested_table_indices": [],
+      "text_preview": "﻿ Page ﻿ ﻿PART I 3 ﻿Item 1 – Business 3 ﻿Item 1A – Risk Factors 8 ﻿Item 1B – Unresolved Staff Comments 14 ﻿Item 1C – Cybersecurity 14 ﻿Item 2 – Properties 14 ﻿Item 3 – Legal Proceedings 14 ﻿Item 4 – Mine Safety Disclosur"
+    },
+    {
+      "table_index": 3,
+      "html_start": 312169,
+      "html_end": 313297,
+      "raw_html_utf8_sha256": "d8dc2d50a4eebcfa39735f4bf67b98f500bf298a6c7791af0f6a7dbf8dbb1a55",
+      "row_count": 2,
+      "nested_table_indices": [],
+      "text_preview": "A. The Consolidated Financial Statements of National Presto Industries, Inc. and its subsidiaries and the related Report of Independent Registered Public Accounting Firm can be found on pages F-1 through F-22. B. Quarter"
+    },
+    {
+      "table_index": 4,
+      "html_start": 334126,
+      "html_end": 344455,
+      "raw_html_utf8_sha256": "10a7a09bda7967542dd4792fc3f66842368e76a341e77a1ab9233509635930ba",
+      "row_count": 11,
+      "nested_table_indices": [],
+      "text_preview": "NAME TITLE AGE Maryjo Cohen Chair of the Board, President, and Chief Executive Officer 73 Douglas J. Frederick Chief Operating Officer, Vice President, Secretary and General Counsel 55 Jeffery A. Morgan Vice President, E"
+    },
+    {
+      "table_index": 5,
+      "html_start": 357144,
+      "html_end": 378752,
+      "raw_html_utf8_sha256": "8cb7fa820761c9f570167f9f70f36a8e8803f629700c2a1b27ffc5724e3a6a96",
+      "row_count": 21,
+      "nested_table_indices": [],
+      "text_preview": "(a) Documents filed as part of this Form 10-K: Form 10-K Page Reference 1. Consolidated Financial Statements: a. Consolidated Balance Sheets - December 31, 2025 and 2024 F-1 & F-2 b. Consolidated Statements of Comprehens"
+    },
+    {
+      "table_index": 6,
+      "html_start": 378979,
+      "html_end": 389823,
+      "raw_html_utf8_sha256": "b4f6b04dccb7c4ca65a9ab8bc33749a1e8a02c2a79c9245dcd0eabadee4766fe",
+      "row_count": 13,
+      "nested_table_indices": [],
+      "text_preview": "(b) Exhibits: Exhibit Number Description Exhibit 3(i) Restated Articles of Incorporation – incorporated by reference from Exhibit 3(i) of the Company’s report on Form 10-K/A for the year ended December 31, 2005 Exhibit 3"
+    },
+    {
+      "table_index": 7,
+      "html_start": 390948,
+      "html_end": 415201,
+      "raw_html_utf8_sha256": "b9e58ab29a69af3f0cd42a4279cc585feeb3f2a8e4fcd7ab47171da823686f4d",
+      "row_count": 41,
+      "nested_table_indices": [],
+      "text_preview": "Exhibit Number Description ﻿ Exhibit 10.1* Incentive Compensation Plan – incorporated by reference from Exhibit 10.1 of the Company’s quarterly report on Form 10-Q for the quarter ended July 4, 2010 ﻿ ﻿ Exhibit 10.2* For"
+    },
+    {
+      "table_index": 8,
+      "html_start": 418144,
+      "html_end": 422375,
+      "raw_html_utf8_sha256": "a77fa45e217716ef9086ab893bae5e7283654427eceb4bc2aebd138ec74a0140",
+      "row_count": 6,
+      "nested_table_indices": [],
+      "text_preview": "NATIONAL PRESTO INDUSTRIES, INC. (registrant) By: /S/ Maryjo Cohen Maryjo Cohen President and Chief Executive Officer Date: March 13, 2026"
+    },
+    {
+      "table_index": 9,
+      "html_start": 422932,
+      "html_end": 439196,
+      "raw_html_utf8_sha256": "4ee6ee1ffb394c4b9b17bc712ed1cabb91e74a37ca3858442bcbb720a3ffe5bd",
+      "row_count": 16,
+      "nested_table_indices": [],
+      "text_preview": "By: /S/ Douglas J. Frederick By: /S/ Patrick J. Quinn Douglas J. Frederick Patrick J. Quinn Chief Operating Officer, Vice President, Director Secretary, General Counsel, and Director By: /S/ Maryjo Cohen By: /S/ Joseph G"
+    },
+    {
+      "table_index": 10,
+      "html_start": 440943,
+      "html_end": 499807,
+      "raw_html_utf8_sha256": "9c0493deb427d372ead821fe0da8b8bc185be5b9c1500177b453df9872124143",
+      "row_count": 26,
+      "nested_table_indices": [],
+      "text_preview": "December 31 2025 2024 ASSETS CURRENT ASSETS: Cash and cash equivalents $ 3,252 $ 17,663 Marketable securities 503 5,010 Accounts receivable $ 85,282 $ 62,506 Less allowance for doubtful accounts 243 85,039 217 62,289 Inv"
+    },
+    {
+      "table_index": 11,
+      "html_start": 501818,
+      "html_end": 555783,
+      "raw_html_utf8_sha256": "aaf3c6a5de41ffc32ee45fd068e87e3409b52c078d6e62e1b9449c408dd32e42",
+      "row_count": 25,
+      "nested_table_indices": [],
+      "text_preview": "December 31 2025 2024 LIABILITIES CURRENT LIABILITIES: Accounts payable $ 45,956 $ 44,625 Line of credit 23,624 - Federal and state income taxes - 4,680 Lease liabilities 516 564 Accrued liabilities 24,855 24,567 Total c"
+    },
+    {
+      "table_index": 12,
+      "html_start": 557746,
+      "html_end": 605047,
+      "raw_html_utf8_sha256": "325e3be3cc735a2a026caae11217602f7d7cf98ec3d59a41d41156d0d46ff563",
+      "row_count": 25,
+      "nested_table_indices": [],
+      "text_preview": "For the years ended December 31, 2025 2024 2023 Net sales $ 503,524 $ 388,228 $ 340,912 Cost of sales 423,199 309,662 273,460 Gross profit 80,325 78,566 67,452 Selling and general expenses 35,868 31,838 30,784 Intangible"
+    },
+    {
+      "table_index": 13,
+      "html_start": 607013,
+      "html_end": 710879,
+      "raw_html_utf8_sha256": "1ebfeb35f1746144b70efb9a7b1a54375a9b8ef03a7de09d31b774f1af1d6010",
+      "row_count": 47,
+      "nested_table_indices": [],
+      "text_preview": "For the years ended December 31, 2025 2024 2023 Cash flows from operating activities: Net earnings $ 33,084 $ 41,460 $ 34,559 Adjustments to reconcile net earnings to net cash provided by operating activities: Provision "
+    },
+    {
+      "table_index": 14,
+      "html_start": 712864,
+      "html_end": 786017,
+      "raw_html_utf8_sha256": "7b2af4d49e58c085570ca52ad67eac5560f66c7fe6208e24a646a3554821ce23",
+      "row_count": 17,
+      "nested_table_indices": [],
+      "text_preview": "Shares of Common Stock Outstanding Common Stock Paid-in Capital Retained Earnings Accumulated Comprehensive Income (Loss) Treasury Stock Total Balance December 31, 2022 7,063 $ 7,441 $ 14,799 $ 338,071 $ ( 103 ) $ ( 12,1"
+    },
+    {
+      "table_index": 15,
+      "html_start": 798080,
+      "html_end": 814918,
+      "raw_html_utf8_sha256": "90094051058c376298610be37abca660dc2f6b7efe074aceb7eddfb25316e4d0",
+      "row_count": 11,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) MARKETABLE SECURITIES Amortized Cost Fair Value Gross Unrealized Gains Gross Unrealized Losses December 31, 2025 Certificates of Deposit 496 503 7 - Total Marketable Securities $ 496 $ 503 $ 7 $ - December"
+    },
+    {
+      "table_index": 16,
+      "html_start": 835719,
+      "html_end": 862250,
+      "raw_html_utf8_sha256": "b617d9e599f11c58a62d935e87ca0aebaf3519e501808f1ce28bc09ade642831",
+      "row_count": 12,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) INTANGIBLE ASSETS Technology Software and Other Contracts/ Customer Relationships Trade Secrets Total December 31, 2025 Gross Carrying Amount $ 290 $ 6,058 $ 1,000 $ 7,348 Accumulated Amortization ( 290 ) "
+    },
+    {
+      "table_index": 17,
+      "html_start": 863009,
+      "html_end": 865949,
+      "raw_html_utf8_sha256": "3d668d002a9fbcbb7ef6aa3c3846b7914ec34c5ba45be96286d1d62c01888063",
+      "row_count": 3,
+      "nested_table_indices": [],
+      "text_preview": "Years ending December 31: (In thousands) 2026 $ 1,262 $ 1,262"
+    },
+    {
+      "table_index": 18,
+      "html_start": 885635,
+      "html_end": 894924,
+      "raw_html_utf8_sha256": "7905e93018dcd086cbf5fdccd60527f6ec0e656c8b72985f62220f69d025ffce",
+      "row_count": 7,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) Year Ended December 31 2025 2024 Beginning balance January 1 $ 88 $ 366 Accruals during the period 3,670 1,021 Charges / payments made under the warranties ( 3,271 ) ( 1,299 ) Balance December 31 $ 487 $ 8"
+    },
+    {
+      "table_index": 19,
+      "html_start": 907404,
+      "html_end": 916880,
+      "raw_html_utf8_sha256": "f45b61b003782c9adee776bab51a42ea433ec4137221349e71e28fa639d64862",
+      "row_count": 5,
+      "nested_table_indices": [],
+      "text_preview": "Increase (Decrease) – (In thousands, except per share data) Year Cost of Sales Net Earnings Earnings Per Share 2025 $ ( 5,926 ) $ 4,735 $ 0.66 2024 $ 2,576 $ ( 2,053 ) $ ( 0.29 ) 2023 $ ( 228 ) $ 186 $ 0.03"
+    },
+    {
+      "table_index": 20,
+      "html_start": 936650,
+      "html_end": 967347,
+      "raw_html_utf8_sha256": "e8219a6740498f671417fb3b60420d075dd1fcd5c42e84a9b9443cd74f56eb45",
+      "row_count": 7,
+      "nested_table_indices": [],
+      "text_preview": "2025 2024 2023 Shares Weighted Average Fair Value at Grant Date Shares Weighted Average Fair Value at Grant Date Shares Weighted Average Fair Value at Grant Date Non-vested at beginning of period 30,665 $ 83.60 29,671 $ "
+    },
+    {
+      "table_index": 21,
+      "html_start": 975132,
+      "html_end": 996835,
+      "raw_html_utf8_sha256": "365dc64d6673be1265c64f39aa63789d981d83e9d1cbfeecac2f7b7e34da3625",
+      "row_count": 11,
+      "nested_table_indices": [],
+      "text_preview": "For Years Ended December 31 (in thousands) 2025 2024 2023 Current: Federal $ 592 $ 12,299 $ 9,314 State 702 1,439 ( 252 ) 1,294 13,738 9,062 Deferred: Federal 7,350 ( 4,486 ) ( 1,509 ) State 391 ( 42 ) 319 7,741 ( 4,528 "
+    },
+    {
+      "table_index": 22,
+      "html_start": 997390,
+      "html_end": 1010601,
+      "raw_html_utf8_sha256": "47a11cd878e622e171c2b7f22166fdf1f08ba3013e602dc22df7b0b7088d2aeb",
+      "row_count": 6,
+      "nested_table_indices": [],
+      "text_preview": "For Years Ended December 31 (in thousands) 2025 2024 2023 Federal $ 9,080 $ 11,420 $ 6,710 State 1,083 530 109 Foreign 21 21 18 Total income taxes paid (net of refunds received) $ 10,184 $ 11,971 $ 6,837"
+    },
+    {
+      "table_index": 23,
+      "html_start": 1011921,
+      "html_end": 1057357,
+      "raw_html_utf8_sha256": "e815ae219449c5a0aab3a4312cc1e084d7490dfdfa1bc41f4cdfbbd30dfba261",
+      "row_count": 12,
+      "nested_table_indices": [],
+      "text_preview": "Percent of Pre-tax Income 2025 2024 2023 Amount (in thousands) Percent Amount (in thousands) Percent Amount (in thousands) Percent U.S. federal statutory tax rate $ 8,845 21.0 % $ 10,641 21.0 % $ 8,911 21.0 % State and l"
+    },
+    {
+      "table_index": 24,
+      "html_start": 1059657,
+      "html_end": 1093942,
+      "raw_html_utf8_sha256": "4a9fdd8358bc83dbf6f83ca21d0b4e4424f7ed854ceb2edec1d4298cd59aafd0",
+      "row_count": 22,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) 2025 2024 Deferred tax assets State NOL and tax credit carryforwards $ 2,370 $ 2,091 Lease liabilities 2,107 2,286 Vacation 1,004 979 Inventory 994 3,215 Insurance (primarily product liability) 968 1,089 R"
+    },
+    {
+      "table_index": 25,
+      "html_start": 1098092,
+      "html_end": 1108309,
+      "raw_html_utf8_sha256": "b9d70fd0a7b5c3fcaa70e220d40a1934db6c0ef1578c62522e44b0039a7614b8",
+      "row_count": 7,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) 2025 2024 Balance at January 1 $ 2,122 $ 2,481 Increases for tax positions taken related to the current year 352 694 Increases (decrease) for tax positions taken related to prior years ( 299 ) ( 51 ) Lapse"
+    },
+    {
+      "table_index": 26,
+      "html_start": 1123301,
+      "html_end": 1132110,
+      "raw_html_utf8_sha256": "fbd03d22fc501162c82919dbd3fbf7fdcd29c64814bd14ef957ca06cbc9b8678",
+      "row_count": 9,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) Years Ending December 31: 2026 $ 195 2027 133 2028 121 2029 108 2030 96 Thereafter 272 $ 925"
+    },
+    {
+      "table_index": 27,
+      "html_start": 1143293,
+      "html_end": 1230702,
+      "raw_html_utf8_sha256": "89079bbca4d1cd1d6b1fd6e01ee8ac72d678caf0bb5aceae43f7bbede6c21a03",
+      "row_count": 33,
+      "nested_table_indices": [],
+      "text_preview": "(in thousands) Housewares / Small Appliance Defense Safety Total Year ended December 31, 2025 External net sales $ 95,604 $ 405,937 1,983 $ 503,524 Cost of sales 88,015 328,293 6,891 423,199 Gross profit (loss) 7,589 77,"
+    },
+    {
+      "table_index": 28,
+      "html_start": 1234965,
+      "html_end": 1246587,
+      "raw_html_utf8_sha256": "576dc53eda863fd01c2d8d514f0bf9bc280e200f0bde69ce7cf1b10bbf706376",
+      "row_count": 6,
+      "nested_table_indices": [],
+      "text_preview": "Years Ending (In thousands) Summary of Lease Cost 2025 2024 2023 Operating lease cost $ 1,151 $ 1,212 $ 1,215 Short-term and variable lease cost 379 265 206 Total lease cost $ 1,530 $ 1,477 $ 1,421"
+    },
+    {
+      "table_index": 29,
+      "html_start": 1249538,
+      "html_end": 1259775,
+      "raw_html_utf8_sha256": "90cb39d3fd15c4f82a918aec65c89a1d9c908c2ee2f9ead96d9590c008f202c3",
+      "row_count": 10,
+      "nested_table_indices": [],
+      "text_preview": "Years ending December 31: (In thousands) 2026 $ 842 2027 814 2028 812 2029 757 2030 703 Thereafter 11,095 Total lease payments $ 15,023 Less: future interest expense 5,582 Lease liabilities $ 9,441"
+    },
+    {
+      "table_index": 30,
+      "html_start": 1262275,
+      "html_end": 1270433,
+      "raw_html_utf8_sha256": "a758703ff538cfdfdb565beb59580ca064f0b22f67f893966928e7def92e372d",
+      "row_count": 8,
+      "nested_table_indices": [],
+      "text_preview": "Years ending December 31: (In thousands) 2026 $ 2,321 2027 2,314 2028 2,314 2029 2,314 2030 2,314 Thereafter 13,884 Total lease payments $ 25,461"
+    },
+    {
+      "table_index": 31,
+      "html_start": 1272239,
+      "html_end": 1314266,
+      "raw_html_utf8_sha256": "814388ad19e736055aebc592b5eae66350a0ce74e2decaae126a407b79464f04",
+      "row_count": 16,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands, except per share data) Per Share (basic and diluted) Quarter Net Sales Gross Profit Net Earnings Net Earnings 2025 First $ 103,639 $ 18,111 $ 7,610 $ 1.07 Second 120,449 18,546 5,152 0.72 Third 115,463 16,"
+    },
+    {
+      "table_index": 32,
+      "html_start": 1332015,
+      "html_end": 1332875,
+      "raw_html_utf8_sha256": "e0a40bb74d55f9216d1da9e18c5cd4c95e39660ff7644b00a4a06f85c7624210",
+      "row_count": 1,
+      "nested_table_indices": [],
+      "text_preview": "● We obtained an understanding of the relevant controls related to the timing of revenue recognition on Defense contracts and tested such controls for design and operating effectiveness, including management review contr"
+    },
+    {
+      "table_index": 33,
+      "html_start": 1332979,
+      "html_end": 1333587,
+      "raw_html_utf8_sha256": "1905d5589ef89f35b801274015cc3e70320272dc6ed439556609ec905f9924c1",
+      "row_count": 1,
+      "nested_table_indices": [],
+      "text_preview": "● We assessed the reasonableness of the timing of revenue recognition for a sample of revenue contracts through:"
+    },
+    {
+      "table_index": 34,
+      "html_start": 1333691,
+      "html_end": 1334453,
+      "raw_html_utf8_sha256": "504874d174ee64be8095dc58e3f85619483e83de1210a3c69b1a86fd09282762",
+      "row_count": 1,
+      "nested_table_indices": [],
+      "text_preview": "- Reviewing contract terms, including evaluating whether the Company has an enforceable right to payment for its performance to date under the contract and whether contractual restrictions prohibit the Company from redir"
+    },
+    {
+      "table_index": 35,
+      "html_start": 1334557,
+      "html_end": 1335248,
+      "raw_html_utf8_sha256": "31488ef0e9dc0f3600b941099a151973782191266eacc16099d08afea1f6c865",
+      "row_count": 1,
+      "nested_table_indices": [],
+      "text_preview": "- Evaluating evidence that the assets created by the Company’s performance under the contract have an alternative use by verifying sales of the same or similar products to other customers."
+    },
+    {
+      "table_index": 36,
+      "html_start": 1335352,
+      "html_end": 1336009,
+      "raw_html_utf8_sha256": "0b39b1dde0e7ea4d831e7d1e7570a091d11863ec599e6a9a116b067002b45698",
+      "row_count": 1,
+      "nested_table_indices": [],
+      "text_preview": "● We reviewed government contracts under ASC 606 to assist in the evaluation of management’s assessment of positive and negative evidence and their conclusions of the timing of when control has been transferred to its cu"
+    },
+    {
+      "table_index": 37,
+      "html_start": 1339039,
+      "html_end": 1403290,
+      "raw_html_utf8_sha256": "a920971f2bc8b2069d0e7fdbd9a9f2d6a597abac8eb53ca43c9a4407c8bd96a6",
+      "row_count": 19,
+      "nested_table_indices": [],
+      "text_preview": "(In thousands) Column A Column B Column C Column D Column E Description Balance at Beginning of Period Additions - Charged to Costs and Expenses (A) Additions - Charged to Other Accounts (B) Deductions (C) Balance at End"
+    }
+  ],
+  "selected_table": {
+    "table_index": 27,
+    "html_start": 1143293,
+    "html_end": 1230702,
+    "preceding_visible_context": " caliber training and tactical rounds. Those aspects include the fuze, the detonator, the metal parts (including the cartridge case), and load, assemble and pack of the final round. ﻿ The Safety segment was started in 2019 with the acquisition of the assets of OneEvent Technologies, Inc., a business located in Mount Horeb, Wisconsin which focused on protection for buildings, homes, assets, and occupants using a cloud-based learning and an analytics engine that utilizes data from a series of sensing devices to predict, alert, and prevent. Upon purchase, it was combined with Rusoh, Inc. which designed and marketed fire extinguishers. Prior to 2019, Rusoh Inc. had been included in the Company’s Housewares/Small Appliances segment. On July 29, 2022, certain assets were acquired and liabilities were assumed of Knox Safety, Inc., a startup business formed in 2019 with operations in Illinois and North Carolina. Knox Safety designed and sold carbon monoxide detectors for residential use. Subsequent to the acquisition, the acquiring entity legally adopted the corporate name Rely Innovations, Inc. and was added to the segment. Since its acquisition, the Company has introduced smoke detectors and fire extinguishers under the Rely name. To focus the direction of the segment’s business, the Company divested the stock of Rusoh, Inc. on November 14, 2023 and certain assets of OneEvent related to its refrigeration monitoring business on July 31, 2025. The OneEvent intellectual property, however, has been retained. The Company manages and assesses the performance of its reportable segments by their gross profit and operating profit. As part of the CODM’s review of segment-level performance, the CODM reviews these measures of income of each reportable segment, which drives the evaluation of the performance of the Company’s reportable segments and allocation of resources to those segments. The significant segment expense categories included in the table below augment the Company’s understanding of operating results. F- 18 Table of Contents In the following summary, operating profit represents earnings before other income and income taxes. The Company's segments operate discretely from each other with no shared owned or leased manufacturing facilities. Costs associated with corporate activities (such as cash and marketable securities management) and the assets associated with such activities are included within the Housewares/Small Appliance segment for all periods presented.",
+    "attributes": {},
+    "nested_table_indices": [],
+    "rows": [
+      {
+        "html_start": 1143465,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1143538,
+            "html_end": 1143620,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1143620,
+            "html_end": 1143702,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {
+              "colspan": "14"
+            },
+            "html_start": 1143702,
+            "html_end": 1143999,
+            "text": "(in thousands)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1143999,
+            "html_end": 1144102,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1144108,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1144181,
+            "html_end": 1144263,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1144263,
+            "html_end": 1144345,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {
+              "colspan": "2"
+            },
+            "html_start": 1144345,
+            "html_end": 1144687,
+            "text": "Housewares / Small Appliance",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1144687,
+            "html_end": 1144790,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1144790,
+            "html_end": 1144872,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {
+              "colspan": "2"
+            },
+            "html_start": 1144872,
+            "html_end": 1145193,
+            "text": "Defense",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1145193,
+            "html_end": 1145296,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1145296,
+            "html_end": 1145378,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {
+              "colspan": "2"
+            },
+            "html_start": 1145378,
+            "html_end": 1145698,
+            "text": "Safety",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1145698,
+            "html_end": 1145801,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1145801,
+            "html_end": 1145883,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {
+              "colspan": "2"
+            },
+            "html_start": 1145883,
+            "html_end": 1146202,
+            "text": "Total",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146202,
+            "html_end": 1146305,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1146311,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146384,
+            "html_end": 1146618,
+            "text": "Year ended December 31, 2025",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146618,
+            "html_end": 1146700,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146700,
+            "html_end": 1146782,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146782,
+            "html_end": 1146864,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146864,
+            "html_end": 1146953,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1146953,
+            "html_end": 1147035,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147035,
+            "html_end": 1147117,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147117,
+            "html_end": 1147199,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147199,
+            "html_end": 1147288,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147288,
+            "html_end": 1147370,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147370,
+            "html_end": 1147452,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147452,
+            "html_end": 1147534,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147534,
+            "html_end": 1147623,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147623,
+            "html_end": 1147705,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147705,
+            "html_end": 1147787,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147787,
+            "html_end": 1147869,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1147869,
+            "html_end": 1147958,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1147964,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1148037,
+            "html_end": 1148242,
+            "text": "External net sales",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1148242,
+            "html_end": 1148335,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1148335,
+            "html_end": 1148441,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1148441,
+            "html_end": 1148857,
+            "text": "95,604",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930510",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1148560
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1148857,
+            "html_end": 1148968,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1148968,
+            "html_end": 1149061,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1149061,
+            "html_end": 1149167,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1149167,
+            "html_end": 1149566,
+            "text": "405,937",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930511",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1149286
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1149566,
+            "html_end": 1149677,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1149677,
+            "html_end": 1149770,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1149770,
+            "html_end": 1149863,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1149863,
+            "html_end": 1150259,
+            "text": "1,983",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930512",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1149982
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1150259,
+            "html_end": 1150370,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1150370,
+            "html_end": 1150463,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1150463,
+            "html_end": 1150569,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1150569,
+            "html_end": 1150924,
+            "text": "503,524",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930513",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1150688
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1150924,
+            "html_end": 1151035,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1151041,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1151114,
+            "html_end": 1151314,
+            "text": "Cost of sales",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1151314,
+            "html_end": 1151429,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1151429,
+            "html_end": 1151544,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1151544,
+            "html_end": 1151982,
+            "text": "88,015",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930514",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1151667
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1151982,
+            "html_end": 1152097,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1152097,
+            "html_end": 1152212,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1152212,
+            "html_end": 1152327,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1152327,
+            "html_end": 1152748,
+            "text": "328,293",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930515",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1152450
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1152748,
+            "html_end": 1152863,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1152863,
+            "html_end": 1152978,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1152978,
+            "html_end": 1153093,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1153093,
+            "html_end": 1153511,
+            "text": "6,891",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930516",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1153216
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1153511,
+            "html_end": 1153626,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1153626,
+            "html_end": 1153741,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1153741,
+            "html_end": 1153856,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1153856,
+            "html_end": 1154233,
+            "text": "423,199",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930517",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1153979
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1154233,
+            "html_end": 1154348,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1154354,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1154427,
+            "html_end": 1154633,
+            "text": "Gross profit (loss)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1154633,
+            "html_end": 1154726,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1154726,
+            "html_end": 1154819,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1154819,
+            "html_end": 1155237,
+            "text": "7,589",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930518",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1154938
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1155237,
+            "html_end": 1155348,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1155348,
+            "html_end": 1155441,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1155441,
+            "html_end": 1155534,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1155534,
+            "html_end": 1155935,
+            "text": "77,644",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930519",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1155653
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1155935,
+            "html_end": 1156046,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156046,
+            "html_end": 1156139,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156139,
+            "html_end": 1156232,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156232,
+            "html_end": 1156641,
+            "text": "( 4,908",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930520",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3",
+                  "sign": "-"
+                },
+                "html_start": 1156352
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156641,
+            "html_end": 1156747,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156747,
+            "html_end": 1156840,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156840,
+            "html_end": 1156933,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1156933,
+            "html_end": 1157290,
+            "text": "80,325",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930521",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1157052
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1157290,
+            "html_end": 1157401,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1157407,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1157480,
+            "html_end": 1157699,
+            "text": "Selling and general expenses (1)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1157699,
+            "html_end": 1157814,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1157814,
+            "html_end": 1157929,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1157929,
+            "html_end": 1158379,
+            "text": "13,130",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930522",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1158052
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1158379,
+            "html_end": 1158494,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1158494,
+            "html_end": 1158609,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1158609,
+            "html_end": 1158724,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1158724,
+            "html_end": 1159156,
+            "text": "15,354",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930523",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1158847
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1159156,
+            "html_end": 1159271,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1159271,
+            "html_end": 1159386,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1159386,
+            "html_end": 1159501,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1159501,
+            "html_end": 1159931,
+            "text": "3,763",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930524",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1159624
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1159931,
+            "html_end": 1160046,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1160046,
+            "html_end": 1160161,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1160161,
+            "html_end": 1160276,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1160276,
+            "html_end": 1160664,
+            "text": "32,247",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930525",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1160399
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1160664,
+            "html_end": 1160779,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1160785,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1160858,
+            "html_end": 1161074,
+            "text": "Depreciation and amortization",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1161074,
+            "html_end": 1161167,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1161167,
+            "html_end": 1161260,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1161260,
+            "html_end": 1161703,
+            "text": "1,050",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930526",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1161379
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1161703,
+            "html_end": 1161814,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1161814,
+            "html_end": 1161907,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1161907,
+            "html_end": 1162000,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1162000,
+            "html_end": 1162425,
+            "text": "3,907",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930527",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1162119
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1162425,
+            "html_end": 1162536,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1162536,
+            "html_end": 1162629,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1162629,
+            "html_end": 1162722,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1162722,
+            "html_end": 1163144,
+            "text": "179",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930528",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1162841
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1163144,
+            "html_end": 1163255,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1163255,
+            "html_end": 1163348,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1163348,
+            "html_end": 1163441,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1163441,
+            "html_end": 1163822,
+            "text": "5,136",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930529",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1163560
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1163822,
+            "html_end": 1163933,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1163939,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1164012,
+            "html_end": 1164222,
+            "text": "Operating profit (loss)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1164222,
+            "html_end": 1164337,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1164337,
+            "html_end": 1164452,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1164452,
+            "html_end": 1164892,
+            "text": "( 9,292",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930530",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3",
+                  "sign": "-"
+                },
+                "html_start": 1164576
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1164892,
+            "html_end": 1165002,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165002,
+            "html_end": 1165117,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165117,
+            "html_end": 1165232,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165232,
+            "html_end": 1165645,
+            "text": "58,383",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930531",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1165355
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165645,
+            "html_end": 1165760,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165760,
+            "html_end": 1165875,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165875,
+            "html_end": 1165990,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1165990,
+            "html_end": 1166411,
+            "text": "( 8,850",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930532",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4",
+                  "sign": "-"
+                },
+                "html_start": 1166114
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1166411,
+            "html_end": 1166521,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1166521,
+            "html_end": 1166636,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1166636,
+            "html_end": 1166751,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1166751,
+            "html_end": 1167120,
+            "text": "40,241",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930533",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1166874
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1167120,
+            "html_end": 1167235,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1167241,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1167314,
+            "html_end": 1167513,
+            "text": "Total assets",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1167513,
+            "html_end": 1167628,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1167628,
+            "html_end": 1167743,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1167743,
+            "html_end": 1168151,
+            "text": "100,070",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930534",
+                  "contextref": "i_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1167866
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1168151,
+            "html_end": 1168266,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1168266,
+            "html_end": 1168381,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1168381,
+            "html_end": 1168496,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1168496,
+            "html_end": 1168886,
+            "text": "394,392",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930535",
+                  "contextref": "i_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1168619
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1168886,
+            "html_end": 1169001,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169001,
+            "html_end": 1169116,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169116,
+            "html_end": 1169231,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169231,
+            "html_end": 1169618,
+            "text": "6,267",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930536",
+                  "contextref": "i_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1169354
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169618,
+            "html_end": 1169733,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169733,
+            "html_end": 1169848,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169848,
+            "html_end": 1169963,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1169963,
+            "html_end": 1170309,
+            "text": "500,729",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930537",
+                  "contextref": "i_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1170086
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1170309,
+            "html_end": 1170424,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1170430,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1170503,
+            "html_end": 1170710,
+            "text": "Capital expenditures",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1170710,
+            "html_end": 1170803,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1170803,
+            "html_end": 1170896,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1170896,
+            "html_end": 1171337,
+            "text": "23,231",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930538",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1171015
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1171337,
+            "html_end": 1171448,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1171448,
+            "html_end": 1171541,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1171541,
+            "html_end": 1171634,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1171634,
+            "html_end": 1172056,
+            "text": "1,066",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930539",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1171753
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172056,
+            "html_end": 1172167,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172167,
+            "html_end": 1172260,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172260,
+            "html_end": 1172353,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172353,
+            "html_end": 1172771,
+            "text": "36",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930540",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1172472
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172771,
+            "html_end": 1172882,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172882,
+            "html_end": 1172975,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1172975,
+            "html_end": 1173068,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173068,
+            "html_end": 1173447,
+            "text": "24,333",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930541",
+                  "contextref": "d_2025-01-01_2025-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1173187
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173447,
+            "html_end": 1173558,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1173564,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173637,
+            "html_end": 1173652,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173652,
+            "html_end": 1173667,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173667,
+            "html_end": 1173682,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173682,
+            "html_end": 1173697,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173697,
+            "html_end": 1173712,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173712,
+            "html_end": 1173727,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173727,
+            "html_end": 1173742,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173742,
+            "html_end": 1173757,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173757,
+            "html_end": 1173772,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173772,
+            "html_end": 1173787,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173787,
+            "html_end": 1173802,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173802,
+            "html_end": 1173817,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173817,
+            "html_end": 1173832,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173832,
+            "html_end": 1173847,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173847,
+            "html_end": 1173862,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173862,
+            "html_end": 1173877,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173877,
+            "html_end": 1173892,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1173898,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1173971,
+            "html_end": 1174193,
+            "text": "Year ended December 31, 2024",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174193,
+            "html_end": 1174275,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174275,
+            "html_end": 1174357,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174357,
+            "html_end": 1174439,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174439,
+            "html_end": 1174528,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174528,
+            "html_end": 1174610,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174610,
+            "html_end": 1174692,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174692,
+            "html_end": 1174774,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174774,
+            "html_end": 1174863,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174863,
+            "html_end": 1174945,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1174945,
+            "html_end": 1175027,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175027,
+            "html_end": 1175109,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175109,
+            "html_end": 1175198,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175198,
+            "html_end": 1175280,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175280,
+            "html_end": 1175362,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175362,
+            "html_end": 1175444,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175444,
+            "html_end": 1175533,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1175539,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175612,
+            "html_end": 1175817,
+            "text": "External net sales",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175817,
+            "html_end": 1175910,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1175910,
+            "html_end": 1176016,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1176016,
+            "html_end": 1176433,
+            "text": "102,799",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930542",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1176135
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1176433,
+            "html_end": 1176544,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1176544,
+            "html_end": 1176637,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1176637,
+            "html_end": 1176743,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1176743,
+            "html_end": 1177142,
+            "text": "284,025",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930543",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1176862
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1177142,
+            "html_end": 1177253,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1177253,
+            "html_end": 1177346,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1177346,
+            "html_end": 1177439,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1177439,
+            "html_end": 1177835,
+            "text": "1,404",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930544",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1177558
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1177835,
+            "html_end": 1177946,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1177946,
+            "html_end": 1178039,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1178039,
+            "html_end": 1178145,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1178145,
+            "html_end": 1178500,
+            "text": "388,228",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930545",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1178264
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1178500,
+            "html_end": 1178611,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1178617,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1178690,
+            "html_end": 1178890,
+            "text": "Cost of sales",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1178890,
+            "html_end": 1179005,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1179005,
+            "html_end": 1179120,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1179120,
+            "html_end": 1179558,
+            "text": "77,321",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930546",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1179243
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1179558,
+            "html_end": 1179673,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1179673,
+            "html_end": 1179788,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1179788,
+            "html_end": 1179903,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1179903,
+            "html_end": 1180324,
+            "text": "225,852",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930547",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1180026
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1180324,
+            "html_end": 1180439,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1180439,
+            "html_end": 1180554,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1180554,
+            "html_end": 1180669,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1180669,
+            "html_end": 1181087,
+            "text": "6,489",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930548",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1180792
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1181087,
+            "html_end": 1181202,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1181202,
+            "html_end": 1181317,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1181317,
+            "html_end": 1181432,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1181432,
+            "html_end": 1181809,
+            "text": "309,662",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930549",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1181555
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1181809,
+            "html_end": 1181924,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1181930,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1182003,
+            "html_end": 1182209,
+            "text": "Gross profit (loss)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1182209,
+            "html_end": 1182302,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1182302,
+            "html_end": 1182395,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1182395,
+            "html_end": 1182814,
+            "text": "25,478",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930550",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1182514
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1182814,
+            "html_end": 1182925,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1182925,
+            "html_end": 1183018,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1183018,
+            "html_end": 1183111,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1183111,
+            "html_end": 1183512,
+            "text": "58,173",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930551",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1183230
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1183512,
+            "html_end": 1183623,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1183623,
+            "html_end": 1183716,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1183716,
+            "html_end": 1183809,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1183809,
+            "html_end": 1184218,
+            "text": "( 5,085",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930552",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3",
+                  "sign": "-"
+                },
+                "html_start": 1183929
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1184218,
+            "html_end": 1184324,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1184324,
+            "html_end": 1184417,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1184417,
+            "html_end": 1184510,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1184510,
+            "html_end": 1184867,
+            "text": "78,566",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930553",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1184629
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1184867,
+            "html_end": 1184978,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1184984,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1185057,
+            "html_end": 1185276,
+            "text": "Selling and general expenses (1)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1185276,
+            "html_end": 1185391,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1185391,
+            "html_end": 1185506,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1185506,
+            "html_end": 1185956,
+            "text": "11,928",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930554",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1185629
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1185956,
+            "html_end": 1186071,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1186071,
+            "html_end": 1186186,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1186186,
+            "html_end": 1186301,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1186301,
+            "html_end": 1186733,
+            "text": "11,383",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930555",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1186424
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1186733,
+            "html_end": 1186848,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1186848,
+            "html_end": 1186963,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1186963,
+            "html_end": 1187078,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1187078,
+            "html_end": 1187508,
+            "text": "4,996",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930556",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1187201
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1187508,
+            "html_end": 1187623,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1187623,
+            "html_end": 1187738,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1187738,
+            "html_end": 1187853,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1187853,
+            "html_end": 1188241,
+            "text": "28,307",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930557",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1187976
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1188241,
+            "html_end": 1188356,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1188362,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1188435,
+            "html_end": 1188651,
+            "text": "Depreciation and amortization",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1188651,
+            "html_end": 1188744,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1188744,
+            "html_end": 1188837,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1188837,
+            "html_end": 1189278,
+            "text": "948",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930558",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1188956
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1189278,
+            "html_end": 1189389,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1189389,
+            "html_end": 1189482,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1189482,
+            "html_end": 1189575,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1189575,
+            "html_end": 1190000,
+            "text": "3,937",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930559",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1189694
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190000,
+            "html_end": 1190111,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190111,
+            "html_end": 1190204,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190204,
+            "html_end": 1190297,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190297,
+            "html_end": 1190719,
+            "text": "161",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930560",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1190416
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190719,
+            "html_end": 1190830,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190830,
+            "html_end": 1190923,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1190923,
+            "html_end": 1191016,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1191016,
+            "html_end": 1191397,
+            "text": "5,046",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930561",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1191135
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1191397,
+            "html_end": 1191508,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1191514,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1191587,
+            "html_end": 1191797,
+            "text": "Operating profit (loss)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1191797,
+            "html_end": 1191890,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1191890,
+            "html_end": 1191983,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1191983,
+            "html_end": 1192410,
+            "text": "12,602",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930562",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1192102
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1192410,
+            "html_end": 1192521,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1192521,
+            "html_end": 1192614,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1192614,
+            "html_end": 1192707,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1192707,
+            "html_end": 1193116,
+            "text": "42,853",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930563",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1192826
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1193116,
+            "html_end": 1193227,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1193227,
+            "html_end": 1193320,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1193320,
+            "html_end": 1193413,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1193413,
+            "html_end": 1193831,
+            "text": "( 10,242",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930564",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3",
+                  "sign": "-"
+                },
+                "html_start": 1193533
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1193831,
+            "html_end": 1193937,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1193937,
+            "html_end": 1194030,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1194030,
+            "html_end": 1194123,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1194123,
+            "html_end": 1194488,
+            "text": "45,213",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930565",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1194242
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1194488,
+            "html_end": 1194599,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1194605,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1194678,
+            "html_end": 1194877,
+            "text": "Total assets",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1194877,
+            "html_end": 1194970,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1194970,
+            "html_end": 1195063,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1195063,
+            "html_end": 1195467,
+            "text": "115,717",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930566",
+                  "contextref": "i_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1195182
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1195467,
+            "html_end": 1195578,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1195578,
+            "html_end": 1195671,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1195671,
+            "html_end": 1195764,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1195764,
+            "html_end": 1196150,
+            "text": "330,892",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930567",
+                  "contextref": "i_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1195883
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1196150,
+            "html_end": 1196261,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1196261,
+            "html_end": 1196354,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1196354,
+            "html_end": 1196447,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1196447,
+            "html_end": 1196830,
+            "text": "6,788",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930568",
+                  "contextref": "i_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1196566
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1196830,
+            "html_end": 1196941,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1196941,
+            "html_end": 1197034,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1197034,
+            "html_end": 1197127,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1197127,
+            "html_end": 1197469,
+            "text": "453,397",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930569",
+                  "contextref": "i_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1197246
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1197469,
+            "html_end": 1197580,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1197586,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1197659,
+            "html_end": 1197866,
+            "text": "Capital expenditures",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1197866,
+            "html_end": 1197959,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1197959,
+            "html_end": 1198052,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1198052,
+            "html_end": 1198490,
+            "text": "212",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930570",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1198171
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1198490,
+            "html_end": 1198601,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1198601,
+            "html_end": 1198694,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1198694,
+            "html_end": 1198787,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1198787,
+            "html_end": 1199209,
+            "text": "7,253",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930571",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1198906
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1199209,
+            "html_end": 1199320,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1199320,
+            "html_end": 1199413,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1199413,
+            "html_end": 1199506,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1199506,
+            "html_end": 1199924,
+            "text": "66",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930572",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1199625
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1199924,
+            "html_end": 1200035,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200035,
+            "html_end": 1200128,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200128,
+            "html_end": 1200221,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200221,
+            "html_end": 1200599,
+            "text": "7,531",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930573",
+                  "contextref": "d_2024-01-01_2024-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1200340
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200599,
+            "html_end": 1200710,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1200716,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200789,
+            "html_end": 1200804,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200804,
+            "html_end": 1200819,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200819,
+            "html_end": 1200834,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200834,
+            "html_end": 1200849,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200849,
+            "html_end": 1200864,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200864,
+            "html_end": 1200879,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200879,
+            "html_end": 1200894,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200894,
+            "html_end": 1200909,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200909,
+            "html_end": 1200924,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200924,
+            "html_end": 1200939,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200939,
+            "html_end": 1200954,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200954,
+            "html_end": 1200969,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200969,
+            "html_end": 1200984,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200984,
+            "html_end": 1200999,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1200999,
+            "html_end": 1201014,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201014,
+            "html_end": 1201029,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201029,
+            "html_end": 1201044,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1201050,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201123,
+            "html_end": 1201345,
+            "text": "Year ended December 31, 2023",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201345,
+            "html_end": 1201427,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201427,
+            "html_end": 1201509,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201509,
+            "html_end": 1201591,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201591,
+            "html_end": 1201680,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201680,
+            "html_end": 1201762,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201762,
+            "html_end": 1201844,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201844,
+            "html_end": 1201926,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1201926,
+            "html_end": 1202015,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202015,
+            "html_end": 1202097,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202097,
+            "html_end": 1202179,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202179,
+            "html_end": 1202261,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202261,
+            "html_end": 1202350,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202350,
+            "html_end": 1202432,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202432,
+            "html_end": 1202514,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202514,
+            "html_end": 1202596,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202596,
+            "html_end": 1202685,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1202691,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202764,
+            "html_end": 1202969,
+            "text": "External net sales",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1202969,
+            "html_end": 1203062,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1203062,
+            "html_end": 1203168,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1203168,
+            "html_end": 1203584,
+            "text": "97,619",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930574",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1203287
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1203584,
+            "html_end": 1203695,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1203695,
+            "html_end": 1203788,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1203788,
+            "html_end": 1203894,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1203894,
+            "html_end": 1204293,
+            "text": "241,703",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930575",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1204013
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1204293,
+            "html_end": 1204404,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1204404,
+            "html_end": 1204497,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1204497,
+            "html_end": 1204590,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1204590,
+            "html_end": 1204986,
+            "text": "1,590",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930576",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1204709
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1204986,
+            "html_end": 1205097,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1205097,
+            "html_end": 1205190,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1205190,
+            "html_end": 1205296,
+            "text": "$",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1205296,
+            "html_end": 1205651,
+            "text": "340,912",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930577",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Revenues",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1205415
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1205651,
+            "html_end": 1205762,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1205768,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1205841,
+            "html_end": 1206041,
+            "text": "Cost of sales",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1206041,
+            "html_end": 1206156,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1206156,
+            "html_end": 1206271,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1206271,
+            "html_end": 1206709,
+            "text": "77,752",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930578",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1206394
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1206709,
+            "html_end": 1206824,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1206824,
+            "html_end": 1206939,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1206939,
+            "html_end": 1207054,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1207054,
+            "html_end": 1207475,
+            "text": "189,700",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930579",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-5"
+                },
+                "html_start": 1207177
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1207475,
+            "html_end": 1207590,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1207590,
+            "html_end": 1207705,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1207705,
+            "html_end": 1207820,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1207820,
+            "html_end": 1208238,
+            "text": "6,008",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930580",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1207943
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1208238,
+            "html_end": 1208353,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1208353,
+            "html_end": 1208468,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1208468,
+            "html_end": 1208583,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1208583,
+            "html_end": 1208960,
+            "text": "273,460",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930581",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:CostOfGoodsAndServicesSold",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1208706
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1208960,
+            "html_end": 1209075,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1209081,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1209154,
+            "html_end": 1209360,
+            "text": "Gross profit (loss)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1209360,
+            "html_end": 1209453,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1209453,
+            "html_end": 1209546,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1209546,
+            "html_end": 1209965,
+            "text": "19,867",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930582",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1209665
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1209965,
+            "html_end": 1210076,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210076,
+            "html_end": 1210169,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210169,
+            "html_end": 1210262,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210262,
+            "html_end": 1210663,
+            "text": "52,003",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930583",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1210381
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210663,
+            "html_end": 1210774,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210774,
+            "html_end": 1210867,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210867,
+            "html_end": 1210960,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1210960,
+            "html_end": 1211369,
+            "text": "( 4,418",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930584",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3",
+                  "sign": "-"
+                },
+                "html_start": 1211080
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1211369,
+            "html_end": 1211475,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1211475,
+            "html_end": 1211568,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1211568,
+            "html_end": 1211661,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1211661,
+            "html_end": 1212018,
+            "text": "67,452",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930585",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:GrossProfit",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1211780
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1212018,
+            "html_end": 1212129,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1212135,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1212208,
+            "html_end": 1212427,
+            "text": "Selling and general expenses (1)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1212427,
+            "html_end": 1212542,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1212542,
+            "html_end": 1212657,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1212657,
+            "html_end": 1213107,
+            "text": "11,485",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930586",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1212780
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1213107,
+            "html_end": 1213222,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1213222,
+            "html_end": 1213337,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1213337,
+            "html_end": 1213452,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1213452,
+            "html_end": 1213883,
+            "text": "9,082",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930587",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1213575
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1213883,
+            "html_end": 1213998,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1213998,
+            "html_end": 1214113,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1214113,
+            "html_end": 1214228,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1214228,
+            "html_end": 1214658,
+            "text": "5,845",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930588",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1214351
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1214658,
+            "html_end": 1214773,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1214773,
+            "html_end": 1214888,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1214888,
+            "html_end": 1215003,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1215003,
+            "html_end": 1215391,
+            "text": "26,412",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930589",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:SellingGeneralAndAdministrativeExpense",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1215126
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1215391,
+            "html_end": 1215506,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1215512,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1215585,
+            "html_end": 1215801,
+            "text": "Depreciation and amortization",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1215801,
+            "html_end": 1215894,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1215894,
+            "html_end": 1215987,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1215987,
+            "html_end": 1216430,
+            "text": "1,030",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930590",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1216106
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1216430,
+            "html_end": 1216541,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1216541,
+            "html_end": 1216634,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1216634,
+            "html_end": 1216727,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1216727,
+            "html_end": 1217152,
+            "text": "4,635",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930591",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1216846
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1217152,
+            "html_end": 1217263,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1217263,
+            "html_end": 1217356,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1217356,
+            "html_end": 1217449,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1217449,
+            "html_end": 1217871,
+            "text": "342",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930592",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1217568
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1217871,
+            "html_end": 1217982,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1217982,
+            "html_end": 1218075,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1218075,
+            "html_end": 1218168,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1218168,
+            "html_end": 1218549,
+            "text": "6,007",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930593",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:DepreciationDepletionAndAmortization",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1218287
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1218549,
+            "html_end": 1218660,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1218666,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1218739,
+            "html_end": 1218949,
+            "text": "Operating profit (loss)",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1218949,
+            "html_end": 1219042,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1219042,
+            "html_end": 1219135,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1219135,
+            "html_end": 1219561,
+            "text": "7,352",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930594",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1219254
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1219561,
+            "html_end": 1219672,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1219672,
+            "html_end": 1219765,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1219765,
+            "html_end": 1219858,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1219858,
+            "html_end": 1220267,
+            "text": "38,286",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930595",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1219977
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1220267,
+            "html_end": 1220378,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1220378,
+            "html_end": 1220471,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1220471,
+            "html_end": 1220564,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1220564,
+            "html_end": 1220982,
+            "text": "( 10,605",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930596",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3",
+                  "sign": "-"
+                },
+                "html_start": 1220684
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1220982,
+            "html_end": 1221088,
+            "text": ")",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1221088,
+            "html_end": 1221181,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1221181,
+            "html_end": 1221274,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1221274,
+            "html_end": 1221639,
+            "text": "35,033",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930597",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:OperatingIncomeLoss",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1221393
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1221639,
+            "html_end": 1221750,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1221756,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1221829,
+            "html_end": 1222028,
+            "text": "Total assets",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222028,
+            "html_end": 1222121,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222121,
+            "html_end": 1222214,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222214,
+            "html_end": 1222618,
+            "text": "191,902",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930598",
+                  "contextref": "i_2022-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1222333
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222618,
+            "html_end": 1222729,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222729,
+            "html_end": 1222822,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222822,
+            "html_end": 1222915,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1222915,
+            "html_end": 1223301,
+            "text": "242,272",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930599",
+                  "contextref": "i_2022-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1223034
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1223301,
+            "html_end": 1223412,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1223412,
+            "html_end": 1223505,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1223505,
+            "html_end": 1223598,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1223598,
+            "html_end": 1223981,
+            "text": "6,362",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930600",
+                  "contextref": "i_2022-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1223717
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1223981,
+            "html_end": 1224092,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1224092,
+            "html_end": 1224185,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1224185,
+            "html_end": 1224278,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1224278,
+            "html_end": 1224620,
+            "text": "440,536",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930601",
+                  "contextref": "i_2022-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:Assets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1224397
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1224620,
+            "html_end": 1224731,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1224737,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1224810,
+            "html_end": 1225017,
+            "text": "Capital expenditures",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225017,
+            "html_end": 1225110,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225110,
+            "html_end": 1225203,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225203,
+            "html_end": 1225641,
+            "text": "488",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930602",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-HousewaresSmallAppliancesMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1225322
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225641,
+            "html_end": 1225752,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225752,
+            "html_end": 1225845,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225845,
+            "html_end": 1225938,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1225938,
+            "html_end": 1226360,
+            "text": "1,168",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930603",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-DefenseMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1226057
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1226360,
+            "html_end": 1226471,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1226471,
+            "html_end": 1226564,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1226564,
+            "html_end": 1226657,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1226657,
+            "html_end": 1227076,
+            "text": "184",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930604",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember_StatementBusinessSegmentsAxis-SafetyMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 1226776
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227076,
+            "html_end": 1227187,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227187,
+            "html_end": 1227280,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227280,
+            "html_end": 1227373,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227373,
+            "html_end": 1227751,
+            "text": "1,840",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930605",
+                  "contextref": "d_2023-01-01_2023-12-31_ConsolidationItemsAxis-OperatingSegmentsMember",
+                  "unitref": "USD",
+                  "name": "us-gaap:PaymentsToAcquireProductiveAssets",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-4"
+                },
+                "html_start": 1227492
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227751,
+            "html_end": 1227862,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1227868,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227941,
+            "html_end": 1227986,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1227986,
+            "html_end": 1228031,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228031,
+            "html_end": 1228076,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228076,
+            "html_end": 1228121,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228121,
+            "html_end": 1228166,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228166,
+            "html_end": 1228211,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228211,
+            "html_end": 1228256,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228256,
+            "html_end": 1228301,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228301,
+            "html_end": 1228346,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228346,
+            "html_end": 1228391,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228391,
+            "html_end": 1228436,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228436,
+            "html_end": 1228481,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228481,
+            "html_end": 1228526,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228526,
+            "html_end": 1228571,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228571,
+            "html_end": 1228616,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228616,
+            "html_end": 1228661,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228661,
+            "html_end": 1228706,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      {
+        "html_start": 1228712,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1228785,
+            "html_end": 1229016,
+            "text": "(1) Excluding depreciation and amortization.",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229016,
+            "html_end": 1229120,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229120,
+            "html_end": 1229224,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229224,
+            "html_end": 1229328,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229328,
+            "html_end": 1229432,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229432,
+            "html_end": 1229536,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229536,
+            "html_end": 1229640,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229640,
+            "html_end": 1229744,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229744,
+            "html_end": 1229848,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229848,
+            "html_end": 1229952,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1229952,
+            "html_end": 1230056,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1230056,
+            "html_end": 1230160,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1230160,
+            "html_end": 1230264,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1230264,
+            "html_end": 1230368,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1230368,
+            "html_end": 1230472,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1230472,
+            "html_end": 1230576,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 1230576,
+            "html_end": 1230680,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      }
+    ],
+    "raw_html_utf8_sha256": "89079bbca4d1cd1d6b1fd6e01ee8ac72d678caf0bb5aceae43f7bbede6c21a03"
+  },
+  "limitations": [
+    "Inspection only: not production evidence admission, a financial claim or a new answer.",
+    "Cell text preserves source order; blank cells and colspan/rowspan attributes are not interpreted.",
+    "Inline attributes are inventoried, not independently validated or resolved against XBRL contexts and units.",
+    "No currency, scale, sign, period, segment identity, reconciliation or materiality is inferred.",
+    "Retained receipts bind these bytes; source authenticity and current availability are not established."
+  ]
+}
