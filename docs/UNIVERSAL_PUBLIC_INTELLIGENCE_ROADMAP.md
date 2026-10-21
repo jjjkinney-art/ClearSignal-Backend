@@ -8,6 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**21 October named-segment composition (offline):** the shared business producer
+can retain an explicit named segment's present composition without treating it
+as issuer-wide activities, ownership proof or revenue economics. The retained NPK
+replay keeps the existing distribution excerpt and adds one exact Safety-segment
+statement through final binding/composition; all seven non-business claim texts
+remain. See `NAMED_SEGMENT_COMPOSITION_20261021.md`. Products, revenue drivers,
+segment economics, independent usefulness review and the existing development/
+holdout and signed-in launch gates remain open. No new live authority, activation
+or coverage percentage follows.
+
 **21 October owned explicit-scenario backend integration (offline):** a separate,
 default-disabled `/ask` dispatcher accepts explicit assumptions, checks real
 account/conversation ownership before evidence retrieval and persists the exact

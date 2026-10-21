@@ -73,6 +73,24 @@ _NAMED_SEGMENT_STRUCTURE = re.compile(
 _REPORTED_SEGMENT_LIST = re.compile(
     r"^Our (?:one|two|three|four|five|six|seven|eight|nine|ten) reportable segments are "
     r"[A-Z][a-z]+(?: [A-Z][a-z]+)*(?:, (?:and )?[A-Z][a-z]+(?: [A-Z][a-z]+)*)+\.$")
+# Complete, explicitly named segment + one source-spelled legal organization.
+# This reports composition only; it does not resolve a subsidiary to the issuer
+# or infer products, ownership, consolidation, revenue or relative importance.
+_NAMED_SEGMENT_COMPOSITION = re.compile(
+    r'^(?:\ufeff\s*)*The (?P<label>[A-Z][A-Za-z]*(?:(?: |/|-| & )[A-Za-z]+){0,5}) segment '
+    r'(?:is (?:currently )?comprised of|consists of|comprises) '
+    r'(?P<component>[A-Z][A-Za-z\x27\u2019&-]*(?: [A-Z][A-Za-z\x27\u2019&-]*){0,7},? '
+    r'(?:Inc\.|Corporation|Corp\.|LLC|Ltd\.))'
+    # A suffix period can also terminate the sentence. An alias needs its own
+    # terminal period; unpunctuated Corporation/LLC suffixes need one as well.
+    r'(?: \("[A-Z][A-Za-z&-]{0,39}"\)\.|(?<=[A-Za-z])\.|(?<=\.))$')
+
+
+def _segment_business_scope(quote):
+    match = _NAMED_SEGMENT_COMPOSITION.fullmatch(quote)
+    return {'kind': 'named_segment', 'label': match['label']} if match else None
+
+
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
     r"^(?:We|Our company|The company|The firm)\s+"
@@ -170,6 +188,7 @@ def _business_quote_rejection(quote):
              or _CURRENT_REVENUE_MODEL.match(quote)
              or _CURRENT_PRODUCT_DISTRIBUTION.fullmatch(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
+             or _NAMED_SEGMENT_COMPOSITION.fullmatch(quote)
              or _REPORTED_SEGMENT_LIST.fullmatch(quote)
              or _NAMED_SEGMENT_STRUCTURE.match(quote))
             or not quote.endswith(".")):
@@ -180,7 +199,10 @@ def _business_quote_rejection(quote):
 def _business_summary(value):
     return (f'{value["ticker"]} described its business in its {value.get("document_type", "10-K")} filed '
             f'{value["document_ref"]["published_at"]}: “{value["quote"]}” '
-            'This is an issuer description; competitive advantage and future performance remain unverified.')
+            + ('This is issuer-reported composition of the named segment only; operating activities, '
+               'ownership, revenue contribution and segment economics are not established by this statement; '
+               if value.get('business_scope') else 'This is an issuer description; ')
+            + 'competitive advantage and future performance remain unverified.')
 
 
 def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
@@ -244,7 +266,8 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
                       if not _bare_segment_list(quote)]
     candidates.sort(key=lambda row: (-1 if row[0] in named_offsets else
                                     2 if _CURRENT_SEGMENT_STRUCTURE.match(row[1])
-                                    else 1 if _NAMED_SEGMENT_STRUCTURE.match(row[1]) else 0,
+                                    else 1 if (_NAMED_SEGMENT_STRUCTURE.match(row[1])
+                                               or _NAMED_SEGMENT_COMPOSITION.fullmatch(row[1])) else 0,
                                     row[0]))
     result = []
     from .business_context import complementary_candidates
@@ -258,6 +281,9 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
             return []
         value = dict(claim_kind="issuer_business_description", ticker=ticker, quote=quote,
                      start_offset=offset, end_offset=offset + len(quote), document_ref=ref)
+        scope = _segment_business_scope(quote)
+        if scope:
+            value['business_scope'] = scope
         if document.document_type != "10-K":
             value["document_type"] = document.document_type
         if layout:
@@ -292,6 +318,7 @@ def bound_business_description(item, *, ticker, cik):
             return None
         section = business_section_label(item.document_type, layout)
         if (value.get("claim_kind") != "issuer_business_description" or value.get("ticker") != ticker
+                or value.get('business_scope') != _segment_business_scope(value.get('quote', ''))
                 or not _business_quote(value.get("quote"), ticker=ticker, cik=cik) or value["quote"] != ref.get("quote")
                 or ref.get("provider") != "SEC EDGAR" or ref.get("section") != section
                 or not ref.get("content_hash") or not _business_issuer_url(ref["url"], cik)
