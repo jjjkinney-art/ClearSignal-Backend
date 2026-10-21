@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October retained segment economics source review (offline):** Note L in the
+already retained filing contains three years of explicit segment sales and
+operating results, with material corporate-allocation and expense-definition
+caveats. A hash-bound raw-HTML table map distinguishes this numerical/dimensional
+source gap from the qualitative Business-section sentence rules. The next repair
+needs separate segment observation/binding; the consolidated parser must retain
+its dimension exclusions. See `SEGMENT_ECONOMICS_SOURCE_REVIEW_20261022.md`.
+This inspection changes no answer, independent quality score, flags, frozen
+benchmark or live authority. Products, drivers, independent usefulness and the
+existing launch gates remain open.
+
 **21 October historical segment order context (offline):** one bounded pair of
 complete Business-section sentences can preserve explicit dated segment contract
 backlog amounts and their adjacent issuer definition. The ordinary retained NPK
