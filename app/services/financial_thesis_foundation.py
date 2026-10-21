@@ -332,12 +332,14 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .thesis_disclosures import bound_business_description, bound_thesis_risk
     from .thesis_competition import bound_competition_description
     from .segment_order_context import bound_order_context
+    from .segment_financial_context import bound_segment_financial_context
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
     operating_mechanisms = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
-              "issuer_competition_description": 0, "issuer_order_backlog_context": 0}
+              "issuer_competition_description": 0, "issuer_order_backlog_context": 0,
+              "issuer_segment_financial_context": 0}
     current_risks = 0
     business_descriptions = []
     seen = set()
@@ -345,9 +347,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         value = (bound_business_description(item, ticker=ticker, cik=expected_cik)
                  or bound_competition_description(item, ticker=ticker, cik=expected_cik)
                  or bound_order_context(item, ticker=ticker, cik=expected_cik)
+                 or bound_segment_financial_context(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value["quote"] in seen or counts[value["claim_kind"]] >=
-                (1 if value['claim_kind'] == 'issuer_order_backlog_context' else 2)):
+                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context'} else 2)):
             continue
         reference_id = f"E{index}"
         if references is not None:
@@ -368,6 +371,12 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['business_scope'] = dict(value['business_scope'])
         if value['claim_kind'] == 'issuer_order_backlog_context':
             row['order_context'] = value['order_context']
+        if value['claim_kind'] == 'issuer_segment_financial_context':
+            row['segment_context'] = value['segment_context']
+            row['document_ref'] = value['document_ref']
+            row['operating_income_ref'] = value['operating_income_ref']
+            row['source_proof'] = value['proof']
+            row['caveat_refs'] = value['caveat_refs']
         if value.get("issuer_relationship"):
             row["issuer_relationship"] = value["issuer_relationship"]
         elif value["claim_kind"] == "issuer_disclosed_risk":
@@ -399,6 +408,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                            "Official business and sampled risk context")
         if counts['issuer_order_backlog_context']:
             context_heading += ' with historical order context'
+        if counts['issuer_segment_financial_context']:
+            context_heading += ' and dated segment financial results'
         answer += "\n\n" + context_heading + "\n" + "\n\n".join(
             f"{row['claim']} [{row['reference_id']}]" for row in disclosures)
         answer += ("\nThese short excerpts are partial context, not a complete business model or a ranking "
