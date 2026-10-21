@@ -1,0 +1,162 @@
+{
+  "base_commit": "6c5d1e700f94350d57ac3b48755927a25d6e37e5",
+  "runtime": "CPython 3.11.9",
+  "new_tests": 45,
+  "related_passed": 501,
+  "related_files": [
+    "tests/test_named_segment_composition.py",
+    "tests/test_business_context_coverage.py",
+    "tests/test_thesis_disclosures.py",
+    "tests/test_product_distribution_business.py",
+    "tests/test_financial_thesis_foundation.py",
+    "tests/test_thesis_competition.py",
+    "tests/test_source_thesis_paraphrases.py",
+    "tests/test_source_answer.py"
+  ],
+  "related_log_sha256": "07e9e5a25e453fc92effd5ea7bb3565c32e2c805649e90c62faffde9e27c6300",
+  "collection": 18567,
+  "collection_log_sha256": "29b9574a95601fbbc7b6decbe4ccb7fce3f1681e76f9739e83507cafebb5b009",
+  "import_routes": 136,
+  "matching_direct_pins": 20,
+  "source_files_sha256": {
+    "app/services/thesis_disclosures.py": "8346997103e12694abfa13a325f632b85f5e0fc5cfd8399622f37350b51f8cc2",
+    "app/services/business_context.py": "367bd06b57ef16ddfd0b257a94efd9a9be87a41fefb93e870f993d466a75a69a",
+    "app/services/financial_thesis_foundation.py": "4d9e6cf2fba0540a7150f6a75bee3017b528760b2c51e8dd70d5f00e7d03e4b7",
+    "tests/test_named_segment_composition.py": "2ac72b8727e772efd79907ef52ef6ce50349708dc0e31b6e1f16fb46707a3d3c",
+    "scripts/replay_retained_segment_composition.py": "a03ea3d562c7cf96a94f4aff2ad15e9aa125c5ad612aa9299238b775e77db2d3",
+    "docs/NAMED_SEGMENT_COMPOSITION_20261021.md": "6e4fc0a0148cfc6fcf68c9833bee10b65d731d2ece78aa120a8aa8c578a4923d",
+    "docs/NAMED_SEGMENT_COMPOSITION_REPLAY_20261021.json": "79c35a87ff112d94b2bdf5340865ec1b2c1214229c93900cc71565ede0552657",
+    "docs/UNIVERSAL_PUBLIC_INTELLIGENCE_ROADMAP.md": "c63274dc739824f1e46c2e0743b2d9883dba93b7bc9a5a9682be964da962b8b2"
+  },
+  "local_ci_groups": [
+    {
+      "name": "Launch-security & reproducibility",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_launch_security.py",
+        "tests/test_launch_access_policy.py",
+        "tests/test_rate_limit_middleware.py",
+        "tests/test_dependency_pinning.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "cf3243203bbdede485eb35607a0887f45db267e571ef8eae761306129ca34937",
+      "result": "83 passed, 1 warning in 4.22s"
+    },
+    {
+      "name": "Production router regression",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_health_head.py",
+        "tests/test_portfolio_router.py",
+        "tests/test_scenario_router.py",
+        "tests/test_notifications_router.py",
+        "tests/test_watchlist_db_backed.py",
+        "tests/test_watchlist_scope_service.py",
+        "tests/test_auth_scoping.py",
+        "tests/test_brief_material_change_service.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "bc6ae5d7fcb941154e29e1d99dcd26d7e6f149f7a79e5b258598a706a3e2855f",
+      "result": "87 passed, 1 warning in 24.22s"
+    },
+    {
+      "name": "Auth & billing",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_alembic_migrations.py",
+        "tests/test_services/test_auth_routes.py",
+        "tests/test_services/test_auth_middleware.py",
+        "tests/test_services/test_billing_routes.py",
+        "tests/test_services/test_billing_observability.py",
+        "tests/test_billing_checkout_webhook.py",
+        "tests/test_services/test_stripe_service.py",
+        "tests/test_services/test_webhook_service.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "952b4be7e9eccab44873830020ece0dacc1bd282baa59844c4df21f866249113",
+      "result": "221 passed, 1 warning in 39.46s"
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_conviction_integration.py",
+        "tests/test_conviction_modeler.py",
+        "tests/test_directional_stance.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "b3fba6add22827333cfc5666b082c3515c9e7651f6df8c112a8490e15493e1c6",
+      "result": "178 passed in 3.24s"
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_company_detection.py",
+        "tests/test_company_routing.py",
+        "tests/test_question_anchored_valuation.py",
+        "tests/test_comparative_ranking.py",
+        "tests/test_production_acceptance_validator.py",
+        "tests/test_beta_launch_validator.py",
+        "tests/benchmark/v4_analog_usefulness.py",
+        "tests/benchmark/v9_blind_analyst_evaluation.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "0ac2f7f89782f4426437351d02948feecf021612178fd4f303a6d6015e161864",
+      "result": "195 passed in 4.52s"
+    }
+  ],
+  "validation_environment": {
+    "cleared": true,
+    "OPENAI_API_KEY": "TEST_ONLY",
+    "SEC_USER_AGENT": "Test contact@example.invalid",
+    "external_sockets": "denied; AF_UNIX construction allowed for local async runtime"
+  },
+  "validation_command_prefix": [
+    "python",
+    "-I",
+    "-B",
+    "<socket audit guard>",
+    "-q",
+    "-o",
+    "addopts="
+  ],
+  "warnings": [
+    "Three local CI groups report one Starlette/AnyIO deprecation each; collection reports one too. No warning suppression or warning fix is claimed."
+  ],
+  "limitations": [
+    "Hosted full isolated-per-file CI is required; local related/group checks are not that full run.",
+    "Retained replay is exposed producer/binder/final-composition evidence, not new provider execution, production auth/persistence/browser acceptance or independent usefulness adjudication.",
+    "Scope coverage is sampled and structure-only; complete business model and broad-company launch remain unresolved."
+  ]
+}

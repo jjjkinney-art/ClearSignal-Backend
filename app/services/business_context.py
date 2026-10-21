@@ -25,7 +25,11 @@ def description_roles(quote):
         _CURRENT_BUSINESS_PREDICATE, _CURRENT_REVENUE_MODEL, _CURRENT_PRODUCT_DISTRIBUTION,
         _CURRENT_SEGMENT_STRUCTURE, _NAMED_SEGMENT_STRUCTURE, _REPORTED_SEGMENT_LIST,
         _NAMED_ISSUER_ACTIVITY, _bare_segment_list, _customer_purpose_activity,
+        _segment_business_scope,
     )
+    if _segment_business_scope(quote):
+        # A legal organization name is structure, not its operating activities.
+        return {'segments'}
     roles = set()
     named_list = bool(_NAMED_SEGMENT_STRUCTURE.match(quote) or _REPORTED_SEGMENT_LIST.fullmatch(quote))
     segment_statement = bool(_CURRENT_SEGMENT_STRUCTURE.match(quote))
