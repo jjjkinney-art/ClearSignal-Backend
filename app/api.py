@@ -1498,6 +1498,10 @@ async def ask_question(request: QuestionRequest, http_request: Request):
     from .security.ask_guard import enforce_ask_preflight as _enforce_ask_preflight
     _acting_user_id = await _enforce_ask_preflight(http_request, getattr(request, "question", "") or "")
 
+    if "conditional_valuation" in request.model_fields_set:
+        from .services.owned_scenario_turns import handle_owned_scenario_turn
+        return await handle_owned_scenario_turn(request, http_request, user_id=_acting_user_id)
+
     _KEEPALIVE_INTERVAL_S: float = 25.0  # < 60 s Nginx limit; resets the clock
 
     # ── Sprint 3C.1A: progressive protocol negotiation ────────────────────────

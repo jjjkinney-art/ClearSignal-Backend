@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**21 October owned explicit-scenario backend integration (offline):** a separate,
+default-disabled `/ask` dispatcher accepts explicit assumptions, checks real
+account/conversation ownership before evidence retrieval and persists the exact
+scenario inputs, citations and explanation. Original-turn retries preserve the
+saved result without fetching; hypothetical results cannot become thesis-memory
+artifacts or alerts. Six retained ASML/NPK scenarios and three gaps passed signed
+local HTTP/save/reopen/retry isolation replay. See `OWNED_SCENARIO_TURNS_20261021.md`.
+This is a backend contract, not browser input UI, production activation or broad
+company acceptance. The user-facing form, production end-to-end verification,
+independent usefulness review and development/holdout launch gates remain open.
+No live authority, new spending or coverage percentage follows.
+
 **21 October explicit-scenario explanations (offline):** the separate,
 default-disabled scenario endpoint now composes historical EPS citations,
 explicit assumptions and conditional growth/required-growth/recovery results.

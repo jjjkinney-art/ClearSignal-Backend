@@ -206,6 +206,9 @@ class Settings(BaseSettings):
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False
+    # Separate opt-in for explicit scenario turns through authenticated /ask.
+    # Requires the scenario flag above too; never grants live-run authority.
+    owned_research_scenarios_enabled: bool = False
 
     # Optional API key for Financial Modeling Prep.  When provided and
     # ``enable_data_retrieval`` is True, the backend will include this
