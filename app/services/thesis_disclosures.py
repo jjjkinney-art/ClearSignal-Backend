@@ -363,6 +363,7 @@ def fetch_thesis_disclosures(ticker, *, question, user_agent=""):
                                      stats=stats)
     stats.update(business_count=sum(bool(item.business_disclosures) for item in items),
                  competition_count=sum(bool(getattr(item, 'competition_disclosures', [])) for item in items),
+                 segment_context_count=sum(bool(item.segment_disclosures) for item in items),
                  operating_context_count=sum(bool(item.operating_disclosures) for item in items),
                  risk_count=sum(bool(item.risk_disclosures) for item in items))
     logger.info("thesis disclosure retrieval diagnostic",
@@ -418,7 +419,8 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         document = fetch_public_document(filing.url, user_agent=user_agent, publisher="SEC EDGAR",
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
-            preserve_sec_business=True, extract_tables=False)
+            preserve_sec_business=True, extract_tables=False,
+            segment_fact_cik=cik if relationship is None else None)
         diagnostics = {}
         stats.update(stage="extraction", status="extraction_complete")
         business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
@@ -430,6 +432,9 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         from .segment_order_context import extract_order_context
         orders = (extract_order_context(document, ticker=ticker, cik=cik)
                   if relationship is None else [])
+        from .segment_financial_context import extract_segment_financial_context
+        segments = (extract_segment_financial_context(document, ticker=ticker, cik=cik)
+                    if relationship is None else [])
         if relationship is not None:
             diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
@@ -446,7 +451,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                     risks.append(item)
         # Source order, never an assertion that these are the most material risks.
         risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + competition + risks[:2] + orders
+        return (quarterly_business + business)[:2] + competition + risks[:2] + orders + segments
     except Exception as exc:
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):

@@ -117,6 +117,10 @@ class RetrievedEvidence(BaseModel):
         default_factory=list,
         description="Producer-bound issuer competition descriptions; not independently verified advantages or market shares.",
     )
+    segment_disclosures: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Producer-bound annual segment financial observations with dimensional, table and allocation proof; separate from consolidated facts.",
+    )
     operating_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Producer-bound historical operating-context quotes; not revenue, forecasts or normalized financial facts.",

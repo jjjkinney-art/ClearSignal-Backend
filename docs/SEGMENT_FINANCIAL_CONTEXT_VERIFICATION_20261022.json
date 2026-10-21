@@ -1,0 +1,151 @@
+{
+  "base_commit": "6b9991429732518b4499ccb1c72fc13328341d5a",
+  "date_auckland": "2026-10-22",
+  "python": "3.11.9",
+  "requirements_sha256": "b99d0980daf6d0eda58ea5a1f5556d2d60406a0573129897fe5843dc1c343991",
+  "dependency_changes": false,
+  "new_test_cases": 55,
+  "focused_passed": 255,
+  "adjacent_passed": 407,
+  "local_ci_groups": [
+    {
+      "name": "Launch-security & reproducibility",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_launch_security.py",
+        "tests/test_launch_access_policy.py",
+        "tests/test_rate_limit_middleware.py",
+        "tests/test_dependency_pinning.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "e9c385c449304c27a77069ad0cfed1a2ed1dc23999a0dd7f500e5fdd6c2f7043",
+      "passed": 83
+    },
+    {
+      "name": "Production router regression",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_health_head.py",
+        "tests/test_portfolio_router.py",
+        "tests/test_scenario_router.py",
+        "tests/test_notifications_router.py",
+        "tests/test_watchlist_db_backed.py",
+        "tests/test_watchlist_scope_service.py",
+        "tests/test_auth_scoping.py",
+        "tests/test_brief_material_change_service.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "38b69e07f4e8c46949d9033f2bad8c143170ae4e88e2cb15ba6c9a1f79dbe2e1",
+      "passed": 87
+    },
+    {
+      "name": "Auth & billing",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_alembic_migrations.py",
+        "tests/test_services/test_auth_routes.py",
+        "tests/test_services/test_auth_middleware.py",
+        "tests/test_services/test_billing_routes.py",
+        "tests/test_services/test_billing_observability.py",
+        "tests/test_billing_checkout_webhook.py",
+        "tests/test_services/test_stripe_service.py",
+        "tests/test_services/test_webhook_service.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "8bf8492042c388e5e53434083ca35e86e8b7df14daf7fbba282f13a543ed3ce6",
+      "passed": 221
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_conviction_integration.py",
+        "tests/test_conviction_modeler.py",
+        "tests/test_directional_stance.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "424ab356f34996640d266ced6f84a479f3925dd916ed62d84aa4b5e38d975b5f",
+      "passed": 178
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "command": [
+        "/workspace/scratch/4b78885eb155/clearsignal-venv/bin/python",
+        "-I",
+        "-B",
+        "/workspace/scratch/4b78885eb155/segment_test_guard.py",
+        "-q",
+        "-o",
+        "addopts=",
+        "tests/test_company_detection.py",
+        "tests/test_company_routing.py",
+        "tests/test_question_anchored_valuation.py",
+        "tests/test_comparative_ranking.py",
+        "tests/test_production_acceptance_validator.py",
+        "tests/test_beta_launch_validator.py",
+        "tests/benchmark/v4_analog_usefulness.py",
+        "tests/benchmark/v9_blind_analyst_evaluation.py"
+      ],
+      "exit_code": 0,
+      "log_sha256": "ac84478f1d3d21462ca5e2ac55d3df372ba4b4feb5f657eed9085878435e061a",
+      "passed": 195
+    }
+  ],
+  "collected_tests": 18690,
+  "routes": 136,
+  "source_or_model_network_calls": 0,
+  "external_sockets_denied": true,
+  "retained_replay_canonical_match": true,
+  "preserved_claims_and_reference_ids": 10,
+  "candidate_claims": 11,
+  "final_status": "partial",
+  "file_hashes": {
+    "app/providers/sec_segment_facts.py": "c7dc7ede149c65759e43be4e9ce6a238dd2d3e66050573ffdd8e7a4d37263dd1",
+    "app/services/segment_financial_context.py": "562115c7937b9f072c3d3b03431b97aedfbd506df49d0897f328860e099f4e89",
+    "app/services/public_document_ingestion.py": "9c1ae2d6b5a13dfe10c738c5091975134e35caccb778405d2f68ab8f7ed9769d",
+    "app/services/thesis_disclosures.py": "d7461593a19024ae3c16892d7f6b27e695336d1814196c0c87cc9bf20cf9d5d4",
+    "app/services/financial_thesis_foundation.py": "00308c20a94ae26397d45f3753358ffdc7b2351d71549c658ab266b17deb17b4",
+    "app/schemas.py": "d7d535d1545f3cf3e1726d5d41acbd9aa062ea6502210fc3080b6ec0e8367e52",
+    "tests/test_segment_financial_context.py": "ac6fc8c01f1a7561fac837d0bec8850aaa4ba202fc0953063916910d0064acc9",
+    "tests/test_general_finance_evidence.py": "e91d5346df22f771fe918aba4576d48568df0a601924a0e97656d6d23d829ad2",
+    "scripts/replay_retained_segment_financials.py": "4af8ac38c4501f3237f1cf97ca520b2b9bc3f770854254ee60724fd5531d73b4",
+    "docs/SEGMENT_FINANCIAL_CONTEXT_REPLAY_20261022.json": "b5dd77ce104fe52b77b8d4bbcad676a3f9ad614c3cca96c3f01bede8f3d99b40"
+  },
+  "log_hashes": {
+    "segment-economics-final-reviewed.log": "606b129f08d3dbf2e36886dfcc180ba15f4c41145c9e0c22459414bb6a4cb841",
+    "segment-financial-related.log": "13185b1522dbf27c69aa034e925009c8a384513c3739fd171eb3472352c10014",
+    "segment-financial-final-collection.log": "d47e1479c1b4483ea9991cfd8ac3a64acaea32d651fc5fa952685f89e8ccd3c8",
+    "segment-financial-reviewed-replay.log": "5e835ef466fcdefa1c954485947f9138f0110b026e9b0a0f853ddebceb24f56e",
+    "segment-financial-final-scope.log": "0f26710e08ff19b1ed03859b7d4242148ecb95ee570c63bc7f8d854fed8ca229",
+    "segment-financial-final-scope-replay.log": "5e835ef466fcdefa1c954485947f9138f0110b026e9b0a0f853ddebceb24f56e"
+  },
+  "hosted_full_ci": "required_pending_publication",
+  "independent_factual_or_usefulness_review": false,
+  "holdout_answers_accessed": false,
+  "production_signed_in_acceptance": false,
+  "final_scope_recheck_passed": 55
+}

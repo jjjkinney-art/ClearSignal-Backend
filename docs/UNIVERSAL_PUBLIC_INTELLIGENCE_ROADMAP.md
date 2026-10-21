@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October source-bound segment financial context (offline):** a separate
+namespace/dimension/table-bound contract can preserve annual USD external sales
+and operating profit/loss without admitting segment observations as consolidated
+facts. The ordinary retained ingestion/disclosure/final-answer replay adds one
+three-segment results claim with accounting-allocation caveats, preserving the
+existing ten claims/citations, inferences, coverage and gaps. See
+`SEGMENT_FINANCIAL_CONTEXT_20261022.md`. Source-format/currency/period support is
+bounded; totals reconciliation, ratios, products/drivers, independent usefulness,
+development/holdout and signed-in launch acceptance remain open. No new live
+capture/spending authority or scenario activation follows.
+
 **22 October retained segment economics source review (offline):** Note L in the
 already retained filing contains three years of explicit segment sales and
 operating results, with material corporate-allocation and expense-definition
