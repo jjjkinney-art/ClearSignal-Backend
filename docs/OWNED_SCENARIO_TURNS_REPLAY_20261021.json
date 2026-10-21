@@ -1,0 +1,2956 @@
+{
+  "base_commit": "35d3cb299283367359aab0d97fb648ea1ae69fe6",
+  "kind": "retained_body_signed_ask_owned_scenario_save_reopen_retry",
+  "archive_hashes_verified": 19,
+  "body_hashes": {
+    "ASML": "28be6fd0f5608350ec396ae5d5097e45da95f4f29ad3fbd19aac328a15cce3d4",
+    "NPK": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "external_requests": 0,
+  "model_calls": 0,
+  "saved_source_substitutions": 9,
+  "successful_scenarios": 6,
+  "explicit_gaps": 3,
+  "cases": [
+    {
+      "ticker": "ASML",
+      "basis": "basic",
+      "currency": "EUR",
+      "mode": "evaluate_growth_scenario",
+      "available": true,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "ASML",
+        "request_id": "09b62299-a153-40c7-9bc4-459b48a22cdb",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "ASML",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 24.73 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual per-share EPS growth: 0%.\n\nUsing reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 EUR/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately 122.4%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness.",
+          "general": {
+            "answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 24.73 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual per-share EPS growth: 0%.\n\nUsing reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 EUR/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately 122.4%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness."
+          },
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "ASML basic EPS: 24.73 EUR per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-02-25",
+              "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "20-F",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-02-25",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 237 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "ASML",
+              "assumptions": {
+                "mode": "evaluate_growth_scenario",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "EUR/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "ASML",
+                  "currency": "EUR",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "basic",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "eps_growth_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": true,
+              "status": "partial",
+              "classification": "explicit_hypothetical_valuation_scenario",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": true,
+                "classification": "source_anchored_conditional_fiscal_eps_scenario",
+                "mode": "evaluate_growth_scenario",
+                "distributions": "excluded",
+                "formula": "price_factor = (exit_PE / entry_PE) * (1 + EPS_growth)^years; annual_price_change = price_factor^(1 / years) - 1",
+                "values": {
+                  "eps_growth_rate": "0",
+                  "terminal_price_factor": "4.9460000000000000000000000000000000000000000000000",
+                  "cumulative_price_change": "3.9460000000000000000000000000000000000000000000000",
+                  "annualized_price_change": "1.2239604313026794497200263251260116632381509218346"
+                },
+                "numeric_contract": {
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "annual_rates": "annual_fraction",
+                  "cumulative_price_change": "total_horizon_fraction",
+                  "price_factor": "dimensionless"
+                },
+                "inputs": {
+                  "mode": "evaluate_growth_scenario",
+                  "distributions": "excluded",
+                  "entry_pe": {
+                    "value": "4.0436716538617064294379296401132228063081277800243",
+                    "unit": "x",
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    },
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Scenario ratio derived from explicitly assumed price and historical fiscal EPS E1"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    },
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_growth_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "limitations": [
+                  "Not an expected return, total return, forecast or recommendation.",
+                  "EPS growth is per-share growth, not aggregate earnings or revenue growth.",
+                  "Dividends and other distributions are excluded.",
+                  "Input provenance and compatible bases are caller assertions, not independently verified.",
+                  "Decimal rounding applies; no acceptance tolerance or investment score is assigned.",
+                  "The source anchor is a historical fiscal year, not current TTM or forward EPS.",
+                  "The price is hypothetical; no market observation or price freshness is verified.",
+                  "Split/security conversion and earnings-scope compatibility remain user assertions.",
+                  "The requested EPS basis is basic; no basic/diluted substitution or dilution forecast is established.",
+                  "Entry P/E is a rounded conditional ratio, not an observed market multiple.",
+                  "Source consistency reconstruction is not independent factual adjudication."
+                ],
+                "status": "partial",
+                "launch_ready": false,
+                "source_eps": {
+                  "value": "24.73",
+                  "unit": "EUR/shares",
+                  "currency": "EUR",
+                  "reference_id": "E1",
+                  "concept": "us-gaap:EarningsPerShareBasic",
+                  "share_basis": "basic",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "period_basis": "fiscal_year",
+                  "document_type": "20-F",
+                  "source_consistency_reconstructed": true,
+                  "independently_adjudicated": false
+                },
+                "supplied_assumptions": {
+                  "mode": "evaluate_growth_scenario",
+                  "scenario_as_of": "2026-10-20",
+                  "distributions": "excluded",
+                  "price_per_underlying_common_share": true,
+                  "price": {
+                    "value": "100",
+                    "unit": "EUR/share",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_basis": {
+                    "issuer": "ASML",
+                    "currency": "EUR",
+                    "accounting": "gaap",
+                    "adjustment_definition": "none",
+                    "share_basis": "basic",
+                    "period_basis": "fiscal_year",
+                    "earnings_scope": "total_operations",
+                    "split_basis": "User assumes identical unconverted underlying common-share basis"
+                  },
+                  "eps_growth_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "entry_pe_derivation": {
+                  "formula": "assumed_price / reported_fiscal_basic_eps",
+                  "value": "4.0436716538617064294379296401132228063081277800243",
+                  "unit": "x",
+                  "price_status": "user_assumption",
+                  "eps_reference_ids": [
+                    "E1"
+                  ],
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "market_pe_verified": false
+                },
+                "basis_verification": {
+                  "issuer_currency_concept_period": "producer_consistency_reconstructed",
+                  "earnings_scope_and_split_basis": "user_assertions_not_independently_verified"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "explanation": {
+                "status": "partial",
+                "classification": "conditional_scenario_explanation",
+                "direct_answer": "Using reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 EUR/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately 122.4%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.",
+                "reported_facts": [
+                  {
+                    "text": "Reported annual basic EPS was 24.73 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]",
+                    "reference_ids": [
+                      "E1"
+                    ]
+                  }
+                ],
+                "explicit_assumptions": [
+                  "Hypothetical starting price: 100 EUR/underlying common share.",
+                  "Assumed exit P/E: 20x; horizon: 2 years.",
+                  "Currency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.",
+                  "Assumed annual per-share EPS growth: 0%."
+                ],
+                "conditional_results": {
+                  "annualized_price_change": "approximately 122.4%",
+                  "cumulative_price_change": "394.6%",
+                  "terminal_price_factor": "4.9460000000000000000000000000000000000000000000000"
+                },
+                "percentage_display": {
+                  "decimal_places": 2,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "inexact_prefix": "approximately ",
+                  "exact_fraction_values": "scenario.values"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "source_claims": [
+                {
+                  "value_text": "24.73 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2025-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 24.73,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "24.73 EUR per share (as of 2025-12-31)",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "period": "FY2025",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Basic"
+                },
+                {
+                  "value_text": "19.25 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2024-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 19.25,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "19.25 EUR per share (as of 2024-12-31)",
+                  "period_start": "2024-01-01",
+                  "period_end": "2024-12-31",
+                  "period": "FY2024",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Basic"
+                }
+              ],
+              "evidence_references": [
+                {
+                  "id": "E1",
+                  "title": "ASML basic EPS: 24.73 EUR per share (2025-12-31)",
+                  "source": "SEC EDGAR \u2014 structured XBRL fact",
+                  "published_at": "2026-02-25",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "inspectable": true,
+                  "source_type": "regulatory_filing",
+                  "source_tier": "primary",
+                  "claim_type": "reported_fact",
+                  "document_type": "20-F",
+                  "reporting_period_start": "2025-01-01",
+                  "reporting_period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "retrieved_at": null,
+                  "observed_at": null,
+                  "section": null,
+                  "page": null,
+                  "extraction_method": "structured_xbrl",
+                  "freshness_status": "current",
+                  "status_reason": "evidence is 237 days old",
+                  "conflict_group_id": null,
+                  "supersedes_reference_id": null
+                }
+              ],
+              "as_of": "2026-10-20",
+              "evaluated_at": "2026-10-20",
+              "market_price_observed": false,
+              "market_pe_verified": false,
+              "reporting_currency": "EUR",
+              "fx_conversion_performed": false,
+              "adr_conversion_performed": false,
+              "source_selection": "latest_available_annual_eur_gaap_basic_eps_with_same_filing_assets_currency_anchor",
+              "limitations": [
+                "Explicit hypothetical assumptions are not source observations or forecasts.",
+                "EPS uses the explicitly requested basic basis; no basic/diluted substitution or dilution forecast is established.",
+                "Reported currency is preserved; no FX conversion, ADR ratio or observed market price is supplied.",
+                "References support reported historical EPS only, not future EPS, prices or valuation multiples.",
+                "Source consistency is not independent factual adjudication or quote/share/split compatibility.",
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "basic",
+      "currency": "EUR",
+      "mode": "solve_required_earnings_growth",
+      "available": true,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "ASML",
+        "request_id": "395c97a1-81c8-4b4b-80e6-c89e52a48de7",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "ASML",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 24.73 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual price-change target: 0%.\n\nAt the hypothetical starting price of 100 EUR/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately -55.04% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness.",
+          "general": {
+            "answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 24.73 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual price-change target: 0%.\n\nAt the hypothetical starting price of 100 EUR/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately -55.04% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness."
+          },
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "ASML basic EPS: 24.73 EUR per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-02-25",
+              "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "20-F",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-02-25",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 237 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "ASML",
+              "assumptions": {
+                "mode": "solve_required_earnings_growth",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "EUR/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "ASML",
+                  "currency": "EUR",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "basic",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "annual_price_return_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": true,
+              "status": "partial",
+              "classification": "explicit_hypothetical_valuation_scenario",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": true,
+                "classification": "source_anchored_conditional_fiscal_eps_scenario",
+                "mode": "solve_required_earnings_growth",
+                "distributions": "excluded",
+                "formula": "EPS_growth = (1 + annual_price_return) * (entry_PE / exit_PE)^(1 / years) - 1",
+                "values": {
+                  "eps_growth_rate": "-0.55035171223156501218762104223089129332022828106862",
+                  "terminal_price_factor": "1",
+                  "cumulative_price_change": "0",
+                  "annualized_price_change": "0"
+                },
+                "numeric_contract": {
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "annual_rates": "annual_fraction",
+                  "cumulative_price_change": "total_horizon_fraction",
+                  "price_factor": "dimensionless"
+                },
+                "inputs": {
+                  "mode": "solve_required_earnings_growth",
+                  "distributions": "excluded",
+                  "entry_pe": {
+                    "value": "4.0436716538617064294379296401132228063081277800243",
+                    "unit": "x",
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    },
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Scenario ratio derived from explicitly assumed price and historical fiscal EPS E1"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    },
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "annual_price_return_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "limitations": [
+                  "Not an expected return, total return, forecast or recommendation.",
+                  "EPS growth is per-share growth, not aggregate earnings or revenue growth.",
+                  "Dividends and other distributions are excluded.",
+                  "Input provenance and compatible bases are caller assertions, not independently verified.",
+                  "Decimal rounding applies; no acceptance tolerance or investment score is assigned.",
+                  "The source anchor is a historical fiscal year, not current TTM or forward EPS.",
+                  "The price is hypothetical; no market observation or price freshness is verified.",
+                  "Split/security conversion and earnings-scope compatibility remain user assertions.",
+                  "The requested EPS basis is basic; no basic/diluted substitution or dilution forecast is established.",
+                  "Entry P/E is a rounded conditional ratio, not an observed market multiple.",
+                  "Source consistency reconstruction is not independent factual adjudication."
+                ],
+                "status": "partial",
+                "launch_ready": false,
+                "source_eps": {
+                  "value": "24.73",
+                  "unit": "EUR/shares",
+                  "currency": "EUR",
+                  "reference_id": "E1",
+                  "concept": "us-gaap:EarningsPerShareBasic",
+                  "share_basis": "basic",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "period_basis": "fiscal_year",
+                  "document_type": "20-F",
+                  "source_consistency_reconstructed": true,
+                  "independently_adjudicated": false
+                },
+                "supplied_assumptions": {
+                  "mode": "solve_required_earnings_growth",
+                  "scenario_as_of": "2026-10-20",
+                  "distributions": "excluded",
+                  "price_per_underlying_common_share": true,
+                  "price": {
+                    "value": "100",
+                    "unit": "EUR/share",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_basis": {
+                    "issuer": "ASML",
+                    "currency": "EUR",
+                    "accounting": "gaap",
+                    "adjustment_definition": "none",
+                    "share_basis": "basic",
+                    "period_basis": "fiscal_year",
+                    "earnings_scope": "total_operations",
+                    "split_basis": "User assumes identical unconverted underlying common-share basis"
+                  },
+                  "annual_price_return_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "entry_pe_derivation": {
+                  "formula": "assumed_price / reported_fiscal_basic_eps",
+                  "value": "4.0436716538617064294379296401132228063081277800243",
+                  "unit": "x",
+                  "price_status": "user_assumption",
+                  "eps_reference_ids": [
+                    "E1"
+                  ],
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "market_pe_verified": false
+                },
+                "basis_verification": {
+                  "issuer_currency_concept_period": "producer_consistency_reconstructed",
+                  "earnings_scope_and_split_basis": "user_assertions_not_independently_verified"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "explanation": {
+                "status": "partial",
+                "classification": "conditional_scenario_explanation",
+                "direct_answer": "At the hypothetical starting price of 100 EUR/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately -55.04% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.",
+                "reported_facts": [
+                  {
+                    "text": "Reported annual basic EPS was 24.73 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]",
+                    "reference_ids": [
+                      "E1"
+                    ]
+                  }
+                ],
+                "explicit_assumptions": [
+                  "Hypothetical starting price: 100 EUR/underlying common share.",
+                  "Assumed exit P/E: 20x; horizon: 2 years.",
+                  "Currency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.",
+                  "Assumed annual price-change target: 0%."
+                ],
+                "conditional_results": {
+                  "annualized_price_change": "0%",
+                  "cumulative_price_change": "0%",
+                  "terminal_price_factor": "1"
+                },
+                "percentage_display": {
+                  "decimal_places": 2,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "inexact_prefix": "approximately ",
+                  "exact_fraction_values": "scenario.values"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "source_claims": [
+                {
+                  "value_text": "24.73 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2025-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 24.73,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "24.73 EUR per share (as of 2025-12-31)",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "period": "FY2025",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Basic"
+                },
+                {
+                  "value_text": "19.25 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2024-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 19.25,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareBasic",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "19.25 EUR per share (as of 2024-12-31)",
+                  "period_start": "2024-01-01",
+                  "period_end": "2024-12-31",
+                  "period": "FY2024",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Basic"
+                }
+              ],
+              "evidence_references": [
+                {
+                  "id": "E1",
+                  "title": "ASML basic EPS: 24.73 EUR per share (2025-12-31)",
+                  "source": "SEC EDGAR \u2014 structured XBRL fact",
+                  "published_at": "2026-02-25",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "inspectable": true,
+                  "source_type": "regulatory_filing",
+                  "source_tier": "primary",
+                  "claim_type": "reported_fact",
+                  "document_type": "20-F",
+                  "reporting_period_start": "2025-01-01",
+                  "reporting_period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "retrieved_at": null,
+                  "observed_at": null,
+                  "section": null,
+                  "page": null,
+                  "extraction_method": "structured_xbrl",
+                  "freshness_status": "current",
+                  "status_reason": "evidence is 237 days old",
+                  "conflict_group_id": null,
+                  "supersedes_reference_id": null
+                }
+              ],
+              "as_of": "2026-10-20",
+              "evaluated_at": "2026-10-20",
+              "market_price_observed": false,
+              "market_pe_verified": false,
+              "reporting_currency": "EUR",
+              "fx_conversion_performed": false,
+              "adr_conversion_performed": false,
+              "source_selection": "latest_available_annual_eur_gaap_basic_eps_with_same_filing_assets_currency_anchor",
+              "limitations": [
+                "Explicit hypothetical assumptions are not source observations or forecasts.",
+                "EPS uses the explicitly requested basic basis; no basic/diluted substitution or dilution forecast is established.",
+                "Reported currency is preserved; no FX conversion, ADR ratio or observed market price is supplied.",
+                "References support reported historical EPS only, not future EPS, prices or valuation multiples.",
+                "Source consistency is not independent factual adjudication or quote/share/split compatibility.",
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "diluted",
+      "currency": "EUR",
+      "mode": "evaluate_growth_scenario",
+      "available": true,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "ASML",
+        "request_id": "56251fb2-e6e7-40c5-b1d5-d5bbafdbea29",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "ASML",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario (partial)\n\nReported annual diluted EPS was 24.71 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual per-share EPS growth: 0%.\n\nUsing reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 EUR/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately 122.31%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness.",
+          "general": {
+            "answer": "Conditional valuation scenario (partial)\n\nReported annual diluted EPS was 24.71 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual per-share EPS growth: 0%.\n\nUsing reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 EUR/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately 122.31%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness."
+          },
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "ASML diluted EPS: 24.71 EUR per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-02-25",
+              "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "20-F",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-02-25",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 237 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "ASML",
+              "assumptions": {
+                "mode": "evaluate_growth_scenario",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "EUR/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "ASML",
+                  "currency": "EUR",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "diluted",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "eps_growth_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": true,
+              "status": "partial",
+              "classification": "explicit_hypothetical_valuation_scenario",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": true,
+                "classification": "source_anchored_conditional_fiscal_eps_scenario",
+                "mode": "evaluate_growth_scenario",
+                "distributions": "excluded",
+                "formula": "price_factor = (exit_PE / entry_PE) * (1 + EPS_growth)^years; annual_price_change = price_factor^(1 / years) - 1",
+                "values": {
+                  "eps_growth_rate": "0",
+                  "terminal_price_factor": "4.9420000000000000000000000000000000000000000000000",
+                  "cumulative_price_change": "3.9420000000000000000000000000000000000000000000000",
+                  "annualized_price_change": "1.2230609528305785974936550442782175597763715882899"
+                },
+                "numeric_contract": {
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "annual_rates": "annual_fraction",
+                  "cumulative_price_change": "total_horizon_fraction",
+                  "price_factor": "dimensionless"
+                },
+                "inputs": {
+                  "mode": "evaluate_growth_scenario",
+                  "distributions": "excluded",
+                  "entry_pe": {
+                    "value": "4.0469445568595710238769728854714690408741400242817",
+                    "unit": "x",
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "diluted",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    },
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Scenario ratio derived from explicitly assumed price and historical fiscal EPS E1"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    },
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "diluted",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_growth_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "limitations": [
+                  "Not an expected return, total return, forecast or recommendation.",
+                  "EPS growth is per-share growth, not aggregate earnings or revenue growth.",
+                  "Dividends and other distributions are excluded.",
+                  "Input provenance and compatible bases are caller assertions, not independently verified.",
+                  "Decimal rounding applies; no acceptance tolerance or investment score is assigned.",
+                  "The source anchor is a historical fiscal year, not current TTM or forward EPS.",
+                  "The price is hypothetical; no market observation or price freshness is verified.",
+                  "Split/security conversion and earnings-scope compatibility remain user assertions.",
+                  "The requested EPS basis is diluted; no basic/diluted substitution or dilution forecast is established.",
+                  "Entry P/E is a rounded conditional ratio, not an observed market multiple.",
+                  "Source consistency reconstruction is not independent factual adjudication."
+                ],
+                "status": "partial",
+                "launch_ready": false,
+                "source_eps": {
+                  "value": "24.71",
+                  "unit": "EUR/shares",
+                  "currency": "EUR",
+                  "reference_id": "E1",
+                  "concept": "us-gaap:EarningsPerShareDiluted",
+                  "share_basis": "diluted",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "period_basis": "fiscal_year",
+                  "document_type": "20-F",
+                  "source_consistency_reconstructed": true,
+                  "independently_adjudicated": false
+                },
+                "supplied_assumptions": {
+                  "mode": "evaluate_growth_scenario",
+                  "scenario_as_of": "2026-10-20",
+                  "distributions": "excluded",
+                  "price_per_underlying_common_share": true,
+                  "price": {
+                    "value": "100",
+                    "unit": "EUR/share",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_basis": {
+                    "issuer": "ASML",
+                    "currency": "EUR",
+                    "accounting": "gaap",
+                    "adjustment_definition": "none",
+                    "share_basis": "diluted",
+                    "period_basis": "fiscal_year",
+                    "earnings_scope": "total_operations",
+                    "split_basis": "User assumes identical unconverted underlying common-share basis"
+                  },
+                  "eps_growth_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "entry_pe_derivation": {
+                  "formula": "assumed_price / reported_fiscal_diluted_eps",
+                  "value": "4.0469445568595710238769728854714690408741400242817",
+                  "unit": "x",
+                  "price_status": "user_assumption",
+                  "eps_reference_ids": [
+                    "E1"
+                  ],
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "market_pe_verified": false
+                },
+                "basis_verification": {
+                  "issuer_currency_concept_period": "producer_consistency_reconstructed",
+                  "earnings_scope_and_split_basis": "user_assertions_not_independently_verified"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "explanation": {
+                "status": "partial",
+                "classification": "conditional_scenario_explanation",
+                "direct_answer": "Using reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 EUR/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately 122.31%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.",
+                "reported_facts": [
+                  {
+                    "text": "Reported annual diluted EPS was 24.71 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]",
+                    "reference_ids": [
+                      "E1"
+                    ]
+                  }
+                ],
+                "explicit_assumptions": [
+                  "Hypothetical starting price: 100 EUR/underlying common share.",
+                  "Assumed exit P/E: 20x; horizon: 2 years.",
+                  "Currency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.",
+                  "Assumed annual per-share EPS growth: 0%."
+                ],
+                "conditional_results": {
+                  "annualized_price_change": "approximately 122.31%",
+                  "cumulative_price_change": "394.2%",
+                  "terminal_price_factor": "4.9420000000000000000000000000000000000000000000000"
+                },
+                "percentage_display": {
+                  "decimal_places": 2,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "inexact_prefix": "approximately ",
+                  "exact_fraction_values": "scenario.values"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "source_claims": [
+                {
+                  "value_text": "24.71 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2025-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 24.71,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareDiluted",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "24.71 EUR per share (as of 2025-12-31)",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "period": "FY2025",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Diluted"
+                },
+                {
+                  "value_text": "19.24 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2024-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 19.24,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareDiluted",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "19.24 EUR per share (as of 2024-12-31)",
+                  "period_start": "2024-01-01",
+                  "period_end": "2024-12-31",
+                  "period": "FY2024",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Diluted"
+                }
+              ],
+              "evidence_references": [
+                {
+                  "id": "E1",
+                  "title": "ASML diluted EPS: 24.71 EUR per share (2025-12-31)",
+                  "source": "SEC EDGAR \u2014 structured XBRL fact",
+                  "published_at": "2026-02-25",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "inspectable": true,
+                  "source_type": "regulatory_filing",
+                  "source_tier": "primary",
+                  "claim_type": "reported_fact",
+                  "document_type": "20-F",
+                  "reporting_period_start": "2025-01-01",
+                  "reporting_period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "retrieved_at": null,
+                  "observed_at": null,
+                  "section": null,
+                  "page": null,
+                  "extraction_method": "structured_xbrl",
+                  "freshness_status": "current",
+                  "status_reason": "evidence is 237 days old",
+                  "conflict_group_id": null,
+                  "supersedes_reference_id": null
+                }
+              ],
+              "as_of": "2026-10-20",
+              "evaluated_at": "2026-10-20",
+              "market_price_observed": false,
+              "market_pe_verified": false,
+              "reporting_currency": "EUR",
+              "fx_conversion_performed": false,
+              "adr_conversion_performed": false,
+              "source_selection": "latest_available_annual_eur_gaap_diluted_eps_with_same_filing_assets_currency_anchor",
+              "limitations": [
+                "Explicit hypothetical assumptions are not source observations or forecasts.",
+                "EPS uses the explicitly requested diluted basis; no basic/diluted substitution or dilution forecast is established.",
+                "Reported currency is preserved; no FX conversion, ADR ratio or observed market price is supplied.",
+                "References support reported historical EPS only, not future EPS, prices or valuation multiples.",
+                "Source consistency is not independent factual adjudication or quote/share/split compatibility.",
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "diluted",
+      "currency": "EUR",
+      "mode": "solve_required_earnings_growth",
+      "available": true,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "ASML",
+        "request_id": "9bef47df-dd9e-4356-9928-15d361175132",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "ASML",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario (partial)\n\nReported annual diluted EPS was 24.71 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual price-change target: 0%.\n\nAt the hypothetical starting price of 100 EUR/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately -55.02% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness.",
+          "general": {
+            "answer": "Conditional valuation scenario (partial)\n\nReported annual diluted EPS was 24.71 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 EUR/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual price-change target: 0%.\n\nAt the hypothetical starting price of 100 EUR/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately -55.02% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness."
+          },
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "ASML diluted EPS: 24.71 EUR per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-02-25",
+              "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "20-F",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-02-25",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 237 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "ASML",
+              "assumptions": {
+                "mode": "solve_required_earnings_growth",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "EUR/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "ASML",
+                  "currency": "EUR",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "diluted",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "annual_price_return_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": true,
+              "status": "partial",
+              "classification": "explicit_hypothetical_valuation_scenario",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": true,
+                "classification": "source_anchored_conditional_fiscal_eps_scenario",
+                "mode": "solve_required_earnings_growth",
+                "distributions": "excluded",
+                "formula": "EPS_growth = (1 + annual_price_return) * (entry_PE / exit_PE)^(1 / years) - 1",
+                "values": {
+                  "eps_growth_rate": "-0.55016977886876191875887190524520081752805107480982",
+                  "terminal_price_factor": "1",
+                  "cumulative_price_change": "0",
+                  "annualized_price_change": "0"
+                },
+                "numeric_contract": {
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "annual_rates": "annual_fraction",
+                  "cumulative_price_change": "total_horizon_fraction",
+                  "price_factor": "dimensionless"
+                },
+                "inputs": {
+                  "mode": "solve_required_earnings_growth",
+                  "distributions": "excluded",
+                  "entry_pe": {
+                    "value": "4.0469445568595710238769728854714690408741400242817",
+                    "unit": "x",
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "diluted",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    },
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Scenario ratio derived from explicitly assumed price and historical fiscal EPS E1"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    },
+                    "eps_basis": {
+                      "issuer": "ASML",
+                      "currency": "EUR",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "diluted",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "annual_price_return_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "limitations": [
+                  "Not an expected return, total return, forecast or recommendation.",
+                  "EPS growth is per-share growth, not aggregate earnings or revenue growth.",
+                  "Dividends and other distributions are excluded.",
+                  "Input provenance and compatible bases are caller assertions, not independently verified.",
+                  "Decimal rounding applies; no acceptance tolerance or investment score is assigned.",
+                  "The source anchor is a historical fiscal year, not current TTM or forward EPS.",
+                  "The price is hypothetical; no market observation or price freshness is verified.",
+                  "Split/security conversion and earnings-scope compatibility remain user assertions.",
+                  "The requested EPS basis is diluted; no basic/diluted substitution or dilution forecast is established.",
+                  "Entry P/E is a rounded conditional ratio, not an observed market multiple.",
+                  "Source consistency reconstruction is not independent factual adjudication."
+                ],
+                "status": "partial",
+                "launch_ready": false,
+                "source_eps": {
+                  "value": "24.71",
+                  "unit": "EUR/shares",
+                  "currency": "EUR",
+                  "reference_id": "E1",
+                  "concept": "us-gaap:EarningsPerShareDiluted",
+                  "share_basis": "diluted",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "period_basis": "fiscal_year",
+                  "document_type": "20-F",
+                  "source_consistency_reconstructed": true,
+                  "independently_adjudicated": false
+                },
+                "supplied_assumptions": {
+                  "mode": "solve_required_earnings_growth",
+                  "scenario_as_of": "2026-10-20",
+                  "distributions": "excluded",
+                  "price_per_underlying_common_share": true,
+                  "price": {
+                    "value": "100",
+                    "unit": "EUR/share",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_basis": {
+                    "issuer": "ASML",
+                    "currency": "EUR",
+                    "accounting": "gaap",
+                    "adjustment_definition": "none",
+                    "share_basis": "diluted",
+                    "period_basis": "fiscal_year",
+                    "earnings_scope": "total_operations",
+                    "split_basis": "User assumes identical unconverted underlying common-share basis"
+                  },
+                  "annual_price_return_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "entry_pe_derivation": {
+                  "formula": "assumed_price / reported_fiscal_diluted_eps",
+                  "value": "4.0469445568595710238769728854714690408741400242817",
+                  "unit": "x",
+                  "price_status": "user_assumption",
+                  "eps_reference_ids": [
+                    "E1"
+                  ],
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "market_pe_verified": false
+                },
+                "basis_verification": {
+                  "issuer_currency_concept_period": "producer_consistency_reconstructed",
+                  "earnings_scope_and_split_basis": "user_assertions_not_independently_verified"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "explanation": {
+                "status": "partial",
+                "classification": "conditional_scenario_explanation",
+                "direct_answer": "At the hypothetical starting price of 100 EUR/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately -55.02% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.",
+                "reported_facts": [
+                  {
+                    "text": "Reported annual diluted EPS was 24.71 EUR/share for 2025-01-01 to 2025-12-31 (filed 2026-02-25). [E1]",
+                    "reference_ids": [
+                      "E1"
+                    ]
+                  }
+                ],
+                "explicit_assumptions": [
+                  "Hypothetical starting price: 100 EUR/underlying common share.",
+                  "Assumed exit P/E: 20x; horizon: 2 years.",
+                  "Currency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.",
+                  "Assumed annual price-change target: 0%."
+                ],
+                "conditional_results": {
+                  "annualized_price_change": "0%",
+                  "cumulative_price_change": "0%",
+                  "terminal_price_factor": "1"
+                },
+                "percentage_display": {
+                  "decimal_places": 2,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "inexact_prefix": "approximately ",
+                  "exact_fraction_values": "scenario.values"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "source_claims": [
+                {
+                  "value_text": "24.71 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2025-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 24.71,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareDiluted",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "24.71 EUR per share (as of 2025-12-31)",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "period": "FY2025",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Diluted"
+                },
+                {
+                  "value_text": "19.24 EUR per share",
+                  "provenance": "reported",
+                  "as_of": "2024-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 19.24,
+                  "unit": "EUR/shares",
+                  "source": "20-F",
+                  "source_date_unavailable": false,
+                  "ticker": "ASML",
+                  "metric": "us-gaap:EarningsPerShareDiluted",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:937966:0001628280-26-011378:us-gaap:EarningsPerShareDiluted",
+                    "title": "20-F filed 2026-02-25 \u00b7 Earnings Per Share, Diluted",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                    "published_at": "2026-02-25"
+                  },
+                  "rendered": "19.24 EUR per share (as of 2024-12-31)",
+                  "period_start": "2024-01-01",
+                  "period_end": "2024-12-31",
+                  "period": "FY2024",
+                  "scope": "consolidated",
+                  "currency": "EUR",
+                  "label": "Earnings Per Share, Diluted"
+                }
+              ],
+              "evidence_references": [
+                {
+                  "id": "E1",
+                  "title": "ASML diluted EPS: 24.71 EUR per share (2025-12-31)",
+                  "source": "SEC EDGAR \u2014 structured XBRL fact",
+                  "published_at": "2026-02-25",
+                  "url": "https://www.sec.gov/Archives/edgar/data/937966/000162828026011378/0001628280-26-011378-index.htm",
+                  "inspectable": true,
+                  "source_type": "regulatory_filing",
+                  "source_tier": "primary",
+                  "claim_type": "reported_fact",
+                  "document_type": "20-F",
+                  "reporting_period_start": "2025-01-01",
+                  "reporting_period_end": "2025-12-31",
+                  "filed_at": "2026-02-25",
+                  "retrieved_at": null,
+                  "observed_at": null,
+                  "section": null,
+                  "page": null,
+                  "extraction_method": "structured_xbrl",
+                  "freshness_status": "current",
+                  "status_reason": "evidence is 237 days old",
+                  "conflict_group_id": null,
+                  "supersedes_reference_id": null
+                }
+              ],
+              "as_of": "2026-10-20",
+              "evaluated_at": "2026-10-20",
+              "market_price_observed": false,
+              "market_pe_verified": false,
+              "reporting_currency": "EUR",
+              "fx_conversion_performed": false,
+              "adr_conversion_performed": false,
+              "source_selection": "latest_available_annual_eur_gaap_diluted_eps_with_same_filing_assets_currency_anchor",
+              "limitations": [
+                "Explicit hypothetical assumptions are not source observations or forecasts.",
+                "EPS uses the explicitly requested diluted basis; no basic/diluted substitution or dilution forecast is established.",
+                "Reported currency is preserved; no FX conversion, ADR ratio or observed market price is supplied.",
+                "References support reported historical EPS only, not future EPS, prices or valuation multiples.",
+                "Source consistency is not independent factual adjudication or quote/share/split compatibility.",
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "NPK",
+      "basis": "basic",
+      "currency": "USD",
+      "mode": "evaluate_growth_scenario",
+      "available": true,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "NPK",
+        "request_id": "c2ecc8cf-1c0c-4f1c-b08a-9ca633edacf3",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "NPK",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 4.63 USD/share for 2025-01-01 to 2025-12-31 (filed 2026-03-13). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 USD/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual per-share EPS growth: 0%.\n\nUsing reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 USD/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately -3.77%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness.",
+          "general": {
+            "answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 4.63 USD/share for 2025-01-01 to 2025-12-31 (filed 2026-03-13). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 USD/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual per-share EPS growth: 0%.\n\nUsing reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 USD/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately -3.77%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness."
+          },
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "NPK basic EPS: $4.63 per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-03-13",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "10-K",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-03-13",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 221 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "NPK",
+              "assumptions": {
+                "mode": "evaluate_growth_scenario",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "USD/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "NPK",
+                  "currency": "USD",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "basic",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "eps_growth_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": true,
+              "status": "partial",
+              "classification": "explicit_hypothetical_valuation_scenario",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": true,
+                "classification": "source_anchored_conditional_fiscal_eps_scenario",
+                "mode": "evaluate_growth_scenario",
+                "distributions": "excluded",
+                "formula": "price_factor = (exit_PE / entry_PE) * (1 + EPS_growth)^years; annual_price_change = price_factor^(1 / years) - 1",
+                "values": {
+                  "eps_growth_rate": "0",
+                  "terminal_price_factor": "0.92600000000000000000000000000000000000000000000001",
+                  "cumulative_price_change": "-0.07399999999999999999999999999999999999999999999999",
+                  "annualized_price_change": "-0.03771106210244731921177683392099832013650275318273"
+                },
+                "numeric_contract": {
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "annual_rates": "annual_fraction",
+                  "cumulative_price_change": "total_horizon_fraction",
+                  "price_factor": "dimensionless"
+                },
+                "inputs": {
+                  "mode": "evaluate_growth_scenario",
+                  "distributions": "excluded",
+                  "entry_pe": {
+                    "value": "21.598272138228941684665226781857451403887688984881",
+                    "unit": "x",
+                    "eps_basis": {
+                      "issuer": "NPK",
+                      "currency": "USD",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    },
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Scenario ratio derived from explicitly assumed price and historical fiscal EPS E1"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    },
+                    "eps_basis": {
+                      "issuer": "NPK",
+                      "currency": "USD",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_growth_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "limitations": [
+                  "Not an expected return, total return, forecast or recommendation.",
+                  "EPS growth is per-share growth, not aggregate earnings or revenue growth.",
+                  "Dividends and other distributions are excluded.",
+                  "Input provenance and compatible bases are caller assertions, not independently verified.",
+                  "Decimal rounding applies; no acceptance tolerance or investment score is assigned.",
+                  "The source anchor is a historical fiscal year, not current TTM or forward EPS.",
+                  "The price is hypothetical; no market observation or price freshness is verified.",
+                  "Split/security conversion and earnings-scope compatibility remain user assertions.",
+                  "The requested EPS basis is basic; no basic/diluted substitution or dilution forecast is established.",
+                  "Entry P/E is a rounded conditional ratio, not an observed market multiple.",
+                  "Source consistency reconstruction is not independent factual adjudication."
+                ],
+                "status": "partial",
+                "launch_ready": false,
+                "source_eps": {
+                  "value": "4.63",
+                  "unit": "USD/shares",
+                  "currency": "USD",
+                  "reference_id": "E1",
+                  "concept": "us-gaap:EarningsPerShareBasic",
+                  "share_basis": "basic",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "filed_at": "2026-03-13",
+                  "document_ref": {
+                    "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                    "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                    "published_at": "2026-03-13"
+                  },
+                  "period_basis": "fiscal_year",
+                  "document_type": "10-K",
+                  "source_consistency_reconstructed": true,
+                  "independently_adjudicated": false
+                },
+                "supplied_assumptions": {
+                  "mode": "evaluate_growth_scenario",
+                  "scenario_as_of": "2026-10-20",
+                  "distributions": "excluded",
+                  "price_per_underlying_common_share": true,
+                  "price": {
+                    "value": "100",
+                    "unit": "USD/share",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_basis": {
+                    "issuer": "NPK",
+                    "currency": "USD",
+                    "accounting": "gaap",
+                    "adjustment_definition": "none",
+                    "share_basis": "basic",
+                    "period_basis": "fiscal_year",
+                    "earnings_scope": "total_operations",
+                    "split_basis": "User assumes identical unconverted underlying common-share basis"
+                  },
+                  "eps_growth_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "entry_pe_derivation": {
+                  "formula": "assumed_price / reported_fiscal_basic_eps",
+                  "value": "21.598272138228941684665226781857451403887688984881",
+                  "unit": "x",
+                  "price_status": "user_assumption",
+                  "eps_reference_ids": [
+                    "E1"
+                  ],
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "market_pe_verified": false
+                },
+                "basis_verification": {
+                  "issuer_currency_concept_period": "producer_consistency_reconstructed",
+                  "earnings_scope_and_split_basis": "user_assertions_not_independently_verified"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "explanation": {
+                "status": "partial",
+                "classification": "conditional_scenario_explanation",
+                "direct_answer": "Using reported annual EPS as the starting earnings amount, the hypothetical starting price of 100 USD/share, annual per-share EPS growth of 0% and exit P/E of 20x over 2 years imply annualized price change of approximately -3.77%. Future earnings and the exit multiple remain assumptions. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.",
+                "reported_facts": [
+                  {
+                    "text": "Reported annual basic EPS was 4.63 USD/share for 2025-01-01 to 2025-12-31 (filed 2026-03-13). [E1]",
+                    "reference_ids": [
+                      "E1"
+                    ]
+                  }
+                ],
+                "explicit_assumptions": [
+                  "Hypothetical starting price: 100 USD/underlying common share.",
+                  "Assumed exit P/E: 20x; horizon: 2 years.",
+                  "Currency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.",
+                  "Assumed annual per-share EPS growth: 0%."
+                ],
+                "conditional_results": {
+                  "annualized_price_change": "approximately -3.77%",
+                  "cumulative_price_change": "approximately -7.4%",
+                  "terminal_price_factor": "0.92600000000000000000000000000000000000000000000001"
+                },
+                "percentage_display": {
+                  "decimal_places": 2,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "inexact_prefix": "approximately ",
+                  "exact_fraction_values": "scenario.values"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "source_claims": [
+                {
+                  "value_text": "$4.63 per share",
+                  "provenance": "reported",
+                  "as_of": "2025-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 4.63,
+                  "unit": "USD/shares",
+                  "source": "10-K",
+                  "source_date_unavailable": false,
+                  "ticker": "NPK",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                    "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                    "published_at": "2026-03-13"
+                  },
+                  "rendered": "$4.63 per share (as of 2025-12-31)",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "period": "FY2025",
+                  "scope": "consolidated",
+                  "currency": "USD",
+                  "label": "Earnings Per Share, Basic"
+                },
+                {
+                  "value_text": "$5.82 per share",
+                  "provenance": "reported",
+                  "as_of": "2024-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 5.82,
+                  "unit": "USD/shares",
+                  "source": "10-K",
+                  "source_date_unavailable": false,
+                  "ticker": "NPK",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                    "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                    "published_at": "2026-03-13"
+                  },
+                  "rendered": "$5.82 per share (as of 2024-12-31)",
+                  "period_start": "2024-01-01",
+                  "period_end": "2024-12-31",
+                  "period": "FY2024",
+                  "scope": "consolidated",
+                  "currency": "USD",
+                  "label": "Earnings Per Share, Basic"
+                }
+              ],
+              "evidence_references": [
+                {
+                  "id": "E1",
+                  "title": "NPK basic EPS: $4.63 per share (2025-12-31)",
+                  "source": "SEC EDGAR \u2014 structured XBRL fact",
+                  "published_at": "2026-03-13",
+                  "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                  "inspectable": true,
+                  "source_type": "regulatory_filing",
+                  "source_tier": "primary",
+                  "claim_type": "reported_fact",
+                  "document_type": "10-K",
+                  "reporting_period_start": "2025-01-01",
+                  "reporting_period_end": "2025-12-31",
+                  "filed_at": "2026-03-13",
+                  "retrieved_at": null,
+                  "observed_at": null,
+                  "section": null,
+                  "page": null,
+                  "extraction_method": "structured_xbrl",
+                  "freshness_status": "current",
+                  "status_reason": "evidence is 221 days old",
+                  "conflict_group_id": null,
+                  "supersedes_reference_id": null
+                }
+              ],
+              "as_of": "2026-10-20",
+              "evaluated_at": "2026-10-20",
+              "market_price_observed": false,
+              "market_pe_verified": false,
+              "reporting_currency": "USD",
+              "fx_conversion_performed": false,
+              "adr_conversion_performed": false,
+              "source_selection": "latest_available_annual_usd_gaap_basic_eps_with_same_filing_assets_currency_anchor",
+              "limitations": [
+                "Explicit hypothetical assumptions are not source observations or forecasts.",
+                "EPS uses the explicitly requested basic basis; no basic/diluted substitution or dilution forecast is established.",
+                "Reported currency is preserved; no FX conversion, ADR ratio or observed market price is supplied.",
+                "References support reported historical EPS only, not future EPS, prices or valuation multiples.",
+                "Source consistency is not independent factual adjudication or quote/share/split compatibility.",
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "NPK",
+      "basis": "basic",
+      "currency": "USD",
+      "mode": "solve_required_earnings_growth",
+      "available": true,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "NPK",
+        "request_id": "d51c6ae8-54a7-4836-8a32-54bc8a6d8ce5",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "NPK",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 4.63 USD/share for 2025-01-01 to 2025-12-31 (filed 2026-03-13). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 USD/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual price-change target: 0%.\n\nAt the hypothetical starting price of 100 USD/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately 3.92% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness.",
+          "general": {
+            "answer": "Conditional valuation scenario (partial)\n\nReported annual basic EPS was 4.63 USD/share for 2025-01-01 to 2025-12-31 (filed 2026-03-13). [E1]\n\nExplicit hypothetical assumptions\nHypothetical starting price: 100 USD/underlying common share.\nAssumed exit P/E: 20x; horizon: 2 years.\nCurrency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.\nAssumed annual price-change target: 0%.\n\nAt the hypothetical starting price of 100 USD/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately 3.92% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.\n\nUnverified requested parts: observed market price and security/share-basis verification; independently supported future earnings and exit valuation; expected total returns and investment attractiveness."
+          },
+          "evidence_references": [
+            {
+              "id": "E1",
+              "title": "NPK basic EPS: $4.63 per share (2025-12-31)",
+              "source": "SEC EDGAR \u2014 structured XBRL fact",
+              "published_at": "2026-03-13",
+              "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+              "inspectable": true,
+              "source_type": "regulatory_filing",
+              "source_tier": "primary",
+              "claim_type": "reported_fact",
+              "document_type": "10-K",
+              "reporting_period_start": "2025-01-01",
+              "reporting_period_end": "2025-12-31",
+              "filed_at": "2026-03-13",
+              "retrieved_at": null,
+              "observed_at": null,
+              "section": null,
+              "page": null,
+              "extraction_method": "structured_xbrl",
+              "freshness_status": "current",
+              "status_reason": "evidence is 221 days old",
+              "conflict_group_id": null,
+              "supersedes_reference_id": null
+            }
+          ],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "NPK",
+              "assumptions": {
+                "mode": "solve_required_earnings_growth",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "USD/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "NPK",
+                  "currency": "USD",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "basic",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "annual_price_return_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": true,
+              "status": "partial",
+              "classification": "explicit_hypothetical_valuation_scenario",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": true,
+                "classification": "source_anchored_conditional_fiscal_eps_scenario",
+                "mode": "solve_required_earnings_growth",
+                "distributions": "excluded",
+                "formula": "EPS_growth = (1 + annual_price_return) * (entry_PE / exit_PE)^(1 / years) - 1",
+                "values": {
+                  "eps_growth_rate": "0.0391889178159316207216232895021616413212713248566",
+                  "terminal_price_factor": "1",
+                  "cumulative_price_change": "0",
+                  "annualized_price_change": "0"
+                },
+                "numeric_contract": {
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "annual_rates": "annual_fraction",
+                  "cumulative_price_change": "total_horizon_fraction",
+                  "price_factor": "dimensionless"
+                },
+                "inputs": {
+                  "mode": "solve_required_earnings_growth",
+                  "distributions": "excluded",
+                  "entry_pe": {
+                    "value": "21.598272138228941684665226781857451403887688984881",
+                    "unit": "x",
+                    "eps_basis": {
+                      "issuer": "NPK",
+                      "currency": "USD",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    },
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Scenario ratio derived from explicitly assumed price and historical fiscal EPS E1"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    },
+                    "eps_basis": {
+                      "issuer": "NPK",
+                      "currency": "USD",
+                      "accounting": "gaap",
+                      "adjustment_definition": "none",
+                      "share_basis": "basic",
+                      "period_basis": "fiscal_year",
+                      "earnings_scope": "total_operations",
+                      "split_basis": "User assumes identical unconverted underlying common-share basis"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "annual_price_return_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "limitations": [
+                  "Not an expected return, total return, forecast or recommendation.",
+                  "EPS growth is per-share growth, not aggregate earnings or revenue growth.",
+                  "Dividends and other distributions are excluded.",
+                  "Input provenance and compatible bases are caller assertions, not independently verified.",
+                  "Decimal rounding applies; no acceptance tolerance or investment score is assigned.",
+                  "The source anchor is a historical fiscal year, not current TTM or forward EPS.",
+                  "The price is hypothetical; no market observation or price freshness is verified.",
+                  "Split/security conversion and earnings-scope compatibility remain user assertions.",
+                  "The requested EPS basis is basic; no basic/diluted substitution or dilution forecast is established.",
+                  "Entry P/E is a rounded conditional ratio, not an observed market multiple.",
+                  "Source consistency reconstruction is not independent factual adjudication."
+                ],
+                "status": "partial",
+                "launch_ready": false,
+                "source_eps": {
+                  "value": "4.63",
+                  "unit": "USD/shares",
+                  "currency": "USD",
+                  "reference_id": "E1",
+                  "concept": "us-gaap:EarningsPerShareBasic",
+                  "share_basis": "basic",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "filed_at": "2026-03-13",
+                  "document_ref": {
+                    "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                    "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                    "published_at": "2026-03-13"
+                  },
+                  "period_basis": "fiscal_year",
+                  "document_type": "10-K",
+                  "source_consistency_reconstructed": true,
+                  "independently_adjudicated": false
+                },
+                "supplied_assumptions": {
+                  "mode": "solve_required_earnings_growth",
+                  "scenario_as_of": "2026-10-20",
+                  "distributions": "excluded",
+                  "price_per_underlying_common_share": true,
+                  "price": {
+                    "value": "100",
+                    "unit": "USD/share",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "exit_pe": {
+                    "value": "20",
+                    "unit": "x",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "horizon": {
+                    "value": 2,
+                    "unit": "years",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  },
+                  "eps_basis": {
+                    "issuer": "NPK",
+                    "currency": "USD",
+                    "accounting": "gaap",
+                    "adjustment_definition": "none",
+                    "share_basis": "basic",
+                    "period_basis": "fiscal_year",
+                    "earnings_scope": "total_operations",
+                    "split_basis": "User assumes identical unconverted underlying common-share basis"
+                  },
+                  "annual_price_return_rate": {
+                    "value": "0",
+                    "unit": "annual_fraction",
+                    "provenance": {
+                      "kind": "user_assumption",
+                      "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                    }
+                  }
+                },
+                "entry_pe_derivation": {
+                  "formula": "assumed_price / reported_fiscal_basic_eps",
+                  "value": "21.598272138228941684665226781857451403887688984881",
+                  "unit": "x",
+                  "price_status": "user_assumption",
+                  "eps_reference_ids": [
+                    "E1"
+                  ],
+                  "precision_digits": 50,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "market_pe_verified": false
+                },
+                "basis_verification": {
+                  "issuer_currency_concept_period": "producer_consistency_reconstructed",
+                  "earnings_scope_and_split_basis": "user_assertions_not_independently_verified"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "explanation": {
+                "status": "partial",
+                "classification": "conditional_scenario_explanation",
+                "direct_answer": "At the hypothetical starting price of 100 USD/share and exit P/E of 20x over 2 years, annual per-share EPS growth of approximately 3.92% is mathematically required for the assumed 0% annual price-change target. This calculation does not assess whether that growth is achievable. Price changes exclude distributions and do not establish expected total returns, a buy/sell threshold or investment attractiveness. The citation supports historical EPS only; it does not verify the assumed price, future earnings or exit multiple. Historical fiscal EPS is not current TTM or forward EPS.",
+                "reported_facts": [
+                  {
+                    "text": "Reported annual basic EPS was 4.63 USD/share for 2025-01-01 to 2025-12-31 (filed 2026-03-13). [E1]",
+                    "reference_ids": [
+                      "E1"
+                    ]
+                  }
+                ],
+                "explicit_assumptions": [
+                  "Hypothetical starting price: 100 USD/underlying common share.",
+                  "Assumed exit P/E: 20x; horizon: 2 years.",
+                  "Currency, earnings scope and share/split compatibility are user assertions; no FX or ADR conversion is performed.",
+                  "Assumed annual price-change target: 0%."
+                ],
+                "conditional_results": {
+                  "annualized_price_change": "0%",
+                  "cumulative_price_change": "0%",
+                  "terminal_price_factor": "1"
+                },
+                "percentage_display": {
+                  "decimal_places": 2,
+                  "rounding": "ROUND_HALF_EVEN",
+                  "inexact_prefix": "approximately ",
+                  "exact_fraction_values": "scenario.values"
+                },
+                "unanswered_parts": [
+                  "observed market price and security/share-basis verification",
+                  "independently supported future earnings and exit valuation",
+                  "expected total returns and investment attractiveness"
+                ]
+              },
+              "source_claims": [
+                {
+                  "value_text": "$4.63 per share",
+                  "provenance": "reported",
+                  "as_of": "2025-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 4.63,
+                  "unit": "USD/shares",
+                  "source": "10-K",
+                  "source_date_unavailable": false,
+                  "ticker": "NPK",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                    "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                    "published_at": "2026-03-13"
+                  },
+                  "rendered": "$4.63 per share (as of 2025-12-31)",
+                  "period_start": "2025-01-01",
+                  "period_end": "2025-12-31",
+                  "period": "FY2025",
+                  "scope": "consolidated",
+                  "currency": "USD",
+                  "label": "Earnings Per Share, Basic"
+                },
+                {
+                  "value_text": "$5.82 per share",
+                  "provenance": "reported",
+                  "as_of": "2024-12-31",
+                  "confidence": null,
+                  "assumptions": null,
+                  "stale": false,
+                  "raw_value": 5.82,
+                  "unit": "USD/shares",
+                  "source": "10-K",
+                  "source_date_unavailable": false,
+                  "ticker": "NPK",
+                  "metric": "us-gaap:EarningsPerShareBasic",
+                  "derivation": null,
+                  "freshness_status": null,
+                  "polarity": null,
+                  "assumptions_inferred": false,
+                  "document_ref": {
+                    "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+                    "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+                    "provider": "SEC EDGAR",
+                    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                    "published_at": "2026-03-13"
+                  },
+                  "rendered": "$5.82 per share (as of 2024-12-31)",
+                  "period_start": "2024-01-01",
+                  "period_end": "2024-12-31",
+                  "period": "FY2024",
+                  "scope": "consolidated",
+                  "currency": "USD",
+                  "label": "Earnings Per Share, Basic"
+                }
+              ],
+              "evidence_references": [
+                {
+                  "id": "E1",
+                  "title": "NPK basic EPS: $4.63 per share (2025-12-31)",
+                  "source": "SEC EDGAR \u2014 structured XBRL fact",
+                  "published_at": "2026-03-13",
+                  "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+                  "inspectable": true,
+                  "source_type": "regulatory_filing",
+                  "source_tier": "primary",
+                  "claim_type": "reported_fact",
+                  "document_type": "10-K",
+                  "reporting_period_start": "2025-01-01",
+                  "reporting_period_end": "2025-12-31",
+                  "filed_at": "2026-03-13",
+                  "retrieved_at": null,
+                  "observed_at": null,
+                  "section": null,
+                  "page": null,
+                  "extraction_method": "structured_xbrl",
+                  "freshness_status": "current",
+                  "status_reason": "evidence is 221 days old",
+                  "conflict_group_id": null,
+                  "supersedes_reference_id": null
+                }
+              ],
+              "as_of": "2026-10-20",
+              "evaluated_at": "2026-10-20",
+              "market_price_observed": false,
+              "market_pe_verified": false,
+              "reporting_currency": "USD",
+              "fx_conversion_performed": false,
+              "adr_conversion_performed": false,
+              "source_selection": "latest_available_annual_usd_gaap_basic_eps_with_same_filing_assets_currency_anchor",
+              "limitations": [
+                "Explicit hypothetical assumptions are not source observations or forecasts.",
+                "EPS uses the explicitly requested basic basis; no basic/diluted substitution or dilution forecast is established.",
+                "Reported currency is preserved; no FX conversion, ADR ratio or observed market price is supplied.",
+                "References support reported historical EPS only, not future EPS, prices or valuation multiples.",
+                "Source consistency is not independent factual adjudication or quote/share/split compatibility.",
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "NPK",
+      "basis": "diluted",
+      "currency": "USD",
+      "mode": "evaluate_growth_scenario",
+      "available": false,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "NPK",
+        "request_id": "04e07fb7-4962-46c8-8ea5-563003608dfd",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "NPK",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario remains unverified. The requested annual EPS evidence or explicit scenario inputs did not qualify. No forecast, expected return or buy/sell threshold is established. The supplied assumptions are preserved for review.",
+          "general": {
+            "answer": "Conditional valuation scenario remains unverified. The requested annual EPS evidence or explicit scenario inputs did not qualify. No forecast, expected return or buy/sell threshold is established. The supplied assumptions are preserved for review."
+          },
+          "evidence_references": [],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "NPK",
+              "assumptions": {
+                "mode": "evaluate_growth_scenario",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "USD/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "NPK",
+                  "currency": "USD",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "diluted",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "eps_growth_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": false,
+              "status": "insufficient_conditional_scenario_evidence",
+              "stage": "latest_annual_reporting_period",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": null,
+              "source_claims": [],
+              "evidence_references": [],
+              "limitations": [
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "basic",
+      "currency": "USD",
+      "mode": "evaluate_growth_scenario",
+      "available": false,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "ASML",
+        "request_id": "91ac704b-139f-4ba0-8449-3ed90e1cb5c9",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "ASML",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario remains unverified. The requested annual EPS evidence or explicit scenario inputs did not qualify. No forecast, expected return or buy/sell threshold is established. The supplied assumptions are preserved for review.",
+          "general": {
+            "answer": "Conditional valuation scenario remains unverified. The requested annual EPS evidence or explicit scenario inputs did not qualify. No forecast, expected return or buy/sell threshold is established. The supplied assumptions are preserved for review."
+          },
+          "evidence_references": [],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "ASML",
+              "assumptions": {
+                "mode": "evaluate_growth_scenario",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "USD/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "ASML",
+                  "currency": "USD",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "basic",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "eps_growth_rate": {
+                  "value": "0",
+                  "unit": "annual_fraction",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                }
+              }
+            },
+            "result": {
+              "available": false,
+              "status": "insufficient_conditional_scenario_evidence",
+              "stage": "annual_basic_eps",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": null,
+              "source_claims": [],
+              "evidence_references": [],
+              "limitations": [
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "ticker": "ASML",
+      "basis": "basic",
+      "currency": "EUR",
+      "mode": "evaluate_earnings_recovery_scenario",
+      "available": false,
+      "exact_snapshot_preserved": true,
+      "changed_input_retry_exact_no_fetch": true,
+      "foreign_read_and_dispatch_denied": true,
+      "thesis_memory_artifact": "unavailable",
+      "response": {
+        "company": "ASML",
+        "request_id": "03f29a60-5ffd-40d5-99d3-bce67bc74cdc",
+        "agents_used": [],
+        "routing": {
+          "pipeline": "owned_conditional_scenario",
+          "response_mode": "conditional_scenario",
+          "detected_ticker": "ASML",
+          "model_calls": 0
+        },
+        "answer": {
+          "direct_answer": "Conditional valuation scenario remains unverified. The requested annual EPS evidence or explicit scenario inputs did not qualify. No forecast, expected return or buy/sell threshold is established. The supplied assumptions are preserved for review.",
+          "general": {
+            "answer": "Conditional valuation scenario remains unverified. The requested annual EPS evidence or explicit scenario inputs did not qualify. No forecast, expected return or buy/sell threshold is established. The supplied assumptions are preserved for review."
+          },
+          "evidence_references": [],
+          "conditional_valuation": {
+            "request": {
+              "ticker": "ASML",
+              "assumptions": {
+                "mode": "evaluate_earnings_recovery_scenario",
+                "scenario_as_of": "2026-10-20",
+                "distributions": "excluded",
+                "price_per_underlying_common_share": true,
+                "price": {
+                  "value": "100",
+                  "unit": "EUR/share",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "exit_pe": {
+                  "value": "20",
+                  "unit": "x",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "horizon": {
+                  "value": 2,
+                  "unit": "years",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "eps_basis": {
+                  "issuer": "ASML",
+                  "currency": "EUR",
+                  "accounting": "gaap",
+                  "adjustment_definition": "none",
+                  "share_basis": "basic",
+                  "period_basis": "fiscal_year",
+                  "earnings_scope": "total_operations",
+                  "split_basis": "User assumes identical unconverted underlying common-share basis"
+                },
+                "target_eps": {
+                  "value": "4",
+                  "unit": "EUR/shares",
+                  "provenance": {
+                    "kind": "user_assumption",
+                    "reference": "Invented offline demonstration, not observed price or earnings forecast"
+                  }
+                },
+                "target_fiscal_period": {
+                  "start": "2027-01-01",
+                  "end": "2027-12-31"
+                }
+              }
+            },
+            "result": {
+              "available": false,
+              "status": "insufficient_conditional_scenario_inputs",
+              "stage": "scenario_contract",
+              "admitted": false,
+              "launch_ready": false,
+              "scenario": {
+                "available": false,
+                "status": "insufficient_recovery_scenario_inputs",
+                "classification": "source_anchored_conditional_earnings_recovery_scenario",
+                "reason": "this recovery context requires reported nonpositive annual EPS",
+                "admitted": false,
+                "launch_ready": false,
+                "limitations": [
+                  "No scenario calculation supplied; no forecast, current P/E or recommendation established."
+                ]
+              },
+              "source_claims": [],
+              "evidence_references": [],
+              "limitations": [
+                "Saved only as an explicit scenario turn in the selected owner conversation; no portfolio, investment-thesis snapshot or alert is written."
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "limitations": [
+    "Local invented HS256 JWTs, beta accounts and disposable SQLite, not production auth/database/browser acceptance.",
+    "Current identity and UTC boundary are injected; retained bodies use the actual provider parser, producer and scenario evaluators.",
+    "Price, future earnings, growth, multiple, horizon and share/split assertions are explicit invented inputs, not observed facts or forecasts.",
+    "Production flags remain off. No UI assumption-entry form, live execution, spending or broad-company quality acceptance is established.",
+    "Historical run records are untouched and complete inventories were not independently revalidated here."
+  ]
+}

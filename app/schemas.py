@@ -476,6 +476,10 @@ class QuestionRequest(BaseModel):
 
     company_name: str = Field(..., description="Company name or ticker relevant to the question")
     question: str = Field(..., description="User question to route to the appropriate agent")
+    conditional_valuation: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Opt-in explicit scenario {ticker, assumptions}; requires authenticated owned conversation and request reference. Omit for ordinary research.",
+    )
     as_of: Optional[str] = Field(
         None,
         description=(

@@ -1919,6 +1919,10 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
     Explicit general-finance intents remain on their focused general route.
     Unresolved company research returns a readable clarification before agents.
     """
+    # Explicit assumptions cannot fall through to models via an internal call
+    # that bypasses the authenticated, owner-scoped /ask dispatcher.
+    if request.conditional_valuation is not None:
+        raise ValueError('Explicit scenario turns require the authenticated owned /ask path')
     # ── Phase 20A P3: Ticker normalization ────────────────────────────────────
     # Normalize ticker variants (BRK-B → BRK.B, BRKB → BRK.B) BEFORE any
     # entity resolution or company detection runs.
