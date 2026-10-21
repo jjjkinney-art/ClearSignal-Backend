@@ -128,8 +128,11 @@ def evaluate_requested_scenario(payload):
             return {'available': False, 'status': 'insufficient_conditional_scenario_inputs',
                 'stage': 'scenario_contract', 'admitted': False, 'launch_ready': False,
                 'scenario': result, 'source_claims': [], 'evidence_references': []}
+        from app.services.conditional_scenario_explanation import explain_validated_scenario
+        explanation = explain_validated_scenario(result)
         return {'available': True, 'status': 'partial', 'classification': 'explicit_hypothetical_valuation_scenario',
             'admitted': False, 'launch_ready': False, 'scenario': result,
+            'explanation': explanation,
             'source_claims': item.verified_claims, 'evidence_references': references,
             'as_of': boundary.isoformat(), 'evaluated_at': evaluated,
             'market_price_observed': False, 'market_pe_verified': False,

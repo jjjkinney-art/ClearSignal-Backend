@@ -14,6 +14,7 @@ def main():
     from copy import deepcopy
     from datetime import date
     from decimal import Decimal,localcontext
+    from fractions import Fraction
     from unittest.mock import patch
     import httpx
     from fastapi import FastAPI
@@ -111,6 +112,20 @@ def main():
                 assert eps['reference_id'] in {ref['id'] for ref in r['evidence_references']}
                 assert all(c['unit']==currency+'/shares' and c['currency']==currency for c in r['source_claims'])
                 assert payload==before
+                explanation=r['explanation']
+                assert explanation['status']=='partial'
+                assert explanation['unanswered_parts']==r['scenario']['unanswered_parts']
+                fact=explanation['reported_facts'][0]
+                assert fact['reference_ids']==[eps['reference_id']]
+                assert f"{value} {currency}/share" in fact['text']
+                assert eps['period_end'] in fact['text'] and eps['filed_at'] in fact['text']
+                assert '[' not in explanation['direct_answer']
+                for key in ('annualized_price_change','cumulative_price_change'):
+                    display=explanation['conditional_results'][key]
+                    rendered=Fraction(display.removeprefix('approximately ').removesuffix('%'))/100
+                    exact=Fraction(r['scenario']['values'][key])
+                    assert abs(rendered-exact)<=Fraction(1,20000)
+                    assert display.startswith('approximately ')==(rendered!=exact)
                 with localcontext() as ctx:
                     ctx.prec=50
                     values=r['scenario']['values']
@@ -139,7 +154,7 @@ def main():
     report={'kind':'retained_body_offline_ASGI_application_replay','base_commit':'32584e354a6764e9db4015c32c41fe40c89b86fa',
             'analysis_as_of':AS_OF,'external_requests':0,'model_calls':0,'live_approvals_consumed_by_replay':0,
             'saved_provider_get_replays':calls,'body_hashes':BODIES,'body_lengths':{t:len(b) for t,b in bodies.items()},
-            'archive_hashes_verified':len(inventory),'cases':results,
+            'archive_hashes_verified':len(inventory),'scenario_explanation_checks':6,'cases':results,
             'limitations':['UTC clock, directory identity and authenticated request state are injected for offline replay.',
             'Feature enabled only in process with restoration; production remains off.',
             'Hypothetical price, future EPS, exit multiple and rates are invented demonstrations, not market observations or forecasts.',
