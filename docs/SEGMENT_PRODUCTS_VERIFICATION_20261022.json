@@ -8,7 +8,8 @@
     "app/services/financial_thesis_foundation.py": "1d6d4b9ad13a46594ec8da687d66289837b9e3083b5a3aa5e5652236796aa511",
     "app/services/segment_product_context.py": "e94671cbeea73722cc6bd04daf2c80b9236fbd4840ab46934768607c4403999e",
     "tests/test_segment_product_context.py": "c683adbfff2124b319ca05d8910e104bf93fb53e66c17c0d67876a84c86becc9",
-    "scripts/replay_retained_segment_products.py": "def089f13b648012670dc6e8fac265d0f723ab1673069af9ae1cf6c329834615"
+    "scripts/replay_retained_segment_products.py": "def089f13b648012670dc6e8fac265d0f723ab1673069af9ae1cf6c329834615",
+    "tests/test_general_finance_evidence.py": "bd5f427f1391656eb380280bb7522e9de35d26a4d15ad3f011c83539c076c2b9"
   },
   "python_version": "3.11.9",
   "all_20_direct_dependency_pins_match_installed": true,
@@ -61,6 +62,14 @@
   "dependency_changes": false,
   "independent_usefulness_review": false,
   "launch_ready": false,
-  "hosted_ci": "required before merge; pending",
-  "canonical_replay_regeneration_matches": true
+  "hosted_ci": "Full hosted CI required on corrected head; pending",
+  "canonical_replay_regeneration_matches": true,
+  "hosted_ci_initial_failure": {
+    "run_id": 39729291825,
+    "head": "535ae34920c35b0dc77c88b642ec6d545cb71568",
+    "test": "tests/test_general_finance_evidence.py::TestRetrievedEvidenceSchema::test_serialization",
+    "reason": "Expected serialized-field set omitted the intentional product_disclosures field.",
+    "repair": "Update expected field set and assert empty-list default; product code unchanged.",
+    "local_verification": "43 passed in affected test file"
+  }
 }

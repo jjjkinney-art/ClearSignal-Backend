@@ -110,6 +110,7 @@ class TestRetrievedEvidenceSchema:
             "section", "page", "extraction_method", "verified_claims",
             "calculated_claims", "risk_disclosures", "business_disclosures",
             "competition_disclosures", "operating_disclosures", "segment_disclosures",
+            "product_disclosures",
         }
         assert d["source_type"] == "unknown"
         assert d["source_tier"] == "unverified"
@@ -120,6 +121,7 @@ class TestRetrievedEvidenceSchema:
         assert d["competition_disclosures"] == []
         assert d["operating_disclosures"] == []
         assert d["segment_disclosures"] == []
+        assert d["product_disclosures"] == []
 
 
 # ── retrieve_general_finance_evidence (production stub) ──────────────────────

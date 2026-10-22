@@ -84,6 +84,13 @@ required before merge. Local CPython 3.11.9 was restored after its executable wa
 missing; existing pinned dependencies and repository runtime requirements were
 not changed.
 
+The initial hosted run 39729291825 failed the existing exact serialization-field
+expectation in `test_general_finance_evidence.py`: it omitted the intentional
+`product_disclosures` field. The corrected expectation also checks its empty-list
+default; all 43 tests in that affected file pass locally. No product code or
+retained replay changed in this correction. Full hosted CI must pass on the
+corrected head before merge; initial hosted success is not claimed.
+
 This is unblinded engineering validation, not independent factual/usefulness
 adjudication or launch acceptance. Wider product coverage, a complete business
 model, operating explanations, counter-evidence, valuation, frozen development/
