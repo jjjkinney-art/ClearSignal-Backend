@@ -323,6 +323,15 @@ def parse_segment_tables(text, *, cik):
                      'period_label': 'Year ended December 31, ' + period[:4], 'definition': definition,
                      'allocation': allocation, 'metrics': metrics}
             if not table['invalid'] and reconstruct(proof, cik=cik) is not None:
+                # Preserve a separately reconstructed adjacent annual comparison.
+                # The primary result remains the latest year; no stale fallback.
+                prior_end = str(int(period[:4]) - 1) + '-12-31'
+                if prior_end in periods:
+                    prior = {**proof, 'period_end': prior_end,
+                             'period_label': 'Year ended December 31, ' + prior_end[:4],
+                             'metrics': periods[prior_end]}
+                    if reconstruct(prior, cik=cik) is not None:
+                        proof['comparison_period'] = prior
                 result.append(proof)
                 break  # latest supported year in each table; no stale substitution within a table
         if len(result) >= 1:

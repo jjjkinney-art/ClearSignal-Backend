@@ -1,0 +1,61 @@
+{
+  "base_commit": "4ccaf6a7d20395177c9d5aa21d5b5adae8906f5d",
+  "kind": "offline_engineering_validation",
+  "source_input_hashes": {
+    "app/providers/sec_segment_facts.py": "daa898423a30cc467d532e78998d6ffcc76affb221625e4f3e31931b08335182",
+    "app/services/segment_sales_explanations.py": "906065bfd8e5cf39a3c78416bc96501a8d5bb9a6903d13c7e005cd6bd018c6e7",
+    "app/services/segment_financial_context.py": "8e1b50b80e8ea8e7aae24a1f2374dccb7b9ba9551bea267968aed608780eed0e",
+    "app/services/financial_thesis_foundation.py": "c8a684aba93d8112a41d957ee660ccb7807ec2931f8e47d8d6226a126ea9b504",
+    "tests/test_segment_sales_explanations.py": "8f0ba105619eb75f49d1c7d825f240da9f5d1d98a4ee77f568105e94bc86f82d",
+    "scripts/replay_retained_segment_sales_explanations.py": "4ff10e837d0ba8b06a4e23a77a59e08c08a7273992c70f2b331e6009356342f0"
+  },
+  "new_tests": 41,
+  "focused_tests": 576,
+  "adjacent_tests": 73,
+  "collected_tests": 18762,
+  "local_ci_groups": [
+    {
+      "log": "segment-sales-ci-0.log",
+      "sha256": "75f23cccfe1b2770f8adafda72da45382c2f54d82ec6dba6a6b2863eddadf4d5",
+      "summary": "83 passed, 1 warning in 3.43s"
+    },
+    {
+      "log": "segment-sales-ci-1.log",
+      "sha256": "bd13c4e8e1ebbd345463fe60c33f056994c0e5fe6dc0e5a7c875f6388c4c4921",
+      "summary": "87 passed, 1 warning in 18.80s"
+    },
+    {
+      "log": "segment-sales-ci-2.log",
+      "sha256": "04fc2b6f3a5ec149ac108c383fa5ad54136a4b25df993c642bdb1ebc2e812b82",
+      "summary": "221 passed, 1 warning in 25.73s"
+    },
+    {
+      "log": "segment-sales-ci-3.log",
+      "sha256": "13e259dcf62d72a7b4cbbb6168074fb561dfd7c91e3d7bcaaea524a74e410309",
+      "summary": "178 passed in 2.05s"
+    },
+    {
+      "log": "segment-sales-ci-4.log",
+      "sha256": "416cf0ac15b49b6b7eb71903a873e2a7d8d25efe3f37723fc6478acce8eb5386",
+      "summary": "195 passed in 2.84s"
+    }
+  ],
+  "replay_sha256": "883c72275c9c9003166a435420f96293ca569d0ac86de183be61901dc69f2b85",
+  "canonical_replay_regeneration_matches": true,
+  "archived_baseline_reproduced_exactly": true,
+  "previous_nonsegment_claims_preserved": 10,
+  "claim_count_before": 11,
+  "claim_count_after": 11,
+  "prior_inferences_and_citation_ids_preserved": true,
+  "body_hashes": {
+    "filing": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "facts": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "archive_inventory_entries_verified": 19,
+  "external_financial_provider_requests": 0,
+  "model_calls": 0,
+  "dependency_changes": false,
+  "independent_usefulness_review": false,
+  "launch_ready": false,
+  "hosted_ci": "required before merge; pending"
+}
