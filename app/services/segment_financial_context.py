@@ -25,12 +25,45 @@ def _summary(value):
     text += ' '.join(f"{r['label']}: external revenue ${r['revenue_usd']:,}; operating "
                      + (f"loss ${abs(r['operating_income_usd']):,}." if r['operating_income_usd'] < 0
                         else f"profit ${r['operating_income_usd']:,}.") for r in rows)
-    return (text + ' ' + value['proof']['definition'] + ' ' + value['proof']['allocation']
+    summary = (text + ' ' + value['proof']['definition'] + ' ' + value['proof']['allocation']
             + ' These are reported segment results with the stated allocation; they do not establish standalone economics. '
             + ('No revenue share, margin, growth rate, operating driver, valuation or future performance is inferred. '
                'Reported totals and completeness of segment coverage have not been independently reconciled.'
                if value['segment_context']['analysis']['status'] == 'unavailable' else
                'Any percentage relationships are separate calculations from the cited amounts; the allocation caveat remains material.'))
+    for explanation in value.get('sales_explanations', []):
+        summary += (f" For {explanation['current_start']} to {explanation['current_end']} compared with "
+                    f"{explanation['prior_start']} to {explanation['prior_end']}, management stated: "
+                    + explanation['quote'] + ' ' + explanation['limitation'])
+    return summary
+
+
+def _explanation_fields(proof, source, ref, cik):
+    try:
+        return _build_explanation_fields(proof, source, ref, cik)
+    except (KeyError, ValueError, TypeError, AttributeError):
+        return None
+
+
+def _build_explanation_fields(proof, source, ref, cik):
+    from .segment_sales_explanations import explanations
+    values = explanations(proof, source, cik=cik)
+    if not values:
+        return None
+    refs = []
+    for value in values:
+        refs.append(ClaimDocumentReference(**{**ref, 'reference_id': ref['reference_id'] + f":sales_explanation:{value['start_offset']}",
+                     'section': 'Item 7. Management discussion and analysis',
+                     'quote': value['quote']}).to_dict())
+    return {'operating_explanation_source': source, 'sales_explanations': values,
+            'sales_explanation_refs': refs,
+            'comparison_revenue_ref': ClaimDocumentReference(**{**ref,
+                'reference_id': ref['reference_id'] + ':prior_revenue',
+                'quote': proof['comparison_period']['metrics']['revenue']['row_text']}).to_dict(),
+            'sales_comparison_heading_refs': [ClaimDocumentReference(**{**ref,
+                'reference_id': ref['reference_id'] + f":comparison_heading:{v['heading_start_offset']}",
+                'section': 'Item 7. Management discussion and analysis',
+                'quote': v['comparison_heading']}).to_dict() for v in values]}
 
 
 def _context(proof, cik):
@@ -72,6 +105,11 @@ def extract_segment_financial_context(document, *, ticker, cik):
         value = {'ticker': ticker, 'claim_kind': 'issuer_segment_financial_context',
                  'document_type': document.document_type, 'quote': ref['quote'],
                  'document_ref': ref, 'operating_income_ref': income_ref, 'caveat_refs': caveat_refs, 'proof': proof, 'segment_context': context}
+        if document.document_type == '10-K':
+            from .segment_sales_explanations import source_window
+            fields = _explanation_fields(proof, source_window(document.text), ref, cik)
+            if fields:
+                value.update(fields)
         item = RetrievedEvidence(title=f'{ticker} annual segment results', source='SEC EDGAR',
             timestamp=document.published_at, summary=_summary(value), url=document.final_url,
             relevance_score=0.96, source_type='regulatory_filing', source_tier='primary',
@@ -93,6 +131,14 @@ def bound_segment_financial_context(item, *, ticker, cik):
         proof = value['proof']
         context = _context(proof, cik)
         ref = ClaimDocumentReference(**value['document_ref']).to_dict()
+        explanation_keys = {'operating_explanation_source', 'sales_explanations', 'sales_explanation_refs',
+                            'comparison_revenue_ref', 'sales_comparison_heading_refs'}
+        if explanation_keys.intersection(value):
+            fields = _explanation_fields(proof, value.get('operating_explanation_source'), ref, cik)
+            if (item.document_type != '10-K' or not fields
+                    or json.dumps({k: value.get(k) for k in explanation_keys}, sort_keys=True, allow_nan=False)
+                    != json.dumps(fields, sort_keys=True, allow_nan=False)):
+                return None
         income_ref = ClaimDocumentReference(**value['operating_income_ref']).to_dict()
         if income_ref != {**ref, 'reference_id': ref['reference_id'] + ':operating_income',
                           'quote': proof['metrics']['operating_income']['row_text']}:

@@ -378,6 +378,12 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['operating_income_ref'] = value['operating_income_ref']
             row['source_proof'] = value['proof']
             row['caveat_refs'] = value['caveat_refs']
+            if value.get('sales_explanations'):
+                row['sales_explanations'] = value['sales_explanations']
+                row['sales_explanation_refs'] = value['sales_explanation_refs']
+                row['operating_explanation_source'] = value['operating_explanation_source']
+                row['comparison_revenue_ref'] = value['comparison_revenue_ref']
+                row['sales_comparison_heading_refs'] = value['sales_comparison_heading_refs']
             analysis = value['segment_context'].get('analysis', {'status': 'unavailable'})
             if analysis['status'] != 'unavailable':
                 from .segment_analysis import render_segment_analysis

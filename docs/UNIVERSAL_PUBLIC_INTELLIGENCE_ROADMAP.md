@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October source-bound segment sales explanations (offline):** separately
+reconstructed adjacent annual segment tables can support complete, explicitly
+scoped MD&A shipment explanations. Both sales amounts, printed change/direction,
+optional percentage and comparison headings must match before management's exact
+sentence is retained. The ordinary retained replay preserves ten other claims,
+all citation IDs, prior calculations and gaps while enriching the segment claim.
+See `SEGMENT_SALES_EXPLANATIONS_20261022.md`. This is management attribution,
+not independently established causation, demand, new awards or a forecast.
+Unsupported wording/formats remain gaps. Independent usefulness, products,
+counter-evidence, valuation and existing acceptance gates remain open; no new
+live authority, spending or activation follows.
+
 **22 October retained operating-explanation source review (offline):** the saved
 filing's MD&A contains explicit segment sales/profit explanations; missing causal
 context in answers is not established source absence. Seventeen exact candidate
