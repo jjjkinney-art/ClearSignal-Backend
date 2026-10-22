@@ -38,6 +38,29 @@ def valid_dimensions(dimensions):
         and base._ID.fullmatch(segment['member']))
 
 
+def valid_total_dimensions(dimensions):
+    # A segment-table aggregation is still not a consolidated company fact.
+    if not isinstance(dimensions, list) or len(dimensions) != 1:
+        return False
+    d = dimensions[0]
+    return bool(set(d) == {'axis_namespace', 'axis', 'member_namespace', 'member'}
+        and SRT.fullmatch(d['axis_namespace']) and d['axis'] == 'ConsolidationItemsAxis'
+        and base._GAAP.fullmatch(d['member_namespace']) and d['member'] == 'OperatingSegmentsMember')
+
+
+def total_amount(observation, *, cik):
+    try:
+        if observation.get('scope') != 'reported_segment_total' or not valid_total_dimensions(observation['dimensions']):
+            return None
+        # Preserve the total scope; copy only for the existing scalar checks.
+        start, end = date.fromisoformat(observation['start']), date.fromisoformat(observation['end'])
+        if not 330 <= (end - start).days <= 380:
+            return None
+        return base.validated_observation({**observation, 'scope': 'consolidated'}, cik=cik, concepts=CONCEPTS)
+    except (KeyError, TypeError, ValueError, AttributeError):
+        return None
+
+
 def amount(observation, *, cik):
     """Only a separately validated dimensional observation may reuse scalar math."""
     if not isinstance(observation, dict) or observation.get('scope') != 'segment':
@@ -156,7 +179,7 @@ class _Target(base._InlineTarget):
             return
         identifier, segment = entity.find(x + 'identifier'), entity.find(x + 'segment')
         start, end = period.find(x + 'startDate'), period.find(x + 'endDate')
-        if any(n is None or len(n) for n in (identifier, start, end)) or segment is None or len(segment) != 2:
+        if any(n is None or len(n) for n in (identifier, start, end)) or segment is None or len(segment) not in {1, 2}:
             return
         dimensions = []
         for member in segment:
@@ -167,7 +190,7 @@ class _Target(base._InlineTarget):
             member_ns, name = base._qname(scope, (member.text or '').strip())
             dimensions.append(dict(axis_namespace=axis_ns, axis=axis, member_namespace=member_ns, member=name))
         dimensions.sort(key=lambda v: 0 if v['axis'] == 'ConsolidationItemsAxis' else 1)
-        if not valid_dimensions(dimensions) or not base._ID.fullmatch(element.get('id', '')):
+        if not (valid_dimensions(dimensions) or valid_total_dimensions(dimensions)) or not base._ID.fullmatch(element.get('id', '')):
             return
         self.contexts[element.get('id')] = dict(entity_scheme=identifier.get('scheme'),
             entity_identifier=(identifier.text or '').strip(), start=(start.text or '').strip(),
@@ -217,8 +240,9 @@ def parse_segment_tables(text, *, cik):
         context, unit = target.contexts.get(fact['context_id']), target.units.get(fact['unit_id'])
         if context is None or unit is None:
             continue
-        observation = dict(**fact, **context, **unit, scope='segment')
-        value = amount(observation, cik=cik)
+        scope = 'segment' if len(context['dimensions']) == 2 else 'reported_segment_total'
+        observation = dict(**fact, **context, **unit, scope=scope)
+        value = amount(observation, cik=cik) if scope == 'segment' else total_amount(observation, cik=cik)
         if value is None:
             continue
         key = (observation['start'], observation['end'], observation['concept'],
@@ -262,6 +286,7 @@ def parse_segment_tables(text, *, cik):
             if not metric or len(row) != len(headers):
                 continue
             entries = []
+            total = None
             for column, cell in enumerate(row):
                 if column and cell is row[column - 1]:
                     continue
@@ -272,18 +297,26 @@ def parse_segment_tables(text, *, cik):
                     continue
                 observation = pair[0]
                 label = headers[column]['text']
-                if not label or label == 'Total' or observation['end'] != period:
+                if not label or observation['end'] != period:
                     continue
                 if metric == 'revenue' and observation['concept'] not in CONCEPTS[:2]:
                     continue
                 if metric == 'operating_income' and observation['concept'] != CONCEPTS[2]:
                     continue
-                entries.append({'label': label, 'column': column, 'observation': observation})
+                entry = {'label': label, 'column': column, 'observation': observation}
+                if label == 'Total':
+                    if total is not None:
+                        total = {'ambiguous': True}
+                    else:
+                        total = entry
+                else:
+                    entries.append(entry)
             bucket = periods.setdefault(period, {})
             if metric in bucket:
                 table['invalid'] = True
             bucket[metric] = {'entries': entries, 'row_text': text_row,
-                              'cells': [{'text': c['text'], 'fact_ids': c['fact_ids']} for c in row]}
+                              'cells': [{'text': c['text'], 'fact_ids': c['fact_ids']} for c in row],
+                              'total': total}
         for period, metrics in sorted(periods.items(), reverse=True)[:1]:
             proof = {'table_number': table['table_number'], 'period_end': period,
                      'unit_heading': '(in thousands)', 'headers': [c['text'] for c in headers],

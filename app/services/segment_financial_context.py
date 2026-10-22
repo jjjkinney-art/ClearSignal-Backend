@@ -6,6 +6,7 @@ import re
 from ..integrity.provenance import ClaimDocumentReference
 from ..providers.sec_segment_facts import reconstruct
 from ..schemas import RetrievedEvidence
+from .segment_analysis import segment_analysis
 
 SECTION = 'Annual segment financial table'
 
@@ -26,14 +27,20 @@ def _summary(value):
                         else f"profit ${r['operating_income_usd']:,}.") for r in rows)
     return (text + ' ' + value['proof']['definition'] + ' ' + value['proof']['allocation']
             + ' These are reported segment results with the stated allocation; they do not establish standalone economics. '
-              'No revenue share, margin, growth rate, operating driver, valuation or future performance is inferred. '
-              'Reported totals and completeness of segment coverage have not been independently reconciled.')
+            + ('No revenue share, margin, growth rate, operating driver, valuation or future performance is inferred. '
+               'Reported totals and completeness of segment coverage have not been independently reconciled.'
+               if value['segment_context']['analysis']['status'] == 'unavailable' else
+               'Any percentage relationships are separate calculations from the cited amounts; the allocation caveat remains material.'))
 
 
 def _context(proof, cik):
     rows = _rows(proof, cik)
+    if not rows:
+        return None
+    analysis = segment_analysis(proof, rows, cik=cik)
     return {'scope': 'reported_segments', 'currency': 'USD', 'segments': rows,
-            'derived_ratios': [], 'totals_reconciled': False} if rows else None
+            'derived_ratios': analysis['derived_ratios'],
+            'totals_reconciled': analysis['status'] in {'matched', 'zero_revenue'}, 'analysis': analysis}
 
 
 def extract_segment_financial_context(document, *, ticker, cik):

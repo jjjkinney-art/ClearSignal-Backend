@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October reconciled segment-table relationships (offline):** separately bound
+segment-table Total facts can support exact sales/operating-result reconciliation,
+then labelled derived sales shares and operating-profit/external-sales ratios.
+The retained replay exactly reproduces PR326's archived baseline, preserves all
+citation IDs and ten other claims, and appends a dated derived-analysis section
+with allocation caveats. Missing/mismatched totals or zero sales withhold the
+unsupported percentages. This is reported-table scope, not consolidated-company
+exposure or standalone margins. See `SEGMENT_TABLE_ANALYSIS_20261022.md`.
+Independent usefulness, products/drivers, counter-evidence, valuation and the
+existing development/holdout/signed-in launch gates remain open. No new live
+capture/spending authority or scenario activation follows.
+
 **22 October source-bound segment financial context (offline):** a separate
 namespace/dimension/table-bound contract can preserve annual USD external sales
 and operating profit/loss without admitting segment observations as consolidated
