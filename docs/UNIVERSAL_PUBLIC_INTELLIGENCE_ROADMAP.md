@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October complete segment product lists (offline):** a separate bounded
+contract retains an entire neutral product enumeration with its explicit numbered
+segment heading, rather than clipping a long sentence or relaxing ordinary
+qualitative-business rules. The retained ordinary-path replay adds one scoped
+product claim while preserving all eleven prior claims/citations, calculations,
+coverage and unanswered gaps. See `SEGMENT_PRODUCTS_20261022.md`. This does not
+establish issuer-wide activities, revenue contribution, ownership or complete
+business coverage. Wider products, independent usefulness, counter-evidence,
+valuation and existing acceptance gates remain open. No new live authority,
+spending or activation follows.
+
 **22 October source-bound segment sales explanations (offline):** separately
 reconstructed adjacent annual segment tables can support complete, explicitly
 scoped MD&A shipment explanations. Both sales amounts, printed change/direction,

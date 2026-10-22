@@ -80,10 +80,10 @@ class ClaimDocumentReference:
             or any(character not in "0123456789abcdef" for character in self.content_hash)
         ):
             raise ValueError("document content hash must be lowercase SHA-256")
-        # Preserve complete risk sentences rather than cutting an issuer's
-        # qualification mid-sentence. Other document-reference limits stay 300.
+        # Preserve complete bounded risk sentences and separately admitted
+        # segment product lists. Ordinary business quote limits stay 300.
         quote_limit = (900 if self.provider == "SEC EDGAR" and host == "www.sec.gov"
-            and self.section in {"Item 1A. Risk Factors", "Item 3.D. Risk Factors", "Strategic report - Risk and security - Risk factors", "Annual Report 2025 - Risk management - Key risks and mitigations"}
+            and self.section in {"Item 1A. Risk Factors", "Item 3.D. Risk Factors", "Strategic report - Risk and security - Risk factors", "Annual Report 2025 - Risk management - Key risks and mitigations", "Item 1. Business - Reported segment products"}
                        and self.content_hash else 300)
         if self.quote is not None and (not self.quote.strip() or len(self.quote) > quote_limit):
             raise ValueError(f"document quote must contain 1-{quote_limit} characters")

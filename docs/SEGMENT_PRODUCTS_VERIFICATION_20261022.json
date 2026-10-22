@@ -1,0 +1,75 @@
+{
+  "base_commit": "6023227b16decbc46505f567af1b2b4468ec79de",
+  "kind": "offline_engineering_validation",
+  "source_input_hashes": {
+    "app/integrity/provenance.py": "16d44160d692dae8c883a3f0a4aa558d15245ca4c5cfc6faeb00163f5b8b3d37",
+    "app/schemas.py": "ac8917d6a8faada050beaade12dfe51390834002e8722a53f1bd5006732f48f2",
+    "app/services/thesis_disclosures.py": "300604cb0bf518466ff55ae503f39880b521f726141f45327babfd961489f771",
+    "app/services/financial_thesis_foundation.py": "1d6d4b9ad13a46594ec8da687d66289837b9e3083b5a3aa5e5652236796aa511",
+    "app/services/segment_product_context.py": "e94671cbeea73722cc6bd04daf2c80b9236fbd4840ab46934768607c4403999e",
+    "tests/test_segment_product_context.py": "c683adbfff2124b319ca05d8910e104bf93fb53e66c17c0d67876a84c86becc9",
+    "scripts/replay_retained_segment_products.py": "def089f13b648012670dc6e8fac265d0f723ab1673069af9ae1cf6c329834615",
+    "tests/test_general_finance_evidence.py": "bd5f427f1391656eb380280bb7522e9de35d26a4d15ad3f011c83539c076c2b9"
+  },
+  "python_version": "3.11.9",
+  "all_20_direct_dependency_pins_match_installed": true,
+  "requirements_sha256": "b99d0980daf6d0eda58ea5a1f5556d2d60406a0573129897fe5843dc1c343991",
+  "new_tests": 53,
+  "focused_tests": 629,
+  "adjacent_tests": 134,
+  "collected_tests": 18815,
+  "local_ci_groups": [
+    {
+      "log": "segment-products-ci-0.log",
+      "sha256": "e89ac6509018cb1a8e6a1a0ea192bfeb398e3165840d450c848a0c2cefd49d41",
+      "summary": "83 passed, 1 warning in 2.49s"
+    },
+    {
+      "log": "segment-products-ci-1.log",
+      "sha256": "3ca04b0a42025ca2f57736c18e8809a727760ed32f6095b347106db03d9fe2c2",
+      "summary": "87 passed, 1 warning in 25.84s"
+    },
+    {
+      "log": "segment-products-ci-2.log",
+      "sha256": "24f1dafa55a92afa351bbcd86e928e04adfe1cb56c2c835d8b025f1e66d5b3fa",
+      "summary": "221 passed, 1 warning in 25.67s"
+    },
+    {
+      "log": "segment-products-ci-3.log",
+      "sha256": "59f1792ff423df35d0254b4ef0f87f4b7fba562e8fa76948604827d1168b3d07",
+      "summary": "178 passed in 2.10s"
+    },
+    {
+      "log": "segment-products-ci-4.log",
+      "sha256": "c5ef57bd62fd9c23c2e61a5cb5ed89f02adc24b1d45aeac1e8294a7d00a37125",
+      "summary": "195 passed in 3.12s"
+    }
+  ],
+  "replay_sha256": "5b58a5221ee7e1bda42e393fdcd174bf47dcad17277704fb22e472a6a739abeb",
+  "archived_baseline_reproduced_exactly": true,
+  "previous_claims_preserved": 11,
+  "claim_count_before": 11,
+  "claim_count_after": 12,
+  "prior_inferences_and_citation_ids_preserved": true,
+  "body_hashes": {
+    "filing": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "facts": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "archive_inventory_entries_verified": 19,
+  "external_financial_provider_requests": 0,
+  "model_calls": 0,
+  "new_persistent_source_capture": false,
+  "dependency_changes": false,
+  "independent_usefulness_review": false,
+  "launch_ready": false,
+  "hosted_ci": "Full hosted CI required on corrected head; pending",
+  "canonical_replay_regeneration_matches": true,
+  "hosted_ci_initial_failure": {
+    "run_id": 39729291825,
+    "head": "535ae34920c35b0dc77c88b642ec6d545cb71568",
+    "test": "tests/test_general_finance_evidence.py::TestRetrievedEvidenceSchema::test_serialization",
+    "reason": "Expected serialized-field set omitted the intentional product_disclosures field.",
+    "repair": "Update expected field set and assert empty-list default; product code unchanged.",
+    "local_verification": "43 passed in affected test file"
+  }
+}

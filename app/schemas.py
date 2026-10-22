@@ -125,6 +125,10 @@ class RetrievedEvidence(BaseModel):
         default_factory=list,
         description="Producer-bound historical operating-context quotes; not revenue, forecasts or normalized financial facts.",
     )
+    product_disclosures: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Producer-bound complete product lists with explicit segment headings; no issuer-wide or revenue inference.",
+    )
     risk_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Producer-bound qualitative risk quotes; not verified outcomes or quantitative facts.",
