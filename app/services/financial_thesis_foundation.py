@@ -337,6 +337,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     risk_interpretations = []
     risk_financial_links = []
     operating_mechanisms = []
+    segment_calculations = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
               "issuer_competition_description": 0, "issuer_order_backlog_context": 0,
               "issuer_segment_financial_context": 0}
@@ -377,6 +378,15 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['operating_income_ref'] = value['operating_income_ref']
             row['source_proof'] = value['proof']
             row['caveat_refs'] = value['caveat_refs']
+            analysis = value['segment_context'].get('analysis', {'status': 'unavailable'})
+            if analysis['status'] != 'unavailable':
+                from .segment_analysis import render_segment_analysis
+                segment_calculations.append({'kind': 'segment_table_calculation', 'provenance': 'derived',
+                    'scope': 'reported_segment_table', 'period_start': item.reporting_period_start,
+                    'period_end': item.reporting_period_end, 'reference_ids': [reference_id],
+                    'document_ref': value['document_ref'], 'operating_income_ref': value['operating_income_ref'],
+                    'caveat_refs': value['caveat_refs'], 'analysis': analysis,
+                    'text': render_segment_analysis(analysis)})
         if value.get("issuer_relationship"):
             row["issuer_relationship"] = value["issuer_relationship"]
         elif value["claim_kind"] == "issuer_disclosed_risk":
@@ -428,6 +438,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         answer += '\n\nDisclosed operating mechanisms and monitoring\n' + '\n\n'.join(
             row['text'] + ' ' + row['conditional_test'] for row in operating_mechanisms)
         interpretations.extend(operating_mechanisms)
+    if segment_calculations:
+        answer += '\n\nDerived segment relationships\n' + '\n\n'.join(
+            row['text'] + '\n\n' + ' '.join(f'[{ref}]' for ref in row['reference_ids']) for row in segment_calculations)
+        interpretations.extend(segment_calculations)
     from .business_context import coverage_from_bound_descriptions, render_business_coverage
     business_coverage = coverage_from_bound_descriptions(business_descriptions)
     if business_descriptions:
