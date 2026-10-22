@@ -1,0 +1,219 @@
+{
+  "base_commit": "6c73ed2505038fa50e9ad062d95b1709581c48f3",
+  "kind": "unblinded_retained_segment_organisation_source_inspection",
+  "source": {
+    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "body_bytes": 1404517,
+    "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "independent_origin_verification": false,
+    "normalized_text_sha256": "e8dd751e931eee031f8b0a5174deb32e554f43837d8d107f760b50496fff3ca3",
+    "normalized_text_characters": 173081,
+    "offset_basis": "Full normalized visible text with SEC footer removal; Unicode character offsets, end exclusive."
+  },
+  "business_window": [
+    5751,
+    31290
+  ],
+  "normalizer_input_hashes": {
+    "app/services/public_document_ingestion.py": "9c1ae2d6b5a13dfe10c738c5091975134e35caccb778405d2f68ab8f7ed9769d",
+    "app/services/sec_risk_sections.py": "03dcbd76050715325636f45b0725d11dc3d267eeac0f2e0039cd36b2fa259031",
+    "app/services/thesis_disclosures.py": "300604cb0bf518466ff55ae503f39880b521f726141f45327babfd961489f771"
+  },
+  "candidate_passages": [
+    {
+      "start_offset": 6396,
+      "end_offset": 6566,
+      "quote": "The Defense segment protects the lives of the citizens of our nation, as well as the citizens of our nation’s allies, by providing our warfighters with reliable products.",
+      "quote_sha256": "9a64824133d8871c684cae1f1face9c8a9fc8e3d3e916470fc68b8c4c7c53dff",
+      "review_role": "promotional_antecedent",
+      "disposition": "Explicit segment antecedent contains promotional benefit/reliability claims. Do not promote those claims or clip them into neutral current activities.",
+      "generic_business_predicate_rejection": "subject_or_activity",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 6567,
+      "end_offset": 6990,
+      "quote": "It manufactures 40mm ammunition, precision mechanical and electro-mechanical assemblies, medium caliber cartridge cases and metal parts; performs Load, Assemble and Pack (LAP) operations on ordnance-related products primarily for the United States Government and prime contractors; and manufactures detonators, booster pellets, release cartridges, lead azide, other military energetic devices and materials, and assemblies.",
+      "quote_sha256": "2840886e3d3ee4c094c51851bacc45b3a5f359b47ed409f9291d66f264238e0b",
+      "review_role": "pronoun_manufacturing",
+      "disposition": "Complete manufacturing/customer sentence; subject It requires explicit local antecedent binding. Product caliber is not a financial metric.",
+      "generic_business_predicate_rejection": "length",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 13435,
+      "end_offset": 13441,
+      "quote": "﻿ ﻿ 2.",
+      "quote_sha256": "3ac3fb40ab19d8860dc134a6c16a35d126d1cd4e19a9ed547a7463be75de208a",
+      "review_role": "numbered_heading",
+      "disposition": "Keep ordinal and source-spelled segment heading; neither heading proximity nor a collective subsidiary statement proves a specific issuer ownership chain.",
+      "generic_business_predicate_rejection": "length",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 13442,
+      "end_offset": 13549,
+      "quote": "Defense Segment Each of the segment’s operating companies are subsidiaries of National Defense Corporation.",
+      "quote_sha256": "9a6059195707438e4a2c4718f2dd025663746340be94aa31748a300cc7fd84d1",
+      "review_role": "collective_organisation_relationship",
+      "disposition": "States a collective segment operating-company relationship to a named parent. Does not enumerate all members or establish that parent as the directory issuer.",
+      "generic_business_predicate_rejection": "subject_or_activity",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 13550,
+      "end_offset": 13780,
+      "quote": "AMTEC Corporation (\"AMTEC\") was acquired on February 24, 2001, and manufactures 40mm ammunition, and precision mechanical and electro-mechanical products for the United States Department of Defense (DOD) and DOD prime contractors.",
+      "quote_sha256": "4450915376c9c885fc120e53b21f91eab20467cfb60942109109d4b1be0dc0bc",
+      "review_role": "named_organisation_activity",
+      "disposition": "Potential first bounded shared candidate: full legal name/alias, acquisition date, manufacture/product specification and explicitly expanded customer. Report organisation activity in section context; no ownership or issuer-wide roll-up.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 14098,
+      "end_offset": 14320,
+      "quote": "﻿ Spectra Technologies LLC (\"Spectra\"), a subsidiary of AMTEC, was acquired on July 31, 2003, and is engaged in the manufacture and delivery of munitions and ordnance-related products for the DOD and DOD prime contractors.",
+      "quote_sha256": "a23dc474511409e6f7232a078081c0b2e3538a5df67a4a223e60a32abaf6956f",
+      "review_role": "explicit_subsidiary_activity",
+      "disposition": "Names subsidiary and parent AMTEC within the sentence; acquisition date and DOD acronym must retain source context. No transitive link to the directory issuer is supplied by this sentence.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 14440,
+      "end_offset": 14552,
+      "quote": "﻿ Amron, a division of AMTEC (\"Amron\"), holds the assets that were purchased from Amron LLC on January 30, 2006.",
+      "quote_sha256": "d96358c27482d4ba79d8eed721d45e9e86ce5d2a706a75ec771d7ffd5412d54e",
+      "review_role": "division_alias_acquisition",
+      "disposition": "Division identity, alias and asset acquisition appear together. Keep asset acquisition distinct from acquiring a corporation.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 14553,
+      "end_offset": 14788,
+      "quote": "Amron manufactures cartridge cases used in medium caliber ammunition (20mm, 25mm, 30mm, 40mm, and 50mm) primarily for the DOD and DOD prime contractors, which includes the 40mm systems program previously mentioned and referenced below.",
+      "quote_sha256": "70d35c90c69bdc9bee0550fbfbd3f2b04ba0a357cb3822263e15ff5536fd8612",
+      "review_role": "specification_and_customer",
+      "disposition": "Product-caliber numbers and customer acronym/reference are not financial facts. Do not strip numbers or infer alias/customer definitions from outside the bound context.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 14882,
+      "end_offset": 15123,
+      "quote": "﻿ Tech Ord, a division of AMTEC (\"Tech Ord\"), holds the assets formerly owned by Chemring Energetic Devices, Inc.’s business located in Clear Lake, South Dakota and all of the real property previously owned by Technical Ordnance Realty, LLC.",
+      "quote_sha256": "c1ce2b1dcc00fa3851fbc3eb922c824c9f8d1b42c6892d37ea2b5aff9ca7ee1c",
+      "review_role": "division_assets",
+      "disposition": "Division relationship and former asset owner; not proof of a current issuer ownership chain.",
+      "generic_business_predicate_rejection": "subject_or_activity",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 15172,
+      "end_offset": 15353,
+      "quote": "Tech Ord manufactures in its 124,000 square foot Clear Lake facility detonators, booster pellets, release cartridges, lead azide, and other military energetic devices and materials.",
+      "quote_sha256": "f38a0005f47efc8f24a90bf4a9f0632e01b5dde47ceb82e41415566197c76d60",
+      "review_role": "facility_and_products",
+      "disposition": "Manufacturing description also contains facility area, a separate physical quantity. A generic numeric exception would mix quantity types.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 15354,
+      "end_offset": 15466,
+      "quote": "Its major customers include United States and foreign government agencies, AMTEC, and other defense contractors.",
+      "quote_sha256": "97c700473ece1a0f849812a8c17db915744ffddfb6c598acd77f1dec98187b6b",
+      "review_role": "pronoun_customers",
+      "disposition": "Its major customers requires a bound organisation antecedent, not the nearest ticker or a later segment table.",
+      "generic_business_predicate_rejection": "subject_or_activity",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 15467,
+      "end_offset": 15674,
+      "quote": "The equity interests of Woodlawn Manufacturing, Ltd. (\"Woodlawn\"), a subsidiary of National Defense Corporation and its newly formed subsidiary, Woodlawn Manufacturing LLC, were acquired on October 26, 2022.",
+      "quote_sha256": "bc475d9873837bb884d4b6c0846a4cdda486aa53c209e9088d6c49ffe4bdf465",
+      "review_role": "legal_organisation_relationship",
+      "disposition": "Two similarly named legal entities and an explicit parent relationship. Do not collapse Ltd. and LLC or infer unnamed issuer ownership.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 15675,
+      "end_offset": 15792,
+      "quote": "Woodlawn is engaged in the manufacture of metal parts and assemblies primarily for the DOD and DOD prime contractors.",
+      "quote_sha256": "b24f5e13aa0bf862a58042399ae44605541bedbc7178a3966a316a49638f0c50",
+      "review_role": "alias_manufacturing",
+      "disposition": "Short neutral activity sentence; Woodlawn alias needs its exact local legal-entity definition and unresolved DOD context.",
+      "generic_business_predicate_rejection": "subject_or_activity",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 19654,
+      "end_offset": 19790,
+      "quote": "﻿ During 2025, almost all of the work performed by this segment directly or indirectly for the DOD was performed on a fixed-price basis.",
+      "quote_sha256": "337033f8ba7e0ced5d03716f284b43d8ff7ae753a5e154696b28e6f455ec0299",
+      "review_role": "dated_contract_basis",
+      "disposition": "Observed 2025 segment contract-basis disclosure; this segment and DOD need section/acronym binding. Does not establish quantified effect or forecast.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 19791,
+      "end_offset": 20197,
+      "quote": "Under fixed-price contracts, the price paid to the contractor is usually awarded based on competition or negotiation at the outset of the contract and therefore is generally not subject to adjustments reflecting the actual costs incurred by the contractor, with the exception of some limited escalation clauses, which on the 2017 and 2022 contracts apply to only three materials – steel, aluminum and zinc.",
+      "quote_sha256": "013325dce7c58af5fea1495c4244836688f8dfa710e3a3ba82b92a5a371ec986",
+      "review_role": "contract_definition_and_exceptions",
+      "disposition": "Retain entire fixed-price explanation and limited escalation exceptions; not evidence that costs actually increased or a quantified earnings impact.",
+      "generic_business_predicate_rejection": "length",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 20905,
+      "end_offset": 21119,
+      "quote": "To focus the direction of the segment's business, the Company divested the stock of Rusoh, Inc. on November 14, 2023 and certain assets of OneEvent related to its refrigeration monitoring business on July 31, 2025.",
+      "quote_sha256": "caf5b19abf6859afc40ec508d2c033bb86b6cf06943066a5777a6e9365c640a8",
+      "review_role": "dated_divestment_counterevidence",
+      "disposition": "Explicit 2023 stock divestment and 2025 partial asset divestment; current product attribution must not reuse related historical descriptions indiscriminately.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 21546,
+      "end_offset": 21619,
+      "quote": "As noted above, the certain assets of the business were divested in 2025.",
+      "quote_sha256": "33925b6ee32b61889b00508dbc75787180035a5abf0eba6529b66cdee5369b58",
+      "review_role": "divestment_cross_reference",
+      "disposition": "Reinforces 2025 disposition; needs its complete antecedent rather than a generic divested flag for every business.",
+      "generic_business_predicate_rejection": "numeric_or_forward_looking",
+      "new_production_admission": false
+    },
+    {
+      "start_offset": 22139,
+      "end_offset": 22189,
+      "quote": "As noted above, the business was divested in 2023.",
+      "quote_sha256": "71359812fb7cbf1ccf58f2ec6ab8e6669f3aa2eb04a783b1117a5df8d932f532",
+      "review_role": "historical_business_disposition",
+      "disposition": "Explicit 2023 divestment cross-reference; historical fire-extinguisher description cannot automatically become current Safety products.",
+      "generic_business_predicate_rejection": "length",
+      "new_production_admission": false
+    }
+  ],
+  "separate_consolidation_policy_context": [
+    {
+      "start_offset": 111945,
+      "end_offset": 112123,
+      "quote": "﻿ ( 2 ) BASIS OF PRESENTATION: The Consolidated Financial Statements include the accounts of National Presto Industries, Inc. and its subsidiaries, all of which are wholly-owned.",
+      "quote_sha256": "3e5edf3df467bf18e96ecef66c9954440b0bdabdcd61f28e2fae0fe53a8637cf",
+      "disposition": "Generic consolidation policy does not identify the specific subsidiaries or complete the named organisation-to-issuer chain."
+    }
+  ],
+  "limitations": [
+    "Selected unchanged production normalization/sentence functions; not a before/after claim or final-answer replay.",
+    "Business-predicate rejection is an isolated diagnostic, not an assessment of every specialised producer.",
+    "Section placement and generic consolidation policy do not prove named ownership or current membership.",
+    "No new source capture, financial-provider/model request, ledger resumption, holdout inspection, flag or benchmark change."
+  ]
+}
