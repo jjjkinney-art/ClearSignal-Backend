@@ -8,6 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October issuer-versus-segment coverage clarity (offline):** the answer's
+coverage paragraph now acknowledges selected, final-bound segment product lists,
+annual results and management explanations separately from issuer-description
+facets. The retained replay preserves all twelve claims/citations, calculations,
+facet statuses and unanswered parts; complete business-model coverage stays false.
+See `SCOPED_BUSINESS_COVERAGE_20261022.md`. This is a scope/presentation repair,
+not new extraction, independent usefulness or a closed quality gate. Wider coverage,
+counter-evidence, valuation and existing acceptance gates remain open. No new live
+authority, spending or activation follows.
+
 **22 October complete segment product lists (offline):** a separate bounded
 contract retains an entire neutral product enumeration with its explicit numbered
 segment heading, rather than clipping a long sentence or relaxing ordinary

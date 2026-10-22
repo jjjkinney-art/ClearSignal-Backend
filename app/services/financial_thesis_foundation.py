@@ -339,6 +339,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     risk_financial_links = []
     operating_mechanisms = []
     segment_calculations = []
+    scoped_segment_context = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
               "issuer_competition_description": 0, "issuer_order_backlog_context": 0,
               "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0}
@@ -377,18 +378,31 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         if value['claim_kind'] == 'issuer_segment_product_context':
             row['product_context'] = value['product_context']
             row['document_ref'] = value['document_ref']
+            scoped_segment_context.append({'kind': 'segment_product_list',
+                'scope': 'named_segment', 'segment_label': value['product_context']['scope']['label'],
+                'reference_ids': [reference_id]})
         if value['claim_kind'] == 'issuer_segment_financial_context':
             row['segment_context'] = value['segment_context']
             row['document_ref'] = value['document_ref']
             row['operating_income_ref'] = value['operating_income_ref']
             row['source_proof'] = value['proof']
             row['caveat_refs'] = value['caveat_refs']
+            context_rows = value['segment_context']['segments']
+            scoped_segment_context.append({'kind': 'reported_segment_results',
+                'scope': 'reported_segments', 'segment_labels': [r['label'] for r in context_rows],
+                'period_start': context_rows[0]['start'], 'period_end': context_rows[0]['end'],
+                'currency': value['segment_context']['currency'], 'reference_ids': [reference_id]})
             if value.get('sales_explanations'):
                 row['sales_explanations'] = value['sales_explanations']
                 row['sales_explanation_refs'] = value['sales_explanation_refs']
                 row['operating_explanation_source'] = value['operating_explanation_source']
                 row['comparison_revenue_ref'] = value['comparison_revenue_ref']
                 row['sales_comparison_heading_refs'] = value['sales_comparison_heading_refs']
+                for explanation in value['sales_explanations']:
+                    scoped_segment_context.append({'kind': 'management_sales_explanation',
+                        'scope': explanation['scope'], 'segment_label': explanation['label'],
+                        **{k: explanation[k] for k in ('current_start', 'current_end', 'prior_start', 'prior_end')},
+                        'reference_ids': [reference_id]})
             analysis = value['segment_context'].get('analysis', {'status': 'unavailable'})
             if analysis['status'] != 'unavailable':
                 from .segment_analysis import render_segment_analysis
@@ -454,8 +468,8 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['text'] + '\n\n' + ' '.join(f'[{ref}]' for ref in row['reference_ids']) for row in segment_calculations)
         interpretations.extend(segment_calculations)
     from .business_context import coverage_from_bound_descriptions, render_business_coverage
-    business_coverage = coverage_from_bound_descriptions(business_descriptions)
-    if business_descriptions:
+    business_coverage = coverage_from_bound_descriptions(business_descriptions, scoped_context=scoped_segment_context)
+    if business_descriptions or scoped_segment_context:
         answer += '\n\nBusiness context coverage\n' + render_business_coverage(business_coverage)
     unanswered = missing + ["competitive position" if counts["issuer_business_description"] else
                             "business model and competitive position", "valuation and expected returns",

@@ -72,28 +72,52 @@ def complementary_candidates(candidates):
     return selected
 
 
-def coverage_from_bound_descriptions(descriptions):
+def coverage_from_bound_descriptions(descriptions, *, scoped_context=()):
     """Summarize only (bound quote, admitted response reference) pairs."""
     references = {key: [] for key, _ in FACETS}
     for quote, reference_id in descriptions:
         for key in description_roles(quote):
             if reference_id not in references[key]:
                 references[key].append(reference_id)
-    return {
+    coverage = {
         'scope': 'sampled_issuer_descriptions', 'complete_business_model': False,
         'facets': [{'facet': key, 'label': label,
                     'status': 'source_description_present' if references[key] else 'not_verified',
                     'reference_ids': references[key]} for key, label in FACETS],
         'limitation': 'These are sampled issuer descriptions. Full business-model coverage, segment economics, competitive strength and causal financial drivers remain unverified.',
     }
+    if scoped_context:
+        # Supplied only by final-bound, selected disclosure branches. These
+        # entries never fill issuer-wide facets or assert complete coverage.
+        coverage['scoped_context'] = list(scoped_context)
+        coverage['scope'] = 'sampled_issuer_descriptions_and_scoped_segment_context'
+        coverage['limitation'] = (
+            'The named-segment evidence above does not establish issuer-wide activities or a complete business model. '
+            'Standalone segment economics, competitive strength and independently established causal drivers remain unverified. '
+            'Reported figures and management attributions retain their original scope and periods.')
+    return coverage
 
 
 def render_business_coverage(coverage):
     lines = []
+    scoped = coverage.get('scoped_context', [])
     for facet in coverage['facets']:
         if facet['reference_ids']:
             cites = ' '.join(f'[{ref}]' for ref in facet['reference_ids'])
             lines.append(f"{facet['label']}: sampled issuer description {cites}.")
+        elif facet['facet'] == 'activities' and any(row['kind'] == 'segment_product_list' for row in scoped):
+            lines.append(f"{facet['label']}: issuer-wide coverage remains unverified; named-segment product evidence is listed below.")
         else:
             lines.append(f"{facet['label']}: not verified in the admitted descriptions.")
+    for row in scoped:
+        cites = ' '.join(f'[{ref}]' for ref in row['reference_ids'])
+        if row['kind'] == 'segment_product_list':
+            lines.append(f"Named-segment product list: {row['segment_label']} {cites}.")
+        elif row['kind'] == 'reported_segment_results':
+            lines.append(f"Reported annual segment results: {', '.join(row['segment_labels'])}; "
+                         f"{row['period_start']} to {row['period_end']} ({row['currency']}) {cites}.")
+        elif row['kind'] == 'management_sales_explanation':
+            lines.append(f"Management-attributed segment sales explanation: {row['segment_label']}; "
+                         f"{row['current_start']} to {row['current_end']} versus "
+                         f"{row['prior_start']} to {row['prior_end']} {cites}.")
     return '\n'.join(lines) + '\n' + coverage['limitation']
