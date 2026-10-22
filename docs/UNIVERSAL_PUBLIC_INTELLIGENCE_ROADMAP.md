@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October retained operating-explanation source review (offline):** the saved
+filing's MD&A contains explicit segment sales/profit explanations; missing causal
+context in answers is not established source absence. Seventeen exact candidate
+sentences and comparison boundaries identify a bounded next repair: separately
+bind explicit segment sales comparisons across two annual periods and preserve
+complete management-attributed shipment explanations. Repeated comparison headings,
+pronouns, pricing-offset ambiguity and gross-versus-operating metrics require
+separate handling. See `OPERATING_EXPLANATIONS_SOURCE_REVIEW_20261022.md`.
+This inspection changes no production answer, independent quality score, benchmark,
+flag or live authority. Products, counter-evidence, valuation and acceptance gates
+remain open.
+
 **22 October reconciled segment-table relationships (offline):** separately bound
 segment-table Total facts can support exact sales/operating-result reconciliation,
 then labelled derived sales shares and operating-profit/external-sales ratios.

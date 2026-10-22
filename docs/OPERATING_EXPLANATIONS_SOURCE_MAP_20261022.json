@@ -1,0 +1,174 @@
+{
+  "kind": "unblinded_retained_source_inspection",
+  "base_commit": "b2a777d45f2c05681c9f280b8561e44d4b81cad6",
+  "source": {
+    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "body_bytes": 1404517,
+    "independent_origin_verification": false,
+    "normalized_text_sha256": "e8dd751e931eee031f8b0a5174deb32e554f43837d8d107f760b50496fff3ca3",
+    "normalized_text_characters": 173081,
+    "offset_basis": "Full normalized visible text; SEC footer removal enabled; Unicode characters, end exclusive."
+  },
+  "normalizer_inputs": {
+    "app/services/public_document_ingestion.py": "9c1ae2d6b5a13dfe10c738c5091975134e35caccb778405d2f68ab8f7ed9769d",
+    "app/services/sec_risk_sections.py": "03dcbd76050715325636f45b0725d11dc3d267eeac0f2e0039cd36b2fa259031",
+    "app/services/thesis_disclosures.py": "d7461593a19024ae3c16892d7f6b27e695336d1814196c0c87cc9bf20cf9d5d4"
+  },
+  "section": {
+    "start": 62215,
+    "end": 84983,
+    "opening": "ITEM 7. MANAGEMENT’S DISCUSSION AND ANALYSIS OF FINANCIAL CONDITION AND RESULTS OF OPERAT",
+    "closing": "ITEM 7A. QUANTITATIVE AND QUALITATIVE DISCLOSURES ABOUT MARKET R"
+  },
+  "comparison_window": {
+    "start": 64815,
+    "end": 69242,
+    "heading": "2025 COMPARED TO 2024",
+    "note": "First comparison block within Item 7; the heading repeats later in liquidity discussion."
+  },
+  "passages": [
+    {
+      "start": 65568,
+      "end": 65794,
+      "quote": "Net sales of the Housewares/Small Appliance segment decreased by $7,195,000 (7%), from $102,799,000 to $95,604,000, primarily attributable to a decrease in units shipped, approximately 47% was offset by an increase in pricing.",
+      "quote_sha256": "95a2410c0fe636c8066b09190b14d8a211f512508a75f1dbfb914eeaf7809b40",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 65795,
+      "end": 65959,
+      "quote": "Net sales of the Defense segment increased by $121,912,000 (43%), from $284,025,000 to $405,937,000, reflecting an increase in shipments from the segment's backlog.",
+      "quote_sha256": "828882008abe9dc7f97008d5eb831c69f7e774c0c3a7f9384399f9510aa513da",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 65960,
+      "end": 66051,
+      "quote": "Safety segment sales increased $579,000 to $1,983,000, reflecting an increase in shipments.",
+      "quote_sha256": "a8b7f2866d06a0d5bed05dead1ef1f2ee1c1e40110ff87dd270da68d87063304",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 66054,
+      "end": 66404,
+      "quote": "Gross profit of the Housewares/Small Appliance segment decreased $17,889,000 from $25,478,000 (25% of sales) in 2024 to $7,589,000 (8% of sales) in 2025, primarily reflecting the decrease in sales mentioned above and the Trump administration's tariffs that went into effect on goods deemed to have been shipped from the Orient after January 31, 2025.",
+      "quote_sha256": "2e4310c47069a586e99ad7c820f4db7f9e13e59460598e1b2b163b4e7b551510",
+      "qualitative_business_predicate_rejection": "length",
+      "production_admission": false
+    },
+    {
+      "start": 66405,
+      "end": 66554,
+      "quote": "Those tariffs are generally treated as period costs and expensed as they are incurred, reflecting the segment’s LIFO inventory cost valuation method.",
+      "quote_sha256": "cea933d077cac2c713de4b12c2be4fda2d67b49cf750455cf4f19cf1b9af66ee",
+      "qualitative_business_predicate_rejection": "subject_or_activity",
+      "production_admission": false
+    },
+    {
+      "start": 66555,
+      "end": 66714,
+      "quote": "The relocation costs of the segment’s distribution center from Canton to Nettleton, Mississippi also served to reduce gross profit by approximately $1,261,000.",
+      "quote_sha256": "3cf346b3f56ce55671df6d4ff4ce2b1939fced24c1ad2f43d20a01359a6637a0",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 66715,
+      "end": 66960,
+      "quote": "Defense gross profit increased $19,471,000 from $58,173,000 (21% of sales) in 2024 to $77,644,000 (19% of sales) in 2025, primarily reflecting the increase in sales mentioned above, as well as differences in mix efficiencies, and material costs.",
+      "quote_sha256": "5c21473e1e2478103794270f4ad23cc0c9b2322a3e4c634a0d08401d2898e296",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 66961,
+      "end": 67101,
+      "quote": "Due to the startup nature of the businesses in the Safety segment and resulting limited revenues, gross margins were negative in both years.",
+      "quote_sha256": "b215eb51d08c8e1fc35e9e0da9bc1bad342c800f8009a0aae59f94188e2ecb7f",
+      "qualitative_business_predicate_rejection": "subject_or_activity",
+      "production_admission": false
+    },
+    {
+      "start": 67104,
+      "end": 67404,
+      "quote": "Selling and general expenses for the Housewares/Small Appliance segment increased $1,304,000, primarily reflecting increased personnel costs of $768,000, computers and technology costs of $266,000, and the favorable adjustment to the reserve for bad debts of $285,000 that occurred in the prior year.",
+      "quote_sha256": "c3ac345cf767155c1cfa3bdc9f4a2f0b5ec2ca82bbe858f4881340fc699bb380",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 67405,
+      "end": 67666,
+      "quote": "Defense segment selling and general expenses increased $3,941,000, primarily due to increased personnel costs of $3,012,000, legal and professional expenses of $347,000, repairs and maintenance costs of $334,000, and computers and software expenses of $256,000.",
+      "quote_sha256": "34127cf57a7f4f04fe652e4aa2563f52de0eed55f754f629b90e10f220816187",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 67667,
+      "end": 67842,
+      "quote": "Safety segment selling and general expenses decreased $1,215,000, primarily reflecting the sale of OneEvent's refrigeration monitoring business that occurred on July 31, 2025.",
+      "quote_sha256": "fbc776d894edc06431c100365e3cb65d1fc4125c4bf59f1735f55baede1dfe2c",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 67843,
+      "end": 67980,
+      "quote": "During the first quarter of 2025, the Company made deposits totaling $2,701,000 with a vendor in its Housewares/Small Appliances segment.",
+      "quote_sha256": "59e74c572e4bbc47371729b18189c5d1a9f9f5600e23f47e2d96e41aedffb0f4",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 67981,
+      "end": 68093,
+      "quote": "On May 29, 2025, the vendor filed for protection in the U.S. Bankruptcy Court in the Northern District of Texas.",
+      "quote_sha256": "ea83aa8dad3b50e60730754c88c5d7638106e4d396bd3b0cdbf75fcab346588a",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 68094,
+      "end": 68230,
+      "quote": "As recovery of the deposit is deemed unlikely, the Company recorded an impairment of the full deposit during the second quarter of 2025.",
+      "quote_sha256": "c91d626c61bad56baeeee06f4a79b4d7d684868c54ec53ab733f53a49057ae15",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 68231,
+      "end": 68326,
+      "quote": "The above items were responsible for the change in operating profit from continuing operations.",
+      "quote_sha256": "0c2d2e6895ed9e8ebcf28cec84bc4d4d104948d96c1e26be97e8279d8a1f29db",
+      "qualitative_business_predicate_rejection": "subject_or_activity",
+      "production_admission": false
+    },
+    {
+      "start": 68329,
+      "end": 68595,
+      "quote": "The $3,579,000 decrease in other income was attributable to a decrease of $3,009,000 in interest income on marketable securities and an increase in interest expense of $830,000 related to the outstanding balance of the Company's revolving line of credit during 2025.",
+      "quote_sha256": "2313c34aacda42b349ec8ee2a7a60bec3662b3d576299486bdb9cbc5c961a017",
+      "qualitative_business_predicate_rejection": "numeric_or_forward_looking",
+      "production_admission": false
+    },
+    {
+      "start": 68596,
+      "end": 68703,
+      "quote": "Both stem from the increased investments in inventory required to support augmented Defense segment awards.",
+      "quote_sha256": "f0bba91e438141949449e5433de3b34048245b4ec4c6dd8cd2ca9cd6988adc6f",
+      "qualitative_business_predicate_rejection": "subject_or_activity",
+      "production_admission": false
+    }
+  ],
+  "limits": [
+    "No production claim extraction, final binding or saved answer was run.",
+    "The business predicate is tested outside its eligible Business section for diagnosis only, not used as an MD&A admission rule.",
+    "Source statements are management attributions, not independently verified causes.",
+    "No provider/model calls, new capture, holdout inspection, flags or ledger changes."
+  ]
+}
