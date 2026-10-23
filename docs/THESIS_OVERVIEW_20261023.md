@@ -23,7 +23,9 @@ This is a bounded composition and interpretation repair. It does not establish
 durable competitive advantage, causal earnings bridges, complete business-model
 coverage or a valuation boundary. Without segment evidence the opening explicitly
 leaves the company-specific economic case incomplete. Existing question routing,
-decision-threshold behavior, claims, sources and gap states remain unchanged.
+decision-threshold routing, claims, sources and gap states remain unchanged.
+The monitoring fallback for missing operating income shares the foundation's
+neutral cash-flow interpretation; it still produces no valuation boundaries.
 The detailed evidence catalogue remains available, so this first presentation
 slice also makes the complete answer longer. Further brevity and integrated
 economic reasoning require their own complete-answer review.
@@ -66,6 +68,12 @@ acceptance is claimed.
 - Full repository collection: 18,982 tests, zero collection errors.
 - Five CI regression groups passed separately: launch security 83, production
   routers 87, auth/billing 221, conviction 178 and release closure 195.
+- PR CI run 39919266513 found one stale supporting-signal expectation in the
+  missing-operating-income monitoring test. The follow-up updates that expectation
+  and checks preserved cash-flow evidence/citations and neutral interpretation
+  through the monitoring builder and final source gate. All 122 tests in the
+  affected foundation/bank/decision-monitoring/period-coverage group pass locally;
+  the new PR-head CI result remains required.
 - Retained replay: fourteen claims before and after; zero external requests and
   model calls. Claims, citations, coverage and existing gaps remain equal.
 
