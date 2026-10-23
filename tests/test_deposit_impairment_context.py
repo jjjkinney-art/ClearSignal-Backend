@@ -176,4 +176,11 @@ def test_ordinary_retrieval_final_answer_and_incomplete_coverage(monkeypatch):
     result=apply_source_answer_gate(thesis,'What is the investment thesis for ZQXB? Cite material claims.',admitted,references=refs)
     rows=[c for c in result['claims'] if c['claim_kind']=='issuer_deposit_impairment_context']
     assert len(rows)==1 and QUOTE in thesis.direct_answer
+    assert thesis.direct_answer.count(rows[0]['claim']) == 1
+    assert thesis.direct_answer.count(QUOTE) == 1
+    opening = thesis.direct_answer.split('Positive, rising reported comparisons:')[0]
+    assert rows[0]['claim'] in opening and f"[{rows[0]['reference_id']}]" in opening
+    before = thesis.direct_answer
+    repeated = apply_source_answer_gate(thesis,'What is the investment thesis for ZQXB? Cite material claims.',admitted,references=refs)
+    assert repeated == result and thesis.direct_answer == before
     assert result['status']=='partial' and result['business_context_coverage']['complete_business_model'] is False
