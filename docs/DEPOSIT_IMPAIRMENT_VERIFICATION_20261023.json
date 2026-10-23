@@ -1,0 +1,87 @@
+{
+  "base_commit": "03d0723aca96181d99e2cdb9007cd13980353738",
+  "kind": "offline_engineering_verification_not_independent_usefulness",
+  "python": "3.11.9",
+  "dependency_pins_changed": false,
+  "new_tests": 64,
+  "focused_tests": 619,
+  "adjacent_tests": 202,
+  "collection": {
+    "count": 18968,
+    "errors": 0
+  },
+  "local_ci_groups": [
+    {
+      "name": "Launch-security & reproducibility",
+      "exit_code": 0,
+      "passed": 83
+    },
+    {
+      "name": "Production router regression",
+      "exit_code": 0,
+      "passed": 87
+    },
+    {
+      "name": "Auth & billing",
+      "exit_code": 0,
+      "passed": 221
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "exit_code": 0,
+      "passed": 178
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "exit_code": 0,
+      "passed": 195
+    }
+  ],
+  "implementation_hashes": {
+    "app/providers/sec_deposit_impairment.py": "b87934952af74df81e9b8c23e0038e2b890b1290f080a7356d18c53aba2338fc",
+    "app/services/deposit_impairment_context.py": "bc81c96fb6f2f26eef596373e6cc70dbd75941246cf74b3265a9296626123063",
+    "app/services/public_document_ingestion.py": "22ff156c425b7bd8939a03707371b671c3298e74d389bca838c577c8a6444866",
+    "app/services/thesis_disclosures.py": "11151d4fc34ff26b2cfdcd0c9b9097f12c69f4fb9b303f0ed7e848010dabbd2f",
+    "app/services/financial_thesis_foundation.py": "a9227c26a7b822f49b37692ad03edc571e9cdfa2a33c0b508dd71d1bb1306be6",
+    "app/integrity/provenance.py": "7d53bd2f0b6ad60e283c73f0effaee4d8cb8fba97b77642c303e6fa918ae7841",
+    "app/schemas.py": "498aa70fb638ded87e13fcb65722fc2c0ca49ae3b5ca9e319de7a486ca9b1547",
+    "tests/test_deposit_impairment_context.py": "957c005474aafd973ff31822130dcde326b6c019b2cfd61b31dbdc030cee71a0",
+    "tests/test_general_finance_evidence.py": "cc69c1bc9c4e7c4244c47dcd9828f0d2e28c1079bd645585a3eede60bc8aa8fb",
+    "scripts/replay_retained_deposit_impairment.py": "25a3f4fc5a14fc935e9e5cde6fc1b8eef6176d059dba2075beb3d3fb17ab1dc0"
+  },
+  "replay_sha256": "e9ad0f84ee1e4ae49e66101d5d157fa7add755a8774d66619394a46f08f6c997",
+  "source_hashes": {
+    "filing": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "facts": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "archive_inventory_entries_verified": 19,
+  "replay": {
+    "baseline_exactly_matches_PR333_archived_candidate": true,
+    "claims_before": 13,
+    "claims_after": 14,
+    "previous_claims_and_citations_preserved": 13,
+    "coverage_inferences_unanswered_parts_unchanged": true,
+    "new_reference": "E14",
+    "expense_amount_usd": 2701000,
+    "duplicate_presentations_not_added": true,
+    "source_vendor_identity_not_invented": true,
+    "narrative_segment_not_a_dimensional_measurement": true,
+    "external_requests": 0,
+    "model_calls": 0
+  },
+  "log_hashes": {
+    "impairment-focused.log": "26b6ec6931b8be8836d525723b4e5de632f2a43ebd58e1af5e5a3bf80d121408",
+    "impairment-adjacent.log": "5a1252cde97978bfbf4980d24147fe742cddc3a6f36b6c9bb6e9183f907e33b3",
+    "impairment-collection.log": "9750477b748c21eba404e2cc0dab1d0b6ed0549289cb998acfb27879b8a042bc",
+    "impairment-ci-0.log": "740d436313e5b39b34a0f7f09935f1f296515e47e4a00a3b1fa55cead234c5ca",
+    "impairment-ci-1.log": "a0297dce01dd274e7db4422c04c41dffbef8fc2d8e264f1ed8602c432a099aec",
+    "impairment-ci-2.log": "28e5c6ef930cc94cdfdb23c7ce8cec852a5de246f7ad4e3232c9ef62d6586199",
+    "impairment-ci-3.log": "9827e47af22744a6e98645b0578925032af5b97700ad7965c6c2947448d373db",
+    "impairment-ci-4.log": "7a54ada0bdfc530f3aa3defe34e3a43fb8bca426b5933d04e7a93ce3d3097d03"
+  },
+  "limitations": [
+    "Local checks and exposed retained replay are not independent factual/usefulness adjudication or launch acceptance.",
+    "Full hosted per-file CI is separately pending on the draft PR.",
+    "All twelve live approvals remain consumed; no new capture, provider/model calls, spending, old-ledger resumption, holdout-output inspection or activation."
+  ]
+}

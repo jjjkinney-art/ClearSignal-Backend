@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**23 October dated deposit impairment (offline implementation):** separately
+qualified consolidated expense and cash-flow reconciliation rows bind one
+measurement, retaining the full dated management event and recovery uncertainty.
+The retained replay adds E14 while preserving thirteen previous claims/citations,
+coverage, calculations and unanswered parts. Narrative segment context remains
+distinct from a dimensional segment expense; duplicate rows are never added or
+treated as a new cash payment. See `DEPOSIT_IMPAIRMENT_20261023.md`. Supported
+layouts/event grammar are bounded; independent usefulness, broader operating
+reasoning, valuation and existing launch gates remain open. No new live authority,
+spending, benchmark change or activation follows.
+
 **23 October operating counter-evidence source review (offline):** twelve retained
 MD&A sentences expose adverse tariff/cost/impairment context and distinct
 gross-profit versus operating-income metrics. Two statement rows repeat one
