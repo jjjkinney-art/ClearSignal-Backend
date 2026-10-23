@@ -21,7 +21,12 @@ def test_valid_comparisons_survive_missing_operating_income():
     assert result['benchmarks'] == []
     assert len(result['foundation']['claims']) == 3
     assert [r['signal'] for r in result['calculations']] == [
-        'counter_evidence', 'counter_evidence', 'supporting']
+        'counter_evidence', 'counter_evidence', 'context_only']
+    cash = result['calculations'][2]
+    assert cash['reference_ids'] == ['E3']
+    assert 'underlying movements remain unverified' in cash['text']
+    assert 'before assigning a favorable or adverse thesis signal' in cash['conditional_test']
+    assert result['foundation']['claims'][2]['claim'] == items[2].summary
     assert result['unanswered_parts'] == ['operating income', 'operating margin']
     assert 'no operating margin or margin benchmark has been calculated' in result['answer']
     assert 'own reporting period' in result['answer']
@@ -62,6 +67,9 @@ def test_gate_keeps_evidence_and_missing_margin_but_removes_investment_boundarie
         assert 'operating income' in result['unanswered_parts']
         assert 'operating margin' in result['unanswered_parts']
         assert 'valuation decision boundaries' in result['unanswered_parts']
+        cash = next(row for row in result['inferences'] if row.get('metric') == 'operating cash flow')
+        assert cash['signal'] == 'context_only' and cash['reference_ids'] == ['E3']
+        assert 'underlying movements remain unverified' in thesis.direct_answer
         assert not thesis.decision_thresholds and not thesis.threshold_zones
         assert not thesis.bull_thesis and thesis.confidence_score == 0
 
