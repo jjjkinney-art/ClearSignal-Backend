@@ -334,6 +334,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .segment_order_context import bound_order_context
     from .segment_financial_context import bound_segment_financial_context
     from .segment_product_context import bound_segment_products
+    from .segment_organisation_context import bound_organisation_activity
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
@@ -342,7 +343,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     scoped_segment_context = []
     counts = {"issuer_business_description": 0, "issuer_disclosed_risk": 0,
               "issuer_competition_description": 0, "issuer_order_backlog_context": 0,
-              "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0}
+              "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0, "issuer_organisation_activity_context": 0}
     current_risks = 0
     business_descriptions = []
     seen = set()
@@ -352,9 +353,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                  or bound_order_context(item, ticker=ticker, cik=expected_cik)
                  or bound_segment_financial_context(item, ticker=ticker, cik=expected_cik)
                  or bound_segment_products(item, ticker=ticker, cik=expected_cik)
+                 or bound_organisation_activity(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value["quote"] in seen or counts[value["claim_kind"]] >=
-                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context'} else 2)):
+                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context'} else 2)):
             continue
         reference_id = f"E{index}"
         if references is not None:
@@ -381,6 +383,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             scoped_segment_context.append({'kind': 'segment_product_list',
                 'scope': 'named_segment', 'segment_label': value['product_context']['scope']['label'],
                 'reference_ids': [reference_id]})
+        if value['claim_kind'] == 'issuer_organisation_activity_context':
+            row['organisation_context'] = value['organisation_context']
+            row['document_ref'] = value['document_ref']
+            row['discussion_heading'] = value['heading_quote']
         if value['claim_kind'] == 'issuer_segment_financial_context':
             row['segment_context'] = value['segment_context']
             row['document_ref'] = value['document_ref']
