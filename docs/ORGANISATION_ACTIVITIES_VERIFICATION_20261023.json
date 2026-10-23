@@ -1,0 +1,80 @@
+{
+  "base_commit": "a2282d4cfebbcada6f1ddf5b4204acb8b312cbc9",
+  "kind": "offline_engineering_verification_not_usefulness_adjudication",
+  "python": "3.11.9",
+  "repository_dependency_pins_changed": false,
+  "source_hashes": {
+    "filing": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "facts": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f"
+  },
+  "replay_sha256": "69376c9786f7a88782d36a8e129923e47a00f6662b81804d423bd89e6f92be04",
+  "implementation_hashes": {
+    "app/services/segment_organisation_context.py": "975cd9ed4ecd83b20fbcbc90400c301f2bf741e28a600cea19c6dcf2d5124a2e",
+    "app/integrity/provenance.py": "38da202d8fa6310cd0d227b3a8dc2c7a43a7dcec38bbf54ca847768c7cc6a38c",
+    "app/schemas.py": "ae83bdfe2676c74c0cfd4f854fa0e36e6cdc00f5936fb0670440be17612e9317",
+    "app/services/thesis_disclosures.py": "83168a36f28cc6f9f3859b6ee4a92d3cbce6cf8001a3e07820bd15bf485e1b45",
+    "app/services/financial_thesis_foundation.py": "c7290185bd12e3f80e4e5e44b82edd32ebbe40e136b69a91e54ed7328fa29326",
+    "tests/test_segment_organisation_context.py": "10d3b784a76768153cba819c55dc2dffe6b12c3c36ff34291263aa1b021f5b78",
+    "tests/test_general_finance_evidence.py": "b05162d19650119210bf8d46a1285e2f3a3d392a65a9a75b4d56ef72462bba6b",
+    "scripts/replay_retained_organisation_activities.py": "d5dfed88dc0918f833f11dacffbf7c66bef0ca0c51d5a9ac5ad243543d88abaf"
+  },
+  "new_tests": 73,
+  "focused_tests": 653,
+  "adjacent_tests": 211,
+  "collection": {
+    "count": 18904,
+    "errors": 0
+  },
+  "ci_groups": [
+    {
+      "name": "Launch-security & reproducibility",
+      "exit_code": 0,
+      "passed": 83
+    },
+    {
+      "name": "Production router regression",
+      "exit_code": 0,
+      "passed": 87
+    },
+    {
+      "name": "Auth & billing",
+      "exit_code": 0,
+      "passed": 221
+    },
+    {
+      "name": "Validation V1/V6 (conviction engine)",
+      "exit_code": 0,
+      "passed": 178
+    },
+    {
+      "name": "Release-closure intelligence regressions",
+      "exit_code": 0,
+      "passed": 195
+    }
+  ],
+  "log_hashes": {
+    "organisation-focused-final.log": "12cf26f8c0a3c7fc98bd396933189312907415b75df0868f52db2da4af4a4f7d",
+    "organisation-adjacent.log": "429291af780f149cdba4ce921cf90a74b6e0505e8ea0ccdfaa8b513d07f5978f",
+    "organisation-collection.log": "b3d9bddc4522503d41853c36158a833313e1a68c1d5584986d6eb3f6900f735c",
+    "organisation-ci-0.log": "89b694d17795eb276cb022ea4666cd6c11ea2fb8ce15aa5cb816e3d02388890f",
+    "organisation-ci-1.log": "bbfce6167a56d8d4a665074e4095a1715ccd8e1f9fa557b795fdd40301486d89",
+    "organisation-ci-2.log": "db1929e6eaeddcfc893fe634b53db19ed3ca17b97982da18158b4c1a6033c368",
+    "organisation-ci-3.log": "c67cddadc720d02f3451b9eaf3b3d0ce94bd234fb88feab381282360a04e36c7",
+    "organisation-ci-4.log": "037bad6a8c57964874ab8a6304f6dcfc67b66a79622ba801e48c072213dbe989"
+  },
+  "replay": {
+    "baseline_exactly_matches_PR331_archived_candidate": true,
+    "claims_before": 12,
+    "claims_after": 13,
+    "all_12_previous_claims_and_references_preserved": true,
+    "issuer_coverage_inferences_unanswered_parts_unchanged": true,
+    "new_claim_reference": "E13",
+    "external_requests": 0,
+    "model_calls": 0
+  },
+  "limitations": [
+    "Local regression checks and exposed retained replay, not independent research-quality or launch acceptance.",
+    "Synthetic unseen names do not establish quality across real issuers, company sizes or question families.",
+    "All twelve live approvals remain consumed; no new capture, spending, model/provider call, ledger resumption, holdout output inspection or activation."
+  ]
+}

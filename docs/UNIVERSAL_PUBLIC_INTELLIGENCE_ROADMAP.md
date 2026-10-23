@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**23 October named-organisation activities (offline implementation):** a separate
+producer and final binder preserve complete manufacturing/customer statements
+with source-spelled legal names/aliases in numbered segment discussion. Complete
+Business proof reconstructs headings, offsets, aliases and named disposition
+checks; placement never establishes ownership or current operations. The retained
+replay appends E13 while preserving all twelve previous claims/citations,
+issuer-wide coverage statuses, inferences and unanswered parts. This is a bounded
+statement grammar, not general subsidiary resolution or complete company research.
+See `ORGANISATION_ACTIVITIES_20261023.md`. Independent usefulness and launch gates
+remain open; no new live authority, spending or activation follows.
+
 **22 October segment organisation/activity source review (offline):** eighteen
 retained Business passages distinguish manufacturing/customer information from
 pronoun, legal-entity, acquisition, physical-quantity and divestment bindings.
