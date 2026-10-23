@@ -461,16 +461,18 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         selected.append(item)
         seen.add(value["quote"])
         counts[value["claim_kind"]] += 1
-    if disclosures:
+    from .thesis_evidence_overview import OVERVIEW_CLAIM_KINDS, render_bound_overview
+    # These complete statements appear once in the opening. Retain all structured
+    # rows, selected evidence and original reference IDs for downstream consumers.
+    remaining_disclosures = [row for row in disclosures if row['claim_kind'] not in OVERVIEW_CLAIM_KINDS]
+    if remaining_disclosures:
         context_heading = ("Official business, competition and sampled risk context"
                            if counts['issuer_competition_description'] else
                            "Official business and sampled risk context")
         if counts['issuer_order_backlog_context']:
             context_heading += ' with historical order context'
-        if counts['issuer_segment_financial_context']:
-            context_heading += ' and dated segment financial results'
         answer += "\n\n" + context_heading + "\n" + "\n\n".join(
-            f"{row['claim']} [{row['reference_id']}]" for row in disclosures)
+            f"{row['claim']} [{row['reference_id']}]" for row in remaining_disclosures)
         answer += ("\nThese short excerpts are partial context, not a complete business model or a ranking "
                    "of the most material risks. Disclosed possibilities do not establish occurrence, "
                    "probability or a quantified effect on the financial case.")
@@ -508,8 +510,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer += "\n\n" + limitation
     answer += ("\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell "
                "recommendation. Unverified requested parts: " + "; ".join(unanswered) + ".")
-    from .thesis_evidence_overview import render_bound_overview
-    overview = render_bound_overview(rows, core_comparisons, interpretations)
+    overview = render_bound_overview(rows)
     answer = "Financial thesis foundation (partial)\n\n" + overview + "\n\n" + answer
     return {"answer": answer, "claims": rows, "selected_items": selected,
             "inferences": interpretations, "unanswered_parts": unanswered,

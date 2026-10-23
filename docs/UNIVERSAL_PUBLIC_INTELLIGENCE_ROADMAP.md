@@ -8,6 +8,16 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**24 October complete-answer duplication repair (offline):** full-prose review
+found the PR337 overview repeated evidence and grew the retained answer to 2,259
+words. Complete bound segment/impairment statements now move to the opening once;
+repeated consolidated observations are removed. The candidate is 1,909 words,
+15.5% shorter, with identical complete source-answer objects, citations, integrity,
+coverage and gaps. See `THESIS_DEDUPLICATION_20261024.md` and its replay. This is
+unblinded readability work, not independent usefulness acceptance or valuation
+completion. No new live authority, spending, benchmark/holdout change or activation
+follows; the rough planning estimate and acceptance gates remain unchanged.
+
 **23 October evidence-led thesis composition (offline implementation):** broad
 thesis answers now lead with dated admitted segment economics, allocation caveats,
 management-attributed sales explanation, consolidated comparisons and separately

@@ -156,13 +156,15 @@ def test_normal_retrieval_and_final_answer_are_additive_and_keep_gaps(monkeypatc
     assert 'valuation and expected returns' in result['unanswered_parts']
     assert result['business_context_coverage']['complete_business_model'] is False
     opening = thesis.direct_answer.split('Positive, rising reported comparisons:')[0]
-    assert 'Reported segment economics (2024-01-01 to 2024-12-31; USD)' in opening
-    assert 'Water Systems: external sales $200,000, operating loss $20,000' in opening
-    assert 'Clinical Devices: external sales $800,000, operating profit $100,000' in opening
+    assert 'Reported segment economics' in opening
+    assert '2024-01-01 to 2024-12-31' in opening
+    assert 'Water Systems: external revenue $200,000; operating loss $20,000' in opening
+    assert 'Clinical Devices: external revenue $800,000; operating profit $100,000' in opening
     assert claims[0]['source_proof']['allocation'] in opening
     assert f"[{claims[0]['reference_id']}]" in opening
     assert 'neither persistence nor the causes of later consolidated results' in opening
-    assert 'Current period: 2025-04-01 to 2025-06-30' in opening
+    assert '2025-04-01 to 2025-06-30' in thesis.direct_answer
+    assert thesis.direct_answer.count(claims[0]['claim']) == 1
 
 
 def test_newer_incomplete_period_cannot_fall_back_to_older_table_rows():
