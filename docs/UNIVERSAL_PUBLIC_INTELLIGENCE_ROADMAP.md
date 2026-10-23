@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**23 October operating counter-evidence source review (offline):** twelve retained
+MD&A sentences expose adverse tariff/cost/impairment context and distinct
+gross-profit versus operating-income metrics. Two statement rows repeat one
+$2.701m consolidated impairment; the cash-flow reconciliation must not be counted
+as another loss or new cash payment. The next shared contract should link a dated
+management impairment explanation to one separately qualified consolidated expense,
+keeping narrative segment context distinct from dimensional measurement. See
+`OPERATING_COUNTEREVIDENCE_SOURCE_REVIEW_20261023.md`. This is source inspection,
+not an implementation or usefulness pass. No answer, benchmark, live authority,
+spending or activation changes; existing quality gates remain open.
+
 **23 October named-organisation activities (offline implementation):** a separate
 producer and final binder preserve complete manufacturing/customer statements
 with source-spelled legal names/aliases in numbered segment discussion. Complete

@@ -1,0 +1,1127 @@
+{
+  "base_commit": "4d8837f691a960b5801855c7f9cc40719ad49be7",
+  "kind": "unblinded_retained_operating_counterevidence_source_inspection",
+  "source": {
+    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "body_bytes": 1404517,
+    "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "independent_origin_verification": false
+  },
+  "normalized_text": {
+    "sha256": "e8dd751e931eee031f8b0a5174deb32e554f43837d8d107f760b50496fff3ca3",
+    "characters": 173081,
+    "offset_basis": "Full normalized visible text; Unicode character offsets, end exclusive."
+  },
+  "mda_source_window": {
+    "start": 62215,
+    "length": 22835,
+    "sha256": "ebede3a14b833a55bd117b780d8576cbdbd84a11a84b2633cf089cc4fdad121d"
+  },
+  "comparison_window": {
+    "start": 64815,
+    "end": 69242,
+    "heading": "2025 COMPARED TO 2024",
+    "note": "First comparison block within Item 7; the heading repeats later in liquidity discussion."
+  },
+  "passages": [
+    {
+      "start": 66054,
+      "end": 66404,
+      "quote": "Gross profit of the Housewares/Small Appliance segment decreased $17,889,000 from $25,478,000 (25% of sales) in 2024 to $7,589,000 (8% of sales) in 2025, primarily reflecting the decrease in sales mentioned above and the Trump administration's tariffs that went into effect on goods deemed to have been shipped from the Orient after January 31, 2025.",
+      "quote_sha256": "2e4310c47069a586e99ad7c820f4db7f9e13e59460598e1b2b163b4e7b551510",
+      "role": "gross_profit_not_operating_income",
+      "production_admission": false
+    },
+    {
+      "start": 66405,
+      "end": 66554,
+      "quote": "Those tariffs are generally treated as period costs and expensed as they are incurred, reflecting the segment\u2019s LIFO inventory cost valuation method.",
+      "quote_sha256": "cea933d077cac2c713de4b12c2be4fda2d67b49cf750455cf4f19cf1b9af66ee",
+      "role": "pronoun_tariff_accounting_policy",
+      "production_admission": false
+    },
+    {
+      "start": 66555,
+      "end": 66714,
+      "quote": "The relocation costs of the segment\u2019s distribution center from Canton to Nettleton, Mississippi also served to reduce gross profit by approximately $1,261,000.",
+      "quote_sha256": "3cf346b3f56ce55671df6d4ff4ce2b1939fced24c1ad2f43d20a01359a6637a0",
+      "role": "pronoun_approximate_relocation_cost",
+      "production_admission": false
+    },
+    {
+      "start": 66715,
+      "end": 66960,
+      "quote": "Defense gross profit increased $19,471,000 from $58,173,000 (21% of sales) in 2024 to $77,644,000 (19% of sales) in 2025, primarily reflecting the increase in sales mentioned above, as well as differences in mix efficiencies, and material costs.",
+      "quote_sha256": "5c21473e1e2478103794270f4ad23cc0c9b2322a3e4c634a0d08401d2898e296",
+      "role": "gross_profit_not_operating_income",
+      "production_admission": false
+    },
+    {
+      "start": 66961,
+      "end": 67101,
+      "quote": "Due to the startup nature of the businesses in the Safety segment and resulting limited revenues, gross margins were negative in both years.",
+      "quote_sha256": "b215eb51d08c8e1fc35e9e0da9bc1bad342c800f8009a0aae59f94188e2ecb7f",
+      "role": "negative_gross_margin_qualitative",
+      "production_admission": false
+    },
+    {
+      "start": 67104,
+      "end": 67404,
+      "quote": "Selling and general expenses for the Housewares/Small Appliance segment increased $1,304,000, primarily reflecting increased personnel costs of $768,000, computers and technology costs of $266,000, and the favorable adjustment to the reserve for bad debts of $285,000 that occurred in the prior year.",
+      "quote_sha256": "c3ac345cf767155c1cfa3bdc9f4a2f0b5ec2ca82bbe858f4881340fc699bb380",
+      "role": "expense_components_not_full_reconciliation",
+      "production_admission": false
+    },
+    {
+      "start": 67405,
+      "end": 67666,
+      "quote": "Defense segment selling and general expenses increased $3,941,000, primarily due to increased personnel costs of $3,012,000, legal and professional expenses of $347,000, repairs and maintenance costs of $334,000, and computers and software expenses of $256,000.",
+      "quote_sha256": "34127cf57a7f4f04fe652e4aa2563f52de0eed55f754f629b90e10f220816187",
+      "role": "expense_components_not_full_reconciliation",
+      "production_admission": false
+    },
+    {
+      "start": 67667,
+      "end": 67842,
+      "quote": "Safety segment selling and general expenses decreased $1,215,000, primarily reflecting the sale of OneEvent's refrigeration monitoring business that occurred on July 31, 2025.",
+      "quote_sha256": "fbc776d894edc06431c100365e3cb65d1fc4125c4bf59f1735f55baede1dfe2c",
+      "role": "expense_change_with_dated_disposition",
+      "production_admission": false
+    },
+    {
+      "start": 67843,
+      "end": 67980,
+      "quote": "During the first quarter of 2025, the Company made deposits totaling $2,701,000 with a vendor in its Housewares/Small Appliances segment.",
+      "quote_sha256": "59e74c572e4bbc47371729b18189c5d1a9f9f5600e23f47e2d96e41aedffb0f4",
+      "role": "deposit_amount_segment_and_quarter_antecedent",
+      "production_admission": false
+    },
+    {
+      "start": 67981,
+      "end": 68093,
+      "quote": "On May 29, 2025, the vendor filed for protection in the U.S. Bankruptcy Court in the Northern District of Texas.",
+      "quote_sha256": "ea83aa8dad3b50e60730754c88c5d7638106e4d396bd3b0cdbf75fcab346588a",
+      "role": "vendor_pronoun_and_bankruptcy_date",
+      "production_admission": false
+    },
+    {
+      "start": 68094,
+      "end": 68230,
+      "quote": "As recovery of the deposit is deemed unlikely, the Company recorded an impairment of the full deposit during the second quarter of 2025.",
+      "quote_sha256": "c91d626c61bad56baeeee06f4a79b4d7d684868c54ec53ab733f53a49057ae15",
+      "role": "recovery_assessment_full_deposit_impairment_pronouns",
+      "production_admission": false
+    },
+    {
+      "start": 68231,
+      "end": 68326,
+      "quote": "The above items were responsible for the change in operating profit from continuing operations.",
+      "quote_sha256": "0c2d2e6895ed9e8ebcf28cec84bc4d4d104948d96c1e26be97e8279d8a1f29db",
+      "role": "aggregate_operating_profit_bridge_not_component_proof",
+      "production_admission": false
+    }
+  ],
+  "raw_table_offset_basis": "Strict UTF-8 decoded raw HTML Unicode character offsets; end exclusive. Table/row indices zero based.",
+  "impairment_statement_rows": [
+    {
+      "table_index": 12,
+      "row_index": 7,
+      "html_start": 557746,
+      "html_end": 605047,
+      "raw_table_sha256": "325e3be3cc735a2a026caae11217602f7d7cf98ec3d59a41d41156d0d46ff563",
+      "preceding_context": "etained earnings 379,599 353,659 Accumulated other comprehensive income 6 35 405,472 378,433 Less treasury stock, at cost, 316,801 and 334,923 shares at December 31, 2025 and 2024, respectively 10,337 10,806 Total stockholders' equity 395,135 367,627 $ 500,729 $ 453,397 \ufeff The accompanying notes are an integral part of the Consolidated Financial Statements. F-2 Table of Contents NATIONAL PRESTO INDUSTRIES, INC. CONSOLIDATED STATEMENTS OF COMPREHENSIVE INCOME (In thousands except per share data) \ufeff",
+      "first_three_rows": [
+        {
+          "html_start": 557918,
+          "cells": [
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 557991,
+              "html_end": 558073,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 558073,
+              "html_end": 558155,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "10"
+              },
+              "html_start": 558155,
+              "html_end": 558566,
+              "text": "For the years ended December 31,",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 558566,
+              "html_end": 558669,
+              "text": "",
+              "inline_facts": []
+            }
+          ]
+        },
+        {
+          "html_start": 558675,
+          "cells": [
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 558748,
+              "html_end": 558830,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 558830,
+              "html_end": 558912,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "2"
+              },
+              "html_start": 558912,
+              "html_end": 559230,
+              "text": "2025",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 559230,
+              "html_end": 559333,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 559333,
+              "html_end": 559415,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "2"
+              },
+              "html_start": 559415,
+              "html_end": 559733,
+              "text": "2024",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 559733,
+              "html_end": 559836,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 559836,
+              "html_end": 559918,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "2"
+              },
+              "html_start": 559918,
+              "html_end": 560236,
+              "text": "2023",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 560236,
+              "html_end": 560339,
+              "text": "",
+              "inline_facts": []
+            }
+          ]
+        },
+        {
+          "html_start": 560345,
+          "cells": [
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 560418,
+              "html_end": 560626,
+              "text": "Net sales",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 560626,
+              "html_end": 560719,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 560719,
+              "html_end": 560825,
+              "text": "$",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 560825,
+              "html_end": 561134,
+              "text": "503,524",
+              "inline_facts": [
+                {
+                  "tag": "ix:nonfraction",
+                  "attributes": {
+                    "id": "c141929923",
+                    "contextref": "d_2025-01-01_2025-12-31",
+                    "unitref": "USD",
+                    "name": "us-gaap:Revenues",
+                    "scale": "3",
+                    "format": "ixt:num-dot-decimal",
+                    "decimals": "-3"
+                  },
+                  "html_start": 560945
+                }
+              ]
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561134,
+              "html_end": 561245,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561245,
+              "html_end": 561338,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561338,
+              "html_end": 561444,
+              "text": "$",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561444,
+              "html_end": 561753,
+              "text": "388,228",
+              "inline_facts": [
+                {
+                  "tag": "ix:nonfraction",
+                  "attributes": {
+                    "id": "c141929924",
+                    "contextref": "d_2024-01-01_2024-12-31",
+                    "unitref": "USD",
+                    "name": "us-gaap:Revenues",
+                    "scale": "3",
+                    "format": "ixt:num-dot-decimal",
+                    "decimals": "-3"
+                  },
+                  "html_start": 561564
+                }
+              ]
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561753,
+              "html_end": 561864,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561864,
+              "html_end": 561957,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 561957,
+              "html_end": 562063,
+              "text": "$",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 562063,
+              "html_end": 562372,
+              "text": "340,912",
+              "inline_facts": [
+                {
+                  "tag": "ix:nonfraction",
+                  "attributes": {
+                    "id": "c141929925",
+                    "contextref": "d_2023-01-01_2023-12-31",
+                    "unitref": "USD",
+                    "name": "us-gaap:Revenues",
+                    "scale": "3",
+                    "format": "ixt:num-dot-decimal",
+                    "decimals": "-3"
+                  },
+                  "html_start": 562183
+                }
+              ]
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 562372,
+              "html_end": 562483,
+              "text": "",
+              "inline_facts": []
+            }
+          ]
+        }
+      ],
+      "cash_flow_reconciliation_heading": null,
+      "selected_row": {
+        "html_start": 571562,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 571635,
+            "html_end": 571828,
+            "text": "Impairment of vendor deposit",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 571828,
+            "html_end": 571921,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 571921,
+            "html_end": 572053,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 572053,
+            "html_end": 572405,
+            "text": "2,701",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141929938",
+                  "contextref": "d_2025-01-01_2025-12-31",
+                  "unitref": "USD",
+                  "name": "npk:DepositsImpairment",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 572212
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 572405,
+            "html_end": 572537,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 572537,
+            "html_end": 572630,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 572630,
+            "html_end": 572762,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 572762,
+            "html_end": 573105,
+            "text": "-",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141929939",
+                  "contextref": "d_2024-01-01_2024-12-31",
+                  "unitref": "USD",
+                  "name": "npk:DepositsImpairment",
+                  "scale": "3",
+                  "format": "ixt:fixed-zero",
+                  "decimals": "-3"
+                },
+                "html_start": 572921
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 573105,
+            "html_end": 573237,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 573237,
+            "html_end": 573330,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 573330,
+            "html_end": 573462,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 573462,
+            "html_end": 573805,
+            "text": "-",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141929940",
+                  "contextref": "d_2023-01-01_2023-12-31",
+                  "unitref": "USD",
+                  "name": "npk:DepositsImpairment",
+                  "scale": "3",
+                  "format": "ixt:fixed-zero",
+                  "decimals": "-3"
+                },
+                "html_start": 573621
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 573805,
+            "html_end": 573937,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      }
+    },
+    {
+      "table_index": 13,
+      "row_index": 10,
+      "html_start": 607013,
+      "html_end": 710879,
+      "raw_table_sha256": "1ebfeb35f1746144b70efb9a7b1a54375a9b8ef03a7de09d31b774f1af1d6010",
+      "preceding_context": "hare, basic and diluted: Net earnings per share $ 4.63 $ 5.82 $ 4.86 Comprehensive income: Net earnings $ 33,084 $ 41,460 $ 34,559 Other comprehensive income, net of tax: Unrealized gain (loss) on available-for-sale securities, net of tax ( 29 ) 13 125 Comprehensive income $ 33,055 $ 41,473 $ 34,684 \ufeff The accompanying notes are an integral part of the Consolidated Financial Statements. F-3 Table of Contents NATIONAL PRESTO INDUSTRIES, INC. CONSOLIDATED STATEMENTS OF CASH FLOWS \ufeff (In Thousands) \ufeff",
+      "first_three_rows": [
+        {
+          "html_start": 607199,
+          "cells": [
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 607291,
+              "html_end": 607387,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 607387,
+              "html_end": 607483,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "10"
+              },
+              "html_start": 607483,
+              "html_end": 607943,
+              "text": "For the years ended December 31,",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 607943,
+              "html_end": 608060,
+              "text": "",
+              "inline_facts": []
+            }
+          ]
+        },
+        {
+          "html_start": 608066,
+          "cells": [
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 608158,
+              "html_end": 608254,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 608254,
+              "html_end": 608350,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "2"
+              },
+              "html_start": 608350,
+              "html_end": 608717,
+              "text": "2025",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 608717,
+              "html_end": 608834,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 608834,
+              "html_end": 608930,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "2"
+              },
+              "html_start": 608930,
+              "html_end": 609297,
+              "text": "2024",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 609297,
+              "html_end": 609414,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 609414,
+              "html_end": 609510,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {
+                "colspan": "2"
+              },
+              "html_start": 609510,
+              "html_end": 609877,
+              "text": "2023",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 609877,
+              "html_end": 609994,
+              "text": "",
+              "inline_facts": []
+            }
+          ]
+        },
+        {
+          "html_start": 610000,
+          "cells": [
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610073,
+              "html_end": 610337,
+              "text": "Cash flows from operating activities:",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610337,
+              "html_end": 610433,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610433,
+              "html_end": 610529,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610529,
+              "html_end": 610625,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610625,
+              "html_end": 610721,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610721,
+              "html_end": 610817,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610817,
+              "html_end": 610926,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 610926,
+              "html_end": 611036,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 611036,
+              "html_end": 611132,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 611132,
+              "html_end": 611228,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 611228,
+              "html_end": 611324,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 611324,
+              "html_end": 611420,
+              "text": "",
+              "inline_facts": []
+            },
+            {
+              "tag": "td",
+              "attributes": {},
+              "html_start": 611420,
+              "html_end": 611516,
+              "text": "",
+              "inline_facts": []
+            }
+          ]
+        }
+      ],
+      "cash_flow_reconciliation_heading": {
+        "html_start": 613869,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 613942,
+            "html_end": 614252,
+            "text": "Adjustments to reconcile net earnings to net cash provided by operating activities:",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614252,
+            "html_end": 614348,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614348,
+            "html_end": 614444,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614444,
+            "html_end": 614540,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614540,
+            "html_end": 614636,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614636,
+            "html_end": 614732,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614732,
+            "html_end": 614841,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614841,
+            "html_end": 614951,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 614951,
+            "html_end": 615047,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 615047,
+            "html_end": 615143,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 615143,
+            "html_end": 615239,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 615239,
+            "html_end": 615335,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 615335,
+            "html_end": 615431,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      },
+      "selected_row": {
+        "html_start": 627376,
+        "cells": [
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 627449,
+            "html_end": 627713,
+            "text": "Loss on impairment of vendor deposit",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 627713,
+            "html_end": 627820,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 627820,
+            "html_end": 627927,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 627927,
+            "html_end": 628254,
+            "text": "2,701",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141929999",
+                  "contextref": "d_2025-01-01_2025-12-31",
+                  "unitref": "USD",
+                  "name": "npk:DepositsImpairment",
+                  "scale": "3",
+                  "format": "ixt:num-dot-decimal",
+                  "decimals": "-3"
+                },
+                "html_start": 628061
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 628254,
+            "html_end": 628379,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 628379,
+            "html_end": 628486,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 628486,
+            "html_end": 628595,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 628595,
+            "html_end": 628915,
+            "text": "-",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930000",
+                  "contextref": "d_2024-01-01_2024-12-31",
+                  "unitref": "USD",
+                  "name": "npk:DepositsImpairment",
+                  "scale": "3",
+                  "format": "ixt:fixed-zero",
+                  "decimals": "-3"
+                },
+                "html_start": 628731
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 628915,
+            "html_end": 629040,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 629040,
+            "html_end": 629147,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 629147,
+            "html_end": 629254,
+            "text": "",
+            "inline_facts": []
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 629254,
+            "html_end": 629572,
+            "text": "-",
+            "inline_facts": [
+              {
+                "tag": "ix:nonfraction",
+                "attributes": {
+                  "id": "c141930001",
+                  "contextref": "d_2023-01-01_2023-12-31",
+                  "unitref": "USD",
+                  "name": "npk:DepositsImpairment",
+                  "scale": "3",
+                  "format": "ixt:fixed-zero",
+                  "decimals": "-3"
+                },
+                "html_start": 629388
+              }
+            ]
+          },
+          {
+            "tag": "td",
+            "attributes": {},
+            "html_start": 629572,
+            "html_end": 629697,
+            "text": "",
+            "inline_facts": []
+          }
+        ]
+      }
+    }
+  ],
+  "raw_xml_context": {
+    "context_id": "d_2025-01-01_2025-12-31",
+    "xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n",
+    "entity_cik": "0000080172",
+    "start": "2025-01-01",
+    "end": "2025-12-31",
+    "segment_or_scenario_present": false
+  },
+  "raw_xml_unit": {
+    "unit_id": "USD",
+    "xml": "<ns0:unit xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"USD\"><ns0:measure>iso4217:USD</ns0:measure></ns0:unit>\n",
+    "measure_namespace": "http://www.xbrl.org/2003/iso4217",
+    "measure": "USD"
+  },
+  "custom_fact_qname": {
+    "prefix": "npk",
+    "namespace": "http://www.gopresto.com/20251231",
+    "local_name": "DepositsImpairment",
+    "semantic_admission": "not_qualified_by_existing_consolidated_GAAP_contract"
+  },
+  "cross_statement_observation": {
+    "reported_display": "2,701",
+    "scale": "3",
+    "arithmetic_only_expanded_amount": 2701000,
+    "currency": "USD",
+    "same_concept_context_and_unit_in_two_statements": true,
+    "not_two_expenses": true,
+    "cash_flow_row_is_non_cash_reconciliation_not_new_cash_payment": true,
+    "independent_factual_adjudication": false
+  },
+  "current_answer_check": {
+    "claim_count": 13,
+    "reviewed_full_passages_absent_from_direct_answer": 12,
+    "method": "Exact whole-quote containment only; does not establish total semantic absence or assess usefulness."
+  },
+  "input_hashes": {
+    "app/services/public_document_ingestion.py": "9c1ae2d6b5a13dfe10c738c5091975134e35caccb778405d2f68ab8f7ed9769d",
+    "app/services/sec_risk_sections.py": "03dcbd76050715325636f45b0725d11dc3d267eeac0f2e0039cd36b2fa259031",
+    "app/services/segment_sales_explanations.py": "906065bfd8e5cf39a3c78416bc96501a8d5bb9a6903d13c7e005cd6bd018c6e7",
+    "scripts/inspect_retained_html_table.py": "dcadf22dafe60ebaf4aba3b43a60a9f9a90f38d0cf1a612334ca520fd2c381ff"
+  },
+  "limitations": [
+    "Raw XML inspection and arithmetic are not new production financial admission or independent truth review.",
+    "Gross profit and operating income are distinct; current segment proof does not bind the displayed gross-profit comparisons.",
+    "Plain MD&A dollar values are not Inline XBRL observations merely because adjacent statements contain tagged amounts.",
+    "The income and cash-flow rows repeat one recognized impairment, not additive losses or proof of a contemporaneous cash outflow.",
+    "No new source capture, provider/model calls, spending, ledger resumption, holdout output inspection, benchmark change or activation."
+  ]
+}
