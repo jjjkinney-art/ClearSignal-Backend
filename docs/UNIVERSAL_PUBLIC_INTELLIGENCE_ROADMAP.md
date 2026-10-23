@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**23 October complete exposed-answer review (offline):** recovered and verified
+all six original pilot answers and compared their complete prose with the latest
+retained NPK probe. Richer evidence still needs a prioritized economic case;
+historical monitoring levels do not establish valuation boundaries. Next implement
+evidence-led thesis composition and neutral treatment of unexplained operating
+cash-flow movements. See `COMPLETE_ANSWER_REVIEW_20261023.md` and its complete-prose
+JSON packet. Historical outputs are not current reruns; the NPK probe has different
+wording. This unblinded diagnosis establishes no quality pass or estimate increase.
+All twelve live approvals remain consumed; no calls, spending, holdout access or
+activation follows. Existing independent acceptance gates remain open.
+
 **23 October dated deposit impairment (offline implementation):** separately
 qualified consolidated expense and cash-flow reconciliation rows bind one
 measurement, retaining the full dated management event and recovery uncertainty.
