@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**22 October segment organisation/activity source review (offline):** eighteen
+retained Business passages distinguish manufacturing/customer information from
+pronoun, legal-entity, acquisition, physical-quantity and divestment bindings.
+The filing also discusses divested businesses beside historical product prose;
+looser activity matching could misstate current operations. The next shared
+contract should preserve named-organisation activities and explicit segment
+discussion context without inferring issuer ownership or company-wide coverage.
+See `SEGMENT_ORGANISATION_SOURCE_REVIEW_20261022.md`. This inspection changes no
+answer, benchmark or quality score; independent usefulness and existing launch
+gates remain open. No new live authority, spending or activation follows.
+
 **22 October issuer-versus-segment coverage clarity (offline):** the answer's
 coverage paragraph now acknowledges selected, final-bound segment product lists,
 annual results and management explanations separately from issuer-description
