@@ -32,6 +32,45 @@ def reference(item, identifier):
             "url": item.url, "published_at": item.timestamp}
 
 
+@pytest.mark.parametrize('current,prior', [(120, 100), (40, 100), (-50, -100), (100, 100)])
+@pytest.mark.parametrize('ticker,cik', [('AAPL', '320193'), ('ACHC', '1520697'), ('NPK', '80172')])
+def test_unexplained_cash_flow_is_context_in_both_directions(current, prior, ticker, cik):
+    items = pair(ticker=ticker, cik=cik) + [evidence(
+        'NetCashProvidedByUsedInOperatingActivities', 'operating cash flow',
+        ticker=ticker, cik=cik, current=current, prior=prior, ytd=True)]
+    result = build_financial_foundation(ticker, items, None, expected_cik=cik)
+    cash = next(row for row in result['inferences'] if row.get('metric') == 'operating cash flow')
+    assert cash['signal'] == 'context_only'
+    assert 'underlying movements remain unverified' in cash['text']
+    assert 'below the cited current amount' not in cash['conditional_test']
+    assert result['claims'][2]['claim'] == items[2].summary
+    assert 'operating cash flow [E3]' not in result['answer']
+    opening = result['answer'].split('Positive, rising reported comparisons:')[0]
+    assert '2025-01-01 to 2025-06-30' in opening
+    assert 'valuation and expected returns remain unverified' in opening
+
+
+def test_overview_keeps_decline_beside_improvement_and_final_reference_ids():
+    items = [evidence('Revenues', 'revenue'),
+             evidence('OperatingIncomeLoss', 'operating income', current=40)]
+    refs = [reference(items[0], 'E9'), reference(items[1], 'E14')]
+    result = build_financial_foundation('AAPL', items, refs, expected_cik='320193')
+    opening = result['answer'].split('Positive, rising reported comparisons:')[0]
+    assert 'revenue (as reported) is higher' in opening and '[E9]' in opening
+    assert 'operating income is lower' in opening and '[E14]' in opening
+    assert '[E1]' not in opening and '[E2]' not in opening
+    assert 'company-specific economic case remains incomplete' in opening
+
+
+def test_missing_cash_reference_cannot_leak_into_overview_or_inference():
+    items = pair() + [evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow')]
+    result = build_financial_foundation('AAPL', items,
+        [reference(items[0], 'E5'), reference(items[1], 'E8')], expected_cik='320193')
+    assert not any(row.get('metric') == 'operating cash flow' for row in result['inferences'])
+    assert len(result['claims']) == 2
+    assert 'operating cash flow' in result['unanswered_parts']
+
+
 def test_mixed_trends_produce_cited_counter_evidence_and_conditional_tests():
     items = [evidence("Revenues", "revenue"),
              evidence("OperatingIncomeLoss", "operating income", current=40)]

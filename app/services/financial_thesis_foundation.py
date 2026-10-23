@@ -261,6 +261,17 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         # Independently valid comparisons in different currencies do not
         # establish one combined financial foundation without conversion.
         return None
+    # A total alone does not explain cash-flow quality, persistence or liquidity.
+    # Preserve its direction, but never classify that movement as thesis support
+    # or counter-evidence without a separately bound underlying bridge.
+    for row in interpretations:
+        if row['metric'] == 'operating cash flow':
+            row['signal'] = 'context_only'
+            row['text'] += (' This total alone does not establish sustainable operating strength '
+                            'or weakness; its underlying movements remain unverified.')
+            row['conditional_test'] = ('Review the underlying cash-flow movements and their '
+                'persistence before assigning a favorable or adverse thesis signal; '
+                'this is a monitoring condition, not a forecast.')
     # Use only the revenue comparison that survived reconstruction, conflicts
     # and response-reference checks. A ticker, profile or unbound claim cannot
     # authorize a different cash-flow interpretation. This measure is a narrow
@@ -306,12 +317,12 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                   "The observations share a reporting period. No margin or cash-conversion ratio has been calculated here.")
     supporting = [f"{row['metric']} [{row['reference_ids'][0]}]" for row in interpretations if row["signal"] == "supporting"]
     counter = [f"{row['metric']} [{row['reference_ids'][0]}]" for row in interpretations if row["signal"] == "counter_evidence"]
-    hypothesis = ("Conditional financial case: sustaining the favorable reported trends in " +
-                  ", ".join(supporting) + " would support the financial foundation of the investment case."
+    hypothesis = ("Positive, rising reported comparisons: " +
+                  ", ".join(supporting) + ". These are observations, not evidence that growth will persist."
                   if supporting else "The retrieved comparisons do not establish improving financial performance.")
     if counter:
         hypothesis += " Counter-evidence or an unresolved improvement pattern remains in " + ", ".join(counter) + "."
-    answer = "Financial thesis foundation (partial)\n\n" + hypothesis
+    answer = hypothesis
     answer += "\n\nReported evidence\n" + "\n\n".join(
         f"{index}. {row['claim']} [{row['reference_id']}]" for index, row in enumerate(rows, start=1))
     if supplemental:
@@ -497,6 +508,9 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer += "\n\n" + limitation
     answer += ("\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell "
                "recommendation. Unverified requested parts: " + "; ".join(unanswered) + ".")
+    from .thesis_evidence_overview import render_bound_overview
+    overview = render_bound_overview(rows, core_comparisons, interpretations)
+    answer = "Financial thesis foundation (partial)\n\n" + overview + "\n\n" + answer
     return {"answer": answer, "claims": rows, "selected_items": selected,
             "inferences": interpretations, "unanswered_parts": unanswered,
             "business_context_coverage": business_coverage,

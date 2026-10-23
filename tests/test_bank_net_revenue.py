@@ -134,16 +134,18 @@ def test_unqualified_net_interest_revenue_cannot_change_cash_signal(problem):
         refs.append(reference(other, 'E5'))
     result = build_financial_foundation('AAPL', items, refs, expected_cik='320193')
     cash = next(x for x in result['inferences'] if x['metric'] == 'operating cash flow')
-    assert cash['signal'] == 'counter_evidence'
+    assert cash['signal'] == 'context_only'
     assert 'revenue' in result['unanswered_parts']
+    assert 'For an issuer reporting revenue net of interest expense' not in cash['text']
 
 
-def test_ordinary_revenue_retains_cash_signal_even_for_bank_ticker():
+def test_ordinary_revenue_uses_general_cash_context_even_for_bank_ticker():
     items = [evidence('Revenues', 'revenue', ticker='JPM', cik='19617'),
              evidence('NetCashProvidedByUsedInOperatingActivities', 'operating cash flow',
                       ticker='JPM', cik='19617', current=-237, prior=-222)]
     result = build_financial_foundation('JPM', items, None, expected_cik='19617')
-    assert result['inferences'][-1]['signal'] == 'counter_evidence'
+    assert result['inferences'][-1]['signal'] == 'context_only'
+    assert 'For an issuer reporting revenue net of interest expense' not in result['inferences'][-1]['text']
 
 
 def test_net_interest_cash_context_survives_source_gate_without_conviction(monkeypatch):

@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**23 October evidence-led thesis composition (offline implementation):** broad
+thesis answers now lead with dated admitted segment economics, allocation caveats,
+management-attributed sales explanation, consolidated comparisons and separately
+dated adverse impairment evidence when available. Unexplained operating-cash-flow
+movements are context across issuers, not automatic favorable/adverse signals.
+The retained NPK comparison preserves all fourteen claims, citations, coverage and
+gaps; only cash-flow interpretation changes alongside prose. Missing economics,
+valuation and independent usefulness remain open. See `THESIS_OVERVIEW_20261023.md`
+and its replay. This bounded composition is not complete research; no new live
+authority, spending, benchmark change, holdout access or activation follows.
+
 **23 October complete exposed-answer review (offline):** recovered and verified
 all six original pilot answers and compared their complete prose with the latest
 retained NPK probe. Richer evidence still needs a prioritized economic case;
