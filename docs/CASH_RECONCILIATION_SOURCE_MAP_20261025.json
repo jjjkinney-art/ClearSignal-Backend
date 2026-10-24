@@ -1,0 +1,1554 @@
+{
+  "kind": "unblinded_retained_cash_reconciliation_inspection",
+  "date_auckland": "2026-10-25",
+  "base_commit": "b6a93ba170848e537eaca00b245d77f5248ddc34",
+  "source": {
+    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "table_number_one_based": 14,
+    "table_xml_sha256": "a6805028b4d31ce7276b75036c1c12baab57709f3f1e640142a8224a676a6b13",
+    "independent_origin_verification": false
+  },
+  "operating_rows": [
+    {
+      "label": "Net earnings",
+      "cells": [
+        "Net earnings",
+        "",
+        "$",
+        "33,084",
+        "",
+        "",
+        "$",
+        "41,460",
+        "",
+        "",
+        "$",
+        "34,559",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929981",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:NetIncomeLoss",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "33,084",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 33084000,
+          "signed_taxonomy_value_usd": 33084000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929982",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:NetIncomeLoss",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-4"
+          },
+          "literal": "41,460",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 41460000,
+          "signed_taxonomy_value_usd": 41460000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929983",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:NetIncomeLoss",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "34,559",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 34559000,
+          "signed_taxonomy_value_usd": 34559000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Adjustments to reconcile net earnings to net cash provided by operating activities:",
+      "cells": [
+        "Adjustments to reconcile net earnings to net cash provided by operating activities:",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "observations": []
+    },
+    {
+      "label": "Provision for depreciation",
+      "cells": [
+        "Provision for depreciation",
+        "",
+        "",
+        "3,621",
+        "",
+        "",
+        "",
+        "3,531",
+        "",
+        "",
+        "",
+        "4,372",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929984",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:Depreciation",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "3,621",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 3621000,
+          "signed_taxonomy_value_usd": 3621000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929985",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:Depreciation",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "3,531",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 3531000,
+          "signed_taxonomy_value_usd": 3531000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929986",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:Depreciation",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "4,372",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 4372000,
+          "signed_taxonomy_value_usd": 4372000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Intangibles amortization",
+      "cells": [
+        "Intangibles amortization",
+        "",
+        "",
+        "1,515",
+        "",
+        "",
+        "",
+        "1,515",
+        "",
+        "",
+        "",
+        "1,635",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929987",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:AmortizationOfIntangibleAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "1,515",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 1515000,
+          "signed_taxonomy_value_usd": 1515000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929988",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:AmortizationOfIntangibleAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "1,515",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 1515000,
+          "signed_taxonomy_value_usd": 1515000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929989",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:AmortizationOfIntangibleAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "1,635",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 1635000,
+          "signed_taxonomy_value_usd": 1635000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Deferred income tax (benefit)",
+      "cells": [
+        "Deferred income tax (benefit)",
+        "",
+        "",
+        "7,741",
+        "",
+        "",
+        "",
+        "(4,528",
+        ")",
+        "",
+        "",
+        "(1,190",
+        ")"
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929990",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:DeferredIncomeTaxExpenseBenefit",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "7,741",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 7741000,
+          "signed_taxonomy_value_usd": 7741000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929991",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:DeferredIncomeTaxExpenseBenefit",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "4,528",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": -4528000,
+          "signed_taxonomy_value_usd": -4528000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929992",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:DeferredIncomeTaxExpenseBenefit",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-4",
+            "sign": "-"
+          },
+          "literal": "1,190",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": -1190000,
+          "signed_taxonomy_value_usd": -1190000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Provision for doubtful notes and accounts receivable",
+      "cells": [
+        "Provision for doubtful notes and accounts receivable",
+        "",
+        "",
+        "66",
+        "",
+        "",
+        "",
+        "(285",
+        ")",
+        "",
+        "",
+        "285",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929993",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:ProvisionForLoanLeaseAndOtherLosses",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "66",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 66000,
+          "signed_taxonomy_value_usd": 66000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929994",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:ProvisionForLoanLeaseAndOtherLosses",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "285",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": -285000,
+          "signed_taxonomy_value_usd": -285000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929995",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:ProvisionForLoanLeaseAndOtherLosses",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "285",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 285000,
+          "signed_taxonomy_value_usd": 285000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "(Gain) loss on disposal of property, plant and equipment",
+      "cells": [
+        "(Gain) loss on disposal of property, plant and equipment",
+        "",
+        "",
+        "13",
+        "",
+        "",
+        "",
+        "-",
+        "",
+        "",
+        "",
+        "(7",
+        ")"
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929996",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:GainLossOnDispositionOfAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "13",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 13000,
+          "signed_taxonomy_value_usd": -13000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929997",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:GainLossOnDispositionOfAssets",
+            "scale": "3",
+            "format": "ixt:fixed-zero",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "-",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 0,
+          "signed_taxonomy_value_usd": 0,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141929998",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:GainLossOnDispositionOfAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "7",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": -7000,
+          "signed_taxonomy_value_usd": 7000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Loss on impairment of vendor deposit",
+      "cells": [
+        "Loss on impairment of vendor deposit",
+        "",
+        "",
+        "2,701",
+        "",
+        "",
+        "",
+        "-",
+        "",
+        "",
+        "",
+        "-",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141929999",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "npk:DepositsImpairment",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "2,701",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 2701000,
+          "signed_taxonomy_value_usd": 2701000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930000",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "npk:DepositsImpairment",
+            "scale": "3",
+            "format": "ixt:fixed-zero",
+            "decimals": "-3"
+          },
+          "literal": "-",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 0,
+          "signed_taxonomy_value_usd": 0,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930001",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "npk:DepositsImpairment",
+            "scale": "3",
+            "format": "ixt:fixed-zero",
+            "decimals": "-3"
+          },
+          "literal": "-",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 0,
+          "signed_taxonomy_value_usd": 0,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Noncash retirement plan expense",
+      "cells": [
+        "Noncash retirement plan expense",
+        "",
+        "",
+        "1,008",
+        "",
+        "",
+        "",
+        "904",
+        "",
+        "",
+        "",
+        "863",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930002",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "npk:NoncashRetirementPlanExpense",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "1,008",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 1008000,
+          "signed_taxonomy_value_usd": 1008000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930003",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "npk:NoncashRetirementPlanExpense",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "904",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 904000,
+          "signed_taxonomy_value_usd": 904000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930004",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "npk:NoncashRetirementPlanExpense",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "863",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 863000,
+          "signed_taxonomy_value_usd": 863000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Gain on sale of subsidiary",
+      "cells": [
+        "Gain on sale of subsidiary",
+        "",
+        "",
+        "(253",
+        ")",
+        "",
+        "",
+        "-",
+        "",
+        "",
+        "",
+        "(351",
+        ")"
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930005",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:GainLossOnSaleOfBusiness",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "253",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": -253000,
+          "signed_taxonomy_value_usd": 253000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930006",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:GainLossOnSaleOfBusiness",
+            "scale": "3",
+            "format": "ixt:fixed-zero",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "-",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 0,
+          "signed_taxonomy_value_usd": 0,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930007",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:GainLossOnSaleOfBusiness",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "351",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": -351000,
+          "signed_taxonomy_value_usd": 351000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Other",
+      "cells": [
+        "Other",
+        "",
+        "",
+        "230",
+        "",
+        "",
+        "",
+        "856",
+        "",
+        "",
+        "",
+        "591",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930008",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:OtherNoncashIncomeExpense",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-4",
+            "sign": "-"
+          },
+          "literal": "230",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 230000,
+          "signed_taxonomy_value_usd": -230000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930009",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:OtherNoncashIncomeExpense",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "856",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 856000,
+          "signed_taxonomy_value_usd": -856000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930010",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:OtherNoncashIncomeExpense",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "591",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 591000,
+          "signed_taxonomy_value_usd": -591000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Changes in operating accounts:",
+      "cells": [
+        "Changes in operating accounts:",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "observations": []
+    },
+    {
+      "label": "Accounts receivable, net",
+      "cells": [
+        "Accounts receivable, net",
+        "",
+        "",
+        "(22,902",
+        ")",
+        "",
+        "",
+        "(13,277",
+        ")",
+        "",
+        "",
+        "20,337",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930011",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccountsReceivable",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "22,902",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": -22902000,
+          "signed_taxonomy_value_usd": 22902000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930012",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccountsReceivable",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "13,277",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": -13277000,
+          "signed_taxonomy_value_usd": 13277000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930013",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccountsReceivable",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "20,337",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 20337000,
+          "signed_taxonomy_value_usd": -20337000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Inventories",
+      "cells": [
+        "Inventories",
+        "",
+        "",
+        "(29,028",
+        ")",
+        "",
+        "",
+        "(87,579",
+        ")",
+        "",
+        "",
+        "(38,627",
+        ")"
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930014",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInInventories",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "29,028",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": -29028000,
+          "signed_taxonomy_value_usd": 29028000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930015",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInInventories",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "87,579",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": -87579000,
+          "signed_taxonomy_value_usd": 87579000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930016",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInInventories",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "38,627",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": -38627000,
+          "signed_taxonomy_value_usd": 38627000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Other assets and current assets",
+      "cells": [
+        "Other assets and current assets",
+        "",
+        "",
+        "(28",
+        ")",
+        "",
+        "",
+        "2,122",
+        "",
+        "",
+        "",
+        "2,137",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930017",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInOtherOperatingAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "28",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": -28000,
+          "signed_taxonomy_value_usd": 28000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930018",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInOtherOperatingAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "2,122",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 2122000,
+          "signed_taxonomy_value_usd": -2122000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930019",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInOtherOperatingAssets",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "2,137",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 2137000,
+          "signed_taxonomy_value_usd": -2137000,
+          "display_sign_differs_from_taxonomy_sign": true,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Accounts payable and accrued liabilities",
+      "cells": [
+        "Accounts payable and accrued liabilities",
+        "",
+        "",
+        "1,734",
+        "",
+        "",
+        "",
+        "390",
+        "",
+        "",
+        "",
+        "18,288",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930020",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "1,734",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": 1734000,
+          "signed_taxonomy_value_usd": 1734000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930021",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-4"
+          },
+          "literal": "390",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 390000,
+          "signed_taxonomy_value_usd": 390000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930022",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "18,288",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 18288000,
+          "signed_taxonomy_value_usd": 18288000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Federal and state income taxes payable",
+      "cells": [
+        "Federal and state income taxes payable",
+        "",
+        "",
+        "(8,639",
+        ")",
+        "",
+        "",
+        "1,465",
+        "",
+        "",
+        "",
+        "2,497",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930023",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccruedIncomeTaxesPayable",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "8,639",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": -8639000,
+          "signed_taxonomy_value_usd": -8639000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930024",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccruedIncomeTaxesPayable",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "1,465",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": 1465000,
+          "signed_taxonomy_value_usd": 1465000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930025",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:IncreaseDecreaseInAccruedIncomeTaxesPayable",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "2,497",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 2497000,
+          "signed_taxonomy_value_usd": 2497000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    },
+    {
+      "label": "Net cash provided by (used in) operating activities",
+      "cells": [
+        "Net cash provided by (used in) operating activities",
+        "",
+        "",
+        "(9,137",
+        ")",
+        "",
+        "",
+        "(53,426",
+        ")",
+        "",
+        "",
+        "45,389",
+        ""
+      ],
+      "observations": [
+        {
+          "fact_attributes": {
+            "id": "c141930026",
+            "contextRef": "d_2025-01-01_2025-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "9,137",
+          "cell_index": 3,
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "printed_cash_contribution_usd": -9137000,
+          "signed_taxonomy_value_usd": -9137000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2025-01-01_2025-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2025-01-01</ns0:startDate><ns0:endDate>2025-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930027",
+            "contextRef": "d_2024-01-01_2024-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3",
+            "sign": "-"
+          },
+          "literal": "53,426",
+          "cell_index": 7,
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "printed_cash_contribution_usd": -53426000,
+          "signed_taxonomy_value_usd": -53426000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2024-01-01_2024-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2024-01-01</ns0:startDate><ns0:endDate>2024-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        },
+        {
+          "fact_attributes": {
+            "id": "c141930028",
+            "contextRef": "d_2023-01-01_2023-12-31",
+            "unitRef": "USD",
+            "name": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "scale": "3",
+            "format": "ixt:num-dot-decimal",
+            "decimals": "-3"
+          },
+          "literal": "45,389",
+          "cell_index": 11,
+          "period_start": "2023-01-01",
+          "period_end": "2023-12-31",
+          "printed_cash_contribution_usd": 45389000,
+          "signed_taxonomy_value_usd": 45389000,
+          "display_sign_differs_from_taxonomy_sign": false,
+          "context_xml": "<ns0:context xmlns:ns0=\"http://www.xbrl.org/2003/instance\" id=\"d_2023-01-01_2023-12-31\"><ns0:entity><ns0:identifier scheme=\"http://www.sec.gov/CIK\">0000080172</ns0:identifier></ns0:entity><ns0:period><ns0:startDate>2023-01-01</ns0:startDate><ns0:endDate>2023-12-31</ns0:endDate></ns0:period></ns0:context>\n"
+        }
+      ]
+    }
+  ],
+  "reconciliations": [
+    {
+      "period_start": "2025-01-01",
+      "period_end": "2025-12-31",
+      "printed_component_sum_usd": -9137000,
+      "reported_cfo_usd": -9137000,
+      "residual_usd": 0,
+      "naive_taxonomy_sum_usd": 94799000,
+      "naive_taxonomy_residual_usd": 103936000
+    },
+    {
+      "period_start": "2024-01-01",
+      "period_end": "2024-12-31",
+      "printed_component_sum_usd": -53426000,
+      "reported_cfo_usd": -53426000,
+      "residual_usd": 0,
+      "naive_taxonomy_sum_usd": 142330000,
+      "naive_taxonomy_residual_usd": 195756000
+    },
+    {
+      "period_start": "2023-01-01",
+      "period_end": "2023-12-31",
+      "printed_component_sum_usd": 45389000,
+      "reported_cfo_usd": 45389000,
+      "residual_usd": 0,
+      "naive_taxonomy_sum_usd": 77229000,
+      "naive_taxonomy_residual_usd": 31840000
+    }
+  ],
+  "component_changes_2025_vs_2024": [
+    {
+      "label": "Net earnings",
+      "current_usd": 33084000,
+      "prior_usd": 41460000,
+      "change_usd": -8376000
+    },
+    {
+      "label": "Provision for depreciation",
+      "current_usd": 3621000,
+      "prior_usd": 3531000,
+      "change_usd": 90000
+    },
+    {
+      "label": "Intangibles amortization",
+      "current_usd": 1515000,
+      "prior_usd": 1515000,
+      "change_usd": 0
+    },
+    {
+      "label": "Deferred income tax (benefit)",
+      "current_usd": 7741000,
+      "prior_usd": -4528000,
+      "change_usd": 12269000
+    },
+    {
+      "label": "Provision for doubtful notes and accounts receivable",
+      "current_usd": 66000,
+      "prior_usd": -285000,
+      "change_usd": 351000
+    },
+    {
+      "label": "(Gain) loss on disposal of property, plant and equipment",
+      "current_usd": 13000,
+      "prior_usd": 0,
+      "change_usd": 13000
+    },
+    {
+      "label": "Loss on impairment of vendor deposit",
+      "current_usd": 2701000,
+      "prior_usd": 0,
+      "change_usd": 2701000
+    },
+    {
+      "label": "Noncash retirement plan expense",
+      "current_usd": 1008000,
+      "prior_usd": 904000,
+      "change_usd": 104000
+    },
+    {
+      "label": "Gain on sale of subsidiary",
+      "current_usd": -253000,
+      "prior_usd": 0,
+      "change_usd": -253000
+    },
+    {
+      "label": "Other",
+      "current_usd": 230000,
+      "prior_usd": 856000,
+      "change_usd": -626000
+    },
+    {
+      "label": "Accounts receivable, net",
+      "current_usd": -22902000,
+      "prior_usd": -13277000,
+      "change_usd": -9625000
+    },
+    {
+      "label": "Inventories",
+      "current_usd": -29028000,
+      "prior_usd": -87579000,
+      "change_usd": 58551000
+    },
+    {
+      "label": "Other assets and current assets",
+      "current_usd": -28000,
+      "prior_usd": 2122000,
+      "change_usd": -2150000
+    },
+    {
+      "label": "Accounts payable and accrued liabilities",
+      "current_usd": 1734000,
+      "prior_usd": 390000,
+      "change_usd": 1344000
+    },
+    {
+      "label": "Federal and state income taxes payable",
+      "current_usd": -8639000,
+      "prior_usd": 1465000,
+      "change_usd": -10104000
+    }
+  ],
+  "extension_concept_names_in_reviewed_table": [
+    "npk:DepositsImpairment",
+    "npk:NoncashRetirementPlanExpense"
+  ],
+  "reported_cfo_change_usd": 44289000,
+  "company_fact_inventories": {
+    "NPK": {
+      "body_sha256": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f",
+      "body_bytes": 2490080,
+      "url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000080172.json",
+      "diagnostic_as_of": "2026-10-15",
+      "latest_annual_cfo_period_end": "2025-12-31",
+      "annual_cfo_candidates": [
+        {
+          "unit": "USD",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "val": -9137000,
+          "accn": "0001437749-26-008214",
+          "fy": 2025,
+          "fp": "FY",
+          "form": "10-K",
+          "filed": "2026-03-13",
+          "frame": "CY2025"
+        }
+      ],
+      "selected_concept_presence": {
+        "AmortizationOfIntangibleAssets": true,
+        "DeferredIncomeTaxExpenseBenefit": true,
+        "Depreciation": true,
+        "GainLossOnDispositionOfAssets": true,
+        "GainLossOnSaleOfBusiness": true,
+        "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities": true,
+        "IncreaseDecreaseInAccountsReceivable": true,
+        "IncreaseDecreaseInAccruedIncomeTaxesPayable": true,
+        "IncreaseDecreaseInInventories": true,
+        "IncreaseDecreaseInOtherOperatingAssets": true,
+        "NetIncomeLoss": true,
+        "OtherNoncashIncomeExpense": true,
+        "ProvisionForLoanLeaseAndOtherLosses": true
+      },
+      "complete_cash_table_available_in_review": true,
+      "cross_company_bridge_qualified": false
+    },
+    "ASML": {
+      "body_sha256": "28be6fd0f5608350ec396ae5d5097e45da95f4f29ad3fbd19aac328a15cce3d4",
+      "body_bytes": 1837771,
+      "url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000937966.json",
+      "diagnostic_as_of": "2026-10-15",
+      "latest_annual_cfo_period_end": "2025-12-31",
+      "annual_cfo_candidates": [
+        {
+          "unit": "EUR",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "val": 12658500000,
+          "accn": "0001628280-26-011378",
+          "fy": 2025,
+          "fp": "FY",
+          "form": "20-F",
+          "filed": "2026-02-25",
+          "frame": "CY2025"
+        }
+      ],
+      "selected_concept_presence": {
+        "AmortizationOfIntangibleAssets": true,
+        "DeferredIncomeTaxExpenseBenefit": true,
+        "Depreciation": true,
+        "GainLossOnDispositionOfAssets": false,
+        "GainLossOnSaleOfBusiness": true,
+        "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities": false,
+        "IncreaseDecreaseInAccountsReceivable": true,
+        "IncreaseDecreaseInAccruedIncomeTaxesPayable": true,
+        "IncreaseDecreaseInInventories": true,
+        "IncreaseDecreaseInOtherOperatingAssets": true,
+        "NetIncomeLoss": true,
+        "OtherNoncashIncomeExpense": false,
+        "ProvisionForLoanLeaseAndOtherLosses": false
+      },
+      "complete_cash_table_available_in_review": false,
+      "cross_company_bridge_qualified": false
+    },
+    "ACHC": {
+      "body_sha256": "b1d48d703acb9cf3f60aaa852af3b91f4c463c554bf1a3d1bbf0ae55d0e977a3",
+      "body_bytes": 3457609,
+      "url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001520697.json",
+      "diagnostic_as_of": "2026-10-15",
+      "latest_annual_cfo_period_end": "2025-12-31",
+      "annual_cfo_candidates": [
+        {
+          "unit": "USD",
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "val": 131898000,
+          "accn": "0001193125-26-078266",
+          "fy": 2025,
+          "fp": "FY",
+          "form": "10-K",
+          "filed": "2026-02-27",
+          "frame": "CY2025"
+        }
+      ],
+      "selected_concept_presence": {
+        "AmortizationOfIntangibleAssets": true,
+        "DeferredIncomeTaxExpenseBenefit": true,
+        "Depreciation": true,
+        "GainLossOnDispositionOfAssets": true,
+        "GainLossOnSaleOfBusiness": true,
+        "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities": true,
+        "IncreaseDecreaseInAccountsReceivable": true,
+        "IncreaseDecreaseInAccruedIncomeTaxesPayable": false,
+        "IncreaseDecreaseInInventories": false,
+        "IncreaseDecreaseInOtherOperatingAssets": true,
+        "NetIncomeLoss": true,
+        "OtherNoncashIncomeExpense": true,
+        "ProvisionForLoanLeaseAndOtherLosses": false
+      },
+      "complete_cash_table_available_in_review": false,
+      "cross_company_bridge_qualified": false
+    }
+  },
+  "facts_archive_entries_verified": 19,
+  "external_requests": 0,
+  "model_calls": 0,
+  "production_admission_changed": false,
+  "launch_ready": false,
+  "limitations": [
+    "Reviewed retained presentation arithmetic, not a new production source contract or independent factual/usefulness review.",
+    "Taxonomy signs and displayed cash contributions differ. Never infer a cash effect by summing raw fact values or by guessing label semantics.",
+    "Custom concepts and dash zeros remain diagnostic; no extension to the existing conservative production parser.",
+    "Presence of selected concepts and annual CFO candidates does not establish complete cash-flow coverage, uniqueness, comparable periods or a verified cross-company bridge.",
+    "Historical annual movements do not establish recurrence, current interim drivers, normalized free cash flow or valuation.",
+    "No provider/model call, capture, spending, old-ledger execution, benchmark/holdout access or activation."
+  ]
+}
