@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**24 October segment contract/revenue policy binding (offline implementation):**
+a separate producer/final binder preserves complete named-segment fixed-price
+terms and recognition timing, including escalation, receipt and termination-clause
+exceptions. Complete accounting-note proof reconstructs headings, aliases, segment
+identity, offsets and every displayed context field. Ordinary retrieval adds no
+fetch. The retained replay appends E15/E16 while preserving all fourteen prior
+claims/citations, calculations, coverage and gaps. Policies do not establish actual
+performance, cash collection, competitive advantage or issuer-wide completeness.
+See `SEGMENT_REVENUE_POLICY_20261024.md` and its replay. Grammar/layout support is
+bounded; independent usefulness, matched-period cash-flow explanations and valuation
+remain open. No new live authority, spending, holdout access or activation follows.
+
 **24 October operating-economics source review (offline):** eight complete
 retained passage groups expose payment/inventory practices, fixed-price contract
 economics, revenue-recognition exceptions, customer advances and annual cash-use

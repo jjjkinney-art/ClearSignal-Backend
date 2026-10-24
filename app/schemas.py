@@ -133,6 +133,8 @@ class RetrievedEvidence(BaseModel):
         default_factory=list,
         description="Source-attributed named-organisation activities in segment discussion; no current ownership inference.",
     )
+    revenue_policy_disclosures: List[Dict[str, Any]] = Field(default_factory=list,
+        description="Named-segment contract and revenue-recognition policies with complete exceptions; no realized-performance inference.")
     impairment_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Consolidated deposit-impairment expense with complete management event context and duplicate-presentation proof.",

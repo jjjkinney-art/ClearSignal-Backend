@@ -444,6 +444,9 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         from .deposit_impairment_context import extract_deposit_impairment
         impairments = (extract_deposit_impairment(document, ticker=ticker, cik=cik)
                        if relationship is None else [])
+        from .segment_revenue_policy import extract_segment_revenue_policies
+        policies = (extract_segment_revenue_policies(document,ticker=ticker,cik=cik)
+                    if relationship is None else [])
         if relationship is not None:
             diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
@@ -460,7 +463,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                     risks.append(item)
         # Source order, never an assertion that these are the most material risks.
         risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + competition + risks[:2] + orders + segments + products + organisations + impairments
+        return (quarterly_business + business)[:2] + competition + risks[:2] + orders + segments + products + organisations + impairments + policies
     except Exception as exc:
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):
