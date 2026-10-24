@@ -10,7 +10,7 @@ OVERVIEW_CLAIM_KINDS = frozenset({
 })
 
 
-def render_bound_overview(rows):
+def render_bound_overview(rows, *, operating_questions=()):
     paragraphs = ['Evidence-led case to investigate']
     segment = next((row for row in rows
                     if row['claim_kind'] == 'issuer_segment_financial_context'), None)
@@ -32,6 +32,9 @@ def render_bound_overview(rows):
         # segment-scope and recovery caveats rather than shortening into causality.
         paragraphs.append('Dated adverse evidence to weigh separately\n' + impairment['claim']
                           + f" [{impairment['reference_id']}]")
+    if operating_questions:
+        from .operating_research_questions import render_operating_questions
+        paragraphs.append('Operating questions to resolve\n' + render_operating_questions(operating_questions))
     paragraphs.append('Test the operating explanation, adverse evidence and persistence together. '
         'Different reporting periods and segment versus consolidated scope must not be combined '
         'into an unverified earnings bridge. Unexplained operating-cash-flow movements are context, '

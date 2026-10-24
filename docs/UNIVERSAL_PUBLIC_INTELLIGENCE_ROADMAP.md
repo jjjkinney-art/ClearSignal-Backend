@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**25 October operating research questions (offline composition):** complete-answer
+review found contract and annual cash-use evidence still buried beneath a generic
+profitability question. The opening now asks two cited, explicitly conditional
+questions: contract cost exposure using exactly matched filing/segment evidence,
+and annual consolidated cash conversion without explaining later interim flows.
+All seventeen prior claims/citations, prior inferences, integrity, coverage and
+gaps remain unchanged; two question records are appended. These are investigations,
+not resolved economics, forecasts or valuation boundaries. See
+`OPERATING_QUESTIONS_20261025.md` and its complete-answer replay. Independent
+usefulness, economic reasoning, valuation and launch gates remain open. No new
+live authority, spending, benchmark/holdout access or activation follows.
+
 **24 October matched annual cash-flow explanation (offline implementation):** a
 separate producer/final binder matches complete management annual cash-use context
 to same-document consolidated signed Inline XBRL facts, retaining both years and
