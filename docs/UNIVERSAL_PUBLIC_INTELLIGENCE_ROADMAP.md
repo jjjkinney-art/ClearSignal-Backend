@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**24 October matched annual cash-flow explanation (offline implementation):** a
+separate producer/final binder matches complete management annual cash-use context
+to same-document consolidated signed Inline XBRL facts, retaining both years and
+the distinction between negative outflows and positive generation. E17 is appended
+in the retained replay while all sixteen prior claims/citations, inferences,
+coverage and gaps remain unchanged. Annual context never explains later interim
+cash movements; those drivers remain unverified. See
+`ANNUAL_CASH_FLOW_CONTEXT_20261024.md` and its replay. Grammar is bounded to the
+reviewed calendar-year cash-use form; complete cash reconciliation, independent
+usefulness and valuation remain open. No extra fetch, live authority, spending,
+benchmark/holdout change or activation follows.
+
 **24 October segment contract/revenue policy binding (offline implementation):**
 a separate producer/final binder preserves complete named-segment fixed-price
 terms and recognition timing, including escalation, receipt and termination-clause

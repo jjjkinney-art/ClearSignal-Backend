@@ -135,6 +135,7 @@ class PublicDocument:
     inline_xbrl_facts: tuple[dict, ...] = ()
     segment_financial_tables: tuple[dict, ...] = ()
     deposit_impairment_proofs: tuple[dict, ...] = ()
+    cash_flow_observations: tuple[dict, ...] = ()
 
 
 class _VisibleHTMLParser(HTMLParser):
@@ -656,12 +657,16 @@ def fetch_public_document(
                                                 concepts=inline_fact_concepts)
     segment_tables = ()
     impairment_proofs = ()
+    cash_flow_observations = ()
     if segment_fact_cik is not None and media_type in {"text/html", "application/xhtml+xml"}:
         from ..providers.sec_segment_facts import parse_segment_tables
         segment_tables = parse_segment_tables(decoded, cik=segment_fact_cik)
         if document_type == '10-K':
             from ..providers.sec_deposit_impairment import parse_impairment_tables
             impairment_proofs = parse_impairment_tables(decoded, cik=segment_fact_cik)
+            from ..providers.sec_inline_facts import parse_inline_observations
+            cash_flow_observations = parse_inline_observations(decoded, cik=segment_fact_cik,
+                concepts=('NetCashProvidedByUsedInOperatingActivities',))
     tables: tuple[DocumentTable, ...] = ()
     text_metadata = {}
     if media_type in {"text/html", "application/xhtml+xml"}:
@@ -709,6 +714,7 @@ def fetch_public_document(
         inline_xbrl_facts=inline_facts,
         segment_financial_tables=segment_tables,
         deposit_impairment_proofs=impairment_proofs,
+        cash_flow_observations=cash_flow_observations,
         **text_metadata,
     )
 

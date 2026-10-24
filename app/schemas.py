@@ -135,6 +135,8 @@ class RetrievedEvidence(BaseModel):
     )
     revenue_policy_disclosures: List[Dict[str, Any]] = Field(default_factory=list,
         description="Named-segment contract and revenue-recognition policies with complete exceptions; no realized-performance inference.")
+    cash_flow_disclosures: List[Dict[str, Any]] = Field(default_factory=list,
+        description="Annual consolidated operating cash-flow explanation matched to same-document signed facts; no interim causal bridge.")
     impairment_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Consolidated deposit-impairment expense with complete management event context and duplicate-presentation proof.",
