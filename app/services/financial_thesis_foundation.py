@@ -522,7 +522,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer += "\n\n" + limitation
     answer += ("\n\nThis financial foundation does not establish a complete investment thesis or a buy/sell "
                "recommendation. Unverified requested parts: " + "; ".join(unanswered) + ".")
-    overview = render_bound_overview(rows)
+    from .operating_research_questions import operating_research_questions
+    questions = operating_research_questions(rows)
+    interpretations.extend(questions)
+    overview = render_bound_overview(rows, operating_questions=questions)
     answer = "Financial thesis foundation (partial)\n\n" + overview + "\n\n" + answer
     return {"answer": answer, "claims": rows, "selected_items": selected,
             "inferences": interpretations, "unanswered_parts": unanswered,
