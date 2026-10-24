@@ -85,6 +85,9 @@ class ClaimDocumentReference:
         quote_limit = (900 if self.provider == "SEC EDGAR" and host == "www.sec.gov"
             and self.section in {"Item 1A. Risk Factors", "Item 3.D. Risk Factors", "Strategic report - Risk and security - Risk factors", "Annual Report 2025 - Risk management - Key risks and mitigations", "Item 1. Business - Reported segment products", "Item 1. Business - Reported organisation activities", "Item 7. Management discussion - Deposit impairment"}
                        and self.content_hash else 300)
+        if (self.provider == 'SEC EDGAR' and host == 'www.sec.gov' and self.content_hash
+                and self.section == 'Financial statement notes - Segment revenue policies'):
+            quote_limit = 900
         if self.quote is not None and (not self.quote.strip() or len(self.quote) > quote_limit):
             raise ValueError(f"document quote must contain 1-{quote_limit} characters")
         if (self.page is not None or self.section is not None) and not (
