@@ -1,0 +1,367 @@
+{
+  "date_auckland": "2026-10-24",
+  "base_commit": "718cb6db44340e07797fb2987c871eb9eddf75f2",
+  "kind": "unblinded_retained_operating_economics_source_inspection",
+  "source": {
+    "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "body_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "body_bytes": 1404517,
+    "normalized_text_sha256": "e8dd751e931eee031f8b0a5174deb32e554f43837d8d107f760b50496fff3ca3",
+    "normalized_text_characters": 173081,
+    "offset_basis": "Unicode characters in full normalized visible text; end exclusive.",
+    "independent_origin_verification": false
+  },
+  "facts_sha256": "0f512e8670882f4d201d24252e31ab457f512be1aa6ac9b7243d3b8ec820e19f",
+  "facts_archive_entries_verified": 19,
+  "diagnostic_as_of": "2026-10-15",
+  "contract_source_hashes": {
+    "app/services/public_document_ingestion.py": "22ff156c425b7bd8939a03707371b671c3298e74d389bca838c577c8a6444866",
+    "app/services/annual_eps_research.py": "1d9082cef98ce474740cf3355708557936f1acb7bcf497c26918d4cf651a8814",
+    "app/integrity/sec_metric_evidence.py": "3bcc4f13cef4f707e64bf3ed9c89532271f865ec350f5926e5bb1f68f4db925d"
+  },
+  "candidate_passages": [
+    {
+      "role": "working_capital_practices",
+      "start_offset": 28738,
+      "end_offset": 29652,
+      "quote": "The major portion of the Company's sales are made with terms of 60 days or shorter. \ufeff For the Housewares/Small Appliance segment, inventory levels increase in advance of the selling period for products that are seasonal, such as pressure canners, heaters, and major new product introductions. Inventory build-up also occurs to create stock levels required to support the higher sales that occur in the latter half of each year. Buying practices of the segment's customers require \"just-in-time\" delivery, necessitating that the segment carry large finished goods inventories. The ability to meet United States DOD demands also necessitates the carrying of large inventories in the Defense segment. \ufeff Inventory build-up also occurs in the Safety segment both for seasonal products like carbon monoxide alarms and smoke alarms, and to meet potential demand of customers that require delivery with shorter lead times.",
+      "quote_sha256": "1bdecf74bbb6ca7d92c17ca819cf50557da1c7555f65677a0af2f19b7e720174",
+      "section_window": [
+        5735,
+        31290
+      ],
+      "limitation": "Issuer business practices; does not quantify period cash-flow causality or complete issuer economics.",
+      "new_production_admission": false
+    },
+    {
+      "role": "annual_operating_cash_explanation",
+      "start_offset": 72609,
+      "end_offset": 73763,
+      "quote": "Cash used in operating activities was $9,137,000 during 2025 as compared to $53,426,000 during 2024. The principal factors behind the decrease in cash used can be found in the changes in the components of working capital within the Consolidated Statements of Cash Flows. Of particular note during 2025 was net earnings of $33,084,000, which included the non-cash impairment of a vendor deposit of $2,701,000, depreciation and amortization expenses of $5,136,000, deferred income tax of $7,741,000 and retirement plan expense of $1,008,000. The combination of these factors was more than offset by increases in inventory and accounts receivable levels and a net decrease in payables and accrual levels. Of particular note during 2024 was net earnings of $41,460,000, which included total non-cash depreciation and amortization of $5,046,000 and deferred income tax benefit of $4,528,000. This was augmented by decreases in deposits made to vendors (included in other assets and current assets) and a net increase in payable and accrual levels. The combination of these factors was more than offset by increases in inventory and accounts receivable levels.",
+      "quote_sha256": "39c53bf4636331c2519ebb615ec8ed2b91feb2407d378a7f45e8e600fda01bf9",
+      "section_window": [
+        72553,
+        76753
+      ],
+      "limitation": "Management attribution for 2025 versus 2024, including prior-year context; not an explanation of 2026 interim improvement. Cash used is an outflow, not positive cash generation.",
+      "new_production_admission": false
+    },
+    {
+      "role": "annual_investing_context",
+      "start_offset": 73766,
+      "end_offset": 74149,
+      "quote": "Net cash used in investing activities was $21,876,000 during 2025 as compared to $14,965,000 provided by investing activities during 2024. The change primarily related to net sales and maturities of marketable securities of $4,477,000 in 2025, as opposed to $21,459,000 in 2024, and purchases of property, plant and equipment of $27,034,000 in 2025, as opposed to $7,531,000 in 2024.",
+      "quote_sha256": "05cafe241ec1b3bb8b1c0c0d81d1dc3598c4ce0a2b81747f74afe34cdbeab955",
+      "section_window": [
+        72553,
+        76753
+      ],
+      "limitation": "Investing flows include security maturities/sales and capital expenditure; not operating cash flow or a complete free-cash-flow valuation.",
+      "new_production_admission": false
+    },
+    {
+      "role": "line_of_credit_financing_context",
+      "start_offset": 74152,
+      "end_offset": 74867,
+      "quote": "Net cash provided by financing activities was $16,602,000 during 2025 as compared to $31,533,000 of net cash used in financing activities during 2024. The change primarily relates to net proceeds from the Company's line of credit in 2025 of $23,624,000, as well as the annual dividend payments. During both years, the regular dividend was $1.00 per share. In 2024, the extra dividend was $3.50 per share. However, there was no extra dividend payment during 2025. Cash flows for both years also reflected the proceeds from the sale of treasury stock to a Company sponsored retirement plan. During 2025and 2024, the Company incurred interest expense of $832,000 and $2,000 related to its line of credit, respectively.",
+      "quote_sha256": "0e52f1e34cc8fb8ee0a4acf8014717c22f339f48b061ba8d80710f3f3de512ef",
+      "section_window": [
+        72553,
+        76753
+      ],
+      "limitation": "Financing proceeds are not operating cash flow, a period-end debt balance, or evidence of debt completeness. Preserve dividends and treasury-stock context.",
+      "new_production_admission": false
+    },
+    {
+      "role": "performance_obligations_and_allowances",
+      "start_offset": 122420,
+      "end_offset": 123690,
+      "quote": "The Company\u2019s revenues are derived from short-term contracts and programs that are typically completed within 3 to 42 months and are recognized in accordance with ASC Topic 606, Revenue from Contracts with Customers . The Company\u2019s contracts generally contain one or more performance obligations: the physical delivery of distinct ordered product or products. The Company provides an assurance type product warranty on its products to the original owner. In addition, for the Housewares/Small Appliances segment, the Company estimates returns of seasonal products and returns of newly introduced products sold with a return privilege. Stand-alone selling prices are set forth in each contract and are used to allocate revenue to the corresponding performance obligations. For the Housewares/Small Appliances segment, contracts include variable consideration, as the prices are subject to customer allowances, which principally consist of allowances for cooperative advertising, defective product, and trade discounts. Customer allowances are generally allocated to the performance obligations based on budgeted rates agreed upon with customers, as well as historical experience, and yield the Company\u2019s best estimate of the expected value for the variable consideration.",
+      "quote_sha256": "9cf1ac7e7810ecef7c8dfb95dd5ea8321fc34b403a2815b2e6edc6df374660b0",
+      "section_window": [
+        122403,
+        127369
+      ],
+      "limitation": "Issuer accounting policy and contract practices; preserve variable consideration and allowances. Not all contracts have identical economics.",
+      "new_production_admission": false
+    },
+    {
+      "role": "defense_contract_economics",
+      "start_offset": 123691,
+      "end_offset": 124404,
+      "quote": "The Company's contracts in the Defense segment are primarily with the U.S. Department of Defense (DOD) and DOD prime contractors. As a consequence, this segment's business essentially depends on the product needs and governmental funding of the DOD. Substantially all of the work performed by the Defense segment directly or indirectly for the DOD is performed on a fixed-price basis. Under fixed-price contracts, the price paid to the contractor is awarded based on competition or negotiation at the outset of the contract and therefore, with the exception of limited escalation provisions on specific materials, is generally not subject to any adjustments reflecting the actual costs incurred by the contractor.",
+      "quote_sha256": "112fd743ed139040b130013dc50d2d726ee71a1e615feecee7b107716da10c25",
+      "section_window": [
+        122403,
+        127369
+      ],
+      "limitation": "Named-segment fixed-price economics; retain the limited escalation exception. Does not prove relative advantage, backlog profitability or cost pass-through.",
+      "new_production_admission": false
+    },
+    {
+      "role": "segment_revenue_recognition",
+      "start_offset": 124407,
+      "end_offset": 125066,
+      "quote": "For the Housewares/Small Appliance and Safety segments, revenue is generally recognized as the completed, ordered product is shipped to the customer from the Company\u2019s warehouses. For the situations in which revenue should be recognized when product is received by the customer, the Company adjusts revenue accordingly. For the Defense segment, revenue is primarily recognized when the customer has legal title and formally documents that it has accepted the products. There are also certain termination clauses in Defense segment contracts that may give rise to an over-time pattern of recognition of revenue in the absence of alternative use of the product.",
+      "quote_sha256": "a8fae56ce6dacee8de5c9ba1fbaccd2e66b85df8816b394489254cad761e2a42",
+      "section_window": [
+        122403,
+        127369
+      ],
+      "limitation": "Keep shipment/receipt distinctions and Defense title/acceptance plus termination-clause exception together. This describes recognition, not cash receipt or future revenue.",
+      "new_production_admission": false
+    },
+    {
+      "role": "customer_advances_and_contract_liabilities",
+      "start_offset": 125069,
+      "end_offset": 125934,
+      "quote": "The timing of revenue recognition, billings, and cash collections results in billed accounts receivable, and customer advances and deposits (contract liabilities) on the Company\u2019s Consolidated Balance Sheets. For the Defense segment, the Company occasionally receives advances or deposits from certain customers before revenue is recognized, resulting in contract liabilities. These advances or deposits do not represent a significant financing component. As of December 31, 2025 and 2024 , $ 9,230,000 and $ 7,345,000 , respectively, of contract liabilities were included in Accrued Liabilities on the Company\u2019s Consolidated Balance Sheets. During 2025, 2024, and 2023 , the Company recognized revenue of $ 7,110,000 , $ 9,564,000 and $ 326,000 , respectively, that was included in the Defense segment contract liability at the beginning of those respective years.",
+      "quote_sha256": "3c368b25cee03b3e58b1a14f384f65ad96c1de3eb235947c1c892f5bab7d4288",
+      "section_window": [
+        122403,
+        127369
+      ],
+      "limitation": "Advances can precede recognized revenue. Balances, releases and financing-component judgment differ; these are not new orders or the same period cash collected.",
+      "new_production_admission": false
+    }
+  ],
+  "existing_annual_eps_contract": {
+    "basic": {
+      "qualified": true,
+      "verified_claims": [
+        {
+          "value_text": "$4.63 per share",
+          "provenance": "reported",
+          "as_of": "2025-12-31",
+          "confidence": null,
+          "assumptions": null,
+          "stale": false,
+          "raw_value": 4.63,
+          "unit": "USD/shares",
+          "source": "10-K",
+          "source_date_unavailable": false,
+          "ticker": "NPK",
+          "metric": "us-gaap:EarningsPerShareBasic",
+          "derivation": null,
+          "freshness_status": null,
+          "polarity": null,
+          "assumptions_inferred": false,
+          "document_ref": {
+            "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+            "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+            "provider": "SEC EDGAR",
+            "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+            "published_at": "2026-03-13"
+          },
+          "rendered": "$4.63 per share (as of 2025-12-31)",
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "currency": "USD",
+          "label": "Earnings Per Share, Basic"
+        },
+        {
+          "value_text": "$5.82 per share",
+          "provenance": "reported",
+          "as_of": "2024-12-31",
+          "confidence": null,
+          "assumptions": null,
+          "stale": false,
+          "raw_value": 5.82,
+          "unit": "USD/shares",
+          "source": "10-K",
+          "source_date_unavailable": false,
+          "ticker": "NPK",
+          "metric": "us-gaap:EarningsPerShareBasic",
+          "derivation": null,
+          "freshness_status": null,
+          "polarity": null,
+          "assumptions_inferred": false,
+          "document_ref": {
+            "reference_id": "sec:80172:0001437749-26-008214:us-gaap:EarningsPerShareBasic",
+            "title": "10-K filed 2026-03-13 \u00b7 Earnings Per Share, Basic",
+            "provider": "SEC EDGAR",
+            "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+            "published_at": "2026-03-13"
+          },
+          "rendered": "$5.82 per share (as of 2024-12-31)",
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "currency": "USD",
+          "label": "Earnings Per Share, Basic"
+        }
+      ]
+    },
+    "diluted": {
+      "qualified": false,
+      "verified_claims": []
+    }
+  },
+  "annual_financial_comparisons": {
+    "operating cash flow": {
+      "qualified": true,
+      "verified_claims": [
+        {
+          "value_text": "$-9,137,000",
+          "provenance": "reported",
+          "as_of": "2025-12-31",
+          "confidence": null,
+          "assumptions": null,
+          "stale": false,
+          "raw_value": -9137000,
+          "unit": "USD",
+          "source": "10-K",
+          "source_date_unavailable": false,
+          "ticker": "NPK",
+          "metric": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+          "derivation": null,
+          "freshness_status": null,
+          "polarity": null,
+          "assumptions_inferred": false,
+          "document_ref": {
+            "reference_id": "sec:80172:0001437749-26-008214:us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "title": "10-K filed 2026-03-13 \u00b7 Net Cash Provided by (Used in) Operating Activities",
+            "provider": "SEC EDGAR",
+            "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+            "published_at": "2026-03-13"
+          },
+          "rendered": "$-9,137,000 (as of 2025-12-31)",
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "currency": "USD",
+          "label": "Net Cash Provided by (Used in) Operating Activities"
+        },
+        {
+          "value_text": "$-53,426,000",
+          "provenance": "reported",
+          "as_of": "2024-12-31",
+          "confidence": null,
+          "assumptions": null,
+          "stale": false,
+          "raw_value": -53426000,
+          "unit": "USD",
+          "source": "10-K",
+          "source_date_unavailable": false,
+          "ticker": "NPK",
+          "metric": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+          "derivation": null,
+          "freshness_status": null,
+          "polarity": null,
+          "assumptions_inferred": false,
+          "document_ref": {
+            "reference_id": "sec:80172:0001437749-26-008214:us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "title": "10-K filed 2026-03-13 \u00b7 Net Cash Provided by (Used in) Operating Activities",
+            "provider": "SEC EDGAR",
+            "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+            "published_at": "2026-03-13"
+          },
+          "rendered": "$-53,426,000 (as of 2024-12-31)",
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "currency": "USD",
+          "label": "Net Cash Provided by (Used in) Operating Activities"
+        }
+      ]
+    },
+    "capital expenditure": {
+      "qualified": true,
+      "verified_claims": [
+        {
+          "value_text": "$27,034,000",
+          "provenance": "reported",
+          "as_of": "2025-12-31",
+          "confidence": null,
+          "assumptions": null,
+          "stale": false,
+          "raw_value": 27034000,
+          "unit": "USD",
+          "source": "10-K",
+          "source_date_unavailable": false,
+          "ticker": "NPK",
+          "metric": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "derivation": null,
+          "freshness_status": null,
+          "polarity": null,
+          "assumptions_inferred": false,
+          "document_ref": {
+            "reference_id": "sec:80172:0001437749-26-008214:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+            "title": "10-K filed 2026-03-13 \u00b7 Payments to Acquire Property, Plant, and Equipment",
+            "provider": "SEC EDGAR",
+            "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+            "published_at": "2026-03-13"
+          },
+          "rendered": "$27,034,000 (as of 2025-12-31)",
+          "period_start": "2025-01-01",
+          "period_end": "2025-12-31",
+          "period": "FY2025",
+          "scope": "consolidated",
+          "currency": "USD",
+          "label": "Payments to Acquire Property, Plant, and Equipment"
+        },
+        {
+          "value_text": "$7,531,000",
+          "provenance": "reported",
+          "as_of": "2024-12-31",
+          "confidence": null,
+          "assumptions": null,
+          "stale": false,
+          "raw_value": 7531000,
+          "unit": "USD",
+          "source": "10-K",
+          "source_date_unavailable": false,
+          "ticker": "NPK",
+          "metric": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "derivation": null,
+          "freshness_status": null,
+          "polarity": null,
+          "assumptions_inferred": false,
+          "document_ref": {
+            "reference_id": "sec:80172:0001437749-26-008214:us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+            "title": "10-K filed 2026-03-13 \u00b7 Payments to Acquire Property, Plant, and Equipment",
+            "provider": "SEC EDGAR",
+            "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/0001437749-26-008214-index.htm",
+            "published_at": "2026-03-13"
+          },
+          "rendered": "$7,531,000 (as of 2024-12-31)",
+          "period_start": "2024-01-01",
+          "period_end": "2024-12-31",
+          "period": "FY2024",
+          "scope": "consolidated",
+          "currency": "USD",
+          "label": "Payments to Acquire Property, Plant, and Equipment"
+        }
+      ]
+    }
+  },
+  "selected_standard_debt_concept_presence": {
+    "LongTermDebtCurrent": false,
+    "LongTermDebtNoncurrent": false,
+    "LongTermDebt": false,
+    "LongTermDebtAndCapitalLeaseObligations": false,
+    "ShortTermBorrowings": false
+  },
+  "missing_debt_tags_establish_zero_debt": false,
+  "valuation_readiness": {
+    "market_price_verified": false,
+    "security_basis_verified": false,
+    "normalized_future_earnings_verified": false,
+    "investment_boundary_established": false,
+    "scenario_assumptions_chosen": false
+  },
+  "external_requests": 0,
+  "model_calls": 0,
+  "launch_ready": false,
+  "limitations": [
+    "Source inspection, not production extraction or independent usefulness acceptance.",
+    "Retained annual evidence does not explain later interim outcomes without a matched source bridge.",
+    "Conditional valuation arithmetic already exists separately behind disabled-by-default controls; this inspection does not activate or connect it to broad /ask.",
+    "No new capture, spending, old-ledger execution, benchmark change, holdout access or activation."
+  ]
+}

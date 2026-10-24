@@ -8,6 +8,18 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**24 October operating-economics source review (offline):** eight complete
+retained passage groups expose payment/inventory practices, fixed-price contract
+economics, revenue-recognition exceptions, customer advances and annual cash-use
+explanations. Missing standard debt tags coexist with disclosed credit-line
+proceeds and cannot establish zero debt. Existing annual selectors qualify basic
+EPS and signed cash-flow/capex context; existing conditional valuation arithmetic
+does not supply missing security/price/future assumptions. Next implement scoped
+named-segment contract/revenue-policy binding, followed by matched-period cash-flow
+explanations. See `OPERATING_ECONOMICS_SOURCE_REVIEW_20261024.md` and its source map.
+No production answer, settings, live authority, spending, benchmark/holdout access
+or activation changes; independent quality and valuation gates remain open.
+
 **24 October complete-answer duplication repair (offline):** full-prose review
 found the PR337 overview repeated evidence and grew the retained answer to 2,259
 words. Complete bound segment/impairment statements now move to the opening once;
