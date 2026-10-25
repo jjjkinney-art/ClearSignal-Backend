@@ -19,7 +19,11 @@ def render_bound_overview(rows, *, operating_questions=()):
         # and any management explanation; do not create a competing short version.
         paragraphs.append('Reported segment economics\n' + segment['claim']
                           + f" [{segment['reference_id']}]")
-        paragraphs.append('The conditional '
+        synthesis = segment_persistence_case(segment)
+        if synthesis:
+            paragraphs.append(synthesis)
+        else:
+            paragraphs.append('The conditional '
             'research case is whether the reported operations can sustain profitability; '
             'the table alone establishes neither persistence nor the causes of later consolidated results.')
     else:
@@ -41,3 +45,29 @@ def render_bound_overview(rows, *, operating_questions=()):
         'not a favorable or adverse thesis signal. Historical monitoring levels do not establish '
         'valuation or an attractiveness boundary; valuation and expected returns remain unverified.')
     return '\n\n'.join(paragraphs)
+
+
+def segment_persistence_case(row):
+    """A conditional test from final-bound, reconciled segment signs only."""
+    context = row.get('segment_context', {})
+    segments = context.get('segments', [])
+    if not context.get('totals_reconciled') or not segments:
+        return None
+    periods = {(s['start'], s['end']) for s in segments}
+    if len(periods) != 1:
+        return None
+    positive = [s['label'] for s in segments if s['operating_income_usd'] > 0]
+    negative = [s['label'] for s in segments if s['operating_income_usd'] < 0]
+    if len(positive) != 1 or not negative:
+        return None
+    start, end = next(iter(periods))
+    return (f"Conditional investment case to test: for {start} to {end}, "
+            f"{positive[0]} was the only reported segment with positive operating income, "
+            f"while {' and '.join(negative)} reported operating losses. "
+            "The case therefore depends on whether the profitable segment can sustain its "
+            "reported contribution and whether the loss-making segments improve or continue "
+            "to offset it. Subsequent comparable segment results that show weakening profit "
+            "alongside persistent losses would weaken this case; sustained profit and narrowing "
+            "losses would support it. These are conditional tests, not forecasts. The filing's "
+            "cost allocations apply; reported segment profit is not standalone earning power "
+            f"or consolidated cash generation. [{row['reference_id']}]")
