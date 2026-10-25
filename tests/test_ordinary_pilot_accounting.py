@@ -66,3 +66,16 @@ def test_scope_denied_before_claim(tmp_path, case, stage, route):
     with pytest.raises(AccountingError, match='scope'):
         book.claim(case, stage, route)
     assert book.summary()['outcomes'] == {}
+
+
+def test_ambiguous_outcome_durably_halts_without_settling(tmp_path):
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    a = book.claim(CASE, 'evidence.sec', 'sec/submissions')
+    with pytest.raises(AccountingError, match='invalid outcome'):
+        book.settle(a, succeeded=1)
+    assert book.summary()['halt'] == 'invalid_outcome'
+    assert book.summary()['outcomes'] == {'pending': 1}
+    with pytest.raises(AccountingError):
+        book.claim(CASE, 'evidence.sec_metrics', 'sec/facts')
+    book.settle(a, succeeded=True)
+    assert book.summary()['outcomes'] == {'late': 1}

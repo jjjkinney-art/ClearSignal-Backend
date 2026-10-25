@@ -72,6 +72,9 @@ class OfflineAccounting:
 
     def settle(self, attempt, *, succeeded):
         if type(succeeded) is not bool:
+            with sqlite3.connect(self.path, timeout=10) as db:
+                db.execute('BEGIN IMMEDIATE')
+                db.execute("UPDATE state SET halt=CASE WHEN halt='' THEN 'invalid_outcome' ELSE halt END")
             raise AccountingError('invalid outcome')
         with sqlite3.connect(self.path, timeout=10) as db:
             db.execute('BEGIN IMMEDIATE')
