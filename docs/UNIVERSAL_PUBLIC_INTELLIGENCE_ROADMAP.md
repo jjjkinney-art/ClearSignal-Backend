@@ -8,6 +8,17 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**25 October original-byte cash binding and row references (offline):** a separate
+service regenerates the full table capsule from supplied original filing bytes,
+rejects a rehashed offsetting-row substitution, reconstructs the bridge and
+creates sixteen complete source-row references in the retained probe. Ordinary
+quote caps remain unchanged. Source binding is scoped to supplied-byte consistency;
+independent origin authentication, semantic nonoverlap and evidence admission
+remain false. See `CASH_SOURCE_BINDING_20261025.md` and its replay. Next connect a
+trusted original-source handle through bounded ingestion and the final claim/
+citation gate. No ordinary answer, settings, live authority, spending, benchmark/
+holdout access or activation changes; usefulness and launch gates remain open.
+
 **25 October complete cash parser/reconstructor (offline implementation):** a
 separate shared layer retains full table/resource XML, reconstructs printed cash
 contributions separately from signed taxonomy values, and requires exact annual
