@@ -8,6 +8,19 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**25 October ordinary-path annual cash bridge (offline verification):** existing
+bounded 10-K ingestion retains eligible original bytes in a private handle;
+producer and final gate reconstruct the complete bridge and row references.
+Serialized descriptors cannot reauthorize it, and generic excerpts cannot bypass
+a failed binding. The retained replay appends E18 with all fifteen component
+changes and exact annual totals while preserving seventeen prior claims/citations,
+inferences, coverage and gaps. Initial integrated support is the bounded USD
+calendar-annual grammar. See `CASH_ANSWER_20261025.md` and its full-answer replay.
+Source consistency is not semantic nonoverlap, sustainable cash or a later interim
+explanation. Next assess complete-answer usefulness/readability and remaining
+economic/valuation gaps. No new calls, spending, holdout access or activation;
+independent usefulness, signed-in and launch gates remain open.
+
 **25 October original-byte cash binding and row references (offline):** a separate
 service regenerates the full table capsule from supplied original filing bytes,
 rejects a rehashed offsetting-row substitution, reconstructs the bridge and

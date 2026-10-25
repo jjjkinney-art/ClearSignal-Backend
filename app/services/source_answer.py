@@ -117,6 +117,9 @@ def is_decision_monitoring_request(question: str) -> bool:
 
 
 def _claim_text(item: object) -> str | None:
+    if getattr(item, 'cash_reconciliation_disclosures', []):
+        # Complete bridges render only through original-source reconstruction.
+        return None
     source = str(getattr(item, "source", "") or "")
     summary = str(getattr(item, "summary", "") or "").strip()
     # Filing-discovery metadata proves only that a filing exists. It is not an
