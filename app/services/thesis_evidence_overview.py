@@ -58,8 +58,10 @@ def segment_persistence_case(row):
         return None
     positive = [s['label'] for s in segments if s['operating_income_usd'] > 0]
     negative = [s['label'] for s in segments if s['operating_income_usd'] < 0]
-    if len(positive) != 1 or not negative:
+    if not positive and not negative:
         return None
+    if len(positive) != 1 or not negative:
+        return _other_segment_case(row, segments, positive, negative)
     start, end = next(iter(periods))
     return (f"Conditional investment case to test: for {start} to {end}, "
             f"{positive[0]} was the only reported segment with positive operating income, "
@@ -71,3 +73,35 @@ def segment_persistence_case(row):
             "losses would support it. These are conditional tests, not forecasts. The filing's "
             "cost allocations apply; reported segment profit is not standalone earning power "
             f"or consolidated cash generation. [{row['reference_id']}]")
+
+
+def _other_segment_case(row, segments, positive, negative):
+    start, end = segments[0]['start'], segments[0]['end']
+    parts = [f"Conditional segment case to test, {start} to {end}:"]
+    if positive:
+        parts.append('Positive reported operating income: ' + '; '.join(positive) + '.')
+    if negative:
+        parts.append('Reported operating losses: ' + '; '.join(negative) + '.')
+    zero = [s['label'] for s in segments if s['operating_income_usd'] == 0]
+    if zero:
+        parts.append('Zero reported operating income: ' + '; '.join(zero) + '.')
+    if positive and negative:
+        parts.append('Test whether the profitable segments sustain their contributions and '
+                     'whether losses elsewhere narrow. Sustained profit and narrowing losses '
+                     'would support this operating case; weakening profits and persistent or '
+                     'widening losses would weaken it.')
+    elif positive:
+        parts.append('Test whether the reported profitable segments sustain their contributions. '
+                     'Sustained comparable segment profits would support this operating case; '
+                     'declining profits or a shift into losses would weaken it. Positive '
+                     'segment results alone do not establish an attractive investment.')
+    else:
+        parts.append('A recovery case requires evidence of improving segment economics. '
+                     'Narrowing comparable losses would support that case; persistent or '
+                     'widening losses would weaken it. A loss does not itself establish '
+                     'that recovery is likely or that the shares are inexpensive.')
+    parts.append("These are conditional tests, not forecasts. Compare subsequent like-for-like "
+                 "periods and segment definitions. The filing's cost allocations apply; "
+                 "reported segment profit is not standalone earning power or consolidated "
+                 f"cash generation. [{row['reference_id']}]")
+    return ' '.join(parts)
