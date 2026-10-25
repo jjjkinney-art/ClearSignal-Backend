@@ -8,6 +8,19 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**25 October complete cash-reconciliation source review (offline):** fifteen
+printed annual components reconcile exactly for all three retained NPK years.
+The 2025 cash outflow improved by $44.289m; a $58.551m reduction in inventory cash
+drain is partly offset by other movements. Signed taxonomy values differ from
+printed indirect-cash contributions, so a raw fact sum is invalid. Retained
+ASML/ACHC inventories use different component sets and lack complete cash tables
+in this review; no cross-company bridge is qualified. Next implement a shared,
+complete statement-contribution contract with exact reconciliation and final
+reconstruction, rather than extending the narrative grammar or guessing signs.
+See `CASH_RECONCILIATION_SOURCE_REVIEW_20261025.md` and its source map. No production
+answer, live authority, spending, benchmark/holdout access or activation changes.
+Independent usefulness, sustainable economics, valuation and launch gates remain open.
+
 **25 October operating research questions (offline composition):** complete-answer
 review found contract and annual cash-use evidence still buried beneath a generic
 profitability question. The opening now asks two cited, explicitly conditional
