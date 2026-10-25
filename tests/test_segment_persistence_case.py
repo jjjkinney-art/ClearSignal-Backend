@@ -30,12 +30,39 @@ def test_unreconciled_or_mixed_periods_withheld():
     assert segment_persistence_case(value) is None
 
 
-def test_multiple_profit_segments_or_no_losses_withheld():
+def test_multiple_profit_segments_and_zero_are_explicit():
     value = row()
-    value['segment_context']['segments'][2]['operating_income_usd'] = 1
+    value['segment_context']['segments'].append(
+        dict(value['segment_context']['segments'][0], label='Delta'))
+    text = segment_persistence_case(value)
+    assert 'Alpha; Delta' in text and 'Beta' in text
+    assert 'Zero reported operating income: Gamma' in text
+    assert 'only reported segment' not in text
+
+
+def test_profit_only_is_not_attractiveness():
+    value = row()
+    value['segment_context']['segments'][1]['operating_income_usd'] = 2
+    text = segment_persistence_case(value)
+    assert 'sustain their contributions' in text
+    assert 'do not establish an attractive investment' in text
+
+
+def test_loss_only_requires_recovery_evidence():
+    value = row()
+    value['segment_context']['segments'][0]['operating_income_usd'] = -8
+    text = segment_persistence_case(value)
+    assert 'recovery case requires evidence' in text
+    assert 'shares are inexpensive' in text
+    assert 'Positive reported operating income:' not in text
+
+
+def test_all_zero_or_empty_withheld():
+    value = row()
+    for segment in value['segment_context']['segments']:
+        segment['operating_income_usd'] = 0
     assert segment_persistence_case(value) is None
-    value = row()
-    value['segment_context']['segments'][1]['operating_income_usd'] = 0
+    value['segment_context']['segments'] = []
     assert segment_persistence_case(value) is None
 
 
