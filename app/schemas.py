@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import uuid as _uuid
 from typing import List, Optional, Dict, Any, Literal
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 # Import field_validator for pydantic v2; fall back to validator for v1.  In v2
 # field_validator replaces the old validator decorator.  We alias validator
@@ -51,6 +51,7 @@ class RetrievedEvidence(BaseModel):
                      Scored by the retrieval layer; higher → more relevant.
     """
 
+    _cash_reconciliation_source: Any = PrivateAttr(default=None)
     title: str = Field(..., description="Short headline or title of the evidence item")
     source: str = Field(..., description="Publication or data provider name")
     summary: str = Field(..., description="1-3 sentence summary of the relevant finding")
@@ -135,6 +136,7 @@ class RetrievedEvidence(BaseModel):
     )
     revenue_policy_disclosures: List[Dict[str, Any]] = Field(default_factory=list,
         description="Named-segment contract and revenue-recognition policies with complete exceptions; no realized-performance inference.")
+    cash_reconciliation_disclosures: List[Dict[str, Any]] = Field(default_factory=list)
     cash_flow_disclosures: List[Dict[str, Any]] = Field(default_factory=list,
         description="Annual consolidated operating cash-flow explanation matched to same-document signed facts; no interim causal bridge.")
     impairment_disclosures: List[Dict[str, Any]] = Field(

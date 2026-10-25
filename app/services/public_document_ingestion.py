@@ -136,6 +136,7 @@ class PublicDocument:
     segment_financial_tables: tuple[dict, ...] = ()
     deposit_impairment_proofs: tuple[dict, ...] = ()
     cash_flow_observations: tuple[dict, ...] = ()
+    cash_reconciliation_source: object | None = None
 
 
 class _VisibleHTMLParser(HTMLParser):
@@ -701,6 +702,16 @@ def fetch_public_document(
         )
     if not text:
         raise PublicDocumentError("document contained no extractable text")
+    cash_source = None
+    if segment_fact_cik is not None and document_type == '10-K' and method == 'html':
+        from ..providers.sec_cash_reconciliation import parse_cash_reconciliations
+        from .cash_reconciliation_evidence import CashSource
+        try:
+            if parse_cash_reconciliations(body.decode('utf-8'), cik=segment_fact_cik):
+                cash_source = CashSource(body, digest, segment_fact_cik, current_url,
+                                         published_at, title or 'Annual cash-flow statement')
+        except UnicodeError:
+            pass
     return PublicDocument(
         requested_url=requested_url, final_url=current_url,
         content_type=media_type, content_hash=digest, byte_count=len(body),
@@ -715,6 +726,7 @@ def fetch_public_document(
         segment_financial_tables=segment_tables,
         deposit_impairment_proofs=impairment_proofs,
         cash_flow_observations=cash_flow_observations,
+        cash_reconciliation_source=cash_source,
         **text_metadata,
     )
 

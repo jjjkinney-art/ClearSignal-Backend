@@ -349,6 +349,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .deposit_impairment_context import bound_deposit_impairment
     from .segment_revenue_policy import bound_segment_revenue_policy
     from .annual_cash_flow_context import bound_annual_cash_flow_context
+    from .cash_reconciliation_evidence import bound_cash_reconciliation
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
@@ -359,7 +360,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
               "issuer_competition_description": 0, "issuer_order_backlog_context": 0,
               "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0, "issuer_organisation_activity_context": 0,
               "issuer_deposit_impairment_context": 0, "issuer_segment_revenue_policy": 0,
-              "issuer_annual_cash_flow_context": 0}
+              "issuer_annual_cash_flow_context": 0, "issuer_cash_reconciliation": 0}
     current_risks = 0
     business_descriptions = []
     seen = set()
@@ -373,9 +374,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                  or bound_deposit_impairment(item, ticker=ticker, cik=expected_cik)
                  or bound_segment_revenue_policy(item,ticker=ticker,cik=expected_cik)
                  or bound_annual_cash_flow_context(item,ticker=ticker,cik=expected_cik)
+                 or bound_cash_reconciliation(item,ticker=ticker,cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value["quote"] in seen or counts[value["claim_kind"]] >=
-                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context'} else 2)):
+                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation'} else 2)):
             continue
         reference_id = f"E{index}"
         if references is not None:
@@ -417,6 +419,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             row['cash_flow_context'] = value['cash_flow_context']
             row['document_ref'] = value['document_ref']
             row['observations'] = value['observations']
+        if value['claim_kind'] == 'issuer_cash_reconciliation':
+            row['cash_reconciliation'] = value['bridge']
+            row['row_references'] = value['row_references']
+            row['document_ref'] = value['document_ref']
         if value['claim_kind'] == 'issuer_segment_financial_context':
             row['segment_context'] = value['segment_context']
             row['document_ref'] = value['document_ref']

@@ -114,6 +114,7 @@ class TestRetrievedEvidenceSchema:
             "organisation_disclosures",
             "revenue_policy_disclosures",
             "cash_flow_disclosures",
+            "cash_reconciliation_disclosures",
             "impairment_disclosures",
         }
         assert d["source_type"] == "unknown"
@@ -129,6 +130,7 @@ class TestRetrievedEvidenceSchema:
         assert d["organisation_disclosures"] == []
         assert d["revenue_policy_disclosures"] == []
         assert d["cash_flow_disclosures"] == []
+        assert d["cash_reconciliation_disclosures"] == []
         assert d["impairment_disclosures"] == []
 
 
