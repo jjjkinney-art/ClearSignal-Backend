@@ -1,0 +1,1404 @@
+{
+  "kind": "retained_original_cash_source_binding_and_row_references",
+  "date_auckland": "2026-10-25",
+  "base_commit": "ef7a376ae34c9958eb214392458c1dc2d993687c",
+  "previous_replay_sha256": "a54a93981659fc7a27573594f7324a54da291801c82f80f9fa8299f0fe0255bb",
+  "binding_code_sha256": "d5c8688b23029936a75fa8e2eca24f37f4fa560d32af763ae78314418e448f4a",
+  "result": {
+    "bridge": {
+      "currency": "USD",
+      "scope": "consolidated_calendar_annual",
+      "rows": [
+        {
+          "label": "Net earnings",
+          "values": [
+            {
+              "fact_id": "c141929981",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "NetIncomeLoss",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "33,084",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 33084000,
+              "signed_taxonomy_value": 33084000,
+              "column": 3,
+              "display_contribution": 33084000
+            },
+            {
+              "fact_id": "c141929982",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "NetIncomeLoss",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "41,460",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 41460000,
+              "signed_taxonomy_value": 41460000,
+              "column": 7,
+              "display_contribution": 41460000
+            },
+            {
+              "fact_id": "c141929983",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "NetIncomeLoss",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "34,559",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 34559000,
+              "signed_taxonomy_value": 34559000,
+              "column": 11,
+              "display_contribution": 34559000
+            }
+          ]
+        },
+        {
+          "label": "Provision for depreciation",
+          "values": [
+            {
+              "fact_id": "c141929984",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "Depreciation",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "3,621",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 3621000,
+              "signed_taxonomy_value": 3621000,
+              "column": 3,
+              "display_contribution": 3621000
+            },
+            {
+              "fact_id": "c141929985",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "Depreciation",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "3,531",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 3531000,
+              "signed_taxonomy_value": 3531000,
+              "column": 7,
+              "display_contribution": 3531000
+            },
+            {
+              "fact_id": "c141929986",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "Depreciation",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "4,372",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 4372000,
+              "signed_taxonomy_value": 4372000,
+              "column": 11,
+              "display_contribution": 4372000
+            }
+          ]
+        },
+        {
+          "label": "Intangibles amortization",
+          "values": [
+            {
+              "fact_id": "c141929987",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "AmortizationOfIntangibleAssets",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "1,515",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 1515000,
+              "signed_taxonomy_value": 1515000,
+              "column": 3,
+              "display_contribution": 1515000
+            },
+            {
+              "fact_id": "c141929988",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "AmortizationOfIntangibleAssets",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "1,515",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 1515000,
+              "signed_taxonomy_value": 1515000,
+              "column": 7,
+              "display_contribution": 1515000
+            },
+            {
+              "fact_id": "c141929989",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "AmortizationOfIntangibleAssets",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "1,635",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 1635000,
+              "signed_taxonomy_value": 1635000,
+              "column": 11,
+              "display_contribution": 1635000
+            }
+          ]
+        },
+        {
+          "label": "Deferred income tax (benefit)",
+          "values": [
+            {
+              "fact_id": "c141929990",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "DeferredIncomeTaxExpenseBenefit",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "7,741",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 7741000,
+              "signed_taxonomy_value": 7741000,
+              "column": 3,
+              "display_contribution": 7741000
+            },
+            {
+              "fact_id": "c141929991",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "DeferredIncomeTaxExpenseBenefit",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "4,528",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 4528000,
+              "signed_taxonomy_value": -4528000,
+              "column": 7,
+              "display_contribution": -4528000
+            },
+            {
+              "fact_id": "c141929992",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "DeferredIncomeTaxExpenseBenefit",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "1,190",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 1190000,
+              "signed_taxonomy_value": -1190000,
+              "column": 11,
+              "display_contribution": -1190000
+            }
+          ]
+        },
+        {
+          "label": "Provision for doubtful notes and accounts receivable",
+          "values": [
+            {
+              "fact_id": "c141929993",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "ProvisionForLoanLeaseAndOtherLosses",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "66",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 66000,
+              "signed_taxonomy_value": 66000,
+              "column": 3,
+              "display_contribution": 66000
+            },
+            {
+              "fact_id": "c141929994",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "ProvisionForLoanLeaseAndOtherLosses",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "285",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 285000,
+              "signed_taxonomy_value": -285000,
+              "column": 7,
+              "display_contribution": -285000
+            },
+            {
+              "fact_id": "c141929995",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "ProvisionForLoanLeaseAndOtherLosses",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "285",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 285000,
+              "signed_taxonomy_value": 285000,
+              "column": 11,
+              "display_contribution": 285000
+            }
+          ]
+        },
+        {
+          "label": "(Gain) loss on disposal of property, plant and equipment",
+          "values": [
+            {
+              "fact_id": "c141929996",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "GainLossOnDispositionOfAssets",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "13",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 13000,
+              "signed_taxonomy_value": -13000,
+              "column": 3,
+              "display_contribution": 13000
+            },
+            {
+              "fact_id": "c141929997",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "GainLossOnDispositionOfAssets",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "-",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "fixed-zero",
+              "sign": "-",
+              "magnitude": 0,
+              "signed_taxonomy_value": 0,
+              "column": 7,
+              "display_contribution": 0
+            },
+            {
+              "fact_id": "c141929998",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "GainLossOnDispositionOfAssets",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "7",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 7000,
+              "signed_taxonomy_value": 7000,
+              "column": 11,
+              "display_contribution": -7000
+            }
+          ]
+        },
+        {
+          "label": "Loss on impairment of vendor deposit",
+          "values": [
+            {
+              "fact_id": "c141929999",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://www.gopresto.com/20251231",
+              "concept": "DepositsImpairment",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "2,701",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 2701000,
+              "signed_taxonomy_value": 2701000,
+              "column": 3,
+              "display_contribution": 2701000
+            },
+            {
+              "fact_id": "c141930000",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://www.gopresto.com/20251231",
+              "concept": "DepositsImpairment",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "-",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "fixed-zero",
+              "sign": "",
+              "magnitude": 0,
+              "signed_taxonomy_value": 0,
+              "column": 7,
+              "display_contribution": 0
+            },
+            {
+              "fact_id": "c141930001",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://www.gopresto.com/20251231",
+              "concept": "DepositsImpairment",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "-",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "fixed-zero",
+              "sign": "",
+              "magnitude": 0,
+              "signed_taxonomy_value": 0,
+              "column": 11,
+              "display_contribution": 0
+            }
+          ]
+        },
+        {
+          "label": "Noncash retirement plan expense",
+          "values": [
+            {
+              "fact_id": "c141930002",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://www.gopresto.com/20251231",
+              "concept": "NoncashRetirementPlanExpense",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "1,008",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 1008000,
+              "signed_taxonomy_value": 1008000,
+              "column": 3,
+              "display_contribution": 1008000
+            },
+            {
+              "fact_id": "c141930003",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://www.gopresto.com/20251231",
+              "concept": "NoncashRetirementPlanExpense",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "904",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 904000,
+              "signed_taxonomy_value": 904000,
+              "column": 7,
+              "display_contribution": 904000
+            },
+            {
+              "fact_id": "c141930004",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://www.gopresto.com/20251231",
+              "concept": "NoncashRetirementPlanExpense",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "863",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 863000,
+              "signed_taxonomy_value": 863000,
+              "column": 11,
+              "display_contribution": 863000
+            }
+          ]
+        },
+        {
+          "label": "Gain on sale of subsidiary",
+          "values": [
+            {
+              "fact_id": "c141930005",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "GainLossOnSaleOfBusiness",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "253",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 253000,
+              "signed_taxonomy_value": 253000,
+              "column": 3,
+              "display_contribution": -253000
+            },
+            {
+              "fact_id": "c141930006",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "GainLossOnSaleOfBusiness",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "-",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "fixed-zero",
+              "sign": "-",
+              "magnitude": 0,
+              "signed_taxonomy_value": 0,
+              "column": 7,
+              "display_contribution": 0
+            },
+            {
+              "fact_id": "c141930007",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "GainLossOnSaleOfBusiness",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "351",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 351000,
+              "signed_taxonomy_value": 351000,
+              "column": 11,
+              "display_contribution": -351000
+            }
+          ]
+        },
+        {
+          "label": "Other",
+          "values": [
+            {
+              "fact_id": "c141930008",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "OtherNoncashIncomeExpense",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "230",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 230000,
+              "signed_taxonomy_value": -230000,
+              "column": 3,
+              "display_contribution": 230000
+            },
+            {
+              "fact_id": "c141930009",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "OtherNoncashIncomeExpense",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "856",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 856000,
+              "signed_taxonomy_value": -856000,
+              "column": 7,
+              "display_contribution": 856000
+            },
+            {
+              "fact_id": "c141930010",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "OtherNoncashIncomeExpense",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "591",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 591000,
+              "signed_taxonomy_value": -591000,
+              "column": 11,
+              "display_contribution": 591000
+            }
+          ]
+        },
+        {
+          "label": "Accounts receivable, net",
+          "values": [
+            {
+              "fact_id": "c141930011",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccountsReceivable",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "22,902",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 22902000,
+              "signed_taxonomy_value": 22902000,
+              "column": 3,
+              "display_contribution": -22902000
+            },
+            {
+              "fact_id": "c141930012",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccountsReceivable",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "13,277",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 13277000,
+              "signed_taxonomy_value": 13277000,
+              "column": 7,
+              "display_contribution": -13277000
+            },
+            {
+              "fact_id": "c141930013",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccountsReceivable",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "20,337",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 20337000,
+              "signed_taxonomy_value": -20337000,
+              "column": 11,
+              "display_contribution": 20337000
+            }
+          ]
+        },
+        {
+          "label": "Inventories",
+          "values": [
+            {
+              "fact_id": "c141930014",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInInventories",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "29,028",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 29028000,
+              "signed_taxonomy_value": 29028000,
+              "column": 3,
+              "display_contribution": -29028000
+            },
+            {
+              "fact_id": "c141930015",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInInventories",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "87,579",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 87579000,
+              "signed_taxonomy_value": 87579000,
+              "column": 7,
+              "display_contribution": -87579000
+            },
+            {
+              "fact_id": "c141930016",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInInventories",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "38,627",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 38627000,
+              "signed_taxonomy_value": 38627000,
+              "column": 11,
+              "display_contribution": -38627000
+            }
+          ]
+        },
+        {
+          "label": "Other assets and current assets",
+          "values": [
+            {
+              "fact_id": "c141930017",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInOtherOperatingAssets",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "28",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 28000,
+              "signed_taxonomy_value": 28000,
+              "column": 3,
+              "display_contribution": -28000
+            },
+            {
+              "fact_id": "c141930018",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInOtherOperatingAssets",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "2,122",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 2122000,
+              "signed_taxonomy_value": -2122000,
+              "column": 7,
+              "display_contribution": 2122000
+            },
+            {
+              "fact_id": "c141930019",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInOtherOperatingAssets",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "2,137",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 2137000,
+              "signed_taxonomy_value": -2137000,
+              "column": 11,
+              "display_contribution": 2137000
+            }
+          ]
+        },
+        {
+          "label": "Accounts payable and accrued liabilities",
+          "values": [
+            {
+              "fact_id": "c141930020",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "1,734",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 1734000,
+              "signed_taxonomy_value": 1734000,
+              "column": 3,
+              "display_contribution": 1734000
+            },
+            {
+              "fact_id": "c141930021",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "390",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 390000,
+              "signed_taxonomy_value": 390000,
+              "column": 7,
+              "display_contribution": 390000
+            },
+            {
+              "fact_id": "c141930022",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccountsPayableAndAccruedLiabilities",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "18,288",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 18288000,
+              "signed_taxonomy_value": 18288000,
+              "column": 11,
+              "display_contribution": 18288000
+            }
+          ]
+        },
+        {
+          "label": "Federal and state income taxes payable",
+          "values": [
+            {
+              "fact_id": "c141930023",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccruedIncomeTaxesPayable",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "8,639",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 8639000,
+              "signed_taxonomy_value": -8639000,
+              "column": 3,
+              "display_contribution": -8639000
+            },
+            {
+              "fact_id": "c141930024",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccruedIncomeTaxesPayable",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "1,465",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 1465000,
+              "signed_taxonomy_value": 1465000,
+              "column": 7,
+              "display_contribution": 1465000
+            },
+            {
+              "fact_id": "c141930025",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "IncreaseDecreaseInAccruedIncomeTaxesPayable",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "2,497",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 2497000,
+              "signed_taxonomy_value": 2497000,
+              "column": 11,
+              "display_contribution": 2497000
+            }
+          ]
+        },
+        {
+          "label": "Net cash provided by (used in) operating activities",
+          "values": [
+            {
+              "fact_id": "c141930026",
+              "context_id": "d_2025-01-01_2025-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "NetCashProvidedByUsedInOperatingActivities",
+              "period_start": "2025-01-01",
+              "period_end": "2025-12-31",
+              "currency": "USD",
+              "literal": "9,137",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 9137000,
+              "signed_taxonomy_value": -9137000,
+              "column": 3,
+              "display_contribution": -9137000
+            },
+            {
+              "fact_id": "c141930027",
+              "context_id": "d_2024-01-01_2024-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "NetCashProvidedByUsedInOperatingActivities",
+              "period_start": "2024-01-01",
+              "period_end": "2024-12-31",
+              "currency": "USD",
+              "literal": "53,426",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "-",
+              "magnitude": 53426000,
+              "signed_taxonomy_value": -53426000,
+              "column": 7,
+              "display_contribution": -53426000
+            },
+            {
+              "fact_id": "c141930028",
+              "context_id": "d_2023-01-01_2023-12-31",
+              "unit_id": "USD",
+              "concept_namespace": "http://fasb.org/us-gaap/2025",
+              "concept": "NetCashProvidedByUsedInOperatingActivities",
+              "period_start": "2023-01-01",
+              "period_end": "2023-12-31",
+              "currency": "USD",
+              "literal": "45,389",
+              "scale": 3,
+              "format_namespace": "http://www.xbrl.org/inlineXBRL/transformation/2020-02-12",
+              "format": "num-dot-decimal",
+              "sign": "",
+              "magnitude": 45389000,
+              "signed_taxonomy_value": 45389000,
+              "column": 11,
+              "display_contribution": 45389000
+            }
+          ]
+        }
+      ],
+      "totals": [
+        {
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "component_sum": -9137000,
+          "operating_cash_flow": -9137000,
+          "residual": 0
+        },
+        {
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "component_sum": -53426000,
+          "operating_cash_flow": -53426000,
+          "residual": 0
+        },
+        {
+          "start": "2023-01-01",
+          "end": "2023-12-31",
+          "component_sum": 45389000,
+          "operating_cash_flow": 45389000,
+          "residual": 0
+        }
+      ],
+      "current_vs_prior_component_changes": [
+        {
+          "label": "Net earnings",
+          "change": -8376000
+        },
+        {
+          "label": "Provision for depreciation",
+          "change": 90000
+        },
+        {
+          "label": "Intangibles amortization",
+          "change": 0
+        },
+        {
+          "label": "Deferred income tax (benefit)",
+          "change": 12269000
+        },
+        {
+          "label": "Provision for doubtful notes and accounts receivable",
+          "change": 351000
+        },
+        {
+          "label": "(Gain) loss on disposal of property, plant and equipment",
+          "change": 13000
+        },
+        {
+          "label": "Loss on impairment of vendor deposit",
+          "change": 2701000
+        },
+        {
+          "label": "Noncash retirement plan expense",
+          "change": 104000
+        },
+        {
+          "label": "Gain on sale of subsidiary",
+          "change": -253000
+        },
+        {
+          "label": "Other",
+          "change": -626000
+        },
+        {
+          "label": "Accounts receivable, net",
+          "change": -9625000
+        },
+        {
+          "label": "Inventories",
+          "change": 58551000
+        },
+        {
+          "label": "Other assets and current assets",
+          "change": -2150000
+        },
+        {
+          "label": "Accounts payable and accrued liabilities",
+          "change": 1344000
+        },
+        {
+          "label": "Federal and state income taxes payable",
+          "change": -10104000
+        }
+      ],
+      "operating_cash_flow_change": 44289000,
+      "admitted": false,
+      "source_binding_established": true,
+      "semantic_component_nonoverlap_verified": false,
+      "launch_ready": false
+    },
+    "row_references": [
+      {
+        "label": "Net earnings",
+        "fact_ids": [
+          "c141929981",
+          "c141929982",
+          "c141929983"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:0",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929981",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Net earnings $ 33,084 $ 41,460 $ 34,559"
+        }
+      },
+      {
+        "label": "Provision for depreciation",
+        "fact_ids": [
+          "c141929984",
+          "c141929985",
+          "c141929986"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:1",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929984",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Provision for depreciation 3,621 3,531 4,372"
+        }
+      },
+      {
+        "label": "Intangibles amortization",
+        "fact_ids": [
+          "c141929987",
+          "c141929988",
+          "c141929989"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:2",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929987",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Intangibles amortization 1,515 1,515 1,635"
+        }
+      },
+      {
+        "label": "Deferred income tax (benefit)",
+        "fact_ids": [
+          "c141929990",
+          "c141929991",
+          "c141929992"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:3",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929990",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Deferred income tax (benefit) 7,741 (4,528 ) (1,190 )"
+        }
+      },
+      {
+        "label": "Provision for doubtful notes and accounts receivable",
+        "fact_ids": [
+          "c141929993",
+          "c141929994",
+          "c141929995"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:4",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929993",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Provision for doubtful notes and accounts receivable 66 (285 ) 285"
+        }
+      },
+      {
+        "label": "(Gain) loss on disposal of property, plant and equipment",
+        "fact_ids": [
+          "c141929996",
+          "c141929997",
+          "c141929998"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:5",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929996",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "(Gain) loss on disposal of property, plant and equipment 13 - (7 )"
+        }
+      },
+      {
+        "label": "Loss on impairment of vendor deposit",
+        "fact_ids": [
+          "c141929999",
+          "c141930000",
+          "c141930001"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:6",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141929999",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Loss on impairment of vendor deposit 2,701 - -"
+        }
+      },
+      {
+        "label": "Noncash retirement plan expense",
+        "fact_ids": [
+          "c141930002",
+          "c141930003",
+          "c141930004"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:7",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930002",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Noncash retirement plan expense 1,008 904 863"
+        }
+      },
+      {
+        "label": "Gain on sale of subsidiary",
+        "fact_ids": [
+          "c141930005",
+          "c141930006",
+          "c141930007"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:8",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930005",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Gain on sale of subsidiary (253 ) - (351 )"
+        }
+      },
+      {
+        "label": "Other",
+        "fact_ids": [
+          "c141930008",
+          "c141930009",
+          "c141930010"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:9",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930008",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Other 230 856 591"
+        }
+      },
+      {
+        "label": "Accounts receivable, net",
+        "fact_ids": [
+          "c141930011",
+          "c141930012",
+          "c141930013"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:10",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930011",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Accounts receivable, net (22,902 ) (13,277 ) 20,337"
+        }
+      },
+      {
+        "label": "Inventories",
+        "fact_ids": [
+          "c141930014",
+          "c141930015",
+          "c141930016"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:11",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930014",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Inventories (29,028 ) (87,579 ) (38,627 )"
+        }
+      },
+      {
+        "label": "Other assets and current assets",
+        "fact_ids": [
+          "c141930017",
+          "c141930018",
+          "c141930019"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:12",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930017",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Other assets and current assets (28 ) 2,122 2,137"
+        }
+      },
+      {
+        "label": "Accounts payable and accrued liabilities",
+        "fact_ids": [
+          "c141930020",
+          "c141930021",
+          "c141930022"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:13",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930020",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Accounts payable and accrued liabilities 1,734 390 18,288"
+        }
+      },
+      {
+        "label": "Federal and state income taxes payable",
+        "fact_ids": [
+          "c141930023",
+          "c141930024",
+          "c141930025"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:14",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930023",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Federal and state income taxes payable (8,639 ) 1,465 2,497"
+        }
+      },
+      {
+        "label": "Net cash provided by (used in) operating activities",
+        "fact_ids": [
+          "c141930026",
+          "c141930027",
+          "c141930028"
+        ],
+        "document_ref": {
+          "reference_id": "document:8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1:cash_table:14:row:15",
+          "title": "National Presto Industries 2025 annual cash-flow statement",
+          "provider": "SEC EDGAR",
+          "url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm#c141930026",
+          "published_at": "2026-03-13",
+          "section": "Consolidated annual statement of cash flows",
+          "content_hash": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+          "quote": "Net cash provided by (used in) operating activities (9,137 ) (53,426 ) 45,389"
+        }
+      }
+    ],
+    "source_sha256": "8d9ea0ecbc1619994be67fe36900878ae6c825ba99047373ad749f9caedab8a1",
+    "source_url": "https://www.sec.gov/Archives/edgar/data/80172/000143774926008214/npk20251231_10k.htm",
+    "filed_at": "2026-03-13",
+    "evaluated_at": "2026-10-25",
+    "source_binding_scope": "exact_supplied_document_bytes",
+    "independent_origin_verification": false,
+    "admitted": false,
+    "launch_ready": false
+  },
+  "external_requests": 0,
+  "model_calls": 0,
+  "answer_generation_executed": false,
+  "limitations": [
+    "Exact supplied-source consistency and row references, not independent origin authentication or semantic nonoverlap.",
+    "Historical retained source; the replay supplies fresh metadata for this consistency probe, not a fresh network availability check.",
+    "Not wired to ordinary ingestion, RetrievedEvidence, final answer admission, /ask or saved research.",
+    "No current ASML/ACHC reruns, independent usefulness assessment, live calls, spending, capture, old-ledger execution, benchmark/holdout access or activation."
+  ]
+}
