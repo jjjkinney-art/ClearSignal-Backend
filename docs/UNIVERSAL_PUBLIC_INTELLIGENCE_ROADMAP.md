@@ -8,6 +8,19 @@ This roadmap supersedes the live-data scope of the older static company-profile 
 
 ### P0 priority — universal company quality (user directive, October 9, 2026 Auckland)
 
+**25 October complete cash parser/reconstructor (offline implementation):** a
+separate shared layer retains full table/resource XML, reconstructs printed cash
+contributions separately from signed taxonomy values, and requires exact annual
+totals and component-change reconciliation. All sixteen reviewed numeric rows
+match the retained source map; generic synthetic row sets exercise USD/EUR/GBP
+without conversion. This layer is not wired to ingestion, evidence admission,
+citations or `/ask`. Exact arithmetic cannot detect deletion of offsetting rows;
+all results remain explicitly unadmitted pending original-source binding and a
+final claim/citation path. See `CASH_RECONCILIATION_PARSER_20261025.md` and its
+replay. Existing source parsers, answers, settings and live authority are unchanged.
+No spending, benchmark/holdout access or activation; independent usefulness,
+sustainable economics, valuation and launch gates remain open.
+
 **25 October complete cash-reconciliation source review (offline):** fifteen
 printed annual components reconcile exactly for all three retained NPK years.
 The 2025 cash outflow improved by $44.289m; a $58.551m reduction in inventory cash
