@@ -46,6 +46,21 @@ class OfflineAccounting:
         """Refuse further work even when durable cleanup storage is unavailable."""
         self._locally_sealed = True
 
+    def _case_reason(self, db, case, now):
+        """Called inside each operation's write transaction, not a precheck."""
+        if not getattr(self, '_lifecycle_required', False):
+            return ''  # isolated component rehearsals without a run lifecycle
+        row = db.execute("SELECT started FROM case_lifecycle WHERE case_id=? AND status='running'", (case,)).fetchone()
+        if not row:
+            return 'case_not_active'
+        if not math.isfinite(now) or now < row[0] or now < self.started:
+            return 'clock_drift'
+        if now - self.started >= self._policy['wall_seconds']:
+            return 'deadline'
+        if now - row[0] >= (30 if case.endswith(':core_thesis') else 20):
+            return 'case_deadline'
+        return ''
+
     def claim(self, case, stage, route):
         """Record a simulated attempt atomically; returned IDs are not capabilities."""
         if self._locally_sealed:
@@ -53,6 +68,7 @@ class OfflineAccounting:
         with sqlite3.connect(self.path, timeout=10) as db:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
+            reason = reason or self._case_reason(db, case, self.clock())
             limits = self._policy['per_case'].get(case, {})
             stage_cap = self._policy['per_stage'].get(case, {}).get(stage, {}).get(route, 0)
             attempts = db.execute('SELECT case_id,stage,route,outcome FROM attempts').fetchall()
@@ -92,7 +108,9 @@ class OfflineAccounting:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
             now = self.clock()
-            pending = db.execute('SELECT outcome FROM attempts WHERE id=?', (attempt,)).fetchone()
+            pending = db.execute('SELECT outcome,case_id FROM attempts WHERE id=?', (attempt,)).fetchone()
+            if pending:
+                reason = reason or self._case_reason(db, pending[1], now)
             duplicate = db.execute('SELECT 1 FROM fixture_dispatches WHERE attempt_id=?', (attempt,)).fetchone()
             latest, = db.execute('SELECT MAX(dispatched_at) FROM fixture_dispatches').fetchone()
             recent, = db.execute('SELECT COUNT(*) FROM fixture_dispatches WHERE dispatched_at>?', (now-1,)).fetchone()
@@ -122,16 +140,18 @@ class OfflineAccounting:
             raise AccountingError('invalid outcome')
         with sqlite3.connect(self.path, timeout=10) as db:
             db.execute('BEGIN IMMEDIATE')
-            pending = db.execute('SELECT outcome FROM attempts WHERE id=?', (attempt,)).fetchone()
+            pending = db.execute('SELECT outcome,case_id FROM attempts WHERE id=?', (attempt,)).fetchone()
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
-            expired = self.clock() - self.started >= self._policy['wall_seconds']
+            now = self.clock()
+            case_reason = self._case_reason(db, pending[1], now) if pending else ''
+            expired = now - self.started >= self._policy['wall_seconds'] or bool(case_reason)
             if not pending or pending[0] != 'pending':
                 reason = halt or 'invalid_settlement'
                 db.execute('UPDATE state SET halt=?', (reason,))
                 invalid = True
             else:
                 invalid = False
-                reason = halt or ('deadline' if expired else '' if succeeded else 'attempt_failure')
+                reason = halt or case_reason or ('deadline' if expired else '' if succeeded else 'attempt_failure')
                 db.execute('UPDATE state SET halt=?', (reason,))
                 outcome = 'late' if halt or expired else 'success' if succeeded else 'failure'
                 db.execute('UPDATE attempts SET outcome=? WHERE id=?', (outcome, attempt))
@@ -165,10 +185,12 @@ class OfflineAccounting:
         with sqlite3.connect(self.path, timeout=10) as db:
             db.execute('BEGIN IMMEDIATE')
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
-            pending = db.execute('SELECT outcome FROM attempts WHERE id=?', (attempt,)).fetchone()
+            pending = db.execute('SELECT outcome,case_id FROM attempts WHERE id=?', (attempt,)).fetchone()
             total = db.execute('SELECT COALESCE(SUM(length(body)),0) FROM bodies').fetchone()[0]
             duplicate = db.execute('SELECT 1 FROM bodies WHERE attempt_id=?', (attempt,)).fetchone()
             reason = halt or reason
+            if pending:
+                reason = reason or self._case_reason(db, pending[1], self.clock())
             if not reason:
                 if self.clock() - self.started >= self._policy['wall_seconds']:
                     reason = 'deadline'

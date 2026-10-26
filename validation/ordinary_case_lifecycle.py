@@ -1,7 +1,7 @@
 """Offline case state machine; no execution or network authority.
 
-Used with a new rehearsal ledger. This does not yet wrap every transport seam;
-claim/dispatch/retention deadlines still require executor integration.
+Used with a new rehearsal ledger. Accounting operations enforce the attached
+lifecycle inside their write transactions. No native executor is supplied.
 """
 import sqlite3
 from .ordinary_pilot_accounting import AccountingError
@@ -11,6 +11,7 @@ from .ordinary_pilot_contract import CASES
 class OfflineCaseLifecycle:
     def __init__(self, book):
         self.book = book
+        book._lifecycle_required = True
         with sqlite3.connect(book.path) as db:
             db.execute('CREATE TABLE case_lifecycle (position INTEGER PRIMARY KEY, '
                        'case_id TEXT UNIQUE, status TEXT, started REAL)')
