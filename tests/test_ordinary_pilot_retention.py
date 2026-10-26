@@ -26,7 +26,8 @@ def test_complete_bytes_and_hash_are_durable(tmp_path):
 
 
 @pytest.mark.parametrize('body', [b'FIXTURE_SECRET_DO_NOT_RETAIN',
-    b'{"value":"FIXTURE_SECRET_DO_NOT_RETAIN"}', b'\xff', b'x' * 16777217])
+    b'{"value":"FIXTURE_SECRET_DO_NOT_RETAIN"}', b'\xff', b'x' * 16777217],
+    ids=['raw-secret', 'json-secret', 'invalid-utf8', 'oversized-body'])
 def test_rejected_body_never_stored(tmp_path, body):
     b = OfflineAccounting(tmp_path / 'offline.db')
     a = attempt(b)
