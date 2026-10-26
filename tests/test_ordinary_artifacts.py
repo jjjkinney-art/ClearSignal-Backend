@@ -90,3 +90,21 @@ def test_duplicate_answer_cannot_overwrite_original(tmp_path):
     import json
     assert json.loads(raw) == original
     assert book.summary()['halt'] == 'answer_retention_failure'
+
+
+@pytest.mark.parametrize('mutation', ['stage', 'route', 'stage_quota', 'unrun_attempt', 'clock'])
+def test_terminal_verifier_independently_refuses_scope_and_clock_corruption(tmp_path, mutation):
+    book, _ = finished(tmp_path)
+    with sqlite3.connect(book.path) as db:
+        if mutation == 'stage':
+            db.execute("UPDATE attempts SET stage='unapproved'")
+        elif mutation == 'route':
+            db.execute("UPDATE attempts SET route='sec/document'")
+        elif mutation == 'stage_quota':
+            db.execute("INSERT INTO attempts SELECT 'extra',case_id,stage,route,'failure' FROM attempts")
+        elif mutation == 'unrun_attempt':
+            db.execute("INSERT INTO attempts VALUES ('extra',?,'evidence.sec_metrics','sec/facts','pending')", (CASES[1],))
+        else:
+            db.execute('UPDATE fixture_dispatches SET dispatched_at=?', (book.started - 1,))
+    with pytest.raises(AccountingError):
+        verify_terminal_snapshot(book, forbidden_values=SECRET)

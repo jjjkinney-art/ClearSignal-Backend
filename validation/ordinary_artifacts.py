@@ -7,6 +7,8 @@ import hashlib
 import json
 from pathlib import Path
 import sqlite3
+import math
+from collections import Counter
 
 from .ordinary_pilot_accounting import AccountingError
 from .ordinary_pilot_contract import CASES, quota_contract
@@ -68,7 +70,8 @@ def verify_terminal_snapshot(book, *, forbidden_values):
                 'complete', 'partial_gap', 'halted', 'not_run_after_halt'} for c, s in cases):
             raise AccountingError('invalid terminal denominator')
         attempts = db.execute('SELECT id,case_id,stage,route,outcome FROM attempts ORDER BY rowid').fetchall()
-        dispatches = {r[0] for r in db.execute('SELECT attempt_id FROM fixture_dispatches')}
+        dispatch_rows = db.execute('SELECT attempt_id,dispatched_at FROM fixture_dispatches ORDER BY rowid').fetchall()
+        dispatches = {r[0] for r in dispatch_rows}
         bodies = {}
         for identifier, sha, raw in db.execute('SELECT attempt_id,sha256,body FROM bodies'):
             if hashlib.sha256(raw).hexdigest() != sha:
@@ -86,23 +89,48 @@ def verify_terminal_snapshot(book, *, forbidden_values):
         identifiers = {a[0] for a in attempts}
         if dispatches - identifiers or set(bodies) - identifiers:
             raise AccountingError('orphan transport record')
+        case_counts, route_counts, stage_counts = Counter(), Counter(), Counter()
         for identifier, case, stage, route, outcome in attempts:
             if case not in CASES or outcome not in {'success', 'failure', 'late', 'pending'}:
                 raise AccountingError('invalid attempt record')
+            cap = policy['per_stage'][case].get(stage, {}).get(route, 0)
+            if not cap or not policy['per_case'][case].get(route, 0):
+                raise AccountingError('attempt outside authorized fixture scope')
+            case_counts[case] += 1
+            route_counts[case, route] += 1
+            stage_counts[case, stage, route] += 1
+            if (case_counts[case] > policy['per_case'][case]['sec']
+                    or route_counts[case, route] > policy['per_case'][case][route]
+                    or stage_counts[case, stage, route] > cap):
+                raise AccountingError('fixture quota exceeded')
+            if statuses[case] == 'not_run_after_halt':
+                raise AccountingError('unrun case has attempt')
             if statuses[case] in {'complete', 'partial_gap'} and outcome != 'success':
                 raise AccountingError('finished case has unsuccessful attempt')
             if outcome == 'success' and (identifier not in dispatches or identifier not in bodies):
                 raise AccountingError('successful attempt missing dispatch or body')
             if outcome == 'pending' and not halt:
                 raise AccountingError('unresolved attempt without halt')
+        times = []
+        for _, timestamp in dispatch_rows:
+            if (type(timestamp) not in (int, float) or not math.isfinite(timestamp)
+                    or timestamp < book.started or timestamp - book.started >= policy['wall_seconds']
+                    or (times and timestamp < times[-1])):
+                raise AccountingError('invalid fixture dispatch clock')
+            if sum(t > timestamp - 1 for t in times) >= 10:
+                raise AccountingError('fixture dispatch rate exceeded')
+            times.append(timestamp)
         answers = {}
         exists = db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='retained_answers'").fetchone()
         for case, sha, raw in db.execute('SELECT case_id,sha256,payload FROM retained_answers') if exists else ():
             if case not in CASES or hashlib.sha256(raw).hexdigest() != sha:
                 raise AccountingError('answer hash mismatch')
+            if statuses[case] == 'not_run_after_halt' or len(raw) > 4 * 1024 * 1024:
+                raise AccountingError('invalid retained answer')
             payload = json.loads(raw)
             reject_runtime_values(payload, forbidden_values, raw=raw)
-            if payload.get('company') != case.split(':')[0]:
+            if (type(payload) is not dict or payload.get('company') != case.split(':')[0]
+                    or type(payload.get('answer')) is not dict):
                 raise AccountingError('answer issuer mismatch')
             answers[case] = {'sha256': sha, 'response': payload}
         for case, status in cases:
