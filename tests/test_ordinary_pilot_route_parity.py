@@ -143,6 +143,7 @@ def test_normal_route_matches_side_effect_free_composition(isolated_pipeline, mo
         for book in books:
             expected = (6 if case['question_id'] == 'core_thesis' else 2) if has_evidence == 'wire-filings' else 1
             assert book.summary()['outcomes'] == {'success': expected}
+            assert book.summary()['fixture_dispatch_count'] == expected
             assert not book.summary()['halt']
             if has_evidence == 'wire-filings':
                 with sqlite3.connect(book.path) as db:

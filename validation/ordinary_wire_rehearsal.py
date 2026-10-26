@@ -18,7 +18,8 @@ CIKS = dict(NPK='0000080172', GOOGL='0001652044', INGR='0001046257',
 
 
 class _FixtureOwner:
-    def __init__(self, ticker, scenario):
+    def __init__(self, ticker, scenario, book, attempt):
+        self.book, self.attempt = book, attempt
         self.scenario = 'monitoring_financial_inputs' if scenario == 'reported-facts' else scenario
         self.monitoring = scenario == 'reported-facts'
         self.case = {'identity': {'ticker': ticker, 'cik': CIKS[ticker],
@@ -29,6 +30,7 @@ class _FixtureOwner:
     def once(self, scenarios):
         with self.lock:
             if scenarios == {'wire_connect_failure'}:
+                self.book.claim_fixture_dispatch(self.attempt)
                 self.connects += 1
             if self.scenario not in scenarios or self.scenario in self.used:
                 return False
@@ -47,8 +49,8 @@ def rehearse_sec(book, case, *, stage, route, scenario='happy'):
         raise AccountingError('unsupported rehearsal')
     from .pilot_live import OwnedHTTPTransport
     from ._pilot_wire_fixtures import SyntheticNetworkBackend
-    owner = _FixtureOwner(case.split(':')[0], scenario)
     attempt = book.claim(case, stage, route)
+    owner = _FixtureOwner(case.split(':')[0], scenario, book, attempt)
     wire = None
     try:
         wire = OwnedHTTPTransport()

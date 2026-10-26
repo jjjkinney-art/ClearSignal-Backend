@@ -6,6 +6,7 @@ late, never as publishable answers. Retention and physical fencing remain separa
 """
 import os
 import hashlib
+import math
 from copy import deepcopy
 import sqlite3
 import time
@@ -31,6 +32,7 @@ class OfflineAccounting:
                 CREATE TABLE state (halt TEXT NOT NULL);
                 INSERT INTO state VALUES ('');
                 CREATE TABLE cleanup_failures (code TEXT NOT NULL);
+                CREATE TABLE fixture_dispatches (attempt_id TEXT PRIMARY KEY, dispatched_at REAL NOT NULL);
                 CREATE TABLE bodies (attempt_id TEXT PRIMARY KEY, sha256 TEXT, body BLOB NOT NULL);
                 CREATE TABLE attempts (id TEXT PRIMARY KEY, case_id TEXT, stage TEXT,
                     route TEXT, outcome TEXT NOT NULL DEFAULT 'pending');
@@ -77,6 +79,40 @@ class OfflineAccounting:
         if reason:
             raise AccountingError(reason)
         return attempt
+
+    def claim_fixture_dispatch(self, attempt):
+        """One-shot accounting at the fake connection boundary; not a live grant.
+
+        Rate excess halts rather than sleeping/retrying. Failed connections stay
+        consumed. A native executor must use its own approved request gate.
+        """
+        if self._locally_sealed:
+            raise AccountingError('locally sealed')
+        with sqlite3.connect(self.path, timeout=10) as db:
+            db.execute('BEGIN IMMEDIATE')
+            reason = db.execute('SELECT halt FROM state').fetchone()[0]
+            now = self.clock()
+            pending = db.execute('SELECT outcome FROM attempts WHERE id=?', (attempt,)).fetchone()
+            duplicate = db.execute('SELECT 1 FROM fixture_dispatches WHERE attempt_id=?', (attempt,)).fetchone()
+            latest, = db.execute('SELECT MAX(dispatched_at) FROM fixture_dispatches').fetchone()
+            recent, = db.execute('SELECT COUNT(*) FROM fixture_dispatches WHERE dispatched_at>?', (now-1,)).fetchone()
+            if not reason:
+                if not math.isfinite(now) or now < self.started or (latest is not None and now < latest):
+                    reason = 'clock_drift'
+                elif now - self.started >= self._policy['wall_seconds']:
+                    reason = 'deadline'
+                elif self._locally_sealed:
+                    reason = 'locally_sealed'
+                elif not pending or pending[0] != 'pending' or duplicate:
+                    reason = 'unclaimed_or_consumed_dispatch'
+                elif recent >= 10:
+                    reason = 'dispatch_rate'
+            if reason:
+                db.execute('UPDATE state SET halt=?', (reason,))
+            else:
+                db.execute('INSERT INTO fixture_dispatches VALUES (?,?)', (attempt, now))
+        if reason:
+            raise AccountingError(reason)
 
     def settle(self, attempt, *, succeeded):
         if type(succeeded) is not bool:
@@ -164,4 +200,5 @@ class OfflineAccounting:
             rows = db.execute('SELECT outcome,COUNT(*) FROM attempts GROUP BY outcome').fetchall()
             return {'halt': db.execute('SELECT halt FROM state').fetchone()[0],
                     'outcomes': dict(rows), 'execution_authorized': False,
+                    'fixture_dispatch_count': db.execute('SELECT COUNT(*) FROM fixture_dispatches').fetchone()[0],
                     'cleanup_failures': [r[0] for r in db.execute('SELECT code FROM cleanup_failures ORDER BY rowid')]}
