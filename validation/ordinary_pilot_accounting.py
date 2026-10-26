@@ -23,12 +23,14 @@ class OfflineAccounting:
         self.path, self.clock = str(path), clock
         self.started = clock()
         self._policy = quota_contract()
+        self._locally_sealed = False
         fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         os.close(fd)
         with sqlite3.connect(self.path) as db:
             db.executescript('''
                 CREATE TABLE state (halt TEXT NOT NULL);
                 INSERT INTO state VALUES ('');
+                CREATE TABLE cleanup_failures (code TEXT NOT NULL);
                 CREATE TABLE bodies (attempt_id TEXT PRIMARY KEY, sha256 TEXT, body BLOB NOT NULL);
                 CREATE TABLE attempts (id TEXT PRIMARY KEY, case_id TEXT, stage TEXT,
                     route TEXT, outcome TEXT NOT NULL DEFAULT 'pending');
@@ -38,8 +40,14 @@ class OfflineAccounting:
     def policy(self):
         return deepcopy(self._policy)
 
+    def seal_local(self):
+        """Refuse further work even when durable cleanup storage is unavailable."""
+        self._locally_sealed = True
+
     def claim(self, case, stage, route):
         """Record a simulated attempt atomically; returned IDs are not capabilities."""
+        if self._locally_sealed:
+            raise AccountingError('locally sealed')
         with sqlite3.connect(self.path, timeout=10) as db:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
@@ -101,6 +109,8 @@ class OfflineAccounting:
         media, provenance and runtime-secret binding must still be enforced by
         the future executor. No caller-controlled receipt fields are accepted.
         """
+        if self._locally_sealed:
+            raise AccountingError('locally sealed')
         from .pilot_policy import reject_runtime_values
         from .capture_budget import BudgetError
         reason = ''
@@ -140,8 +150,18 @@ class OfflineAccounting:
         return {'attempt_id': attempt, 'body_sha256': sha, 'body_bytes': len(body),
                 'admitted_evidence': False, 'execution_authorized': False}
 
+    def record_cleanup_failure(self, code):
+        """Record safe codes only; never replace the first durable halt reason."""
+        if code not in {'transport_close', 'settlement'}:
+            raise AccountingError('invalid cleanup code')
+        with sqlite3.connect(self.path, timeout=10) as db:
+            db.execute('BEGIN IMMEDIATE')
+            db.execute('INSERT INTO cleanup_failures VALUES (?)', (code,))
+            db.execute("UPDATE state SET halt=CASE WHEN halt='' THEN 'cleanup_failure' ELSE halt END")
+
     def summary(self):
         with sqlite3.connect(self.path) as db:
             rows = db.execute('SELECT outcome,COUNT(*) FROM attempts GROUP BY outcome').fetchall()
             return {'halt': db.execute('SELECT halt FROM state').fetchone()[0],
-                    'outcomes': dict(rows), 'execution_authorized': False}
+                    'outcomes': dict(rows), 'execution_authorized': False,
+                    'cleanup_failures': [r[0] for r in db.execute('SELECT code FROM cleanup_failures ORDER BY rowid')]}

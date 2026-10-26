@@ -73,3 +73,53 @@ def test_wire_fault_never_retries_connection(tmp_path, monkeypatch, scenario):
     with pytest.raises(TransportFailure):
         rehearse_facts(book, CASES[0], scenario=scenario)
     assert len(calls) == 1
+
+
+def test_close_failure_does_not_mask_original_transport_fault(tmp_path, monkeypatch):
+    from validation.pilot_live import OwnedHTTPTransport
+    original_close = OwnedHTTPTransport.close
+    def failing_close(self):
+        original_close(self)
+        raise RuntimeError('invented cleanup text must not enter ledger')
+    monkeypatch.setattr(OwnedHTTPTransport, 'close', failing_close)
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    with pytest.raises(TransportFailure) as caught:
+        rehearse_facts(book, CASES[0], scenario='wire_read_failure')
+    assert caught.value.code == 'read_error'
+    assert caught.value.offline_cleanup_codes == ('transport_close',)
+    assert not caught.value.offline_cleanup_recording_failed
+    summary = book.summary()
+    assert summary['halt'] == 'attempt_failure'
+    assert summary['outcomes'] == {'failure': 1}
+    assert summary['cleanup_failures'] == ['transport_close']
+    assert 'invented cleanup text' not in str(summary)
+
+
+def test_settlement_cleanup_failure_is_durable_and_original_survives(tmp_path, monkeypatch):
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    def fail_settle(*args, **kwargs):
+        raise RuntimeError('invented settlement failure')
+    monkeypatch.setattr(book, 'settle', fail_settle)
+    with pytest.raises(TransportFailure) as caught:
+        rehearse_facts(book, CASES[0], scenario='wire_redirect')
+    assert caught.value.code == 'http_redirect'
+    assert caught.value.offline_cleanup_codes == ('settlement',)
+    assert book.summary()['halt'] == 'cleanup_failure'
+    assert book.summary()['outcomes'] == {'pending': 1}
+    with pytest.raises(AccountingError):
+        rehearse_facts(book, CASES[0])
+
+
+def test_unavailable_cleanup_storage_does_not_hide_first_failure(tmp_path, monkeypatch):
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    def unavailable(*args, **kwargs):
+        raise OSError('invented disk unavailable')
+    monkeypatch.setattr(book, 'settle', unavailable)
+    monkeypatch.setattr(book, 'record_cleanup_failure', unavailable)
+    with pytest.raises(TransportFailure) as caught:
+        rehearse_facts(book, CASES[0], scenario='wire_connect_failure')
+    assert caught.value.code == 'connect_error'
+    assert caught.value.offline_cleanup_recording_failed is True
+    assert caught.value.offline_cleanup_codes == ('settlement',)
+    with pytest.raises(AccountingError, match='locally sealed'):
+        rehearse_facts(book, CASES[2])

@@ -51,12 +51,28 @@ def rehearse_facts(book, case, *, scenario='happy'):
             raise AccountingError('fixture media mismatch')
         receipt = book.retain_fixture_body(attempt, body, forbidden_values=SECRET_CANARIES)
         wire.close()
-    except BaseException:
+    except BaseException as primary:
+        book.seal_local()
+        cleanup_codes = []
         try:
             if wire is not None:
                 wire.close()
-        finally:
+        except BaseException:
+            cleanup_codes.append('transport_close')
+        try:
             book.settle(attempt, succeeded=False)
+        except BaseException:
+            cleanup_codes.append('settlement')
+        recording_failed = False
+        for code in cleanup_codes:
+            try:
+                book.record_cleanup_failure(code)
+            except BaseException:
+                recording_failed = True
+        # Safe typed metadata survives even if storage is unavailable. The
+        # original exception/code remains primary; never return a response.
+        primary.offline_cleanup_codes = tuple(cleanup_codes)
+        primary.offline_cleanup_recording_failed = recording_failed
         raise
     book.settle(attempt, succeeded=True)
     if book.summary()['halt']:
