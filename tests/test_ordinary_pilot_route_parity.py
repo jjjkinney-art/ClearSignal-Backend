@@ -25,7 +25,7 @@ def drain_workers():
 
 
 @pytest.mark.parametrize('case', CASES, ids=lambda c: c['case_id'])
-@pytest.mark.parametrize('has_evidence', [False, True, 'wire'], ids=['source-gap', 'reported-comparisons', 'bounded-facts-gap'])
+@pytest.mark.parametrize('has_evidence', [False, True, 'wire', 'wire-positive'], ids=['source-gap', 'reported-comparisons', 'bounded-facts-gap', 'bounded-reported-facts'])
 def test_normal_route_matches_side_effect_free_composition(isolated_pipeline, monkeypatch, tmp_path, case, has_evidence):
     from app.services import issuer_identity, verified_sec_metric_service
     from app.config import settings
@@ -38,7 +38,7 @@ def test_normal_route_matches_side_effect_free_composition(isolated_pipeline, mo
     items = pair(ticker=ticker, cik=cik) if has_evidence is True else []
     monkeypatch.setattr(verified_sec_metric_service, 'fetch_verified_metric_evidence', lambda *a, **k: items)
     books = None
-    if has_evidence == 'wire':
+    if has_evidence in ('wire', 'wire-positive'):
         import httpx
         import sqlite3
         from app.providers import sec_client
@@ -51,7 +51,8 @@ def test_normal_route_matches_side_effect_free_composition(isolated_pipeline, mo
         def fixture_get(url, **kwargs):
             assert url == f'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
             book = active_book[0]
-            result = rehearse_facts(book, case['case_id'])
+            result = rehearse_facts(book, case['case_id'],
+                                    scenario='reported-facts' if has_evidence == 'wire-positive' else 'happy')
             with sqlite3.connect(book.path) as db:
                 body = db.execute('SELECT body FROM bodies WHERE attempt_id=?',
                                   (result['receipt']['attempt_id'],)).fetchone()[0]
@@ -102,3 +103,11 @@ def test_normal_route_matches_side_effect_free_composition(isolated_pipeline, mo
         assert routed.get(key) is None
     if has_evidence is True and case['question_id'] == 'core_thesis':
         assert len(normal.answer['source_answer']['claims']) == 2
+    if has_evidence == 'wire-positive' and case['question_id'] == 'core_thesis':
+        claims = normal.answer['source_answer']['claims']
+        assert len(claims) == 2
+        assert any('revenue' in c['claim'].lower() for c in claims)
+        assert any('operating income' in c['claim'].lower() for c in claims)
+        refs = {r['id'] for r in normal.answer['evidence_references']}
+        assert all(c['reference_id'] in refs for c in claims)
+        assert all(c['claim'] in normal.answer['investment_thesis']['direct_answer'] for c in claims)

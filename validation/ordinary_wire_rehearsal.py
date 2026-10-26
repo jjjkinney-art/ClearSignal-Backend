@@ -16,7 +16,8 @@ CIKS = dict(NPK='0000080172', GOOGL='0001652044', INGR='0001046257',
 
 class _FixtureOwner:
     def __init__(self, ticker, scenario):
-        self.scenario, self.monitoring = scenario, False
+        self.scenario = 'monitoring_financial_inputs' if scenario == 'reported-facts' else scenario
+        self.monitoring = scenario == 'reported-facts'
         self.case = {'identity': {'ticker': ticker, 'cik': CIKS[ticker],
                                  'company_name': 'Invented rehearsal company'}}
         self.identities = [self.case['identity']]
@@ -35,7 +36,7 @@ class _FixtureOwner:
 def rehearse_facts(book, case, *, scenario='happy'):
     """One invented facts response over real HTTPX/httpcore parsing; no sockets."""
     if case not in CASES or scenario not in {
-            'happy', 'wire_redirect', 'wire_read_failure', 'wire_connect_failure'}:
+            'happy', 'reported-facts', 'wire_redirect', 'wire_read_failure', 'wire_connect_failure'}:
         raise AccountingError('unsupported rehearsal')
     from .pilot_live import OwnedHTTPTransport
     from ._pilot_wire_fixtures import SyntheticNetworkBackend
