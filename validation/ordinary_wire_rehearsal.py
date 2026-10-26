@@ -51,6 +51,11 @@ def rehearse_facts(book, case, *, scenario='happy'):
             raise AccountingError('fixture media mismatch')
         receipt = book.retain_fixture_body(attempt, body, forbidden_values=SECRET_CANARIES)
         wire.close()
+        book.settle(attempt, succeeded=True)
+        if book.summary()['halt']:
+            raise AccountingError('rehearsal halted; response not publishable')
+        result = {'receipt': receipt, 'simulated_connections': owner.connects,
+                  'external_requests': 0, 'execution_authorized': False}
     except BaseException as primary:
         book.seal_local()
         cleanup_codes = []
@@ -74,8 +79,4 @@ def rehearse_facts(book, case, *, scenario='happy'):
         primary.offline_cleanup_codes = tuple(cleanup_codes)
         primary.offline_cleanup_recording_failed = recording_failed
         raise
-    book.settle(attempt, succeeded=True)
-    if book.summary()['halt']:
-        raise AccountingError('rehearsal halted; response not publishable')
-    return {'receipt': receipt, 'simulated_connections': owner.connects,
-            'external_requests': 0, 'execution_authorized': False}
+    return result

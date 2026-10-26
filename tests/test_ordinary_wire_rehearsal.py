@@ -123,3 +123,57 @@ def test_unavailable_cleanup_storage_does_not_hide_first_failure(tmp_path, monke
     assert caught.value.offline_cleanup_codes == ('settlement',)
     with pytest.raises(AccountingError, match='locally sealed'):
         rehearse_facts(book, CASES[2])
+
+
+@pytest.mark.parametrize('seam', ['retention', 'settle-before-commit', 'settle-after-commit', 'summary', 'close'])
+def test_success_path_io_failure_never_returns_and_seals(tmp_path, monkeypatch, seam):
+    from validation.pilot_live import OwnedHTTPTransport
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    real_settle = book.settle
+    real_summary = book.summary
+    def fail(*args, **kwargs):
+        raise OSError('invented primary I/O failure')
+    if seam == 'retention':
+        monkeypatch.setattr(book, 'retain_fixture_body', fail)
+    elif seam.startswith('settle'):
+        def settle(identifier, *, succeeded):
+            if succeeded:
+                if seam == 'settle-after-commit':
+                    real_settle(identifier, succeeded=True)
+                fail()
+            return real_settle(identifier, succeeded=False)
+        monkeypatch.setattr(book, 'settle', settle)
+    elif seam == 'summary':
+        monkeypatch.setattr(book, 'summary', fail)
+    else:
+        real_close = OwnedHTTPTransport.close
+        def close(wire):
+            real_close(wire)
+            fail()
+        monkeypatch.setattr(OwnedHTTPTransport, 'close', close)
+    with pytest.raises(OSError, match='invented primary I/O failure') as caught:
+        rehearse_facts(book, CASES[0])
+    assert hasattr(caught.value, 'offline_cleanup_codes')
+    # No returned receipt constitutes publication; attempts/bodies remain audit
+    # records even if success committed before an acknowledgement was lost.
+    with pytest.raises(AccountingError, match='locally sealed'):
+        rehearse_facts(book, CASES[2])
+    assert real_summary()['halt']
+    assert real_summary()['outcomes'].get('pending', 0) == 0
+
+
+def test_all_success_cleanup_storage_failures_keep_primary_and_seal(tmp_path, monkeypatch):
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    def primary(*args, **kwargs):
+        raise OSError('invented primary retention error')
+    def cleanup(*args, **kwargs):
+        raise OSError('invented cleanup storage error')
+    monkeypatch.setattr(book, 'retain_fixture_body', primary)
+    monkeypatch.setattr(book, 'settle', cleanup)
+    monkeypatch.setattr(book, 'record_cleanup_failure', cleanup)
+    with pytest.raises(OSError, match='invented primary retention error') as caught:
+        rehearse_facts(book, CASES[0])
+    assert caught.value.offline_cleanup_codes == ('settlement',)
+    assert caught.value.offline_cleanup_recording_failed
+    with pytest.raises(AccountingError, match='locally sealed'):
+        rehearse_facts(book, CASES[2])
