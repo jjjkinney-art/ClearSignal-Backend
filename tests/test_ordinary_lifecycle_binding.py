@@ -104,3 +104,15 @@ def test_case_completion_and_new_claim_are_serialized(tmp_path):
     report = run.finalize()
     assert report['halt']
     assert report['cases'][0]['status'] == ('halted' if claimed else 'partial_gap')
+
+
+def test_sealed_worker_settlement_is_late_before_terminal_finalization(tmp_path):
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    attempt = book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts')
+    book.seal_local()
+    book.settle(attempt, succeeded=True)
+    assert book.summary()['outcomes'] == {'late': 1}
+    assert book.summary()['halt'] == 'locally_sealed'
+    result = lifecycle.finalize()
+    assert result['cases'][0]['status'] == 'halted'
