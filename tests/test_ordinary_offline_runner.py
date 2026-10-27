@@ -39,3 +39,22 @@ def test_reuse_refused_and_fault_validation_precedes_file_creation(tmp_path):
     assert not path.exists()
     run_fixture_cohort(path)
     with pytest.raises(FileExistsError): run_fixture_cohort(path)
+
+
+@pytest.mark.parametrize('failure', ['swallowed', 'undrained'])
+def test_coordinator_does_not_retain_answer_after_halt_or_undrained_work(tmp_path, failure):
+    import sqlite3
+    from validation.ordinary_coordinator import run_offline_cases
+    from validation.ordinary_pilot_accounting import OfflineAccounting
+    book = OfflineAccounting(tmp_path / 'fresh.db')
+    def invoke(case):
+        if failure == 'swallowed':
+            attempt = book.claim(case, 'evidence.sec_metrics', 'sec/facts')
+            book.settle(attempt, succeeded=False)
+        return {'company': case.split(':')[0], 'answer': {'text': 'not publishable'}}
+    result = run_offline_cases(book, invoke, lambda: failure == 'undrained',
+                               forbidden_values=('invented-secret',))
+    assert result['failure_class'] == 'AccountingError'
+    assert [r['status'] for r in result['lifecycle']['cases']] == ['halted'] + ['not_run_after_halt'] * 11
+    with sqlite3.connect(book.path) as db:
+        assert not db.execute("SELECT 1 FROM sqlite_master WHERE name='retained_answers'").fetchone()
