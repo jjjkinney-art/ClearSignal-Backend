@@ -126,3 +126,28 @@ def test_sealed_failed_settlement_preserves_first_failure(tmp_path):
     assert book.summary()['outcomes'] == {'failure': 1}
     assert book.summary()['halt'] == 'attempt_failure'
     assert lifecycle.finalize()['cases'][0]['status'] == 'halted'
+
+
+def test_seal_waits_for_inflight_settlement_before_returning(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event, current_thread
+    entered, release, sealed = Event(), Event(), Event()
+    def clock():
+        if current_thread().name.startswith('ThreadPoolExecutor'):
+            entered.set()
+            assert release.wait(3)
+        return 0.0
+    book = OfflineAccounting(tmp_path / 'offline.db', clock=clock)
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    attempt = book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts')
+    def seal():
+        book.seal_local(); sealed.set()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        settling = pool.submit(book.settle, attempt, succeeded=True)
+        assert entered.wait(3)
+        sealing = pool.submit(seal)
+        assert not sealed.wait(0.05)
+        release.set()
+        settling.result(timeout=3); sealing.result(timeout=3)
+    assert sealed.is_set()
+    assert book.summary()['outcomes'] == {'success': 1}

@@ -11,6 +11,7 @@ import re
 from copy import deepcopy
 import sqlite3
 import time
+from threading import Lock
 from uuid import uuid4
 
 from .ordinary_pilot_contract import quota_contract
@@ -26,6 +27,7 @@ class OfflineAccounting:
         self.started = clock()
         self._policy = quota_contract()
         self._locally_sealed = False
+        self._seal_lock = Lock()
         fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         os.close(fd)
         with sqlite3.connect(self.path) as db:
@@ -47,7 +49,8 @@ class OfflineAccounting:
 
     def seal_local(self):
         """Refuse further work even when durable cleanup storage is unavailable."""
-        self._locally_sealed = True
+        with self._seal_lock:
+            self._locally_sealed = True
 
     def _case_reason(self, db, case, now):
         """Called inside each operation's write transaction, not a precheck."""
@@ -142,6 +145,12 @@ class OfflineAccounting:
             raise AccountingError(reason)
 
     def settle(self, attempt, *, succeeded):
+        # A seal cannot return while a settlement is still committing; once
+        # it returns, successful late results cannot commit as successes.
+        with self._seal_lock:
+            return self._settle_locked(attempt, succeeded=succeeded)
+
+    def _settle_locked(self, attempt, *, succeeded):
         if type(succeeded) is not bool:
             with sqlite3.connect(self.path, timeout=10) as db:
                 db.execute('BEGIN IMMEDIATE')
