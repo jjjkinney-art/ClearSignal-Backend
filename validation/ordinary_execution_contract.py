@@ -10,7 +10,7 @@ import re
 from decimal import Decimal, InvalidOperation
 from pathlib import PurePosixPath
 
-from .ordinary_pilot_contract import CASES, quota_contract
+from .ordinary_pilot_contract import CASES, quota_contract, validate_contract
 
 # Projection of the twelve case records in the supplied review packet's
 # cases.json (file SHA-256 af2fd4a2c5edbd9fab88390553baed840350499753a70f5c75a38a42145c258e).
@@ -64,12 +64,38 @@ def pending_manifest(*, cases, source_sha256, dependency_sha256, output_dir,
 
 def matches_separate_approval(manifest, approval):
     """Check proposal/approval binding only; return no execution capability."""
+    manifest_keys = {'purpose', 'schema_version', 'case_records_sha256', 'case_order',
+                     'source_sha256', 'dependency_sha256', 'output_dir', 'all_in_usd',
+                     'retention_reference', 'limits', 'case_seconds', 'sec_dispatches_per_second',
+                     'follow_redirects', 'retry_attempts', 'approval_status',
+                     'invoice_ceiling_verified', 'execution_authorized'}
     keys = {'reference', 'manifest_sha256', 'output_dir', 'all_in_usd',
             'execution_allowed', 'spending_authorized'}
-    if (type(manifest) is not dict or manifest.get('purpose') != 'ordinary_twelve_case_pilot_pending'
+    if type(manifest) is not dict or set(manifest) != manifest_keys:
+        raise ValueError('invalid proposal manifest')
+    validate_contract(manifest['limits'])
+    output = manifest['output_dir']
+    if (manifest.get('purpose') != 'ordinary_twelve_case_pilot_pending'
+            or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1
             or manifest.get('approval_status') != 'pending' or manifest.get('execution_authorized') is not False
+            or manifest['invoice_ceiling_verified'] is not False
             or manifest.get('case_records_sha256') != PACKET_CASE_PROJECTION_SHA256
-            or manifest.get('case_order') != list(CASES) or manifest.get('limits') != quota_contract()
+            or type(manifest['case_order']) is not list or manifest['case_order'] != list(CASES)
+            or type(manifest['case_seconds']) is not dict
+            or set(manifest['case_seconds']) != {'core_thesis', 'decision_threshold'}
+            or any(type(manifest['case_seconds'][k]) is not int or manifest['case_seconds'][k] != v
+                   for k, v in {'core_thesis': 30, 'decision_threshold': 20}.items())
+            or type(manifest['sec_dispatches_per_second']) is not int or manifest['sec_dispatches_per_second'] != 10
+            or manifest['follow_redirects'] is not False or type(manifest['retry_attempts']) is not int
+            or manifest['retry_attempts'] != 0
+            or any(type(manifest[k]) is not str or not re.fullmatch(r'[0-9a-f]{64}', manifest[k])
+                   for k in ('source_sha256', 'dependency_sha256'))
+            or type(output) is not str or not output.startswith('/') or output == '/'
+            or str(PurePosixPath(output)) != output or '..' in PurePosixPath(output).parts
+            or type(manifest['all_in_usd']) is not str
+            or not re.fullmatch(r'(?:0|[1-9][0-9]{0,5})\.[0-9]{2}', manifest['all_in_usd'])
+            or type(manifest['retention_reference']) is not str
+            or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}', manifest['retention_reference'])
             or type(approval) is not dict or set(approval) != keys
             or type(approval['reference']) is not str
             or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}', approval['reference'])

@@ -67,5 +67,23 @@ def test_each_case_field_is_bound_to_packet(field, value):
 def test_self_consistent_approval_does_not_accept_changed_packet_digest_or_limits():
     manifest = proposal(); manifest['case_records_sha256'] = 'a' * 64
     with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
+
+
+@pytest.mark.parametrize('field,value', [
+    ('schema_version', True), ('source_sha256', 'not-a-hash'), ('dependency_sha256', ''),
+    ('output_dir', '/tmp/../unsafe'), ('all_in_usd', 'NaN'), ('retention_reference', ''),
+    ('case_seconds', {'core_thesis': 300, 'decision_threshold': 20}),
+    ('sec_dispatches_per_second', 100), ('follow_redirects', True), ('retry_attempts', 1),
+    ('invoice_ceiling_verified', True), ('unexpected', 'value'),
+])
+def test_self_consistent_malformed_manifest_refused(field, value):
+    manifest = proposal(); manifest[field] = value
+    with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
+
+
+def test_boolean_or_float_quota_cannot_pass_integer_limit():
+    for value in (True, 1.0):
+        manifest = proposal(); manifest['limits']['per_stage']['NPK:core_thesis']['evidence.sec']['sec/directory'] = value
+        with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
     manifest = proposal(); manifest['limits']['sec_gets'] = 67
     with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
