@@ -101,11 +101,12 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
     lifecycle.finalize()
     with sqlite3.connect(book.path) as db:
         assert db.execute('SELECT COUNT(*) FROM attempts WHERE request_sha256 IS NOT NULL').fetchone()[0] == 48
-    packet = export_fixture_packet(book, forbidden_values=('invented-secret',))
+    packet = export_fixture_packet(book, forbidden_values=('invented-secret',), require_bound=True)
     assert len(packet['answers']) == packet['denominator'] == 12
     assert len(packet['attempts']) == 48
     assert all(row['status'] == 'partial_gap' for row in packet['cases'])
     assert all(row['outcome'] == 'success' for row in packet['attempts'])
+    assert packet['request_binding_required'] and all(r['request_sha256'] for r in packet['attempts'])
     for case in CASES:
         routes = [r['route'] for r in packet['attempts'] if r['case_id'] == case['case_id']]
         assert routes.count('sec/facts') == 1 and routes.count('sec/submissions') == (3 if case['question_id'] == 'core_thesis' else 1)

@@ -56,13 +56,15 @@ def store_fixture_answer(book, case, payload, *, forbidden_values):
         raise AccountingError('answer retention refused') from None
 
 
-def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
+def verify_terminal_snapshot(book, *, forbidden_values, require_bound=False, _snapshot=None):
     """Read one consistent sealed snapshot; refuse mismatched or missing records."""
     if not book._locally_sealed or not getattr(book, '_lifecycle_required', False):
         raise AccountingError('sealed lifecycle required')
     if (type(forbidden_values) is not tuple or not forbidden_values
             or any(type(v) is not str or not v for v in forbidden_values)):
         raise AccountingError('screening values required')
+    if type(require_bound) is not bool:
+        raise AccountingError('invalid binding requirement')
     uri = Path(book.path).resolve().as_uri() + '?mode=ro'
     with (sqlite3.connect(uri, uri=True) if _snapshot is None else nullcontext(_snapshot)) as db:
         db.execute('BEGIN')
@@ -101,6 +103,9 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
         for identifier, case, stage, route, outcome, fingerprint in attempts:
             if case not in CASES or outcome not in {'success', 'failure', 'late', 'pending'}:
                 raise AccountingError('invalid attempt record')
+            if require_bound and (type(fingerprint) is not str or len(fingerprint) != 64
+                                  or any(c not in '0123456789abcdef' for c in fingerprint)):
+                raise AccountingError('fixture request binding missing')
             cap = policy['per_stage'][case].get(stage, {}).get(route, 0)
             if not cap or not policy['per_case'][case].get(route, 0):
                 raise AccountingError('attempt outside authorized fixture scope')
@@ -160,7 +165,7 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
                 'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False}
 
 
-def export_fixture_packet(book, *, forbidden_values):
+def export_fixture_packet(book, *, forbidden_values, require_bound=False):
     """Export one verified snapshot in memory; fixture evidence only, never live authority.
 
     The manifest includes original body bytes (base64), attempts, and observed
@@ -169,22 +174,24 @@ def export_fixture_packet(book, *, forbidden_values):
     """
     uri = Path(book.path).resolve().as_uri() + '?mode=ro'
     with sqlite3.connect(uri, uri=True) as db:
-        report = verify_terminal_snapshot(book, forbidden_values=forbidden_values, _snapshot=db)
+        report = verify_terminal_snapshot(book, forbidden_values=forbidden_values, require_bound=require_bound, _snapshot=db)
         rows = db.execute('SELECT a.id,a.case_id,a.stage,a.route,a.outcome,d.dispatched_at,'
-                          'b.sha256,b.body,r.url,r.media_type,r.http_status FROM attempts a '
+                          'b.sha256,b.body,r.url,r.media_type,r.http_status,a.request_sha256 FROM attempts a '
                           'LEFT JOIN fixture_dispatches d ON d.attempt_id=a.id '
                           'LEFT JOIN bodies b ON b.attempt_id=a.id '
                           'LEFT JOIN fixture_receipts r ON r.attempt_id=a.id ORDER BY a.rowid').fetchall()
         records = []
-        for identifier, case, stage, route, outcome, dispatched, sha, raw, url, media, status in rows:
+        for identifier, case, stage, route, outcome, dispatched, sha, raw, url, media, status, fingerprint in rows:
             records.append({'attempt_id': identifier, 'case_id': case, 'stage': stage,
                             'route': route, 'outcome': outcome,
                             'simulated_dispatched_at': dispatched,
                             'body_sha256': sha,
                             'body_bytes': len(raw) if raw is not None else None,
                             'body_base64': base64.b64encode(raw).decode('ascii') if raw is not None else None,
-                            'url': url, 'media_type': media, 'http_status': status})
+                            'url': url, 'media_type': media, 'http_status': status,
+                            'request_sha256': fingerprint})
         return {'format': 'ordinary-fixture-packet-v1', 'synthetic_only': True,
                 'cases': report['cases'], 'denominator': report['denominator'],
                 'halt': report['halt'], 'answers': report['answers'], 'attempts': records,
+                'request_binding_required': require_bound,
                 'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False}
