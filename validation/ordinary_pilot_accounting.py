@@ -153,14 +153,14 @@ class OfflineAccounting:
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
             now = self.clock()
             case_reason = self._case_reason(db, pending[1], now) if pending else ''
-            expired = now - self.started >= self._policy['wall_seconds'] or bool(case_reason) or self._locally_sealed
+            expired = now - self.started >= self._policy['wall_seconds'] or bool(case_reason) or (self._locally_sealed and succeeded)
             if not pending or pending[0] != 'pending':
                 reason = halt or 'invalid_settlement'
                 db.execute('UPDATE state SET halt=?', (reason,))
                 invalid = True
             else:
                 invalid = False
-                reason = halt or case_reason or ('locally_sealed' if self._locally_sealed else
+                reason = halt or case_reason or ('locally_sealed' if self._locally_sealed and succeeded else
                                                    'deadline' if expired else '' if succeeded else 'attempt_failure')
                 db.execute('UPDATE state SET halt=?', (reason,))
                 outcome = 'late' if halt or expired else 'success' if succeeded else 'failure'

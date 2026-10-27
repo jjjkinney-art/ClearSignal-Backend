@@ -116,3 +116,13 @@ def test_sealed_worker_settlement_is_late_before_terminal_finalization(tmp_path)
     assert book.summary()['halt'] == 'locally_sealed'
     result = lifecycle.finalize()
     assert result['cases'][0]['status'] == 'halted'
+
+
+def test_sealed_failed_settlement_preserves_first_failure(tmp_path):
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    attempt = book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts')
+    book.seal_local(); book.settle(attempt, succeeded=False)
+    assert book.summary()['outcomes'] == {'failure': 1}
+    assert book.summary()['halt'] == 'attempt_failure'
+    assert lifecycle.finalize()['cases'][0]['status'] == 'halted'
