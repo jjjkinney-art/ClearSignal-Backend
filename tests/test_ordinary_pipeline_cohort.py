@@ -8,6 +8,7 @@ import sqlite3
 from pathlib import Path
 
 import httpx
+import pytest
 from contextvars import ContextVar
 import socket
 from app.schemas import QuestionRequest
@@ -26,7 +27,8 @@ from validation.ordinary_wire_rehearsal import rehearse_sec
 CASES = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
 
 
-def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline, monkeypatch, tmp_path):
+@pytest.mark.parametrize('fault', [None, 'wire_connect_failure', 'wire_read_failure'])
+def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline, monkeypatch, tmp_path, fault):
     from app.config import settings
     from app.providers import sec_client
     from app.services import issuer_identity, verified_sec_metric_service, public_document_ingestion
@@ -59,8 +61,10 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
         route = ('sec/facts' if '/companyfacts/' in url else
                  'sec/submissions' if '/submissions/' in url else 'sec/document')
         current_stage = 'evidence.sec_metrics' if route == 'sec/facts' else stage.get()
+        scenario = (fault if fault and case['case_id'] == CASES[2]['case_id'] and route == 'sec/facts'
+                    else 'reported-facts' if route == 'sec/facts' else 'happy')
         receipt = rehearse_sec(book, case['case_id'], stage=current_stage, route=route,
-                               scenario='reported-facts' if route == 'sec/facts' else 'happy', bound=True)['receipt']
+                               scenario=scenario, bound=True)['receipt']
         assert receipt['url'] == url
         with sqlite3.connect(book.path) as db:
             raw, = db.execute('SELECT body FROM bodies WHERE attempt_id=?', (receipt['attempt_id'],)).fetchone()
@@ -92,7 +96,17 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
         monkeypatch.setattr(router._sec_provider, '_load_ticker_cik_map', lambda: {ticker: cik})
         monkeypatch.setattr(verified_sec_metric_service, '_load_ticker_cik_map', lambda: {ticker: cik})
         lifecycle.begin(case['case_id'])
-        response = router.route_question(QuestionRequest(company_name=ticker, question=case['question']))
+        try:
+            response = router.route_question(QuestionRequest(company_name=ticker, question=case['question']))
+        except Exception:
+            if fault and book.summary()['halt']:
+                break
+            raise
+        # Application services can catch transport failures and return a partial
+        # answer. The coordinator must never publish it after a durable halt.
+        if book.summary()['halt']:
+            assert fault and case['case_id'] == CASES[2]['case_id']
+            break
         assert response.company == ticker and response.routing['response_mode'] == 'source_evidence'
         store_fixture_answer(book, case['case_id'], response.model_dump(mode='json'),
                              forbidden_values=('invented-secret',))
@@ -100,8 +114,15 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
         tick[0] += 2.0
     lifecycle.finalize()
     with sqlite3.connect(book.path) as db:
-        assert db.execute('SELECT COUNT(*) FROM attempts WHERE request_sha256 IS NOT NULL').fetchone()[0] == 48
+        attempts, bound = db.execute('SELECT COUNT(*),COUNT(request_sha256) FROM attempts').fetchone()
+        assert attempts == bound
     packet = export_fixture_packet(book, forbidden_values=('invented-secret',), require_bound=True)
+    if fault:
+        assert packet['halt'] and packet['denominator'] == 12
+        assert [r['status'] for r in packet['cases']] == ['partial_gap', 'partial_gap', 'halted'] + ['not_run_after_halt'] * 9
+        assert set(packet['answers']) == {CASES[0]['case_id'], CASES[1]['case_id']}
+        assert packet['quality_pass_rate'] is None and not packet['launch_ready']
+        return
     assert len(packet['answers']) == packet['denominator'] == 12
     assert len(packet['attempts']) == 48
     assert all(row['status'] == 'partial_gap' for row in packet['cases'])
