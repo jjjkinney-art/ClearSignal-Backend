@@ -10,7 +10,7 @@ import pytest
 from validation._pilot_wire_fixtures import SyntheticProxyBackend
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_case_lifecycle import OfflineCaseLifecycle
-from validation.ordinary_pilot_accounting import OfflineAccounting
+from validation.ordinary_pilot_accounting import OfflineAccounting, AccountingError
 from validation.ordinary_pilot_contract import CASES
 from validation.ordinary_wire_rehearsal import CIKS
 from validation.pilot_approved import ExchangeGate, ScopedBackend
@@ -26,7 +26,6 @@ class FixtureOwner:
         self.book, self.case_id = book, case
         self.ledger = self
         self.policy = {'execution_configuration': {'proxy': 'http://proxy:8080'}}
-        self.claims = {}
         self.case = {'identity': {'ticker': case.split(':')[0], 'cik': CIKS[case.split(':')[0]],
                                   'company_name': 'Invented issuer'}}
         self.identities = [self.case['identity']]
@@ -44,9 +43,7 @@ class FixtureOwner:
         return True
 
     def claim_native_dispatch(self, attempt, *, case_run, route, request_sha256):
-        if self.claims.get(attempt) != (case_run, route, request_sha256):
-            raise BudgetError('fixture claim mismatch')
-        self.book.claim_fixture_dispatch(attempt)
+        self.book.claim_fixture_dispatch(attempt, case=case_run, route=route, request_sha256=request_sha256)
 
 
 def setup(book, case, monkeypatch, *, transport=OwnedHTTPTransport):
@@ -67,8 +64,7 @@ def claim(owner, gate):
     stage, route = 'evidence.sec_metrics', 'sec/facts'
     url = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{CIKS[case.split(":")[0]]}.json'
     fingerprint = digest({'method': 'GET', 'url': url, 'route': route, 'stage': stage})
-    attempt = owner.book.claim(case, stage, route)
-    owner.claims[attempt] = (case, route, fingerprint)
+    attempt = owner.book.claim(case, stage, route, request_sha256=fingerprint)
     return attempt, url, fingerprint, gate.issue(attempt, fingerprint, route, case, stage)
 
 
@@ -117,12 +113,28 @@ def test_gate_refuses_mismatched_ledger_claim_before_dispatch(tmp_path, monkeypa
     lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
     owner, gate, wire = setup(book, CASES[0], monkeypatch)
     attempt, url, fingerprint, grant = claim(owner, gate)
-    owner.claims[attempt] = (CASES[1], 'sec/facts', fingerprint)
-    with pytest.raises(BudgetError):
+    with sqlite3.connect(book.path) as db:
+        db.execute('UPDATE attempts SET request_sha256=? WHERE id=?', ('a' * 64, attempt))
+    with pytest.raises(AccountingError):
         with gate.exchange(url, grant, fingerprint):
             pass
     assert gate.dispatched == book.summary()['fixture_dispatch_count'] == 0
     gate.seal(); wire.close()
+
+
+@pytest.mark.parametrize('change', ['case', 'route', 'fingerprint'])
+def test_durable_fixture_claim_rejects_cross_scope_dispatch(tmp_path, change):
+    book = OfflineAccounting(tmp_path / 'ledger.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    fingerprint = 'a' * 64
+    attempt = book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts', request_sha256=fingerprint)
+    values = {'case': CASES[0], 'route': 'sec/facts', 'request_sha256': fingerprint}
+    values[{'case':'case', 'route':'route', 'fingerprint':'request_sha256'}[change]] = {
+        'case': CASES[1], 'route': 'sec/submissions', 'fingerprint': 'b' * 64}[change]
+    with pytest.raises(AccountingError, match='fixture_binding_mismatch'):
+        book.claim_fixture_dispatch(attempt, **values)
+    assert book.summary()['fixture_dispatch_count'] == 0
+    assert book.summary()['halt'] == 'fixture_binding_mismatch'
 
 
 @pytest.mark.parametrize('scenario', ['wire_connect_failure', 'wire_redirect', 'wire_read_failure'])

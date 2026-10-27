@@ -101,9 +101,9 @@ def test_terminal_verifier_independently_refuses_scope_and_clock_corruption(tmp_
         elif mutation == 'route':
             db.execute("UPDATE attempts SET route='sec/document'")
         elif mutation == 'stage_quota':
-            db.execute("INSERT INTO attempts SELECT 'extra',case_id,stage,route,'failure' FROM attempts")
+            db.execute("INSERT INTO attempts(id,case_id,stage,route,outcome) SELECT 'extra',case_id,stage,route,'failure' FROM attempts")
         elif mutation == 'unrun_attempt':
-            db.execute("INSERT INTO attempts VALUES ('extra',?,'evidence.sec_metrics','sec/facts','pending')", (CASES[1],))
+            db.execute("INSERT INTO attempts(id,case_id,stage,route,outcome) VALUES ('extra',?,'evidence.sec_metrics','sec/facts','pending')", (CASES[1],))
         else:
             db.execute('UPDATE fixture_dispatches SET dispatched_at=?', (book.started - 1,))
     with pytest.raises(AccountingError):

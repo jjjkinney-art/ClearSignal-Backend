@@ -7,6 +7,7 @@ late, never as publishable answers. Retention and physical fencing remain separa
 import os
 import hashlib
 import math
+import re
 from copy import deepcopy
 import sqlite3
 import time
@@ -37,7 +38,7 @@ class OfflineAccounting:
                 CREATE TABLE fixture_receipts (attempt_id TEXT PRIMARY KEY, url TEXT NOT NULL,
                     media_type TEXT NOT NULL, http_status INTEGER NOT NULL);
                 CREATE TABLE attempts (id TEXT PRIMARY KEY, case_id TEXT, stage TEXT,
-                    route TEXT, outcome TEXT NOT NULL DEFAULT 'pending');
+                    route TEXT, outcome TEXT NOT NULL DEFAULT 'pending', request_sha256 TEXT);
             ''')
 
     @property
@@ -63,10 +64,12 @@ class OfflineAccounting:
             return 'case_deadline'
         return ''
 
-    def claim(self, case, stage, route):
+    def claim(self, case, stage, route, *, request_sha256=None):
         """Record a simulated attempt atomically; returned IDs are not capabilities."""
         if self._locally_sealed:
             raise AccountingError('locally sealed')
+        if request_sha256 is not None and (type(request_sha256) is not str or not re.fullmatch(r'[0-9a-f]{64}', request_sha256)):
+            raise AccountingError('invalid fixture request binding')
         with sqlite3.connect(self.path, timeout=10) as db:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
@@ -92,13 +95,13 @@ class OfflineAccounting:
                 db.execute('UPDATE state SET halt=?', (reason,))
             else:
                 attempt = uuid4().hex
-                db.execute('INSERT INTO attempts(id,case_id,stage,route) VALUES (?,?,?,?)',
-                           (attempt, case, stage, route))
+                db.execute('INSERT INTO attempts(id,case_id,stage,route,request_sha256) VALUES (?,?,?,?,?)',
+                           (attempt, case, stage, route, request_sha256))
         if reason:
             raise AccountingError(reason)
         return attempt
 
-    def claim_fixture_dispatch(self, attempt):
+    def claim_fixture_dispatch(self, attempt, *, case=None, route=None, request_sha256=None):
         """One-shot accounting at the fake connection boundary; not a live grant.
 
         Rate excess halts rather than sleeping/retrying. Failed connections stay
@@ -110,7 +113,7 @@ class OfflineAccounting:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
             now = self.clock()
-            pending = db.execute('SELECT outcome,case_id FROM attempts WHERE id=?', (attempt,)).fetchone()
+            pending = db.execute('SELECT outcome,case_id,route,request_sha256 FROM attempts WHERE id=?', (attempt,)).fetchone()
             if pending:
                 reason = reason or self._case_reason(db, pending[1], now)
             duplicate = db.execute('SELECT 1 FROM fixture_dispatches WHERE attempt_id=?', (attempt,)).fetchone()
@@ -125,6 +128,10 @@ class OfflineAccounting:
                     reason = 'locally_sealed'
                 elif not pending or pending[0] != 'pending' or duplicate:
                     reason = 'unclaimed_or_consumed_dispatch'
+                elif pending[3] is not None and (case, route, request_sha256) != (pending[1], pending[2], pending[3]):
+                    reason = 'fixture_binding_mismatch'
+                elif pending[3] is None and any(v is not None for v in (case, route, request_sha256)):
+                    reason = 'fixture_binding_missing'
                 elif recent >= 10:
                     reason = 'dispatch_rate'
             if reason:
