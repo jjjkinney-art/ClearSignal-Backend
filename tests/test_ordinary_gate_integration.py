@@ -173,3 +173,35 @@ def test_ordinary_transport_rejects_oversized_fake_response(tmp_path, monkeypatc
     assert book.summary()['fixture_dispatch_count'] == 1
     book.settle(attempt, succeeded=False)
     gate.seal(); wire.close()
+
+
+@pytest.mark.parametrize('method,url,body', [
+    ('POST', 'https://api.openai.com/v1/chat/completions', b'{}'),
+    ('GET', 'https://api.openai.com/v1/chat/completions', b''),
+    ('POST', 'https://data.sec.gov/submissions/CIK0000080172.json', b''),
+    ('GET', 'http://data.sec.gov/submissions/CIK0000080172.json', b''),
+    ('GET', 'https://data.sec.gov:443/submissions/CIK0000080172.json', b''),
+    ('GET', 'https://data.sec.gov/submissions/CIK0000080172.json?x=1', b''),
+    ('GET', 'https://user@data.sec.gov/submissions/CIK0000080172.json', b''),
+    ('GET', 'https://data.sec.gov/submissions/CIK0000080172.json', b'body'),
+])
+def test_ordinary_transport_refuses_models_and_unapproved_request_forms_before_dispatch(tmp_path, monkeypatch, method, url, body):
+    book = OfflineAccounting(tmp_path / 'ledger.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    owner, gate, wire = setup(book, CASES[0], monkeypatch, transport=OrdinaryHTTPTransport)
+    with pytest.raises(BudgetError): wire.exchange(method, url, body=body)
+    assert gate.dispatched == book.summary()['fixture_dispatch_count'] == 0
+    gate.seal(); wire.close()
+
+
+def test_ordinary_transport_accepts_claimed_sec_fixture(tmp_path, monkeypatch):
+    book = OfflineAccounting(tmp_path / 'ledger.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    owner, gate, wire = setup(book, CASES[0], monkeypatch, transport=OrdinaryHTTPTransport)
+    attempt, url, fingerprint, grant = claim(owner, gate)
+    with gate.exchange(url, grant, fingerprint):
+        media, body = wire.exchange('GET', url)
+    assert media == 'application/json' and body and gate.dispatched == 1
+    book.retain_fixture_body(attempt, body, forbidden_values=('invented-secret',))
+    book.settle(attempt, succeeded=True)
+    gate.seal(); wire.close()
