@@ -12,6 +12,9 @@ from pathlib import PurePosixPath
 
 from .ordinary_pilot_contract import CASES, quota_contract
 
+# Projection of the twelve case records in the supplied review packet's
+# cases.json (file SHA-256 af2fd4a2c5edbd9fab88390553baed840350499753a70f5c75a38a42145c258e).
+PACKET_CASE_PROJECTION_SHA256 = 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'
 
 def _digest(value):
     encoded = json.dumps(value, sort_keys=True, separators=(',', ':'),
@@ -30,6 +33,8 @@ def pending_manifest(*, cases, source_sha256, dependency_sha256, output_dir,
                    or type(c['question']) is not str or not c['question'].strip()
                    for c, case in zip(cases, CASES))):
         raise ValueError('exact ordered case records required')
+    if _digest(cases) != PACKET_CASE_PROJECTION_SHA256:
+        raise ValueError('case records differ from review packet')
     if any(type(v) is not str or not re.fullmatch(r'[0-9a-f]{64}', v)
            for v in (source_sha256, dependency_sha256)):
         raise ValueError('source and dependency digests required')
@@ -63,6 +68,8 @@ def matches_separate_approval(manifest, approval):
             'execution_allowed', 'spending_authorized'}
     if (type(manifest) is not dict or manifest.get('purpose') != 'ordinary_twelve_case_pilot_pending'
             or manifest.get('approval_status') != 'pending' or manifest.get('execution_authorized') is not False
+            or manifest.get('case_records_sha256') != PACKET_CASE_PROJECTION_SHA256
+            or manifest.get('case_order') != list(CASES) or manifest.get('limits') != quota_contract()
             or type(approval) is not dict or set(approval) != keys
             or type(approval['reference']) is not str
             or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}', approval['reference'])

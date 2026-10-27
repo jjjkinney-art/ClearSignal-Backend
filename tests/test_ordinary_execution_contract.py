@@ -53,5 +53,19 @@ def test_approval_must_match_every_bound_field(field, value):
 def test_changed_question_or_cost_invalidates_prior_binding():
     manifest = proposal(); approval = consent(manifest)
     cases = [dict(c) for c in CASES]; cases[0]['question'] += ' changed'
-    with pytest.raises(ValueError): matches_separate_approval(proposal(cases=cases), approval)
+    with pytest.raises(ValueError, match='review packet'): proposal(cases=cases)
     with pytest.raises(ValueError): matches_separate_approval(proposal(all_in_usd='0.01'), approval)
+
+
+@pytest.mark.parametrize('field,value', [('expected_cik', '0000000001'), ('issuer_id', 'OTHER'),
+                                         ('question_id', 'other'), ('question', 'changed')])
+def test_each_case_field_is_bound_to_packet(field, value):
+    cases = [dict(c) for c in CASES]; cases[0][field] = value
+    with pytest.raises(ValueError): proposal(cases=cases)
+
+
+def test_self_consistent_approval_does_not_accept_changed_packet_digest_or_limits():
+    manifest = proposal(); manifest['case_records_sha256'] = 'a' * 64
+    with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
+    manifest = proposal(); manifest['limits']['sec_gets'] = 67
+    with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
