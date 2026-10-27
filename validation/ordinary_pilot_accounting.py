@@ -34,6 +34,8 @@ class OfflineAccounting:
                 CREATE TABLE cleanup_failures (code TEXT NOT NULL);
                 CREATE TABLE fixture_dispatches (attempt_id TEXT PRIMARY KEY, dispatched_at REAL NOT NULL);
                 CREATE TABLE bodies (attempt_id TEXT PRIMARY KEY, sha256 TEXT, body BLOB NOT NULL);
+                CREATE TABLE fixture_receipts (attempt_id TEXT PRIMARY KEY, url TEXT NOT NULL,
+                    media_type TEXT NOT NULL, http_status INTEGER NOT NULL);
                 CREATE TABLE attempts (id TEXT PRIMARY KEY, case_id TEXT, stage TEXT,
                     route TEXT, outcome TEXT NOT NULL DEFAULT 'pending');
             ''')

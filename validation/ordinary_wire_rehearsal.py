@@ -60,6 +60,7 @@ def rehearse_sec(book, case, *, stage, route, scenario='happy'):
         if media != ('text/html' if route == 'sec/document' else 'application/json'):
             raise AccountingError('fixture media mismatch')
         receipt = book.retain_fixture_body(attempt, body, forbidden_values=SECRET_CANARIES)
+        _retain_fixture_receipt(book, attempt, url, media)
         receipt.update(route=route, stage=stage, url=url)
         wire.close()
         book.settle(attempt, succeeded=True)
@@ -94,6 +95,11 @@ def rehearse_sec(book, case, *, stage, route, scenario='happy'):
 
 
 def _fixture_url(book, case, stage, route):
+    with sqlite3.connect(book.path) as db:
+        return _fixture_url_from_db(db, case, stage, route)
+
+
+def _fixture_url_from_db(db, case, stage, route):
     cik = CIKS[case.split(':')[0]]
     fixed = {'sec/directory': 'https://www.sec.gov/files/company_tickers.json',
              'sec/submissions': f'https://data.sec.gov/submissions/CIK{cik}.json',
@@ -103,10 +109,9 @@ def _fixture_url(book, case, stage, route):
     if route != 'sec/document':
         raise AccountingError('unknown fixture route')
     from .pilot_live import json_object
-    with sqlite3.connect(book.path) as db:
-        sources = db.execute("SELECT b.body,b.sha256 FROM bodies b JOIN attempts a "
-            "ON a.id=b.attempt_id WHERE a.case_id=? AND a.stage=? "
-            "AND a.route='sec/submissions' AND a.outcome='success'", (case, stage)).fetchall()
+    sources = db.execute("SELECT b.body,b.sha256 FROM bodies b JOIN attempts a "
+        "ON a.id=b.attempt_id WHERE a.case_id=? AND a.stage=? "
+        "AND a.route='sec/submissions' AND a.outcome='success'", (case, stage)).fetchall()
     if len(sources) != 1:
         raise AccountingError('one retained same-case same-stage submissions source required')
     body, digest = sources[0]
@@ -124,3 +129,26 @@ def _fixture_url(book, case, stage, route):
             or type(document) is not str or not re.fullmatch(r'[A-Za-z0-9_-]+\.htm[l]?', document)):
         raise AccountingError('unsafe fixture filing metadata')
     return f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace('-', '')}/{document}"
+
+
+def _retain_fixture_receipt(book, attempt, url, media):
+    """Record only the observed successful fake exchange while its attempt is active."""
+    if book._locally_sealed:
+        raise AccountingError('locally sealed')
+    with sqlite3.connect(book.path, timeout=10) as db:
+        db.execute('BEGIN IMMEDIATE')
+        halt, = db.execute('SELECT halt FROM state').fetchone()
+        row = db.execute('SELECT case_id,stage,route,outcome FROM attempts WHERE id=?', (attempt,)).fetchone()
+        if halt or not row or row[3] != 'pending':
+            raise AccountingError('fixture receipt has no pending attempt')
+        case, stage, route, _ = row
+        reason = book._case_reason(db, case, book.clock())
+        if reason:
+            raise AccountingError(reason)
+        if (not db.execute('SELECT 1 FROM fixture_dispatches WHERE attempt_id=?', (attempt,)).fetchone()
+                or not db.execute('SELECT 1 FROM bodies WHERE attempt_id=?', (attempt,)).fetchone()
+                or url != _fixture_url_from_db(db, case, stage, route)
+                or media != ('text/html' if route == 'sec/document' else 'application/json')):
+            raise AccountingError('fixture receipt scope mismatch')
+        # OwnedHTTPTransport only returns successfully for a 200 response.
+        db.execute('INSERT INTO fixture_receipts VALUES (?,?,?,200)', (attempt, url, media))

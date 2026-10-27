@@ -125,7 +125,8 @@ def test_export_contains_original_bytes_and_attempt_scope_without_mutation(tmp_p
     assert (item['case_id'], item['stage'], item['route'], item['outcome']) == (
         CASES[0], 'evidence.sec_metrics', 'sec/facts', 'success')
     assert item['simulated_dispatched_at'] is not None
-    assert item['url'] is item['media_type'] is item['http_status'] is None
+    assert item['url'] == 'https://data.sec.gov/api/xbrl/companyfacts/CIK0000080172.json'
+    assert item['media_type'] == 'application/json' and item['http_status'] == 200
     assert packet['answers'][CASES[0]]['response'] == payload
     assert packet['denominator'] == 12 and packet['synthetic_only']
     assert not packet['execution_authorized'] and not packet['launch_ready']
@@ -142,3 +143,34 @@ def test_export_rejects_corrupt_body_and_unsealed_ledger(tmp_path):
     OfflineCaseLifecycle(other)
     with pytest.raises(AccountingError):
         export_fixture_packet(other, forbidden_values=SECRET)
+
+
+@pytest.mark.parametrize('mutation', ['missing', 'url', 'media', 'status', 'orphan'])
+def test_export_rejects_missing_or_changed_fixture_receipts(tmp_path, mutation):
+    book, _ = finished(tmp_path)
+    with sqlite3.connect(book.path) as db:
+        if mutation == 'missing': db.execute('DELETE FROM fixture_receipts')
+        elif mutation == 'url': db.execute("UPDATE fixture_receipts SET url='https://example.invalid/'")
+        elif mutation == 'media': db.execute("UPDATE fixture_receipts SET media_type='text/html'")
+        elif mutation == 'status': db.execute('UPDATE fixture_receipts SET http_status=302')
+        else: db.execute("UPDATE fixture_receipts SET attempt_id='orphan'")
+    with pytest.raises(AccountingError):
+        export_fixture_packet(book, forbidden_values=SECRET)
+
+
+def test_document_receipt_bound_to_retained_same_stage_submissions(tmp_path):
+    from validation.ordinary_wire_rehearsal import rehearse_sec
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    run = OfflineCaseLifecycle(book); run.begin(CASES[0])
+    for route in ('sec/submissions', 'sec/document'):
+        rehearse_sec(book, CASES[0], stage='evidence.thesis_disclosures', route=route)
+    store_fixture_answer(book, CASES[0], {'company':'NPK','answer':{}}, forbidden_values=SECRET)
+    run.finish(CASES[0], status='partial_gap'); run.finalize()
+    packet = export_fixture_packet(book, forbidden_values=SECRET)
+    doc = next(r for r in packet['attempts'] if r['route'] == 'sec/document')
+    assert doc['url'].endswith('/000095017026012345/issuer-20251231.htm')
+    assert doc['media_type'] == 'text/html' and doc['http_status'] == 200
+    with sqlite3.connect(book.path) as db:
+        db.execute("UPDATE fixture_receipts SET url=replace(url,'issuer-20251231.htm','other.htm') WHERE media_type='text/html'")
+    with pytest.raises(AccountingError):
+        export_fixture_packet(book, forbidden_values=SECRET)

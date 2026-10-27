@@ -1,7 +1,7 @@
 """Offline answer retention and read-only terminal verification; no live authority.
 
-The returned manifest locates original bodies in the private rehearsal ledger.
-It is not yet a source-body export or independent source/citation adjudication.
+The fixture export includes stored bytes and simulated receipts. It does not
+establish source authenticity or independently adjudicate citations.
 """
 import base64
 from contextlib import nullcontext
@@ -91,6 +91,11 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
         identifiers = {a[0] for a in attempts}
         if dispatches - identifiers or set(bodies) - identifiers:
             raise AccountingError('orphan transport record')
+        receipts = {identifier: (url, media, status) for identifier, url, media, status
+                    in db.execute('SELECT attempt_id,url,media_type,http_status FROM fixture_receipts')}
+        if set(receipts) - identifiers or set(receipts) - dispatches or set(receipts) - set(bodies):
+            raise AccountingError('orphan fixture receipt')
+        from .ordinary_wire_rehearsal import _fixture_url_from_db
         case_counts, route_counts, stage_counts = Counter(), Counter(), Counter()
         for identifier, case, stage, route, outcome in attempts:
             if case not in CASES or outcome not in {'success', 'failure', 'late', 'pending'}:
@@ -111,6 +116,14 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
                 raise AccountingError('finished case has unsuccessful attempt')
             if outcome == 'success' and (identifier not in dispatches or identifier not in bodies):
                 raise AccountingError('successful attempt missing dispatch or body')
+            if outcome == 'success' and identifier not in receipts:
+                raise AccountingError('successful attempt missing fixture receipt')
+            if identifier in receipts:
+                url, media, status = receipts[identifier]
+                if (url != _fixture_url_from_db(db, case, stage, route)
+                        or media != ('text/html' if route == 'sec/document' else 'application/json')
+                        or status != 200):
+                    raise AccountingError('invalid fixture receipt')
             if outcome == 'pending' and not halt:
                 raise AccountingError('unresolved attempt without halt')
         times = []
@@ -149,26 +162,26 @@ def export_fixture_packet(book, *, forbidden_values):
     """Export one verified snapshot in memory; fixture evidence only, never live authority.
 
     The manifest includes original body bytes (base64), attempts, and observed
-    fake-dispatch times. URLs, media types and status codes were not durably
-    recorded and are deliberately marked unavailable, not reconstructed.
+    fake-dispatch times and fixture receipts. Failed requests can lack receipts.
     It does not establish authenticity or citation support.
     """
     uri = Path(book.path).resolve().as_uri() + '?mode=ro'
     with sqlite3.connect(uri, uri=True) as db:
         report = verify_terminal_snapshot(book, forbidden_values=forbidden_values, _snapshot=db)
         rows = db.execute('SELECT a.id,a.case_id,a.stage,a.route,a.outcome,d.dispatched_at,'
-                          'b.sha256,b.body FROM attempts a '
+                          'b.sha256,b.body,r.url,r.media_type,r.http_status FROM attempts a '
                           'LEFT JOIN fixture_dispatches d ON d.attempt_id=a.id '
-                          'LEFT JOIN bodies b ON b.attempt_id=a.id ORDER BY a.rowid').fetchall()
+                          'LEFT JOIN bodies b ON b.attempt_id=a.id '
+                          'LEFT JOIN fixture_receipts r ON r.attempt_id=a.id ORDER BY a.rowid').fetchall()
         records = []
-        for identifier, case, stage, route, outcome, dispatched, sha, raw in rows:
+        for identifier, case, stage, route, outcome, dispatched, sha, raw, url, media, status in rows:
             records.append({'attempt_id': identifier, 'case_id': case, 'stage': stage,
                             'route': route, 'outcome': outcome,
                             'simulated_dispatched_at': dispatched,
                             'body_sha256': sha,
                             'body_bytes': len(raw) if raw is not None else None,
                             'body_base64': base64.b64encode(raw).decode('ascii') if raw is not None else None,
-                            'url': None, 'media_type': None, 'http_status': None})
+                            'url': url, 'media_type': media, 'http_status': status})
         return {'format': 'ordinary-fixture-packet-v1', 'synthetic_only': True,
                 'cases': report['cases'], 'denominator': report['denominator'],
                 'halt': report['halt'], 'answers': report['answers'], 'attempts': records,
