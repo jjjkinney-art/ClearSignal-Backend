@@ -15,6 +15,7 @@ from validation.ordinary_pilot_contract import CASES
 from validation.ordinary_wire_rehearsal import CIKS
 from validation.pilot_approved import ExchangeGate, ScopedBackend
 from validation.pilot_live import OwnedHTTPTransport, TransportFailure
+from validation.ordinary_transport import OrdinaryHTTPTransport
 
 
 class FixtureOwner:
@@ -48,13 +49,13 @@ class FixtureOwner:
         self.book.claim_fixture_dispatch(attempt)
 
 
-def setup(book, case, monkeypatch):
+def setup(book, case, monkeypatch, *, transport=OwnedHTTPTransport):
     import validation.pilot_approved as approved
     monkeypatch.setattr(approved, 'verify_network_configuration',
                         lambda config, tls=False: ssl.create_default_context() if tls else None)
     owner = FixtureOwner(book, case)
     gate = ExchangeGate(owner)
-    wire = OwnedHTTPTransport(gate=gate, execution=owner.policy['execution_configuration'],
+    wire = transport(gate=gate, execution=owner.policy['execution_configuration'],
                               runtime={'sec_contact': 'Fixture contact@example.invalid'})
     fake = SyntheticProxyBackend(owner)
     wire._wire._pool._network_backend = ScopedBackend(fake, gate)
@@ -144,3 +145,31 @@ def test_scoped_proxy_faults_consume_once_and_stop_case(tmp_path, monkeypatch, s
     result = lifecycle.finalize()
     assert result['cases'][0]['status'] == 'halted'
     assert all(c['status'] == 'not_run_after_halt' for c in result['cases'][1:])
+
+
+def test_ordinary_transport_disallows_historic_reviewed_exception(tmp_path, monkeypatch):
+    from validation.pilot_live import ReviewedDocumentEnvelope
+    book = OfflineAccounting(tmp_path / 'ledger.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    owner, gate, wire = setup(book, CASES[0], monkeypatch, transport=OrdinaryHTTPTransport)
+    url = 'https://www.sec.gov/Archives/edgar/data/123/123/annual.htm'
+    envelope = ReviewedDocumentEnvelope('0000000123', url, '10-K', '2026-01-01', 'invented')
+    assert wire.authorize_reviewed_document('0000000123', url, '10-K', '2026-01-01') is None
+    assert wire.response_limit('GET', url, None) == 16 * 1024 * 1024
+    with pytest.raises(BudgetError): wire.response_limit('GET', url, envelope)
+    gate.seal(); wire.close()
+
+
+def test_ordinary_transport_rejects_oversized_fake_response(tmp_path, monkeypatch):
+    import validation._pilot_wire_fixtures as fixtures
+    book = OfflineAccounting(tmp_path / 'ledger.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    owner, gate, wire = setup(book, CASES[0], monkeypatch, transport=OrdinaryHTTPTransport)
+    monkeypatch.setattr(fixtures, 'sec_fixture', lambda *args: ('application/json', b'x' * (16 * 1024 * 1024 + 1)))
+    attempt, url, fingerprint, grant = claim(owner, gate)
+    with pytest.raises(TransportFailure) as exc:
+        with gate.exchange(url, grant, fingerprint): wire.exchange('GET', url)
+    assert exc.value.code == 'response_size'
+    assert book.summary()['fixture_dispatch_count'] == 1
+    book.settle(attempt, succeeded=False)
+    gate.seal(); wire.close()
