@@ -71,7 +71,7 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
         if tuple(c for c, s in cases) != CASES or any(s not in {
                 'complete', 'partial_gap', 'halted', 'not_run_after_halt'} for c, s in cases):
             raise AccountingError('invalid terminal denominator')
-        attempts = db.execute('SELECT id,case_id,stage,route,outcome FROM attempts ORDER BY rowid').fetchall()
+        attempts = db.execute('SELECT id,case_id,stage,route,outcome,request_sha256 FROM attempts ORDER BY rowid').fetchall()
         dispatch_rows = db.execute('SELECT attempt_id,dispatched_at FROM fixture_dispatches ORDER BY rowid').fetchall()
         dispatches = {r[0] for r in dispatch_rows}
         bodies = {}
@@ -97,7 +97,8 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
             raise AccountingError('orphan fixture receipt')
         from .ordinary_wire_rehearsal import _fixture_url_from_db
         case_counts, route_counts, stage_counts = Counter(), Counter(), Counter()
-        for identifier, case, stage, route, outcome in attempts:
+        from .capture_budget import digest as request_digest
+        for identifier, case, stage, route, outcome, fingerprint in attempts:
             if case not in CASES or outcome not in {'success', 'failure', 'late', 'pending'}:
                 raise AccountingError('invalid attempt record')
             cap = policy['per_stage'][case].get(stage, {}).get(route, 0)
@@ -122,7 +123,8 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
                 url, media, status = receipts[identifier]
                 if (url != _fixture_url_from_db(db, case, stage, route)
                         or media != ('text/html' if route == 'sec/document' else 'application/json')
-                        or status != 200):
+                        or status != 200 or (fingerprint is not None and fingerprint !=
+                            request_digest({'method':'GET', 'url':url, 'route':route, 'stage':stage}))):
                     raise AccountingError('invalid fixture receipt')
             if outcome == 'pending' and not halt:
                 raise AccountingError('unresolved attempt without halt')
@@ -153,7 +155,7 @@ def verify_terminal_snapshot(book, *, forbidden_values, _snapshot=None):
                 raise AccountingError('finished case missing complete response')
         return {'cases': [{'case_id': c, 'status': s} for c, s in cases],
                 'denominator': 12, 'answers': answers, 'bodies': bodies,
-                'attempts': [dict(zip(('id','case_id','stage','route','outcome'), a)) for a in attempts],
+                'attempts': [dict(zip(('id','case_id','stage','route','outcome','request_sha256'), a)) for a in attempts],
                 'dispatch_count': len(dispatches), 'halt': halt,
                 'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False}
 

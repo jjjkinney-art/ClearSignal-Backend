@@ -60,7 +60,7 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
                  'sec/submissions' if '/submissions/' in url else 'sec/document')
         current_stage = 'evidence.sec_metrics' if route == 'sec/facts' else stage.get()
         receipt = rehearse_sec(book, case['case_id'], stage=current_stage, route=route,
-                               scenario='reported-facts' if route == 'sec/facts' else 'happy')['receipt']
+                               scenario='reported-facts' if route == 'sec/facts' else 'happy', bound=True)['receipt']
         assert receipt['url'] == url
         with sqlite3.connect(book.path) as db:
             raw, = db.execute('SELECT body FROM bodies WHERE attempt_id=?', (receipt['attempt_id'],)).fetchone()
@@ -99,6 +99,8 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
         lifecycle.finish(case['case_id'], status='partial_gap')
         tick[0] += 2.0
     lifecycle.finalize()
+    with sqlite3.connect(book.path) as db:
+        assert db.execute('SELECT COUNT(*) FROM attempts WHERE request_sha256 IS NOT NULL').fetchone()[0] == 48
     packet = export_fixture_packet(book, forbidden_values=('invented-secret',))
     assert len(packet['answers']) == packet['denominator'] == 12
     assert len(packet['attempts']) == 48

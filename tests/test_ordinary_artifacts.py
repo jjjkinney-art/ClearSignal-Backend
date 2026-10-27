@@ -174,3 +174,16 @@ def test_document_receipt_bound_to_retained_same_stage_submissions(tmp_path):
         db.execute("UPDATE fixture_receipts SET url=replace(url,'issuer-20251231.htm','other.htm') WHERE media_type='text/html'")
     with pytest.raises(AccountingError):
         export_fixture_packet(book, forbidden_values=SECRET)
+
+
+def test_changed_bound_fingerprint_invalidates_terminal_packet(tmp_path):
+    from validation.ordinary_wire_rehearsal import rehearse_sec
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    run = OfflineCaseLifecycle(book); run.begin(CASES[0])
+    rehearse_sec(book, CASES[0], stage='evidence.sec_metrics', route='sec/facts', bound=True)
+    store_fixture_answer(book, CASES[0], {'company':'NPK','answer':{}}, forbidden_values=SECRET)
+    run.finish(CASES[0], status='partial_gap'); run.finalize()
+    export_fixture_packet(book, forbidden_values=SECRET)
+    with sqlite3.connect(book.path) as db:
+        db.execute('UPDATE attempts SET request_sha256=?', ('a' * 64,))
+    with pytest.raises(AccountingError): export_fixture_packet(book, forbidden_values=SECRET)

@@ -12,14 +12,16 @@ import sqlite3
 from .ordinary_pilot_accounting import AccountingError
 from .ordinary_pilot_contract import CASES
 from .pilot_fixtures import SECRET_CANARIES
+from .capture_budget import digest as request_digest
 
 CIKS = dict(NPK='0000080172', GOOGL='0001652044', INGR='0001046257',
             NNBR='0000918541', AMZN='0001018724', MAN='0000871763')
 
 
 class _FixtureOwner:
-    def __init__(self, ticker, scenario, book, attempt):
+    def __init__(self, ticker, scenario, book, attempt, binding=None):
         self.book, self.attempt = book, attempt
+        self.binding = binding or {}
         self.scenario = 'monitoring_financial_inputs' if scenario == 'reported-facts' else scenario
         self.monitoring = scenario == 'reported-facts'
         self.case = {'identity': {'ticker': ticker, 'cik': CIKS[ticker],
@@ -30,7 +32,7 @@ class _FixtureOwner:
     def once(self, scenarios):
         with self.lock:
             if scenarios == {'wire_connect_failure'}:
-                self.book.claim_fixture_dispatch(self.attempt)
+                self.book.claim_fixture_dispatch(self.attempt, **self.binding)
                 self.connects += 1
             if self.scenario not in scenarios or self.scenario in self.used:
                 return False
@@ -42,20 +44,23 @@ def rehearse_facts(book, case, *, scenario='happy'):
     return rehearse_sec(book, case, stage='evidence.sec_metrics', route='sec/facts', scenario=scenario)
 
 
-def rehearse_sec(book, case, *, stage, route, scenario='happy'):
+def rehearse_sec(book, case, *, stage, route, scenario='happy', bound=False):
     """Fixed synthetic SEC routes only, never a caller-supplied URL."""
     if case not in CASES or scenario not in {
             'happy', 'reported-facts', 'wire_redirect', 'wire_read_failure', 'wire_connect_failure'}:
         raise AccountingError('unsupported rehearsal')
     from .pilot_live import OwnedHTTPTransport
     from ._pilot_wire_fixtures import SyntheticNetworkBackend
-    attempt = book.claim(case, stage, route)
-    owner = _FixtureOwner(case.split(':')[0], scenario, book, attempt)
+    url = _fixture_url(book, case, stage, route) if bound else None
+    fingerprint = request_digest({'method':'GET', 'url':url, 'route':route, 'stage':stage}) if bound else None
+    attempt = book.claim(case, stage, route, request_sha256=fingerprint)
+    binding = {'case':case, 'route':route, 'request_sha256':fingerprint} if bound else None
+    owner = _FixtureOwner(case.split(':')[0], scenario, book, attempt, binding)
     wire = None
     try:
         wire = OwnedHTTPTransport()
         wire._wire._pool._network_backend = SyntheticNetworkBackend(owner)
-        url = _fixture_url(book, case, stage, route)
+        url = url if bound else _fixture_url(book, case, stage, route)
         media, body = wire.exchange('GET', url)
         if media != ('text/html' if route == 'sec/document' else 'application/json'):
             raise AccountingError('fixture media mismatch')
