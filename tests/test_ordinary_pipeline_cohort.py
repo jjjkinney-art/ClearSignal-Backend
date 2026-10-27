@@ -11,6 +11,7 @@ import httpx
 import pytest
 from contextvars import ContextVar
 import socket
+import threading
 from app.schemas import QuestionRequest
 from app.services import router_service as router
 from app.services.verified_sec_metric_service import fetch_verified_metric_evidence as REAL_METRIC_FETCH
@@ -19,8 +20,8 @@ from app.services.filing_metric_evidence import fetch_latest_filing_metrics as R
 from app.services.providers.sec_provider import fetch_recent_filings as REAL_FILINGS
 from test_source_evidence_latency import isolated_pipeline
 
-from validation.ordinary_artifacts import export_fixture_packet, store_fixture_answer
-from validation.ordinary_case_lifecycle import OfflineCaseLifecycle
+from validation.ordinary_artifacts import export_fixture_packet
+from validation.ordinary_coordinator import run_offline_cases
 from validation.ordinary_pilot_accounting import OfflineAccounting
 from validation.ordinary_wire_rehearsal import rehearse_sec
 
@@ -38,8 +39,8 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
     monkeypatch.setattr(verified_sec_metric_service, 'fetch_verified_metric_evidence', REAL_METRIC_FETCH)
     tick = [0.0]
     book = OfflineAccounting(tmp_path / 'cohort.db', clock=lambda: tick[0])
-    lifecycle = OfflineCaseLifecycle(book)
     active = [None]
+    initial_threads = set(threading.enumerate())
 
     stage = ContextVar('cohort_fixture_stage', default='evidence.sec')
     def scoped(fn, name):
@@ -87,7 +88,8 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
 
     monkeypatch.setattr(sec_client.requests, 'get', fixture_get)
     monkeypatch.setattr(router._sec_provider, '_fetch_json', lambda url, **kwargs: json.loads(exchange(url)))
-    for case in CASES:
+    def invoke(case_id):
+        case = next(c for c in CASES if c['case_id'] == case_id)
         active[0] = case
         ticker, cik = case['issuer_id'], case['expected_cik']
         directory = issuer_identity.parse_directory({'0': {'ticker': ticker, 'cik_str': int(cik),
@@ -95,34 +97,30 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
         monkeypatch.setattr(issuer_identity, '_load_directory', lambda: directory)
         monkeypatch.setattr(router._sec_provider, '_load_ticker_cik_map', lambda: {ticker: cik})
         monkeypatch.setattr(verified_sec_metric_service, '_load_ticker_cik_map', lambda: {ticker: cik})
-        lifecycle.begin(case['case_id'])
-        try:
-            response = router.route_question(QuestionRequest(company_name=ticker, question=case['question']))
-        except Exception:
-            if fault and book.summary()['halt']:
-                break
-            raise
-        # Application services can catch transport failures and return a partial
-        # answer. The coordinator must never publish it after a durable halt.
-        if book.summary()['halt']:
-            assert fault and case['case_id'] == CASES[2]['case_id']
-            break
-        assert response.company == ticker and response.routing['response_mode'] == 'source_evidence'
-        store_fixture_answer(book, case['case_id'], response.model_dump(mode='json'),
-                             forbidden_values=('invented-secret',))
-        lifecycle.finish(case['case_id'], status='partial_gap')
+        response = router.route_question(QuestionRequest(company_name=ticker, question=case['question']))
+        if not book.summary()['halt']:
+            assert response.company == ticker and response.routing['response_mode'] == 'source_evidence'
         tick[0] += 2.0
-    lifecycle.finalize()
+        return response.model_dump(mode='json')
+
+    def drain():
+        workers = [t for t in threading.enumerate() if t not in initial_threads and t.name.startswith('ThreadPoolExecutor-')]
+        for worker in workers: worker.join(3)
+        return sum(worker.is_alive() for worker in workers)
+
+    result = run_offline_cases(book, invoke, drain, forbidden_values=('invented-secret',))
     with sqlite3.connect(book.path) as db:
         attempts, bound = db.execute('SELECT COUNT(*),COUNT(request_sha256) FROM attempts').fetchone()
         assert attempts == bound
     packet = export_fixture_packet(book, forbidden_values=('invented-secret',), require_bound=True)
     if fault:
+        assert result['failure_class']
         assert packet['halt'] and packet['denominator'] == 12
         assert [r['status'] for r in packet['cases']] == ['partial_gap', 'partial_gap', 'halted'] + ['not_run_after_halt'] * 9
         assert set(packet['answers']) == {CASES[0]['case_id'], CASES[1]['case_id']}
         assert packet['quality_pass_rate'] is None and not packet['launch_ready']
         return
+    assert result['failure_class'] is None
     assert len(packet['answers']) == packet['denominator'] == 12
     assert len(packet['attempts']) == 48
     assert all(row['status'] == 'partial_gap' for row in packet['cases'])
