@@ -208,3 +208,29 @@ def test_success_requires_complete_bound_screened_timely_original_body(tmp_path,
         assert db.execute('SELECT COUNT(*) FROM ordinary_responses').fetchone()[0] == 0
         assert db.execute('SELECT status FROM attempts').fetchone()[0] == 'claimed'
     with pytest.raises(BudgetError): book.finish_case(case)
+
+
+def test_worker_exchange_adapter_retains_before_return_and_rejects_cross_issuer(tmp_path, monkeypatch):
+    from validation.ordinary_native_exchange import exchange_sec
+    import validation.pilot_approved as approved
+    monkeypatch.setattr(approved, 'verify_network_configuration', lambda config, tls=False: ssl.create_default_context() if tls else None)
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    owner = SimpleNamespace(ledger=book, monitoring=True, active=book.require_active,
+        scenario='happy', once=lambda scenarios: False,
+        case={'identity': {'ticker': 'NPK', 'cik': '0000080172', 'company_name': 'Invented'}},
+        identities=[{'ticker': 'NPK', 'cik': '0000080172', 'company_name': 'Invented'}])
+    owner.gate = OrdinaryNativeGate(owner)
+    wire = OrdinaryHTTPTransport(gate=owner.gate, execution=CONFIG, runtime={'sec_contact': 'Fixture contact@example.invalid'})
+    wire._wire._pool._network_backend = ScopedBackend(SyntheticProxyBackend(owner), owner.gate)
+    try:
+        media, body = exchange_sec(owner, wire, case_run=case, stage='evidence.sec_metrics', route='sec/facts',
+            url='https://data.sec.gov/api/xbrl/companyfacts/CIK0000080172.json', forbidden_values=('TEST-ONLY-secret',))
+        with book.transaction() as db:
+            assert db.execute('SELECT body FROM ordinary_responses').fetchone() == (body,)
+            assert db.execute('SELECT status FROM attempts').fetchone() == ('settled',)
+        with pytest.raises(BudgetError):
+            exchange_sec(owner, wire, case_run=case, stage='evidence.sec', route='sec/submissions',
+                url='https://data.sec.gov/submissions/CIK0001652044.json', forbidden_values=('TEST-ONLY-secret',))
+        assert owner.gate.dispatched == 1
+    finally:
+        owner.gate.seal(); wire.close()
