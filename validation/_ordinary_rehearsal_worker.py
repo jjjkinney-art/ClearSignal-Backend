@@ -29,8 +29,6 @@ SCENARIO_FAULTS = {
     # Stalled peers: INGR's first (core) and second (threshold) facts requests.
     'core_deadline': ('stall', r'/companyfacts/CIK0001046257\.json$', 1),
     'threshold_deadline': ('stall', r'/companyfacts/CIK0001046257\.json$', 2),
-    # Enters through route_question (the /ask core) instead of the pipeline.
-    'ask_routing': None,
 }
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
@@ -89,7 +87,10 @@ def main():
     os.environ.update(PATH='/usr/bin:/bin', HOME=str(home), PYTHONDONTWRITEBYTECODE='1',
                       CLEARSIGNAL_BENCHMARK_CAPTURE_ENABLED='false',
                       DECISION_MONITORING_INPUTS_ENABLED='true',
-                      DECISION_MONITORING_FILING_FALLBACK_ENABLED='false', **REHEARSAL_RUNTIME)
+                      DECISION_MONITORING_FILING_FALLBACK_ENABLED='false',
+                      # As in production /ask: authenticated mode, so the router
+                      # never writes the legacy global watchlist/history.
+                      AUTH_ENABLED='true', **REHEARSAL_RUNTIME)
     for name in execution['proxy_selectors']:
         os.environ[name] = execution['proxy']
     for name in execution['ca_selectors']:
@@ -102,7 +103,7 @@ def main():
             import traceback
             # Event name and code locations only; never arguments or values.
             blocked.append({'event': event, 'locations': [
-                f'{Path(frame.filename).name}:{frame.lineno}' for frame in traceback.extract_stack(limit=8)[:-1]]})
+                f'{Path(frame.filename).name}:{frame.lineno}' for frame in traceback.extract_stack(limit=30)[:-1]]})
             if holder:
                 holder[0].halt('offline_network_attempt')
             raise RuntimeError('external operation prohibited in ordinary rehearsal')
@@ -161,7 +162,7 @@ def main():
         boundary.install()
         try:
             from app.config import settings
-            from app.schemas import CompanyContext, QuestionRequest
+            from app.schemas import QuestionRequest
             from app.services import router_service
             from app.services.providers import sec_provider
             boundary.settings = settings
@@ -173,25 +174,20 @@ def main():
                     # contract assumes; identity metadata keeps its own cache.
                     sec_provider._ticker_cik_cache = None
                     sec_provider._reset_shared_company_tickers()
-                    if scenario == 'ask_routing':
-                        # As the frontend sends it: empty company_name, so the
-                        # /ask core detects the company from the question text.
-                        # Under the frozen quotas that lookup has no stage slot.
+                    # As the frontend sends it: empty company_name, so the /ask
+                    # core resolves the company from the question text. That
+                    # resolution may use the routing stage's directory slot.
+                    token = boundary.stage.set('routing')
+                    try:
                         response = router_service.route_question(QuestionRequest(
                             question=case['question'], company_name=''))
-                    else:
-                        # The frozen packet's verified identity enters the
-                        # investment pipeline; routing above it is not exercised.
-                        response = router_service._run_investment_pipeline(
-                            CompanyContext(company_name=case['identity']['ticker'],
-                                           ticker=case['identity']['ticker']),
-                            case['question'], 'ordinary-rehearsal-' + case['case_id'],
-                            side_effects_enabled=False)
+                    finally:
+                        boundary.stage.reset(token)
                     if boundary.drain():
                         raise BudgetError('unfinished pipeline workers')
                     boundary.active()
                     payload = response.model_dump(mode='json')
-                    routes.append({'case_id': case['case_id'],
+                    routes.append({'case_id': case['case_id'], 'company': payload.get('company'),
                                    'pipeline': (payload.get('routing') or {}).get('pipeline'),
                                    'response_mode': (payload.get('routing') or {}).get('response_mode')})
                     boundary.complete_case(payload)

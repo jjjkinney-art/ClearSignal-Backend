@@ -245,7 +245,12 @@ class OrdinaryNativeLedger(AttemptLedger):
                 db.execute("UPDATE policy SET halted=COALESCE(halted,'post_claim_failure') WHERE id=1")
 
     def complete_case(self, case_run, payload, *, forbidden_values):
-        """Retain the complete answer and finish its case in one transaction."""
+        """Retain the complete answer and finish its case in one transaction.
+
+        The response must name this case's issuer, or no issuer at all when the
+        application could not resolve the company (an explicit, retained gap).
+        A response naming any other issuer is drift and halts.
+        """
         try:
             raw = json.dumps(payload, sort_keys=True, separators=(',', ':'),
                              ensure_ascii=False, allow_nan=False).encode('utf-8')
@@ -264,7 +269,7 @@ class OrdinaryNativeLedger(AttemptLedger):
                               "WHERE c.id=? AND c.status='active'", (case_run,)).fetchone()
             unsettled = db.execute("SELECT 1 FROM attempts WHERE case_run=? AND status!='settled'", (case_run,)).fetchone()
             now = time.monotonic_ns()
-            if not case or unsettled or payload.get('company') != case[0].split(':')[0]:
+            if not case or unsettled or payload.get('company') not in {case[0].split(':')[0], ''}:
                 reason = 'invalid_response'
             else:
                 reason = self._deadline_reason(now, case[0], case[1])

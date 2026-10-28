@@ -306,7 +306,7 @@ class AttemptLedger:
         }
         if (type(code) is not str or code not in codes or type(route) is not str
                 or route not in codes[code] or type(stage) is not str
-                or stage not in {'evidence.sec', 'evidence.sec_metrics',
+                or stage not in {'routing', 'evidence.sec', 'evidence.sec_metrics',
                                  'evidence.thesis_disclosures', 'evidence.filing_metrics'}
                 or type(attempt_id) is not str):
             raise BudgetError('invalid SEC refusal metadata')
@@ -327,7 +327,7 @@ class AttemptLedger:
                 or type(route) is not str or type(stage) is not str
                 or type(attempt_id) is not str
                 or not ((route in {'sec/directory', 'sec/submissions', 'sec/facts', 'sec/document'}
-                         and stage in {'evidence.sec', 'evidence.sec_metrics',
+                         and stage in {'routing', 'evidence.sec', 'evidence.sec_metrics',
                                        'evidence.thesis_disclosures', 'evidence.filing_metrics'})
                         or (stage in {'valuation', 'macro', 'risk', 'market', 'quality',
                                       'question_answerer', 'synthesis'} and route == 'model/' + stage))):

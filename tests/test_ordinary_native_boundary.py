@@ -250,10 +250,14 @@ def test_a_paid_provider_key_in_the_environment_halts(boundary, monkeypatch, nam
     assert boundary.ledger.summary()['halted'] == 'configuration_drift'
 
 
-def test_settings_drift_halts(boundary):
-    boundary.settings = SimpleNamespace(decision_monitoring_inputs_enabled=True,
-                                        decision_monitoring_filing_fallback_enabled=True,
-                                        fmp_api_key='', fred_api_key='', sec_user_agent=boundary.contact)
+@pytest.mark.parametrize('drift', ['filing_fallback', 'auth_disabled', 'auth_missing'])
+def test_settings_drift_halts(boundary, drift):
+    values = dict(decision_monitoring_inputs_enabled=True, decision_monitoring_filing_fallback_enabled=False,
+                  auth_enabled=True, fmp_api_key='', fred_api_key='', sec_user_agent=boundary.contact)
+    if drift == 'filing_fallback': values['decision_monitoring_filing_fallback_enabled'] = True
+    elif drift == 'auth_disabled': values['auth_enabled'] = False  # would write global legacy history
+    else: values.pop('auth_enabled')
+    boundary.settings = SimpleNamespace(**values)
     with pytest.raises(BudgetError):
         boundary.active()
     assert boundary.ledger.summary()['halted'] == 'configuration_drift'
@@ -296,3 +300,12 @@ def test_dispatch_claim_pacing_waits_rather_than_halting(boundary):
     fetch(boundary, 'evidence.sec', DIRECTORY)
     assert clock.monotonic() - started >= 0.5  # waited for the window to open
     assert boundary.claim_pacing_waits > 0 and boundary.ledger.summary()['halted'] is None
+
+
+@pytest.mark.parametrize('url', [SUBMISSIONS, FACTS])
+def test_routing_stage_admits_only_the_directory(boundary, url):
+    fetch(boundary, 'routing', DIRECTORY)  # identity resolution
+    with pytest.raises(BudgetError):
+        fetch(boundary, 'routing', url)
+    assert boundary.ledger.summary()['halted']
+    assert rows(boundary, "SELECT COUNT(*) FROM attempts WHERE status='settled'") == [(1,)]

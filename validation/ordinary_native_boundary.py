@@ -23,7 +23,9 @@ from validation.pilot_approved import ScopedBackend, runtime_values
 from validation.pilot_boundary import PilotBoundary
 from validation.pilot_live import SubmissionRefusal, TransportFailure, json_object, submission_documents
 
-SEC_STAGES = frozenset({'evidence.sec', 'evidence.sec_metrics',
+# 'routing' is set by the worker around /ask company resolution; its stage
+# quota admits only the SEC directory.
+SEC_STAGES = frozenset({'routing', 'evidence.sec', 'evidence.sec_metrics',
                         'evidence.thesis_disclosures', 'evidence.filing_metrics'})
 PAID_PROVIDER_ENVIRONMENT = ('FMP_API_KEY', 'FRED_API_KEY', 'NEWS_API_KEY')
 
@@ -86,7 +88,8 @@ class OrdinaryNativeBoundary(PilotBoundary):
             self.refuse('configuration_drift')
         if self.settings is not None:
             expected = self.ledger.policy['configuration']['settings']
-            if (any(getattr(self.settings, key) != value for key, value in expected.items())
+            missing = object()  # an absent pinned setting is drift, never an error
+            if (any(getattr(self.settings, key, missing) != value for key, value in expected.items())
                     or self.settings.fmp_api_key or self.settings.fred_api_key
                     or self.settings.sec_user_agent != self.contact):
                 self.refuse('configuration_drift')

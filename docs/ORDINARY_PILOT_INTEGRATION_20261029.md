@@ -117,17 +117,57 @@ Concrete defects, each verified by reading the code and then by running it:
   keeps its application-level assertions and drops only its fixture-transport
   variants.
 
+## Contract amendment (decided by the project owner on 2026-10-29)
+
+The frontend calls `/ask` with `company_name=""`
+(`frontend_cinematic/app/(product)/analyze/page.tsx`), so `route_question`
+resolves the company from the question text. For issuers missing from the
+local company database (NPK, INGR, NNBR), that calls `discover_company`,
+which fetches the SEC directory before any evidence stage. The original
+per-stage quotas had no slot for that request, so the frontend-shaped
+request halted on NPK, case 1.
+
+Option (a) was chosen. Every case gains a `routing` stage that admits
+exactly one `sec/directory` request and nothing else. The per-case totals
+(8/3 SEC, 2/1 directory) and the 66-request overall total are unchanged. The
+routing directory response is shared, so the pipeline's directory step reuses
+it instead of making a second request. The proposal manifest therefore
+changes, and any approval must bind the amended contract.
+
+The main rehearsal now enters exactly as the frontend does, through
+`route_question(question, company_name="")` inside the `routing` stage. It
+runs in authenticated mode (`AUTH_ENABLED=true`, pinned in the policy), as
+production `/ask` does. In unauthenticated mode the router writes the legacy
+global watchlist and history, including a database write; a pilot must not
+perform those.
+
+## Application finding: NNBR is not resolved from its own legal name
+
+The NNBR questions name the company "NN INC", which is also its SEC
+registrant name. `name_key` removes "INC", leaving "nn", which is below the
+five-character name-match minimum, and "NN" is not the ticker. `/ask`
+therefore returns an unresolved-identity response for both NNBR cases:
+`entity_suggestion` and `company_identity_clarification`. Each is retained
+in full and reported as `identity_unresolved`, never as a pass. A response
+naming any other issuer still halts as drift.
+
+This is offline evidence of the small-issuer problem this pilot targets. It
+was not fixed here: changing identity resolution is application work that
+needs its own review.
+
 ## Evidence, all offline (sockets refused, invented credentials and sources)
 
-- **Happy run.** 12 of 12 cases. 60 SEC exchanges: 7 per thesis case and 3
-  per threshold case, within the 66-GET contract and every per-stage quota.
-  All were retained before settlement.
+- **Happy run through the frontend-shaped `/ask` path.** All 12 outcomes are
+  reported: 10 answered and 2 NNBR `identity_unresolved`.
+  - 50 SEC exchanges: 7 per answered thesis case, 3 per answered threshold
+    case, and 0 for NNBR. All are within the contract and retained before
+    settlement.
+  - The routing slot was used exactly once (NPK, case 1), and that case made
+    no second directory request.
   - Every answer reference traces to a retained body, a document admitted by
     that case's own retained submissions, or a filing-index page for an
     accession those submissions list.
-  - 108 tracked pipeline tasks, 0 unfinished.
-  - 0 model requests, 0 blocked external operations.
-  - Pacing engaged; peak in flight ≤ 4.
+  - 0 model requests, 0 blocked external operations, 0 unfinished tasks.
 - **Read failure, redirect, oversize body, connect failure.** In each case
   the first cause is preserved (`read_error`, `http_redirect`,
   `response_size`, `connect_error`). In-flight siblings are recorded honestly
@@ -137,31 +177,14 @@ Concrete defects, each verified by reading the code and then by running it:
   trusting the killed worker's report.
 - **Mismatched source hash or CA identity.** The worker refuses before any
   ledger, gate or request.
-- **Mutation testing.** 21 of 21 targeted mutations are killed. They cover
-  stage-scoped admission, the slot wait, both pacing points, the zero-model
-  refusal, the paid-provider check, issuer and drift checks, first-cause
-  recording, non-UTF-8 and entity screening, completion rules, output
-  freshness, every export check, and running-code verification.
-
-## Genuine blocker: `/ask` identity routing versus the frozen quotas
-
-The frontend (`frontend_cinematic/app/(product)/analyze/page.tsx`) calls
-`/ask` with `company_name=""`, so `route_question` detects the company from
-the question text. GOOGL, AMZN and MAN resolve from the local company
-database. NPK, INGR and NNBR do not: `discover_company` fetches
-`company_tickers.json` before any evidence stage. The frozen per-stage
-quotas have no slot outside `evidence.*`, so the frontend-shaped request
-halts on NPK, case 1. The `ask_routing` scenario reproduces this.
-
-The main rehearsal therefore enters `_run_investment_pipeline` with the
-packet's verified identity. The route-parity test shows that `route_question`
-calls exactly that function with the same company and question, and that a
-side-effect-free call returns the identical answer. That establishes answer
-equivalence after resolution; it does not cover the resolution request.
-Resolving this needs a decision on the frozen contract. For example, a
-`routing` stage could receive a directory slot within the unchanged totals,
-since the shared directory response then serves the pipeline. This change
-does not make that decision.
+- **Mutation testing.** 26 of 26 live targeted mutations are killed. They
+  include the routing slot and its directory-only scope, the authenticated-mode
+  pin and setting, drift versus unresolved answers, and every export check.
+- **Hosted CI on the previous head `d33e726`.** All 15 steps passed,
+  including the full isolated-per-file regression. A local replica of every
+  gate showed the same result, apart from four files that fail identically on
+  the unmodified base on macOS: `/tmp` symlink literals, a local-date-vs-UTC
+  test, and an interpreter-shutdown flake.
 
 ## Not established
 
@@ -172,8 +195,9 @@ does not make that decision.
   arrival timing nor real SEC response sizes are established. Rate and
   concurrency are enforced and recorded at owned HTTPX entry.
 - **Not authenticated or browser coverage.** The `/ask` authentication
-  preflight, ownership and streaming layers are not exercised. Only the router
-  core and the pipeline are.
+  preflight, ownership, persistence of owned history and streaming layers are
+  not exercised. Only `route_question` and the pipeline are, in authenticated
+  mode.
 - **Not a cost ceiling.** Zero model and provider calls do not establish an
   all-in invoice ceiling (`invoice_ceiling_verified=False`).
 - **Not reviewed.** No independent review has occurred.

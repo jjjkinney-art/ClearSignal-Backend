@@ -85,7 +85,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         payload = json.loads(raw)
         from validation.pilot_policy import reject_runtime_values
         reject_runtime_values(payload, forbidden_values, raw=raw)
-        if payload.get('company') != case_id.split(':')[0]:
+        if payload.get('company') not in {case_id.split(':')[0], ''}:
             raise ExportRefused('answer issuer mismatch')
     if any(row[2] == 'complete' and row[0] not in answers for row in cases):
         raise ExportRefused('completed case without its retained answer')
@@ -154,11 +154,14 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         if row is None:
             status = 'not_run_after_halt' if halted else 'not_run'
         elif row[2] == 'complete':
-            status = 'answered_unadjudicated'
+            # An unresolved company is retained and reported, never a pass.
+            unresolved = json.loads(answers[row[0]][2]).get('company') == ''
+            status = 'identity_unresolved' if unresolved else 'answered_unadjudicated'
         else:
             status = 'halted'
         outcomes.append({'case_id': case_id, 'status': status})
-    complete = not halted and all(o['status'] == 'answered_unadjudicated' for o in outcomes)
+    complete = not halted and all(o['status'] in {'answered_unadjudicated', 'identity_unresolved'}
+                                  for o in outcomes)
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
     return {'format': 'ordinary-native-packet-v1', 'synthetic_sec_backend': synthetic,

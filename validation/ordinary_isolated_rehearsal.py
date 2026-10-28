@@ -21,7 +21,7 @@ from validation.pilot_policy import AUDITED_DEPENDENCIES
 
 ROOT = Path(__file__).resolve().parents[1]
 SCENARIOS = ('happy', 'wire_read_failure', 'wire_redirect', 'wire_oversize', 'wire_connect_failure',
-             'core_deadline', 'threshold_deadline', 'ask_routing')
+             'core_deadline', 'threshold_deadline')
 TEST_ONLY = 'TEST-ONLY-NOT-AN-APPROVAL'
 
 

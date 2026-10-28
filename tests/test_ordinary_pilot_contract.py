@@ -11,8 +11,11 @@ def test_twelve_fixed_cases_and_nontransferable_limits():
     assert validate_contract(c) == c
     assert c['execution_authorized'] is False
     # Stage directory slots share, rather than multiply, aggregate case limits.
-    assert sum(s.get('sec/directory', 0) for s in c['per_stage'][CASES[0]].values()) == 4
+    assert sum(s.get('sec/directory', 0) for s in c['per_stage'][CASES[0]].values()) == 5
     assert c['per_case'][CASES[0]]['sec/directory'] == 2
+    # Routing may resolve identity through the directory only; totals unchanged.
+    assert all(c['per_stage'][case]['routing'] == {'sec/directory': 1} for case in CASES)
+    assert [c['per_case'][case]['sec'] for case in CASES] == [8, 3] * 6
 
 
 @pytest.mark.parametrize('mutation', [

@@ -17,7 +17,12 @@ def quota_contract():
         per_case[case] = {'sec': 8 if core else 3, 'sec/directory': 2 if core else 1,
                           'sec/submissions': 3 if core else 1, 'sec/facts': 1,
                           'sec/document': 2 if core else 0}
-        stages = {'evidence.sec': {'sec/directory': 1, 'sec/submissions': 1},
+        # One routing-stage directory slot: /ask resolves a company named only
+        # in question text through the SEC directory before evidence stages.
+        # Per-case and overall totals are unchanged; the shared directory
+        # response then serves the pipeline instead of a second GET.
+        stages = {'routing': {'sec/directory': 1},
+                  'evidence.sec': {'sec/directory': 1, 'sec/submissions': 1},
                   'evidence.sec_metrics': {'sec/directory': 1, 'sec/facts': 1}}
         if core:
             for stage in ('evidence.filing_metrics', 'evidence.thesis_disclosures'):

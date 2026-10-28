@@ -357,3 +357,15 @@ def test_failure_records_use_fixed_codes_only(tmp_path):
     with book.transaction() as db:
         assert db.execute('SELECT code,detail FROM ordinary_exchange_failures').fetchall() == [('transport', 'read_error')]
     assert book.summary()['halted'] == 'post_claim_failure'
+
+
+def test_an_unresolved_identity_answer_is_retained_but_another_issuer_halts(tmp_path):
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    book.complete_case(case, {'company': '', 'answer': {'text': 'Could not verify the company.'}},
+                       forbidden_values=('TEST-ONLY-secret',))
+    with book.transaction() as db:
+        assert db.execute('SELECT case_id FROM ordinary_answers').fetchall() == [(CASES[0],)]
+    case = book.begin_case(CASES[1])
+    with pytest.raises(BudgetError):
+        book.complete_case(case, {'company': 'GOOGL', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    assert book.summary()['halted'] == 'invalid_response'
