@@ -41,7 +41,7 @@ def _store_fixture_answer_locked(book, case, payload, *, forbidden_values):
         if len(raw) > 4 * 1024 * 1024:
             raise AccountingError('answer envelope exceeded')
         reject_runtime_values(payload, forbidden_values, raw=raw)
-        with sqlite3.connect(book.path, timeout=10) as db:
+        with book._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
             reason = halt or book._case_reason(db, case, book.clock())
@@ -54,7 +54,7 @@ def _store_fixture_answer_locked(book, case, payload, *, forbidden_values):
     except BaseException:
         book.seal_local()
         try:
-            with sqlite3.connect(book.path, timeout=10) as db:
+            with book._connect() as db:
                 db.execute("UPDATE state SET halt=CASE WHEN halt='' THEN 'answer_retention_failure' ELSE halt END")
         except sqlite3.Error:
             pass  # unavailable durable storage cannot permit response publication
@@ -70,7 +70,8 @@ def verify_terminal_snapshot(book, *, forbidden_values, require_bound=False, _sn
         raise AccountingError('screening values required')
     if type(require_bound) is not bool:
         raise AccountingError('invalid binding requirement')
-    uri = Path(book.path).resolve().as_uri() + '?mode=ro'
+    book._check_identity()
+    uri = Path(book.path).as_uri() + '?mode=ro'
     with (sqlite3.connect(uri, uri=True) if _snapshot is None else nullcontext(_snapshot)) as db:
         db.execute('BEGIN')
         halt, = db.execute('SELECT halt FROM state').fetchone()
@@ -177,7 +178,8 @@ def export_fixture_packet(book, *, forbidden_values, require_bound=False):
     fake-dispatch times and fixture receipts. Failed requests can lack receipts.
     It does not establish authenticity or citation support.
     """
-    uri = Path(book.path).resolve().as_uri() + '?mode=ro'
+    book._check_identity()
+    uri = Path(book.path).as_uri() + '?mode=ro'
     with sqlite3.connect(uri, uri=True) as db:
         report = verify_terminal_snapshot(book, forbidden_values=forbidden_values, require_bound=require_bound, _snapshot=db)
         rows = db.execute('SELECT a.id,a.case_id,a.stage,a.route,a.outcome,d.dispatched_at,'

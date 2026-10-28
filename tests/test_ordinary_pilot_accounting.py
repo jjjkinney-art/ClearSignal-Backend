@@ -1,4 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 import sqlite3
 import pytest
 from validation.ordinary_pilot_accounting import OfflineAccounting, AccountingError
@@ -79,3 +80,17 @@ def test_ambiguous_outcome_durably_halts_without_settling(tmp_path):
         book.claim(CASE, 'evidence.sec_metrics', 'sec/facts')
     book.settle(a, succeeded=True)
     assert book.summary()['outcomes'] == {'late': 1}
+@pytest.mark.parametrize('mode', ['deleted', 'replaced', 'symlink'])
+def test_unavailable_or_replaced_ledger_never_silently_reopens(tmp_path, mode):
+    book = OfflineAccounting(tmp_path / 'original.db')
+    original = Path(book.path)
+    if mode == 'deleted':
+        original.unlink()
+    else:
+        original.rename(tmp_path / 'preserved.db')
+        if mode == 'replaced': original.write_bytes(b'replacement')
+        else: original.symlink_to(tmp_path / 'preserved.db')
+    with pytest.raises(AccountingError): book.claim(CASE, 'evidence.sec_metrics', 'sec/facts')
+    assert book._locally_sealed
+    if mode == 'deleted': assert not original.exists()
+    if mode == 'replaced': assert original.read_bytes() == b'replacement'

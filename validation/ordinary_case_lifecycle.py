@@ -12,7 +12,7 @@ class OfflineCaseLifecycle:
     def __init__(self, book):
         self.book = book
         book._lifecycle_required = True
-        with sqlite3.connect(book.path) as db:
+        with book._connect() as db:
             db.execute('CREATE TABLE case_lifecycle (position INTEGER PRIMARY KEY, '
                        'case_id TEXT UNIQUE, status TEXT, started REAL)')
             db.executemany('INSERT INTO case_lifecycle VALUES (?,?,?,NULL)',
@@ -22,7 +22,7 @@ class OfflineCaseLifecycle:
         if self.book._locally_sealed:
             raise AccountingError('locally sealed')
         reason = ''
-        with sqlite3.connect(self.book.path, timeout=10) as db:
+        with self.book._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
             active = db.execute("SELECT 1 FROM case_lifecycle WHERE status='running'").fetchone()
@@ -42,12 +42,12 @@ class OfflineCaseLifecycle:
 
     def finish(self, case, *, status):
         if type(status) is not str or status not in {'complete', 'partial_gap', 'error'}:
-            with sqlite3.connect(self.book.path) as db:
+            with self.book._connect() as db:
                 db.execute("UPDATE state SET halt=CASE WHEN halt='' THEN 'invalid_case_outcome' ELSE halt END")
             self.book.seal_local()
             raise AccountingError('invalid case outcome')
         reason = ''
-        with sqlite3.connect(self.book.path, timeout=10) as db:
+        with self.book._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             row = db.execute('SELECT status,started FROM case_lifecycle WHERE case_id=?', (case,)).fetchone()
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
@@ -78,7 +78,7 @@ class OfflineCaseLifecycle:
     def finalize(self):
         """Produce all twelve denominator rows; never convert gaps into passes."""
         self.book.seal_local()
-        with sqlite3.connect(self.book.path, timeout=10) as db:
+        with self.book._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
             unfinished = db.execute("SELECT COUNT(*) FROM case_lifecycle WHERE status IN ('running','scheduled')").fetchone()[0]

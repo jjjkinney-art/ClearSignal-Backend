@@ -8,6 +8,7 @@ import os
 import hashlib
 import math
 import re
+from pathlib import Path
 from copy import deepcopy
 import sqlite3
 import time
@@ -23,14 +24,16 @@ class AccountingError(ValueError):
 
 class OfflineAccounting:
     def __init__(self, path, *, clock=time.monotonic):
-        self.path, self.clock = str(path), clock
+        self.path, self.clock = str(Path(path).absolute()), clock
         self.started = clock()
         self._policy = quota_contract()
         self._locally_sealed = False
         self._seal_lock = RLock()
         fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        stat = os.fstat(fd)
+        self._file_identity = (stat.st_dev, stat.st_ino)
         os.close(fd)
-        with sqlite3.connect(self.path) as db:
+        with self._connect() as db:
             db.executescript('''
                 CREATE TABLE state (halt TEXT NOT NULL);
                 INSERT INTO state VALUES ('');
@@ -42,6 +45,21 @@ class OfflineAccounting:
                 CREATE TABLE attempts (id TEXT PRIMARY KEY, case_id TEXT, stage TEXT,
                     route TEXT, outcome TEXT NOT NULL DEFAULT 'pending', request_sha256 TEXT);
             ''')
+
+    def _check_identity(self):
+        try:
+            stat = os.stat(self.path, follow_symlinks=False)
+        except OSError:
+            self.seal_local()
+            raise AccountingError('fixture ledger unavailable; no reset') from None
+        if (stat.st_dev, stat.st_ino) != self._file_identity:
+            self.seal_local()
+            raise AccountingError('fixture ledger replaced; no reset')
+
+    def _connect(self):
+        """Open only the original file; never recreate a missing ledger."""
+        self._check_identity()
+        return sqlite3.connect(Path(self.path).as_uri() + '?mode=rw', uri=True, timeout=10)
 
     @property
     def policy(self):
@@ -77,7 +95,7 @@ class OfflineAccounting:
             raise AccountingError('locally sealed')
         if request_sha256 is not None and (type(request_sha256) is not str or not re.fullmatch(r'[0-9a-f]{64}', request_sha256)):
             raise AccountingError('invalid fixture request binding')
-        with sqlite3.connect(self.path, timeout=10) as db:
+        with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
             reason = reason or self._case_reason(db, case, self.clock())
@@ -120,7 +138,7 @@ class OfflineAccounting:
     def _dispatch_locked(self, attempt, *, case=None, route=None, request_sha256=None):
         if self._locally_sealed:
             raise AccountingError('locally sealed')
-        with sqlite3.connect(self.path, timeout=10) as db:
+        with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             reason = db.execute('SELECT halt FROM state').fetchone()[0]
             now = self.clock()
@@ -160,11 +178,11 @@ class OfflineAccounting:
 
     def _settle_locked(self, attempt, *, succeeded):
         if type(succeeded) is not bool:
-            with sqlite3.connect(self.path, timeout=10) as db:
+            with self._connect() as db:
                 db.execute('BEGIN IMMEDIATE')
                 db.execute("UPDATE state SET halt=CASE WHEN halt='' THEN 'invalid_outcome' ELSE halt END")
             raise AccountingError('invalid outcome')
-        with sqlite3.connect(self.path, timeout=10) as db:
+        with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             pending = db.execute('SELECT outcome,case_id FROM attempts WHERE id=?', (attempt,)).fetchone()
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
@@ -213,7 +231,7 @@ class OfflineAccounting:
                 reject_runtime_values(text, forbidden_values, raw=body)
             except (BudgetError, UnicodeError, RecursionError):
                 reason = 'body_screening'
-        with sqlite3.connect(self.path, timeout=10) as db:
+        with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             halt = db.execute('SELECT halt FROM state').fetchone()[0]
             pending = db.execute('SELECT outcome,case_id FROM attempts WHERE id=?', (attempt,)).fetchone()
@@ -243,13 +261,13 @@ class OfflineAccounting:
         """Record safe codes only; never replace the first durable halt reason."""
         if code not in {'transport_close', 'settlement'}:
             raise AccountingError('invalid cleanup code')
-        with sqlite3.connect(self.path, timeout=10) as db:
+        with self._connect() as db:
             db.execute('BEGIN IMMEDIATE')
             db.execute('INSERT INTO cleanup_failures VALUES (?)', (code,))
             db.execute("UPDATE state SET halt=CASE WHEN halt='' THEN 'cleanup_failure' ELSE halt END")
 
     def summary(self):
-        with sqlite3.connect(self.path) as db:
+        with self._connect() as db:
             rows = db.execute('SELECT outcome,COUNT(*) FROM attempts GROUP BY outcome').fetchall()
             return {'halt': db.execute('SELECT halt FROM state').fetchone()[0],
                     'outcomes': dict(rows), 'execution_authorized': False,

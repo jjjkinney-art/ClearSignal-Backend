@@ -100,7 +100,7 @@ def rehearse_sec(book, case, *, stage, route, scenario='happy', bound=False):
 
 
 def _fixture_url(book, case, stage, route):
-    with sqlite3.connect(book.path) as db:
+    with book._connect() as db:
         return _fixture_url_from_db(db, case, stage, route)
 
 
@@ -145,7 +145,7 @@ def _retain_fixture_receipt(book, attempt, url, media):
 def _retain_fixture_receipt_locked(book, attempt, url, media):
     if book._locally_sealed:
         raise AccountingError('locally sealed')
-    with sqlite3.connect(book.path, timeout=10) as db:
+    with book._connect() as db:
         db.execute('BEGIN IMMEDIATE')
         halt, = db.execute('SELECT halt FROM state').fetchone()
         row = db.execute('SELECT case_id,stage,route,outcome FROM attempts WHERE id=?', (attempt,)).fetchone()
