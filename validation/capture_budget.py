@@ -104,6 +104,7 @@ def validate_policy(policy):
     if not isinstance(policy, dict) or type(policy.get('schema_version')) is not int or policy['schema_version'] not in (1, 2):
         raise BudgetError('unsupported policy')
     rehearsal = policy['schema_version'] == 2
+    ordinary = rehearsal and policy.get('purpose') == 'approved_ordinary_twelve_case_pilot'
     if rehearsal:
         from validation.pilot_policy import policy_for
         try:
@@ -116,7 +117,13 @@ def validate_policy(policy):
                      'disabled_monitoring_freshness_validation': 'freshness',
                      'approved_monitoring_freshness_pilot': 'approved_freshness'}
             mode = modes.get(purpose)
-            if purpose == 'approved_two_source_diagnostic_capture':
+            if ordinary:
+                from validation.ordinary_native_policy import policy_for as ordinary_policy
+                expected = ordinary_policy(policy['code_binding'], policy['dependencies'],
+                    policy['approval'], policy['execution_configuration'], cases=policy['case_records'],
+                    all_in_usd=policy['budget_usd'], retention_reference=policy['retention_reference'],
+                    pricing_review_reference=policy['pricing_review_reference'])
+            elif purpose == 'approved_two_source_diagnostic_capture':
                 from validation.source_capture import policy_for as capture_policy
                 expected = capture_policy(policy['code_binding'], policy['dependencies'],
                                           policy['approval'], policy['execution_configuration'])
@@ -128,7 +135,7 @@ def validate_policy(policy):
                 raise ValueError('unknown policy purpose')
             extra = ({'approval': policy['approval'], 'execution': policy['execution_configuration']}
                      if mode in {'approved', 'approved_source_monitoring', 'approved_freshness'} else {})
-            if purpose not in {'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture'}:
+            if not ordinary and purpose not in {'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture'}:
                 expected = policy_for(policy['code_binding'], policy['dependencies'], mode=mode, **extra)
         except (KeyError, TypeError, ValueError):
             raise BudgetError('invalid fixed rehearsal policy') from None
@@ -138,15 +145,21 @@ def validate_policy(policy):
         if not isinstance(policy.get(key), str) or not policy[key].strip():
             raise BudgetError(f'{key} is required')
     budget = money(policy.get('budget_usd'), round_up=False)
-    if budget <= 0 or count(policy.get('maximum_attempts')) < 1:
+    if (budget < 0 if ordinary else budget <= 0) or count(policy.get('maximum_attempts')) < 1:
         raise BudgetError('positive budget and maximum_attempts required')
     cases = policy.get('approved_case_ids')
-    if (not isinstance(cases, list) or not 1 <= len(cases) <= 6
+    if (not isinstance(cases, list) or not 1 <= len(cases) <= (12 if ordinary else 6)
             or any(not isinstance(c, str) or c.count(':') != 1 for c in cases)
             or len(set(cases)) != len(cases)):
         raise BudgetError('one to six distinct approved cases required')
-    validate_cases(cases)
-    if policy.get('setup_sha256') != setup_binding():
+    if ordinary:
+        from validation.ordinary_pilot_contract import CASES
+        from validation.ordinary_execution_contract import PACKET_CASE_PROJECTION_SHA256
+        if cases != list(CASES) or policy.get('setup_sha256') != PACKET_CASE_PROJECTION_SHA256:
+            raise BudgetError('exact ordinary packet binding required')
+    else:
+        validate_cases(cases)
+    if not ordinary and policy.get('setup_sha256') != setup_binding():
         raise BudgetError('setup binding absent or changed')
     rates = policy.get('prices')
     if not isinstance(rates, dict) or not rates:
@@ -466,8 +479,13 @@ class AttemptLedger:
 
     def claim_native_dispatch(self, attempt_id, *, case_run, route, request_sha256):
         """Consume an approved claim once across gates/contexts, before native I/O."""
+        if self.policy.get('purpose') == 'approved_ordinary_twelve_case_pilot':
+            from validation.ordinary_native_ledger import OrdinaryNativeLedger
+            if type(self) is not OrdinaryNativeLedger:
+                raise BudgetError('ordinary native intent requires its fresh-only ledger')
         if self.policy.get('purpose') not in {'approved_six_case_pilot', 'approved_source_monitoring_pilot',
-                                                 'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture', 'approved_monitoring_freshness_pilot'}:
+                                                 'approved_two_source_diagnostic_capture', 'approved_eps_source_adequacy_capture', 'approved_monitoring_freshness_pilot',
+                                                 'approved_ordinary_twelve_case_pilot'}:
             raise BudgetError('native dispatch requires approved policy')
         with self.transaction() as db:
             self.active(db)
@@ -544,7 +562,8 @@ def preflight(policy, case_id):
     if case_id not in policy['approved_case_ids']:
         raise BudgetError('case not explicitly approved')
     return dict(artifact_id=str(uuid4()), case_id=case_id,
-                policy_sha256=digest(policy), setup_sha256=setup_binding(),
+                policy_sha256=digest(policy), setup_sha256=(policy['setup_sha256']
+                    if policy.get('purpose') == 'approved_ordinary_twelve_case_pilot' else setup_binding()),
                 configuration_version=policy['configuration_version'],
                 execution_allowed=False, hard_usd_cap_established=False,
                 blockers=['No audited provider transport integration',
