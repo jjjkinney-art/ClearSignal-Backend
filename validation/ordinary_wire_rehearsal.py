@@ -40,13 +40,39 @@ class _FixtureOwner:
             return True
 
 
+class _ScopedFixtureOwner(_FixtureOwner):
+    """Fake ledger adapter for exercising ExchangeGate, never native authority."""
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.ledger = self
+        self.policy = {'execution_configuration': {'proxy': 'http://proxy:8080'}}
+
+    def active(self):
+        if self.book._locally_sealed or self.book.summary()['halt']:
+            raise AccountingError('scoped rehearsal halted')
+
+    def claim_native_dispatch(self, attempt, *, case_run, route, request_sha256):
+        self.book.claim_fixture_dispatch(attempt, case=case_run, route=route,
+                                         request_sha256=request_sha256)
+
+    def once(self, scenarios):
+        # Dispatch is already accounted by ExchangeGate, before fake connect.
+        with self.lock:
+            if scenarios == {'wire_connect_failure'}:
+                self.connects += 1
+            if self.scenario not in scenarios or self.scenario in self.used:
+                return False
+            self.used.add(self.scenario)
+            return True
+
+
 def rehearse_facts(book, case, *, scenario='happy'):
     return rehearse_sec(book, case, stage='evidence.sec_metrics', route='sec/facts', scenario=scenario)
 
 
-def rehearse_sec(book, case, *, stage, route, scenario='happy', bound=False):
+def rehearse_sec(book, case, *, stage, route, scenario='happy', bound=False, scoped=False):
     """Fixed synthetic SEC routes only, never a caller-supplied URL."""
-    if case not in CASES or scenario not in {
+    if (scoped and not bound) or case not in CASES or scenario not in {
             'happy', 'reported-facts', 'wire_redirect', 'wire_read_failure', 'wire_connect_failure'}:
         raise AccountingError('unsupported rehearsal')
     from .pilot_live import OwnedHTTPTransport
@@ -55,13 +81,29 @@ def rehearse_sec(book, case, *, stage, route, scenario='happy', bound=False):
     fingerprint = request_digest({'method':'GET', 'url':url, 'route':route, 'stage':stage}) if bound else None
     attempt = book.claim(case, stage, route, request_sha256=fingerprint)
     binding = {'case':case, 'route':route, 'request_sha256':fingerprint} if bound else None
-    owner = _FixtureOwner(case.split(':')[0], scenario, book, attempt, binding)
-    wire = None
+    owner_type = _ScopedFixtureOwner if scoped else _FixtureOwner
+    owner = owner_type(case.split(':')[0], scenario, book, attempt, binding)
+    wire = gate = None
     try:
-        wire = OwnedHTTPTransport()
-        wire._wire._pool._network_backend = SyntheticNetworkBackend(owner)
+        if scoped:
+            from .pilot_approved import ExchangeGate, ScopedBackend
+            from .ordinary_transport import OrdinaryHTTPTransport
+            from ._pilot_wire_fixtures import SyntheticProxyBackend
+            gate = ExchangeGate(owner)
+            wire = OrdinaryHTTPTransport(gate=gate, execution=owner.policy['execution_configuration'],
+                                         runtime={'sec_contact': 'Fixture contact@example.invalid'})
+            wire._wire._pool._network_backend = ScopedBackend(SyntheticProxyBackend(owner), gate)
+        else:
+            wire = OwnedHTTPTransport()
+            wire._wire._pool._network_backend = SyntheticNetworkBackend(owner)
         url = url if bound else _fixture_url(book, case, stage, route)
-        media, body = wire.exchange('GET', url)
+        if scoped:
+            grant = gate.issue(attempt, fingerprint, route, case, stage)
+            with gate.exchange(url, grant, fingerprint):
+                media, body = wire.exchange('GET', url)
+            gate.seal()
+        else:
+            media, body = wire.exchange('GET', url)
         if media != ('text/html' if route == 'sec/document' else 'application/json'):
             raise AccountingError('fixture media mismatch')
         receipt = book.retain_fixture_body(attempt, body, forbidden_values=SECRET_CANARIES)
@@ -72,8 +114,11 @@ def rehearse_sec(book, case, *, stage, route, scenario='happy', bound=False):
         if book.summary()['halt']:
             raise AccountingError('rehearsal halted; response not publishable')
         result = {'receipt': receipt, 'simulated_connections': owner.connects,
+                  'scoped_dispatches': gate.dispatched if scoped else None,
                   'external_requests': 0, 'execution_authorized': False}
     except BaseException as primary:
+        if gate is not None:
+            gate.seal()
         book.seal_local()
         cleanup_codes = []
         try:

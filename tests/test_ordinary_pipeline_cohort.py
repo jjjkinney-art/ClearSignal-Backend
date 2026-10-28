@@ -12,6 +12,7 @@ import pytest
 from contextvars import ContextVar
 import socket
 import threading
+import ssl
 from app.schemas import QuestionRequest
 from app.services import router_service as router
 from app.services.verified_sec_metric_service import fetch_verified_metric_evidence as REAL_METRIC_FETCH
@@ -30,6 +31,9 @@ CASES = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_te
 
 @pytest.mark.parametrize('fault', [None, 'wire_connect_failure', 'wire_read_failure'])
 def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline, monkeypatch, tmp_path, fault):
+    import validation.pilot_approved as approved
+    monkeypatch.setattr(approved, 'verify_network_configuration',
+                        lambda config, tls=False: ssl.create_default_context() if tls else None)
     from app.config import settings
     from app.providers import sec_client
     from app.services import issuer_identity, verified_sec_metric_service, public_document_ingestion
@@ -64,8 +68,10 @@ def test_actual_routed_answers_retained_in_one_fixture_cohort(isolated_pipeline,
         current_stage = 'evidence.sec_metrics' if route == 'sec/facts' else stage.get()
         scenario = (fault if fault and case['case_id'] == CASES[2]['case_id'] and route == 'sec/facts'
                     else 'reported-facts' if route == 'sec/facts' else 'happy')
-        receipt = rehearse_sec(book, case['case_id'], stage=current_stage, route=route,
-                               scenario=scenario, bound=True)['receipt']
+        exchange_result = rehearse_sec(book, case['case_id'], stage=current_stage, route=route,
+                                      scenario=scenario, bound=True, scoped=True)
+        assert exchange_result['scoped_dispatches'] == exchange_result['simulated_connections'] == 1
+        receipt = exchange_result['receipt']
         assert receipt['url'] == url
         with sqlite3.connect(book.path) as db:
             raw, = db.execute('SELECT body FROM bodies WHERE attempt_id=?', (receipt['attempt_id'],)).fetchone()
