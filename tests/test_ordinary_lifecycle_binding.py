@@ -151,3 +151,35 @@ def test_seal_waits_for_inflight_settlement_before_returning(tmp_path):
         settling.result(timeout=3); sealing.result(timeout=3)
     assert sealed.is_set()
     assert book.summary()['outcomes'] == {'success': 1}
+
+
+@pytest.mark.parametrize('operation', ['claim', 'dispatch', 'retain'])
+def test_seal_waits_for_active_fixture_write(tmp_path, operation):
+    from concurrent.futures import ThreadPoolExecutor
+    from threading import Event, current_thread
+    entered, release, sealed = Event(), Event(), Event()
+    book = OfflineAccounting(tmp_path / 'offline.db')
+    lifecycle = OfflineCaseLifecycle(book); lifecycle.begin(CASES[0])
+    attempt = None if operation == 'claim' else book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts')
+    start = book.clock()
+    def clock():
+        if current_thread().name.startswith('ThreadPoolExecutor'):
+            entered.set()
+            assert release.wait(3)
+        return start
+    book.clock = clock
+    def write():
+        if operation == 'claim': return book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts')
+        if operation == 'dispatch': return book.claim_fixture_dispatch(attempt)
+        return book.retain_fixture_body(attempt, b'fixture', forbidden_values=('invented-secret',))
+    def seal():
+        book.seal_local(); sealed.set()
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        future = pool.submit(write)
+        assert entered.wait(3)
+        sealing = pool.submit(seal)
+        assert not sealed.wait(0.05)
+        release.set()
+        future.result(timeout=3); sealing.result(timeout=3)
+    with pytest.raises(AccountingError, match='locally sealed'):
+        book.claim(CASES[0], 'evidence.sec_metrics', 'sec/facts')

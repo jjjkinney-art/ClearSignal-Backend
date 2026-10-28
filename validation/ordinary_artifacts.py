@@ -24,6 +24,11 @@ def _bytes(value):
 
 def store_fixture_answer(book, case, payload, *, forbidden_values):
     """Retain the entire serialized response while its case is still active."""
+    with book._seal_lock:
+        return _store_fixture_answer_locked(book, case, payload, forbidden_values=forbidden_values)
+
+
+def _store_fixture_answer_locked(book, case, payload, *, forbidden_values):
     try:
         if (case not in CASES or not getattr(book, '_lifecycle_required', False)
                 or book._locally_sealed or type(payload) is not dict

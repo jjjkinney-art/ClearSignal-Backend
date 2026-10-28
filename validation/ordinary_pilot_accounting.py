@@ -11,7 +11,7 @@ import re
 from copy import deepcopy
 import sqlite3
 import time
-from threading import Lock
+from threading import RLock
 from uuid import uuid4
 
 from .ordinary_pilot_contract import quota_contract
@@ -27,7 +27,7 @@ class OfflineAccounting:
         self.started = clock()
         self._policy = quota_contract()
         self._locally_sealed = False
-        self._seal_lock = Lock()
+        self._seal_lock = RLock()
         fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         os.close(fd)
         with sqlite3.connect(self.path) as db:
@@ -69,6 +69,10 @@ class OfflineAccounting:
 
     def claim(self, case, stage, route, *, request_sha256=None):
         """Record a simulated attempt atomically; returned IDs are not capabilities."""
+        with self._seal_lock:
+            return self._claim_locked(case, stage, route, request_sha256=request_sha256)
+
+    def _claim_locked(self, case, stage, route, *, request_sha256=None):
         if self._locally_sealed:
             raise AccountingError('locally sealed')
         if request_sha256 is not None and (type(request_sha256) is not str or not re.fullmatch(r'[0-9a-f]{64}', request_sha256)):
@@ -110,6 +114,10 @@ class OfflineAccounting:
         Rate excess halts rather than sleeping/retrying. Failed connections stay
         consumed. A native executor must use its own approved request gate.
         """
+        with self._seal_lock:
+            return self._dispatch_locked(attempt, case=case, route=route, request_sha256=request_sha256)
+
+    def _dispatch_locked(self, attempt, *, case=None, route=None, request_sha256=None):
         if self._locally_sealed:
             raise AccountingError('locally sealed')
         with sqlite3.connect(self.path, timeout=10) as db:
@@ -184,6 +192,10 @@ class OfflineAccounting:
         media, provenance and runtime-secret binding must still be enforced by
         the future executor. No caller-controlled receipt fields are accepted.
         """
+        with self._seal_lock:
+            return self._retain_body_locked(attempt, body, forbidden_values=forbidden_values)
+
+    def _retain_body_locked(self, attempt, body, *, forbidden_values):
         if self._locally_sealed:
             raise AccountingError('locally sealed')
         from .pilot_policy import reject_runtime_values

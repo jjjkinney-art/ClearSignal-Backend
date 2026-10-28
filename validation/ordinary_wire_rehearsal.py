@@ -138,6 +138,11 @@ def _fixture_url_from_db(db, case, stage, route):
 
 def _retain_fixture_receipt(book, attempt, url, media):
     """Record only the observed successful fake exchange while its attempt is active."""
+    with book._seal_lock:
+        return _retain_fixture_receipt_locked(book, attempt, url, media)
+
+
+def _retain_fixture_receipt_locked(book, attempt, url, media):
     if book._locally_sealed:
         raise AccountingError('locally sealed')
     with sqlite3.connect(book.path, timeout=10) as db:
