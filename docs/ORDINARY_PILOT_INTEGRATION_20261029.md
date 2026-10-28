@@ -141,27 +141,43 @@ production `/ask` does. In unauthenticated mode the router writes the legacy
 global watchlist and history, including a database write; a pilot must not
 perform those.
 
-## Application finding: NNBR is not resolved from its own legal name
+## Application fix: short registrant names with their legal form (NNBR)
 
 The NNBR questions name the company "NN INC", which is also its SEC
-registrant name. `name_key` removes "INC", leaving "nn", which is below the
-five-character name-match minimum, and "NN" is not the ticker. `/ask`
-therefore returns an unresolved-identity response for both NNBR cases:
-`entity_suggestion` and `company_identity_clarification`. Each is retained
-in full and reported as `identity_unresolved`, never as a pass. A response
-naming any other issuer still halts as drift.
+registrant name. The directory indexes names by `name_key`, which strips the
+legal form, so NNBR is indexed as "nn". Question windows were compared as raw
+words. The window "nn inc" never equalled "nn", and the single word "nn" is
+below the five-character minimum. The frontend-shaped `/ask` therefore
+returned an unresolved-identity response for both NNBR cases.
 
-This is offline evidence of the small-issuer problem this pilot targets. It
-was not fixed here: changing identity resolution is application work that
-needs its own review.
+The same defect made "Compare NN INC with WD-40 CO" silently resolve to WD-40
+alone.
+
+Fix (`issuer_identity.discover_company`, free text only): a multi-word window
+that ends in an explicit legal form (Inc, Corp, Co, Ltd, …) also matches its
+`name_key`. The legal form makes a short name exact. These are still refused:
+- a bare short word ("nn");
+- an uppercase token that is not a ticker ("NN");
+- a stop-word legal name;
+- a short name shared by two registrants ("AB INC" and "AB CORP");
+- a question naming two issuers.
+
+Tests reproduce the defect through `discover_company` and through
+`route_question` with `company_name=""`. All 2,267 tests in the 49 identity,
+detection and routing test files pass, against 2,257 before the 10 new tests.
+The two non-equivalent mutations of the fix are killed.
+
+An answer naming no issuer is still retained and reported as
+`identity_unresolved`, never as a pass. One naming another issuer still halts
+as drift.
 
 ## Evidence, all offline (sockets refused, invented credentials and sources)
 
-- **Happy run through the frontend-shaped `/ask` path.** All 12 outcomes are
-  reported: 10 answered and 2 NNBR `identity_unresolved`.
-  - 50 SEC exchanges: 7 per answered thesis case, 3 per answered threshold
-    case, and 0 for NNBR. All are within the contract and retained before
-    settlement.
+- **Happy run through the frontend-shaped `/ask` path.** 12 of 12 cases are
+  answered, and every company, NNBR included, is identified from the question
+  text.
+  - 60 SEC exchanges: 7 per thesis case and 3 per threshold case. All are
+    within the contract and retained before settlement.
   - The routing slot was used exactly once (NPK, case 1), and that case made
     no second directory request.
   - Every answer reference traces to a retained body, a document admitted by
@@ -177,9 +193,10 @@ needs its own review.
   trusting the killed worker's report.
 - **Mismatched source hash or CA identity.** The worker refuses before any
   ledger, gate or request.
-- **Mutation testing.** 26 of 26 live targeted mutations are killed. They
-  include the routing slot and its directory-only scope, the authenticated-mode
-  pin and setting, drift versus unresolved answers, and every export check.
+- **Mutation testing.** 26 of 26 live targeted mutations on the pilot path
+  are killed, plus 2 of 2 on the identity fix. They include the routing slot
+  and its directory-only scope, the authenticated-mode pin and setting, drift
+  versus unresolved answers, and every export check.
 - **Hosted CI on the previous head `d33e726`.** All 15 steps passed,
   including the full isolated-per-file regression. A local replica of every
   gate showed the same result, apart from four files that fail identically on

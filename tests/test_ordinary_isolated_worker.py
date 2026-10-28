@@ -39,18 +39,15 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     result, output = happy
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and not packet['halt'] and packet['first_failure'] is None
-    # The frontend-shaped /ask cannot resolve "NN INC" (NNBR's SEC registrant
-    # name) from question text: both cases are retained as explicit gaps.
-    unresolved = {'NNBR:core_thesis', 'NNBR:decision_threshold'}
-    assert [c['status'] for c in packet['cases']] == [
-        'identity_unresolved' if case in unresolved else 'answered_unadjudicated' for case in CASES]
+    # Every company is identified from question text, including "NN INC" (a
+    # short registrant name made exact by its legal form).
+    assert [c['status'] for c in packet['cases']] == ['answered_unadjudicated'] * 12
     assert [c['case_id'] for c in packet['cases']] == list(CASES)
     # Every SEC exchange: claimed, entered once, retained with its receipt, settled.
-    assert packet['attempt_count'] == packet['wire_entries'] == worker['synthetic_requests'] == 50
+    assert packet['attempt_count'] == packet['wire_entries'] == worker['synthetic_requests'] == 60
     assert all(a['status'] == 'settled' and a['response'] and a['failure'] is None for a in packet['attempts'])
     per_case = {case: sum(a['case_id'] == case for a in packet['attempts']) for case in CASES}
-    assert per_case == {case: 0 if case in unresolved else (7 if case.endswith(':core_thesis') else 3)
-                        for case in CASES}
+    assert per_case == {case: (7 if case.endswith(':core_thesis') else 3) for case in CASES}
     assert sum(per_case.values()) <= quota_contract()['sec_gets']
     # Identity resolution used the routing slot once (first unseen issuer, case
     # one); the pipeline then reused that directory response instead of a GET.
@@ -59,10 +56,8 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     assert not [a for a in packet['attempts'] if a['case_id'] == 'NPK:core_thesis' and a['route'] == 'sec/directory'
                 and a['stage'] != 'routing']
     # Real /ask routing, zero models, no external operation, nothing left running.
-    assert {(r['pipeline'], r['response_mode']) for r in worker['routing'] if r['case_id'] not in unresolved} == {
-        ('investment_thesis', 'source_evidence')}
-    assert {(r['company'], r['pipeline']) for r in worker['routing'] if r['case_id'] in unresolved} <= {
-        ('', 'entity_suggestion'), ('', 'company_identity_clarification')}
+    assert [(r['company'], r['pipeline'], r['response_mode']) for r in worker['routing']] == [
+        (case.split(':')[0], 'investment_thesis', 'source_evidence') for case in CASES]
     assert worker['refused_model_requests'] == 0 and worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     # Timing-dependent observations: never above four in flight. The export has
@@ -98,9 +93,6 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
                 listed |= {f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accn.replace("-", "")}/{accn}-index.htm'
                            for accn in data['filings']['recent']['accessionNumber']}
         answer = packet['answers'][case]['response']
-        if answer['company'] == '':  # identity unresolved: no SEC source was requested
-            assert not attempts and case.startswith('NNBR:')
-            continue
         assert answer['company'] == case.split(':')[0]
         urls = {ref['url'] for ref in answer['answer']['evidence_references'] if ref.get('url')}
         assert urls and urls <= retained | listed, case
