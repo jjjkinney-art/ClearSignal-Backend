@@ -12,16 +12,35 @@ import socket
 import sys
 import time
 from collections import namedtuple
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import contextmanager, redirect_stdout, redirect_stderr
 from io import StringIO
 
 
 def main():
     if (not sys.flags.isolated or not sys.flags.dont_write_bytecode
             or sys.version_info[:3] != (3, 11, 9) or sys.implementation.name != 'cpython'
-            or len(sys.argv) != 2 or sys.argv[1] not in {'happy', 'wire_connect_failure', 'wire_read_failure'}):
+            or len(sys.argv) != 4 or sys.argv[1] not in {
+                'happy', 'wire_connect_failure', 'wire_read_failure', 'core_deadline', 'threshold_deadline'}):
         return 2
     scenario = sys.argv[1]
+    try:
+        ack_fd, status_fd = map(int, sys.argv[2:])
+        if min(ack_fd, status_fd) < 3 or ack_fd == status_fd:
+            return 2
+    except ValueError:
+        return 2
+    @contextmanager
+    def case_scope(case):
+        os.write(status_fd, ('begin ' + case + '\n').encode())
+        if os.read(ack_fd, 1) != b'1':
+            raise RuntimeError('parent deadline acknowledgment absent')
+        try:
+            yield
+        except BaseException:
+            os.write(status_fd, ('abort ' + case + '\n').encode())
+            raise
+        else:
+            os.write(status_fd, ('end ' + case + '\n').encode())
     output = Path.cwd().resolve()
     if set(p.name for p in output.iterdir()) != {'isolated-home'}:
         return 2
@@ -107,9 +126,17 @@ def main():
         def sec_exchange(self, method, url, body):
             route = self.sec_route(method, url, body)
             fault = (scenario if self.case['case_id'] == CASES[2] and route == 'sec/facts'
-                     and scenario != 'happy' else 'reported-facts' if route == 'sec/facts' else 'happy')
+                     and scenario in {'wire_connect_failure', 'wire_read_failure'}
+                     else 'reported-facts' if route == 'sec/facts' else 'happy')
             if url != _fixture_url(book, self.case['case_id'], self.stage.get(), route):
                 self.refuse('request_url_mismatch')
+            if route == 'sec/facts' and (
+                    (scenario == 'core_deadline' and self.case['case_id'] == CASES[2])
+                    or (scenario == 'threshold_deadline' and self.case['case_id'] == CASES[3])):
+                # Stall a real pipeline executor task in C-level sleep. Even if
+                # the router returns and cleanup times out, the parent must reap
+                # this thread's process and reject any artifact it wrote.
+                time.sleep(3600)
             result = rehearse_sec(book, self.case['case_id'], stage=self.stage.get(), route=route,
                                   scenario=fault, bound=True, scoped=True)
             with book._connect() as db:
@@ -143,7 +170,8 @@ def main():
                 # Pace invented exchanges below the unchanged 10/sec fixture limit.
                 time.sleep(max(0, 1.05 - (time.monotonic() - started)))
                 return response.model_dump(mode='json')
-            result = run_offline_cases(book, invoke, boundary.drain, forbidden_values=('TEST_ONLY',))
+            result = run_offline_cases(book, invoke, boundary.drain, forbidden_values=('TEST_ONLY',),
+                                       case_scope=case_scope)
             packet = export_fixture_packet(book, forbidden_values=('TEST_ONLY',), require_bound=True)
         finally:
             boundary.close()

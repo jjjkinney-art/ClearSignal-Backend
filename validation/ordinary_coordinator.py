@@ -7,22 +7,24 @@ from .ordinary_artifacts import store_fixture_answer
 from .ordinary_case_lifecycle import OfflineCaseLifecycle
 from .ordinary_pilot_accounting import AccountingError
 from .ordinary_pilot_contract import CASES
+from contextlib import nullcontext
 
 
-def run_offline_cases(book, invoke, drain, *, forbidden_values):
+def run_offline_cases(book, invoke, drain, *, forbidden_values, case_scope=None):
     """Stop at first failure; retain answers only after workers drain and no halt."""
     lifecycle = OfflineCaseLifecycle(book)
     failure = None
     try:
         for case in CASES:
-            lifecycle.begin(case)
-            response = invoke(case)
-            if drain():
-                raise AccountingError('unfinished fixture workers')
-            if book.summary()['halt']:
-                raise AccountingError('fixture ledger halted')
-            store_fixture_answer(book, case, response, forbidden_values=forbidden_values)
-            lifecycle.finish(case, status='partial_gap')
+            with (case_scope(case) if case_scope else nullcontext()):
+                lifecycle.begin(case)
+                response = invoke(case)
+                if drain():
+                    raise AccountingError('unfinished fixture workers')
+                if book.summary()['halt']:
+                    raise AccountingError('fixture ledger halted')
+                store_fixture_answer(book, case, response, forbidden_values=forbidden_values)
+                lifecycle.finish(case, status='partial_gap')
     except Exception as exc:
         failure = type(exc).__name__
         book.seal_local()
