@@ -134,8 +134,12 @@ routing directory response is shared, so the pipeline's directory step reuses
 it instead of making a second request. The proposal manifest therefore
 changes, and any approval must bind the amended contract.
 
-The main rehearsal now enters exactly as the frontend does, through
-`route_question(question, company_name="")` inside the `routing` stage. It
+The main rehearsal enters through `route_question(question,
+company_name="")` inside the `routing` stage. **Correction (review,
+2026-10-29):** this is not exactly the frontend's request. The frontend also
+always sends `intent` from its own `classifyQueryIntent`, and the worker omits
+it. See "Open blocker: frontend intent routes most cohort questions away from
+research" below. It
 runs in authenticated mode (`AUTH_ENABLED=true`, pinned in the policy), as
 production `/ask` does. In unauthenticated mode the router writes the legacy
 global watchlist and history, including a database write; a pilot must not
@@ -171,9 +175,36 @@ An answer naming no issuer is still retained and reported as
 `identity_unresolved`, never as a pass. One naming another issuer still halts
 as drift.
 
+## Open blocker: frontend intent routes most cohort questions away from research
+
+Found in model-assisted review on 2026-10-29 and verified by execution. The
+frontend (`lib/queryIntent.ts`, `classifyQueryIntent`, at commit `86189b4`)
+sends an `intent` with every `/ask` call. Running that exact classifier on the
+twelve cohort questions gives:
+
+| Case | Frontend intent | Cause |
+|---|---|---|
+| NPK thesis and threshold | `market_question` | "National Presto **Industries**" matches its macro keyword `industries` |
+| GOOGL, INGR, NNBR, AMZN, MAN thesis | `investing_education` | The question begins "What is…" |
+| GOOGL, INGR, NNBR, AMZN, MAN threshold | `company_analysis` | — |
+
+`route_question` treats `market_question` and `investing_education` as
+authoritative (`company_detection.intent_allows_company_detection`, and the
+general-finance fast path in `router_service.py`). It sends them to
+`run_general_finance_agent`, a model call, not the source-evidence pipeline.
+
+With the frontend's actual payload, 7 of 12 cases therefore receive a general
+model answer instead of company-specific source research. A zero-model pilot
+that sent the real payload would halt on case 1. The current rehearsal, which
+omits `intent`, does not measure the path users take.
+
+Fixing this changes routing for real users in the frontend, the backend, or
+both. That is an owner decision; it is not resolved in this branch.
+
 ## Evidence, all offline (sockets refused, invented credentials and sources)
 
-- **Happy run through the frontend-shaped `/ask` path.** 12 of 12 cases are
+- **Happy run through `route_question` with empty `company_name` and no
+  `intent`.** 12 of 12 cases are
   answered, and every company, NNBR included, is identified from the question
   text.
   - 60 SEC exchanges: 7 per thesis case and 3 per threshold case. All are
