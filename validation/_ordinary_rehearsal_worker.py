@@ -143,6 +143,7 @@ def main():
     socket.getaddrinfo = scoped_dns
 
     from validation.capture_budget import BudgetError
+    from validation.ordinary_frontend_intents import frontend_intent
     from validation.ordinary_native_boundary import OrdinaryNativeBoundary
     from validation.ordinary_native_ledger import OrdinaryNativeLedger
     from validation.pilot_approved import verify_network_configuration
@@ -172,20 +173,23 @@ def main():
                     # contract assumes; identity metadata keeps its own cache.
                     sec_provider._ticker_cik_cache = None
                     sec_provider._reset_shared_company_tickers()
-                    # As the frontend sends it: empty company_name, so the /ask
-                    # core resolves the company from the question text. That
-                    # resolution may use the routing stage's directory slot.
+                    # As the frontend sends it: empty company_name and the
+                    # frontend classifier's intent, so the /ask core resolves
+                    # the company from the question text. That resolution may
+                    # use the routing stage's directory slot.
                     token = boundary.stage.set('routing')
                     try:
                         response = router_service.route_question(QuestionRequest(
-                            question=case['question'], company_name=''))
+                            question=case['question'], company_name='',
+                            intent=frontend_intent(case['case_id'])))
                     finally:
                         boundary.stage.reset(token)
                     if boundary.drain():
                         raise BudgetError('unfinished pipeline workers')
                     boundary.active()
                     payload = response.model_dump(mode='json')
-                    routes.append({'case_id': case['case_id'], 'company': payload.get('company'),
+                    routes.append({'case_id': case['case_id'], 'intent': frontend_intent(case['case_id']),
+                                   'company': payload.get('company'),
                                    'pipeline': (payload.get('routing') or {}).get('pipeline'),
                                    'response_mode': (payload.get('routing') or {}).get('response_mode')})
                     boundary.complete_case(payload)

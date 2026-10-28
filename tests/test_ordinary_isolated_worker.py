@@ -5,6 +5,7 @@ parent deadlines and read-only export. The SEC backend and every source body are
 invented, and the approval is an invented TEST-ONLY record. Nothing here is
 real-company research evidence or authority to run a live pilot.
 """
+import hashlib
 import json
 from pathlib import Path
 import shutil
@@ -56,8 +57,9 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     assert not [a for a in packet['attempts'] if a['case_id'] == 'NPK:core_thesis' and a['route'] == 'sec/directory'
                 and a['stage'] != 'routing']
     # Real /ask routing, zero models, no external operation, nothing left running.
-    assert [(r['company'], r['pipeline'], r['response_mode']) for r in worker['routing']] == [
-        (case.split(':')[0], 'investment_thesis', 'source_evidence') for case in CASES]
+    # Entered with the pinned frontend intent, as production /ask receives it.
+    assert [(r['intent'], r['company'], r['pipeline'], r['response_mode']) for r in worker['routing']] == [
+        ('company_analysis', case.split(':')[0], 'investment_thesis', 'source_evidence') for case in CASES]
     assert worker['refused_model_requests'] == 0 and worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     # Timing-dependent observations: never above four in flight. The export has
@@ -267,3 +269,18 @@ def test_parent_rolls_back_a_killed_childs_open_transaction_before_export(tmp_pa
     assert packet['halt'] == 'stage_timeout' and packet['answers'] == {} and packet['wire_entries'] == 0
     assert packet['cases'][0] == {'case_id': CASES[0], 'status': 'halted'}
     assert [c['status'] for c in packet['cases'][1:]] == ['not_run_after_halt'] * 11
+
+
+def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
+    from app.services.company_detection import intent_allows_company_detection
+    from validation.ordinary_frontend_intents import CASE_INTENTS, FRONTEND, FRONTEND_INTENTS, frontend_intent
+    cases = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
+    # The intents were classified from exactly these question texts, in this order.
+    assert [c['case_id'] for c in cases] == list(CASE_INTENTS) == list(CASES)
+    questions = json.dumps([c['question'] for c in cases]).encode()
+    assert hashlib.sha256(questions).hexdigest() == FRONTEND['questions_sha256']
+    assert set(CASE_INTENTS.values()) <= FRONTEND_INTENTS
+    # A general intent is authoritative in the backend and would route away
+    # from research; the pinned frontend must not send one for these questions.
+    assert all(intent_allows_company_detection(frontend_intent(case)) for case in CASES)
+    assert not intent_allows_company_detection('investing_education')

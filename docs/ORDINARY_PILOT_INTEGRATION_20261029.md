@@ -135,11 +135,10 @@ it instead of making a second request. The proposal manifest therefore
 changes, and any approval must bind the amended contract.
 
 The main rehearsal enters through `route_question(question,
-company_name="")` inside the `routing` stage. **Correction (review,
-2026-10-29):** this is not exactly the frontend's request. The frontend also
-always sends `intent` from its own `classifyQueryIntent`, and the worker omits
-it. See "Open blocker: frontend intent routes most cohort questions away from
-research" below. It
+company_name="", intent=...)` inside the `routing` stage, sending the intent
+the pinned frontend classifier gives each question. (An earlier version of
+this report said it entered "exactly as the frontend does" while omitting
+`intent`; see "Frontend intent" below.) It
 runs in authenticated mode (`AUTH_ENABLED=true`, pinned in the policy), as
 production `/ask` does. In unauthenticated mode the router writes the legacy
 global watchlist and history, including a database write; a pilot must not
@@ -175,12 +174,11 @@ An answer naming no issuer is still retained and reported as
 `identity_unresolved`, never as a pass. One naming another issuer still halts
 as drift.
 
-## Open blocker: frontend intent routes most cohort questions away from research
+## Frontend intent: blocker found in review, fixed in the frontend
 
 Found in model-assisted review on 2026-10-29 and verified by execution. The
-frontend (`lib/queryIntent.ts`, `classifyQueryIntent`, at commit `86189b4`)
-sends an `intent` with every `/ask` call. Running that exact classifier on the
-twelve cohort questions gives:
+frontend (`lib/queryIntent.ts`, `classifyQueryIntent`) sends an `intent` with
+every `/ask` call. At frontend main `86189b4` it gave:
 
 | Case | Frontend intent | Cause |
 |---|---|---|
@@ -190,22 +188,41 @@ twelve cohort questions gives:
 
 `route_question` treats `market_question` and `investing_education` as
 authoritative (`company_detection.intent_allows_company_detection`, and the
-general-finance fast path in `router_service.py`). It sends them to
-`run_general_finance_agent`, a model call, not the source-evidence pipeline.
+general-finance fast path in `router_service.py`) and sends them to
+`run_general_finance_agent`, a model call. With the real payload, 7 of 12
+cases would have received a general model answer instead of source research,
+and a zero-model pilot would have halted on case 1.
 
-With the frontend's actual payload, 7 of 12 cases therefore receive a general
-model answer instead of company-specific source research. A zero-model pilot
-that sent the real payload would halt on case 1. The current rehearsal, which
-omits `intent`, does not measure the path users take.
+The project owner chose to fix the root cause in the frontend and keep the
+backend rule that explicit general intents win.
 
-Fixing this changes routing for real users in the frontend, the backend, or
-both. That is an owner decision; it is not resolved in this branch.
+- **Frontend fix.** Branch `fix/company-research-intent`, commit
+  `b75abe3`, in `jjjkinney-art/Ai-Intelligence-interface`. A question
+  that names a capitalised subject in "thesis for/on X" or "make X
+  attractive" is company research unless X is a market or a group of
+  securities. A capitalised company name ending in "Industry"/"Industries" no
+  longer counts as a macro keyword. The twelve cohort questions classify as
+  `company_analysis`. Tests keep general questions general: "What is an
+  investment thesis?", "thesis for tech stocks", "make the S&P 500
+  attractive", "airline industry".
+- **Pilot binding.** `validation/ordinary_frontend_intents.py` pins the
+  frontend commit, the classifier and resolver SHA-256 hashes, the hash of
+  the twelve question texts, and the resulting intent per case. It lives in
+  `validation/`, so `source_binding()` binds it to the policy. The worker
+  sends that intent. A test checks the table against the cohort file and
+  confirms that every pinned intent reaches company detection. Replacing the
+  NPK intent with `market_question` makes the happy run halt (mutation
+  killed).
+- **Prerequisite for a live run.** The fix must be reviewed, merged and
+  deployed before a pilot is representative. The approval package must name
+  the deployed frontend commit, and that commit's classifier hash must equal
+  the pinned one. Until then, production users asking these questions still
+  receive general answers.
 
 ## Evidence, all offline (sockets refused, invented credentials and sources)
 
-- **Happy run through `route_question` with empty `company_name` and no
-  `intent`.** 12 of 12 cases are
-  answered, and every company, NNBR included, is identified from the question
+- **Happy run through `route_question` with empty `company_name` and the
+  pinned frontend intent.** 12 of 12 cases are answered, and every company, NNBR included, is identified from the question
   text.
   - 60 SEC exchanges: 7 per thesis case and 3 per threshold case. All are
     within the contract and retained before settlement.
@@ -221,7 +238,10 @@ both. That is an owner decision; it is not resolved in this branch.
   with no fabricated body or receipt. All twelve outcomes are reported.
 - **Stalled peer.** The parent killed the child at about 30.0 s (thesis) or
   about 20.0 s (threshold) and exported from the durable ledger, without
-  trusting the killed worker's report.
+  trusting the killed worker's report. An answer committed after the parent's
+  deadline is dropped and recorded in `late_answers_rejected`. A child killed
+  inside an open transaction leaves nothing behind: the parent rolls back its
+  hot journal before exporting.
 - **Mismatched source hash or CA identity.** The worker refuses before any
   ledger, gate or request.
 - **Mutation testing.** 26 of 26 live targeted mutations on the pilot path
@@ -248,4 +268,8 @@ both. That is an owner decision; it is not resolved in this branch.
   mode.
 - **Not a cost ceiling.** Zero model and provider calls do not establish an
   all-in invoice ceiling (`invoice_ceiling_verified=False`).
-- **Not reviewed.** No independent review has occurred.
+- **Not independently reviewed.** A model-assisted review on 2026-10-29 found
+  the intent blocker above and two worker defects, now fixed: an answer the
+  parent had already ruled late could be exported, and a worker that refused
+  before creating its ledger reported no case outcomes. A model-assisted
+  review is not an independent human review.
