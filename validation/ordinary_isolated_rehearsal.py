@@ -70,7 +70,9 @@ def run_rehearsal(output_dir, *, scenario='happy'):
               'supervisor': child, 'denominator': len(CASES), 'quality_pass_rate': None,
               'launch_ready': False, 'invoice_ceiling_verified': False}
     if not ledger.is_file():
-        result.update(status='worker_incomplete', packet=None, worker=None)
+        # Refused before any ledger, gate or request: every case is reported.
+        result.update(status='worker_incomplete', packet=None, worker=None,
+                      cases=[{'case_id': case, 'status': 'not_run'} for case in CASES])
         return result
     if child['stop_reason']:
         # The child was killed and reaped; its own publication is never trusted.
@@ -84,9 +86,16 @@ def run_rehearsal(output_dir, *, scenario='happy'):
     if not child['stop_reason'] and not child['returncode'] and report.is_file() and not report.is_symlink():
         worker = json.loads(report.read_text())
     if child['stop_reason'] and child['interrupted_case']:
+        # The parent's deadline is authoritative. The child anchors its own case
+        # clock slightly later (after the acknowledgment), so it can commit an
+        # answer the parent has already ruled late; such an answer is rejected.
+        late = child['interrupted_case']
         for row in packet['cases']:
-            if row['case_id'] == child['interrupted_case']:
+            if row['case_id'] == late:
                 row['status'] = 'halted'
+        if packet['answers'].pop(late, None) is not None:
+            packet['late_answers_rejected'] = [late]
+        packet['status'] = 'halted'
     status = ('worker_stopped' if child['stop_reason'] else
               'worker_incomplete' if worker is None else packet['status'])
     result.update(status=status, packet=packet, worker=worker)

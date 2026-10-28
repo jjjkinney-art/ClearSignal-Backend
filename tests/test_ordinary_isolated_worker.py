@@ -205,5 +205,65 @@ def test_worker_refuses_a_policy_that_does_not_match_the_running_configuration(t
     output = tmp_path / field
     result = run_rehearsal(output, scenario='happy')
     assert result['status'] == 'worker_incomplete' and result['packet'] is None
+    assert result['cases'] == [{'case_id': case, 'status': 'not_run'} for case in CASES]
     assert result['supervisor']['returncode'] != 0 and result['supervisor']['finished_case_scopes'] == 0
     assert not (output / 'ledger.sqlite').exists()  # refused before any ledger, gate or request
+
+
+@pytest.mark.timeout(120)
+def test_an_answer_the_parent_ruled_late_is_never_exported(tmp_path, monkeypatch):
+    """The child may commit a case just after the parent's deadline fired (its
+    clock starts after the acknowledgment). The parent's ruling wins."""
+    from validation import ordinary_isolated_rehearsal as launcher
+    real = launcher.supervise
+
+    def late_at_last_case(*args, **kwargs):
+        child = real(*args, **kwargs)
+        return dict(child, stop_reason='case_deadline', interrupted_case=CASES[-1], finished_case_scopes=11)
+    monkeypatch.setattr(launcher, 'supervise', late_at_last_case)
+    result = run_rehearsal(tmp_path / 'late', scenario='happy')
+    packet = result['packet']
+    assert result['status'] == 'worker_stopped' and packet['status'] == 'halted' and result['worker'] is None
+    assert packet['cases'][-1] == {'case_id': CASES[-1], 'status': 'halted'}
+    assert CASES[-1] not in packet['answers'] and packet['late_answers_rejected'] == [CASES[-1]]
+    assert set(packet['answers']) == set(CASES[:-1])
+
+
+@pytest.mark.timeout(60)
+def test_parent_rolls_back_a_killed_childs_open_transaction_before_export(tmp_path):
+    """A child killed inside a write transaction leaves a hot journal. The
+    parent's stop record rolls it back; the read-only export never sees the
+    uncommitted answer, and the case remains an explicit halted gap."""
+    import signal
+    import subprocess
+    import sys
+    from validation.ordinary_isolated_rehearsal import rehearsal_policy
+    from validation.ordinary_native_export import record_parent_stop
+    from validation.ordinary_native_ledger import OrdinaryNativeLedger, create_fresh_output
+    output = tmp_path / 'run'
+    create_fresh_output(output)
+    policy = rehearsal_policy(output)
+    book = OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
+    run = book.begin_case(CASES[0])
+    code = (
+        'import sqlite3, time\n'
+        f'db = sqlite3.connect({str(output / "ledger.sqlite")!r}, isolation_level=None, timeout=10)\n'
+        'db.execute("BEGIN IMMEDIATE")\n'
+        f'db.execute("INSERT INTO ordinary_answers VALUES (?,?,?,?,?)", ({run!r}, {CASES[0]!r}, "0"*64, b"{{}}", 1))\n'
+        f'db.execute("UPDATE cases SET status=\'complete\' WHERE id=?", ({run!r},))\n'
+        'db.execute("PRAGMA cache_size=1")\n'
+        'for i in range(2000): db.execute("INSERT INTO ordinary_wire_entries VALUES (?,?)", ("pad-%d" % i, i))\n'
+        'print("ready", flush=True); time.sleep(60)\n')
+    child = subprocess.Popen([sys.executable, '-c', code], stdout=subprocess.PIPE, text=True)
+    try:
+        assert child.stdout.readline().strip() == 'ready'
+        assert (output / 'ledger.sqlite-journal').exists()
+    finally:
+        child.send_signal(signal.SIGKILL)
+        child.wait()
+    record_parent_stop(output / 'ledger.sqlite', 'stage_timeout')
+    assert not (output / 'ledger.sqlite-journal').exists()
+    packet = export_packet(output / 'ledger.sqlite', policy, forbidden_values=FORBIDDEN, synthetic=True)
+    assert packet['halt'] == 'stage_timeout' and packet['answers'] == {} and packet['wire_entries'] == 0
+    assert packet['cases'][0] == {'case_id': CASES[0], 'status': 'halted'}
+    assert [c['status'] for c in packet['cases'][1:]] == ['not_run_after_halt'] * 11

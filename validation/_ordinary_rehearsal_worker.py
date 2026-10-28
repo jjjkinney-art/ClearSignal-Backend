@@ -34,15 +34,14 @@ REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
 
 
-def verify_running_configuration(policy, root):
+def verify_running_configuration(policy):
     """Compare the code and packages actually loaded with the bound policy."""
     from validation.pilot_policy import AUDITED_DEPENDENCIES
     from validation.pilot_rehearsal import source_binding
     installed = {name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES}
     if (sys.implementation.name != 'cpython' or sys.version_info[:3] != (3, 11, 9)
             or installed != dict(AUDITED_DEPENDENCIES) or policy['dependencies'] != installed
-            or source_binding() != policy['code_binding']['source_sha256']
-            or Path(root).resolve() != Path(__file__).resolve().parents[1]):
+            or source_binding() != policy['code_binding']['source_sha256']):
         raise RuntimeError('running code or dependencies differ from the bound policy')
 
 
@@ -123,8 +122,7 @@ def main():
     platform.processor = lambda: 'offline-fixture'
     platform.uname = lambda: namedtuple('OfflineUname', 'system node release version machine processor')(
         'Linux', 'offline', '0', 'offline', 'x86_64', 'offline')
-    root = Path(__file__).resolve().parents[1]
-    verify_running_configuration(policy, root)
+    verify_running_configuration(policy)
     sys.addaudithook(audit)
 
     def scoped_dns(host, port, *args, **kwargs):
