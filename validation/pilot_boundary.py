@@ -37,10 +37,10 @@ class FrozenModelRequest(NamedTuple):
 
 
 class PilotBoundary:
-    def __init__(self, ledger, scenario):
+    def __init__(self, ledger, scenario, *, cases=None):
         self.ledger, self.scenario = ledger, scenario
         self.contact = SYNTHETIC_CONTACT
-        self.cases = preflight()['cases']
+        self.cases = preflight()['cases'] if cases is None else cases
         self.identities = [case['identity'] for case in self.cases[::2]]
         self.case = self.case_run = None
         self.stage = ContextVar('offline_pilot_stage', default='outside_pipeline')
