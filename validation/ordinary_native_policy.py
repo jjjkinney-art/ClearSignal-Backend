@@ -57,6 +57,12 @@ def policy_for(code_binding, dependencies, approval, execution, *, cases, all_in
         'setup_sha256': package['proposal']['case_records_sha256'],
         'maximum_attempts': 66, 'approved_case_ids': list(CASES),
         'invoice_ceiling_verified': False,
+        # Source-evidence application path: SEC inputs only, no model routes.
+        'configuration': {'variant': 'source_monitoring', 'model_attempts': 0,
+                          'paid_provider_attempts': 0, 'follow_redirects': False,
+                          'transport_retries': 0,
+                          'settings': {'decision_monitoring_inputs_enabled': True,
+                                       'decision_monitoring_filing_fallback_enabled': False}},
         'prices': {route: {'currency': 'USD', 'all_incremental_charges_accounted': False,
             'request_usd': '0', 'input_token_usd': '0', 'output_token_usd': '0',
             'maximum_input_tokens': 0, 'maximum_output_tokens': 0} for route in routes},

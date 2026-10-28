@@ -11,7 +11,7 @@ import pytest
 
 from validation.capture_budget import AttemptLedger, BudgetError, digest, validate_policy
 from validation.ordinary_native_policy import execution_package, policy_for
-from validation.ordinary_native_ledger import OrdinaryNativeLedger, OrdinaryNativeGate
+from validation.ordinary_native_ledger import OrdinaryNativeLedger, OrdinaryNativeGate, create_fresh_output
 from validation.ordinary_pilot_contract import CASES
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 from validation.pilot_approved import ScopedBackend, ExchangeGate
@@ -45,7 +45,9 @@ def approved_policy(output):
 
 def ledger(tmp_path):
     output = tmp_path / 'new-output'
-    return OrdinaryNativeLedger(output/'ledger.sqlite', approved_policy(output), create=True)
+    policy = approved_policy(output)
+    create_fresh_output(output)  # the launcher owns creation of the approved directory
+    return OrdinaryNativeLedger(output/'ledger.sqlite', policy, create=True)
 
 
 PLAN = [('evidence.sec', 'sec/directory'), ('evidence.sec', 'sec/submissions'),
@@ -75,7 +77,8 @@ def test_new_profile_is_fixed_and_cannot_reopen_or_reuse_output(tmp_path):
     assert validate_policy(book.policy) == 0
     assert book.policy['invoice_ceiling_verified'] is False
     with pytest.raises(BudgetError): OrdinaryNativeLedger(book.path, book.policy)
-    with pytest.raises(FileExistsError): OrdinaryNativeLedger(book.path, book.policy, create=True)
+    # Reuse is refused: the directory is no longer the launcher's fresh state.
+    with pytest.raises(BudgetError): OrdinaryNativeLedger(book.path, book.policy, create=True)
     with pytest.raises(BudgetError): book.begin_case(CASES[1])
     case = book.begin_case(CASES[0])
     with pytest.raises(BudgetError): ExchangeGate(SimpleNamespace(ledger=book))
@@ -124,7 +127,7 @@ def test_actual_entry_rate_is_independent_of_earlier_reservation_rate(tmp_path, 
     for attempt, binding in claims:
         book.claim_wire_entry(attempt, **binding)
         complete(book, attempt, binding)
-    book.finish_case(case)
+    book.complete_case(case, {'company': 'NPK', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
     case = book.begin_case(CASES[1])
     claims = [reserve(book, case, *scope) for scope in (PLAN[0], PLAN[1], PLAN[3])]
     for attempt, binding in claims[:2]:
@@ -210,27 +213,147 @@ def test_success_requires_complete_bound_screened_timely_original_body(tmp_path,
     with pytest.raises(BudgetError): book.finish_case(case)
 
 
-def test_worker_exchange_adapter_retains_before_return_and_rejects_cross_issuer(tmp_path, monkeypatch):
-    from validation.ordinary_native_exchange import exchange_sec
-    import validation.pilot_approved as approved
-    monkeypatch.setattr(approved, 'verify_network_configuration', lambda config, tls=False: ssl.create_default_context() if tls else None)
+# -- launcher-owned fresh output --------------------------------------------------
+
+@pytest.mark.parametrize('state', ['missing', 'extra_file', 'group_readable', 'home_not_empty', 'home_missing'])
+def test_ledger_accepts_only_the_launcher_created_fresh_directory(tmp_path, state):
+    output = tmp_path / 'out'
+    policy = approved_policy(output)
+    if state != 'missing':
+        create_fresh_output(output)
+    if state == 'extra_file': (output / 'resumed-state.sqlite').write_bytes(b'')
+    elif state == 'group_readable': output.chmod(0o750)
+    elif state == 'home_not_empty': (output / 'isolated-home' / '.netrc').write_text('invented')
+    elif state == 'home_missing': (output / 'isolated-home').rmdir()
+    with pytest.raises(BudgetError):
+        OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
+    assert not (output / 'ledger.sqlite').exists()
+    if state == 'missing':
+        assert not output.exists()  # the ledger never creates the approved directory
+
+
+def test_launcher_inputs_are_the_only_permitted_extra_entry(tmp_path):
+    output = tmp_path / 'out'
+    policy = approved_policy(output)
+    create_fresh_output(output)
+    (output / 'request.json').write_text('{}')
+    OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
+    with pytest.raises(FileExistsError):
+        create_fresh_output(output)
+
+
+# -- pacing versus halting at wire entry --------------------------------------------
+
+def test_rate_excess_paces_without_halting(tmp_path, monkeypatch):
+    import validation.ordinary_native_ledger as native
+    from validation.capture_budget import RateLimitDelay
+    now = [10_000_000_000]
+    monkeypatch.setattr(native.time, 'monotonic_ns', lambda: now[0])
     book = ledger(tmp_path); case = book.begin_case(CASES[0])
-    owner = SimpleNamespace(ledger=book, monitoring=True, active=book.require_active,
-        scenario='happy', once=lambda scenarios: False,
-        case={'identity': {'ticker': 'NPK', 'cik': '0000080172', 'company_name': 'Invented'}},
-        identities=[{'ticker': 'NPK', 'cik': '0000080172', 'company_name': 'Invented'}])
-    owner.gate = OrdinaryNativeGate(owner)
-    wire = OrdinaryHTTPTransport(gate=owner.gate, execution=CONFIG, runtime={'sec_contact': 'Fixture contact@example.invalid'})
-    wire._wire._pool._network_backend = ScopedBackend(SyntheticProxyBackend(owner), owner.gate)
-    try:
-        media, body = exchange_sec(owner, wire, case_run=case, stage='evidence.sec_metrics', route='sec/facts',
-            url='https://data.sec.gov/api/xbrl/companyfacts/CIK0000080172.json', forbidden_values=('TEST-ONLY-secret',))
+    attempt, binding = reserve(book, case, *PLAN[0])
+    with book.transaction() as db:  # ten entries already in this one-second window
+        for i in range(10):
+            db.execute('INSERT INTO ordinary_wire_entries VALUES (?,?)', (f'synthetic-{i}', now[0] - 100_000_000 * i))
+    with pytest.raises(RateLimitDelay) as delay:
+        book.claim_wire_entry(attempt, **binding)
+    assert 0 < delay.value.seconds <= 1
+    assert book.summary()['halted'] is None  # paced, not halted, and not consumed
+    now[0] += 1_000_000_000
+    book.claim_wire_entry(attempt, **binding)
+    with book.transaction() as db:
+        assert db.execute('SELECT COUNT(*) FROM ordinary_wire_entries WHERE attempt_id=?', (attempt,)).fetchone() == (1,)
+
+
+def test_a_fifth_concurrent_wire_entry_halts(tmp_path):
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    claims = [reserve(book, case, *scope) for scope in PLAN[:5]]
+    for attempt, binding in claims[:4]:
+        book.claim_wire_entry(attempt, **binding)  # four in flight, none completed
+    with pytest.raises(BudgetError):
+        book.claim_wire_entry(claims[4][0], **claims[4][1])
+    assert book.summary()['halted'] == 'invalid_request'
+
+
+# -- screening that does not require UTF-8 -----------------------------------------
+
+@pytest.mark.parametrize('body,admitted', [
+    (b'<html>Caf\xe9 \x92quoted\x92 Windows-1252 bytes</html>', True),
+    (b'<html>TEST-ONLY-&#115;ecret</html>', False),
+    (b'<html>TEST-ONLY-secret</html>', False),
+])
+def test_document_screening_tolerates_non_utf8_but_refuses_encoded_secrets(tmp_path, body, admitted):
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    attempt, binding = reserve(book, case, 'evidence.thesis_disclosures', 'sec/document')
+    book.claim_wire_entry(attempt, **binding)
+    args = dict(url='https://www.sec.gov/TEST-ONLY/document', media_type='text/html',
+                body=body, forbidden_values=('TEST-ONLY-secret',))
+    if admitted:
+        book.complete_response(attempt, **args)
         with book.transaction() as db:
             assert db.execute('SELECT body FROM ordinary_responses').fetchone() == (body,)
-            assert db.execute('SELECT status FROM attempts').fetchone() == ('settled',)
-        with pytest.raises(BudgetError):
-            exchange_sec(owner, wire, case_run=case, stage='evidence.sec', route='sec/submissions',
-                url='https://data.sec.gov/submissions/CIK0001652044.json', forbidden_values=('TEST-ONLY-secret',))
-        assert owner.gate.dispatched == 1
-    finally:
-        owner.gate.seal(); wire.close()
+    else:
+        with pytest.raises(BudgetError): book.complete_response(attempt, **args)
+        assert book.summary()['halted'] == 'invalid_response'
+
+
+# -- answers finish cases atomically -----------------------------------------------
+
+def finish_all(book, case):
+    for attempt, binding in [reserve(book, case, *scope) for scope in PLAN]:
+        book.claim_wire_entry(attempt, **binding); complete(book, attempt, binding)
+
+
+@pytest.mark.parametrize('fault', ['none', 'unsettled', 'issuer', 'secret', 'late', 'twice', 'oversize'])
+def test_case_completes_only_with_its_own_screened_timely_answer(tmp_path, monkeypatch, fault):
+    import validation.ordinary_native_ledger as native
+    now = [10_000_000_000]
+    monkeypatch.setattr(native.time, 'monotonic_ns', lambda: now[0])
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    if fault == 'unsettled':
+        reserve(book, case, 'evidence.sec', 'sec/directory')
+    else:
+        for attempt, binding in [reserve(book, case, *scope) for scope in PLAN]:
+            now[0] += 150_000_000
+            book.claim_wire_entry(attempt, **binding); complete(book, attempt, binding)
+    answer = {'company': 'NPK', 'answer': {'text': 'Invented'}}
+    if fault == 'issuer': answer['company'] = 'GOOGL'
+    elif fault == 'secret': answer['answer']['text'] = 'TEST-ONLY-secret'
+    elif fault == 'late': now[0] += 30_000_000_000
+    elif fault == 'oversize': answer['answer']['text'] = 'x' * (4 * 1024 * 1024)
+    if fault in ('none', 'twice'):
+        book.complete_case(case, answer, forbidden_values=('TEST-ONLY-secret',))
+        with book.transaction() as db:
+            assert db.execute('SELECT status FROM cases WHERE id=?', (case,)).fetchone() == ('complete',)
+            assert db.execute('SELECT case_id FROM ordinary_answers').fetchall() == [(CASES[0],)]
+        if fault == 'twice':
+            with pytest.raises(BudgetError):
+                book.complete_case(case, answer, forbidden_values=('TEST-ONLY-secret',))
+            assert book.summary()['halted']
+        return
+    with pytest.raises(BudgetError):
+        book.complete_case(case, answer, forbidden_values=('TEST-ONLY-secret',))
+    assert book.summary()['halted']
+    with book.transaction() as db:
+        assert db.execute('SELECT COUNT(*) FROM ordinary_answers').fetchone() == (0,)
+
+
+def test_no_late_work_after_a_case_is_complete(tmp_path):
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    finish_all(book, case)
+    book.complete_case(case, {'company': 'NPK', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    with pytest.raises(BudgetError):
+        reserve(book, case, 'evidence.sec', 'sec/directory')
+
+
+def test_failure_records_use_fixed_codes_only(tmp_path):
+    book = ledger(tmp_path); case = book.begin_case(CASES[0])
+    attempt, _ = reserve(book, case, 'evidence.sec', 'sec/directory')
+    with pytest.raises(BudgetError):
+        book.record_exchange_failure(attempt, 'transport', 'contains spaces and TEST-ONLY-secret')
+    with pytest.raises(BudgetError):
+        book.record_exchange_failure(attempt, 'invented_code', 'read_error')
+    book.record_exchange_failure(attempt, 'transport', 'read_error')
+    book.record_exchange_failure(attempt, 'interrupted', 'sec/directory')  # first record kept
+    with book.transaction() as db:
+        assert db.execute('SELECT code,detail FROM ordinary_exchange_failures').fetchall() == [('transport', 'read_error')]
+    assert book.summary()['halted'] == 'post_claim_failure'
