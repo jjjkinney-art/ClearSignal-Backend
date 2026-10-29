@@ -4,9 +4,27 @@ State on 2026-10-29. Live execution is disabled. No live SEC, model or
 provider request, merge, deploy or spend was made to produce this document.
 No approval exists.
 
-**Every review referenced below is model-assisted** (Claude Code, 2026-10-29).
-None is an independent human review, and none satisfies the
-independent-reviewer requirement.
+**Every review referenced below is model-assisted.** None is a human review,
+and nothing here is an independent human sign-off.
+
+## 0. Review plan for this pilot (Julian's decision, 2026-10-30)
+
+For this bounded, SEC-only, zero-model pilot, Julian chose **separate
+model-assisted review** and **deferred professional engineering review** to a
+pre-launch checkpoint. The original prerequisite of an independent human
+reviewer is therefore **deferred, not met**.
+
+| Review | Scope | Result | Limits |
+|---|---|---|---|
+| Claude Code (Anthropic), 2026-10-29/30 | #350 and #352 in full; #86 | Defects found and fixed are listed in §1 | The same model wrote most of the reviewed code, so this review is not independent of the author |
+| ChatGPT (OpenAI), at `c6d720b` | The direct-TLS configuration, transport, gate, worker integration, launcher, and related test source | No new blocking issue found within that scope. CI run 40857903838 was verified as successful. | Did not run tests locally. Did not review the rest of #350: ledger, export, boundary semantics and the `issuer_identity.py` application change. |
+| Professional engineering review | Everything | **Deferred** to the pre-launch checkpoint | — |
+
+Consequences:
+- The application change in #350 (`issuer_identity.py`, +9 lines) has only
+  model review.
+- The pilot runs from the exact reviewed commit, so it does not require
+  merging that change into production first (§4).
 
 ## 1. Code under review
 
@@ -218,53 +236,53 @@ because the email connector needs reconnecting.
 - the deletion procedure;
 - the terms for retaining SEC content.
 
-## 4. Execution package: merge order and binding
+## 4. Execution package and merge sequence
 
-The package cannot be produced yet. It requires the reviewed `execution.json`,
-the completed evidence (§3) and the final merged code.
+**The pilot executes from the exact reviewed commit, not from `main`.**
+Merging is not a prerequisite. The package binds the git revision and the
+source hash of the checkout it runs from. Running from a clean checkout of
+the #352 head keeps the model-reviewed `issuer_identity.py` change out of
+production until the deferred review.
 
-1. **Independent human review of #350, then merge it** with Squash and merge,
-   the repository's convention.
-2. **Update #352 from `main`.** #350's changes arrive identical on both sides,
-   so no conflict is expected. Then wait for CI, review and merge.
-3. **On this Mac,** check out the merged `main` commit in a clean clone. Leave
-   no `.py` changes.
-4. **Write `execution.json`** in the `direct_tls` shape:
+1. **Clean checkout.** Create a clean checkout of the final #352 head, the
+   commit that contains this document, at `~/clearsignal-pilot/code`. It must
+   have no local changes.
+2. **`execution.json`, direct TLS:**
    - `proxy: null`;
    - `ca_selectors` `["SSL_CERT_FILE", "REQUESTS_CA_BUNDLE"]`;
-   - `ca_identity` set to the venv's `certifi/cacert.pem` path and its
-     SHA-256;
-   - non-secret review references.
-
-   The network reviewer confirms it.
-5. **Generate the evidence templates** (`evidence-template`). Humans fill in
-   the attestations, and `all_in_usd` is set.
-6. **Run `prepare`** with `~/clearsignal-pilot/venv/bin/python` and a fresh
-   absolute output directory that does not yet exist, for example
-   `/Users/juliankinney/clearsignal-pilot/run-1`. The package then binds:
-   - the git revision and the source SHA-256 of `app/**/*.py` and
-     `validation/*.py`, which covers the frontend intent pin;
-   - the installed dependency versions;
-   - `execution.json`, including the CA bundle hash;
-   - the cohort projection;
-   - both evidence files' SHA-256;
-   - the output directory.
-7. **The operator re-checks the production frontend** (`5ee51c3`,
-   `queryIntent.ts` SHA-256 `d8f9810f…41b6`).
-8. **Julian approves** the printed `package_sha256` in a separate approval
-   file.
-9. **Run once** with these variables and no proxy variable set:
+   - `ca_identity` set to
+     `/Users/juliankinney/clearsignal-pilot/venv/lib/python3.11/site-packages/certifi/cacert.pem`,
+     SHA-256 `2ef52ad56b4803e264045c915e55c236cbfa045b84b81efefc218a19eb44bd2b`;
+   - non-secret references to this document and the reviews in §0.
+3. **Evidence.** Generate the evidence files (`evidence-template`) and fill
+   in their attestations with Julian's confirmed answers (§6). The cost
+   evidence carries the confirmed `all_in_usd`.
+4. **`prepare`.** Run it with `~/clearsignal-pilot/venv/bin/python` from the
+   clean checkout, naming the confirmed output directory, which must not yet
+   exist. It prints `package_sha256`.
+5. **Frontend check.** The operator confirms that production still serves
+   `5ee51c3` (`queryIntent.ts` SHA-256 `d8f9810f…41b6`).
+6. **Approval.** Julian's separate approval file names that exact
+   `package_sha256`, the output directory and `all_in_usd`.
+7. **`run`.** Run it with no proxy variable set and with these variables:
    - `OPENAI_API_KEY=ORDINARY-ZERO-MODEL-NO-CREDENTIAL`;
-   - `SEC_USER_AGENT='<name> <email>'`;
-   - `SSL_CERT_FILE` and `REQUESTS_CA_BUNDLE` naming the pinned bundle.
+   - `SEC_USER_AGENT` set to the confirmed contact;
+   - `SSL_CERT_FILE` and `REQUESTS_CA_BUNDLE` set to the pinned bundle.
 
-   First `run` (checks only), then `run --execute`. Keep the Mac awake and the
-   VPN state unchanged during the at most 480 s run.
+   First `run` (checks only), then `run --execute`, once, with the Mac awake
+   and the VPN state unchanged.
 
-**Regeneration rule.** Any code, dependency, `certifi`, configuration or
-evidence change after `prepare` makes `run` refuse. The package must then be
-regenerated and re-approved. The approval is single-use, because the output
-directory must not exist.
+**Regeneration rule.** Any change to code, dependencies, `certifi`, the
+configuration or the evidence after `prepare` makes `run` refuse. Regenerate
+and re-approve. The approval is single-use.
+
+**Merge sequence, when Julian decides to merge.** This is independent of the
+pilot, and the recommendation is to wait for the pre-launch review.
+1. #350: Squash and merge into `main`.
+2. #352: update from `main` (the duplicate #350 content merges cleanly), wait
+   for CI, then Squash and merge.
+3. A package prepared before a merge stays valid only for its own checkout.
+   A run from `main` needs a new package and a new approval.
 
 ## 5. Launch criteria: what this SEC-only pilot evaluates
 
@@ -280,20 +298,50 @@ The pilot's own results are answers built from real SEC sources. They are
 recorded as `answered_unadjudicated`, and their research quality remains
 unadjudicated until a human or benchmark review.
 
-## 6. Julian: decisions only you can make
+## 6. Julian: decisions to confirm
 
-- [x] **Execution environment:** local Mac, direct TLS (decided 2026-10-29).
-- [ ] **Independent reviewers:** one engineer for #350 and #352, who can
-      also act as network reviewer for `execution.json`.
-- [ ] **Spending ceiling `all_in_usd`,** given that the VPN, ISP and
-      electricity costs are not metered by the code.
-- [ ] **Retention:** location (exclude it from cloud sync if needed), access,
-      period and deletion of the run directory.
-- [ ] **SEC contact** for the User-Agent: a name and a monitored email.
-- [ ] **Accept or reject the open risks:**
-  - a VPN below the process is outside the code's view;
-  - a shared VPN exit may be throttled or blocked by SEC;
-  - an unknown response size can halt the run;
-  - a throttle at the 10/s maximum can halt the run;
-  - approval is self-asserted.
-- [ ] **Approve the final `package_sha256`,** after steps 1–8 of §4.
+Recommended defaults are marked. **None is confirmed until Julian answers.**
+
+- [x] **Execution environment:** local Mac, direct TLS (2026-10-29).
+- [x] **Review plan:** separate model-assisted review; professional review
+      deferred to pre-launch (2026-10-30). See §0.
+- [ ] **Spending ceiling `all_in_usd`.** Recommended: **`1.00`**. The
+      incremental-cost assumptions behind it:
+  - SEC access: $0 (free, per SEC's published terms);
+  - AI and paid data: $0, because the code makes no such call and holds no
+    credential;
+  - Mac compute: about $0.003 of electricity (roughly 100 W for at most
+    8 minutes at about $0.25/kWh);
+  - home internet and VPN: $0 incremental, *assuming* a flat-rate,
+    unmetered plan;
+  - data volume: at most about 1.1 GiB of response bodies, plus overhead.
+
+  The expected incremental cost is under $0.01. The $1.00 ceiling leaves
+  room for overhead and the assumptions; it is not an invoice ceiling. If
+  either plan is metered, raise the ceiling accordingly.
+- [ ] **Storage, access and retention.** Recommended:
+  - **location:** `/Users/juliankinney/clearsignal-pilot/run-1`, which the
+    launcher creates `0700`;
+  - **access:** Julian's macOS account only;
+  - **retention:** keep the run folder and its evidence files for 90 days
+    after the run, then delete them.
+
+  Observed: Time Machine has no destination configured, so there are no
+  backups. `~/clearsignal-pilot` is outside Desktop and Documents, so iCloud
+  does not sync it. The parent folder is `755`, but the run folder itself is
+  private. If Time Machine is enabled later, exclude the folder or include
+  backups in the deletion step.
+- [ ] **SEC contact.** Recommended: `ClearSignal supportclearsignal@gmail.com`,
+      the public address. Confirm it is monitored.
+- [ ] **Accept the documented pilot risks.** Recommended: accept all.
+  - Model-only review; professional review deferred.
+  - The VPN below the process is outside the code's view.
+  - SEC may throttle or block the shared VPN exit.
+  - Response sizes are unknown for five issuers; a body over 16 MiB halts the
+    run.
+  - Pacing is at SEC's 10/s maximum, so a throttle halts the run.
+  - The approval file is self-asserted.
+  - Any halt spends the approval, and a rerun needs a new package and
+    approval.
+- [ ] **Final approval** of the exact `package_sha256` printed by `prepare`,
+      after the steps in §4.

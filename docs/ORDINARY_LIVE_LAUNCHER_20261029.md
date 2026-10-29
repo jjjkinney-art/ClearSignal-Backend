@@ -297,20 +297,26 @@ A test runs the live code path over loopback and asserts all of this:
   above.
 - **Research quality.** Answers from invented sources say nothing about it.
 
-## Human reviews and approval still required
+## Reviews and approval
 
-1. **Independent code review** of this branch and of PR #350, which it
-   builds on. In particular:
-   - the worker's socket audit and DNS rule;
-   - `NATIVE_BACKEND`;
-   - the launcher's check order;
-   - the single-use rule.
-2. **Network review** of the actual proxy at `proxy:8080`, the CA bundle to
-   pin and its SHA-256, and the resulting `execution.json`.
-3. **Cost review:** complete the four cost attestations and set `all_in_usd`.
-4. **Retention review:** complete the five retention attestations.
-5. **Operator check** that the deployed frontend still serves the pinned
-   classifier (`Ai-Intelligence-interface` `5ee51c3`, `queryIntent.ts`
-   SHA-256 `d8f9810f…41b6`).
-6. **Julian's separate approval** of the final package digest. Then one
-   operator runs `run` (checks only), and then `run --execute`.
+For this pilot, Julian chose separate model-assisted review (Claude Code;
+ChatGPT at `c6d720b`) and deferred professional engineering review to the
+pre-launch checkpoint. No independent human sign-off exists. See
+`docs/ORDINARY_PILOT_READINESS_20261029.md` §0.
+
+Still required before the pilot:
+1. **Julian's confirmations** in readiness §6: the ceiling, storage and
+   retention, the SEC contact, and acceptance of the risks.
+2. **`execution.json` in the direct-TLS shape,** with the pinned `certifi`
+   bundle (readiness §4).
+3. **The operator's frontend check:** production still serves `5ee51c3`.
+4. **Julian's separate approval** of the exact `package_sha256`. Then `run`
+   (checks only), and then `run --execute`.
+
+Still required before launch: **professional engineering review** of this
+branch and of PR #350. In particular:
+- the worker's socket audit and DNS rules;
+- the direct-TLS mode;
+- the launcher's check order;
+- the single-use rule;
+- the `issuer_identity.py` application change.
