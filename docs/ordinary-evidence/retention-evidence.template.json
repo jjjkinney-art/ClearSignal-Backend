@@ -10,6 +10,8 @@
       "tests/test_ordinary_live_launcher.py::test_direct_tls_refuses_rather_than_overrides_an_inherited_proxy",
       "tests/test_ordinary_live_launcher.py::test_direct_resolution_admits_only_the_claimed_host_and_public_answers",
       "tests/test_ordinary_isolated_worker.py::test_twelve_cases_run_through_the_integrated_native_path",
+      "tests/test_ordinary_isolated_worker.py::test_an_abandoned_evidence_request_degrades_one_answer_without_halting",
+      "tests/test_ordinary_isolated_worker.py::test_the_abandoned_response_never_reaches_the_answer_and_closes_before_the_next_case",
       "tests/test_ordinary_native_boundary.py",
       "tests/test_ordinary_native_ledger.py"
     ],

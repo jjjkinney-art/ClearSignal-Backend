@@ -166,8 +166,15 @@ def test_only_the_gate_admits_a_socket_and_only_in_a_live_mode():
         def __init__(self, admits):
             self.gate = Gate(admits)
 
+    class AbandonedGate:
+        def audit(self, event, args):
+            from validation.ordinary_native_ledger import AbandonedExchange
+            raise AbandonedExchange('abandoned')
+
     event = ('socket.connect', (None, ('127.0.0.1', 8080)))
-    assert gate_admits(True, [object(), Boundary(True)], *event)
+    # An abandoned exchange's socket is refused without counting as blocked or halting.
+    assert gate_admits(True, [object(), type('B', (), {'gate': AbandonedGate()})()], *event) == 'abandoned'
+    assert gate_admits(True, [object(), Boundary(True)], *event) is True
     assert not gate_admits(True, [object(), Boundary(False)], *event)  # refused by the gate
     assert not gate_admits(False, [object(), Boundary(True)], *event)  # rehearsal: never
     assert not gate_admits(True, [object()], *event)                   # before the boundary exists

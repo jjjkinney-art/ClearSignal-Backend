@@ -17,7 +17,7 @@ from pathlib import Path
 from threading import BoundedSemaphore
 
 from validation.capture_budget import BudgetError, RateLimitDelay, digest
-from validation.ordinary_native_ledger import OrdinaryNativeGate, OrdinaryNativeLedger
+from validation.ordinary_native_ledger import AbandonedExchange, OrdinaryNativeGate, OrdinaryNativeLedger
 from validation.ordinary_network import DirectScopedBackend, is_direct
 from validation.ordinary_pilot_contract import quota_contract
 from validation.ordinary_transport import OrdinaryHTTPTransport
@@ -30,6 +30,8 @@ from validation.pilot_live import SubmissionRefusal, TransportFailure, json_obje
 SEC_STAGES = frozenset({'routing', 'evidence.sec', 'evidence.sec_metrics',
                         'evidence.thesis_disclosures', 'evidence.filing_metrics'})
 PAID_PROVIDER_ENVIRONMENT = ('FMP_API_KEY', 'FRED_API_KEY', 'NEWS_API_KEY')
+# Evidence stages the application gives extra time on source-evidence answers.
+DOCUMENT_STAGES = frozenset({'evidence.thesis_disclosures', 'evidence.filing_metrics'})
 # Explicit marker for the transport's own socket backend; there is no default.
 NATIVE_BACKEND = object()
 
@@ -75,6 +77,11 @@ class OrdinaryNativeBoundary(PilotBoundary):
         self.refused_model_requests = 0
         self.claim_pacing_waits = self.slot_waits = 0
         self.refused_requests = []  # bounded (stage, target) diagnostics; SEC URLs are public
+        # Graceful degradation: (case_run, stage) pairs the application abandoned
+        # at its own evidence timeout, and the per-case evidence-wait count.
+        self.abandoned = set()
+        self.evidence_waits = {}
+        self.abandonments = []  # bounded diagnostics: case and stage only
 
     # -- configuration -----------------------------------------------------------
 
@@ -112,6 +119,74 @@ class OrdinaryNativeBoundary(PilotBoundary):
         with self.lock:
             self.admitted = {key: value for key, value in self.admitted.items() if key[0] == self.case_run}
 
+    # -- graceful degradation ----------------------------------------------------
+
+    def install(self):
+        """Mirror the application's evidence timeout instead of halting on it.
+
+        The application (router_service._collect_investment_evidence) waits
+        10 s for every evidence task and, on source-evidence answers, waits on
+        for the two filing-document tasks up to 20 s in total; whatever is
+        still pending is abandoned and answered without. Here each such task is
+        abandoned at the same point: its open exchange stops at its next I/O
+        step, it may start no new request, and no response completing after
+        that point reaches the application. Agent and synthesis waits keep the
+        historical halt.
+        """
+        super().install()
+        from concurrent import futures
+        historical_wait = futures.wait
+        owner = self
+
+        def wait(items, timeout=None, return_when=futures.ALL_COMPLETED):
+            if not items or next(iter(items))._pilot_pool != 'evidence':
+                return historical_wait(items, timeout=timeout, return_when=return_when)
+            done, pending = owner.original_wait(items, timeout=timeout, return_when=return_when)
+            if pending:
+                with owner.lock:
+                    first = owner.evidence_waits.get(owner.case_run, 0) == 0
+                    owner.evidence_waits[owner.case_run] = owner.evidence_waits.get(owner.case_run, 0) + 1
+                documents_wait = first and owner.source_evidence_view()
+                for future in pending:
+                    if documents_wait and future._pilot_stage in DOCUMENT_STAGES:
+                        continue  # The application waits on for these.
+                    owner.abandon(future._pilot_stage)
+            else:
+                with owner.lock:
+                    owner.evidence_waits[owner.case_run] = owner.evidence_waits.get(owner.case_run, 0) + 1
+            return done, pending
+
+        self._patch(futures, 'wait', wait)
+
+    def source_evidence_view(self):
+        from app.services.source_answer import is_source_answer_request
+        return bool(is_source_answer_request(self.case['question']))
+
+    def abandon(self, stage):
+        with self.lock:
+            key = (self.case_run, stage)
+            if key in self.abandoned:
+                return
+            self.abandoned.add(key)
+            if len(self.abandonments) < 24:
+                self.abandonments.append({'case_id': self.case['case_id'], 'stage': stage})
+        self.gate.abandon_stage(self.case_run, stage)
+        self.release.set()
+
+    def abandoned_task(self, stage):
+        with self.lock:
+            return (self.case_run, stage) in self.abandoned
+
+    def drain(self):
+        """Every task, abandoned ones included, must have ended before the case
+        can finish; otherwise the case halts within its own deadline."""
+        self.release.set()
+        remaining = self.ledger.case_remaining_seconds(self.case_run) if self.case_run else 0.0
+        _, pending = self.original_wait(self.futures, timeout=max(0.0, remaining - 0.5) if remaining > 0 else 3)
+        if pending:
+            self.ledger.halt('stage_timeout')
+        return len(pending)
+
     # -- SEC routing -------------------------------------------------------------
 
     def _refuse_request(self, stage, url):
@@ -146,12 +221,14 @@ class OrdinaryNativeBoundary(PilotBoundary):
             self.sec_route_calls[route] = self.sec_route_calls.get(route, 0) + 1
         return route
 
-    def _acquire_slot(self, case_run):
+    def _acquire_slot(self, case_run, stage):
         """Wait for one of four SEC slots, never past the case deadline."""
         while not self.slots.acquire(timeout=0.05):
             with self.lock:
                 self.slot_waits += 1
             self.active()
+            if self.abandoned_task(stage):
+                raise AbandonedExchange('evidence stage abandoned by the application')
             if self.ledger.case_remaining_seconds(case_run) <= 0:
                 return False
         return True
@@ -199,18 +276,23 @@ class OrdinaryNativeBoundary(PilotBoundary):
     def sec_exchange(self, method, url, body):
         route = self.sec_route(method, url, body)
         stage, case_run = self.stage.get(), self.case_run
+        if self.abandoned_task(stage):
+            # No new request from an abandoned stage: nothing reserved or sent.
+            raise AbandonedExchange('evidence stage abandoned by the application')
         fingerprint = digest({'method': 'GET', 'url': url, 'route': route, 'stage': stage})
         attempt = self.ledger.reserve(case_run, route, stage=stage, input_bound=0, output_bound=0,
                                       request_sha256=fingerprint)
         slot = claimed = False
         token = None
         try:
-            slot = self._acquire_slot(case_run)
+            slot = self._acquire_slot(case_run, stage)
             if not slot:
                 self.ledger.halt('stage_timeout')
                 raise BudgetError('SEC slot unavailable before the case deadline')
             while True:  # pacing before dispatch only; no I/O is ever retried
                 self.active()
+                if self.abandoned_task(stage):
+                    raise AbandonedExchange('evidence stage abandoned by the application')
                 try:
                     self.ledger.claim_dispatch(attempt, case_run=case_run, route=route,
                                                request_sha256=fingerprint, input_bound=0, output_bound=0)
@@ -229,6 +311,10 @@ class OrdinaryNativeBoundary(PilotBoundary):
             token = self.sec_attempt.set((attempt, route, stage))
             with self.gate.exchange(url, grant, fingerprint):
                 media, content = self.wire.exchange('GET', url)
+            if self.abandoned_task(stage):
+                # Completed after the application's abandonment point: discarded,
+                # never admitted, retained or returned.
+                raise AbandonedExchange('late response discarded')
             self._admit(route, stage, media, content)
             try:
                 self.ledger.complete_response(attempt, url=url, media_type=media, body=content,
@@ -238,6 +324,15 @@ class OrdinaryNativeBoundary(PilotBoundary):
                 raise
             return media, content
         except BaseException as exc:
+            if self.abandoned_task(stage):
+                # The exchange has ended (or never started); record its terminal
+                # outcome before releasing its slot. Never a halt.
+                try:
+                    self.ledger.abandon_attempt(attempt, route)
+                except BaseException:
+                    self._fail(exc, attempt, route, stage, claimed)
+                    raise BudgetError('ordinary SEC exchange refused') from None
+                raise AbandonedExchange('evidence stage abandoned by the application') from None
             self._fail(exc, attempt, route, stage, claimed)
             raise BudgetError('ordinary SEC exchange refused') from None
         finally:

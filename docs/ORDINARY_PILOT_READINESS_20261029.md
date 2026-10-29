@@ -345,3 +345,86 @@ Recommended defaults are marked. **None is confirmed until Julian answers.**
     approval.
 - [ ] **Final approval** of the exact `package_sha256` printed by `prepare`,
       after the steps in §4.
+
+## 7. Run-1 result, corrected diagnosis and follow-up (2026-10-30)
+
+Run `ordinary-20261030-01`, under approval `Julian-20261030-ordinary-01`,
+executed package `f3ca1afd…ca33` once at 12:33:39–12:34:54 UTC. The approval
+is consumed. The originals in `/Users/juliankinney/clearsignal-pilot/run-1`
+are kept unchanged; their SHA-256 values are recorded with the review copies.
+
+**Outcomes (denominator 12):**
+- 4 answered, unadjudicated: NPK ×2 and GOOGL ×2;
+- 1 halted: `INGR:core_thesis`;
+- 7 not run after the halt.
+
+**Requests:**
+- 27 SEC requests of the 66 allowed: 24 retained (24.4 MB) and 3 failed;
+- 0 model requests;
+- 0 blocked operations;
+- at most 4 in flight;
+- no 403 or 429 from SEC.
+
+### Corrected INGR diagnosis
+
+The first post-run report attributed the halt to the 30 s thesis deadline.
+**That was wrong.** All three INGR failures were recorded at **+10.9 s**.
+
+1. The application's evidence collection
+   (`router_service._collect_investment_evidence`) waits 10 s for its
+   evidence tasks.
+2. INGR's company-facts request, sent at +3.8 s, was still in transfer when
+   that window closed.
+3. The pilot boundary at the time halted whenever the application would
+   abandon a non-document evidence task. It recorded `stage_timeout`, and the
+   response arriving moments later was refused at retention.
+
+**What is not known:**
+- The size of INGR's company-facts body, which was not retained.
+- The cause of the slow transfer. Observed per-transfer throughput was
+  0.10–1.50 MB/s, and there is no baseline without the VPN. Neither the VPN
+  nor any other cause is established.
+
+### Answer review (model-assisted, offline; 4 of 12 cases)
+
+- **Accuracy and citations:** every figure and all 18 quotations matched the
+  retained SEC bodies, and no unsupported factual claim was found.
+- **NPK thesis:** company-specific and partly analytical, with segment
+  concentration, backlog, contract terms and a cash-flow reconciliation. It
+  is very long and repetitive, and it does not explain the latest quarter.
+- **NPK thresholds:** a single margin test only.
+- **GOOGL thesis:** a list of facts.
+  - Revenue was missing, a defect fixed separately in #353.
+  - It did not explain the net-income decline, although the retained data
+    show non-operating income swinging from +$12.8B to −$8.2B.
+  - Its risk passages were generic.
+- **GOOGL thresholds:** a refusal.
+- **After the revenue fix (offline replay):** the GOOGL thesis gains revenue
+  (+24.7%) and the operating margin (31.81% vs 30.51%), and the thresholds
+  answer becomes a margin-monitoring test. Both are still weak.
+
+**Answer-quality gaps recorded for follow-up** (not addressed in this change):
+1. Repetitive, caveat-heavy prose; the NPK thesis runs to about 21,000
+   characters.
+2. Weak decision criteria. Threshold answers offer one margin test and leave
+   operating test points they already hold unused: segment losses, backlog
+   conversion, Defense margin.
+3. No explanation of the current period. The latest 10-Q's own discussion is
+   not used, and non-operating swings are not explained.
+4. Generic risk selection: boilerplate intellectual-property passages instead
+   of issuer-material risks.
+
+### Pilot amendment: graceful degradation (requires a new package and approval)
+
+The pilot now follows the application's evidence timeout instead of halting
+on it. `docs/ORDINARY_LIVE_LAUNCHER_20261029.md` describes the rules under
+"Graceful degradation". Outcomes are now reported in four classes:
+- full answers;
+- degraded answers;
+- unanswered (identity unresolved);
+- operational failures (halted or not run).
+
+The denominator stays 12, and no class is a quality pass. All request, size,
+concurrency, rate and time limits are unchanged. This changes the executed
+code, so any rerun needs a new execution package and Julian's new, separate
+approval.

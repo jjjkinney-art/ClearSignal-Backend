@@ -24,7 +24,7 @@ REGISTRANTS = {
 }
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
-SYNTHETIC_FAULTS = frozenset({'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall'})
+SYNTHETIC_FAULTS = frozenset({'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
 
 
 def _ticker(cik):
@@ -170,6 +170,9 @@ class _Tunnel:
             if self.backend.take_fault(path, 'stall'):
                 import threading
                 threading.Event().wait()  # never set: a hung peer
+            # A slow but live peer: the complete response arrives in 512-byte
+            # reads one second apart (finite, unlike a stall).
+            self.slow = self.backend.take_fault(path, 'slow')
             fault = self.backend.take_fault(path, 'read_failure')
             status, media, body = respond(path) if method == 'GET' else (405, 'text/plain', b'')
             extra = b''
@@ -187,6 +190,10 @@ class _Tunnel:
                 self.fail_at_end = True
         if self.offset >= len(self.response) and getattr(self, 'fail_at_end', False):
             raise httpcore.ReadError('invented read failure')
+        if getattr(self, 'slow', False):
+            import time
+            time.sleep(1.0)
+            max_bytes = min(max_bytes, 512)
         chunk = self.response[self.offset:self.offset + max_bytes]
         self.offset += len(chunk)
         return chunk
@@ -231,7 +238,8 @@ class OrdinarySyntheticSEC:
     path and the fault fires on its ``occurrence``-th match. For
     connect_failure (no path is visible before CONNECT) the selector is
     ignored and the fault fires on the ``occurrence``-th connection.
-    A stall blocks that exchange's thread indefinitely, like a hung peer.
+    A stall blocks that exchange's thread indefinitely, like a hung peer; a
+    slow fault delivers the complete response in 512-byte reads one second apart.
     """
     def __init__(self, fault=None):
         if fault is not None and (type(fault) is not tuple or len(fault) != 3

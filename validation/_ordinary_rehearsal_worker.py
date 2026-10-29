@@ -37,6 +37,9 @@ SCENARIO_FAULTS = {
     # Stalled peers: INGR's first (core) and second (threshold) facts requests.
     'core_deadline': ('stall', r'/companyfacts/CIK0001046257\.json$', 1),
     'threshold_deadline': ('stall', r'/companyfacts/CIK0001046257\.json$', 2),
+    # A slow but live peer on INGR's first facts request: the application
+    # abandons that evidence at its 10 s wait and answers without it.
+    'evidence_abandoned': ('slow', r'/companyfacts/CIK0001046257\.json$', 1),
 }
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
@@ -67,11 +70,16 @@ def loopback_address(address):
 
 def gate_admits(live, holder, event, args):
     """In a live mode, only the gate admits a socket operation: inside a
-    claimed, dispatched exchange, to the address it resolved for the proxy."""
+    claimed, dispatched exchange, to the address it resolved for the proxy.
+    Returns 'abandoned' when the operation belongs to an exchange the
+    application abandoned: refused, but neither blocked nor a halt."""
     if not live or len(holder) < 2:
         return False
+    from validation.ordinary_native_ledger import AbandonedExchange
     try:
         holder[1].gate.audit(event, args)
+    except AbandonedExchange:
+        return 'abandoned'
     except Exception:
         return False
     return True
@@ -166,8 +174,12 @@ def main():
     blocked, holder = [], []
 
     def audit(event, args):
-        if event.startswith('socket.') and gate_admits(live, holder, event, args):
-            return
+        if event.startswith('socket.'):
+            verdict = gate_admits(live, holder, event, args)
+            if verdict is True:
+                return
+            if verdict == 'abandoned':
+                raise RuntimeError('socket operation of an abandoned exchange refused')
         if event.startswith('socket.') or event in {'subprocess.Popen', 'os.system', 'os.posix_spawn'}:
             import traceback
             # Event name and code locations only; never arguments or values.
@@ -288,6 +300,7 @@ def main():
               'failure_class': failure, 'completed_cases': completed, 'routing': routes,
               'blocked_external_operations': blocked[:10],
               'refused_model_requests': boundary.refused_model_requests,
+              'abandoned_evidence': list(boundary.abandonments),
               'refused_requests': list(boundary.refused_requests),
               'transport_entries': dict(boundary.transport_entries),
               'synthetic_requests': None if live else len(backend.requests),

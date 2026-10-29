@@ -102,6 +102,11 @@ class PilotBoundary:
                 return True
         return False
 
+    def abandoned_task(self, stage):
+        """Whether a failing pool task belongs to an evidence stage the
+        application abandoned. Historical boundaries never abandon."""
+        return False
+
     def _patch(self, target, name, value):
         item = patch.object(target, name, value)
         item.start()
@@ -310,6 +315,8 @@ class PilotBoundary:
                         owner.active()
                         return fn(*args, **kwargs)
                     except BaseException:
+                        if owner.abandoned_task(stage):
+                            raise  # The application already discarded this task.
                         owner.ledger.halt('pool_failure')
                         owner.release.set()
                         raise BudgetError('offline pipeline worker failed') from None

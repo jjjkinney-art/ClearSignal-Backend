@@ -284,3 +284,72 @@ def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     # from research; the pinned frontend must not send one for these questions.
     assert all(intent_allows_company_detection(frontend_intent(case)) for case in CASES)
     assert not intent_allows_company_detection('investing_education')
+
+
+# -- graceful degradation at the application's evidence timeout --------------------
+
+@pytest.fixture(scope='module')
+def degraded(tmp_path_factory):
+    output = tmp_path_factory.mktemp('ordinary') / 'degraded'
+    return run_rehearsal(output, scenario='evidence_abandoned'), output
+
+
+@pytest.mark.timeout(180)
+def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degraded):
+    result, output = degraded
+    packet, worker = result['packet'], result['worker']
+    assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
+    statuses = [c['status'] for c in packet['cases']]
+    assert len(statuses) == 12 and statuses[CASES.index('INGR:core_thesis')] == 'answered_degraded_unadjudicated'
+    # Other cases are full answers, unless the application's own 10 s window
+    # also expired for them under load; then they too are degraded, never failed.
+    assert set(statuses) <= {'answered_unadjudicated', 'answered_degraded_unadjudicated'}
+    counts = packet['outcome_counts']
+    assert counts['unanswered'] == counts['operational_failure'] == 0 and sum(counts.values()) == 12
+    assert counts['degraded_answer'] == statuses.count('answered_degraded_unadjudicated') >= 1
+    assert packet['quality_pass_rate'] is None  # a degraded answer is never a pass
+    # Every request counted, within quota, with a terminal outcome; abandoned ones never retained.
+    assert packet['attempt_count'] == packet['wire_entries'] <= 66
+    assert all(a['status'] in {'settled', 'abandoned'} for a in packet['attempts'])
+    abandoned = [a for a in packet['attempts'] if a['status'] == 'abandoned']
+    assert ('INGR:core_thesis', 'evidence.sec_metrics', 'sec/facts') in {
+        (a['case_id'], a['stage'], a['route']) for a in abandoned}
+    assert all(a['failure'] == {'code': 'abandoned', 'detail': a['route']} and a['response'] is None
+               for a in abandoned)
+    degraded_cases = {case for case, status in zip(CASES, statuses) if status == 'answered_degraded_unadjudicated'}
+    assert {a['case_id'] for a in abandoned} == degraded_cases
+    assert {'case_id': 'INGR:core_thesis', 'stage': 'evidence.sec_metrics'} in worker['abandoned_evidence']
+    assert worker['blocked_external_operations'] == [] and worker['unfinished_workers'] == 0
+    assert 1 <= worker['max_inflight_sec'] <= 4
+
+
+@pytest.mark.timeout(180)
+def test_the_abandoned_response_never_reaches_the_answer_and_closes_before_the_next_case(degraded):
+    result, output = degraded
+    packet = result['packet']
+    facts_url = 'https://data.sec.gov/api/xbrl/companyfacts/CIK0001046257.json'
+    answer = packet['answers']['INGR:core_thesis']['response']
+    assert facts_url not in json.dumps(answer)
+    with sqlite3.connect(output / 'ledger.sqlite') as db:
+        assert not db.execute('SELECT 1 FROM ordinary_responses r JOIN attempts a ON a.id=r.attempt_id '
+                              "JOIN cases c ON c.id=a.case_run WHERE c.case_id='INGR:core_thesis' AND r.url=?",
+                              (facts_url,)).fetchone()
+        closed = db.execute("SELECT c.case_id, f.recorded_ns FROM ordinary_exchange_failures f JOIN attempts a "
+                            "ON a.id=f.attempt_id JOIN cases c ON c.id=a.case_run WHERE a.status='abandoned'").fetchall()
+        starts = dict(db.execute("SELECT c.case_id, t.started_ns FROM ordinary_case_times t "
+                                 "JOIN cases c ON c.id=t.case_run"))
+    # Each abandoned request was closed before the next case began.
+    assert closed and all(recorded < starts[CASES[CASES.index(case) + 1]]
+                          for case, recorded in closed if case != CASES[-1])
+
+
+@pytest.mark.timeout(180)
+@pytest.mark.parametrize('sql', [
+    "DELETE FROM ordinary_exchange_failures WHERE code='abandoned'",                       # no terminal record
+    "UPDATE ordinary_exchange_failures SET code='interrupted' WHERE code='abandoned'",     # wrong outcome
+    "UPDATE ordinary_exchange_failures SET recorded_ns=recorded_ns+3600000000000 WHERE code='abandoned'",  # closed late
+])
+def test_parent_export_refuses_an_inconsistent_abandonment(degraded, tmp_path, sql):
+    copy, policy = tampered(degraded, tmp_path, sql)
+    with pytest.raises((ExportRefused, sqlite3.IntegrityError)):
+        export_packet(copy, policy, forbidden_values=FORBIDDEN, synthetic=True)

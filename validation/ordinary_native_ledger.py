@@ -32,7 +32,14 @@ RUN_SECONDS = 480
 # Fixed failure vocabulary for every failed exchange, not just the first.
 EXCHANGE_FAILURE_CODES = frozenset({
     'transport', 'sec_refusal', 'identity_mismatch', 'semantic_refusal',
-    'retention_refused', 'halted_before_dispatch', 'slot_timeout', 'interrupted'})
+    'retention_refused', 'halted_before_dispatch', 'slot_timeout', 'interrupted', 'abandoned'})
+
+
+class AbandonedExchange(BudgetError):
+    """The application abandoned this evidence stage at its own timeout.
+
+    Raised to the abandoned task's thread only; it never halts the run.
+    """
 
 
 def case_seconds(case_id):
@@ -251,6 +258,22 @@ class OrdinaryNativeLedger(AttemptLedger):
                            (attempt_id, code, detail, time.monotonic_ns()))
                 db.execute("UPDATE policy SET halted=COALESCE(halted,'post_claim_failure') WHERE id=1")
 
+    def abandon_attempt(self, attempt_id, route):
+        """Terminal outcome for a request the application abandoned.
+
+        Called by the request's own thread after its exchange has ended (or
+        before it was dispatched), so it stopped counting toward concurrency
+        only once its socket was closed. Status and failure row are written
+        together; nothing is retained and the run is not halted.
+        """
+        with self.transaction() as db:
+            row = db.execute('SELECT route,status FROM attempts WHERE id=?', (attempt_id,)).fetchone()
+            if row is None or row[0] != route or row[1] not in ('pending', 'claimed'):
+                raise BudgetError('abandonment requires an open attempt')
+            db.execute("UPDATE attempts SET status='abandoned' WHERE id=?", (attempt_id,))
+            db.execute('INSERT INTO ordinary_exchange_failures VALUES (?,?,?,?)',
+                       (attempt_id, 'abandoned', route, time.monotonic_ns()))
+
     def complete_case(self, case_run, payload, *, forbidden_values):
         """Retain the complete answer and finish its case in one transaction.
 
@@ -274,7 +297,10 @@ class OrdinaryNativeLedger(AttemptLedger):
             self.active(db)
             case = db.execute("SELECT c.case_id,t.started_ns FROM cases c JOIN ordinary_case_times t ON t.case_run=c.id "
                               "WHERE c.id=? AND c.status='active'", (case_run,)).fetchone()
-            unsettled = db.execute("SELECT 1 FROM attempts WHERE case_run=? AND status!='settled'", (case_run,)).fetchone()
+            # Abandoned attempts are terminal only once their exchange has
+            # ended (abandon_attempt); anything still pending or claimed blocks.
+            unsettled = db.execute("SELECT 1 FROM attempts WHERE case_run=? AND status NOT IN ('settled','abandoned')",
+                                   (case_run,)).fetchone()
             now = time.monotonic_ns()
             if not case or unsettled or payload.get('company') not in {case[0].split(':')[0], ''}:
                 reason = 'invalid_response'
@@ -300,6 +326,20 @@ class OrdinaryNativeGate(ExchangeGate):
         # Direct mode admits only globally routable answers; the loopback test
         # worker alone replaces this rule (and the resolver) with loopback ones.
         self.allow_address = public_address
+        self.open_states = {}  # attempt -> exchange state, while its exchange is open
+
+    def abandon_stage(self, case_run, stage):
+        """Mark open exchanges of an abandoned stage; their next I/O step stops."""
+        with self.lock:
+            for state in self.open_states.values():
+                if state['case_run'] == case_run and state['stage'] == stage:
+                    state['abandoned'] = True
+
+    def require(self, url=None):
+        state = super().require(url)
+        if state.get('abandoned'):
+            raise AbandonedExchange('evidence stage abandoned by the application')
+        return state
 
     @contextmanager
     def exchange(self, url, grant=None, fingerprint=None):
@@ -320,10 +360,16 @@ class OrdinaryNativeGate(ExchangeGate):
                  'attempt': attempt, 'case_run': case_run, 'validated': False, 'fingerprint': fingerprint,
                  'route': route, 'stage': stage, 'active': True, 'thread': get_ident()}
         token = self.current.set(state)
+        with self.lock:
+            self.open_states[attempt] = state
+            if (case_run, stage) in getattr(self.owner, 'abandoned', ()):
+                state['abandoned'] = True
         try:
             yield
         finally:
             state['active'] = False
+            with self.lock:
+                self.open_states.pop(attempt, None)
             self.current.reset(token)
 
     def dns(self, host, port, *args, **kwargs):

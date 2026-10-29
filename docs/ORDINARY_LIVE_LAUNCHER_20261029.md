@@ -84,6 +84,66 @@ layers below the process, such as a VPN. A TLS interceptor whose CA is not in
 the pinned bundle fails verification, and the run halts. It does not make the
 run free of cost or prove where traffic exits.
 
+## Graceful degradation (amendment, 2026-10-30)
+
+The application gives up on slow evidence. `_collect_investment_evidence`
+waits 10 s for every evidence task. On source-evidence answers it then waits
+on for the two filing-document tasks, up to 20 s in total. It answers without
+whatever is still pending. The pilot used to halt whenever that happened. It
+now follows the same rule, under these constraints:
+
+- **The same points.** A non-document task is abandoned when the first
+  evidence wait ends. A document task is abandoned only if it is still
+  pending after the application's extra wait. Agent and synthesis waits keep
+  the historical halt.
+- **Stopped, not orphaned.**
+  - An abandoned stage's open exchange is stopped by the gate at its next
+    I/O step (read, write, DNS or connect).
+  - The stage may start no new request.
+  - Its socket operations are refused without being counted as blocked
+    external operations.
+- **No late results.** A response that completes after the abandonment point
+  is discarded, never admitted, retained or returned to the application. The
+  gate stop and the discard each suffice on their own; removing both is
+  caught by the tests. The only cross-stage state these evidence tasks write
+  is the SEC directory and ticker caches, which are fed from responses, so
+  they can hold only data that arrived in time.
+- **Counted and terminal.**
+  - An abandoned request keeps its reservation, its slot and its place in the
+    concurrency count until its exchange has actually ended.
+  - It then becomes `abandoned`, with its failure record and close time
+    written in the same transaction.
+  - Abandoned requests still count against every quota.
+  - The export refuses an abandoned attempt that lacks that record, has a
+    retained response, or closed after the next case began.
+- **Closed before the next case.**
+  - Every task, abandoned ones included, must end before the case can
+    finish.
+  - If one cannot be stopped within the case's remaining time (a hung peer
+    that never yields a read), the case halts with `stage_timeout`, as
+    before.
+- **Outcome.** A completed case with any abandoned evidence is reported as
+  `answered_degraded_unadjudicated`, counted as `degraded_answer`, and never
+  as a quality pass.
+
+One shared hook was added to `validation/pilot_boundary.py`:
+`abandoned_task`, which returns `False` by default. Historical boundaries
+therefore behave exactly as before; only the ordinary boundary overrides it.
+
+**Rehearsal evidence.** The `evidence_abandoned` scenario uses a slow but
+live peer, which delivers INGR's first company-facts response in 512-byte
+reads one second apart. Result:
+- INGR's thesis is degraded and the other cases are full answers, with no
+  halt;
+- the same 60 requests are made, each with a terminal outcome;
+- the abandoned request is not retained, does not appear in the answer, and
+  was closed before the next case started.
+
+Under load, another case can also reach the application's 10 s window. Two of
+about ten rehearsal runs showed `INGR:decision_threshold` degrading as well,
+after an unexplained in-application gap of about 4.5 s. The tests accept that only as
+a degraded answer with a complete accounting, never as a failure.
+
 ## Safeguards a live run must pass
 
 `run` performs every check below, creates nothing and sends nothing, unless

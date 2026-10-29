@@ -54,7 +54,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         responses = {r[0]: r[1:] for r in db.execute(
             'SELECT attempt_id,url,http_status,media_type,sha256,body,completed_ns FROM ordinary_responses')}
         failures = {r[0]: r[1:] for r in db.execute(
-            'SELECT attempt_id,code,detail FROM ordinary_exchange_failures')}
+            'SELECT attempt_id,code,detail,recorded_ns FROM ordinary_exchange_failures')}
         answers = {r[0]: r[1:] for r in db.execute(
             'SELECT case_run,case_id,sha256,payload,recorded_ns FROM ordinary_answers')}
         first_transport = db.execute('SELECT attempt_id,route,stage,code FROM first_transport_failure WHERE id=1').fetchone()
@@ -92,6 +92,8 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
 
     # Attempts, quotas, receipts and wire timing.
     case_of = {row[0]: row[1] for row in cases}
+    case_start = {row[0]: row[3] for row in cases}
+    abandoned_runs = set()
     counts, total, entries_seen, aggregate = Counter(), 0, [], 0
     records = []
     for attempt, run, route, status, request_sha, stage in attempts:
@@ -109,8 +111,21 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             raise ExportRefused('attempt exceeds the fixed quota contract')
         response = responses.get(attempt)
         entered = entries.get(attempt)
+        if status == 'abandoned':
+            # Abandoned by the application at its evidence timeout: terminal only
+            # once its exchange ended, closed before the next case began, never
+            # retained, and still counted against every quota and limit.
+            failure = failures.get(attempt)
+            later = [row[3] for row in cases if row[3] > case_start[run]]
+            if (response is not None or failure is None or failure[0] != 'abandoned' or failure[1] != route
+                    or type(failure[2]) is not int or failure[2] < case_start[run]
+                    or (entered is not None and failure[2] < entered)
+                    or (later and failure[2] >= min(later))):
+                raise ExportRefused('abandoned attempt without its closed terminal record')
+            abandoned_runs.add(run)
         if entered is not None:
-            entries_seen.append((entered, response[5] if response else None))
+            ended = response[5] if response else (failures[attempt][2] if status == 'abandoned' else None)
+            entries_seen.append((entered, ended))
             if attempt not in intents:
                 raise ExportRefused('wire entry without native intent')
         record = {'attempt_id': attempt, 'case_id': case_id, 'stage': stage, 'route': route,
@@ -134,7 +149,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             raise ExportRefused('settled attempt without retained response')
         if attempt in failures:
             record['failure'] = {'code': failures[attempt][0], 'detail': failures[attempt][1]}
-        if status != 'settled' and not halted:
+        if status not in ('settled', 'abandoned') and not halted:
             raise ExportRefused('unresolved attempt without a durable halt')
         records.append(record)
     if aggregate > limits['aggregate_raw_body_max_bytes']:
@@ -154,19 +169,26 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         if row is None:
             status = 'not_run_after_halt' if halted else 'not_run'
         elif row[2] == 'complete':
-            # An unresolved company is retained and reported, never a pass.
+            # An unresolved company is retained and reported, never a pass. An
+            # answer missing evidence the application abandoned is degraded.
             unresolved = json.loads(answers[row[0]][2]).get('company') == ''
-            status = 'identity_unresolved' if unresolved else 'answered_unadjudicated'
+            status = ('identity_unresolved' if unresolved else
+                      'answered_degraded_unadjudicated' if row[0] in abandoned_runs else 'answered_unadjudicated')
         else:
             status = 'halted'
         outcomes.append({'case_id': case_id, 'status': status})
-    complete = not halted and all(o['status'] in {'answered_unadjudicated', 'identity_unresolved'}
-                                  for o in outcomes)
+    complete = not halted and all(o['status'] in {'answered_unadjudicated', 'answered_degraded_unadjudicated',
+                                                  'identity_unresolved'} for o in outcomes)
+    kinds = {'answered_unadjudicated': 'full_answer', 'answered_degraded_unadjudicated': 'degraded_answer',
+             'identity_unresolved': 'unanswered'}
+    outcome_counts = Counter(kinds.get(o['status'], 'operational_failure') for o in outcomes)
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
     return {'format': 'ordinary-native-packet-v1', 'synthetic_sec_backend': synthetic,
             'status': 'complete' if complete else 'halted', 'halt': halted,
             'first_failure': first, 'denominator': len(CASES), 'cases': outcomes,
+            'outcome_counts': {k: outcome_counts.get(k, 0) for k in
+                               ('full_answer', 'degraded_answer', 'unanswered', 'operational_failure')},
             'answers': {answers[run][0]: {'sha256': answers[run][1], 'response': json.loads(answers[run][2])}
                         for run in answers},
             'attempts': records, 'attempt_count': len(records),
