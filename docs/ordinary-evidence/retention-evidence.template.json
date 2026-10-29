@@ -32,7 +32,7 @@
       "isolated-home": "empty HOME directory for the worker",
       "ledger.sqlite": "durable ledger: claims, wire entries, retained SEC response bodies with receipts, answers, failures, halts",
       "ledger.sqlite-journal": "transient SQLite rollback journal; absent after commit or parent rollback",
-      "packet.json": "parent export of all twelve outcomes",
+      "packet.json": "parent record of all twelve outcomes: the ledger export, or twelve not_run outcomes when the worker stopped before creating its ledger",
       "request.json": "launcher request: the bound policy (approval, references, case records, proxy/CA configuration); no runtime values",
       "worker.json": "worker report: counts, routing, pacing, diagnostics hash"
     },

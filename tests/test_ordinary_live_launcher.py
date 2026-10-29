@@ -276,7 +276,9 @@ def test_an_approval_executes_at_most_once(approved_inputs, monkeypatch):
 
     def recorded(out, policy, **kwargs):
         calls.append(kwargs)
-        return {'status': 'complete', 'packet': None, 'supervisor': {}}
+        return {'status': 'worker_incomplete', 'packet': None,
+                'cases': [{'case_id': case, 'status': 'not_run'} for case in CASES],
+                'supervisor': {'returncode': 2, 'stop_reason': None}}
     monkeypatch.setattr(launcher, 'run_worker', recorded)
     result = launcher.execute(**paths)
     assert result['output_dir'] == str(output) and output.is_dir()
@@ -287,6 +289,29 @@ def test_an_approval_executes_at_most_once(approved_inputs, monkeypatch):
     with pytest.raises(BudgetError):
         launcher.execute(**paths)  # the directory now exists: the approval is spent
     assert len(calls) == 1
+
+
+@pytest.mark.timeout(120)
+def test_a_worker_that_stops_before_its_ledger_still_records_and_reports_twelve_outcomes(
+        approved_inputs, monkeypatch, capsys):
+    paths, files, output = approved_inputs
+    real = launcher.run_worker
+
+    def refused_early(out, policy, *, environment, **kwargs):
+        # The real worker, refusing before any ledger, gate or socket: it is
+        # handed a model credential instead of the zero-model placeholder.
+        return real(out, policy, environment={**environment, 'OPENAI_API_KEY': 'sk-invented'}, **kwargs)
+    monkeypatch.setattr(launcher, 'run_worker', refused_early)
+    code = launcher.main(['run', '--package', str(files['package']), '--approval', str(files['approval']),
+                          '--cost-evidence', str(files['cost']), '--retention-evidence', str(files['retention']),
+                          '--execute'])
+    not_run = [{'case_id': case, 'status': 'not_run'} for case in CASES]
+    printed = json.loads(capsys.readouterr().out)
+    assert code == 1 and printed['status'] == 'worker_incomplete' and printed['cases'] == not_run
+    assert not (output / 'ledger.sqlite').exists()
+    record = json.loads((output / 'packet.json').read_text())  # durable, in the approved directory
+    assert record['cases'] == not_run and record['ledger'] is False and record['worker_returncode'] == 2
+    assert record['denominator'] == 12 and record['execution_authorized'] is False
 
 
 @pytest.mark.parametrize('kind,change', [

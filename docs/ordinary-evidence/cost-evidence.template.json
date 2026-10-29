@@ -43,7 +43,17 @@
       "NPK:core_thesis": 8,
       "NPK:decision_threshold": 3
     },
-    "transferred_body_bytes_maximum": 1107296256,
+    "transfer": {
+      "body_bytes_read_maximum": 1111621632,
+      "body_bytes_read_per_response_maximum": 16842752,
+      "estimate_guidance": "egress and proxy cost estimates must add protocol overhead and in-flight margin to body_bytes_read_maximum",
+      "not_bounded_by_this_code": [
+        "per request: one proxy CONNECT exchange and a TLS handshake with certificate chain",
+        "HTTP request and response headers",
+        "TLS record framing and TCP/IP packet overhead",
+        "response bytes already in flight or buffered (TCP receive window, TLS records) when an oversized or failed response is closed"
+      ]
+    },
     "transport_retries": 0,
     "wall_seconds_maximum": 480
   },

@@ -32,6 +32,7 @@ from validation.ordinary_native_policy import (ZERO_MODEL_PLACEHOLDER, execution
                                                 test_only_references)
 from validation.ordinary_pilot_contract import CASES, quota_contract
 from validation.pilot_approved import runtime_values, validate_execution, verify_network_configuration
+from validation.pilot_live import READ_CHUNK_BYTES
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 
 ATTESTATIONS = {
@@ -48,7 +49,8 @@ OUTPUT_INVENTORY = {
                      'receipts, answers, failures, halts',
     'ledger.sqlite-journal': 'transient SQLite rollback journal; absent after commit or parent rollback',
     'worker.json': 'worker report: counts, routing, pacing, diagnostics hash',
-    'packet.json': 'parent export of all twelve outcomes',
+    'packet.json': 'parent record of all twelve outcomes: the ledger export, or twelve not_run '
+                   'outcomes when the worker stopped before creating its ledger',
     'isolated-home': 'empty HOME directory for the worker',
     '.clearSignal_timeline': 'empty directory created by the application timeline store at import',
     '.clearSignal_watchlist': 'empty directory created by the application watchlist store at import',
@@ -79,9 +81,21 @@ def derived_evidence(kind):
                 'sec_dispatches_per_second_maximum': 10, 'concurrent_sec_maximum': limits['concurrent_sec'],
                 'wall_seconds_maximum': limits['wall_seconds'],
                 'response_bytes_maximum': limits['body_max_bytes'],
-                # Every request may transfer up to its response cap before the
-                # retention limit (checked per response) halts the run.
-                'transferred_body_bytes_maximum': limits['sec_gets'] * limits['body_max_bytes'],
+                'transfer': {
+                    # An oversized body is read until the chunk that crosses the
+                    # cap arrives, then refused: one socket read past the cap.
+                    'body_bytes_read_per_response_maximum': limits['body_max_bytes'] + READ_CHUNK_BYTES,
+                    'body_bytes_read_maximum': limits['sec_gets'] * (limits['body_max_bytes'] + READ_CHUNK_BYTES),
+                    'not_bounded_by_this_code': [
+                        'per request: one proxy CONNECT exchange and a TLS handshake with certificate chain',
+                        'HTTP request and response headers',
+                        'TLS record framing and TCP/IP packet overhead',
+                        'response bytes already in flight or buffered (TCP receive window, TLS records) '
+                        'when an oversized or failed response is closed',
+                    ],
+                    'estimate_guidance': 'egress and proxy cost estimates must add protocol overhead and '
+                                         'in-flight margin to body_bytes_read_maximum',
+                },
                 'retained_bytes_maximum': limits['aggregate_raw_body_max_bytes'],
                 'model_attempts': 0, 'paid_provider_attempts': 0,
                 'model_credential': f'OPENAI_API_KEY must equal the non-secret {ZERO_MODEL_PLACEHOLDER}',
@@ -192,15 +206,38 @@ def check(*, package_path, approval_path, cost_path, retention_path):
     return policy, {'OPENAI_API_KEY': runtime['bearer_placeholder'], 'SEC_USER_AGENT': runtime['sec_contact']}
 
 
+def outcome_record(result):
+    """All twelve outcomes: the ledger export, or the parent's own record when
+    the worker stopped before creating a ledger."""
+    if result['packet'] is not None:
+        return result['packet']
+    return {'format': 'ordinary-native-outcomes-v1', 'status': result['status'], 'ledger': False,
+            'denominator': len(CASES), 'cases': result['cases'],
+            'worker_returncode': result['supervisor']['returncode'],
+            'stop_reason': result['supervisor']['stop_reason'],
+            'execution_authorized': False, 'invoice_ceiling_verified': False}
+
+
+def write_durably(path, record):
+    with path.open('x') as stream:
+        json.dump(record, stream, sort_keys=True, allow_nan=False)
+        stream.flush()
+        os.fsync(stream.fileno())
+    directory = os.open(path.parent, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)
+
+
 def execute(**paths):
     policy, runtime = check(**paths)
     output = create_fresh_output(policy['approval']['output_dir'])  # fails if it exists
     result = run_worker(output, policy, mode='approved', scenario='approved', environment=runtime,
                         forbidden=tuple(runtime.values()), synthetic=False)
-    if result['packet'] is not None:
-        with (output / 'packet.json').open('x') as stream:
-            json.dump(result['packet'], stream, sort_keys=True, allow_nan=False)
-    result['output_dir'] = str(output)
+    record = outcome_record(result)
+    write_durably(output / 'packet.json', record)
+    result.update(output_dir=str(output), outcomes=record['cases'])
     return result
 
 
@@ -245,7 +282,7 @@ def main(argv=None):
         result = execute(**paths)
     except Exception as exc:
         parser.exit(2, f'Ordinary pilot refused: {exc if isinstance(exc, BudgetError) else type(exc).__name__}\n')
-    print(json.dumps({'status': result['status'], 'cases': (result['packet'] or {}).get('cases'),
+    print(json.dumps({'status': result['status'], 'cases': result['outcomes'],
                       'output_dir': result['output_dir']}, sort_keys=True))
     return 0 if result['status'] == 'complete' else 1
 
