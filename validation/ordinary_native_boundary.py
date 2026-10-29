@@ -18,6 +18,7 @@ from threading import BoundedSemaphore
 
 from validation.capture_budget import BudgetError, RateLimitDelay, digest
 from validation.ordinary_native_ledger import OrdinaryNativeGate, OrdinaryNativeLedger
+from validation.ordinary_network import DirectScopedBackend, is_direct
 from validation.ordinary_pilot_contract import quota_contract
 from validation.ordinary_transport import OrdinaryHTTPTransport
 from validation.pilot_approved import ScopedBackend, runtime_values
@@ -66,8 +67,8 @@ class OrdinaryNativeBoundary(PilotBoundary):
         self.wire = OrdinaryHTTPTransport(gate=self.gate, execution=policy['execution_configuration'],
                                           runtime=self.runtime)
         native = self.wire._wire._pool._network_backend
-        self.wire._wire._pool._network_backend = ScopedBackend(
-            native if backend is NATIVE_BACKEND else backend, self.gate)
+        scoped = DirectScopedBackend if is_direct(policy['execution_configuration']) else ScopedBackend
+        self.wire._wire._pool._network_backend = scoped(native if backend is NATIVE_BACKEND else backend, self.gate)
         self.slots = BoundedSemaphore(quota_contract()['concurrent_sec'])
         self.admitted = {}        # (case_run, stage) -> document URLs from that stage's submissions
         self.case_documents = {}  # case_run -> the first admitted URL set (drift check)

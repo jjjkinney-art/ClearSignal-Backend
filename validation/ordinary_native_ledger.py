@@ -5,19 +5,26 @@ terms and the live network backend are outside this module. The launcher owns
 creation of the approved output directory; this ledger only accepts that exact
 fresh directory and never adapts a fixture or historical ledger.
 """
+from contextlib import contextmanager
 import hashlib
 import html
 import json
 import os
 from pathlib import Path
+import socket
 import stat
+from threading import get_ident
 import time
+from urllib.parse import urlsplit
 from uuid import uuid4
 
 from validation.capture_budget import AttemptLedger, BudgetError, RateLimitDelay, digest
 from validation.ordinary_native_policy import PURPOSE
+from validation.ordinary_network import SEC_PORT, admit_resolution, is_direct, public_address, verify_ordinary_network
 from validation.ordinary_pilot_contract import CASES, quota_contract
 from validation.pilot_approved import ExchangeGate
+
+SEC_HOSTS = frozenset({'www.sec.gov', 'data.sec.gov'})
 
 ANSWER_MAX_BYTES = 4 * 1024 * 1024
 CASE_SECONDS = {'core_thesis': 30, 'decision_threshold': 20}
@@ -289,6 +296,63 @@ class OrdinaryNativeGate(ExchangeGate):
             raise BudgetError('ordinary gate requires its fresh native ledger')
         super().__init__(owner)
         self.entry_pacing_waits = 0
+        self.direct = is_direct(owner.ledger.policy['execution_configuration'])
+        # Direct mode admits only globally routable answers; the loopback test
+        # worker alone replaces this rule (and the resolver) with loopback ones.
+        self.allow_address = public_address
+
+    @contextmanager
+    def exchange(self, url, grant=None, fingerprint=None):
+        """As ExchangeGate.exchange, verifying the ordinary pilot's reviewed
+        network configuration (proxy, delegated unchanged, or direct TLS)."""
+        host = urlsplit(url).hostname
+        with self.lock:
+            entry = self.grants.pop(grant, None)
+            if (self.closed or host not in SEC_HOSTS or self.current.get() is not None
+                    or entry is None or entry[1] != fingerprint):
+                raise BudgetError('unclaimed, consumed or mismatched network grant')
+            attempt, _, route, case_run, stage = entry
+            self.owner.ledger.claim_native_dispatch(attempt, case_run=case_run, route=route,
+                                                    request_sha256=fingerprint)
+            self.owner.active()
+            verify_ordinary_network(self.owner.ledger.policy['execution_configuration'])
+        state = {'url': url, 'host': host, 'addresses': set(), 'endpoints': set(), 'dispatched': False,
+                 'attempt': attempt, 'case_run': case_run, 'validated': False, 'fingerprint': fingerprint,
+                 'route': route, 'stage': stage, 'active': True, 'thread': get_ident()}
+        token = self.current.set(state)
+        try:
+            yield
+        finally:
+            state['active'] = False
+            self.current.reset(token)
+
+    def dns(self, host, port, *args, **kwargs):
+        if not self.direct:
+            return super().dns(host, port, *args, **kwargs)
+        state = self.require()
+        if host != state['host'] or port != SEC_PORT:
+            raise BudgetError('DNS target is outside claimed exchange')
+        answers = self.resolve(host, port, *args, **kwargs)
+        state['endpoints'].update(admit_resolution(state['host'], host, port, answers, self.allow_address))
+        return answers
+
+    def audit(self, event, args):
+        if not self.direct:
+            return super().audit(event, args)
+        state = self.require()
+        if not state['dispatched']:
+            raise BudgetError('socket operation before native dispatch')
+        if event == 'socket.getaddrinfo':
+            if args[0] != state['host'] or args[1] != SEC_PORT:
+                raise BudgetError('unclaimed DNS')
+        elif event == 'socket.__new__':
+            if args[1] not in {socket.AF_INET, socket.AF_INET6} or args[2] != socket.SOCK_STREAM:
+                raise BudgetError('unreviewed socket')
+        elif event == 'socket.connect':
+            if (args[1][0], args[1][1]) not in state['endpoints']:
+                raise BudgetError('unclaimed connection')
+        else:
+            raise BudgetError('unreviewed socket operation')
 
     def record_dispatch(self):
         """Claim the durable wire entry, pacing (never retrying I/O) on rate limits.

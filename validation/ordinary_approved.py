@@ -31,7 +31,8 @@ from validation.ordinary_native_ledger import create_fresh_output
 from validation.ordinary_native_policy import (ZERO_MODEL_PLACEHOLDER, execution_package, policy_for,
                                                 test_only_references)
 from validation.ordinary_pilot_contract import CASES, quota_contract
-from validation.pilot_approved import runtime_values, validate_execution, verify_network_configuration
+from validation.ordinary_network import validate_ordinary_execution, verify_ordinary_network
+from validation.pilot_approved import runtime_values
 from validation.pilot_live import READ_CHUNK_BYTES
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 
@@ -65,6 +66,10 @@ ENFORCED_BY = (
     'tests/test_ordinary_live_launcher.py::test_an_unpinned_certificate_halts_before_any_request_is_served',
     'tests/test_ordinary_live_launcher.py::test_run_refuses_every_unapproved_or_drifted_input',
     'tests/test_ordinary_live_launcher.py::test_the_output_directory_holds_only_the_declared_inventory',
+    'tests/test_ordinary_live_launcher.py::test_direct_tls_reaches_only_the_claimed_sec_host_within_every_limit',
+    'tests/test_ordinary_live_launcher.py::test_direct_tls_refuses_an_unpinned_certificate_before_any_request',
+    'tests/test_ordinary_live_launcher.py::test_direct_tls_refuses_rather_than_overrides_an_inherited_proxy',
+    'tests/test_ordinary_live_launcher.py::test_direct_resolution_admits_only_the_claimed_host_and_public_answers',
     'tests/test_ordinary_isolated_worker.py::test_twelve_cases_run_through_the_integrated_native_path',
     'tests/test_ordinary_native_boundary.py',
     'tests/test_ordinary_native_ledger.py',
@@ -101,7 +106,10 @@ def derived_evidence(kind):
                 'model_credential': f'OPENAI_API_KEY must equal the non-secret {ZERO_MODEL_PLACEHOLDER}',
                 'paid_provider_environment_must_be_absent': list(PAID_PROVIDER_ENVIRONMENT),
                 'network_destinations': ['https://www.sec.gov', 'https://data.sec.gov'],
-                'network_path': 'reviewed explicit proxy http://proxy:8080 with a pinned CA bundle',
+                'network_path': 'the reviewed execution configuration: explicit proxy http://proxy:8080, or '
+                                'direct TLS to the SEC hosts with no application proxy (any VPN or other '
+                                'network layer below the process is outside this code); either way TLS is '
+                                'verified against a pinned CA bundle with hostname checking',
                 'transport_retries': 0, 'follow_redirects': False, 'enforced_by': list(ENFORCED_BY)}
     if kind == 'retention':
         return {'output_directory_mode': '0700', 'output_inventory': OUTPUT_INVENTORY,
@@ -157,7 +165,7 @@ def prepare(*, execution_path, cost_path, retention_path, output_dir):
     """The package for the running code; refuses incomplete evidence."""
     require_runtime()
     execution = _load(execution_path)
-    validate_execution(execution)
+    validate_ordinary_execution(execution)
     cost = _load(cost_path)
     all_in_usd = cost.get('all_in_usd') if type(cost) is dict else None
     validate_evidence('cost', cost, all_in_usd=all_in_usd)
@@ -182,7 +190,7 @@ def check(*, package_path, approval_path, cost_path, retention_path):
         all_in_usd, output_dir = proposal['all_in_usd'], proposal['output_dir']
     except (TypeError, KeyError):
         raise BudgetError('execution package required') from None
-    validate_execution(execution)
+    validate_ordinary_execution(execution)
     validate_evidence('cost', _load(cost_path), all_in_usd=all_in_usd)
     validate_evidence('retention', _load(retention_path), all_in_usd=all_in_usd)
     values = package_values(execution=execution, all_in_usd=all_in_usd, cost_path=cost_path,
@@ -202,7 +210,7 @@ def check(*, package_path, approval_path, cost_path, retention_path):
     if os.environ.get('OPENAI_API_KEY') != ZERO_MODEL_PLACEHOLDER:
         raise BudgetError('the zero-model placeholder is required in place of any model credential')
     runtime = runtime_values()  # SEC contact present and well formed
-    verify_network_configuration(execution)  # proxy selectors and pinned CA bytes
+    verify_ordinary_network(execution)  # proxy selectors, or none for direct TLS; pinned CA bytes
     return policy, {'OPENAI_API_KEY': runtime['bearer_placeholder'], 'SEC_USER_AGENT': runtime['sec_contact']}
 
 

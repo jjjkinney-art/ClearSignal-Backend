@@ -9,7 +9,7 @@ import re
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_execution_contract import pending_manifest
 from validation.ordinary_pilot_contract import CASES, quota_contract
-from validation.pilot_approved import validate_execution
+from validation.ordinary_network import validate_ordinary_execution
 from validation.pilot_policy import AUDITED_DEPENDENCIES, MODEL_ROUTES, SEC_ROUTES
 
 PURPOSE = 'approved_ordinary_twelve_case_pilot'
@@ -34,7 +34,7 @@ def execution_package(*, cases, code_binding, dependencies, execution, output_di
             or type(code_binding['revision']) is not str or not code_binding['revision']
             or dependencies != dict(AUDITED_DEPENDENCIES)):
         raise BudgetError('ordinary code/dependency binding refused')
-    validate_execution(execution)
+    validate_ordinary_execution(execution)
     if type(pricing_review_reference) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:/-]{0,199}', pricing_review_reference):
         raise BudgetError('explicit pricing review reference required')
     proposal = pending_manifest(cases=cases, source_sha256=code_binding['source_sha256'],

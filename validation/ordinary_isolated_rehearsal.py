@@ -4,8 +4,8 @@ Offline demonstrations only. The approval here is an invented TEST-ONLY record
 bound to the code, dependencies and CA identity actually present; it grants
 nothing. ``run_rehearsal`` uses the synthetic SEC backend with every socket
 refused. ``run_loopback_rehearsal`` drives the live code path (real sockets,
-proxy CONNECT, TLS verification) against a loopback test server the caller
-runs on 127.0.0.1:8080, trusting only the caller's test CA. There is no resume
+proxy CONNECT or direct TLS, certificate verification) against a loopback test
+server the caller runs on 127.0.0.1, trusting only the caller's test CA. There is no resume
 or reset option; the approval-gated live launcher is ordinary_approved.py.
 """
 import hashlib
@@ -54,14 +54,25 @@ def execution_configuration(ca, *, documentation_reference, verification_referen
             'contains_no_credentials': True}
 
 
-def rehearsal_policy(output, *, ca=None):
+def direct_execution_configuration(ca, *, documentation_reference, verification_reference):
+    """The reviewed direct-TLS configuration: no proxy, one pinned CA bundle."""
+    ca = Path(ca)
+    return {'documentation_reference': documentation_reference,
+            'verification_reference': verification_reference,
+            'substitution': 'direct_tls', 'proxy': None, 'sec_contact_source': 'SEC_USER_AGENT',
+            'ca_selectors': ['SSL_CERT_FILE', 'REQUESTS_CA_BUNDLE'],
+            'ca_identity': {'path': str(ca), 'sha256': hashlib.sha256(ca.read_bytes()).hexdigest()},
+            'contains_no_credentials': True}
+
+
+def rehearsal_policy(output, *, ca=None, network='proxy'):
     """Bind an invented approval to the running code, packages and CA bundle."""
     import certifi
     from validation.ordinary_native_policy import execution_package, policy_for
     from validation.pilot_rehearsal import source_binding
-    execution = execution_configuration(Path(ca or certifi.where()).resolve(),
-                                        documentation_reference=TEST_ONLY + '-network',
-                                        verification_reference=TEST_ONLY + '-review')
+    build = direct_execution_configuration if network == 'direct' else execution_configuration
+    execution = build(Path(ca or certifi.where()).resolve(), documentation_reference=TEST_ONLY + '-network',
+                      verification_reference=TEST_ONLY + '-review')
     values = dict(cases=json.loads((ROOT / 'tests/ordinary_pilot_cases.json').read_text()),
                   code_binding={'revision': git_revision(), 'source_sha256': source_binding()},
                   dependencies={name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES},
@@ -137,11 +148,14 @@ def run_rehearsal(output_dir, *, scenario='happy'):
     return result
 
 
-def run_loopback_rehearsal(output_dir, *, ca):
-    """The live code path against the caller's 127.0.0.1:8080 test server."""
+def run_loopback_rehearsal(output_dir, *, ca, network='proxy'):
+    """The live code path against the caller's loopback test server: a CONNECT
+    proxy on 127.0.0.1:8080, or (network='direct') TLS on 127.0.0.1:8443."""
+    if network not in {'proxy', 'direct'}:
+        raise BudgetError('unknown loopback network')
     require_runtime()
     output = create_fresh_output(output_dir)
-    policy = rehearsal_policy(output, ca=ca)
+    policy = rehearsal_policy(output, ca=ca, network=network)
     runtime = {'OPENAI_API_KEY': ZERO_MODEL_PLACEHOLDER, 'SEC_USER_AGENT': LOOPBACK_CONTACT}
     result = run_worker(output, policy, mode='loopback', scenario='loopback', environment=runtime,
                         forbidden=tuple(runtime.values()), synthetic=True)

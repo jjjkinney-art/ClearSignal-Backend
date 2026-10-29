@@ -4,6 +4,8 @@ This class does not construct a gate or grant network access. The future
 executor must independently bind it to an approved twelve-case ledger and
 isolated process. The historic reviewed-document exception is never accepted.
 """
+import httpx
+
 from validation.capture_budget import BudgetError
 from validation.ordinary_pilot_contract import quota_contract
 from validation.pilot_live import OwnedHTTPTransport
@@ -12,6 +14,20 @@ from urllib.parse import urlsplit
 
 class OrdinaryHTTPTransport(OwnedHTTPTransport):
     """SEC GET only, with the cohort's fixed 16 MiB response envelope."""
+
+    def __init__(self, *, gate=None, execution=None, runtime=None):
+        from validation.ordinary_network import is_direct, verify_ordinary_network
+        if gate is None or not is_direct(execution):
+            super().__init__(gate=gate, execution=execution, runtime=runtime)
+            return
+        # Direct TLS: no application proxy, no environment discovery, and the
+        # pinned context. The gate is attached only after the wire is built.
+        super().__init__(gate=None, execution=execution, runtime=runtime)
+        context = verify_ordinary_network(execution, tls=True)
+        self.gate = gate
+        gate.tls_context = context
+        self._wire.close()
+        self._wire = httpx.HTTPTransport(retries=0, trust_env=False, proxy=None, verify=context)
 
     def exchange(self, method, url, *, body=b'', timeout=10.0, reviewed=None):
         if type(url) is not str or type(method) is not str or type(body) is not bytes:

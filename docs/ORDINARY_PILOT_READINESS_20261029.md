@@ -66,6 +66,9 @@ independent-reviewer requirement.
   - the zero-model placeholder is required;
   - the approval kind is checked.
 - `NATIVE_BACKEND`, an explicit marker.
+- The pilot-only `direct_tls` network configuration
+  (`validation/ordinary_network.py`), described in
+  `docs/ORDINARY_LIVE_LAUNCHER_20261029.md` under "Network configurations".
 - One shared supervise-and-export path.
 - A durable outcome record for every run, even with no ledger.
 
@@ -94,13 +97,18 @@ independent-reviewer requirement.
   arrival.
 - **Each case assumes a fresh session** with no `active_ticker` and no
   history.
-- **TLS trust ends at the pinned bundle.** If the environment's proxy
-  intercepts TLS to inject secrets, that bundle is the proxy's CA. The run
-  then authenticates the proxy, and trusts it for SEC origin. Nothing in the
-  code verifies SEC origin.
+- **TLS trust ends at the pinned bundle.**
+  - With the explicit proxy, if that proxy intercepts TLS, the bundle is the
+    proxy's CA, and the run trusts the proxy for SEC origin.
+  - With direct TLS, the bundle is a public CA bundle and the run verifies
+    the SEC hosts' certificates, though not anything below the process, such
+    as a VPN.
 
 ### Unresolved findings (open)
-1. **The proxy and CA facts are unverified for today's environment.** See §2.
+1. **The network path is not yet exercised live.** Direct TLS from this Mac
+   through the VPN has been tested only over loopback. SEC's reaction to the
+   VPN exit, and any VPN-level TLS handling, are unknown until the approved
+   run. See §2.
 2. **Real response sizes are unknown** for GOOGL, AMZN, INGR, NNBR and MAN.
    NPK is known: 10-K HTML 1,404,517 bytes and facts 2,490,080 bytes. A body
    over 16 MiB halts the run (`response_size`), which fails safe but spends
@@ -109,50 +117,69 @@ independent-reviewer requirement.
    second, and SEC states it may lower limits. A throttle response halts the
    run (`http_throttled`).
 
-## 2. Execution environment: what could and could not be verified
+## 2. Execution environment: chosen path
 
-The historical approved pilots, ten approvals all consumed, ran in a saved
-ChatGPT cloud task environment: `/workspace`, with a pinned venv at
-`/workspace/clearsignal-venv` (`docs/APPROVED_PILOT_ACTIVATION.md`). That
-document records that task metadata then showed all four proxy selectors equal
-to `http://proxy:8080`, and both CA selectors naming one local file.
+**Decision (Julian, 2026-10-29): run locally on this Mac with the pilot-only
+direct-TLS configuration.** No application proxy is used. The historical
+explicit-proxy configuration remains supported and unchanged.
 
-**No access to that environment exists from this session.** Nothing about its
-current proxy, CA bundle, allowed domains, interpreter or dependencies was
-observed.
+### Why not the current cloud environment
+A read-only inspection of the current ChatGPT cloud task (made by the
+operator; no SEC request) found:
 
-The current official documentation
-([Cloud environments](https://learn.chatgpt.com/docs/environments/cloud-environments.md))
-states:
-- network secrets are placeholders that "the proxy substitutes" for allowed
-  HTTPS destinations on port 443;
-- TCP clients use "the environment's HTTP CONNECT proxy at `proxy:8088`", and
-  "TCP tunnels don't intercept TLS or inject network secrets";
-- other subdomains need their own allowed-domain entries, so `data.sec.gov`
-  needs one;
-- saved task state is recoverable "for up to seven days after you last start
-  a turn or resume the task".
+- all four proxy variables at `http://127.0.0.1:44519`, a per-session
+  loopback forwarder, instead of `http://proxy:8080`;
+- both CA selectors on `/usr/local/share/ca-certificates/nebula-dns.crt`
+  (SHA-256 `ab6933a8…8f2b`), a platform TLS-interception CA;
+- no `clearsignal-venv`;
+- `www.sec.gov` and `data.sec.gov` absent from the session's allowed
+  domains.
 
-**It does not mention** `HTTP_PROXY`, port 8080 or any CA bundle.
+These are session observations, not guarantees. Adapting to them would have
+meant:
 
-| Item the package binds | Status |
+- generalising the shared historical proxy code;
+- approving a configuration that changes every session;
+- trusting the platform's interceptor for SEC origin.
+
+### This Mac: what was verified (read-only, no external request)
+
+| Item | Observed |
 |---|---|
-| Proxy selectors = `http://proxy:8080` | **Unverified today.** Historical metadata only, and the current docs name no 8080. If the environment differs, `run` refuses (fail-safe), and `execution.json` needs a new network review. |
-| CA bundle path and SHA-256 | **Unverified.** No hash is recorded anywhere in the repository. It must be read in the environment. |
-| `www.sec.gov` and `data.sec.gov` in allowed domains | **Unverified.** These must be configured. |
-| CPython 3.11.9 and `AUDITED_DEPENDENCIES` installed | **Unverified.** `run` refuses otherwise. |
-| A non-secret `SEC_USER_AGENT` (name and contact) | **To be chosen.** It is a direct variable, not a network secret. |
-| `OPENAI_API_KEY` | Must be set to `ORDINARY-ZERO-MODEL-NO-CREDENTIAL` in the run's shell, overriding any environment placeholder. |
+| OS | macOS 14.0, x86_64 |
+| Interpreter | CPython 3.11.9 standalone at `~/clearsignal-pilot/cpython-3.11.9` (python-build-standalone `20240814`, archive SHA-256 `76073305…a13e`, matching the release's published `SHA256SUMS`) |
+| Packages | Isolated venv at `~/clearsignal-pilot/venv`, from the pinned `requirements.txt`. Every `AUDITED_DEPENDENCIES` version matches: openai 2.32.0, httpx 0.28.1, httpcore 1.0.9, requests 2.32.5, urllib3 2.8.0. No system-wide change was made. |
+| CA bundle candidate | `certifi` 2026.10.23, `~/clearsignal-pilot/venv/lib/python3.11/site-packages/certifi/cacert.pem`, SHA-256 `2ef52ad56b4803e264045c915e55c236cbfa045b84b81efefc218a19eb44bd2b`. `certifi` is not pinned in `requirements.txt`; the package pins these exact bytes, and `run` refuses any change. |
+| Proxy variables | None set. No macOS system proxy is configured. Direct mode refuses to run if one appears. |
+| Credentials | `OPENAI_API_KEY`, `SEC_USER_AGENT`, `FMP_API_KEY`, `FRED_API_KEY` and `NEWS_API_KEY` are all unset. The operator sets only the zero-model placeholder and the SEC contact for the run. |
+| Disk | 488 GiB free |
+| VPN | The default route is `utun5`. A NordVPN profile is reported connected. DNS goes to the VPN's resolver at `100.64.0.2`. The New York exit is as reported by Julian and was not verified, because that would require an external request. |
+
+### What direct TLS does and does not establish
+- It avoids the **application** proxy. TLS is verified end-to-end against the
+  pinned public CA bundle, with hostname checking.
+- It does **not** establish anything about the VPN:
+  - if the VPN intercepted TLS with a CA outside the pinned bundle,
+    verification would fail and the run would halt; if its CA were inside the
+    bundle, this code could not tell;
+  - the VPN sees connection metadata;
+  - it determines the egress IP SEC sees;
+  - it adds latency.
+- DNS answers come from the VPN's resolver. The gate admits only globally
+  routable answers for the claimed host.
+- **New risk:** SEC may throttle or block shared VPN exit addresses. A `403`
+  or `429` halts the run (`http_auth` or `http_throttled`) and spends the
+  approval.
 
 ## 3. Cost and retention evidence
 
-The facts below are documented, with references. The evidence-file
-attestations themselves stay **empty**: they are statements by named humans,
-and none were invented.
+The facts below are documented or observed, with references. The
+evidence-file attestations themselves stay **empty**: they are statements by
+named humans, and none were invented.
 
 **Cost: what is known**
-- SEC EDGAR: anyone can access the data "for free". The current maximum rate
-  is 10 requests per second, and SEC may lower it. Clients must declare a
+- **SEC EDGAR:** anyone can access the data "for free". The current maximum
+  rate is 10 requests per second, and SEC may lower it. Clients must declare a
   User-Agent with a name and contact. Source:
   [Accessing EDGAR Data](https://www.sec.gov/os/accessing-edgar-data), found
   by web search; not fetched from sec.gov.
@@ -163,30 +190,29 @@ and none were invented.
   - at most 1,060.125 MiB of response bodies read;
   - at most 256 MiB retained;
   - at most 480 s of run time.
-- **The code does not bound** CONNECT and TLS setup, headers, framing or
-  in-flight bytes.
-- Cloud task VM resources are set by plan; for example, Plus gives 2 vCPUs,
-  8 GiB of memory and 8 GiB of disk. Retained data at most 256 MiB fits. The
-  documentation states no per-task price.
+- **The code does not bound** TLS handshakes, headers, framing or in-flight
+  bytes.
+- **Local execution** uses no cloud task and no application proxy.
 
-**Cost: unknown**
-- Whether a cloud task incurs any incremental charge on this account's plan.
-- Any proxy or egress charge.
+**Cost: unknown.** Local execution does not guarantee zero cost. Possible
+costs include:
+- the VPN subscription or any VPN data limits;
+- home ISP data, about 1.1 GiB of bodies plus overhead in the worst case;
+- electricity and machine time.
 
-Account evidence could not be gathered: the email connector is disconnected,
-and there is no billing access. The spending ceiling `all_in_usd` is **not
-set**. It is Julian's decision.
+None is metered by this code. The spending ceiling `all_in_usd` is **not
+set**; it is Julian's decision. Billing evidence could not be gathered,
+because the email connector needs reconnecting.
 
 **Retention: what is known**
-- The output directory is created 0700 inside the task's filesystem.
-- Its inventory, the 14 ledger tables, public-SEC-only content and the absence
-  of runtime values are all asserted by tests.
-- Saved task state is recoverable for up to seven days after last activity.
-- The documentation does not state what happens after that, or how deletion
-  works.
+- The output directory is created 0700 on this Mac's disk.
+- Its inventory, the 14 ledger tables, public-SEC-only content and the
+  absence of runtime values are asserted by tests.
+- Nothing is uploaded anywhere by the run.
 
 **Retention: unknown, and a human decision**
-- where the results are kept long-term (copied out of the task, or not);
+- the location and its backup exposure (for example Time Machine or iCloud
+  sync of that folder);
 - who has access;
 - the retention period;
 - the deletion procedure;
@@ -194,25 +220,32 @@ set**. It is Julian's decision.
 
 ## 4. Execution package: merge order and binding
 
-The package cannot be produced yet. It requires the reviewed `execution.json`
-(§2), completed evidence (§3), and the final merged code.
+The package cannot be produced yet. It requires the reviewed `execution.json`,
+the completed evidence (§3) and the final merged code.
 
 1. **Independent human review of #350, then merge it** with Squash and merge,
    the repository's convention.
 2. **Update #352 from `main`.** #350's changes arrive identical on both sides,
    so no conflict is expected. Then wait for CI, review and merge.
-3. **In the execution environment,** check out the merged `main` commit. Leave
+3. **On this Mac,** check out the merged `main` commit in a clean clone. Leave
    no `.py` changes.
-4. **Write `execution.json`** from the observed proxy selectors and the CA
-   path and SHA-256. This is the network review.
+4. **Write `execution.json`** in the `direct_tls` shape:
+   - `proxy: null`;
+   - `ca_selectors` `["SSL_CERT_FILE", "REQUESTS_CA_BUNDLE"]`;
+   - `ca_identity` set to the venv's `certifi/cacert.pem` path and its
+     SHA-256;
+   - non-secret review references.
+
+   The network reviewer confirms it.
 5. **Generate the evidence templates** (`evidence-template`). Humans fill in
    the attestations, and `all_in_usd` is set.
-6. **Run `prepare`** with a fresh absolute output directory, for example
-   `/workspace/clearsignal-ordinary-run-1`. The package then binds:
+6. **Run `prepare`** with `~/clearsignal-pilot/venv/bin/python` and a fresh
+   absolute output directory that does not yet exist, for example
+   `/Users/juliankinney/clearsignal-pilot/run-1`. The package then binds:
    - the git revision and the source SHA-256 of `app/**/*.py` and
      `validation/*.py`, which covers the frontend intent pin;
    - the installed dependency versions;
-   - `execution.json`;
+   - `execution.json`, including the CA bundle hash;
    - the cohort projection;
    - both evidence files' SHA-256;
    - the output directory.
@@ -220,12 +253,18 @@ The package cannot be produced yet. It requires the reviewed `execution.json`
    `queryIntent.ts` SHA-256 `d8f9810f…41b6`).
 8. **Julian approves** the printed `package_sha256` in a separate approval
    file.
-9. **`run` (checks only), then `run --execute`,** once.
+9. **Run once** with these variables and no proxy variable set:
+   - `OPENAI_API_KEY=ORDINARY-ZERO-MODEL-NO-CREDENTIAL`;
+   - `SEC_USER_AGENT='<name> <email>'`;
+   - `SSL_CERT_FILE` and `REQUESTS_CA_BUNDLE` naming the pinned bundle.
 
-**Regeneration rule.** Any code, dependency, configuration or evidence change
-after `prepare` makes `run` refuse. The package must then be regenerated and
-re-approved. The approval is single-use, because the output directory must
-not exist.
+   First `run` (checks only), then `run --execute`. Keep the Mac awake and the
+   VPN state unchanged during the at most 480 s run.
+
+**Regeneration rule.** Any code, dependency, `certifi`, configuration or
+evidence change after `prepare` makes `run` refuse. The package must then be
+regenerated and re-approved. The approval is single-use, because the output
+directory must not exist.
 
 ## 5. Launch criteria: what this SEC-only pilot evaluates
 
@@ -243,20 +282,18 @@ unadjudicated until a human or benchmark review.
 
 ## 6. Julian: decisions only you can make
 
-- [ ] **Execution environment:** reuse the historical ChatGPT cloud task
-      environment, or name another. Grant the network reviewer access to read
-      its proxy and CA configuration.
-- [ ] **Independent reviewers** for #350 and #352, and for the network, cost
-      and retention reviews.
-- [ ] **Spending ceiling `all_in_usd`**, after the plan and egress cost are
-      known.
-- [ ] **Retention:** storage location, access, period and deletion of the
-      run's outputs, including whether to copy them out of the seven-day task
-      state.
+- [x] **Execution environment:** local Mac, direct TLS (decided 2026-10-29).
+- [ ] **Independent reviewers:** one engineer for #350 and #352, who can
+      also act as network reviewer for `execution.json`.
+- [ ] **Spending ceiling `all_in_usd`,** given that the VPN, ISP and
+      electricity costs are not metered by the code.
+- [ ] **Retention:** location (exclude it from cloud sync if needed), access,
+      period and deletion of the run directory.
 - [ ] **SEC contact** for the User-Agent: a name and a monitored email.
 - [ ] **Accept or reject the open risks:**
-  - TLS trust ends at the pinned bundle;
+  - a VPN below the process is outside the code's view;
+  - a shared VPN exit may be throttled or blocked by SEC;
   - an unknown response size can halt the run;
   - a throttle at the 10/s maximum can halt the run;
   - approval is self-asserted.
-- [ ] **Approve the final `package_sha256`,** after steps 1–7 of §4.
+- [ ] **Approve the final `package_sha256`,** after steps 1–8 of §4.

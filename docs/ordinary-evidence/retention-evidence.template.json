@@ -5,6 +5,10 @@
       "tests/test_ordinary_live_launcher.py::test_an_unpinned_certificate_halts_before_any_request_is_served",
       "tests/test_ordinary_live_launcher.py::test_run_refuses_every_unapproved_or_drifted_input",
       "tests/test_ordinary_live_launcher.py::test_the_output_directory_holds_only_the_declared_inventory",
+      "tests/test_ordinary_live_launcher.py::test_direct_tls_reaches_only_the_claimed_sec_host_within_every_limit",
+      "tests/test_ordinary_live_launcher.py::test_direct_tls_refuses_an_unpinned_certificate_before_any_request",
+      "tests/test_ordinary_live_launcher.py::test_direct_tls_refuses_rather_than_overrides_an_inherited_proxy",
+      "tests/test_ordinary_live_launcher.py::test_direct_resolution_admits_only_the_claimed_host_and_public_answers",
       "tests/test_ordinary_isolated_worker.py::test_twelve_cases_run_through_the_integrated_native_path",
       "tests/test_ordinary_native_boundary.py",
       "tests/test_ordinary_native_ledger.py"

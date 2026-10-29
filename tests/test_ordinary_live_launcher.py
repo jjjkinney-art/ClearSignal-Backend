@@ -181,12 +181,17 @@ ATTESTED = 'Reviewed by the operator; reference REVIEW-2026-0001 section 3'
 @pytest.fixture
 def approved_inputs(tmp_path, monkeypatch):
     """A complete invented package and approval, and a host configured for it."""
+    return build_approved_inputs(tmp_path, monkeypatch, network='proxy')
+
+
+def build_approved_inputs(tmp_path, monkeypatch, *, network):
     base = tmp_path.resolve()
     ca = base / 'reviewed-ca.pem'
     ca.write_bytes(b'-----BEGIN CERTIFICATE-----\ninvented\n-----END CERTIFICATE-----\n')
-    from validation.ordinary_isolated_rehearsal import execution_configuration
-    execution = execution_configuration(ca, documentation_reference='NETWORK-REVIEW-2026-0001',
-                                        verification_reference='PROXY-VERIFICATION-2026-0001')
+    from validation.ordinary_isolated_rehearsal import direct_execution_configuration, execution_configuration
+    build = direct_execution_configuration if network == 'direct' else execution_configuration
+    execution = build(ca, documentation_reference='NETWORK-REVIEW-2026-0001',
+                      verification_reference='NETWORK-VERIFICATION-2026-0001')
     files = {'execution': base / 'execution.json', 'cost': base / 'cost.json',
              'retention': base / 'retention.json', 'package': base / 'package.json',
              'approval': base / 'approval.json'}
@@ -203,8 +208,10 @@ def approved_inputs(tmp_path, monkeypatch):
                 'manifest_sha256': digest(package), 'all_in_usd': '0.00',
                 'execution_allowed': True, 'spending_authorized': True}
     files['approval'].write_text(json.dumps(approval))
-    for name in ('HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy'):
-        monkeypatch.setenv(name, 'http://proxy:8080')
+    for name in ('HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'ALL_PROXY', 'all_proxy'):
+        monkeypatch.delenv(name, raising=False)
+        if network == 'proxy' and not name.startswith(('ALL', 'all')):
+            monkeypatch.setenv(name, 'http://proxy:8080')
     for name in ('SSL_CERT_FILE', 'REQUESTS_CA_BUNDLE'):
         monkeypatch.setenv(name, str(ca))
     monkeypatch.setenv('OPENAI_API_KEY', ZERO_MODEL_PLACEHOLDER)
@@ -346,3 +353,117 @@ def test_prepare_refuses_test_only_or_incomplete_inputs(approved_inputs):
     with pytest.raises(BudgetError):
         launcher.prepare(execution_path=files['execution'], cost_path=files['cost'],
                          retention_path=files['retention'], output_dir=output.parent / 'other-run')
+
+
+# -- direct TLS (no application proxy) -------------------------------------------
+
+@pytest.fixture(scope='module')
+def direct_loopback(tmp_path_factory):
+    base = tmp_path_factory.mktemp('direct').resolve()
+    with LoopbackSEC(base, direct=True) as sec:
+        result = run_loopback_rehearsal(base / 'run', ca=sec.ca_path, network='direct')
+    return result, sec, base / 'run'
+
+
+def _port_free_8443():
+    with socket.socket() as probe:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            probe.bind(('127.0.0.1', 8443))
+        except OSError:
+            return False
+    return True
+
+
+needs_direct_port = pytest.mark.skipif(not _port_free_8443(), reason='127.0.0.1:8443 is in use')
+
+
+@needs_direct_port
+@pytest.mark.timeout(180)
+def test_direct_tls_reaches_only_the_claimed_sec_host_within_every_limit(direct_loopback):
+    result, sec, output = direct_loopback
+    packet, worker = result['packet'], result['worker']
+    assert result['status'] == 'complete' and packet['first_failure'] is None
+    assert [c['status'] for c in packet['cases']] == ['answered_unadjudicated'] * 12
+    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == 60
+    # No proxy at all: TLS from the first byte, to the host each exchange claimed.
+    assert sec.connects == [] and len(sec.requests) == 60 and sec.handshake_failures == 0
+    assert all(r['tunnel'] in {'www.sec.gov', 'data.sec.gov'} and r['host'] == r['tunnel']
+               and r['method'] == 'GET' and r['user_agent'] == LOOPBACK_CONTACT for r in sec.requests)
+    assert worker['blocked_external_operations'] == [] and 1 <= worker['max_inflight_sec'] <= 4
+    for path in output.rglob('*'):
+        if path.is_file():
+            assert LOOPBACK_CONTACT.encode() not in path.read_bytes()
+
+
+@needs_direct_port
+@pytest.mark.timeout(120)
+def test_direct_tls_refuses_an_unpinned_certificate_before_any_request(tmp_path):
+    base = tmp_path.resolve()
+    with LoopbackSEC(base, direct=True, untrusted=True) as sec:
+        result = run_loopback_rehearsal(base / 'run', ca=sec.ca_path, network='direct')
+    assert result['status'] == 'halted' and result['packet']['first_failure']['code'] == 'connect_error'
+    assert sec.handshake_failures >= 1 and sec.requests == []
+    assert [c['status'] for c in result['packet']['cases']] == ['halted'] + ['not_run_after_halt'] * 11
+
+
+@pytest.mark.parametrize('name', ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy', 'ALL_PROXY', 'all_proxy'])
+def test_direct_tls_refuses_rather_than_overrides_an_inherited_proxy(tmp_path, monkeypatch, name):
+    paths, _, _ = build_approved_inputs(tmp_path, monkeypatch, network='direct')
+    policy, _ = launcher.check(**paths)  # no proxy variable: the direct configuration passes
+    assert policy['execution_configuration']['substitution'] == 'direct_tls'
+    monkeypatch.setenv(name, 'http://127.0.0.1:44519')
+    with pytest.raises(BudgetError):
+        launcher.check(**paths)
+    assert os.environ[name] == 'http://127.0.0.1:44519'  # left exactly as inherited
+
+
+def test_direct_configuration_shape_is_exact(tmp_path):
+    from validation.ordinary_isolated_rehearsal import direct_execution_configuration
+    from validation.ordinary_network import validate_ordinary_execution
+    ca = tmp_path / 'ca.pem'
+    ca.write_bytes(b'invented')
+    good = direct_execution_configuration(ca.resolve(), documentation_reference='NETWORK-REVIEW-1',
+                                          verification_reference='NETWORK-VERIFICATION-1')
+    validate_ordinary_execution(good)
+    for change in (dict(proxy='http://proxy:8080'), dict(ca_selectors=['SSL_CERT_FILE']),
+                   dict(contains_no_credentials=False), dict(extra=True), dict(substitution='direct')):
+        with pytest.raises(BudgetError):
+            validate_ordinary_execution({**good, **change})
+
+
+def test_direct_resolution_admits_only_the_claimed_host_and_public_answers():
+    from validation.ordinary_network import admit_resolution, public_address
+    from validation._ordinary_rehearsal_worker import loopback_address
+    row = lambda address: (socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, '', (address, 443))
+    assert admit_resolution('data.sec.gov', 'data.sec.gov', 443, [row('23.0.0.1')], public_address) == {('23.0.0.1', 443)}
+    for host, port, answer in (('www.sec.gov', 443, '23.0.0.1'),   # not the claimed host
+                               ('data.sec.gov', 8443, '23.0.0.1'), # not the HTTPS port
+                               ('data.sec.gov', 443, '127.0.0.1'), # loopback is never public
+                               ('data.sec.gov', 443, '10.0.0.8'),  # nor private space
+                               ('data.sec.gov', 443, '100.64.0.1')):  # nor shared/CGNAT space
+        with pytest.raises(BudgetError):
+            admit_resolution('data.sec.gov', host, port, [row(answer)], public_address)
+    assert not loopback_address('23.0.0.1')  # the loopback rule admits only 127.0.0.1
+
+
+def test_an_approved_direct_gate_defaults_to_public_answers_only(tmp_path):
+    from validation.ordinary_isolated_rehearsal import rehearsal_policy
+    from validation.ordinary_native_ledger import OrdinaryNativeGate, OrdinaryNativeLedger, create_fresh_output
+    from validation.ordinary_network import public_address
+    output = create_fresh_output(tmp_path.resolve() / 'run')
+    policy = rehearsal_policy(output, network='direct')
+    (output / 'request.json').write_text(json.dumps({'policy': policy, 'mode': 'loopback'}))
+    owner = type('Owner', (), {'ledger': OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True),
+                               'monitoring': True})()
+    gate = OrdinaryNativeGate(owner)
+    # Only the TEST-ONLY loopback worker replaces this rule; approved mode keeps it.
+    assert gate.direct and gate.allow_address is public_address and not gate.allow_address('127.0.0.1')
+
+
+def test_direct_tls_refuses_a_changed_ca_bundle(tmp_path, monkeypatch):
+    paths, _, _ = build_approved_inputs(tmp_path, monkeypatch, network='direct')
+    launcher.check(**paths)
+    Path(os.environ['SSL_CERT_FILE']).write_bytes(b'-----BEGIN CERTIFICATE-----\nother\n-----END CERTIFICATE-----\n')
+    with pytest.raises(BudgetError):
+        launcher.check(**paths)

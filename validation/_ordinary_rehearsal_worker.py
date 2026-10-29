@@ -50,6 +50,21 @@ def loopback_proxy(host, port, *args, **kwargs):
     return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, '', ('127.0.0.1', 8080))]
 
 
+# Loopback direct-TLS test server port (unprivileged, so CI needs no root).
+LOOPBACK_DIRECT_PORT = 8443
+
+
+def loopback_sec(host, port, *args, **kwargs):
+    """The loopback mode's only direct resolver: an SEC host maps to 127.0.0.1."""
+    if host not in {'www.sec.gov', 'data.sec.gov'} or port != 443:
+        raise RuntimeError('loopback mode resolves only the SEC hosts')
+    return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, '', ('127.0.0.1', LOOPBACK_DIRECT_PORT))]
+
+
+def loopback_address(address):
+    return address == '127.0.0.1'
+
+
 def gate_admits(live, holder, event, args):
     """In a live mode, only the gate admits a socket operation: inside a
     claimed, dispatched exchange, to the address it resolved for the proxy."""
@@ -142,7 +157,8 @@ def main():
                       # As in production /ask: authenticated mode, so the router
                       # never writes the legacy global watchlist/history.
                       AUTH_ENABLED='true', **runtime)
-    for name in execution['proxy_selectors']:
+    # Direct TLS sets no proxy selector and verifies that none is present.
+    for name in execution.get('proxy_selectors') or ():
         os.environ[name] = execution['proxy']
     for name in execution['ca_selectors']:
         os.environ[name] = execution['ca_identity']['path']
@@ -201,17 +217,23 @@ def main():
     from validation.ordinary_frontend_intents import frontend_intent
     from validation.ordinary_native_boundary import NATIVE_BACKEND, OrdinaryNativeBoundary
     from validation.ordinary_native_ledger import OrdinaryNativeLedger
-    from validation.pilot_approved import verify_network_configuration
+    from validation.ordinary_network import verify_ordinary_network
     from validation._ordinary_synthetic_sec import OrdinarySyntheticSEC
     # The real reviewed proxy/CA check runs here; it is never replaced.
-    verify_network_configuration(execution)
+    verify_ordinary_network(execution)
     ledger = OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
     holder.append(ledger)
     backend = NATIVE_BACKEND if live else OrdinarySyntheticSEC(SCENARIO_FAULTS[scenario])
     boundary = OrdinaryNativeBoundary(ledger, backend=backend)
-    # The gate's resolver for the proxy name: the system resolver when
-    # approved, a fixed 127.0.0.1 answer in loopback mode.
-    boundary.gate.resolve = original_dns if mode == 'approved' else loopback_proxy
+    # The gate's resolver: the system resolver when approved (direct mode then
+    # admits only globally routable answers), fixed 127.0.0.1 answers only in
+    # the TEST-ONLY loopback mode.
+    if mode == 'approved':
+        boundary.gate.resolve = original_dns
+    elif boundary.gate.direct:
+        boundary.gate.resolve, boundary.gate.allow_address = loopback_sec, loopback_address
+    else:
+        boundary.gate.resolve = loopback_proxy
     holder.append(boundary)
     diagnostics = StringIO()
     completed, failure, routes = [], None, []
