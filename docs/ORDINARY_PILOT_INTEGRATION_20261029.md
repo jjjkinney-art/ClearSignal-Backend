@@ -197,14 +197,20 @@ The project owner chose to fix the root cause in the frontend and keep the
 backend rule that explicit general intents win.
 
 - **Frontend fix.** Branch `fix/company-research-intent`, commit
-  `b75abe3`, in `jjjkinney-art/Ai-Intelligence-interface`. A question
-  that names a capitalised subject in "thesis for/on X" or "make X
-  attractive" is company research unless X is a market or a group of
-  securities. A capitalised company name ending in "Industry"/"Industries" no
-  longer counts as a macro keyword. The twelve cohort questions classify as
-  `company_analysis`. Tests keep general questions general: "What is an
-  investment thesis?", "thesis for tech stocks", "make the S&P 500
-  attractive", "airline industry".
+  `b56cd0b`, in `jjjkinney-art/Ai-Intelligence-interface` (PR #86). A
+  question about X in "thesis for/on X" or "make X attractive" is company
+  research only when X ends in a legal form the backend recognises (Inc,
+  Corp, Co, Ltd, plc, …) or is a company the frontend already knows, and X is
+  not a market or a group of securities. A capitalised company name ending
+  in "Industry"/"Industries" no longer counts as a macro keyword. The twelve
+  cohort questions classify as `company_analysis`. Tests keep general
+  questions general: "What is an investment thesis?", "thesis for tech
+  stocks", "make the S&P 500 attractive", "airline industry", and
+  capitalised non-companies ("thesis for Bitcoin / Gold / China / REITs").
+  The first version (`b75abe3`) required only a capitalised subject. Run
+  through the backend router, it sent those questions to an entity prompt,
+  and "thesis for China" to the wrong issuer. It was narrowed before
+  merge.
 - **Pilot binding.** `validation/ordinary_frontend_intents.py` pins the
   frontend commit, the classifier and resolver SHA-256 hashes, the hash of
   the twelve question texts, and the resulting intent per case. It lives in
