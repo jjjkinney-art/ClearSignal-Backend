@@ -559,7 +559,9 @@ class TestProvenanceBlockInPrompt:
 
     def test_fresh_evidence_no_stale_warning(self):
         """Recent evidence should NOT trigger the staleness warning."""
-        ev = [_make_evidence(timestamp="2026-05-01T00:00:00Z")]
+        # Relative to now: a fixed date ages past the 180-day threshold.
+        ts = (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ")
+        ev = [_make_evidence(timestamp=ts)]
         prompt = self._build(ev)
         assert "WARNING: Oldest evidence is" not in prompt
 
