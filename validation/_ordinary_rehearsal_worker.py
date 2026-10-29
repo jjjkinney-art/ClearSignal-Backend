@@ -1,10 +1,18 @@
-"""Socket-denied twelve-case worker over the native ordinary stack. No live mode.
+"""Twelve-case worker over the native ordinary stack.
 
 Runs the real application question router for each fixed case. Every SEC GET
 crosses the integrated boundary: stage reservation, paced durable claims, the
-ordinary gate and owned transport, then retention before settlement. The
-network backend beneath the gate is always the invented synthetic SEC backend;
-sockets, subprocesses and ambient credential files are refused by audit hook.
+ordinary gate and owned transport, then retention before settlement.
+Subprocesses and ambient credential files are always refused by audit hook.
+
+Modes (request.json ``mode``, set only by a launcher):
+- ``rehearsal``: the invented synthetic SEC backend; every socket is refused.
+- ``loopback``: the live code path (real sockets, CONNECT, TLS verification)
+  with a TEST-ONLY approval; the proxy resolves only to 127.0.0.1 and the
+  pinned CA is a test CA, so no external host can be reached or trusted.
+- ``approved``: live SEC through the reviewed proxy. Requires a non-test
+  approval bound to this exact output directory; sockets are admitted only by
+  the gate's audit inside a claimed, dispatched exchange.
 Synthetic sources provide no evidence of real-company research quality.
 """
 import hashlib
@@ -32,6 +40,36 @@ SCENARIO_FAULTS = {
 }
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
+LIVE_MODES = ('loopback', 'approved')
+
+
+def loopback_proxy(host, port, *args, **kwargs):
+    """The loopback mode's only resolver: the proxy name maps to 127.0.0.1."""
+    if (host, port) != ('proxy', 8080):
+        raise RuntimeError('loopback mode resolves only the proxy')
+    return [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, '', ('127.0.0.1', 8080))]
+
+
+def gate_admits(live, holder, event, args):
+    """In a live mode, only the gate admits a socket operation: inside a
+    claimed, dispatched exchange, to the address it resolved for the proxy."""
+    if not live or len(holder) < 2:
+        return False
+    try:
+        holder[1].gate.audit(event, args)
+    except Exception:
+        return False
+    return True
+
+
+def live_request_allowed(policy, mode, output):
+    """A live mode needs an approval for this directory of the matching kind."""
+    from validation.ordinary_native_policy import PURPOSE, test_only_references
+    approval = policy.get('approval')
+    if (policy.get('purpose') != PURPOSE or type(approval) is not dict
+            or approval.get('output_dir') != str(output)):
+        return False
+    return test_only_references(policy) is (mode == 'loopback')
 
 
 def verify_running_configuration(policy):
@@ -48,7 +86,7 @@ def verify_running_configuration(policy):
 def main():
     if (not sys.flags.isolated or not sys.flags.dont_write_bytecode
             or sys.version_info[:3] != (3, 11, 9) or sys.implementation.name != 'cpython'
-            or len(sys.argv) != 4 or sys.argv[1] not in SCENARIO_FAULTS):
+            or len(sys.argv) != 4 or (sys.argv[1] not in SCENARIO_FAULTS and sys.argv[1] not in LIVE_MODES)):
         return 2
     scenario = sys.argv[1]
     try:
@@ -79,8 +117,22 @@ def main():
         return 2
     request = json.loads((output / 'request.json').read_text())
     policy = request['policy']
-    if request.get('scenario') != scenario:
+    mode = request.get('mode')
+    live = mode in LIVE_MODES
+    if (mode == 'rehearsal' and (scenario not in SCENARIO_FAULTS or request.get('scenario') != scenario)
+            or live and (scenario != mode or 'scenario' in request
+                         or not live_request_allowed(policy, mode, output))
+            or not live and mode != 'rehearsal'):
         return 2
+    runtime = REHEARSAL_RUNTIME
+    if live:
+        # Runtime-only values from the launcher. Never serialized or hashed;
+        # the export refuses any record containing them.
+        from validation.ordinary_native_policy import ZERO_MODEL_PLACEHOLDER
+        runtime = {'OPENAI_API_KEY': os.environ.get('OPENAI_API_KEY'),
+                   'SEC_USER_AGENT': os.environ.get('SEC_USER_AGENT')}
+        if runtime['OPENAI_API_KEY'] != ZERO_MODEL_PLACEHOLDER:
+            return 2
     execution = policy['execution_configuration']
     os.environ.clear()
     os.environ.update(PATH='/usr/bin:/bin', HOME=str(home), PYTHONDONTWRITEBYTECODE='1',
@@ -89,7 +141,7 @@ def main():
                       DECISION_MONITORING_FILING_FALLBACK_ENABLED='false',
                       # As in production /ask: authenticated mode, so the router
                       # never writes the legacy global watchlist/history.
-                      AUTH_ENABLED='true', **REHEARSAL_RUNTIME)
+                      AUTH_ENABLED='true', **runtime)
     for name in execution['proxy_selectors']:
         os.environ[name] = execution['proxy']
     for name in execution['ca_selectors']:
@@ -98,6 +150,8 @@ def main():
     blocked, holder = [], []
 
     def audit(event, args):
+        if event.startswith('socket.') and gate_admits(live, holder, event, args):
+            return
         if event.startswith('socket.') or event in {'subprocess.Popen', 'os.system', 'os.posix_spawn'}:
             import traceback
             # Event name and code locations only; never arguments or values.
@@ -105,7 +159,7 @@ def main():
                 f'{Path(frame.filename).name}:{frame.lineno}' for frame in traceback.extract_stack(limit=30)[:-1]]})
             if holder:
                 holder[0].halt('offline_network_attempt')
-            raise RuntimeError('external operation prohibited in ordinary rehearsal')
+            raise RuntimeError('external operation prohibited in ordinary worker')
         if event == 'import' and args[0] == 'app.main':
             raise RuntimeError('server import prohibited')
         if event == 'open' and isinstance(args[0], (str, bytes)):
@@ -124,6 +178,7 @@ def main():
         'Linux', 'offline', '0', 'offline', 'x86_64', 'offline')
     verify_running_configuration(policy)
     sys.addaudithook(audit)
+    original_dns = socket.getaddrinfo
 
     def scoped_dns(host, port, *args, **kwargs):
         # Same reviewed rule as the historical approved worker: inside a claimed
@@ -144,7 +199,7 @@ def main():
 
     from validation.capture_budget import BudgetError
     from validation.ordinary_frontend_intents import frontend_intent
-    from validation.ordinary_native_boundary import OrdinaryNativeBoundary
+    from validation.ordinary_native_boundary import NATIVE_BACKEND, OrdinaryNativeBoundary
     from validation.ordinary_native_ledger import OrdinaryNativeLedger
     from validation.pilot_approved import verify_network_configuration
     from validation._ordinary_synthetic_sec import OrdinarySyntheticSEC
@@ -152,8 +207,11 @@ def main():
     verify_network_configuration(execution)
     ledger = OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
     holder.append(ledger)
-    backend = OrdinarySyntheticSEC(SCENARIO_FAULTS[scenario])
+    backend = NATIVE_BACKEND if live else OrdinarySyntheticSEC(SCENARIO_FAULTS[scenario])
     boundary = OrdinaryNativeBoundary(ledger, backend=backend)
+    # The gate's resolver for the proxy name: the system resolver when
+    # approved, a fixed 127.0.0.1 answer in loopback mode.
+    boundary.gate.resolve = original_dns if mode == 'approved' else loopback_proxy
     holder.append(boundary)
     diagnostics = StringIO()
     completed, failure, routes = [], None, []
@@ -202,14 +260,15 @@ def main():
                 pass
         finally:
             boundary.close()
-    worker = {'format': 'ordinary-native-worker-v1', 'synthetic_sec_backend': True,
-              'execution_authorized': False, 'live_network': False,
+    worker = {'format': 'ordinary-native-worker-v1', 'mode': mode, 'synthetic_sec_backend': not live,
+              'execution_authorized': mode == 'approved', 'live_network': mode == 'approved',
+              'external_dispatches': boundary.gate.dispatched if live else 0,
               'failure_class': failure, 'completed_cases': completed, 'routing': routes,
               'blocked_external_operations': blocked[:10],
               'refused_model_requests': boundary.refused_model_requests,
               'refused_requests': list(boundary.refused_requests),
               'transport_entries': dict(boundary.transport_entries),
-              'synthetic_requests': len(backend.requests),
+              'synthetic_requests': None if live else len(backend.requests),
               'max_inflight_sec': boundary.max_inflight,
               'pacing': {'slot_waits': boundary.slot_waits, 'claim_waits': boundary.claim_pacing_waits,
                          'wire_entry_waits': boundary.gate.entry_pacing_waits},

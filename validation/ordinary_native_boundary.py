@@ -6,10 +6,11 @@ a four-slot concurrency wait, the paced durable dispatch claim, the ordinary
 exchange gate (native intent plus durable wire entry), the owned SEC transport,
 semantic admission, and atomic body/receipt retention before settlement.
 
-There is no live entrypoint. The caller supplies the network backend beneath the
-gate's ScopedBackend; the only caller in this repository supplies the synthetic
-SEC backend inside a socket-denied worker. Model and paid-provider requests are
-refused. Nothing here verifies approver identity, invoice terms or SEC origin.
+The caller supplies the network backend beneath the gate's ScopedBackend: the
+synthetic SEC backend for rehearsals, or NATIVE_BACKEND (the owned transport's
+own socket backend) only from the approval-gated worker modes. Model and
+paid-provider requests are refused. Nothing here verifies approver identity,
+invoice terms or SEC origin.
 """
 import os
 from pathlib import Path
@@ -28,6 +29,8 @@ from validation.pilot_live import SubmissionRefusal, TransportFailure, json_obje
 SEC_STAGES = frozenset({'routing', 'evidence.sec', 'evidence.sec_metrics',
                         'evidence.thesis_disclosures', 'evidence.filing_metrics'})
 PAID_PROVIDER_ENVIRONMENT = ('FMP_API_KEY', 'FRED_API_KEY', 'NEWS_API_KEY')
+# Explicit marker for the transport's own socket backend; there is no default.
+NATIVE_BACKEND = object()
 
 
 class _SecRefusal(Exception):
@@ -62,7 +65,9 @@ class OrdinaryNativeBoundary(PilotBoundary):
         self.gate = OrdinaryNativeGate(self)
         self.wire = OrdinaryHTTPTransport(gate=self.gate, execution=policy['execution_configuration'],
                                           runtime=self.runtime)
-        self.wire._wire._pool._network_backend = ScopedBackend(backend, self.gate)
+        native = self.wire._wire._pool._network_backend
+        self.wire._wire._pool._network_backend = ScopedBackend(
+            native if backend is NATIVE_BACKEND else backend, self.gate)
         self.slots = BoundedSemaphore(quota_contract()['concurrent_sec'])
         self.admitted = {}        # (case_run, stage) -> document URLs from that stage's submissions
         self.case_documents = {}  # case_run -> the first admitted URL set (drift check)

@@ -1,0 +1,54 @@
+{
+  "derived": {
+    "enforced_by": [
+      "tests/test_ordinary_live_launcher.py::test_loopback_run_uses_the_live_code_path_within_every_limit",
+      "tests/test_ordinary_live_launcher.py::test_an_unpinned_certificate_halts_before_any_request_is_served",
+      "tests/test_ordinary_live_launcher.py::test_run_refuses_every_unapproved_or_drifted_input",
+      "tests/test_ordinary_live_launcher.py::test_the_output_directory_holds_only_the_declared_inventory",
+      "tests/test_ordinary_isolated_worker.py::test_twelve_cases_run_through_the_integrated_native_path",
+      "tests/test_ordinary_native_boundary.py",
+      "tests/test_ordinary_native_ledger.py"
+    ],
+    "ledger_tables": [
+      "attempts",
+      "cases",
+      "first_sec_refusal",
+      "first_transport_failure",
+      "native_dispatches",
+      "ordinary_answers",
+      "ordinary_case_times",
+      "ordinary_exchange_failures",
+      "ordinary_responses",
+      "ordinary_run",
+      "ordinary_wire_entries",
+      "policy",
+      "sec_claims",
+      "stage_reservations"
+    ],
+    "output_directory_mode": "0700",
+    "output_inventory": {
+      ".clearSignal_timeline": "empty directory created by the application timeline store at import",
+      ".clearSignal_watchlist": "empty directory created by the application watchlist store at import",
+      "isolated-home": "empty HOME directory for the worker",
+      "ledger.sqlite": "durable ledger: claims, wire entries, retained SEC response bodies with receipts, answers, failures, halts",
+      "ledger.sqlite-journal": "transient SQLite rollback journal; absent after commit or parent rollback",
+      "packet.json": "parent export of all twelve outcomes",
+      "request.json": "launcher request: the bound policy (approval, references, case records, proxy/CA configuration); no runtime values",
+      "worker.json": "worker report: counts, routing, pacing, diagnostics hash"
+    },
+    "runtime_value_screening": "retention and export refuse any record containing a runtime value",
+    "runtime_values_never_stored": [
+      "SEC_USER_AGENT value",
+      "OPENAI_API_KEY value"
+    ],
+    "source_content": "public SEC EDGAR responses from www.sec.gov and data.sec.gov only"
+  },
+  "format": "ordinary-retention-evidence-v1",
+  "operator_attestations": {
+    "access_control": null,
+    "deletion_procedure": null,
+    "retention_period": null,
+    "sec_content_terms_reference": null,
+    "storage_location": null
+  }
+}

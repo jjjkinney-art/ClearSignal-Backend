@@ -13,6 +13,19 @@ from validation.pilot_approved import validate_execution
 from validation.pilot_policy import AUDITED_DEPENDENCIES, MODEL_ROUTES, SEC_ROUTES
 
 PURPOSE = 'approved_ordinary_twelve_case_pilot'
+TEST_ONLY = 'TEST-ONLY-NOT-AN-APPROVAL'
+# The cohort makes no model request, so a live run carries no model credential:
+# OPENAI_API_KEY must be exactly this non-secret value.
+ZERO_MODEL_PLACEHOLDER = 'ORDINARY-ZERO-MODEL-NO-CREDENTIAL'
+
+
+def test_only_references(policy):
+    """Whether any reference in the policy marks an invented test record."""
+    execution = policy['execution_configuration']
+    values = (policy['approval']['reference'], policy['approval']['run_id'],
+              policy['retention_reference'], policy['pricing_review_reference'],
+              execution['documentation_reference'], execution['verification_reference'])
+    return any('test-only' in value.lower() for value in values)
 
 
 def execution_package(*, cases, code_binding, dependencies, execution, output_dir,
