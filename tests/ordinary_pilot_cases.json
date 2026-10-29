@@ -1,0 +1,86 @@
+[
+  {
+    "case_id": "NPK:core_thesis",
+    "issuer_id": "NPK",
+    "expected_cik": "0000080172",
+    "question": "What is the investment thesis for National Presto Industries, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "NPK:decision_threshold",
+    "issuer_id": "NPK",
+    "expected_cik": "0000080172",
+    "question": "Which valuation and operating assumptions would make National Presto Industries, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "GOOGL:core_thesis",
+    "issuer_id": "GOOGL",
+    "expected_cik": "0001652044",
+    "question": "What is the investment thesis for Alphabet Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "GOOGL:decision_threshold",
+    "issuer_id": "GOOGL",
+    "expected_cik": "0001652044",
+    "question": "Which valuation and operating assumptions would make Alphabet Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "INGR:core_thesis",
+    "issuer_id": "INGR",
+    "expected_cik": "0001046257",
+    "question": "What is the investment thesis for Ingredion Inc, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "INGR:decision_threshold",
+    "issuer_id": "INGR",
+    "expected_cik": "0001046257",
+    "question": "Which valuation and operating assumptions would make Ingredion Inc attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "NNBR:core_thesis",
+    "issuer_id": "NNBR",
+    "expected_cik": "0000918541",
+    "question": "What is the investment thesis for NN INC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "NNBR:decision_threshold",
+    "issuer_id": "NNBR",
+    "expected_cik": "0000918541",
+    "question": "Which valuation and operating assumptions would make NN INC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "AMZN:core_thesis",
+    "issuer_id": "AMZN",
+    "expected_cik": "0001018724",
+    "question": "What is the investment thesis for AMAZON COM INC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "AMZN:decision_threshold",
+    "issuer_id": "AMZN",
+    "expected_cik": "0001018724",
+    "question": "Which valuation and operating assumptions would make AMAZON COM INC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "MAN:core_thesis",
+    "issuer_id": "MAN",
+    "expected_cik": "0000871763",
+    "question": "What is the investment thesis for ManpowerGroup Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "MAN:decision_threshold",
+    "issuer_id": "MAN",
+    "expected_cik": "0000871763",
+    "question": "Which valuation and operating assumptions would make ManpowerGroup Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  }
+]
