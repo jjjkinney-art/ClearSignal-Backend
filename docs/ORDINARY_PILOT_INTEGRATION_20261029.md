@@ -197,7 +197,7 @@ The project owner chose to fix the root cause in the frontend and keep the
 backend rule that explicit general intents win.
 
 - **Frontend fix.** Branch `fix/company-research-intent`, commit
-  `b56cd0b`, in `jjjkinney-art/Ai-Intelligence-interface` (PR #86). A
+  `b56cd0b`, in `jjjkinney-art/Ai-Intelligence-interface` (PR #86, merged to main as `5ee51c3`). A
   question about X in "thesis for/on X" or "make X attractive" is company
   research only when X ends in a legal form the backend recognises (Inc,
   Corp, Co, Ltd, plc, …) or is a company the frontend already knows, and X is

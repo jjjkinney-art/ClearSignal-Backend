@@ -11,7 +11,7 @@ from validation.ordinary_pilot_contract import CASES
 
 FRONTEND = {
     'repository': 'jjjkinney-art/Ai-Intelligence-interface',
-    'commit': 'b56cd0bbf9fd9df9d586086e63b682c811d1a4ac',
+    'commit': '5ee51c375a75d43ba51fe71114e54a07efe43815',  # main, PR #86 squash-merged
     'classifier': 'frontend_cinematic/lib/queryIntent.ts',
     'classifier_sha256': 'd8f9810fa10cc539f4fc8ef6cdf140a137c312aabb57f88b677f3466ed5e41b6',
     'resolver': 'frontend_cinematic/lib/symbolResolver.ts',
