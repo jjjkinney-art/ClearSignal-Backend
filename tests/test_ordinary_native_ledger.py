@@ -127,7 +127,7 @@ def test_actual_entry_rate_is_independent_of_earlier_reservation_rate(tmp_path, 
     for attempt, binding in claims:
         book.claim_wire_entry(attempt, **binding)
         complete(book, attempt, binding)
-    book.complete_case(case, {'company': 'NPK', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    book.complete_case(case, {'company': CASES[0].split(':')[0], 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
     case = book.begin_case(CASES[1])
     claims = [reserve(book, case, *scope) for scope in (PLAN[0], PLAN[1], PLAN[3])]
     for attempt, binding in claims[:2]:
@@ -315,7 +315,7 @@ def test_case_completes_only_with_its_own_screened_timely_answer(tmp_path, monke
         for attempt, binding in [reserve(book, case, *scope) for scope in PLAN]:
             now[0] += 150_000_000
             book.claim_wire_entry(attempt, **binding); complete(book, attempt, binding)
-    answer = {'company': 'NPK', 'answer': {'text': 'Invented'}}
+    answer = {'company': CASES[0].split(':')[0], 'answer': {'text': 'Invented'}}
     if fault == 'issuer': answer['company'] = 'GOOGL'
     elif fault == 'secret': answer['answer']['text'] = 'TEST-ONLY-secret'
     elif fault == 'late': now[0] += 30_000_000_000
@@ -340,7 +340,7 @@ def test_case_completes_only_with_its_own_screened_timely_answer(tmp_path, monke
 def test_no_late_work_after_a_case_is_complete(tmp_path):
     book = ledger(tmp_path); case = book.begin_case(CASES[0])
     finish_all(book, case)
-    book.complete_case(case, {'company': 'NPK', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    book.complete_case(case, {'company': CASES[0].split(':')[0], 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
     with pytest.raises(BudgetError):
         reserve(book, case, 'evidence.sec', 'sec/directory')
 

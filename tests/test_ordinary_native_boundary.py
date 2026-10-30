@@ -5,6 +5,7 @@ credential is used. The approval is an invented TEST-ONLY record and grants
 nothing. These checks cover admission, refusal and concurrency behaviour.
 """
 import json
+from pathlib import Path
 import threading
 import time
 from types import SimpleNamespace
@@ -17,13 +18,17 @@ from validation.capture_budget import BudgetError
 from validation.ordinary_isolated_rehearsal import rehearsal_policy
 from validation.ordinary_native_boundary import OrdinaryNativeBoundary
 from validation.ordinary_native_ledger import OrdinaryNativeLedger, create_fresh_output
-from validation.ordinary_pilot_contract import CASES
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE
 
-NPK = '0000080172'
+# The first case's issuer in the active cohort; its synthetic filings are generic.
+FIRST = next(c for c in json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
+             if c['case_id'] == CASES[0])
+FIRST_CIK = FIRST['expected_cik']
 DIRECTORY = 'https://www.sec.gov/files/company_tickers.json'
-SUBMISSIONS = f'https://data.sec.gov/submissions/CIK{NPK}.json'
-FACTS = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{NPK}.json'
-ANNUAL = 'https://www.sec.gov/Archives/edgar/data/80172/000095017026019334/npk-20251231.htm'
+SUBMISSIONS = f'https://data.sec.gov/submissions/CIK{FIRST_CIK}.json'
+FACTS = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{FIRST_CIK}.json'
+ANNUAL = (f'https://www.sec.gov/Archives/edgar/data/{int(FIRST_CIK)}/000095017026019334/'
+          f'{FIRST["issuer_id"].lower()}-20251231.htm')
 RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
            'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
 
@@ -84,7 +89,7 @@ def test_multi_row_submissions_admit_exact_supported_documents_for_their_stage(t
         owner.begin(owner.cases[0])
         fetch(owner, 'evidence.sec', SUBMISSIONS)
         admitted = owner.admitted[(owner.case_run, 'evidence.sec')]
-        recent = synthetic.submissions(80172)['filings']['recent']
+        recent = synthetic.submissions(int(FIRST_CIK))['filings']['recent']
         supported = [(f, a, d) for f, a, d in zip(recent['form'], recent['accessionNumber'], recent['primaryDocument'])
                      if f in {'10-K', '10-Q', '8-K'} and d.endswith('.htm')]
         assert len(admitted) == len(supported) == 6
@@ -121,7 +126,7 @@ def test_unlisted_and_cross_issuer_requests_are_refused_before_any_attempt(bound
 
 
 def test_threshold_case_cannot_fetch_documents(boundary):
-    boundary.ledger.complete_case(boundary.case_run, {'company': 'NPK', 'answer': {}},
+    boundary.ledger.complete_case(boundary.case_run, {'company': FIRST['issuer_id'], 'answer': {}},
                                   forbidden_values=tuple(RUNTIME.values()))
     boundary.begin(boundary.cases[1])
     fetch(boundary, 'evidence.sec', SUBMISSIONS)
@@ -283,8 +288,8 @@ def test_transport_refuses_unapproved_request_forms_before_dispatch(boundary, me
 
 def test_transport_never_grants_the_historic_reviewed_envelope(boundary):
     from validation.pilot_live import ReviewedDocumentEnvelope
-    envelope = ReviewedDocumentEnvelope('0000080172', ANNUAL, '10-K', '2026-02-24', 'invented')
-    assert boundary.wire.authorize_reviewed_document('0000080172', ANNUAL, '10-K', '2026-02-24') is None
+    envelope = ReviewedDocumentEnvelope(FIRST_CIK, ANNUAL, '10-K', '2026-02-24', 'invented')
+    assert boundary.wire.authorize_reviewed_document(FIRST_CIK, ANNUAL, '10-K', '2026-02-24') is None
     assert boundary.wire.response_limit('GET', ANNUAL, None) == 16 * 1024 * 1024
     with pytest.raises(BudgetError):
         boundary.wire.response_limit('GET', ANNUAL, envelope)

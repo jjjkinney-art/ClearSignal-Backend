@@ -15,7 +15,8 @@ def test_twelve_fixed_cases_and_nontransferable_limits():
     assert c['per_case'][CASES[0]]['sec/directory'] == 2
     # Routing may resolve identity through the directory only; totals unchanged.
     assert all(c['per_stage'][case]['routing'] == {'sec/directory': 1} for case in CASES)
-    assert [c['per_case'][case]['sec'] for case in CASES] == [8, 3] * 6
+    assert [c['per_case'][case]['sec'] for case in CASES] == [8 if case.endswith(':core_thesis') else 3 for case in CASES]
+    assert sum(case.endswith(':core_thesis') for case in CASES) == 6
 
 
 @pytest.mark.parametrize('mutation', [
