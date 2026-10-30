@@ -108,3 +108,52 @@ off). All scores are from development cases.
 4. Percentage changes of positive bases are kept (e.g. AMZN net income
    +244.9%); correct but large, now explained by the bridge.
 5. Threshold answers remain thin by configuration (filing fallback off).
+
+## Follow-up: linked causes, table scope and risk qualification (`d1d82fb`, `a320e37`)
+
+Same twelve development cases, same replay, compared with `2e74e66`.
+
+- A cause in the immediately following sentence is linked only when it
+  refers back ("The decrease …"), agrees in direction, names no other period
+  and introduces no new scope; the preceding sentence's figures must agree.
+- Narrative under an upper-case segment table heading is attributed to that
+  segment only when its stated change equals the table row's change for the
+  current quarter; it is labelled with the heading and never treated as a
+  consolidated statement.
+- A risk is presented only with a concrete dependency or named parties
+  (statutes and acronyms excluded; macro-hazard text needs a dependency);
+  otherwise the answer says none qualified.
+
+| Case | Run 2 | Final | Change |
+|---|---|---|---|
+| NPK:core_thesis | 2/2/2/2/2 | 2/1/2/2/2 | **risks withdrawn**: general operational text no longer presented; "none qualified" stated |
+| GOOGL:core_thesis | 2/1/2/2/2 | 2/2/2/2/2 | single-source components risk |
+| INGR:core_thesis | 1/1/1/2/2 | 2/1/2/2/2 | revenue, net income and segment causes (incl. Argo) via linked sentences; "none qualified" for risks |
+| NNBR:core_thesis | 2/1/1/1/2 | 2/2/2/2/2 | revenue cause; segment table attributions incl. Mobile Solutions operating-loss cause; ransomware dependency |
+| AMZN:core_thesis | 2/0/1/2/2 | 2/2/2/2/2 | bridge + Anthropic attribution; segment causes; China seller concentration |
+| MAN:core_thesis | 2/1/1/2/2 | 2/1/2/2/2 | margin and regional causes; "none qualified" for risks |
+| NNBR:decision_threshold | 1/0/1/1/2 | 1/0/1/2/2 | loss-margin wording |
+| other threshold answers | 1/0/1/2/2 | 1/0/1/2/2 | wording only where margins cross zero |
+
+Risk scores: 1 where "no company-specific risk qualified" is a true
+statement about the retained candidates; 2 where a dependency-backed risk is
+shown.
+
+Verification (final): 80/80 quotations verbatim; 48/48 reported amounts
+reconcile with XBRL by period; no buy/sell, target or valuation language;
+unanswered parts unchanged. Under the application's normal evidence time
+limits (one run, retained-body fixture, no timeout removal) all twelve
+answers are byte-identical to the timeout-free replay; slowest stage 6.4 s
+(MAN thesis disclosures) against 10 s / 20 s windows; explanation extraction
+at most 0.37 s.
+
+Remaining gaps after the follow-up:
+1. Causes more than one sentence away, or introduced without a back-reference,
+   are not linked (by design: ambiguity is rejected).
+2. Segment tables without an upper-case heading, or with a "%" change
+   column only, are not scoped.
+3. Risk qualification is lexical: it cannot recognise company-specific risks
+   written in generic words (NPK's defence-contract performance risk), and
+   could admit a generic risk that happens to name parties.
+4. Threshold answers remain thin by configuration (filing fallback off).
+5. All findings are from development cases; generalization is untested.
