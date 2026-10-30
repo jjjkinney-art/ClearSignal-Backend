@@ -4,8 +4,10 @@ Every candidate has already passed the issuer-risk admission rules. This
 step removes disclosures that are about the risk-factor section itself or
 that list generic hazards any issuer could name, then prefers disclosures
 that state something particular to this issuer: a concrete dependency or
-concentration first, then named parties or rules. Ties keep source order, so
-an issuer without such signals keeps its source-order selection. Selection never asserts materiality or likelihood.
+concentration first, then named parties (not statutes, which apply to every
+issuer, and not acronyms). A disclosure qualifies only with such a signal,
+and a macro-hazard disclosure only with a concrete dependency; when none
+qualifies, nothing is presented and the answer says so. Selection never asserts materiality or likelihood.
 Nothing here names an issuer.
 """
 import re
@@ -30,6 +32,7 @@ _HAZARDS = {
     'interest rates': r"\binterest rates?\b",
     'supply chain': r"\bsupply chains?\b",
     'cyber': r"\bcyber",
+    'trade measures': r"\bsanctions\b|\bexport controls?\b|\btariffs?\b|\btrade (?:policy|policies|restrictions?)\b",
 }
 _HAZARD_PATTERNS = {name: re.compile(pattern, re.I) for name, pattern in _HAZARDS.items()}
 # A concrete dependency or concentration this issuer states about itself.
@@ -65,19 +68,32 @@ def rejection(quote):
     return None
 
 
+# Laws and regulations apply to every issuer subject to them.
+_STATUTE = re.compile(r"(?:[A-Z][A-Za-z\-]+\s+(?:in\s+|of\s+)?){1,7}(?:Act|Acts|Regulations?|Laws?|Rules?|Directive)\b")
+
+
 def specificity(quote):
-    """Concrete dependency statements outrank named parties or rules (beyond
-    the opening word)."""
-    named = {word for word in re.findall(r"(?<=\s)[A-Z][A-Za-z\-]+", quote)
+    """Concrete dependency statements outrank named parties (beyond the opening
+    word); statute names and all-capital acronyms are not parties."""
+    text = _STATUTE.sub(' ', quote)
+    named = {word for word in re.findall(r"(?<=\s)[A-Z][a-z][A-Za-z\-]*", text)
              if word not in _GENERIC_CAPITALIZED}
     return 3 * len(_DEPENDENCY.findall(quote)) + min(len(named), 2)
+
+
+def qualifies(quote):
+    """Company-specific enough to present: a positive signal, and for text that
+    names generic macro hazards, a concrete dependency."""
+    if hazard_count(quote) >= 2:
+        return bool(_DEPENDENCY.search(quote))
+    return specificity(quote) > 0
 
 
 def select_risks(candidates, *, quote_of, offset_of, limit=2):
     """(selected, rejected reasons). Empty selection means none qualified."""
     kept, reasons = [], []
     for item in candidates:
-        reason = rejection(quote_of(item))
+        reason = rejection(quote_of(item)) or (None if qualifies(quote_of(item)) else 'not_company_specific')
         if reason:
             reasons.append(reason)
         else:
