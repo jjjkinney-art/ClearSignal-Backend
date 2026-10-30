@@ -141,8 +141,10 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         f"- Historical baseline, not an investment threshold: operating margin of "
         f"{Decimal(row['current']['margin_percent']):.2f}% for {row['current']['period_start']} to "
         f"{row['current']['period_end']}. A lower margin for the corresponding period one year later, on the "
-        "same consolidated scope, currency and duration, would weaken the profitability assumption; it would "
-        "not by itself make the company unattractive. "
+        "same consolidated scope, currency and duration, would "
+        + ("mean a larger operating loss relative to revenue and weaken any recovery assumption"
+           if Decimal(row['current']['margin_percent']) <= 0 else "weaken the profitability assumption")
+        + "; it would not by itself make the company unattractive. "
         + ' '.join(f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
     explanation = next((row for row in foundation['claims'] if row.get('period_explanation')), None)
     if explanation:

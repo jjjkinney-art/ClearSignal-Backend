@@ -64,6 +64,16 @@ def operating_margin_assessment(metrics, references):
             magnitude = (f'{abs(change):.2f} percentage points' if abs(change) >= Decimal('0.01')
                          else 'less than 0.01 percentage points')
             movement = f'{direction} by {magnitude}' if change else 'was unchanged'
+            if current_margin <= 0 and prior_margin <= 0:
+                # Signed margins read backwards for losses: say what happened to the loss.
+                loss = ('the operating loss relative to revenue widened' if change < 0 else
+                        'the operating loss relative to revenue narrowed' if change > 0 else
+                        'the operating loss relative to revenue was unchanged')
+                movement = f'was negative in both periods; {loss}' + (f' by {magnitude}' if change else '')
+            elif current_margin <= 0 < prior_margin:
+                movement = f'moved from an operating profit to an operating loss or break-even, down {magnitude}'
+            elif prior_margin <= 0 < current_margin:
+                movement = f'moved from an operating loss or break-even to an operating profit, up {magnitude}'
             text = (
                 f'Calculated operating margin {movement}: {current_margin:.2f}% for '
                 f'{current["period_start"]} to {current["period_end"]}, versus {prior_margin:.2f}% '
@@ -75,7 +85,7 @@ def operating_margin_assessment(metrics, references):
                 'The drivers of the margin change remain unverified.'
             )
             if current_margin <= 0:
-                text += ' The current operating margin is non-positive; any narrowing of losses is not positive operating profitability.'
+                text += ' The current operating margin is non-positive; a smaller loss would still not be positive operating profitability.'
             return {
                 'kind': 'operating_margin_calculation', 'provenance': 'derived',
                 'metric': 'operating margin', 'signal': 'context_only',
@@ -85,8 +95,11 @@ def operating_margin_assessment(metrics, references):
                 'direction': direction, 'current': current, 'prior': prior,
                 'reference_ids': [revenue_ref, income_ref], 'text': text,
                 'conditional_test': 'The cited margin is a historical baseline, not an investment threshold. '
-                    'A lower margin for the corresponding period one year later would weaken the profitability '
-                    'assumption. Review pricing, costs and product mix, and comparable peer evidence, before '
+                    + ('A lower margin for the corresponding period one year later would mean a larger operating '
+                       'loss relative to revenue and would weaken any recovery assumption. ' if current_margin <= 0 else
+                       'A lower margin for the corresponding period one year later would weaken the profitability '
+                       'assumption. ')
+                    + 'Review pricing, costs and product mix, and comparable peer evidence, before '
                     'drawing a competitive-strength conclusion; this is not a forecast.',
             }
     except (KeyError, TypeError, ValueError, DecimalException):
