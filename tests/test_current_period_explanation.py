@@ -11,7 +11,7 @@ from app.services import current_period_explanation as cpe
 NPK_METRICS = {'revenue': {'current': 146596000, 'prior': 120449000},
                'net income': {'current': 15862000, 'prior': 5152000}}
 GOOGL_METRICS = {'revenue': {'current': 127577000000, 'prior': 102346000000},
-                 'other income (expense), net': {'current': -8221000000, 'prior': 12759000000}}
+                 'non-operating income (expense)': {'current': -8221000000, 'prior': 12759000000}}
 NPK_CONSOLIDATED = ('On a consolidated basis, net sales increased by $26,147,000 (22%), gross profit '
                     'increased by $10,001,000 (54%), selling and general expenses decreased by $698,000 (7%).')
 NPK_DEFENSE = ('Defense net sales increased by $27,144,000 from $99,813,000 to $126,957,000 or 27%, '
@@ -32,7 +32,7 @@ def test_statements_bind_only_to_reconciling_figures():
     assert cpe.bind_statement(GOOGL_REVENUE, GOOGL_METRICS) == {
         'metric': 'revenue', 'basis': 'stated level and growth rate'}
     assert cpe.bind_statement(GOOGL_OIE, GOOGL_METRICS) == {
-        'metric': 'other income (expense), net', 'basis': 'stated change'}
+        'metric': 'non-operating income (expense)', 'basis': 'stated change'}
     # Wrong direction, or an amount that does not reconcile, binds nothing.
     reversed_metrics = {'revenue': {'current': 120449000, 'prior': 146596000}}
     assert cpe.bind_statement(NPK_CONSOLIDATED, reversed_metrics) is None
@@ -64,8 +64,12 @@ def test_bridge_only_when_net_and_operating_income_diverge():
     assert bridge['deltas']['NetIncomeLoss'] == -8511
     assert bridge['other_items'] == {'current': 26468 - (40576 - 8221 - 5887),
                                      'prior': 34979 - (31228 + 12759 - 9008)}
-    same_direction = {**figures, ('current', 'NetIncomeLoss'): 36000}
+    # Same direction with a small non-operating change: no bridge.
+    same_direction = {**figures, ('current', 'NetIncomeLoss'): 36000, ('current', 'NonoperatingIncomeExpense'): 12000}
     assert cpe.earnings_bridge(rows(same_direction), current, prior) is None
+    # Same direction, but the non-operating change exceeds the operating change: bridge.
+    material = {**figures, ('current', 'NetIncomeLoss'): 60000, ('current', 'NonoperatingIncomeExpense'): 30000}
+    assert cpe.earnings_bridge(rows(material), current, prior)['deltas']['NonoperatingIncomeExpense'] == 30000 - 12759
     # An ambiguous duplicate fact is never resolved by picking one.
     duplicated = rows(figures) + [(1, {'concept': 'NetIncomeLoss', 'start': current[0], 'end': current[1]})]
     assert cpe.earnings_bridge(duplicated, current, prior) is None
