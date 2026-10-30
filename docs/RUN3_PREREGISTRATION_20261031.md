@@ -64,6 +64,13 @@ The pin records what production sends.
 | 11 | BWMX:decision_threshold | resolves to DE (another issuer); the boundary refuses its first SEC request before dispatch and **halts** |
 | 12 | BWMX:core_thesis | **not run** after that halt (alone it would reach a model and halt) |
 
+The synthetic rehearsal (invented SEC data, same code) reproduces the tail:
+cases 1–10 answered, `BWMX:decision_threshold` routed to DE and halted with
+`invalid_response`, `BWMX:core_thesis` not run, no model request and no
+out-of-scope SEC request. With SEC's real directory SCCO and LNC are expected
+to yield entity suggestions rather than answers (the synthetic directory is
+too small to show this).
+
 These are generalization failures of the frozen code (entity resolution of
 upper-case SEC names and foreign legal forms; frontend classification). They
 are counted; the research logic is not tuned to them.
