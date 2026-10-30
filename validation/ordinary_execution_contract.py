@@ -10,14 +10,15 @@ import re
 from decimal import Decimal, InvalidOperation
 from pathlib import PurePosixPath
 
-from .ordinary_pilot_contract import CASES, quota_contract, validate_contract
+from .ordinary_pilot_contract import CASES, COHORT, quota_contract, validate_contract
 
-# Projection of the twelve run-3 case records in tests/ordinary_run3_cases.json
-# (file SHA-256 28e88911a66fc4d19af4c4562df67307623d043a413a8a8c71ec84e2c04046c5).
-PACKET_CASE_PROJECTION_SHA256 = 'a87bd50548790b0e3e42ed1a3fc31513764296352a3d4cd54dd4c49ac2cfdfa6'
-# Runs 1 and 2: the review packet's cases.json (file SHA-256
+# Projection of the twelve case records: run 3 from tests/ordinary_run3_cases.json
+# (file SHA-256 28e88911a66fc4d19af4c4562df67307623d043a413a8a8c71ec84e2c04046c5);
+# runs 1 and 2 from the review packet's cases.json (file SHA-256
 # af2fd4a2c5edbd9fab88390553baed840350499753a70f5c75a38a42145c258e).
-RUN_1_2_CASE_PROJECTION_SHA256 = 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'
+PACKET_CASE_PROJECTION_SHA256 = {
+    'run3': 'a87bd50548790b0e3e42ed1a3fc31513764296352a3d4cd54dd4c49ac2cfdfa6',
+    'runs-1-2': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'}[COHORT]
 
 def _digest(value):
     encoded = json.dumps(value, sort_keys=True, separators=(',', ':'),

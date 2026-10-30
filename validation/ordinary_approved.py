@@ -163,9 +163,17 @@ def _load(path):
     return json.loads(Path(path).read_text())
 
 
+def require_run3_cohort():
+    """Approved packages and runs use the pre-registered run-3 cohort only."""
+    from validation.ordinary_pilot_contract import COHORT
+    if COHORT != 'run3' or 'ORDINARY_PILOT_COHORT' in os.environ:
+        raise BudgetError('cohort selection is for rehearsals only')
+
+
 def prepare(*, execution_path, cost_path, retention_path, output_dir):
     """The package for the running code; refuses incomplete evidence."""
     require_runtime()
+    require_run3_cohort()
     execution = _load(execution_path)
     validate_ordinary_execution(execution)
     cost = _load(cost_path)
@@ -185,6 +193,7 @@ def prepare(*, execution_path, cost_path, retention_path, output_dir):
 def check(*, package_path, approval_path, cost_path, retention_path):
     """Every precondition for one approved run; returns (policy, runtime). Creates nothing."""
     require_runtime()
+    require_run3_cohort()
     package, approval = _load(package_path), _load(approval_path)
     try:
         execution = package['execution_configuration']

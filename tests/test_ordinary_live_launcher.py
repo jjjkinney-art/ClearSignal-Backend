@@ -14,6 +14,7 @@ import stat
 
 import pytest
 
+from _ordinary_cohort_expectations import EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_STATUS
 from _ordinary_loopback_sec import LoopbackSEC
 from validation import ordinary_approved as launcher
 from validation.capture_budget import BudgetError, digest
@@ -48,12 +49,14 @@ def loopback(tmp_path_factory):
 def test_loopback_run_uses_the_live_code_path_within_every_limit(loopback):
     result, sec, output = loopback
     packet, worker = result['packet'], result['worker']
-    assert result['status'] == 'complete' and packet['first_failure'] is None
-    assert [c['status'] for c in packet['cases']] == ['answered_unadjudicated'] * 12
+    assert result['status'] == EXPECTED_STATUS and packet['first_failure'] is None
+    assert [c['status'] for c in packet['cases']] == EXPECTED_CASE_STATUSES
     # Every exchange crossed a real socket: one CONNECT, one verified TLS
     # session and one request each, all through the gate.
-    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == 60
-    assert len(sec.connects) == len(sec.requests) == 60 and sec.handshake_failures == 0
+    exchanges = packet['attempt_count']
+    assert exchanges == packet['wire_entries'] == worker['external_dispatches'] <= 60
+    assert exchanges == 60 or EXPECTED_HALT is not None
+    assert len(sec.connects) == len(sec.requests) == exchanges and sec.handshake_failures == 0
     assert all(head.split(' ')[1] in {'www.sec.gov:443', 'data.sec.gov:443'} for head in sec.connects)
     assert all(r['method'] == 'GET' and r['host'] == r['tunnel'] and r['user_agent'] == LOOPBACK_CONTACT
                for r in sec.requests)
@@ -115,6 +118,8 @@ def test_evidence_templates_carry_derived_facts_and_require_attestations():
     assert cost['transport_retries'] == 0 and cost['follow_redirects'] is False
 
 
+@pytest.mark.skipif(os.environ.get('ORDINARY_PILOT_COHORT') == 'runs-1-2',
+                    reason='the committed templates are for the run-3 cohort')
 def test_committed_evidence_templates_match_the_code():
     root = Path(__file__).resolve().parents[1] / 'docs/ordinary-evidence'
     for kind in ('cost', 'retention'):
@@ -192,6 +197,8 @@ def approved_inputs(tmp_path, monkeypatch):
 
 
 def build_approved_inputs(tmp_path, monkeypatch, *, network):
+    if 'ORDINARY_PILOT_COHORT' in os.environ:
+        pytest.skip('approved packages use the run-3 cohort only; tested in the main process')
     base = tmp_path.resolve()
     ca = base / 'reviewed-ca.pem'
     ca.write_bytes(b'-----BEGIN CERTIFICATE-----\ninvented\n-----END CERTIFICATE-----\n')
@@ -362,6 +369,17 @@ def test_prepare_refuses_test_only_or_incomplete_inputs(approved_inputs):
                          retention_path=files['retention'], output_dir=output.parent / 'other-run')
 
 
+def test_prepare_and_check_refuse_any_cohort_selection(approved_inputs, monkeypatch):
+    # A rehearsal-only selection, even naming run 3, never reaches an approved package or run.
+    paths, files, output = approved_inputs
+    monkeypatch.setenv('ORDINARY_PILOT_COHORT', 'run3')
+    with pytest.raises(BudgetError, match='rehearsals only'):
+        launcher.prepare(execution_path=files['execution'], cost_path=files['cost'],
+                         retention_path=files['retention'], output_dir=output.parent / 'other-run')
+    with pytest.raises(BudgetError, match='rehearsals only'):
+        launcher.check(**paths)
+
+
 # -- direct TLS (no application proxy) -------------------------------------------
 
 @pytest.fixture(scope='module')
@@ -390,11 +408,13 @@ needs_direct_port = pytest.mark.skipif(not _port_free_8443(), reason='127.0.0.1:
 def test_direct_tls_reaches_only_the_claimed_sec_host_within_every_limit(direct_loopback):
     result, sec, output = direct_loopback
     packet, worker = result['packet'], result['worker']
-    assert result['status'] == 'complete' and packet['first_failure'] is None
-    assert [c['status'] for c in packet['cases']] == ['answered_unadjudicated'] * 12
-    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == 60
+    assert result['status'] == EXPECTED_STATUS and packet['first_failure'] is None
+    assert [c['status'] for c in packet['cases']] == EXPECTED_CASE_STATUSES
+    exchanges = packet['attempt_count']
+    assert exchanges == packet['wire_entries'] == worker['external_dispatches'] <= 60
+    assert exchanges == 60 or EXPECTED_HALT is not None
     # No proxy at all: TLS from the first byte, to the host each exchange claimed.
-    assert sec.connects == [] and len(sec.requests) == 60 and sec.handshake_failures == 0
+    assert sec.connects == [] and len(sec.requests) == exchanges and sec.handshake_failures == 0
     assert all(r['tunnel'] in {'www.sec.gov', 'data.sec.gov'} and r['host'] == r['tunnel']
                and r['method'] == 'GET' and r['user_agent'] == LOOPBACK_CONTACT for r in sec.requests)
     assert worker['blocked_external_operations'] == [] and 1 <= worker['max_inflight_sec'] <= 4

@@ -11,6 +11,7 @@ or reset option; the approval-gated live launcher is ordinary_approved.py.
 import hashlib
 import importlib.metadata
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -142,10 +143,16 @@ def run_rehearsal(output_dir, *, scenario='happy'):
     output = create_fresh_output(output_dir)  # sole owner; never reused
     policy = rehearsal_policy(output)
     from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-    result = run_worker(output, policy, mode='rehearsal', scenario=scenario, environment={},
+    result = run_worker(output, policy, mode='rehearsal', scenario=scenario, environment=cohort_selection(),
                         forbidden=tuple(REHEARSAL_RUNTIME.values()), synthetic=True)
     result['approval'] = 'invented_test_only'
     return result
+
+
+def cohort_selection():
+    """Rehearsals (synthetic or loopback, never approved) forward a cohort selection."""
+    return ({'ORDINARY_PILOT_COHORT': os.environ['ORDINARY_PILOT_COHORT']}
+            if 'ORDINARY_PILOT_COHORT' in os.environ else {})
 
 
 def run_loopback_rehearsal(output_dir, *, ca, network='proxy'):
@@ -157,7 +164,8 @@ def run_loopback_rehearsal(output_dir, *, ca, network='proxy'):
     output = create_fresh_output(output_dir)
     policy = rehearsal_policy(output, ca=ca, network=network)
     runtime = {'OPENAI_API_KEY': ZERO_MODEL_PLACEHOLDER, 'SEC_USER_AGENT': LOOPBACK_CONTACT}
-    result = run_worker(output, policy, mode='loopback', scenario='loopback', environment=runtime,
+    result = run_worker(output, policy, mode='loopback', scenario='loopback',
+                        environment={**runtime, **cohort_selection()},
                         forbidden=tuple(runtime.values()), synthetic=True)
     result['approval'] = 'invented_test_only'
     return result
