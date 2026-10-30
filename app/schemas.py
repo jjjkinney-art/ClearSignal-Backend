@@ -143,6 +143,11 @@ class RetrievedEvidence(BaseModel):
         default_factory=list,
         description="Consolidated deposit-impairment expense with complete management event context and duplicate-presentation proof.",
     )
+    period_explanations: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Latest-period change explanation: an exact consolidated earnings bridge and management "
+                    "statements that reconcile with the same filing's verified figures; attributions are management's.",
+    )
     risk_disclosures: List[Dict[str, Any]] = Field(
         default_factory=list,
         description="Producer-bound qualitative risk quotes; not verified outcomes or quantitative facts.",
