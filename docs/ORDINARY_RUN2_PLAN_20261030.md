@@ -127,7 +127,27 @@ that abandoned them; whether any late bytes were retained (must be none);
 output inventory matches the declared inventory exactly; `request.json` and
 `packet.json` contain no runtime values.
 
-### 2.6 Review limits
+For every abandoned stage, classify the cause from the ledger
+(`stage_reservations`, `sec_claims`, `ordinary_wire_entries`,
+`ordinary_responses.completed_ns`, `ordinary_exchange_failures`) and the
+worker's `abandoned_evidence` list: **network-bound** if one of the stage's
+SEC exchanges was still open when the application stopped waiting;
+**local processing** if all of its responses had completed and parsing or
+extraction was still running. Local processing time on this Mac is variable:
+offline replays of the same code and retained responses measured
+`thesis_disclosures` for NPK at 2.9 s in one run and 30.6 s in another, with
+the new explanation extraction taking at most 0.21 s. A degraded answer caused
+by local processing is an operational finding about the host, not evidence
+about SEC latency or answer quality.
+
+### 2.6 Run conditions
+
+Run on the reviewed Mac with no other heavy local workload (test suites,
+builds, indexing jobs) and with the machine on mains power, so local parsing
+time is as close as possible to what the application's evidence windows
+assume. These conditions reduce, but cannot remove, host-timing variance.
+
+### 2.7 Review limits
 
 The assessment is model-assisted unless a named human reviewer is recorded;
 it is not independent human review. Run 2 is a small pilot, not launch
