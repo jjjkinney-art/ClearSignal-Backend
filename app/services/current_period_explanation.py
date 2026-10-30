@@ -37,7 +37,7 @@ OTHER_NONOPERATING = 'OtherNonoperatingIncomeExpense'
 EXPLANATION_CONCEPTS = (*BRIDGE_CONCEPTS, OTHER_NONOPERATING)
 METRIC_WORDS = {
     'revenue': r'\b(?:net sales|total revenues|revenues?)\b',
-    'operating income': r'\boperating (?:income|profit)\b(?! margin)',
+    'operating income': r'(?:\boperating (?:income|profit)\b(?! margin)|\b(?:income|loss) from operations\b)',
     'net income': r'\bnet (?:income|earnings)\b',
     # Total non-operating income (us-gaap:NonoperatingIncomeExpense); many
     # issuers present it as "other income (expense), net" or "OI&E".
@@ -54,9 +54,28 @@ _OPENER = re.compile(r'(?:During|The|Our|We|In|For|On|As|Net|Total|Operating|Rev
 _HEADING_PREFIX = re.compile(r'(?:[A-Z0-9(][A-Za-z0-9&/\-(),.]*\s+){1,8}')
 _SCOPE = re.compile(
     r'\b(?:segments?|regions?|brands?|divisions?)\b'
-    r'|\b(?:in|for) (?:the |our )?(?!(?:first|second|third|fourth|three|six|nine|twelve|Q[1-4])\b)[A-Z][A-Za-z&.\-]+'
-    r'|\b(?!(?:The|Our|We|In|During|For|Consolidated|Total|Net|Operating)\b)[A-Z][A-Za-z&.\-]+'
-    r'(?:\s+[A-Z][A-Za-z&.\-]+)*\s+(?:segment\s+)?(?:net sales|revenues?|operating (?:income|profit))\b')
+    r'|\b(?:in|for) (?:the |our )?(?!(?:first|second|third|fourth|three|six|nine|twelve|Q[1-4])\b)[A-Z][A-Za-z&.\-–/]+'
+    r'|\b(?!(?:The|Our|We|In|During|For|Consolidated|Total|Net|Operating)\b)[A-Z][A-Za-z&.\-–/]+'
+    r'(?:\s+[A-Z][A-Za-z&.\-–/]+)*\s+(?:segment\s+)?(?:net sales|revenues?|operating (?:income|profit))\b')
+# A sentence that explains the change stated just before it: "The decrease resulted primarily from …".
+_ANAPHOR = re.compile(r'(?:The|This|These|That) (?:(?:net|overall|year-over-year) )?'
+                      r'(increases?|decreases?|declines?|improvements?|reductions?|growth|changes?|deteriorations?)\b')
+_OTHER_PERIOD = re.compile(r'\b(?:six|nine|twelve) months\b|\byear[- ]to[- ]date\b|\bfirst (?:half|nine months)\b'
+                           r'|\bfull[- ]year\b|\bfiscal\b|\bannual\b|\b(?:19|20)\d{2}\b', re.I)
+_PCT_LEVELS = re.compile(
+    r'\b(increased|decreased)\s+(\d+(?:\.\d+)?)\s?(?:%|percent)\s+to\s+\$\s?([\d,]+(?:\.\d+)?)(?:\s*(thousand|million|billion))?\b'
+    r'.{0,120}?\b(?:from|compared (?:to|with))\s+\$\s?([\d,]+(?:\.\d+)?)(?:\s*(thousand|million|billion))?', re.I)
+# A segment table for one period: an upper-case heading, the period, then rows of
+# current, prior and change ("MOBILE SOLUTIONS Three Months Ended September 30, 2026
+# 2025 $ Change Net sales $ 68,177 $ 59,117 $ 9,060 …").
+_TABLE_HEADING = re.compile(
+    r'\b([A-Z][A-Z&/\-–]+(?: [A-Z][A-Z&/\-–]+){0,4}) (Three|Six|Nine|Twelve) Months Ended '
+    r'((?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}, \d{4})')
+_TABLE_HEADER = re.compile(r'\s*(?:\d{4}\s+){1,2}(?:\$|%)?\s*Change\s+')
+_TABLE_ROW = re.compile(r'\s*([A-Z][a-z][A-Za-z ,&\-]*?) \$ ?(\(?[\d,]+\)?) \$ ?(\(?[\d,]+\)?) \$ ?(\(?[\d,]+\)?)')
+_TABLE_NARRATIVE = re.compile(r'([A-Z][a-z][A-Za-z ,&\-]*?) (increased|decreased) by \$ ?([\d,]+(?:\.\d+)?)'
+                              r'(?:\s*(thousand|million|billion))?\b')
+MAX_TABLE_CHARS = 3000
 _UP = {'increased', 'rose', 'grew', 'an increase'}
 _CHANGE = re.compile(r'\b(increased|decreased|rose|fell|declined|grew|an increase|a decrease)\b', re.I)
 _CAUSE = re.compile(r'\b(?:primarily|reflecting|due to|driven by|attributable to|as a result of|resulting from)\b', re.I)
@@ -193,16 +212,109 @@ def bind_attribution(sentence, metrics, period, defined=None):
     return None
 
 
-def segment_attribution(sentence, metrics, period):
-    """A cause management gives for a named segment, region or brand this period."""
-    return (len(sentence) <= MAX_SENTENCE and cause_match(sentence) is not None
-            and names_current_period(sentence, period)
-            and _SCOPE.search(sentence[:cause_match(sentence).start()]) is not None
+def stated_direction(sentence):
+    verb = re.search(r'\b(increased|decreased|rose|fell|declined|grew|improved|an increase|a decrease)\b', sentence, re.I)
+    if not verb:
+        return None
+    return 'up' if verb.group(1).lower() in ('increased', 'rose', 'grew', 'improved', 'an increase') else 'down'
+
+
+def following_cause(sentence, following, period):
+    """Whether the next sentence explains this sentence's own stated change.
+
+    Only the immediately following sentence; it must open by referring back
+    ("The decrease …"), agree in direction, state a cause, introduce no new
+    segment or region before the cause, and name no other period.
+    """
+    if not following or len(following) > MAX_SENTENCE or cause_match(sentence):
+        return False
+    anaphor, cause = _ANAPHOR.match(following), cause_match(following)
+    direction = stated_direction(sentence)
+    if not anaphor or not cause or cause.start() < anaphor.end() or direction is None:
+        return False
+    word = anaphor.group(1).lower()
+    if word.startswith(('increase', 'improvement', 'growth')) and direction != 'up':
+        return False
+    if word.startswith(('decrease', 'decline', 'reduction', 'deterioration')) and direction != 'down':
+        return False
+    if _SCOPE.search(following[anaphor.end():cause.start()]):
+        return False
+    return not (_OTHER_PERIOD.search(following) and not names_current_period(following, period))
+
+
+def internally_consistent(sentence):
+    """The sentence's own figures agree: 'by $X from $A to $B', or 'N percent to $A … from $B'."""
+    if _COMPONENT.search(sentence):
+        return _component_figures(sentence)
+    match = _PCT_LEVELS.search(sentence)
+    if not match:
+        return False
+    current = Decimal(match.group(3).replace(',', '')) * _SCALE[(match.group(4) or '').lower() or None]
+    prior = Decimal(match.group(5).replace(',', '')) * _SCALE[(match.group(6) or '').lower() or None]
+    if prior <= 0 or current == prior or (current > prior) != (match.group(1).lower() == 'increased'):
+        return False
+    # Stated percentages and levels are both rounded.
+    return abs(abs(current - prior) / prior * 100 - Decimal(match.group(2))) <= Decimal('1.0')
+
+
+def segment_attribution(sentence, metrics, period, following=None):
+    """A cause management gives for a named segment, region or brand this period,
+    in the sentence itself or in the next sentence when its own figures agree."""
+    cause = cause_match(sentence)
+    if cause is None and not (following_cause(sentence, following, period) and internally_consistent(sentence)):
+        return False
+    head = sentence[:cause.start()] if cause else sentence
+    return (len(sentence) <= MAX_SENTENCE and names_current_period(sentence, period)
+            and _SCOPE.search(head) is not None
             and re.search(r'\b(?:increase[ds]?|decrease[ds]?|rose|fell|declined|grew|growth|decline)\b', sentence, re.I) is not None
             and re.search(r'(?<!cost of )(?<!costs of )(?:' + METRIC_WORDS['revenue'] + '|' + METRIC_WORDS['operating income']
-                          + r'|\bsales\b)', sentence[:cause_match(sentence).start()], re.I) is not None
+                          + r'|\bsales\b)', head, re.I) is not None
             and bind_statement(sentence, metrics) is None
-            and (not _COMPONENT.search(sentence) or consistent_component(sentence)))
+            and (not _COMPONENT.search(sentence) or _component_figures(sentence)))
+
+
+def _table_number(cell):
+    number = int(cell.strip('()').replace(',', ''))
+    return -number if cell.startswith('(') else number
+
+
+def table_blocks(text, period):
+    """Segment tables for exactly the current quarter, with their narrative span."""
+    blocks, headings = [], list(_TABLE_HEADING.finditer(text))
+    for index, heading in enumerate(headings):
+        if heading.group(2) != 'Three' or not names_current_period(f'three months ended {heading.group(3)}', period):
+            continue
+        end = min(headings[index + 1].start() if index + 1 < len(headings) else len(text),
+                  heading.end() + MAX_TABLE_CHARS)
+        position = heading.end()
+        header = _TABLE_HEADER.match(text, position)
+        if header:
+            position = header.end()
+        rows = {}
+        while (row := _TABLE_ROW.match(text, position)) and row.end() <= end:
+            rows[row.group(1).strip().lower()] = tuple(_table_number(row.group(k)) for k in (2, 3, 4))
+            position = row.end()
+        if rows:
+            blocks.append({'heading': heading.group(1), 'start': heading.start(), 'rows_end': position,
+                           'end': end, 'rows': rows})
+    return blocks
+
+
+def table_scoped(sentence, block, period, following=None):
+    """A narrative sentence whose stated change is the change column of a row
+    of this segment's current-quarter table, at exactly one unit scale."""
+    match = _TABLE_NARRATIVE.match(sentence)
+    if (not match or len(sentence) > MAX_SENTENCE or not names_current_period(sentence, period)
+            or match.group(1).strip().lower() not in block['rows']):
+        return False
+    change = abs(block['rows'][match.group(1).strip().lower()][2])
+    number = match.group(3).replace(',', '')
+    stated = Decimal(number) * _SCALE[(match.group(4) or '').lower() or None]
+    half = Decimal(_SCALE[(match.group(4) or '').lower() or None]) / (2 * 10 ** (len(number.split('.')[1]) if '.' in number else 0))
+    scales = [scale for scale in (1, 10 ** 3, 10 ** 6) if abs(stated - change * scale) <= half]
+    if len(scales) != 1 or not change:
+        return False
+    return cause_match(sentence) is not None or following_cause(sentence, following, period)
 
 
 def bind_statement(sentence, metrics):
@@ -265,8 +377,10 @@ def clause_starts(sentence):
 
 def consistent_component(sentence):
     """A sentence whose own 'by $X from $A to $B' figures agree, with a stated cause."""
-    if len(sentence) > MAX_SENTENCE or not cause_match(sentence):
-        return False
+    return len(sentence) <= MAX_SENTENCE and cause_match(sentence) is not None and _component_figures(sentence)
+
+
+def _component_figures(sentence):
     match = _COMPONENT.search(sentence)
     if not match:
         return False
@@ -324,10 +438,13 @@ def render(value):
         lines.append(text + ' This is the filing\'s own consolidated arithmetic; it shows where the change sits, not why.')
     for statement in value['statements'] + value['components']:
         scope = (', for the segment, region or brand it names'
-                 if statement['basis'] == 'period-matched segment attribution' else '')
+                 if statement['basis'] == 'period-matched segment attribution' else
+                 f", for the segment its table is headed “{statement['scope_heading']}”"
+                 if statement['basis'] == 'table-scoped segment attribution' else '')
         context = f"“{statement['context_quote']}” and " if statement.get('context_quote') else ''
-        lines.append(f"Management stated{scope}: {context}“{statement['quote']}”")
-    if not any(cause_match(row['quote']) for row in value['statements'] + value['components']):
+        cause = f" and “{statement['cause_quote']}”" if statement.get('cause_quote') else ''
+        lines.append(f"Management stated{scope}: {context}“{statement['quote']}”{cause}")
+    if not any(stated_cause(row) for row in value['statements'] + value['components']):
         lines.append('The filing states no cause for these changes in this period; their drivers remain unverified.')
     elif value['statements'] or value['components']:
         lines.append('Attributions in quotation marks are management\'s; they are not independently established causes.')
@@ -337,6 +454,10 @@ def render(value):
 def _cause(sentence):
     match = cause_match(sentence)
     return sentence[match.start():].rstrip(' .') if match else None
+
+
+def stated_cause(row):
+    return _cause(row['quote']) or (_cause(row['cause_quote']) if row.get('cause_quote') else None)
 
 
 def monitoring_criteria(value):
@@ -356,17 +477,19 @@ def monitoring_criteria(value):
                else "Its change exceeded the change in operating income this period")
             + "; later filings show whether that recurs.")
     for statement in value['statements']:
-        cause = _cause(statement['quote'])
+        cause = stated_cause(statement)
         if cause:
             criteria.append(f"{statement['metric'][0].upper()}{statement['metric'][1:]}, management's stated reason: "
                             f"“{cause}”. Later filings' year-over-year explanations show whether management "
                             "reports the same driver.")
     for component in value['components']:
-        if component['basis'] == 'period-matched segment attribution':
+        if component['basis'] in ('period-matched segment attribution', 'table-scoped segment attribution'):
             cause = cause_match(component['quote'])
-            criteria.append(f"{component['quote'][:cause.start()].rstrip(' ,;')}; management's stated reason: "
-                            f"“{_cause(component['quote'])}”. Later filings' year-over-year explanations show "
-                            "whether this persists.")
+            stated = component['quote'][:cause.start()] if cause else component['quote']
+            scope = (f"{component['scope_heading']} (segment table): "
+                     if component['basis'] == 'table-scoped segment attribution' else '')
+            criteria.append(f"{scope}{stated.rstrip(' ,;.')}; management's stated reason: “{stated_cause(component)}”. "
+                            "Later filings' year-over-year explanations show whether this persists.")
             continue
         match = _COMPONENT.search(component['quote'])
         label = component['quote'][:match.start()].strip()
@@ -434,8 +557,12 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
                                                       / Decimal(metrics['revenue'][key]))) for key in ('current', 'prior')}
     candidates, components, anchor, used = {}, [], None, set()
     all_sentences = list(sentences(text))
+    blocks = table_blocks(text, period_value)
     definition = None
     for index, (offset, sentence) in enumerate(all_sentences):
+        following = all_sentences[index + 1][1] if index + 1 < len(all_sentences) else None
+        if any(block['start'] <= offset < block['end'] for block in blocks):
+            continue  # inside a segment table's discussion: never a consolidated statement
         binding = None
         defined = definition[0] if definition and index - definition[1] <= 5 else None
         for start in clause_starts(sentence):
@@ -455,8 +582,11 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             binding['context_quote'] = definition_quote(all_sentences, index, defined, metrics, period_value)
         if binding['metric'] == 'revenue' and anchor is None:
             anchor = index
+        if following_cause(quote, following, period_value):
+            binding['cause_quote'] = following
         # Prefer a stated cause, then figures that reconcile, then document order.
-        rank = (cause_match(quote) is None, binding['basis'] == 'period-matched attribution', offset)
+        rank = (cause_match(quote) is None and 'cause_quote' not in binding,
+                binding['basis'] == 'period-matched attribution', offset)
         candidates.setdefault(binding['metric'], []).append(
             (rank, {'quote': quote, 'start_offset': offset + start, **binding}))
     statements = sorted((min(rows, key=lambda row: row[0])[1] for rows in candidates.values()),
@@ -469,15 +599,40 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             if consistent_component(sentence) and len(components) < MAX_COMPONENTS:
                 components.append({'quote': sentence, 'start_offset': offset, 'basis': 'internally consistent component'})
                 used.add(offset)
-    for offset, sentence in all_sentences:
-        if len(components) >= MAX_COMPONENTS:
-            break
+    scoped = []
+    for block in blocks:
+        narrative = list(sentences(text[block['rows_end']:block['end']]))
+        for index, (offset, sentence) in enumerate(narrative):
+            following = narrative[index + 1][1] if index + 1 < len(narrative) else None
+            if table_scoped(sentence, block, period_value, following):
+                scoped.append({'quote': sentence, 'start_offset': block['rows_end'] + offset,
+                               'basis': 'table-scoped segment attribution', 'scope_heading': block['heading'],
+                               'table_quote': text[block['start']:block['rows_end']].strip(),
+                               **({} if cause_match(sentence) else {'cause_quote': following})})
+    for index, (offset, sentence) in enumerate(all_sentences):
+        following = all_sentences[index + 1][1] if index + 1 < len(all_sentences) else None
+        if any(block['start'] <= offset < block['end'] for block in blocks):
+            continue
         for start in clause_starts(sentence):
-            if offset + start not in used and offset not in used and segment_attribution(sentence[start:], metrics, period_value):
-                components.append({'quote': sentence[start:], 'start_offset': offset + start,
-                                   'basis': 'period-matched segment attribution'})
+            quote = sentence[start:]
+            if (offset + start not in used and offset not in used
+                    and segment_attribution(quote, metrics, period_value, following)):
+                scoped.append({'quote': quote, 'start_offset': offset + start,
+                               'basis': 'period-matched segment attribution',
+                               **({} if cause_match(quote) else {'cause_quote': following})})
                 used.add(offset + start)
                 break
+    # Segment explanations of a consolidated metric that has no explanation of
+    # its own come first; then document order.
+    explained = {statement['metric'] for statement in statements if stated_cause(statement)}
+    unexplained = [name for name in ('operating income', 'revenue') if name in metrics and name not in explained]
+
+    def priority(row):
+        head = row['quote'][:cause_match(row['quote']).start()] if cause_match(row['quote']) else row['quote']
+        names = [name for name in unexplained if re.search(METRIC_WORDS[name] + (r'|\bsales\b' if name == 'revenue' else ''), head, re.I)]
+        return (not names, row['start_offset'])
+    components += sorted(scoped, key=priority)[:max(0, MAX_COMPONENTS - len(components))]
+    components.sort(key=lambda row: row['start_offset'])
     if not statements and not bridge and not components:
         return None
     value = {'claim_kind': 'issuer_current_period_explanation', 'ticker': ticker,
@@ -541,11 +696,25 @@ def bound_current_period_explanation(item, *, ticker, cik):
                        or bind_attribution(statement['quote'], metrics, v['period'], defined=defined))
             if binding != {'metric': statement['metric'], 'basis': statement['basis']}:
                 return None
-        if any(not (consistent_component(c['quote']) if c['basis'] == 'internally consistent component'
-                    else c['basis'] == 'period-matched segment attribution'
-                    and segment_attribution(c['quote'], metrics, v['period']))
-               for c in v['components']):
-            return None
+            if 'cause_quote' in statement and not following_cause(statement['quote'], statement['cause_quote'], v['period']):
+                return None
+        for c in v['components']:
+            following = c.get('cause_quote')
+            if following is not None and cause_match(c['quote']):
+                return None
+            if c['basis'] == 'internally consistent component':
+                valid = consistent_component(c['quote'])
+            elif c['basis'] == 'period-matched segment attribution':
+                valid = segment_attribution(c['quote'], metrics, v['period'], following)
+            elif c['basis'] == 'table-scoped segment attribution':
+                tables = table_blocks(c['table_quote'], v['period'])
+                valid = (len(tables) == 1 and tables[0]['heading'] == c['scope_heading']
+                         and c['table_quote'].startswith(c['scope_heading'])
+                         and table_scoped(c['quote'], tables[0], v['period'], following))
+            else:
+                valid = False
+            if not valid:
+                return None
         bridge = v.get('bridge')
         if bridge:
             values_ = bridge['values']
