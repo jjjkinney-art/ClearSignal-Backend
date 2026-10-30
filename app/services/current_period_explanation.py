@@ -198,13 +198,14 @@ def monitoring_criteria(value):
         v = bridge['values']
         criteria.append(
             f"Other income (expense), net: {_billions_or_millions(v['current:NonoperatingIncomeExpense'])} versus "
-            f"{_billions_or_millions(v['prior:NonoperatingIncomeExpense'])} a year earlier. It moved net income "
-            "opposite to operating income this period; the next comparable filing shows whether that recurs.")
+            f"{_billions_or_millions(v['prior:NonoperatingIncomeExpense'])} for the same period a year earlier. "
+            "It moved net income opposite to operating income this period; later filings show whether that "
+            "recurs.")
     for statement in value['statements']:
         cause = _cause(statement['quote'])
         if cause:
             criteria.append(f"{statement['metric'][0].upper()}{statement['metric'][1:]}, management's stated reason: "
-                            f"“{cause}”. The next comparable filing's explanation shows whether management "
+                            f"“{cause}”. Later filings' year-over-year explanations show whether management "
                             "reports the same driver.")
     for component in value['components']:
         match = _COMPONENT.search(component['quote'])
@@ -212,9 +213,10 @@ def monitoring_criteria(value):
         cause = _cause(component['quote'][match.end():])
         if not cause or not re.fullmatch(r"[A-Za-z][A-Za-z/&' -]{2,80}", label):
             continue
-        criteria.append(f"{label}: ${match.group(5).rstrip(',')} versus ${match.group(4).rstrip(',')} a year "
-                        f"earlier; management's stated reason: “{cause}”. The next comparable filing's figure "
-                        "and stated reason show whether this persists.")
+        criteria.append(f"{label}: ${match.group(5).rstrip(',')} versus ${match.group(4).rstrip(',')} for the "
+                        f"same period a year earlier; management's stated reason: “{cause}”. Compare the figure "
+                        "for the corresponding period one year later, not the next quarter; later filings' "
+                        "stated reasons show whether this persists.")
     return criteria[:4]
 
 

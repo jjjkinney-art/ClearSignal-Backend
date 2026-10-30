@@ -131,16 +131,18 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
             'formula': row['formula'],
             'inputs': row['current'],
             'reference_ids': row['reference_ids'],
-            'condition': 'Review a future comparable margin below this reported-period benchmark.',
+            'condition': 'Compare the margin for the corresponding period one year later with this historical baseline.',
             'limitation': 'This is a monitoring benchmark, not a buy/sell boundary, forecast or materiality threshold.',
         })
     answer = 'Evidence-backed financial monitoring (partial)\n\n'
     answer += '\n\n'.join(row['text'] + ' ' + ' '.join(
         f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
     answer += '\n\nMonitoring criteria\n' + '\n'.join(
-        f"- A future comparable operating margin below {Decimal(row['current']['margin_percent']):.2f}% "
-        f"(calculated for {row['current']['period_start']} to {row['current']['period_end']}) would weaken "
-        "the profitability assumption. Use the same consolidated scope, currency and reporting duration. "
+        f"- Historical baseline, not an investment threshold: operating margin of "
+        f"{Decimal(row['current']['margin_percent']):.2f}% for {row['current']['period_start']} to "
+        f"{row['current']['period_end']}. A lower margin for the corresponding period one year later, on the "
+        "same consolidated scope, currency and duration, would weaken the profitability assumption; it would "
+        "not by itself make the company unattractive. "
         + ' '.join(f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
     explanation = next((row for row in foundation['claims'] if row.get('period_explanation')), None)
     if explanation:
@@ -149,7 +151,9 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         answer += ''.join(f"\n- {line} [{explanation['reference_id']}]"
                           for line in monitoring_criteria(explanation['period_explanation']))
     answer += ('\nThese criteria restate reported figures and management attributions. They do not '
-               'determine whether the stock is attractive or unattractive. Valuation boundaries, '
-               'expected returns, operating KPI breakpoints and quantified earnings impacts remain unverified.')
+               'determine whether the stock is attractive or unattractive. Seasonality between different '
+               'quarters has not been assessed, so a sequential quarter is not a comparable period. Valuation '
+               'boundaries, expected returns, operating KPI breakpoints and quantified earnings impacts remain '
+               'unverified.')
     return {'answer': answer, 'benchmarks': benchmarks,
             'calculations': calculations, 'foundation': foundation}

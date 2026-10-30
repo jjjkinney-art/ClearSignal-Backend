@@ -42,6 +42,20 @@ ISSUER_RISK_CAVEAT = (" This is an issuer disclosure, not an independent assessm
                       "described effects occurred or will occur, or of their financial impact.")
 ISSUER_DESCRIPTION_CAVEAT = (" This is an issuer description; competitive advantage and future "
                              "performance remain unverified.")
+BASELINE_NOTE = ("These are historical comparison baselines, not valuation or investment thresholds, and "
+                 "not forecasts: a later figure below one does not by itself make the company unattractive. "
+                 "Each is comparable only with the corresponding period one year later, on the same scope, "
+                 "currency and duration. Seasonality between different quarters has not been assessed, so "
+                 "a sequential quarter is not a comparable period.")
+
+
+def _duration_label(claim):
+    period = str(claim.get("period", ""))
+    return ("quarterly period" if period.startswith("quarter") else
+            "year-to-date period" if period.startswith("year-to-date") else
+            "fiscal year" if period.startswith("FY") else "reported period")
+
+
 # Structured rows keep this on every test; rendered sections state it once.
 NOT_A_FORECAST = "; this is a monitoring condition, not a forecast."
 
@@ -261,9 +275,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             text += f" The current reported {display_name} is non-positive."
         interpretations.append({"kind": "financial_inference", "metric": display_name,
             "signal": signal, "text": text, "reference_ids": [reference_id],
-            "conditional_test": (f"A future comparable {display_name} below "
-                f"{_value(current['raw_value'], current['unit'])} (reported for {current['period_start']} "
-                f"to {current['period_end']}) would weaken this financial assumption{NOT_A_FORECAST}")})
+            "conditional_test": (f"Historical baseline: {_value(current['raw_value'], current['unit'])} for "
+                f"{current['period_start']} to {current['period_end']} ({_duration_label(current)}). A lower "
+                f"{display_name} for the corresponding period one year later would weaken this financial "
+                f"assumption; it would not by itself make the company unattractive{NOT_A_FORECAST}")})
         rows.append({"claim": rebuilt.summary, "reference_id": reference_id,
                      "claim_kind": "reported_financial_comparison"})
         selected.append(item)
@@ -342,7 +357,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {_once_per_section(row['conditional_test'])}"
         for row in interpretations)
-    answer += "\nThese are monitoring conditions, not forecasts."
+    answer += "\n" + BASELINE_NOTE
     from .operating_margin_assessment import operating_margin_assessment
     margin = operating_margin_assessment(core_comparisons, references)
     if margin:
@@ -518,10 +533,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         section = "\n\nWhat changed in the latest reported period\n" + render(value) + f" [{reference_id}]"
         criteria = monitoring_criteria(value)
         if criteria:
-            section += ("\n\nWhat to check in the next comparable filing\n"
+            section += ("\n\nWhat to check in later filings\n"
                         + "\n".join(f"- {line} [{reference_id}]" for line in criteria)
-                        + "\nThese tests restate the filing's own figures and attributions; they are not forecasts "
-                          "or valuation thresholds.")
+                        + "\nThese restate the filing's own historical figures and management's attributions; "
+                          "they are not forecasts, valuation thresholds or investment criteria.")
         answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
     if remaining_disclosures:
         context_heading = ("Official business, competition and sampled risk context"
