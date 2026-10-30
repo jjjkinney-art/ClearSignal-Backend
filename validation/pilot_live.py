@@ -94,6 +94,57 @@ def transport_failure_code(exc):
     return 'transport_other'
 
 
+FILING_DOCUMENT_FORMS = frozenset({'10-K', '10-Q', '20-F', '40-F', '6-K', '8-K'})
+
+
+class SubmissionRefusal(BudgetError):
+    """A validated submissions response cannot admit filing documents."""
+    def __init__(self, code):
+        self.code = code
+        super().__init__('SEC submissions response refused')
+
+
+def submission_documents(data, cik):
+    """Exact filing-document URLs admitted by one issuer's submissions response.
+
+    ``cik`` is the 10-digit issuer CIK the response was already checked against.
+    Returns ``(urls, filings, excluded)``: the URL set, each URL's
+    ``(form, filingDate)`` or ``None`` when rows disagree or lack an aligned
+    date, and the count of supported rows whose filename is not fetchable.
+    Missing ``filings.recent`` keys propagate as KeyError, as they always have.
+    """
+    recent = data['filings']['recent']
+    fields = [recent[key] for key in ('form', 'accessionNumber', 'primaryDocument')]
+    if any(type(field) is not list for field in fields) or len({len(field) for field in fields}) != 1:
+        raise SubmissionRefusal('sec_recent_array_shape')
+    # Filing dates are optional here: without an aligned date a document
+    # stays fetchable under the ordinary envelope, never the reviewed one.
+    dates = recent.get('filingDate')
+    dated = type(dates) is list and len(dates) == len(fields[0])
+    urls = set()
+    filings = {}
+    excluded = 0
+    for index, (form, accession, document) in enumerate(zip(*fields)):
+        if form not in FILING_DOCUMENT_FORMS:
+            continue
+        if type(accession) is not str or not re.fullmatch(r'[0-9]{10}-[0-9]{2}-[0-9]{6}', accession):
+            raise SubmissionRefusal('sec_accession_syntax')
+        if (type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
+                or '..' in document):
+            # Metadata can remain useful without a fetchable document.
+            # Only exact validated filenames enter the network allowlist.
+            excluded += 1
+            continue
+        url = f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-", "")}/{document}'
+        urls.add(url)
+        filed_at = dates[index] if dated else None
+        entry = (form, filed_at) if type(filed_at) is str else None
+        # Rows disagreeing about one document make it ambiguous: no
+        # reviewed envelope, whichever row happens to come first.
+        filings[url] = entry if filings.get(url, entry) == entry else None
+    return urls, filings, excluded
+
+
 def json_object(raw):
     def unique(pairs):
         result = {}
@@ -327,35 +378,10 @@ class LiveAdapterBoundary(PilotBoundary):
             cik = self.case['identity']['cik']
             if str(data.get('cik', '')).zfill(10) != cik:
                 self.refuse('identity_mismatch')
-            recent = data['filings']['recent']
-            fields = [recent[key] for key in ('form', 'accessionNumber', 'primaryDocument')]
-            if any(type(field) is not list for field in fields) or len({len(field) for field in fields}) != 1:
-                self.refuse_sec_response('sec_recent_array_shape')
-            # Filing dates are optional here: without an aligned date a document
-            # stays fetchable under the ordinary envelope, never the reviewed one.
-            dates = recent.get('filingDate')
-            dated = type(dates) is list and len(dates) == len(fields[0])
-            urls = set()
-            filings = {}
-            excluded_documents = 0
-            for index, (form, accession, document) in enumerate(zip(*fields)):
-                if form not in {'10-K', '10-Q', '20-F', '40-F', '6-K', '8-K'}:
-                    continue
-                if type(accession) is not str or not re.fullmatch(r'[0-9]{10}-[0-9]{2}-[0-9]{6}', accession):
-                    self.refuse_sec_response('sec_accession_syntax')
-                if (type(document) is not str or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]*\.(?:htm|html|txt)', document)
-                        or '..' in document):
-                    # Metadata can remain useful without a fetchable document.
-                    # Only exact validated filenames enter the network allowlist.
-                    excluded_documents += 1
-                    continue
-                url = f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accession.replace("-", "")}/{document}'
-                urls.add(url)
-                filed_at = dates[index] if dated else None
-                entry = (form, filed_at) if type(filed_at) is str else None
-                # Rows disagreeing about one document make it ambiguous: no
-                # reviewed envelope, whichever row happens to come first.
-                filings[url] = entry if filings.get(url, entry) == entry else None
+            try:
+                urls, filings, excluded_documents = submission_documents(data, cik)
+            except SubmissionRefusal as refusal:
+                self.refuse_sec_response(refusal.code)
             with self.lock:
                 attempt, _, _ = self.sec_attempt.get()
                 event = next(item for item in self.events if item['attempt_id'] == attempt)

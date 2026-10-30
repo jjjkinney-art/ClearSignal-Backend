@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from decimal import Decimal
 from typing import Sequence
 
@@ -232,7 +233,27 @@ def comparable_metric_evidence(
             def cash_state(value):
                 return "cash used" if value < 0 else "cash provided" if value > 0 else "zero net cash flow"
             movement = f"operating cash flow moved from {cash_state(prior.value)} to {cash_state(current.value)}"
-    amount_join = "; signed amounts: " if cash_flow and (current.value <= 0 or prior.value <= 0) else " to "
+    elif current.value <= 0 or prior.value <= 0:
+        # A percentage of a loss or across a sign change misleads; state the
+        # absolute change and what kind of movement it is.
+        difference = abs(Decimal(str(current.value)) - Decimal(str(prior.value)))
+        profit_measure = re.search(r"income|earnings|profit|per share", metric_name, re.I)
+        negative, positive = ("a loss", "a profit") if profit_measure else ("negative", "positive")
+        if current.value < 0 and prior.value < 0 and profit_measure:
+            state = (f"loss narrowed by {_value(difference, unit)}" if current.value > prior.value
+                     else f"loss widened by {_value(difference, unit)}" if current.value < prior.value
+                     else "loss was unchanged")
+            movement = f"{metric_name} was a loss in both periods; the {state}"
+        elif current.value < 0 and prior.value < 0:
+            direction = "rose" if current.value > prior.value else "fell" if current.value < prior.value else "was unchanged"
+            movement = (f"{metric_name} was negative in both periods and {direction}"
+                        + (f" by {_value(difference, unit)}" if difference else ""))
+        else:
+            def state_of(value):
+                return negative if value < 0 else positive if value > 0 else "zero"
+            movement = (f"{metric_name} moved from {state_of(prior.value)} to {state_of(current.value)}, "
+                        f"a change of {_value(difference, unit)}")
+    amount_join = "; signed amounts: " if current.value <= 0 or prior.value <= 0 else " to "
     summary = (
         f"{ticker} {movement}{amount_join}"
         f"{_value(current.value, unit)} for the period {current.start} to {current.end}, from "

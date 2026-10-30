@@ -1,5 +1,6 @@
 """Rebuilt financial monitoring benchmarks, never bull/bear price targets."""
 from datetime import date
+from decimal import Decimal
 import re
 
 from .financial_thesis_foundation import build_financial_foundation
@@ -130,16 +131,31 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
             'formula': row['formula'],
             'inputs': row['current'],
             'reference_ids': row['reference_ids'],
-            'condition': 'Review a future comparable margin below this reported-period benchmark.',
+            'condition': 'Compare the margin for the corresponding period one year later with this historical baseline.',
             'limitation': 'This is a monitoring benchmark, not a buy/sell boundary, forecast or materiality threshold.',
         })
     answer = 'Evidence-backed financial monitoring (partial)\n\n'
     answer += '\n\n'.join(row['text'] + ' ' + ' '.join(
         f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
-    answer += ('\n\nReview a future comparable margin below the cited current margin. '
-               'Use the same consolidated scope, currency and reporting duration. '
-               'This benchmark does not determine whether the stock is attractive or '
-               'unattractive. Valuation boundaries, expected returns, operating KPI '
-               'breakpoints and quantified earnings impacts remain unverified.')
+    answer += '\n\nMonitoring criteria\n' + '\n'.join(
+        f"- Historical baseline, not an investment threshold: operating margin of "
+        f"{Decimal(row['current']['margin_percent']):.2f}% for {row['current']['period_start']} to "
+        f"{row['current']['period_end']}. A lower margin for the corresponding period one year later, on the "
+        "same consolidated scope, currency and duration, would "
+        + ("mean a larger operating loss relative to revenue and weaken any recovery assumption"
+           if Decimal(row['current']['margin_percent']) <= 0 else "weaken the profitability assumption")
+        + "; it would not by itself make the company unattractive. "
+        + ' '.join(f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
+    explanation = next((row for row in foundation['claims'] if row.get('period_explanation')), None)
+    if explanation:
+        from .current_period_explanation import monitoring_criteria
+        # Management's own stated drivers and the filing's bridge, as bound.
+        answer += ''.join(f"\n- {line} [{explanation['reference_id']}]"
+                          for line in monitoring_criteria(explanation['period_explanation']))
+    answer += ('\nThese criteria restate reported figures and management attributions. They do not '
+               'determine whether the stock is attractive or unattractive. Seasonality between different '
+               'quarters has not been assessed, so a sequential quarter is not a comparable period. Valuation '
+               'boundaries, expected returns, operating KPI breakpoints and quantified earnings impacts remain '
+               'unverified.')
     return {'answer': answer, 'benchmarks': benchmarks,
             'calculations': calculations, 'foundation': foundation}
