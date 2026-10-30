@@ -4,8 +4,9 @@ from pathlib import Path
 import pytest
 
 from validation.ordinary_execution_contract import pending_manifest, matches_separate_approval, _digest
+from validation.ordinary_pilot_contract import CASES as CASE_ORDER, COHORT_FILE
 
-CASES = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
+CASES = json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
 
 
 def proposal(**changes):
@@ -83,7 +84,7 @@ def test_self_consistent_malformed_manifest_refused(field, value):
 
 def test_boolean_or_float_quota_cannot_pass_integer_limit():
     for value in (True, 1.0):
-        manifest = proposal(); manifest['limits']['per_stage']['NPK:core_thesis']['evidence.sec']['sec/directory'] = value
+        manifest = proposal(); manifest['limits']['per_stage'][CASE_ORDER[0]]['evidence.sec']['sec/directory'] = value
         with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))
     manifest = proposal(); manifest['limits']['sec_gets'] = 67
     with pytest.raises(ValueError): matches_separate_approval(manifest, consent(manifest))

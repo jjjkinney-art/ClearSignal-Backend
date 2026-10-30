@@ -12,11 +12,12 @@ from pathlib import Path
 import pytest
 from app.schemas import QuestionRequest
 from app.services import router_service as router
+from validation.ordinary_pilot_contract import COHORT_FILE
 from test_source_evidence_latency import isolated_pipeline
 from test_financial_thesis_foundation import pair
 
 
-CASES = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
+CASES = json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
 
 
 @pytest.fixture(autouse=True)

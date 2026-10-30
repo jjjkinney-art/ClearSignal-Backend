@@ -19,7 +19,7 @@ from validation.capture_budget import BudgetError, digest
 from validation.ordinary_native_export import export_packet, record_parent_stop
 from validation.ordinary_native_ledger import create_fresh_output
 from validation.ordinary_native_policy import TEST_ONLY, ZERO_MODEL_PLACEHOLDER
-from validation.ordinary_pilot_contract import CASES
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE
 from validation.ordinary_process_supervisor import supervise
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 
@@ -73,7 +73,7 @@ def rehearsal_policy(output, *, ca=None, network='proxy'):
     build = direct_execution_configuration if network == 'direct' else execution_configuration
     execution = build(Path(ca or certifi.where()).resolve(), documentation_reference=TEST_ONLY + '-network',
                       verification_reference=TEST_ONLY + '-review')
-    values = dict(cases=json.loads((ROOT / 'tests/ordinary_pilot_cases.json').read_text()),
+    values = dict(cases=json.loads((ROOT / COHORT_FILE).read_text()),
                   code_binding={'revision': git_revision(), 'source_sha256': source_binding()},
                   dependencies={name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES},
                   execution=execution, all_in_usd='0.00', retention_reference=TEST_ONLY + '-retention',

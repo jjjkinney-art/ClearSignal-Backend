@@ -15,7 +15,7 @@ import pytest
 
 from validation.ordinary_isolated_rehearsal import run_rehearsal
 from validation.ordinary_native_export import ExportRefused, export_packet
-from validation.ordinary_pilot_contract import CASES, quota_contract
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
 
@@ -53,8 +53,8 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     # Identity resolution used the routing slot once (first unseen issuer, case
     # one); the pipeline then reused that directory response instead of a GET.
     routing = [a for a in packet['attempts'] if a['stage'] == 'routing']
-    assert [(a['case_id'], a['route']) for a in routing] == [('NPK:core_thesis', 'sec/directory')]
-    assert not [a for a in packet['attempts'] if a['case_id'] == 'NPK:core_thesis' and a['route'] == 'sec/directory'
+    assert [(a['case_id'], a['route']) for a in routing] == [(CASES[0], 'sec/directory')]
+    assert not [a for a in packet['attempts'] if a['case_id'] == CASES[0] and a['route'] == 'sec/directory'
                 and a['stage'] != 'routing']
     # Real /ask routing, zero models, no external operation, nothing left running.
     # Entered with the pinned frontend intent, as production /ask receives it.
@@ -84,7 +84,7 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
     for case in CASES:
         attempts = [a for a in packet['attempts'] if a['case_id'] == case]
         retained = {a['response']['url'] for a in attempts}
-        cik = next(c for c in json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
+        cik = next(c for c in json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
                    if c['case_id'] == case)['expected_cik']
         listed = set()
         for a in attempts:
@@ -104,9 +104,9 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
 
 @pytest.mark.timeout(120)
 @pytest.mark.parametrize('scenario,case,code', [
-    ('wire_read_failure', 'INGR:core_thesis', 'read_error'),
-    ('wire_redirect', 'INGR:core_thesis', 'http_redirect'),
-    ('wire_oversize', 'INGR:core_thesis', 'response_size'),
+    ('wire_read_failure', CASES[2], 'read_error'),
+    ('wire_redirect', CASES[2], 'http_redirect'),
+    ('wire_oversize', CASES[2], 'response_size'),
     ('wire_connect_failure', None, 'connect_error'),
 ])
 def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, case, code):
@@ -274,15 +274,17 @@ def test_parent_rolls_back_a_killed_childs_open_transaction_before_export(tmp_pa
 def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     from app.services.company_detection import intent_allows_company_detection
     from validation.ordinary_frontend_intents import CASE_INTENTS, FRONTEND, FRONTEND_INTENTS, frontend_intent
-    cases = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
+    cases = json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
     # The intents were classified from exactly these question texts, in this order.
     assert [c['case_id'] for c in cases] == list(CASE_INTENTS) == list(CASES)
     questions = json.dumps([c['question'] for c in cases]).encode()
     assert hashlib.sha256(questions).hexdigest() == FRONTEND['questions_sha256']
     assert set(CASE_INTENTS.values()) <= FRONTEND_INTENTS
-    # A general intent is authoritative in the backend and would route away
-    # from research; the pinned frontend must not send one for these questions.
-    assert all(intent_allows_company_detection(frontend_intent(case)) for case in CASES)
+    # A general intent is authoritative in the backend and routes away from
+    # research. The pinned frontend sends one for exactly one run-3 question,
+    # which is ordered last because its model request halts the run.
+    assert [case for case in CASES if not intent_allows_company_detection(frontend_intent(case))] == [LAST_CASE]
+    assert CASES[-1] == LAST_CASE == 'BWMX:core_thesis'
     assert not intent_allows_company_detection('investing_education')
 
 
@@ -300,7 +302,7 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
     statuses = [c['status'] for c in packet['cases']]
-    assert len(statuses) == 12 and statuses[CASES.index('INGR:core_thesis')] == 'answered_degraded_unadjudicated'
+    assert len(statuses) == 12 and statuses[2] == 'answered_degraded_unadjudicated'
     # Other cases are full answers, unless the application's own 10 s window
     # also expired for them under load; then they too are degraded, never failed.
     assert set(statuses) <= {'answered_unadjudicated', 'answered_degraded_unadjudicated'}
@@ -312,13 +314,13 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     assert packet['attempt_count'] == packet['wire_entries'] <= 66
     assert all(a['status'] in {'settled', 'abandoned'} for a in packet['attempts'])
     abandoned = [a for a in packet['attempts'] if a['status'] == 'abandoned']
-    assert ('INGR:core_thesis', 'evidence.sec_metrics', 'sec/facts') in {
+    assert (CASES[2], 'evidence.sec_metrics', 'sec/facts') in {
         (a['case_id'], a['stage'], a['route']) for a in abandoned}
     assert all(a['failure'] == {'code': 'abandoned', 'detail': a['route']} and a['response'] is None
                for a in abandoned)
     degraded_cases = {case for case, status in zip(CASES, statuses) if status == 'answered_degraded_unadjudicated'}
     assert {a['case_id'] for a in abandoned} == degraded_cases
-    assert {'case_id': 'INGR:core_thesis', 'stage': 'evidence.sec_metrics'} in worker['abandoned_evidence']
+    assert {'case_id': CASES[2], 'stage': 'evidence.sec_metrics'} in worker['abandoned_evidence']
     assert worker['blocked_external_operations'] == [] and worker['unfinished_workers'] == 0
     assert 1 <= worker['max_inflight_sec'] <= 4
 
@@ -327,13 +329,15 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
 def test_the_abandoned_response_never_reaches_the_answer_and_closes_before_the_next_case(degraded):
     result, output = degraded
     packet = result['packet']
-    facts_url = 'https://data.sec.gov/api/xbrl/companyfacts/CIK0001046257.json'
-    answer = packet['answers']['INGR:core_thesis']['response']
+    cik = next(c for c in json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
+               if c['case_id'] == CASES[2])['expected_cik']
+    facts_url = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
+    answer = packet['answers'][CASES[2]]['response']
     assert facts_url not in json.dumps(answer)
     with sqlite3.connect(output / 'ledger.sqlite') as db:
         assert not db.execute('SELECT 1 FROM ordinary_responses r JOIN attempts a ON a.id=r.attempt_id '
-                              "JOIN cases c ON c.id=a.case_run WHERE c.case_id='INGR:core_thesis' AND r.url=?",
-                              (facts_url,)).fetchone()
+                              "JOIN cases c ON c.id=a.case_run WHERE c.case_id=? AND r.url=?",
+                              (CASES[2], facts_url)).fetchone()
         closed = db.execute("SELECT c.case_id, f.recorded_ns FROM ordinary_exchange_failures f JOIN attempts a "
                             "ON a.id=f.attempt_id JOIN cases c ON c.id=a.case_run WHERE a.status='abandoned'").fetchall()
         starts = dict(db.execute("SELECT c.case_id, t.started_ns FROM ordinary_case_times t "

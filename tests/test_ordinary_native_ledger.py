@@ -12,14 +12,14 @@ import pytest
 from validation.capture_budget import AttemptLedger, BudgetError, digest, validate_policy
 from validation.ordinary_native_policy import execution_package, policy_for
 from validation.ordinary_native_ledger import OrdinaryNativeLedger, OrdinaryNativeGate, create_fresh_output
-from validation.ordinary_pilot_contract import CASES
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 from validation.pilot_approved import ScopedBackend, ExchangeGate
 from validation.ordinary_transport import OrdinaryHTTPTransport
 from validation._pilot_wire_fixtures import SyntheticProxyBackend
 from validation.pilot_live import TransportFailure
 
-RECORDS = json.loads(Path(__file__).with_name('ordinary_pilot_cases.json').read_text())
+RECORDS = json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
 CONFIG = {'documentation_reference': 'TEST-ONLY', 'verification_reference': 'TEST-ONLY',
           'substitution': 'explicit_environment_proxy', 'bearer_source': 'OPENAI_API_KEY',
           'sec_contact_source': 'SEC_USER_AGENT', 'proxy': 'http://proxy:8080',

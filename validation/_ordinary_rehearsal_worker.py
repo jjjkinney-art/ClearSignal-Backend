@@ -27,19 +27,27 @@ from collections import namedtuple
 from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from io import StringIO
 
+def _third_case_cik():
+    """The issuer of the cohort's third case: the fault scenarios' target."""
+    from validation.ordinary_pilot_contract import CASES, COHORT_FILE
+    records = json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
+    return int(next(r['expected_cik'] for r in records if r['case_id'] == CASES[2]))
+
+
+_FAULT_CIK = _third_case_cik()
 SCENARIO_FAULTS = {
     'happy': None,
-    # Third case (INGR:core_thesis): first companyfacts request.
-    'wire_read_failure': ('read_failure', r'/companyfacts/CIK0001046257\.json$', 1),
-    'wire_redirect': ('redirect', r'/submissions/CIK0001046257\.json$', 1),
-    'wire_oversize': ('oversize', r'/Archives/edgar/data/1046257/', 1),
+    # Third case (a core_thesis case): its issuer's first companyfacts request.
+    'wire_read_failure': ('read_failure', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
+    'wire_redirect': ('redirect', rf'/submissions/CIK{_FAULT_CIK:010d}\.json$', 1),
+    'wire_oversize': ('oversize', rf'/Archives/edgar/data/{_FAULT_CIK}/', 1),
     'wire_connect_failure': ('connect_failure', '', 13),
-    # Stalled peers: INGR's first (core) and second (threshold) facts requests.
-    'core_deadline': ('stall', r'/companyfacts/CIK0001046257\.json$', 1),
-    'threshold_deadline': ('stall', r'/companyfacts/CIK0001046257\.json$', 2),
-    # A slow but live peer on INGR's first facts request: the application
+    # Stalled peers: that issuer's first (core) and second (threshold) facts requests.
+    'core_deadline': ('stall', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
+    'threshold_deadline': ('stall', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 2),
+    # A slow but live peer on that issuer's first facts request: the application
     # abandons that evidence at its 10 s wait and answers without it.
-    'evidence_abandoned': ('slow', r'/companyfacts/CIK0001046257\.json$', 1),
+    'evidence_abandoned': ('slow', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
 }
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}

@@ -1,0 +1,86 @@
+[
+  {
+    "case_id": "SCCO:core_thesis",
+    "issuer_id": "SCCO",
+    "expected_cik": "0001001838",
+    "question": "What is the investment thesis for SOUTHERN COPPER CORP, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "SCCO:decision_threshold",
+    "issuer_id": "SCCO",
+    "expected_cik": "0001001838",
+    "question": "Which valuation and operating assumptions would make SOUTHERN COPPER CORP attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "BX:core_thesis",
+    "issuer_id": "BX",
+    "expected_cik": "0001393818",
+    "question": "What is the investment thesis for Blackstone Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "BX:decision_threshold",
+    "issuer_id": "BX",
+    "expected_cik": "0001393818",
+    "question": "Which valuation and operating assumptions would make Blackstone Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "LNC:core_thesis",
+    "issuer_id": "LNC",
+    "expected_cik": "0000059558",
+    "question": "What is the investment thesis for LINCOLN NATIONAL CORP, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "LNC:decision_threshold",
+    "issuer_id": "LNC",
+    "expected_cik": "0000059558",
+    "question": "Which valuation and operating assumptions would make LINCOLN NATIONAL CORP attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "LVS:core_thesis",
+    "issuer_id": "LVS",
+    "expected_cik": "0001300514",
+    "question": "What is the investment thesis for LAS VEGAS SANDS CORP, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "LVS:decision_threshold",
+    "issuer_id": "LVS",
+    "expected_cik": "0001300514",
+    "question": "Which valuation and operating assumptions would make LAS VEGAS SANDS CORP attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "USCB:core_thesis",
+    "issuer_id": "USCB",
+    "expected_cik": "0001901637",
+    "question": "What is the investment thesis for USCB FINANCIAL HOLDINGS, INC., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "USCB:decision_threshold",
+    "issuer_id": "USCB",
+    "expected_cik": "0001901637",
+    "question": "Which valuation and operating assumptions would make USCB FINANCIAL HOLDINGS, INC. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "BWMX:decision_threshold",
+    "issuer_id": "BWMX",
+    "expected_cik": "0001788257",
+    "question": "Which valuation and operating assumptions would make BETTERWARE DE MEXICO, S.A.P.I. DE C.V attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "BWMX:core_thesis",
+    "issuer_id": "BWMX",
+    "expected_cik": "0001788257",
+    "question": "What is the investment thesis for BETTERWARE DE MEXICO, S.A.P.I. DE C.V, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  }
+]

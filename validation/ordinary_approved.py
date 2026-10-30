@@ -30,7 +30,7 @@ from validation.ordinary_native_boundary import PAID_PROVIDER_ENVIRONMENT
 from validation.ordinary_native_ledger import create_fresh_output
 from validation.ordinary_native_policy import (ZERO_MODEL_PLACEHOLDER, execution_package, policy_for,
                                                 test_only_references)
-from validation.ordinary_pilot_contract import CASES, quota_contract
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE, quota_contract
 from validation.ordinary_network import validate_ordinary_execution, verify_ordinary_network
 from validation.pilot_approved import runtime_values
 from validation.pilot_live import READ_CHUNK_BYTES
@@ -151,7 +151,7 @@ def evidence_reference(kind, path):
 
 def package_values(*, execution, all_in_usd, cost_path, retention_path):
     from validation.pilot_rehearsal import source_binding
-    return dict(cases=json.loads((ROOT / 'tests/ordinary_pilot_cases.json').read_text()),
+    return dict(cases=json.loads((ROOT / COHORT_FILE).read_text()),
                 code_binding={'revision': git_revision(), 'source_sha256': source_binding()},
                 dependencies={name: importlib.metadata.version(name) for name in AUDITED_DEPENDENCIES},
                 execution=execution, all_in_usd=all_in_usd,

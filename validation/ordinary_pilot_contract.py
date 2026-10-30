@@ -5,9 +5,21 @@ imports, output creation or execution entrypoint. This is not a dispatch fence.
 """
 from copy import deepcopy
 
-ISSUERS = ('NPK', 'GOOGL', 'INGR', 'NNBR', 'AMZN', 'MAN')
+# Runs 1 and 2 used these issuers with tests/ordinary_pilot_cases.json (kept
+# unchanged). Run 3 is the pre-registered unseen-company evaluation in
+# docs/GENERALIZATION_EVAL_PLAN_20261030.md.
+RUN_1_2_ISSUERS = ('NPK', 'GOOGL', 'INGR', 'NNBR', 'AMZN', 'MAN')
+COHORT_FILE = 'tests/ordinary_run3_cases.json'
+ISSUERS = ('SCCO', 'BX', 'LNC', 'LVS', 'USCB', 'BWMX')
 QUESTIONS = ('core_thesis', 'decision_threshold')
-CASES = tuple(f'{issuer}:{question}' for issuer in ISSUERS for question in QUESTIONS)
+# Both BWMX cases are predicted offline to halt the run, so they are ordered
+# last and no other case is lost; both stay in the denominator. The threshold
+# question resolves to another issuer, whose SEC request the boundary refuses
+# before dispatch; the thesis question is classified by the pinned frontend as
+# a general intent, which the backend answers with a model (zero-model rule).
+LAST_CASE = 'BWMX:core_thesis'
+CASES = tuple(case for case in (f'{issuer}:{question}' for issuer in ISSUERS for question in QUESTIONS)
+              if case != LAST_CASE) + (LAST_CASE,)
 
 
 def quota_contract():

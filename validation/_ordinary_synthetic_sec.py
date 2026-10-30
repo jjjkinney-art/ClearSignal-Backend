@@ -21,6 +21,13 @@ REGISTRANTS = {
     'NNBR': (918541, 'NN INC'),
     'AMZN': (1018724, 'AMAZON COM INC'),
     'MAN': (871763, 'ManpowerGroup Inc.'),
+    # Run-3 cohort (identity only; every figure below remains invented).
+    'SCCO': (1001838, 'SOUTHERN COPPER CORP/'),
+    'BX': (1393818, 'Blackstone Inc.'),
+    'LNC': (59558, 'LINCOLN NATIONAL CORP'),
+    'LVS': (1300514, 'LAS VEGAS SANDS CORP'),
+    'USCB': (1901637, 'USCB FINANCIAL HOLDINGS, INC.'),
+    'BWMX': (1788257, 'BETTERWARE DE MEXICO, S.A.P.I. DE C.V'),
 }
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
