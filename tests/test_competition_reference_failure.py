@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import pytest
 
 from app.services import thesis_competition, thesis_disclosures
-from test_thesis_disclosures import BUSINESS, RISK, QUESTION, document
+from test_thesis_disclosures import BUSINESS, RISK, SPECIFIC_RISK, QUESTION, document
 
 
 LONG_COMPETITION = (
@@ -22,7 +22,7 @@ def test_one_unrepresentable_competition_quote_preserves_other_thesis_evidence(m
     assert 300 < len(LONG_COMPETITION) <= 450
     doc = document(f'Item 1. Business {BUSINESS} {SECOND_BUSINESS} '
                    f'{LONG_COMPETITION} {SHORT_COMPETITION} '
-                   f'Item 1A. Risk Factors {RISK} Item 1B. Unresolved Staff Comments')
+                   f'Item 1A. Risk Factors {SPECIFIC_RISK} Item 1B. Unresolved Staff Comments')
     monkeypatch.setattr(thesis_disclosures.sec_provider, '_load_ticker_cik_map', lambda: {'AAPL': '320193'})
     monkeypatch.setattr(thesis_disclosures.sec_provider, 'fetch_recent_filings', lambda *a, **kw: [
         SimpleNamespace(url=doc.final_url, timestamp=doc.published_at, document_type='10-K')])

@@ -15,6 +15,9 @@ from test_financial_thesis_foundation import pair
 
 BUSINESS = "We manufacture specialized components and distribute our products through independent dealers."
 RISK = "Supply chain disruptions could adversely affect our ability to manufacture and deliver products."
+# Broad-thesis selection presents only company-specific risks; fetch-level tests use this form.
+SPECIFIC_RISK = ("Supply chain disruptions at our key suppliers could adversely affect our ability to manufacture "
+                 "and deliver products.")
 QUESTION = "What is the investment thesis for AAPL, what supports it, and what could invalidate it? Cite material claims."
 
 
@@ -240,7 +243,8 @@ def test_named_list_does_not_suppress_a_segment_operating_description():
     'Our operations and financial results are subject to various risks and uncertainties, including those described below, that could adversely affect our business, operations, financial condition, results of operations, liquidity, and the trading price of our common stock.',
 ])
 def test_generic_risk_intro_is_withheld_by_fetch_and_final_foundation(monkeypatch, intro):
-    specific = ('Any significant losses in our investment portfolio or from market-making activities '
+    specific = ('Because market-making activities account for a significant portion of our revenues, any '
+                'significant losses in our investment portfolio or from market-making activities '
                 'could reduce our profitability and our liquidity and capital levels.')
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    f'{intro} {specific} Item 1B. Unresolved Staff Comments')
@@ -308,8 +312,8 @@ def test_only_generic_risk_context_cannot_close_mechanism_gap():
     ('Furthermore, such factors could materially adversely affect our liquidity and financial condition.', 'Liquidity'),
 ])
 def test_unresolved_risk_subject_is_withheld_from_broad_fetch_and_final_answer(monkeypatch, quote, scope):
-    specific = ('Supply chain disruptions could materially adversely affect our marketplace sellers, '
-                'liquidity and operating results.')
+    specific = ('Supply chain disruptions could materially adversely affect our marketplace sellers, who '
+                'account for a significant portion of our sales, and our liquidity and operating results.')
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    f'{quote} {specific} Item 1B. Unresolved Staff Comments')
     risks = service.extract_issuer_risk_evidence(doc, ticker='AAPL',
@@ -366,9 +370,12 @@ def test_broad_risk_eligibility_precedes_sample_cap(monkeypatch, with_valid_risk
         'Furthermore, such factors could materially adversely affect our liquidity and financial condition.',
     ][:rejected_prefix_count]
     valid = [
-        'Our inability to refinance debt maturities could adversely affect our liquidity and operating results.',
-        'Higher refinancing costs could adversely affect our liquidity and financial condition.',
-        'Loss of funding access could adversely affect our liquidity and operating results.',
+        'Because our credit facility accounts for a significant portion of our funding, our inability to refinance '
+        'debt maturities could adversely affect our liquidity and operating results.',
+        'Because our credit facility accounts for a significant portion of our funding, higher refinancing costs '
+        'could adversely affect our liquidity and financial condition.',
+        'Because our credit facility accounts for a significant portion of our funding, loss of funding access '
+        'could adversely affect our liquidity and operating results.',
     ] if with_valid_risks else []
     doc = document(f'Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors '
                    + ' '.join(rejected + valid) + ' Item 1B. Unresolved Staff Comments')
@@ -516,9 +523,10 @@ def test_live_fetch_spends_one_document_slot_and_keeps_both_bound_sections(monke
     monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"AAPL": "0000320193"})
     monkeypatch.setattr(service.sec_provider, "fetch_recent_filings", lambda *a, **k:
         [SimpleNamespace(url=document().final_url, timestamp='2025-08-01', document_type='10-K')])
+    text = f"Item 1. Business Overview. {BUSINESS} Item 1A. Risk Factors {SPECIFIC_RISK} Item 1B. Unresolved Staff Comments"
     def fetch(*args, **kwargs):
         calls.append(kwargs)
-        return document()
+        return document(text)
     monkeypatch.setattr(service, "fetch_public_document", fetch)
     items = service.fetch_thesis_disclosures("AAPL", question=QUESTION)
     assert len(calls) == 1 and calls[0]["preserve_sec_business"] is True
