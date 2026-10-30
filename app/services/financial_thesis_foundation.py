@@ -553,6 +553,9 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                    "model or a ranking of the most material risks, and not independent assessments. Competitive "
                    "advantage and future performance remain unverified; disclosed possibilities do not establish "
                    "occurrence, probability or a quantified effect on the financial case.")
+        if not counts['issuer_disclosed_risk']:
+            answer += ("\nNo company-specific risk disclosure met the selection rules for this answer; "
+                       "material risks remain unverified.")
     if risk_interpretations:
         answer += '\n\nConditional risk monitoring\n' + '\n\n'.join(
             f"{row['text']} [{row['reference_ids'][0]}] {row['conditional_test']}"

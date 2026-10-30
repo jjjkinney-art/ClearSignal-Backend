@@ -93,6 +93,10 @@ def _segment_business_scope(quote):
 
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
+    # "<Issuer> provides our employees with … wellness programs": human
+    # capital, not a product, customer or revenue activity.
+    r"\bprovides?\s+(?:our\s+|its\s+)?(?:employees|staff|workforce)\b|"
+    r"\b(?:employee\s+)?wellness\s+programs?\b|"
     r"^(?:We|Our company|The company|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"offers?\s+(?:our\s+)?(?:employees|staff|workforce)\s+"
@@ -467,9 +471,13 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                 if value and value["quote"] not in seen:
                     seen.add(value["quote"])
                     risks.append(item)
-        # Source order, never an assertion that these are the most material risks.
-        risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + competition + risks[:2] + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
+        # Company-specific first, boilerplate removed; never an assertion that
+        # these are the most material risks.
+        from .risk_selection import select_risks
+        risks, rejected = select_risks(risks, quote_of=lambda item: item.risk_disclosures[0]["quote"],
+                                       offset_of=lambda item: item.risk_disclosures[0]["start_offset"])
+        stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
+        return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
     except Exception as exc:
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):
