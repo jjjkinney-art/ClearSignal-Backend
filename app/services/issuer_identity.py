@@ -145,7 +145,7 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
         # Full exact name spans take precedence over ticker-like words inside
         # that name: SEC's "WD 40 CO" must not also select ticker WD.
         words = list(re.finditer(r"[a-z0-9]+", value.lower()))
-        name_spans = []
+        name_spans, name_matches = [], []
         for start in range(len(words)):
             for width in range(1, min(12, len(words) - start) + 1):
                 key = " ".join(word.group() for word in words[start:start + width])
@@ -153,9 +153,17 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
                     continue
                 found = directory.names.get(key, [])
                 if found:
-                    name_spans.append((words[start].start(), words[start + width - 1].end()))
-                    for item in found:
-                        matches[item.ticker] = item
+                    span = (words[start].start(), words[start + width - 1].end())
+                    name_spans.append(span)
+                    name_matches.append((span, found))
+        # The longest exact name wins: a shorter official name lying wholly
+        # inside a longer one ("southern" in "southern copper corp") is part of
+        # that name, not a second company.
+        for span, found in name_matches:
+            if not any(other != span and other[0] <= span[0] and span[1] <= other[1]
+                       for other, _ in name_matches):
+                for item in found:
+                    matches[item.ticker] = item
         for token_match in re.finditer(r"(?<!\w)\$?[A-Z][A-Z0-9]{0,11}(?:[.-][A-Z0-9]{1,4})?(?!\w)", value):
             if any(start <= token_match.start() and token_match.end() <= end
                    for start, end in name_spans):
@@ -167,6 +175,12 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             if item:
                 matches[item.ticker] = item
         issuer = next(iter(matches.values())) if len(matches) == 1 else None
+        if issuer is None and len({item.cik for item in matches.values()}) == 1:
+            # One issuer's securities (common plus preferred or notes): the
+            # single symbol without a class or series suffix names the issuer.
+            # Distinct base symbols (two share classes) still abstain.
+            base = [item for item in matches.values() if not re.search(r"[.-]", item.ticker)]
+            issuer = base[0] if len(base) == 1 else None
     if issuer is None:
         return None
     return CompanyContext(ticker=issuer.ticker, company_name=issuer.name, aliases=[value])

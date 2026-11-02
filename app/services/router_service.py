@@ -2293,6 +2293,16 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
+                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                    # A ticker-shaped word inside a longer official name ("DE" in
+                    # "BETTERWARE DE MEXICO, S.A.P.I. DE C.V") is part of that
+                    # name, not a second company: the official name wins.
+                    _official = discover_company(request.question, question_text=True, as_of=request.as_of)
+                    _token = (_entity_resolution.matched_text or "").strip().lstrip("$").lower()
+                    if (_official is not None and _official.ticker != _entity_resolution.context.ticker
+                            and _token in re.findall(r"[a-z0-9]+", _official.company_name.lower())):
+                        from .company_detection import EntityResolution
+                        _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
