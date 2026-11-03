@@ -58,7 +58,11 @@ _SCOPE = re.compile(
     r'|\b(?!(?:The|Our|We|In|During|For|Consolidated|Total|Net|Operating)\b)[A-Z][A-Za-z&.\-–/]+'
     r'(?:\s+[A-Z][A-Za-z&.\-–/]+)*\s+(?:segment\s+)?(?:net sales|revenues?|operating (?:income|profit))\b')
 # A sentence that explains the change stated just before it: "The decrease resulted primarily from …".
-_ANAPHOR = re.compile(r'(?:The|This|These|That) (?:(?:net|overall|year-over-year) )?'
+# May restate the change it refers to ("The $938 thousand or 11.5% increase");
+# restated amounts are checked against the preceding sentence.
+_ANAPHOR = re.compile(r'(?:The|This|These|That) '
+                      r'(?:(?:\$\s?[\d,]+(?:\.\d+)?(?:\s*(?:thousand|million|billion))?(?:\s+or\s+\d+(?:\.\d+)?\s?%)?'
+                      r'|\d+(?:\.\d+)?\s?%)\s+)?(?:(?:net|overall|year-over-year) )?'
                       r'(increases?|decreases?|declines?|improvements?|reductions?|growth|changes?|deteriorations?)\b')
 _OTHER_PERIOD = re.compile(r'\b(?:six|nine|twelve) months\b|\byear[- ]to[- ]date\b|\bfirst (?:half|nine months)\b'
                            r'|\bfull[- ]year\b|\bfiscal\b|\bannual\b|\b(?:19|20)\d{2}\b', re.I)
@@ -306,10 +310,10 @@ def bind_table_narrative(sentence, metrics, table, period):
 
 
 def stated_direction(sentence):
-    verb = re.search(r'\b(increased|decreased|rose|fell|declined|grew|improved|an increase|a decrease)\b', sentence, re.I)
+    verb = _CHANGE.search(sentence) or re.search(r'\b(improved)\b', sentence, re.I)
     if not verb:
         return None
-    return 'up' if verb.group(1).lower() in ('increased', 'rose', 'grew', 'improved', 'an increase') else 'down'
+    return 'up' if _rising(verb) or verb.group(1).lower() == 'improved' else 'down'
 
 
 def following_cause(sentence, following, period):
@@ -330,7 +334,13 @@ def following_cause(sentence, following, period):
         return False
     if word.startswith(('decrease', 'decline', 'reduction', 'deterioration')) and direction != 'down':
         return False
-    if _SCOPE.search(following[anaphor.end():cause.start()]):
+    restated = _amounts(following[:anaphor.end()])
+    if restated and not all(any(_close(value, half, other) for other, _ in _amounts(sentence)) for value, half in restated):
+        return False
+    # "The increase in revenues was …" names the sentence's own metric, not a new scope.
+    between = re.sub(r'^\s*in (?:the |our )?(?:net |total |consolidated )?(?:' + '|'.join(METRIC_WORDS.values()) + r')',
+                     '', following[anaphor.end():cause.start()], flags=re.I)
+    if _SCOPE.search(between):
         return False
     return not (_OTHER_PERIOD.search(following) and not names_current_period(following, period))
 
@@ -538,7 +548,7 @@ def render(value):
         cause = f" and “{statement['cause_quote']}”" if statement.get('cause_quote') else ''
         lines.append(f"Management stated{scope}: {context}“{statement['quote']}”{cause}")
     if not any(stated_cause(row) for row in value['statements'] + value['components']):
-        lines.append('The filing states no cause for these changes in this period; their drivers remain unverified.')
+        lines.append('No stated cause was bound to these figures; their drivers remain unverified.')
     elif value['statements'] or value['components']:
         lines.append('Attributions in quotation marks are management\'s; they are not independently established causes.')
     return ' '.join(lines)

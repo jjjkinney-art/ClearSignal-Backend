@@ -116,5 +116,5 @@ def test_material_same_direction_non_operating_swings_get_a_bridge():
              'bridge': bridge, 'statements': [], 'components': []}
     rendered = cpe.render(value)
     assert 'Net income moved $0.0M while operating income moved $0.0M: non-operating income (expense) went from' in rendered
-    assert 'The filing states no cause for these changes in this period' in rendered
+    assert 'No stated cause was bound to these figures' in rendered
     assert 'Its change exceeded the change in operating income' in cpe.monitoring_criteria(value)[0]
