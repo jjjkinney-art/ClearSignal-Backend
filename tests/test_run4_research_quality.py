@@ -178,3 +178,40 @@ def test_business_type_comes_from_the_recorded_industry_code(monkeypatch):
     for sector, (first, second) in SECTOR_SIGNATURES.items():
         assert {first, second} <= set(SECTOR_METRICS[sector])
     assert set(SECTOR_GAPS) == set(SECTOR_METRICS)
+
+
+@pytest.mark.parametrize('statement,following', [
+    (COPPER_STATEMENT, COPPER_CAUSE),
+    ('Revenues were $5.0 billion for the three months ended September 30, 2026, an increase of $1.3 billion '
+     'compared to $3.7 billion for the three months ended September 30, 2025.',
+     'The increase in Revenues was primarily attributable to increases of $867.1 million in Investment Income, '
+     '$237.0 million in Other Revenue and $230.5 million in Management and Advisory Fees, Net.'),
+    ('Net income increased $938 thousand to $9.1 million for the three months ended September 30, 2026 from '
+     '$8.1 million for the same period in 2025.',
+     'The $938 thousand or 11.5% increase in net income was primarily driven by growth in the average loan '
+     'portfolio and expansion of net interest margin resulting from lower funding costs.'),
+])
+def test_the_next_sentence_states_the_cause_of_this_change(statement, following):
+    assert cpe.following_cause(statement, following, PERIOD)
+
+
+def test_a_cause_for_another_amount_scope_or_direction_is_not_attached():
+    statement = ('Net income increased $938 thousand to $9.1 million for the three months ended September 30, 2026 '
+                 'from $8.1 million for the same period in 2025.')
+    cause = ('The $938 thousand or 11.5% increase in net income was primarily driven by growth in the average loan '
+             'portfolio.')
+    assert not cpe.following_cause(statement, cause.replace('$938', '$1,938'), PERIOD)
+    assert not cpe.following_cause(statement, cause.replace('increase in net income', 'decrease in net income'), PERIOD)
+    assert not cpe.following_cause(statement, 'The increase in Europe was primarily driven by pricing.', PERIOD)
+    assert cpe.stated_direction(COPPER_STATEMENT) == 'up'
+
+
+def test_an_unbound_cause_is_never_described_as_absent_from_the_filing():
+    value = cpe.explanation_value(COPPER_STATEMENT, [], [], ticker='X', document_type='10-Q', filed_at='2026-10-30')
+    assert value is None  # no verified comparison: nothing is rendered at all
+    rendered = cpe.render({'claim_kind': 'issuer_current_period_explanation', 'ticker': 'X', 'document_type': '10-Q',
+                           'filed_at': '2026-10-30', 'period': PERIOD, 'metrics': COPPER_METRICS, 'bridge': None,
+                           'statements': [{'quote': COPPER_STATEMENT, 'start_offset': 0, 'metric': 'revenue',
+                                           'basis': 'stated level and growth rate'}], 'components': []})
+    assert 'No stated cause was bound to these figures' in rendered
+    assert 'filing states no cause' not in rendered
