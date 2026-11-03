@@ -57,6 +57,10 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             'SELECT attempt_id,code,detail,recorded_ns FROM ordinary_exchange_failures')}
         answers = {r[0]: r[1:] for r in db.execute(
             'SELECT case_run,case_id,sha256,payload,recorded_ns FROM ordinary_answers')}
+        # Absent from ledgers created before stage abandonments were recorded.
+        stage_abandonments = db.execute('SELECT case_run,stage,recorded_ns FROM ordinary_stage_abandonments '
+                                        'ORDER BY recorded_ns').fetchall() \
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_stage_abandonments'").fetchone() else []
         first_transport = db.execute('SELECT attempt_id,route,stage,code FROM first_transport_failure WHERE id=1').fetchone()
         first_refusal = db.execute('SELECT attempt_id,route,stage,code FROM first_sec_refusal WHERE id=1').fetchone()
 
@@ -162,6 +166,17 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         if open_at_entry >= limits['concurrent_sec']:
             raise ExportRefused('wire entries exceed four concurrent requests')
 
+    # A stage the application answered without degrades its case even when the
+    # stage's own requests settled; the record must fall inside that case.
+    abandoned_stages = []
+    for run, stage, recorded in stage_abandonments:
+        later = [row[3] for row in cases if run in case_start and row[3] > case_start[run]]
+        if (run not in case_start or type(stage) is not str or not stage.startswith('evidence.')
+                or type(recorded) is not int or recorded < case_start[run] or (later and recorded >= min(later))):
+            raise ExportRefused('stage abandonment outside its recorded case')
+        abandoned_runs.add(run)
+        abandoned_stages.append({'case_id': case_of[run], 'stage': stage})
+
     # Twelve outcomes; a halt never turns gaps into passes.
     outcomes = []
     for index, case_id in enumerate(CASES):
@@ -191,7 +206,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
                                ('full_answer', 'degraded_answer', 'unanswered', 'operational_failure')},
             'answers': {answers[run][0]: {'sha256': answers[run][1], 'response': json.loads(answers[run][2])}
                         for run in answers},
-            'attempts': records, 'attempt_count': len(records),
+            'attempts': records, 'attempt_count': len(records), 'abandoned_stages': abandoned_stages,
             'retained_body_bytes': aggregate, 'wire_entries': len(entries_seen),
             'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False,
             'invoice_ceiling_verified': False}

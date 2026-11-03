@@ -26,6 +26,7 @@
       "ordinary_exchange_failures",
       "ordinary_responses",
       "ordinary_run",
+      "ordinary_stage_abandonments",
       "ordinary_wire_entries",
       "policy",
       "sec_claims",

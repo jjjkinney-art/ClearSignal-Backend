@@ -389,3 +389,38 @@ def test_parent_export_refuses_an_inconsistent_abandonment(degraded, tmp_path, s
     copy, policy = tampered(degraded, tmp_path, sql)
     with pytest.raises((ExportRefused, sqlite3.IntegrityError)):
         export_packet(copy, policy, forbidden_values=FORBIDDEN, synthetic=True)
+
+
+# -- an evidence stage abandoned after its own requests settled ----------------
+
+_STAGE_ABANDONED = ("INSERT INTO ordinary_stage_abandonments SELECT c.id, ?, t.started_ns + {offset} "
+                    "FROM cases c JOIN ordinary_case_times t ON t.case_run = c.id WHERE c.case_id = ?")
+
+
+@pytest.mark.timeout(120)
+def test_a_stage_answered_without_degrades_its_case_even_when_its_requests_settled(happy, tmp_path):
+    # Run 4: the application gave up on a filing-metrics stage after its 10-Q
+    # request had completed; the answer lacked that evidence but counted as full.
+    case = next(c for c in COMPLETED if c.endswith(':core_thesis'))
+    copy, policy = tampered(happy, tmp_path, _STAGE_ABANDONED.format(offset=1), 'evidence.filing_metrics', case)
+    with sqlite3.connect(copy) as db:
+        assert not db.execute("SELECT 1 FROM attempts WHERE status='abandoned'").fetchone()
+    packet = export_packet(copy, policy, forbidden_values=FORBIDDEN, synthetic=True)
+    statuses = {c['case_id']: c['status'] for c in packet['cases']}
+    assert statuses[case] == 'answered_degraded_unadjudicated'
+    assert packet['abandoned_stages'] == [{'case_id': case, 'stage': 'evidence.filing_metrics'}]
+    assert packet['outcome_counts']['degraded_answer'] == 1 and packet['quality_pass_rate'] is None
+    # Without the record the same ledger exports the case as a full answer.
+    assert happy[0]['packet']['abandoned_stages'] == []
+
+
+@pytest.mark.timeout(120)
+@pytest.mark.parametrize('stage,offset', [
+    ('evidence.filing_metrics', -1),                 # recorded before its case began
+    ('evidence.filing_metrics', 3600000000000),      # recorded after the next case began
+    ('synthesis', 1),                                # not an evidence stage
+])
+def test_parent_export_refuses_a_stage_abandonment_outside_its_case(happy, tmp_path, stage, offset):
+    copy, policy = tampered(happy, tmp_path, _STAGE_ABANDONED.format(offset=offset), stage, COMPLETED[0])
+    with pytest.raises(ExportRefused):
+        export_packet(copy, policy, forbidden_values=FORBIDDEN, synthetic=True)
