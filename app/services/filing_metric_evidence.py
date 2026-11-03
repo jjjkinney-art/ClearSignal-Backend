@@ -121,7 +121,7 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         document = fetch_public_document(filing.url, user_agent=settings.sec_user_agent,
             publisher='SEC EDGAR', published_at=filing.timestamp, document_type=filing.document_type,
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,
-            extract_tables=False, inline_fact_cik=cik,
+            preserve_sec_results=True, extract_tables=False, inline_fact_cik=cik,
             inline_fact_concepts=tuple(dict.fromkeys((*(c for group in FILING_METRICS.values() for c in group),
                                                       *EXPLANATION_CONCEPTS))))
         items = evidence_from_filing(document, filing, ticker=ticker, cik=cik)

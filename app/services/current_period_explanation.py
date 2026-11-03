@@ -77,7 +77,14 @@ _TABLE_NARRATIVE = re.compile(r'([A-Z][a-z][A-Za-z ,&\-]*?) (increased|decreased
                               r'(?:\s*(thousand|million|billion))?\b')
 MAX_TABLE_CHARS = 3000
 _UP = {'increased', 'rose', 'grew', 'an increase'}
-_CHANGE = re.compile(r'\b(increased|decreased|rose|fell|declined|grew|an increase|a decrease)\b', re.I)
+# "a 39.1% increase" states the direction with the rate between article and noun.
+_CHANGE = re.compile(r'\b(increased|decreased|rose|fell|declined|grew|an increase|a decrease'
+                     r'|an? \d+(?:\.\d+)?\s?(?:%|percent) (?:increase|decrease))\b', re.I)
+
+
+def _rising(verb):
+    word = verb.group(1).lower()
+    return word in _UP or word.endswith(' increase')
 _CAUSE = re.compile(r'\b(?:primarily|reflecting|due to|driven by|attributable to|as a result of|resulting from)\b', re.I)
 _MONEY = re.compile(r'\$\s?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?:\s*(thousand|million|billion)\b)?', re.I)
 def cause_match(sentence):
@@ -103,17 +110,58 @@ MAX_COMPONENTS = 3
 _BOUNDARY = re.compile(r'[.!?](?=\s+[A-Z0-9("“•]|\s*$)')
 
 
+# A flattened table has no terminal punctuation, so the narrative sentence
+# after it joins the table. Its last cell ends in a number, percent sign or
+# closing parenthesis before a capitalized word.
+_CELL_END = re.compile(r'(?:\d|%|\))\s+(?=[A-Z][a-z]+\b)')
+_NUMBER_RUN = re.compile(r'(?:\$?\s?\(?\$?\s?\d[\d,.]*\)?\s*%?\s+){3,}')
+
+
+def _narrative_tail(sentence):
+    """Offset of the narrative sentence after a flattened table, or None.
+
+    The split is at the earliest cell end that follows a run of three numbers
+    (table cells) and whose remainder is one ordinary sentence: short enough,
+    at least eight words, and with no further run of numbers (another row)."""
+    for match in _CELL_END.finditer(sentence):
+        tail = sentence[match.end():]
+        if (_NUMBER_RUN.search(sentence[:match.end()]) and len(tail) <= MAX_SENTENCE
+                and len(tail.split()) >= 8 and not _NUMBER_RUN.search(tail)):
+            return match.end()
+    return None
+
+
+_PERIOD_HEADING = re.compile(r'\b(?:Three|Six|Nine|Twelve) Months Ended '
+                             r'(?:January|February|March|April|May|June|July|August|September|October|November|December)'
+                             r' \d{1,2}, \d{4}', re.I)
+
+
+def _table_context(text, offset, period):
+    """The flattened table ending at offset, from its current-period heading."""
+    window_start = max(0, offset - MAX_TABLE_CHARS)
+    headings = [m for m in _PERIOD_HEADING.finditer(text, window_start, offset)
+                if names_current_period(m.group(0), period)]
+    return text[headings[-1].start():offset].strip() if headings else None
+
+
 def sentences(text):
     """(offset, sentence) pairs. A boundary is terminal punctuation followed by
     whitespace and a capital or digit, so a decimal such as $21.0 billion never
-    splits. Byte-order marks count as spaces (same length, offsets unchanged)."""
+    splits. Byte-order marks count as spaces (same length, offsets unchanged).
+    A narrative sentence run onto a flattened table is yielded on its own."""
     text = text.replace('\ufeff', ' ')
     start = 0
     for match in _BOUNDARY.finditer(text):
         chunk = text[start:match.end()]
         sentence = chunk.strip()
         if sentence:
-            yield start + len(chunk) - len(chunk.lstrip()), sentence
+            offset = start + len(chunk) - len(chunk.lstrip())
+            split = _narrative_tail(sentence)
+            if split is None:
+                yield offset, sentence
+            else:
+                yield offset, sentence[:split].rstrip()
+                yield offset + split, sentence[split:]
         start = match.end()
 
 
@@ -200,7 +248,7 @@ def bind_attribution(sentence, metrics, period, defined=None):
             continue
         verb = _CHANGE.search(sentence, subject.end(), subject.end() + 80)
         delta = metric['current'] - metric['prior']
-        if not verb or delta == 0 or (verb.group(1).lower() in _UP) != (delta > 0):
+        if not verb or delta == 0 or _rising(verb) != (delta > 0):
             continue
         if name in DIRECTION_ONLY and amounts:
             continue
@@ -209,6 +257,51 @@ def bind_attribution(sentence, metrics, period, defined=None):
                 for value, half in amounts):
             continue
         return {'metric': name, 'basis': 'period-matched attribution'}
+    return None
+
+
+_SIGNED_PART = re.compile(r'\$\s?([\d,]+(?:\.\d+)?)(?:\s*(thousand|million|billion))?\s+(increase|decrease)\b', re.I)
+_TABLE_ROW_VALUES = r'\s+\$?\s?\(?([\d,]+(?:\.\d+)?)\)?\s+\$?\s?\(?([\d,]+(?:\.\d+)?)\)?'
+
+
+def _table_row_reconciles(table, name, metric):
+    """The table has this metric's row whose current and prior values equal the
+    reported figures at one unit scale (units, thousands or millions)."""
+    for row in re.finditer(r'(?:Total |Consolidated )?' + METRIC_WORDS[name] + _TABLE_ROW_VALUES, table, re.I):
+        current, prior = (Decimal(row.group(k).replace(',', '')) for k in (1, 2))
+        for scale in (1, 10 ** 3, 10 ** 6):
+            half = Decimal(scale) / 2 * (Decimal('0.1') if '.' in row.group(1) else 1)
+            if (abs(current * scale - metric['current']) <= half
+                    and abs(prior * scale - metric['prior']) <= half):
+                return True
+    return False
+
+
+def bind_table_narrative(sentence, metrics, table, period):
+    """A causal sentence directly after a flattened current-period table whose
+    row for the metric reconciles. Its direction must match, and any amount it
+    states must be a level or the change, or signed parts netting to the change."""
+    if (len(sentence) > MAX_SENTENCE or len(table) > MAX_TABLE_CHARS or not cause_match(sentence)
+            or not names_current_period(table, period)):
+        return None
+    for name, metric in metrics.items():
+        subject = re.match(r'(?:the |our |consolidated |total |net )*' + METRIC_WORDS[name], sentence, re.I)
+        if not subject or name in DIRECTION_ONLY:
+            continue
+        verb = _CHANGE.search(sentence, subject.end(), subject.end() + 80)
+        delta = metric['current'] - metric['prior']
+        if not verb or delta == 0 or _rising(verb) != (delta > 0) or not _table_row_reconciles(table, name, metric):
+            continue
+        amounts = _amounts(sentence[verb.end():])
+        levels = all(any(_close(value, half, target) for target in (metric['current'], metric['prior'], delta))
+                     for value, half in amounts)
+        parts = [(Decimal(m.group(1).replace(',', '')) * _SCALE[(m.group(2) or '').lower() or None],
+                  1 if m.group(3).lower() == 'increase' else -1) for m in _SIGNED_PART.finditer(sentence)]
+        netted = (len(parts) >= 2 and len(parts) == len(amounts)
+                  and abs(sum(value * sign for value, sign in parts) - delta)
+                  <= sum(half for _, half in amounts) + Decimal('0.5'))
+        if levels or netted:
+            return {'metric': name, 'basis': 'table-anchored attribution'}
     return None
 
 
@@ -329,7 +422,7 @@ def bind_statement(sentence, metrics):
         if not verb:
             continue
         delta = metric['current'] - metric['prior']
-        up = verb.group(1).lower() in _UP
+        up = _rising(verb)
         if delta == 0 or up != (delta > 0):
             continue
         after = sentence[verb.start():verb.start() + 200]
@@ -531,7 +624,8 @@ def definition_quote(all_sentences, index, metric, metrics, period):
 
 def explanation_value(text, observations, filing_items, *, ticker, document_type, filed_at):
     metrics, period = _metrics(filing_items)
-    if not period or 'revenue' not in metrics:
+    # Banks and other issuers without a revenue line still explain net income.
+    if not period or not metrics.keys() & {'revenue', 'operating income', 'net income'}:
         return None
     current, prior = (period[0], period[1]), (period[2], period[3])
     period_value = {'current_start': current[0], 'current_end': current[1],
@@ -551,7 +645,8 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             # Reported separately inside the total; a sentence binds to it only
             # when its figures reconcile with this line and not the total.
             metrics['other income (expense), net'] = other
-    if 'operating income' in metrics and metrics['revenue']['current'] > 0 and metrics['revenue']['prior'] > 0:
+    if ('operating income' in metrics and 'revenue' in metrics
+            and metrics['revenue']['current'] > 0 and metrics['revenue']['prior'] > 0):
         # Basis points; used only for direction, never reconciled against stated amounts.
         metrics['operating margin'] = {key: int(round(Decimal(metrics['operating income'][key]) * 10000
                                                       / Decimal(metrics['revenue'][key]))) for key in ('current', 'prior')}
@@ -571,6 +666,16 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
                        or bind_attribution(quote, metrics, period_value, defined=defined))
             if binding:
                 break
+        if not binding and index:
+            # A narrative sentence directly after a flattened table explains that table.
+            previous_offset, previous = all_sentences[index - 1]
+            if (previous_offset + len(previous) <= offset and not text[previous_offset + len(previous):offset].strip()
+                    and _NUMBER_RUN.search(previous) and re.search(r'[\d%)]$', previous)):
+                table = _table_context(text, offset, period_value)
+                quote, start = sentence, 0
+                binding = table and bind_table_narrative(sentence, metrics, table, period_value)
+                if binding:
+                    binding['table_quote'] = table
         for start in clause_starts(sentence):
             if defines_levels(sentence[start:], metrics, period_value):
                 definition = (defines_levels(sentence[start:], metrics, period_value), index)
@@ -692,8 +797,11 @@ def bound_current_period_explanation(item, *, ticker, cik):
                 defined = defines_levels(statement['context_quote'], metrics, v['period'])
                 if defined != statement['metric'] or bind_attribution(statement['quote'], metrics, v['period']):
                     return None
-            binding = (bind_statement(statement['quote'], metrics)
-                       or bind_attribution(statement['quote'], metrics, v['period'], defined=defined))
+            if 'table_quote' in statement:
+                binding = bind_table_narrative(statement['quote'], metrics, statement['table_quote'], v['period'])
+            else:
+                binding = (bind_statement(statement['quote'], metrics)
+                           or bind_attribution(statement['quote'], metrics, v['period'], defined=defined))
             if binding != {'metric': statement['metric'], 'basis': statement['basis']}:
                 return None
             if 'cause_quote' in statement and not following_cause(statement['quote'], statement['cause_quote'], v['period']):
@@ -727,7 +835,8 @@ def bound_current_period_explanation(item, *, ticker, cik):
                         - values_[f'{period_name}:IncomeTaxExpenseBenefit']):
                     return None
         if (v['ticker'] != ticker or v['claim_kind'] != 'issuer_current_period_explanation'
-                or not (v['statements'] or bridge or v['components']) or 'revenue' not in metrics
+                or not (v['statements'] or bridge or v['components'])
+                or not metrics.keys() & {'revenue', 'operating income', 'net income'}
                 or ref['provider'] != 'SEC EDGAR' or ref['url'] != item.url or not _business_issuer_url(item.url, cik)
                 or not re.fullmatch(r'[0-9a-f]{64}', ref.get('content_hash', ''))
                 or ref['reference_id'] != f'document:{ref["content_hash"]}:current_period_explanation'

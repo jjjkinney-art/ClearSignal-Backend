@@ -24,6 +24,14 @@ from .sec_risk_sections import (
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
 _REPORTED_EVENT = re.compile(r"\b(?:are|is|were|was|have been|has been) experiencing\b", re.I)
+# A stated dependency or concentration is itself the issuer's disclosed exposure;
+# it needs no "may"/"could" wording to be a risk mechanism.
+STATED_CONCENTRATION = re.compile((
+    r"\b(?:(?:highly|heavily|significantly|substantially|primarily|principally|largely) dependent (?:up)?on"
+    r"|depends? (?:primarily|principally|heavily|substantially|largely) (?:up)?on"
+    r"|(?:a (?:significant|substantial|large) (?:portion|part|majority)|(?:all|substantially all)) of our "
+    r"(?:current )?(?:operations|revenues?|sales|cash flows?|assets|properties|loans?|loan portfolio)"
+    r"|(?:is|are) concentrated in|concentration of our)\b"), re.I)
 _ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt(?:ion|ions|ed|s|ing)?|unable|cease|fail(?:ure|ures|ed|ing|s)?|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient|legal liabilities|negatively (?:affect|impact)|incur (?:additional|higher|increased) costs|close\b[^.!?]{0,80}\b(?:rooms|hotels|facilities))\b", re.I)
 _NON_TOPIC_PREFIX = re.compile(r"\bnon[\s\-‐‑‒–—]*$", re.I)
 
@@ -65,7 +73,16 @@ RISK_TOPICS = {
     "Patents": r"\b(?:patents?|patent expir\w*|intellectual property)\b",
     "Membership renewals": r"\b(?:memberships?|member renewal\w*)\b",
     "Marketplace sellers": r"\b(?:sellers?|merchants?|marketplace)\b",
-    "Commodity prices": r"\b(?:commodity prices?|oil prices?|gas prices?|aluminum prices?|alumina prices?)\b",
+    "Commodity prices": (r"\b(?:commodity prices?|oil prices?|gas prices?|aluminum prices?|alumina prices?"
+                         r"|(?:metals?|copper|zinc|nickel|silver|gold|iron ore|steel|lithium|coal|molybdenum) prices?"
+                         r"|prices? of (?:copper|zinc|nickel|silver|gold|iron ore|steel|lithium|coal|molybdenum"
+                         r"|(?:the )?metals?(?: (?:that )?we produce)?))\b"),
+    # The issuer's own stated dependency or concentration (markets, properties, loans).
+    "Operating concentration": (r"\b(?:operating concentration|(?:highly|heavily|significantly|substantially|primarily|principally|largely) dependent (?:up)?on"
+                      r"|depends? (?:primarily|principally|heavily|substantially|largely) (?:up)?on"
+                      r"|(?:a (?:significant|substantial|large) (?:portion|part|majority)|(?:all|substantially all)) of our "
+                      r"(?:current )?(?:operations|revenues?|sales|cash flows?|assets|properties|loans?|loan portfolio)"
+                      r"|(?:is|are) concentrated in|concentration of our|geographic(?:al)? concentration)\b"),
     "Occupancy": r"\b(?:occupancy|hotel demand|room demand|RevPAR)\b",
     "Production quality": r"\b(?:production quality|product defects?|product quality|aircraft safety|quality control)\b",
     "Export controls": r"\b(?:export controls?|export restrictions?|export licens\w*|sanctions?)\b",
@@ -176,8 +193,9 @@ def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, 
         ("topic_scope", _has_topic_scope(quote, profile, disclosure=True)),
         # Retain the stable diagnostic code; explicit reported risk events can
         # also qualify. Emission still says the event is issuer-reported only.
-        ("possibility_language", bool(_POSSIBILITY.search(quote) or _REPORTED_EVENT.search(quote))),
-        ("adverse_mechanism", bool(_ADVERSE.search(quote))),
+        ("possibility_language", bool(_POSSIBILITY.search(quote) or _REPORTED_EVENT.search(quote)
+                                      or STATED_CONCENTRATION.search(quote))),
+        ("adverse_mechanism", bool(_ADVERSE.search(quote) or STATED_CONCENTRATION.search(quote))),
         ("generic_products_and_services", not re.search(r"\bproducts and services\b", quote, re.I)),
         ("unresolved_reference", not re.match(r"(?:this|these|that|those|it|they|such)\b", quote, re.I)),
         ("cross_reference_or_instruction", not re.search(
