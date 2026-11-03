@@ -384,7 +384,7 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
             text = _SEC_PAGE_FOOTER.sub('', text)
         return text
 
-    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, preserve_sec_business: bool = False, risk_form: str = "10-K", risk_layout: dict | None = None) -> tuple[
+    def result(self, *, max_chars: int = MAX_EXTRACTED_CHARS, preserve_sec_risk: bool = False, preserve_sec_business: bool = False, risk_form: str = "10-K", risk_layout: dict | None = None, preserve_sec_results: bool = False) -> tuple[
         str | None, str, tuple[DocumentSection, ...], tuple[tuple[str, str], ...],
     ]:
         title = _clean_text(" ".join(self._title_parts))[:300] or None
@@ -395,7 +395,17 @@ class _HTMLTextExtractor(_VisibleHTMLParser):
         full_text = _SEC_PAGE_FOOTER.sub('', original_text) if preserve_sec_risk else original_text
         self.normalized_text_chars_total = len(full_text)
         start, end = 0, max_chars
-        if preserve_sec_risk and len(full_text) > max_chars:
+        results = None
+        if preserve_sec_results and len(full_text) > max_chars:
+            # A caller reading the results discussion keeps that section: in a
+            # long 10-Q the risk section is often only a cross-reference.
+            from .sec_risk_sections import results_section_bounds
+            results = results_section_bounds(full_text, form=risk_form)
+            if results and results[1] > max_chars:
+                start, end = results[0], min(results[1], results[0] + max_chars)
+                self.text_selection = "sec_results_section"
+            # A results discussion inside the leading window keeps that window.
+        if preserve_sec_risk and len(full_text) > max_chars and results is None:
             window = complete_risk_window(full_text, form=risk_form, layout=risk_layout)
             if preserve_sec_business and window:
                 from .sec_risk_sections import business_section_bounds
@@ -575,6 +585,7 @@ def fetch_public_document(
     preserve_sec_business: bool = False,
     extract_tables: bool = True,
     inline_fact_cik: str | None = None,
+    preserve_sec_results: bool = False,
     segment_fact_cik: str | None = None,
     inline_fact_concepts: tuple[str, ...] = (),
 ) -> PublicDocument:
@@ -681,7 +692,8 @@ def fetch_public_document(
                 raise PublicDocumentError("reviewed annual business mapping unavailable")
         title, text, sections, raw_links = parser.result(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
-            preserve_sec_risk=sec_periodic_limits, preserve_sec_business=preserve_sec_business, risk_form=document_type or "10-K", risk_layout=layout)
+            preserve_sec_risk=sec_periodic_limits, preserve_sec_business=preserve_sec_business, risk_form=document_type or "10-K", risk_layout=layout,
+            preserve_sec_results=preserve_sec_results and sec_periodic_limits)
         text_metadata = {"canonical_content_hash": canonical_digest,
                          "normalized_text_chars_total": parser.normalized_text_chars_total,
                          "text_window_start": parser.text_window_start,

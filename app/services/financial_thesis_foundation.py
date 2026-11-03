@@ -22,6 +22,44 @@ CORE_METRICS = {
 SUPPLEMENTARY_METRICS = {
     "pretax income": ("IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",),
 }
+# Business-type measures, chosen by the issuer's SEC industry code (SIC). They
+# use only standard US-GAAP duration facts of the issuer's own consolidated
+# statements; the signature pair must be present before any is retrieved.
+SECTOR_SIC = {
+    "bank": {"6021", "6022", "6029", "6035", "6036"},
+    "insurer": {"6311", "6321", "6324", "6331", "6351", "6361", "6399", "6411"},
+    "asset manager": {"6282"},
+}
+SECTOR_METRICS = {
+    "bank": {
+        "net interest income": ("InterestIncomeExpenseNet",),
+        "provision for credit losses": ("ProvisionForLoanLeaseAndOtherLosses", "ProvisionForLoanAndLeaseLosses"),
+        "noninterest income": ("NoninterestIncome",),
+    },
+    "insurer": {
+        "premiums earned": ("PremiumsEarnedNet",),
+        "net investment income": ("NetInvestmentIncome",),
+        "policyholder benefits and claims": ("PolicyholderBenefitsAndClaimsIncurredNet",),
+    },
+    "asset manager": {},
+}
+SECTOR_SIGNATURES = {
+    "bank": ("provision for credit losses", "noninterest income"),
+    "insurer": ("premiums earned", "policyholder benefits and claims"),
+}
+# What a business-type answer needs but standard reported facts do not supply.
+SECTOR_GAPS = {
+    "bank": ["deposits, loan growth and credit quality"],
+    "insurer": ["reserves, spreads and underwriting results"],
+    "asset manager": ["management and performance fees (no current standard US-GAAP fact)",
+                      "assets under management (not a US-GAAP measure)"],
+}
+
+
+def issuer_sector(cik: str | None) -> str | None:
+    from .providers.sec_provider import issuer_sic
+    sic = issuer_sic(cik) if cik else None
+    return next((sector for sector, codes in SECTOR_SIC.items() if sic in codes), None)
 
 
 def financial_metric_label(name: str, concept: str) -> str:
@@ -337,6 +375,33 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
             selected.append(item)
         else:
             supplemental = []
+    # Business-type measures for the same period as the core comparisons; an
+    # unsupported or unreported one is an explicit gap, never a substitute.
+    sector = issuer_sector(expected_cik)
+    core_periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
+    for name, concepts in SECTOR_METRICS.get(sector, {}).items():
+        qualified = []
+        for index, item in enumerate(items, 1):
+            rebuilt = _rebuild(item, ticker=ticker, cik=expected_cik, name=name, concepts=concepts)
+            if rebuilt is None or (item.reporting_period_start, item.reporting_period_end) not in core_periods:
+                continue
+            ref = f"E{index}"
+            if references is not None:
+                ref = next((r.get("id") for r in references
+                    if r.get("title") == item.title.strip()[:300]
+                    and r.get("source") == item.source.strip()[:120]
+                    and r.get("url") == item.url and r.get("published_at") == item.timestamp), None)
+                if not re.fullmatch(r"E[1-9]\d*", str(ref or "")):
+                    continue
+            qualified.append((item, rebuilt, ref))
+        if not qualified or len({repr(row[1].verified_claims) for row in qualified}) != 1:
+            missing.append(f"{name} ({sector} measure)")
+            continue
+        item, rebuilt, ref = qualified[0]
+        rows.append({"claim": rebuilt.summary, "reference_id": ref, "claim_kind": "sector_financial_comparison"})
+        selected.append(item)
+    if sector:
+        missing.extend(SECTOR_GAPS[sector])
     periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
     limitation = ("These metrics cover different reporting durations or end dates. Evaluate each "
                   "against its own comparable prior-year period; they do not establish a common-period "
@@ -413,9 +478,11 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                 (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation', 'issuer_current_period_explanation'} else 2)):
             continue
         if value['claim_kind'] == 'issuer_current_period_explanation':
-            # Only the period the verified revenue comparison describes.
-            revenue = core_comparisons.get('revenue')
-            if not revenue or value['period']['current_end'] != revenue[0].reporting_period_end:
+            # Only the period a verified comparison describes: revenue, or for
+            # issuers without a revenue line (banks), operating or net income.
+            anchor = next((core_comparisons[name] for name in ('revenue', 'operating income', 'net income')
+                           if name in core_comparisons), None)
+            if not anchor or value['period']['current_end'] != anchor[0].reporting_period_end:
                 continue
         reference_id = f"E{index}"
         if references is not None:

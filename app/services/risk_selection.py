@@ -41,7 +41,14 @@ _DEPENDENCY = re.compile(
     r"|\b(?:represents?|represented) (?:a )?(?:significant|substantial|large|majority)\b"
     r"|\bonly one or (?:a )?limited (?:number of )?sources?\b|\bsingle[- ]source\b|\bsole[- ]source\b"
     r"|\b(?:companies|businesses|issuers) like ours\b"
-    r"|\bour (?:largest|principal|key|major) (?:customers?|suppliers?|clients?)\b", re.I)
+    r"|\bour (?:largest|principal|key|major) (?:customers?|suppliers?|clients?)\b"
+    # Stated dependence on the issuer's own products' prices, markets or
+    # properties, or a concentration of its operations, revenue or loans.
+    r"|\b(?:highly|heavily|significantly|substantially|primarily|principally|largely) dependent (?:up)?on\b"
+    r"|\bdepends? (?:primarily|principally|heavily|substantially|largely) (?:up)?on\b"
+    r"|\b(?:a (?:significant|substantial|large) (?:portion|part|majority)|(?:all|substantially all)) of our "
+    r"(?:current )?(?:operations|revenues?|sales|cash flows?|assets|properties|loans?|loan portfolio)\b"
+    r"|\b(?:is|are) concentrated in\b|\bconcentration of our\b", re.I)
 _GENERIC_CAPITALIZED = {
     'The', 'Our', 'We', 'Any', 'If', 'In', 'For', 'Some', 'Many', 'Such', 'These', 'This', 'Company',
     'Despite', 'Because', 'As', 'An', 'A', 'New', 'Failure', 'Failures', 'Failing', 'Decisions'}
@@ -72,10 +79,16 @@ def rejection(quote):
 _STATUTE = re.compile(r"(?:[A-Z][A-Za-z\-]+\s+(?:in\s+|of\s+)?){1,7}(?:Act|Acts|Regulations?|Laws?|Rules?|Directive)\b")
 
 
+# A risk-factor section heading run into the sentence ("General Risk Factors •
+# Failure …", "Financial risks Our …") names the section, not a party.
+_RUN_IN_SECTION = re.compile(r"^(?:[A-Z][A-Za-z,&\-]*\s+){0,8}?(?:Risks?|Risk Factors)\b\s*(?:•\s*)?(?=[A-Z])")
+
+
 def specificity(quote):
     """Concrete dependency statements outrank named parties (beyond the opening
-    word); statute names and all-capital acronyms are not parties."""
-    text = _STATUTE.sub(' ', quote)
+    word); statute names, all-capital acronyms and a run-in section heading are
+    not parties."""
+    text = _STATUTE.sub(' ', _RUN_IN_SECTION.sub('', quote))
     named = {word for word in re.findall(r"(?<=\s)[A-Z][a-z][A-Za-z\-]*", text)
              if word not in _GENERIC_CAPITALIZED}
     return 3 * len(_DEPENDENCY.findall(quote)) + min(len(named), 2)

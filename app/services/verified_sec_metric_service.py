@@ -346,7 +346,15 @@ def fetch_verified_metric_evidence(
             get_company_fact_records_for_concept_units,
             getattr(settings, "sec_user_agent", "") or "")
     metrics = _requested_metrics(question)
-    from .financial_thesis_foundation import requests_profitability_context, financial_metric_label
+    from .financial_thesis_foundation import (requests_profitability_context, financial_metric_label,
+                                              is_broad_thesis_request, SECTOR_METRICS, SECTOR_SIGNATURES)
+    from .source_answer import is_decision_monitoring_request
+    sector_names = {}
+    if is_broad_thesis_request(question or "") or is_decision_monitoring_request(question or ""):
+        for sector, measures in SECTOR_METRICS.items():
+            for name, concepts in measures.items():
+                sector_names[name] = sector
+                metrics = (*metrics, (concepts, name, (), "USD", "duration"))
     supplementary = next(metric for metric in _METRICS if metric[1] == "pretax income")
     context_requested = requests_profitability_context(question)
     if context_requested and supplementary not in metrics:
@@ -423,6 +431,16 @@ def fetch_verified_metric_evidence(
                 item = None
         if item is not None:
             evidence.append(item)
+    if sector_names:
+        # A business type's measures are kept only when its own signature pair
+        # was reported, so other issuers' answers are unchanged.
+        concept_names = {f"us-gaap:{concept}": name for measures in SECTOR_METRICS.values()
+                         for name, concepts in measures.items() for concept in concepts}
+        found = {concept_names.get(item.verified_claims[0].get("metric")) for item in evidence}
+        keep = {name for name, sector in sector_names.items()
+                if sector in SECTOR_SIGNATURES and set(SECTOR_SIGNATURES[sector]) <= found}
+        evidence = [item for item in evidence
+                    if concept_names.get(item.verified_claims[0].get("metric")) in (None, *keep)]
     if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", (question or "").lower()):
         _attach_free_cash_flow_calculations(evidence)
     from .financial_thesis_foundation import requests_pretax_income
