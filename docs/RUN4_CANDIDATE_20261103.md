@@ -1,7 +1,7 @@
 # Run 4 candidate: same cohort, reviewed identity fixes (2026-11-03)
 
-Status: **prepared offline, not packaged, not approved, not executed.** The
-package depends on the frontend deployment below and is not generated yet.
+Status: **packaged for approval, not approved, not executed.** The frontend
+fix was merged and deployed before packaging (see "Frontend pin").
 
 ## Code under test
 
@@ -43,39 +43,36 @@ in development.
 ## Offline route predictions (this commit, SEC's real directory)
 
 SEC directory as retained in run 2 (sha256 `b5be6382…f4ea`), stubbed pipeline,
-no network.
+no network, frontend intents from the pin below: **all twelve questions route
+to the research pipeline on the correct issuer** (SCCO ×2, BX ×2, LNC ×2,
+LVS ×2, USCB ×2, BWMX ×2). No case is unresolved and no wrong suggestion is
+produced. Wrong-issuer requests remain refused before dispatch.
 
-| Case | Frontend intent (pinned 5ee51c3) | Route |
-|---|---|---|
-| SCCO ×2, BX ×2, LNC ×2, LVS ×2, USCB ×2 | company_analysis | research pipeline, correct issuer |
-| BWMX:decision_threshold | company_analysis | research pipeline, BWMX |
-| BWMX:core_thesis | **investing_education** | **general route: no company, counted unanswered** |
+## Frontend pin
 
-With the candidate frontend intent (`company_analysis`), BWMX:core_thesis also
-routes to research on BWMX (12 of 12). No case is unresolved and no wrong
-suggestion is produced. Wrong-issuer requests remain refused before dispatch.
+Ai-Intelligence-interface PR #87 was squash-merged by Julian Kinney as
+`d66be31ecf7a8581323ff539a5fe43d299e15c01` (tree identical to the reviewed
+`6d1d46f`; CI run 41563227519 passed). Verified 2026-11-03:
 
-## Frontend deployment dependency
+- GitHub's deployment record for environment "Production –
+  ai-intelligence-interface" shows `d66be31` as the **active** Vercel
+  production deployment (`ai-intelligence-interface-5vfowz3ai-…`), superseding
+  `5ee51c3`; "Production – project-qxbjx" also deployed `d66be31`.
+- At `d66be31`, `queryIntent.ts` sha256 `f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8`,
+  `symbolResolver.ts` `6fa4e195…8542` (unchanged).
+- The unmodified classifier at that commit (Node 24.15.0) returns
+  `company_analysis` for all twelve exact run-3 questions (questions sha256
+  `835a5fe7…061d`) and all twelve runs-1-2 questions (`e9948dbc…`).
 
-`validation/ordinary_frontend_intents.py` pins what production sends:
-frontend `5ee51c375a75d43ba51fe71114e54a07efe43815`, `queryIntent.ts`
-sha256 `d8f9810f…41b6`, `symbolResolver.ts` `6fa4e195…8542`, and
-BWMX:core_thesis → `investing_education`. It stays pinned to production until
-the fix in Ai-Intelligence-interface PR #87 (`6d1d46f`, `queryIntent.ts`
-sha256 `f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8`,
-resolver unchanged) is merged **and** its production deployment is verified.
-An undeployed classifier is not treated as production.
+Not verified: the served `/analyze` bundle itself. It requires sign-in, and
+signed-in requests to production `/analyze` returned
+`504 MIDDLEWARE_INVOCATION_TIMEOUT` (twice) at verification time; the
+middleware only refreshes the Supabase session and is unchanged by #87. The
+pilot calls the backend directly with the pinned intents, so it does not
+depend on that path, but production users could not reach it at that time.
 
-**To regenerate after a verified deployment:** the frontend commit and
-classifier hash in that pin (from the deployed merge commit), the case
-intents (re-run the unmodified deployed classifier on the twelve exact
-questions; questions sha256 `835a5fe7…061d` unchanged), then the policy
-source binding, evidence template, package and its hash, and a new approval.
-The rehearsal expectations follow the pin automatically.
-
-If the pilot is instead run against the current production frontend, the
-package can be generated from this commit as is; BWMX:core_thesis is then a
-counted routing failure.
+`validation/ordinary_frontend_intents.py` now pins `d66be31` and every case
+intent as `company_analysis`; the policy source binding changes with it.
 
 ## Unchanged from run 3
 
@@ -84,7 +81,7 @@ the same limits (66 SEC GETs, per-stage caps, 30 s / 20 s per case, 480 s,
 one case at a time, ≤4 concurrent SEC requests, 16 MiB / 256 MiB, 0 model,
 0 paid provider, 0 retries, no redirects, direct pinned TLS, filing fallback
 off), USD 1.00 all-in ceiling, SEC contact, 0700 output with 90-day retention
-(proposed output `~/clearsignal-pilot/run-4`), and the frozen scoring from the
+(output `~/clearsignal-pilot/run-4`), and the frozen scoring from the
 run-3 pre-registration: 12-case denominators, no pass rate, a degraded answer
 is never a quality pass, model-assisted review is not independent human
 review.

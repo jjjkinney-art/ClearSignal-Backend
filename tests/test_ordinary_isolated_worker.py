@@ -15,7 +15,7 @@ import pytest
 
 from validation.ordinary_isolated_rehearsal import run_rehearsal
 from validation.ordinary_native_export import ExportRefused, export_packet
-from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, LAST_CASE, quota_contract
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
 from _ordinary_cohort_expectations import (COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES,
@@ -306,12 +306,12 @@ def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     assert hashlib.sha256(questions).hexdigest() == FRONTEND['questions_sha256']
     assert set(CASE_INTENTS.values()) <= FRONTEND_INTENTS
     # A general intent is authoritative in the backend and routes away from
-    # research. Runs 1-2: none. Run 3: exactly one question, ordered last.
+    # research. The deployed frontend (PR #87) sends none for either cohort;
+    # at 5ee51c3 it sent BWMX:core_thesis as general, which run 3 counted.
+    assert FRONTEND['commit'] == 'd66be31ecf7a8581323ff539a5fe43d299e15c01'
+    assert FRONTEND['classifier_sha256'] == 'f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8'
     general = [case for case in CASES if not intent_allows_company_detection(frontend_intent(case))]
-    if COHORT == 'runs-1-2':
-        assert general == []
-    else:
-        assert general == [LAST_CASE] and CASES[-1] == LAST_CASE == 'BWMX:core_thesis'
+    assert general == []
     assert not intent_allows_company_detection('investing_education')
 
 
