@@ -20,6 +20,11 @@ ROWS = {
     "6": {"ticker": "DE", "cik_str": 315189, "title": "DEERE & CO"},
     "7": {"ticker": "GOOGL", "cik_str": 1652044, "title": "Alphabet Inc."},
     "8": {"ticker": "GOOG", "cik_str": 1652044, "title": "Alphabet Inc."},
+    # An issuer whose name contains another issuer's ticker and whose own
+    # securities carry no class suffix, so the name alone abstains.
+    "9": {"ticker": "TMUS", "cik_str": 1283699, "title": "T-Mobile US, Inc."},
+    "10": {"ticker": "TMUSZ", "cik_str": 1283699, "title": "T-Mobile US, Inc."},
+    "11": {"ticker": "T", "cik_str": 732717, "title": "AT&T INC."},
 }
 THESIS = ("What is the investment thesis for {}, what supports it, and what could invalidate it? "
           "Distinguish reported facts from inference and cite material claims.")
@@ -78,9 +83,23 @@ def test_a_ticker_word_inside_an_official_name_does_not_select_another_company(r
     assert routed == ["BWMX"]
 
 
+def test_a_ticker_word_inside_an_ambiguous_official_name_is_not_trusted(routed):
+    response = route(THESIS.format("T-Mobile US, Inc."))
+    # Not AT&T: identification stays unresolved and suggests the named issuer.
+    assert routed == []
+    text = response.answer["general"]["answer"]
+    assert "Did you mean" in text and "(TMUS)" in text and "AT&T" not in text
+
+
 def test_a_plain_ticker_question_keeps_its_ticker(routed):
     route("What is the investment thesis for DE, what supports it, and what could invalidate it?")
-    assert routed == ["DE"]
+    route("What is the investment thesis for T, what supports it, and what could invalidate it?")
+    assert routed == ["DE", "T"]
+
+
+def test_a_ticker_written_outside_the_name_is_still_that_ticker(routed):
+    route("What is the investment thesis for T, given competition from T-Mobile US, Inc.?")
+    assert routed == ["T"]
 
 
 def test_full_names_route_to_their_issuers(routed):

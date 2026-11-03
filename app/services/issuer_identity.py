@@ -127,6 +127,28 @@ def exact_issuer(value: str, directory: Directory) -> Issuer | None:
     return matches[0] if len(matches) == 1 else None
 
 
+def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int], list[Issuer]]]:
+    """Exact official-name word windows in free text, as (character span, issuers)."""
+    from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, _CONTEXT_WORDS
+    excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
+    words = list(re.finditer(r"[a-z0-9]+", value.lower()))
+    windows = []
+    for start in range(len(words)):
+        for width in range(1, min(12, len(words) - start) + 1):
+            key = " ".join(word.group() for word in words[start:start + width])
+            if width == 1 and (len(key) < 5 or key.upper() in excluded or key in _CONTEXT_WORDS):
+                continue
+            found = directory.names.get(key, [])
+            if found:
+                windows.append(((words[start].start(), words[start + width - 1].end()), found))
+    return windows
+
+
+def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
+    """Where exact current official names occur in free text, and whose they are."""
+    return _name_windows(value, _load_directory()) if value.strip() else []
+
+
 def discover_company(value: str, *, question_text: bool = False, as_of=None) -> CompanyContext | None:
     """Resolve exact official names/tickers; ambiguous and historical gaps close.
 
@@ -139,23 +161,13 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
     if not question_text:
         issuer = exact_issuer(value, directory)
     else:
-        from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, _CONTEXT_WORDS
+        from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS
         excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
         matches = {}
         # Full exact name spans take precedence over ticker-like words inside
         # that name: SEC's "WD 40 CO" must not also select ticker WD.
-        words = list(re.finditer(r"[a-z0-9]+", value.lower()))
-        name_spans, name_matches = [], []
-        for start in range(len(words)):
-            for width in range(1, min(12, len(words) - start) + 1):
-                key = " ".join(word.group() for word in words[start:start + width])
-                if width == 1 and (len(key) < 5 or key.upper() in excluded or key in _CONTEXT_WORDS):
-                    continue
-                found = directory.names.get(key, [])
-                if found:
-                    span = (words[start].start(), words[start + width - 1].end())
-                    name_spans.append(span)
-                    name_matches.append((span, found))
+        name_matches = _name_windows(value, directory)
+        name_spans = [span for span, _ in name_matches]
         # The longest exact name wins: a shorter official name lying wholly
         # inside a longer one ("southern" in "southern copper corp") is part of
         # that name, not a second company.
