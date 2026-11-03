@@ -18,7 +18,8 @@ from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-from _ordinary_cohort_expectations import COMPLETED, EXPECTED_HALT
+from _ordinary_cohort_expectations import (COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES,
+                                          UNRESOLVED)
 
 FORBIDDEN = tuple(REHEARSAL_RUNTIME.values())
 
@@ -47,10 +48,11 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     assert packet['first_failure'] is None
     if EXPECTED_HALT is None:
         assert result['status'] == 'complete' and not packet['halt']
-        # Every company is identified from question text, including "NN INC" (a
-        # short registrant name made exact by its legal form).
-        assert statuses == ['answered_unadjudicated'] * 12
-        assert packet['attempt_count'] == 60
+        # Every company-analysis question is identified from its text, including
+        # "NN INC" (a short registrant name made exact by its legal form); a
+        # question the pinned frontend sends as general is counted unresolved.
+        assert statuses == EXPECTED_CASE_STATUSES
+        assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES
     else:
         halted_case, reason = EXPECTED_HALT
         assert result['status'] == 'halted' and packet['halt'] == reason
@@ -331,9 +333,13 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     assert len(statuses) == 12 and statuses[4] == 'answered_degraded_unadjudicated'
     # Other cases are full answers, unless the application's own 10 s window
     # also expired for them under load; then they too are degraded, never failed.
-    assert set(statuses) <= {'answered_unadjudicated', 'answered_degraded_unadjudicated'}
+    # A case the pinned frontend sends as general is unanswered, as in production.
+    assert [s for s, case in zip(statuses, CASES) if case in UNRESOLVED] == ['identity_unresolved'] * len(UNRESOLVED)
+    assert {s for s, case in zip(statuses, CASES) if case not in UNRESOLVED} <= {
+        'answered_unadjudicated', 'answered_degraded_unadjudicated'}
     counts = packet['outcome_counts']
-    assert counts['unanswered'] == counts['operational_failure'] == 0 and sum(counts.values()) == 12
+    assert counts['unanswered'] == len(UNRESOLVED) and counts['operational_failure'] == 0
+    assert sum(counts.values()) == 12
     assert counts['degraded_answer'] == statuses.count('answered_degraded_unadjudicated') >= 1
     assert packet['quality_pass_rate'] is None  # a degraded answer is never a pass
     # Every request counted, within quota, with a terminal outcome; abandoned ones never retained.

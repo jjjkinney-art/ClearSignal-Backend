@@ -1,8 +1,8 @@
 """The ordinary pilot tests on the completing runs-1-2 cohort, in their own process.
 
-Run 3 halts at its eleventh case by design, so tests of a fully completing run
-(late-answer ruling, degraded-but-complete evidence, twelve answered cases)
-execute here, against the unchanged historical cohort, instead of being skipped.
+Run 3 leaves a case unresolved while the pinned frontend sends it as general,
+so tests of twelve answered cases also execute here, against the unchanged
+historical cohort, instead of being skipped.
 """
 import os
 from pathlib import Path
