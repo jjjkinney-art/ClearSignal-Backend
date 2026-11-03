@@ -170,6 +170,9 @@ class OrdinaryNativeBoundary(PilotBoundary):
             self.abandoned.add(key)
             if len(self.abandonments) < 24:
                 self.abandonments.append({'case_id': self.case['case_id'], 'stage': stage})
+        # Durable even when the stage's download already completed: the answer
+        # still lacks this evidence, so the case is degraded.
+        self.ledger.record_stage_abandonment(self.case_run, stage)
         self.gate.abandon_stage(self.case_run, stage)
         self.release.set()
 

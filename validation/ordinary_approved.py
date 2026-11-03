@@ -58,7 +58,7 @@ OUTPUT_INVENTORY = {
 }
 LEDGER_TABLES = ('attempts', 'cases', 'first_sec_refusal', 'first_transport_failure', 'native_dispatches',
                  'ordinary_answers', 'ordinary_case_times', 'ordinary_exchange_failures',
-                 'ordinary_responses', 'ordinary_run', 'ordinary_wire_entries', 'policy',
+                 'ordinary_responses', 'ordinary_run', 'ordinary_stage_abandonments', 'ordinary_wire_entries', 'policy',
                  'sec_claims', 'stage_reservations')
 # Offline tests a reviewer can run for each derived property.
 ENFORCED_BY = (

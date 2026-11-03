@@ -122,6 +122,8 @@ class OrdinaryNativeLedger(AttemptLedger):
                        'code TEXT NOT NULL, detail TEXT NOT NULL, recorded_ns INTEGER NOT NULL)')
             db.execute('CREATE TABLE ordinary_answers (case_run TEXT PRIMARY KEY, case_id TEXT UNIQUE NOT NULL, '
                        'sha256 TEXT NOT NULL, payload BLOB NOT NULL, recorded_ns INTEGER NOT NULL)')
+            db.execute('CREATE TABLE ordinary_stage_abandonments (case_run TEXT NOT NULL, stage TEXT NOT NULL, '
+                       'recorded_ns INTEGER NOT NULL, PRIMARY KEY (case_run, stage))')
 
     def begin_case(self, case_id):
         run_id = str(uuid4())
@@ -257,6 +259,16 @@ class OrdinaryNativeLedger(AttemptLedger):
                 db.execute('INSERT OR IGNORE INTO ordinary_exchange_failures VALUES (?,?,?,?)',
                            (attempt_id, code, detail, time.monotonic_ns()))
                 db.execute("UPDATE policy SET halted=COALESCE(halted,'post_claim_failure') WHERE id=1")
+
+    def record_stage_abandonment(self, case_run, stage):
+        """Durably record that the application answered without an evidence
+        stage, whether or not that stage's requests had already completed."""
+        if type(stage) is not str or not stage.startswith('evidence.') or not stage[9:].replace('_', '').isalnum():
+            raise BudgetError('invalid stage abandonment record')
+        with self.transaction() as db:
+            if db.execute('SELECT 1 FROM cases WHERE id=?', (case_run,)).fetchone():
+                db.execute('INSERT OR IGNORE INTO ordinary_stage_abandonments VALUES (?,?,?)',
+                           (case_run, stage, time.monotonic_ns()))
 
     def abandon_attempt(self, attempt_id, route):
         """Terminal outcome for a request the application abandoned.
