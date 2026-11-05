@@ -83,3 +83,54 @@ def test_an_ambiguous_exact_name_suggests_its_own_registrants_not_fuzzy_matches(
     # Materials from "for", "cite" or "material".
     assert not any(word in text for word in ("Ford", "Citigroup", "Applied Materials"))
     assert "Did you mean" in text and "(OWL)" in text and "(OBDC)" in text
+
+
+# -- eligibility of the foreign-security OTC line rule ------------------------------
+# The rule applies only when every match shares one CIK, several unsuffixed symbols
+# remain, and exactly one of them is not a five-letter symbol ending in F (an OTC
+# line for a foreign issuer's ordinary or preferred shares). Everything else is unchanged.
+
+EDGE_ROWS = {
+    # Share classes plus an OTC line: two non-F symbols remain, so it abstains.
+    "0": {"ticker": "CLSA", "cik_str": 501, "title": "CLASSCO HOLDINGS INC"},
+    "1": {"ticker": "CLSB", "cik_str": 501, "title": "CLASSCO HOLDINGS INC"},
+    "2": {"ticker": "CLSHF", "cik_str": 501, "title": "CLASSCO HOLDINGS INC"},
+    # Common, an exchange-listed preferred (suffixed) and OTC preferred lines.
+    "3": {"ticker": "PRFC", "cik_str": 502, "title": "PREFCO ENERGY INC"},
+    "4": {"ticker": "PRFC-PA", "cik_str": 502, "title": "PREFCO ENERGY INC"},
+    "5": {"ticker": "PRFPF", "cik_str": 502, "title": "PREFCO ENERGY INC"},
+    "6": {"ticker": "PRFQF", "cik_str": 502, "title": "PREFCO ENERGY INC"},
+    # An OTC ADR line (five letters ending in Y) beside the ordinary-share line.
+    "7": {"ticker": "ADRCY", "cik_str": 503, "title": "ADRCO AG"},
+    "8": {"ticker": "ADRCF", "cik_str": 503, "title": "ADRCO AG"},
+    # Only OTC lines: nothing distinguishes them, so it abstains.
+    "9": {"ticker": "ONLYF", "cik_str": 504, "title": "ONLYCO LTD"},
+    "10": {"ticker": "ONLZF", "cik_str": 504, "title": "ONLYCO LTD"},
+    # A different issuer with a similar name.
+    "11": {"ticker": "PRFE", "cik_str": 505, "title": "PREFCO ENERGY PARTNERS INC"},
+    # An ordinary five-letter exchange symbol ending in F for a separate issuer.
+    "12": {"ticker": "SOLOF", "cik_str": 506, "title": "SOLO FINANCE CORP"},
+}
+
+
+@pytest.fixture
+def edge_directory(monkeypatch):
+    parsed = identity.parse_directory(EDGE_ROWS)
+    monkeypatch.setattr(identity, "_load_directory", lambda: parsed)
+    return parsed
+
+
+@pytest.mark.parametrize("name,expected", [
+    ("CLASSCO HOLDINGS INC", None),        # share classes still need a selection
+    ("PREFCO ENERGY INC", "PRFC"),         # common beside exchange and OTC preferred lines
+    ("ADRCO AG", "ADRCY"),                 # the US ADR line beside the OTC ordinary line
+    ("ONLYCO LTD", None),                  # only OTC lines: unchanged abstention
+    ("PREFCO ENERGY PARTNERS INC", "PRFE"),  # the longer, different registrant name wins
+    ("SOLO FINANCE CORP", "SOLOF"),        # a sole symbol is never excluded by the rule
+])
+def test_foreign_security_line_rule_eligibility(edge_directory, name, expected):
+    assert discover(THESIS.format(name)) == expected
+
+
+def test_two_named_issuers_stay_ambiguous_whatever_their_otc_lines(edge_directory):
+    assert discover("Compare PREFCO ENERGY INC with ADRCO AG on margins.") is None
