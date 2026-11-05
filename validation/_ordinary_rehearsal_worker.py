@@ -28,16 +28,16 @@ from contextlib import contextmanager, redirect_stderr, redirect_stdout
 from io import StringIO
 
 def _third_case_cik():
-    """The third issuer's (thesis case, index 4): the fault scenarios' target."""
-    from validation.ordinary_pilot_contract import CASES, COHORT_FILE
+    """The fault scenarios' target issuer (thesis case at FAULT_CASE_INDEX)."""
+    from validation.ordinary_pilot_contract import CASES, COHORT_FILE, FAULT_CASE_INDEX
     records = json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
-    return int(next(r['expected_cik'] for r in records if r['case_id'] == CASES[4]))
+    return int(next(r['expected_cik'] for r in records if r['case_id'] == CASES[FAULT_CASE_INDEX]))
 
 
 _FAULT_CIK = _third_case_cik()
 SCENARIO_FAULTS = {
     'happy': None,
-    # Third issuer's thesis case (index 4): its first companyfacts request.
+    # Target issuer's thesis case (FAULT_CASE_INDEX): its first companyfacts request.
     'wire_read_failure': ('read_failure', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
     'wire_redirect': ('redirect', rf'/submissions/CIK{_FAULT_CIK:010d}\.json$', 1),
     'wire_oversize': ('oversize', rf'/Archives/edgar/data/{_FAULT_CIK}/', 1),

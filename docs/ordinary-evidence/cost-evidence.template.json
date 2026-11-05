@@ -1,7 +1,52 @@
 {
-  "all_in_usd": null,
+  "format": "ordinary-cost-evidence-v1",
   "derived": {
+    "sec_gets_maximum": 66,
+    "sec_gets_per_case": {
+      "SMFG:core_thesis": 8,
+      "SMFG:decision_threshold": 3,
+      "BNY:core_thesis": 8,
+      "BNY:decision_threshold": 3,
+      "OWL:core_thesis": 8,
+      "OWL:decision_threshold": 3,
+      "TWST:core_thesis": 8,
+      "TWST:decision_threshold": 3,
+      "AGEN:core_thesis": 8,
+      "AGEN:decision_threshold": 3,
+      "FSTR:core_thesis": 8,
+      "FSTR:decision_threshold": 3
+    },
+    "sec_dispatches_per_second_maximum": 10,
     "concurrent_sec_maximum": 4,
+    "wall_seconds_maximum": 480,
+    "response_bytes_maximum": 16777216,
+    "transfer": {
+      "body_bytes_read_per_response_maximum": 16842752,
+      "body_bytes_read_maximum": 1111621632,
+      "not_bounded_by_this_code": [
+        "per request: one proxy CONNECT exchange and a TLS handshake with certificate chain",
+        "HTTP request and response headers",
+        "TLS record framing and TCP/IP packet overhead",
+        "response bytes already in flight or buffered (TCP receive window, TLS records) when an oversized or failed response is closed"
+      ],
+      "estimate_guidance": "egress and proxy cost estimates must add protocol overhead and in-flight margin to body_bytes_read_maximum"
+    },
+    "retained_bytes_maximum": 268435456,
+    "model_attempts": 0,
+    "paid_provider_attempts": 0,
+    "model_credential": "OPENAI_API_KEY must equal the non-secret ORDINARY-ZERO-MODEL-NO-CREDENTIAL",
+    "paid_provider_environment_must_be_absent": [
+      "FMP_API_KEY",
+      "FRED_API_KEY",
+      "NEWS_API_KEY"
+    ],
+    "network_destinations": [
+      "https://www.sec.gov",
+      "https://data.sec.gov"
+    ],
+    "network_path": "the reviewed execution configuration: explicit proxy http://proxy:8080, or direct TLS to the SEC hosts with no application proxy (any VPN or other network layer below the process is outside this code); either way TLS is verified against a pinned CA bundle with hostname checking",
+    "transport_retries": 0,
+    "follow_redirects": false,
     "enforced_by": [
       "tests/test_ordinary_live_launcher.py::test_loopback_run_uses_the_live_code_path_within_every_limit",
       "tests/test_ordinary_live_launcher.py::test_an_unpinned_certificate_halts_before_any_request_is_served",
@@ -16,58 +61,13 @@
       "tests/test_ordinary_isolated_worker.py::test_the_abandoned_response_never_reaches_the_answer_and_closes_before_the_next_case",
       "tests/test_ordinary_native_boundary.py",
       "tests/test_ordinary_native_ledger.py"
-    ],
-    "follow_redirects": false,
-    "model_attempts": 0,
-    "model_credential": "OPENAI_API_KEY must equal the non-secret ORDINARY-ZERO-MODEL-NO-CREDENTIAL",
-    "network_destinations": [
-      "https://www.sec.gov",
-      "https://data.sec.gov"
-    ],
-    "network_path": "the reviewed execution configuration: explicit proxy http://proxy:8080, or direct TLS to the SEC hosts with no application proxy (any VPN or other network layer below the process is outside this code); either way TLS is verified against a pinned CA bundle with hostname checking",
-    "paid_provider_attempts": 0,
-    "paid_provider_environment_must_be_absent": [
-      "FMP_API_KEY",
-      "FRED_API_KEY",
-      "NEWS_API_KEY"
-    ],
-    "response_bytes_maximum": 16777216,
-    "retained_bytes_maximum": 268435456,
-    "sec_dispatches_per_second_maximum": 10,
-    "sec_gets_maximum": 66,
-    "sec_gets_per_case": {
-      "BWMX:core_thesis": 8,
-      "BWMX:decision_threshold": 3,
-      "BX:core_thesis": 8,
-      "BX:decision_threshold": 3,
-      "LNC:core_thesis": 8,
-      "LNC:decision_threshold": 3,
-      "LVS:core_thesis": 8,
-      "LVS:decision_threshold": 3,
-      "SCCO:core_thesis": 8,
-      "SCCO:decision_threshold": 3,
-      "USCB:core_thesis": 8,
-      "USCB:decision_threshold": 3
-    },
-    "transfer": {
-      "body_bytes_read_maximum": 1111621632,
-      "body_bytes_read_per_response_maximum": 16842752,
-      "estimate_guidance": "egress and proxy cost estimates must add protocol overhead and in-flight margin to body_bytes_read_maximum",
-      "not_bounded_by_this_code": [
-        "per request: one proxy CONNECT exchange and a TLS handshake with certificate chain",
-        "HTTP request and response headers",
-        "TLS record framing and TCP/IP packet overhead",
-        "response bytes already in flight or buffered (TCP receive window, TLS records) when an oversized or failed response is closed"
-      ]
-    },
-    "transport_retries": 0,
-    "wall_seconds_maximum": 480
+    ]
   },
-  "format": "ordinary-cost-evidence-v1",
   "operator_attestations": {
-    "compute_host_cost_reference": null,
-    "provider_billing_check_reference": null,
+    "sec_access_terms_reference": null,
     "proxy_and_egress_cost_reference": null,
-    "sec_access_terms_reference": null
-  }
+    "compute_host_cost_reference": null,
+    "provider_billing_check_reference": null
+  },
+  "all_in_usd": null
 }

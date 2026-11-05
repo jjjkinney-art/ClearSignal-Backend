@@ -7,9 +7,11 @@ Status: **plan only.** No package, approval, retrieval or run exists for it.
 - Code: `773449d` on `pilot/run5-integration` (do not merge). This is the run-4
   integration stack `8380090` plus backend #360 (research quality, with its
   review findings resolved) and #361 (stage-abandonment reporting).
-- The implementation is frozen at the commit that adds this document. Any later
-  change under `app/` or `validation/` invalidates this plan; it would need a
-  new pre-registration.
+- The implementation is frozen at the commit that adds this document
+  (`d2be09f`). Any later change under `app/` invalidates this plan.
+- Amendment 1 (below, before packaging) changes `validation/` and `tests/` for
+  the run-5 cohort configuration only. Any other change under `validation/`
+  would need a new pre-registration.
 - The run-3/run-4 cohort (SCCO, BX, LNC, LVS, BWMX, USCB) is now **development
   evidence**: #360 was designed on its results. It cannot measure
   generalization and is excluded here.
@@ -30,7 +32,10 @@ Script: `scripts/select_generalization_cohort.py`. Output:
   `de59c00edabfb8b540c61ea4805446763bc9ba6aa8b42fa2955f5439556558d2`, 10,410
   rows). It lists only ticker, CIK and name. Its order is used as a size proxy;
   that is SEC's ordering, not a measured size.
-- **Buckets by position:** large 1–200, mid 501–1,500, small 2,501–5,000.
+- **Buckets by directory position:** positions 1–200, 501–1,500 and
+  2,501–5,000. The selection output labels them `large`, `mid` and `small`.
+  These are **directory-position buckets, not verified company sizes**; no
+  market value or revenue was looked up.
 - **Eligibility:**
   - the ticker is 1–5 capital letters (no share classes, units or warrants);
   - the name has no fund, trust, ETF, acquisition, SPAC, BDC, REIT,
@@ -48,14 +53,14 @@ Script: `scripts/select_generalization_cohort.py`. Output:
 
 Result. It is kept whatever the filings turn out to contain.
 
-| Bucket | Position | Ticker | CIK | SEC name |
+| Directory-position bucket | Position | Ticker | CIK | SEC name |
 |---|---|---|---|---|
-| large | 101 | SMFG | 1022837 | SUMITOMO MITSUI FINANCIAL GROUP, INC. |
-| large | 171 | BNY | 1390777 | Bank of New York Mellon Corp |
-| mid | 709 | OWL | 1823945 | BLUE OWL CAPITAL INC. |
-| mid | 963 | TWST | 1581280 | Twist Bioscience Corp |
-| small | 3715 | AGEN | 1098972 | AGENUS INC |
-| small | 3465 | FSTR | 352825 | FOSTER L B CO |
+| 1–200 | 101 | SMFG | 1022837 | SUMITOMO MITSUI FINANCIAL GROUP, INC. |
+| 1–200 | 171 | BNY | 1390777 | Bank of New York Mellon Corp |
+| 501–1,500 | 709 | OWL | 1823945 | BLUE OWL CAPITAL INC. |
+| 501–1,500 | 963 | TWST | 1581280 | Twist Bioscience Corp |
+| 2,501–5,000 | 3715 | AGEN | 1098972 | AGENUS INC |
+| 2,501–5,000 | 3465 | FSTR | 352825 | FOSTER L B CO |
 
 **No substitution.** An unsupported filer (for example a foreign private issuer
 filing a 20-F under IFRS), a missing filing, a failed identification or a failed
@@ -160,3 +165,96 @@ Preparation is offline, before any package:
 
 Julian's approval then names the package digest. Nothing in this document
 authorizes retrieval or a run.
+
+## Amendment 1 (2026-11-05, before packaging): cohort configuration and predictions
+
+No company, question, assessment item or limit changes. `app/` is unchanged
+from `d2be09f`. The following were made after the freeze, in one commit, and
+only to configure and rehearse this cohort:
+
+**`validation/`**
+
+- `ordinary_pilot_contract.py`:
+  - adds the `run5` cohort, in the pre-registered order;
+  - makes it the only cohort an approved package or run may use
+    (`APPROVED_COHORT`);
+  - names the rehearsal fault-target case (`FAULT_CASE_INDEX`).
+- `ordinary_approved.py`: the cohort check reads `APPROVED_COHORT`.
+- `ordinary_execution_contract.py`: the run-5 case-record projection digest.
+- `ordinary_frontend_intents.py`: pins the deployed frontend `84466b2`. Its
+  classifier and resolver are byte-identical to `d66be31`. Adds the run-5
+  question digest and intents.
+- `_ordinary_synthetic_sec.py`: invented rehearsal data only. Adds the run-5
+  registrants, plus the real directory rows that share their CIK or name
+  (SMFNF, OBDC, OTF), so the rehearsal resolves names as the live directory
+  does.
+- `_ordinary_rehearsal_worker.py`: the fault target is now `FAULT_CASE_INDEX`
+  (TWST), because index 4 (OWL) is predicted unresolved.
+
+**`tests/`** and **`docs/ordinary-evidence/`**
+
+- Adds the case file `tests/ordinary_run5_cases.json`.
+- Rehearsal expectations now include the predicted unresolved cases and
+  their routes.
+- Assertions that assumed every case resolves were generalized.
+- The committed cost-evidence template is regenerated (per-case keys only).
+
+**No case is reordered or removed.** No case is predicted to halt the run:
+an unresolved case is counted as unanswered and the run continues.
+
+### Predicted outcomes (offline, before any retrieval)
+
+Method:
+
+- The deployed frontend classifier was run unmodified on the twelve exact
+  questions (questions sha256 `1dd2bd96…14e8`, Node 24.15.0). Its files were
+  exported from `84466b2`; `queryIntent.ts` sha256 is `f0b6a07b…dde8`.
+- The frozen backend routed each question with that intent against SEC's
+  retained directory (run 4, sha256 `de59c00e…58d2`). The research pipeline
+  and general agents were stubbed, and nothing was read from the network.
+  Routing reads no filing.
+
+| Case | Frontend intent | Backend route | Prediction |
+|---|---|---|---|
+| SMFG:core_thesis | company_analysis | entity suggestion | **unresolved** (unrelated suggestions shown) |
+| SMFG:decision_threshold | company_analysis | identity clarification | **unresolved** |
+| BNY:core_thesis | **investing_education** | general route | **unresolved** (no company) |
+| BNY:decision_threshold | company_analysis | research | correct issuer |
+| OWL:core_thesis | company_analysis | entity suggestion | **unresolved** (unrelated suggestions shown) |
+| OWL:decision_threshold | company_analysis | identity clarification | **unresolved** |
+| TWST ×2, AGEN ×2, FSTR ×2 | company_analysis | research | correct issuer |
+
+Causes, from directory data and the pinned code:
+
+- **SMFG:** two unsuffixed symbols on one CIK (SMFG, SMFNF), so the
+  share-class rule abstains.
+- **OWL:** "BLUE OWL CAPITAL INC." and "Blue Owl Capital Corp" (OBDC) share
+  the name core, so the identity is ambiguous.
+- **BNY:core_thesis:** the deployed frontend classifies this text as
+  investing education.
+- **Unrelated suggestions:** for the two unresolved thesis questions, the
+  backend suggests Ford, Citigroup and Applied Materials. These are generic
+  examples, but they are misleading. No SEC request is made for them.
+
+Predicted totals:
+
+- 7 of 12 cases reach research on the correct issuer.
+- 5 of 12 are unresolved.
+- No case routes to a wrong issuer.
+
+**Unsupported research versus operational degradation.** These are reported
+separately:
+
+- An unresolved identity, a general route or an unsupported filer
+  (non-US-GAAP data) is **unsupported research**. It is a product limitation
+  and is counted as unanswered.
+- A timeout, an abandoned stage or a transport failure on a supported case is
+  **operational degradation or failure**. Neither can be predicted without
+  filings, which were not inspected.
+- The two SMFG cases would also face the unimplemented IFRS path, but they are
+  predicted to stop at identity first. That expectation comes from general
+  knowledge that SMFG is a foreign private issuer, not from any filing, and
+  was not used to change anything.
+
+These cases stay in the twelve-case denominator. The predictions are not
+evidence of research quality.

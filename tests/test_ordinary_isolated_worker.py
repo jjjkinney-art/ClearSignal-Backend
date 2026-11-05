@@ -15,7 +15,7 @@ import pytest
 
 from validation.ordinary_isolated_rehearsal import run_rehearsal
 from validation.ordinary_native_export import ExportRefused, export_packet
-from validation.ordinary_pilot_contract import CASES, COHORT_FILE, LAST_CASE, quota_contract
+from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
 from _ordinary_cohort_expectations import (COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES,
@@ -120,9 +120,9 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
 
 @pytest.mark.timeout(120)
 @pytest.mark.parametrize('scenario,case,code', [
-    ('wire_read_failure', CASES[4], 'read_error'),
-    ('wire_redirect', CASES[4], 'http_redirect'),
-    ('wire_oversize', CASES[4], 'response_size'),
+    ('wire_read_failure', CASES[FAULT_CASE_INDEX], 'read_error'),
+    ('wire_redirect', CASES[FAULT_CASE_INDEX], 'http_redirect'),
+    ('wire_oversize', CASES[FAULT_CASE_INDEX], 'response_size'),
     ('wire_connect_failure', None, 'connect_error'),
 ])
 def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, case, code):
@@ -135,7 +135,7 @@ def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, c
     halted = statuses.index('halted')
     if case:
         assert CASES[halted] == case
-    assert statuses == ['answered_unadjudicated'] * halted + ['halted'] + ['not_run_after_halt'] * (11 - halted)
+    assert statuses == EXPECTED_CASE_STATUSES[:halted] + ['halted'] + ['not_run_after_halt'] * (11 - halted)
     assert set(packet['answers']) == set(CASES[:halted])
     failed = [a for a in packet['attempts'] if a['failure']]
     assert failed and all(a['response'] is None and a['status'] != 'settled' for a in failed)
@@ -143,7 +143,8 @@ def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, c
     no_runtime_values_written(output)
 
 
-@pytest.mark.parametrize('scenario,index,limit', [('core_deadline', 4, 30), ('threshold_deadline', 5, 20)])
+@pytest.mark.parametrize('scenario,index,limit', [('core_deadline', FAULT_CASE_INDEX, 30),
+                                                  ('threshold_deadline', FAULT_CASE_INDEX + 1, 20)])
 @pytest.mark.timeout(90)
 def test_parent_kills_a_stalled_case_and_exports_from_the_durable_ledger(tmp_path, scenario, index, limit):
     result = run_rehearsal(tmp_path / scenario, scenario=scenario)
@@ -154,7 +155,7 @@ def test_parent_kills_a_stalled_case_and_exports_from_the_durable_ledger(tmp_pat
     assert limit <= supervisor['case_elapsed_seconds'] < limit + 5
     assert packet['halt'] == 'stage_timeout'
     assert [c['status'] for c in packet['cases']] == (
-        ['answered_unadjudicated'] * index + ['halted'] + ['not_run_after_halt'] * (11 - index))
+        EXPECTED_CASE_STATUSES[:index] + ['halted'] + ['not_run_after_halt'] * (11 - index))
     assert set(packet['answers']) == set(CASES[:index])
 
 
@@ -306,12 +307,14 @@ def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     assert hashlib.sha256(questions).hexdigest() == FRONTEND['questions_sha256']
     assert set(CASE_INTENTS.values()) <= FRONTEND_INTENTS
     # A general intent is authoritative in the backend and routes away from
-    # research. The deployed frontend (PR #87) sends none for either cohort;
-    # at 5ee51c3 it sent BWMX:core_thesis as general, which run 3 counted.
-    assert FRONTEND['commit'] == 'd66be31ecf7a8581323ff539a5fe43d299e15c01'
+    # research. The deployed frontend (84466b2; classifier unchanged since PR #87)
+    # sends none for runs 1-4 and BNY:core_thesis as general for run 5, which is
+    # counted unresolved; at 5ee51c3 it sent BWMX:core_thesis as general (run 3).
+    assert FRONTEND['commit'] == '84466b2926c5e231b322db7f6a363763de544a95'
     assert FRONTEND['classifier_sha256'] == 'f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8'
     general = [case for case in CASES if not intent_allows_company_detection(frontend_intent(case))]
-    assert general == []
+    assert general == (['BNY:core_thesis'] if COHORT == 'run5' else [])
+    assert set(general) <= set(UNRESOLVED)
     assert not intent_allows_company_detection('investing_education')
 
 
@@ -330,7 +333,7 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
     statuses = [c['status'] for c in packet['cases']]
-    assert len(statuses) == 12 and statuses[4] == 'answered_degraded_unadjudicated'
+    assert len(statuses) == 12 and statuses[FAULT_CASE_INDEX] == 'answered_degraded_unadjudicated'
     # Other cases are full answers, unless the application's own 10 s window
     # also expired for them under load; then they too are degraded, never failed.
     # A case the pinned frontend sends as general is unanswered, as in production.
@@ -346,13 +349,13 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     assert packet['attempt_count'] == packet['wire_entries'] <= 66
     assert all(a['status'] in {'settled', 'abandoned'} for a in packet['attempts'])
     abandoned = [a for a in packet['attempts'] if a['status'] == 'abandoned']
-    assert (CASES[4], 'evidence.sec_metrics', 'sec/facts') in {
+    assert (CASES[FAULT_CASE_INDEX], 'evidence.sec_metrics', 'sec/facts') in {
         (a['case_id'], a['stage'], a['route']) for a in abandoned}
     assert all(a['failure'] == {'code': 'abandoned', 'detail': a['route']} and a['response'] is None
                for a in abandoned)
     degraded_cases = {case for case, status in zip(CASES, statuses) if status == 'answered_degraded_unadjudicated'}
     assert {a['case_id'] for a in abandoned} == degraded_cases
-    assert {'case_id': CASES[4], 'stage': 'evidence.sec_metrics'} in worker['abandoned_evidence']
+    assert {'case_id': CASES[FAULT_CASE_INDEX], 'stage': 'evidence.sec_metrics'} in worker['abandoned_evidence']
     assert worker['blocked_external_operations'] == [] and worker['unfinished_workers'] == 0
     assert 1 <= worker['max_inflight_sec'] <= 4
 
@@ -362,14 +365,14 @@ def test_the_abandoned_response_never_reaches_the_answer_and_closes_before_the_n
     result, output = degraded
     packet = result['packet']
     cik = next(c for c in json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
-               if c['case_id'] == CASES[4])['expected_cik']
+               if c['case_id'] == CASES[FAULT_CASE_INDEX])['expected_cik']
     facts_url = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
-    answer = packet['answers'][CASES[4]]['response']
+    answer = packet['answers'][CASES[FAULT_CASE_INDEX]]['response']
     assert facts_url not in json.dumps(answer)
     with sqlite3.connect(output / 'ledger.sqlite') as db:
         assert not db.execute('SELECT 1 FROM ordinary_responses r JOIN attempts a ON a.id=r.attempt_id '
                               "JOIN cases c ON c.id=a.case_run WHERE c.case_id=? AND r.url=?",
-                              (CASES[4], facts_url)).fetchone()
+                              (CASES[FAULT_CASE_INDEX], facts_url)).fetchone()
         closed = db.execute("SELECT c.case_id, f.recorded_ns FROM ordinary_exchange_failures f JOIN attempts a "
                             "ON a.id=f.attempt_id JOIN cases c ON c.id=a.case_run WHERE a.status='abandoned'").fetchall()
         starts = dict(db.execute("SELECT c.case_id, t.started_ns FROM ordinary_case_times t "

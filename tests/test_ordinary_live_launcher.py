@@ -14,8 +14,7 @@ import stat
 
 import pytest
 
-from _ordinary_cohort_expectations import (EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES, EXPECTED_STATUS,
-                                          UNRESOLVED)
+from _ordinary_cohort_expectations import (EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES, EXPECTED_STATUS, UNRESOLVED, UNRESOLVED_ROUTES)
 from _ordinary_loopback_sec import LoopbackSEC
 from validation import ordinary_approved as launcher
 from validation.capture_budget import BudgetError, digest
@@ -67,9 +66,10 @@ def test_loopback_run_uses_the_live_code_path_within_every_limit(loopback):
     assert 1 <= worker['max_inflight_sec'] <= 4
     assert {(r['pipeline'], r['response_mode']) for r in worker['routing'] if r['case_id'] not in UNRESOLVED} == {
         ('investment_thesis', 'source_evidence')}
-    # A case the pinned frontend sends as general takes the general route and no SEC request.
-    assert [(r['pipeline'], r['response_mode']) for r in worker['routing'] if r['case_id'] in UNRESOLVED] == [
-        ('general_finance', None)] * len(UNRESOLVED)
+    # An unresolved case (general frontend intent or unresolved identity) takes its
+    # own non-research route and makes no SEC evidence request.
+    assert [(r['pipeline'], r['response_mode']) for r in worker['routing'] if r['case_id'] in UNRESOLVED] == \
+        UNRESOLVED_ROUTES
     # Runtime values are used on the wire and never stored.
     for path in output.rglob('*'):
         if path.is_file():
@@ -124,7 +124,7 @@ def test_evidence_templates_carry_derived_facts_and_require_attestations():
 
 
 @pytest.mark.skipif(os.environ.get('ORDINARY_PILOT_COHORT') == 'runs-1-2',
-                    reason='the committed templates are for the run-3 cohort')
+                    reason='the committed templates are for the approved cohort')
 def test_committed_evidence_templates_match_the_code():
     root = Path(__file__).resolve().parents[1] / 'docs/ordinary-evidence'
     for kind in ('cost', 'retention'):
@@ -203,7 +203,7 @@ def approved_inputs(tmp_path, monkeypatch):
 
 def build_approved_inputs(tmp_path, monkeypatch, *, network):
     if 'ORDINARY_PILOT_COHORT' in os.environ:
-        pytest.skip('approved packages use the run-3 cohort only; tested in the main process')
+        pytest.skip('approved packages use the approved cohort only; tested in the main process')
     base = tmp_path.resolve()
     ca = base / 'reviewed-ca.pem'
     ca.write_bytes(b'-----BEGIN CERTIFICATE-----\ninvented\n-----END CERTIFICATE-----\n')

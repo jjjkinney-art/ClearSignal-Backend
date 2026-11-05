@@ -11,10 +11,10 @@ import sys
 
 import pytest
 
-from validation.ordinary_pilot_contract import COHORT
+from validation.ordinary_pilot_contract import APPROVED_COHORT, COHORT
 
 
-@pytest.mark.skipif(COHORT != 'run3', reason='this process already uses the historical cohort')
+@pytest.mark.skipif(COHORT != APPROVED_COHORT, reason='this process already uses the historical cohort')
 @pytest.mark.timeout(1800)
 def test_ordinary_pilot_tests_pass_on_the_completing_historical_cohort():
     root = Path(__file__).resolve().parents[1]

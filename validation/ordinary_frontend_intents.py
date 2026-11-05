@@ -11,7 +11,9 @@ from validation.ordinary_pilot_contract import CASES, COHORT
 
 FRONTEND = {
     'repository': 'jjjkinney-art/Ai-Intelligence-interface',
-    'commit': 'd66be31ecf7a8581323ff539a5fe43d299e15c01',  # main, PR #87 squash-merged
+    # Production since 2026-11-05 (PR #89 squash-merged). Classifier and resolver are
+    # byte-identical to d66be31 (PR #87), which classified runs 3 and 4.
+    'commit': '84466b2926c5e231b322db7f6a363763de544a95',
     'classifier': 'frontend_cinematic/lib/queryIntent.ts',
     'classifier_sha256': 'f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8',
     'resolver': 'frontend_cinematic/lib/symbolResolver.ts',
@@ -21,15 +23,22 @@ FRONTEND = {
     # commit (Node 24.15.0), after its production deployment; it was classified
     # 2026-10-31 at 5ee51c3 for run 3. Runs 1 and 2 (tests/ordinary_pilot_cases.json)
     # were classified for PR #350.
-    'questions_sha256': {'run3': '835a5fe7d038e21f7085f078f63cf10b92a4d58c310cce00fc6a80c5087f061d',
+    # Run 5 (tests/ordinary_run5_cases.json) was classified 2026-11-05 by the unmodified
+    # files exported from 84466b2 (Node 24.15.0).
+    'questions_sha256': {'run5': '1dd2bd963509407fff9af6a5456c25ad3642e19ca15d4bcdd9191ee648e914e8',
+                         'run3': '835a5fe7d038e21f7085f078f63cf10b92a4d58c310cce00fc6a80c5087f061d',
                          'runs-1-2': 'e9948dbc5a8038b2d32805ec39135e7e329c984bff38144679317774ce5eec28'}[COHORT],
 }
 # The frontend's QueryIntent union.
 FRONTEND_INTENTS = frozenset({'company_analysis', 'market_question', 'investing_education',
                               'portfolio_question'})
-# What the pinned classifier returns: company analysis for every cohort question.
-# (At 5ee51c3 it sent BWMX:core_thesis as investing_education; run 3 counted that.)
-CASE_INTENTS = {case: 'company_analysis' for case in CASES}
+# What the pinned classifier returns. For runs 1-4 that is company analysis for
+# every question (at 5ee51c3 it sent BWMX:core_thesis as investing_education; run 3
+# counted that). For run 5 it sends BNY:core_thesis ("…for Bank of New York Mellon
+# Corp…") as investing_education: the backend routes it away from research, and the
+# case is counted unresolved, not removed or reworded.
+CASE_INTENTS = {case: ('investing_education' if (COHORT, case) == ('run5', 'BNY:core_thesis')
+                       else 'company_analysis') for case in CASES}
 
 
 def frontend_intent(case_id):

@@ -28,7 +28,21 @@ REGISTRANTS = {
     'LVS': (1300514, 'LAS VEGAS SANDS CORP'),
     'USCB': (1901637, 'USCB FINANCIAL HOLDINGS, INC.'),
     'BWMX': (1788257, 'BETTERWARE DE MEXICO, S.A.P.I. DE C.V'),
+    # Run-5 cohort (identity only; every figure below remains invented).
+    'SMFG': (1022837, 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
+    'BNY': (1390777, 'Bank of New York Mellon Corp'),
+    'OWL': (1823945, 'BLUE OWL CAPITAL INC.'),
+    'TWST': (1581280, 'Twist Bioscience Corp'),
+    'AGEN': (1098972, 'AGENUS INC'),
+    'FSTR': (352825, 'FOSTER L B CO'),
 }
+# Real directory rows that share a run-5 issuer's CIK or name, as SEC's retained
+# directory (run 4, sha256 de59c00e...) lists them. Directory identity only: they
+# make the rehearsal resolve names as the live directory would, and no
+# submissions, facts or documents are served for the other issuers.
+_DIRECTORY_ONLY = [(1022837, 'SMFNF', 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
+                   (1655888, 'OBDC', 'Blue Owl Capital Corp'),
+                   (1747777, 'OTF', 'Blue Owl Technology Finance Corp.')]
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
 SYNTHETIC_FAULTS = frozenset({'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
@@ -39,7 +53,7 @@ def _ticker(cik):
 
 
 def directory():
-    rows = [(cik, ticker, name) for ticker, (cik, name) in REGISTRANTS.items()] + _UNRELATED
+    rows = [(cik, ticker, name) for ticker, (cik, name) in REGISTRANTS.items()] + _DIRECTORY_ONLY + _UNRELATED
     return {str(i): {'cik_str': cik, 'ticker': ticker, 'title': name}
             for i, (cik, ticker, name) in enumerate(rows)}
 

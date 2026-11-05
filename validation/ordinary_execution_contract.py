@@ -16,7 +16,10 @@ from .ordinary_pilot_contract import CASES, COHORT, quota_contract, validate_con
 # (file SHA-256 28e88911a66fc4d19af4c4562df67307623d043a413a8a8c71ec84e2c04046c5);
 # runs 1 and 2 from the review packet's cases.json (file SHA-256
 # af2fd4a2c5edbd9fab88390553baed840350499753a70f5c75a38a42145c258e).
+# Run 5 from tests/ordinary_run5_cases.json (file SHA-256
+# e15d1f8705adb31183c3aa44083f67f7f22e7ce4d39b5533c70715c221d9fdf5).
 PACKET_CASE_PROJECTION_SHA256 = {
+    'run5': '950e991317aac9b2979794b3cdf917358f0b566d6a3fd89f40aabeafb2782399',
     'run3': 'a87bd50548790b0e3e42ed1a3fc31513764296352a3d4cd54dd4c49ac2cfdfa6',
     'runs-1-2': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'}[COHORT]
 

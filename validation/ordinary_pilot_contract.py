@@ -12,6 +12,10 @@ QUESTIONS = ('core_thesis', 'decision_threshold')
 # docs/GENERALIZATION_EVAL_PLAN_20261030.md.
 RUN_1_2_ISSUERS = ('NPK', 'GOOGL', 'INGR', 'NNBR', 'AMZN', 'MAN')
 RUN_3_ISSUERS = ('SCCO', 'BX', 'LNC', 'LVS', 'USCB', 'BWMX')
+# Run 5 is unseen-company cohort 2, pre-registered in
+# docs/GENERALIZATION_COHORT_2_PREREGISTRATION_20261105.md, in its
+# pre-registered order. No case is predicted to halt the run, so none is moved.
+RUN_5_ISSUERS = ('SMFG', 'BNY', 'OWL', 'TWST', 'AGEN', 'FSTR')
 # Both BWMX cases are predicted offline to halt the run, so they are ordered
 # last and no other case is lost; both stay in the denominator. The threshold
 # question resolves to another issuer, whose SEC request the boundary refuses
@@ -24,14 +28,25 @@ COHORTS = {
              + (LAST_CASE,)),
     'runs-1-2': ('tests/ordinary_pilot_cases.json',
                  tuple(f'{i}:{q}' for i in RUN_1_2_ISSUERS for q in QUESTIONS)),
+    'run5': ('tests/ordinary_run5_cases.json',
+             tuple(f'{i}:{q}' for i in RUN_5_ISSUERS for q in QUESTIONS)),
 }
+# Rehearsal fault scenarios target the thesis case at this index and the
+# threshold case after it: the third issuer's, unless that issuer is predicted
+# unresolved (run 5: OWL), then the next issuer whose two cases are answered.
+FAULT_CASE_INDEX = {'run5': 6}
+# The only cohort an approved package or run may use.
+APPROVED_COHORT = 'run5'
 # Rehearsal tests may select the historical cohort to keep exercising a fully
 # completing run; the approved launcher refuses any selection, so an approved
-# execution always uses run 3, whose case records its package binds.
-COHORT = os.environ.get('ORDINARY_PILOT_COHORT', 'run3')
+# execution always uses APPROVED_COHORT, whose case records its package binds.
+COHORT = os.environ.get('ORDINARY_PILOT_COHORT', APPROVED_COHORT)
 if COHORT not in COHORTS:
     raise ValueError('unknown ordinary pilot cohort')
 COHORT_FILE, CASES = COHORTS[COHORT]
+# Kept for the historical run-3 cohort's tests.
+LAST_CASE = CASES[-1] if COHORT != 'run3' else LAST_CASE
+FAULT_CASE_INDEX = FAULT_CASE_INDEX.get(COHORT, 4)
 ISSUERS = tuple(dict.fromkeys(case.split(':')[0] for case in CASES))
 
 

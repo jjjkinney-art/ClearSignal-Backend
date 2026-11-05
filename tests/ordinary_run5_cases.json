@@ -1,0 +1,86 @@
+[
+  {
+    "case_id": "SMFG:core_thesis",
+    "issuer_id": "SMFG",
+    "expected_cik": "0001022837",
+    "question": "What is the investment thesis for SUMITOMO MITSUI FINANCIAL GROUP, INC., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "SMFG:decision_threshold",
+    "issuer_id": "SMFG",
+    "expected_cik": "0001022837",
+    "question": "Which valuation and operating assumptions would make SUMITOMO MITSUI FINANCIAL GROUP, INC. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "BNY:core_thesis",
+    "issuer_id": "BNY",
+    "expected_cik": "0001390777",
+    "question": "What is the investment thesis for Bank of New York Mellon Corp, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "BNY:decision_threshold",
+    "issuer_id": "BNY",
+    "expected_cik": "0001390777",
+    "question": "Which valuation and operating assumptions would make Bank of New York Mellon Corp attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "OWL:core_thesis",
+    "issuer_id": "OWL",
+    "expected_cik": "0001823945",
+    "question": "What is the investment thesis for BLUE OWL CAPITAL INC., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "OWL:decision_threshold",
+    "issuer_id": "OWL",
+    "expected_cik": "0001823945",
+    "question": "Which valuation and operating assumptions would make BLUE OWL CAPITAL INC. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "TWST:core_thesis",
+    "issuer_id": "TWST",
+    "expected_cik": "0001581280",
+    "question": "What is the investment thesis for Twist Bioscience Corp, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "TWST:decision_threshold",
+    "issuer_id": "TWST",
+    "expected_cik": "0001581280",
+    "question": "Which valuation and operating assumptions would make Twist Bioscience Corp attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "AGEN:core_thesis",
+    "issuer_id": "AGEN",
+    "expected_cik": "0001098972",
+    "question": "What is the investment thesis for AGENUS INC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "AGEN:decision_threshold",
+    "issuer_id": "AGEN",
+    "expected_cik": "0001098972",
+    "question": "Which valuation and operating assumptions would make AGENUS INC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "FSTR:core_thesis",
+    "issuer_id": "FSTR",
+    "expected_cik": "0000352825",
+    "question": "What is the investment thesis for FOSTER L B CO, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
+  },
+  {
+    "case_id": "FSTR:decision_threshold",
+    "issuer_id": "FSTR",
+    "expected_cik": "0000352825",
+    "question": "Which valuation and operating assumptions would make FOSTER L B CO attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+    "question_id": "decision_threshold"
+  }
+]
