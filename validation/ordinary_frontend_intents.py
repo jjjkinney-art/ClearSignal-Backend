@@ -25,7 +25,7 @@ FRONTEND = {
     # were classified for PR #350.
     # Run 5 (tests/ordinary_run5_cases.json) was classified 2026-11-05 by the unmodified
     # files exported from 84466b2 (Node 24.15.0).
-    'questions_sha256': {'run5': '1dd2bd963509407fff9af6a5456c25ad3642e19ca15d4bcdd9191ee648e914e8',
+    'questions_sha256': {'run5': '2f2e0db6f80c457a54bd01859ff3af094df02159fcbd4d338cf851158c351860',
                          'run3': '835a5fe7d038e21f7085f078f63cf10b92a4d58c310cce00fc6a80c5087f061d',
                          'runs-1-2': 'e9948dbc5a8038b2d32805ec39135e7e329c984bff38144679317774ce5eec28'}[COHORT],
 }
@@ -35,8 +35,9 @@ FRONTEND_INTENTS = frozenset({'company_analysis', 'market_question', 'investing_
 # What the pinned classifier returns. For runs 1-4 that is company analysis for
 # every question (at 5ee51c3 it sent BWMX:core_thesis as investing_education; run 3
 # counted that). For run 5 it sends BNY:core_thesis ("…for Bank of New York Mellon
-# Corp…") as investing_education: the backend routes it away from research, and the
-# case is counted unresolved, not removed or reworded.
+# Corp…") as investing_education: the backend's general route attempts a model call,
+# which the zero-model boundary refuses, halting the run there. The case is kept,
+# not removed or reworded, and ordered last (pre-registration amendment 2).
 CASE_INTENTS = {case: ('investing_education' if (COHORT, case) == ('run5', 'BNY:core_thesis')
                        else 'company_analysis') for case in CASES}
 

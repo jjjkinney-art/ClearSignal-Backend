@@ -212,6 +212,13 @@ def main():
     platform.processor = lambda: 'offline-fixture'
     platform.uname = lambda: namedtuple('OfflineUname', 'system node release version machine processor')(
         'Linux', 'offline', '0', 'offline', 'x86_64', 'offline')
+    # The OpenAI SDK's request headers ask distro for the Linux distribution the
+    # fixture above reports. Without /etc/os-release (macOS) distro shells out to
+    # lsb_release, which this worker refuses, so a model request failed before it
+    # reached the zero-model boundary: uncounted on macOS, refused on Linux. A
+    # fixed answer makes every model request reach the boundary on every host.
+    import distro
+    distro.id = lambda: 'offline-fixture'
     verify_running_configuration(policy)
     sys.addaudithook(audit)
     original_dns = socket.getaddrinfo

@@ -9,9 +9,10 @@ Status: **plan only.** No package, approval, retrieval or run exists for it.
   review findings resolved) and #361 (stage-abandonment reporting).
 - The implementation is frozen at the commit that adds this document
   (`d2be09f`). Any later change under `app/` invalidates this plan.
-- Amendment 1 (below, before packaging) changes `validation/` and `tests/` for
-  the run-5 cohort configuration only. Any other change under `validation/`
-  would need a new pre-registration.
+- Amendments 1 and 2 (below, both before any retrieval) change `validation/`
+  and `tests/` only: amendment 1 configures the run-5 cohort; amendment 2
+  fixes a rehearsal fixture defect and moves one case last. Any other change
+  under `validation/` would need a new pre-registration.
 - The run-3/run-4 cohort (SCCO, BX, LNC, LVS, BWMX, USCB) is now **development
   evidence**: #360 was designed on its results. It cannot measure
   generalization and is excluded here.
@@ -218,7 +219,7 @@ Method:
 |---|---|---|---|
 | SMFG:core_thesis | company_analysis | entity suggestion | **unresolved** (unrelated suggestions shown) |
 | SMFG:decision_threshold | company_analysis | identity clarification | **unresolved** |
-| BNY:core_thesis | **investing_education** | general route | **unresolved** (no company) |
+| BNY:core_thesis | **investing_education** | general route | **failed: model call refused, run halts** (see amendment 2) |
 | BNY:decision_threshold | company_analysis | research | correct issuer |
 | OWL:core_thesis | company_analysis | entity suggestion | **unresolved** (unrelated suggestions shown) |
 | OWL:decision_threshold | company_analysis | identity clarification | **unresolved** |
@@ -236,10 +237,11 @@ Causes, from directory data and the pinned code:
   backend suggests Ford, Citigroup and Applied Materials. These are generic
   examples, but they are misleading. No SEC request is made for them.
 
-Predicted totals:
+Predicted totals (as corrected by amendment 2):
 
 - 7 of 12 cases reach research on the correct issuer.
-- 5 of 12 are unresolved.
+- 4 of 12 are unresolved (SMFG ×2, OWL ×2).
+- 1 of 12 fails: BNY:core_thesis halts the run.
 - No case routes to a wrong issuer.
 
 **Unsupported research versus operational degradation.** These are reported
@@ -258,3 +260,86 @@ separately:
 
 These cases stay in the twelve-case denominator. The predictions are not
 evidence of research quality.
+
+## Amendment 2 (2026-11-05, before any retrieval): model-call halt and case order
+
+No company, question, assessment item or limit changes. `app/` is unchanged
+from `d2be09f`. Run 5 remains unapproved.
+
+### What was found
+
+Hosted CI on amendment 1 (`47b3589`, run 41977440729) failed: the synthetic
+rehearsal halted with `invalid_request` before BNY:decision_threshold. The
+same tests passed on the Mac. Traced offline, in both environments:
+
+1. **Classifier.** The deployed frontend (`84466b2`, classifier sha256
+   `f0b6a07b…dde8`) sends BNY:core_thesis as `investing_education`.
+2. **Backend routing.** The frozen `/ask` treats that intent as general and
+   calls `run_general_finance_agent`. That agent **always makes a model
+   call**: no FRED key is set, so it retrieves no evidence and goes straight to
+   the model.
+3. **Model-call safeguard on Linux (CI).** The request reaches the pilot's
+   OpenAI mock. The zero-model boundary refuses it, which halts the run with
+   `invalid_request`.
+4. **Model-call safeguard on macOS.** The worker's platform fixture reports
+   `uname` as Linux on every host, so the OpenAI SDK's header code asks
+   `distro.id()` for the distribution. macOS has no `/etc/os-release`, so
+   `distro` runs `lsb_release` as a subprocess. The worker's audit hook refuses
+   that subprocess's `/dev/null` open with a `RuntimeError`, so the model call
+   failed **before reaching the boundary**:
+   - nothing was counted as a model request;
+   - the general agent fell back to a canned answer;
+   - the case looked like an ordinary unresolved case.
+
+   This was confirmed by tracing the worker's diagnostics in a throwaway,
+   uncommitted copy: `distro` → `lsb_release` → "write outside fresh rehearsal
+   output", three attempts.
+
+Checked and ruled out:
+
+- credentials: the same placeholder key, and the OpenAI client is constructed
+  in both environments;
+- mocks: the SDK patches are installed before the app is imported;
+- leaked local state: no untracked or ignored files, and fresh outputs and
+  homes.
+
+The same worker runs the approved live mode, so **on this Mac a live run
+would also have hidden the model attempt**. That is a safeguard defect in the
+fixture, not application behaviour.
+
+### What changed
+
+- `validation/_ordinary_rehearsal_worker.py`: `distro.id()` returns a fixed
+  value, alongside the existing platform fixture. Every model request now
+  reaches the zero-model boundary on every host. With this line removed, the
+  Mac reproduces the masked "complete" run; with it, the Mac halts exactly as
+  CI does.
+- **BNY:core_thesis is retained as a failed case and moved last.** It
+  genuinely attempts a model call and halts the run. Following the run-3
+  precedent (BWMX:core_thesis), it is ordered after the other eleven cases so
+  their observations are preserved.
+
+  New order: SMFG ×2, BNY:decision_threshold, OWL ×2, TWST ×2, AGEN ×2,
+  FSTR ×2, BNY:core_thesis.
+
+  All twelve cases stay in the denominator. **This order differs from the
+  order pre-registered on 2026-11-05 and is disclosed here.** It was made
+  before any retrieval and changes no case's content.
+- Case file, projection digest and question digest are re-derived for the
+  new order. The intents are unchanged.
+- Rehearsal expectations now assert the explained outcome, without weakening
+  any check:
+  - status `halted`, halt `invalid_request` at the last case;
+  - exactly one refused model request;
+  - the exact SEC exchange count, which is now asserted unconditionally where
+    a halt previously relaxed it;
+  - seven answered and four identity-unresolved cases.
+- The fault-target case index follows the new order (TWST:core_thesis).
+
+### Predicted outcome (live)
+
+- 7 cases answered on the correct issuer.
+- 4 unresolved (SMFG ×2, OWL ×2).
+- BNY:core_thesis: a refused model attempt halts the run. It is counted as a
+  failed case. It is unsupported research caused by the frontend intent, not
+  an SEC or transport fault.

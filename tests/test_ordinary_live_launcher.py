@@ -14,7 +14,7 @@ import stat
 
 import pytest
 
-from _ordinary_cohort_expectations import (EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES, EXPECTED_STATUS, UNRESOLVED, UNRESOLVED_ROUTES)
+from _ordinary_cohort_expectations import (EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES, EXPECTED_STATUS, EXPECTED_REFUSED_MODEL_REQUESTS, UNRESOLVED, UNRESOLVED_ROUTES)
 from _ordinary_loopback_sec import LoopbackSEC
 from validation import ordinary_approved as launcher
 from validation.capture_budget import BudgetError, digest
@@ -55,13 +55,14 @@ def test_loopback_run_uses_the_live_code_path_within_every_limit(loopback):
     # session and one request each, all through the gate.
     exchanges = packet['attempt_count']
     assert exchanges == packet['wire_entries'] == worker['external_dispatches'] <= 60
-    assert exchanges == EXPECTED_SEC_EXCHANGES or EXPECTED_HALT is not None
+    assert exchanges == EXPECTED_SEC_EXCHANGES
     assert len(sec.connects) == len(sec.requests) == exchanges and sec.handshake_failures == 0
     assert all(head.split(' ')[1] in {'www.sec.gov:443', 'data.sec.gov:443'} for head in sec.connects)
     assert all(r['method'] == 'GET' and r['host'] == r['tunnel'] and r['user_agent'] == LOOPBACK_CONTACT
                for r in sec.requests)
     assert worker['mode'] == 'loopback' and worker['live_network'] is False
-    assert worker['blocked_external_operations'] == [] and worker['refused_model_requests'] == 0
+    assert worker['blocked_external_operations'] == []
+    assert worker['refused_model_requests'] == EXPECTED_REFUSED_MODEL_REQUESTS
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     assert 1 <= worker['max_inflight_sec'] <= 4
     assert {(r['pipeline'], r['response_mode']) for r in worker['routing'] if r['case_id'] not in UNRESOLVED} == {
@@ -417,7 +418,7 @@ def test_direct_tls_reaches_only_the_claimed_sec_host_within_every_limit(direct_
     assert [c['status'] for c in packet['cases']] == EXPECTED_CASE_STATUSES
     exchanges = packet['attempt_count']
     assert exchanges == packet['wire_entries'] == worker['external_dispatches'] <= 60
-    assert exchanges == EXPECTED_SEC_EXCHANGES or EXPECTED_HALT is not None
+    assert exchanges == EXPECTED_SEC_EXCHANGES
     # No proxy at all: TLS from the first byte, to the host each exchange claimed.
     assert sec.connects == [] and len(sec.requests) == exchanges and sec.handshake_failures == 0
     assert all(r['tunnel'] in {'www.sec.gov', 'data.sec.gov'} and r['host'] == r['tunnel']

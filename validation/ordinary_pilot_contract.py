@@ -13,9 +13,13 @@ QUESTIONS = ('core_thesis', 'decision_threshold')
 RUN_1_2_ISSUERS = ('NPK', 'GOOGL', 'INGR', 'NNBR', 'AMZN', 'MAN')
 RUN_3_ISSUERS = ('SCCO', 'BX', 'LNC', 'LVS', 'USCB', 'BWMX')
 # Run 5 is unseen-company cohort 2, pre-registered in
-# docs/GENERALIZATION_COHORT_2_PREREGISTRATION_20261105.md, in its
-# pre-registered order. No case is predicted to halt the run, so none is moved.
+# docs/GENERALIZATION_COHORT_2_PREREGISTRATION_20261105.md. Amendment 2 moves
+# BNY:core_thesis last, before any retrieval: the pinned frontend sends it as
+# investing_education, the general route attempts a model call, and the
+# zero-model boundary halts the run there. Last, it costs no other case; it
+# stays in the denominator as a failed case.
 RUN_5_ISSUERS = ('SMFG', 'BNY', 'OWL', 'TWST', 'AGEN', 'FSTR')
+RUN_5_LAST_CASE = 'BNY:core_thesis'
 # Both BWMX cases are predicted offline to halt the run, so they are ordered
 # last and no other case is lost; both stay in the denominator. The threshold
 # question resolves to another issuer, whose SEC request the boundary refuses
@@ -29,12 +33,13 @@ COHORTS = {
     'runs-1-2': ('tests/ordinary_pilot_cases.json',
                  tuple(f'{i}:{q}' for i in RUN_1_2_ISSUERS for q in QUESTIONS)),
     'run5': ('tests/ordinary_run5_cases.json',
-             tuple(f'{i}:{q}' for i in RUN_5_ISSUERS for q in QUESTIONS)),
+             tuple(case for case in (f'{i}:{q}' for i in RUN_5_ISSUERS for q in QUESTIONS) if case != RUN_5_LAST_CASE)
+             + (RUN_5_LAST_CASE,)),
 }
 # Rehearsal fault scenarios target the thesis case at this index and the
 # threshold case after it: the third issuer's, unless that issuer is predicted
 # unresolved (run 5: OWL), then the next issuer whose two cases are answered.
-FAULT_CASE_INDEX = {'run5': 6}
+FAULT_CASE_INDEX = {'run5': 5}
 # The only cohort an approved package or run may use.
 APPROVED_COHORT = 'run5'
 # Rehearsal tests may select the historical cohort to keep exercising a fully

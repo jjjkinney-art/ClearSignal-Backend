@@ -18,7 +18,8 @@ from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-from _ordinary_cohort_expectations import (COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_SEC_EXCHANGES,
+from _ordinary_cohort_expectations import (COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
+                                          EXPECTED_SEC_EXCHANGES, GENERAL_INTENT,
                                           UNRESOLVED)
 
 FORBIDDEN = tuple(REHEARSAL_RUNTIME.values())
@@ -56,9 +57,9 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     else:
         halted_case, reason = EXPECTED_HALT
         assert result['status'] == 'halted' and packet['halt'] == reason
-        assert statuses == (['answered_unadjudicated'] * len(COMPLETED) + ['halted']
-                            + ['not_run_after_halt'] * (len(CASES) - len(COMPLETED) - 1))
-        assert LAST_CASE not in [r['case_id'] for r in worker['routing']]
+        assert statuses == EXPECTED_CASE_STATUSES and statuses[CASES.index(halted_case)] == 'halted'
+        assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES
+        assert halted_case == LAST_CASE and halted_case not in [r['case_id'] for r in worker['routing']]
     # Every SEC exchange: claimed, entered once, retained with its receipt, settled.
     assert packet['attempt_count'] == packet['wire_entries'] == worker['synthetic_requests']
     assert all(a['status'] == 'settled' and a['response'] and a['failure'] is None for a in packet['attempts'])
@@ -76,7 +77,8 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     assert [(r['intent'], r['company'], r['pipeline'], r['response_mode']) for r in worker['routing']
             if r['case_id'] in COMPLETED] == [
         ('company_analysis', case.split(':')[0], 'investment_thesis', 'source_evidence') for case in COMPLETED]
-    assert worker['refused_model_requests'] == 0 and worker['blocked_external_operations'] == []
+    assert worker['refused_model_requests'] == EXPECTED_REFUSED_MODEL_REQUESTS
+    assert worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     # Timing-dependent observations: never above four in flight. The export has
     # already re-verified <=10 entries/s and <=4 concurrent from durable times;
@@ -314,7 +316,8 @@ def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     assert FRONTEND['classifier_sha256'] == 'f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8'
     general = [case for case in CASES if not intent_allows_company_detection(frontend_intent(case))]
     assert general == (['BNY:core_thesis'] if COHORT == 'run5' else [])
-    assert set(general) <= set(UNRESOLVED)
+    # Such a case halts the run (zero-model refusal), so it is ordered last.
+    assert general == GENERAL_INTENT and all(CASES.index(case) == len(CASES) - 1 for case in general)
     assert not intent_allows_company_detection('investing_education')
 
 

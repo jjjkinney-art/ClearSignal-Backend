@@ -14,13 +14,6 @@
     "question_id": "decision_threshold"
   },
   {
-    "case_id": "BNY:core_thesis",
-    "issuer_id": "BNY",
-    "expected_cik": "0001390777",
-    "question": "What is the investment thesis for Bank of New York Mellon Corp, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
-    "question_id": "core_thesis"
-  },
-  {
     "case_id": "BNY:decision_threshold",
     "issuer_id": "BNY",
     "expected_cik": "0001390777",
@@ -82,5 +75,12 @@
     "expected_cik": "0000352825",
     "question": "Which valuation and operating assumptions would make FOSTER L B CO attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
     "question_id": "decision_threshold"
+  },
+  {
+    "case_id": "BNY:core_thesis",
+    "issuer_id": "BNY",
+    "expected_cik": "0001390777",
+    "question": "What is the investment thesis for Bank of New York Mellon Corp, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+    "question_id": "core_thesis"
   }
 ]
