@@ -133,6 +133,9 @@ class PublicDocument:
     text_selection: str = "prefix"
     canonical_content_hash: str | None = None
     inline_xbrl_facts: tuple[dict, ...] = ()
+    # Revenue (and other requested concepts) disaggregated by one
+    # srt:ProductOrServiceAxis member; never consolidated values.
+    inline_member_facts: tuple[dict, ...] = ()
     segment_financial_tables: tuple[dict, ...] = ()
     deposit_impairment_proofs: tuple[dict, ...] = ()
     cash_flow_observations: tuple[dict, ...] = ()
@@ -663,10 +666,13 @@ def fetch_public_document(
         )
     decoded = body.decode(encoding, errors="replace")
     inline_facts = ()
+    inline_member_facts = ()
     if inline_fact_cik is not None:
-        from ..providers.sec_inline_facts import parse_inline_observations
+        from ..providers.sec_inline_facts import parse_inline_observations, parse_member_observations
         inline_facts = parse_inline_observations(decoded, cik=inline_fact_cik,
                                                 concepts=inline_fact_concepts)
+        inline_member_facts = parse_member_observations(decoded, cik=inline_fact_cik,
+                                                        concepts=inline_fact_concepts)
     segment_tables = ()
     impairment_proofs = ()
     cash_flow_observations = ()
@@ -735,6 +741,7 @@ def fetch_public_document(
         source_type=source_type, source_tier=source_tier,
         tables=tables,
         inline_xbrl_facts=inline_facts,
+        inline_member_facts=inline_member_facts,
         segment_financial_tables=segment_tables,
         deposit_impairment_proofs=impairment_proofs,
         cash_flow_observations=cash_flow_observations,

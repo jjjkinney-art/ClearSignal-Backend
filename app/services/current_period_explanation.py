@@ -27,7 +27,7 @@ import json
 import re
 
 from ..integrity.provenance import ClaimDocumentReference
-from ..providers.sec_inline_facts import validated_observation
+from ..providers.sec_inline_facts import validated_member_observation, validated_observation
 from ..schemas import RetrievedEvidence
 
 SECTION = 'Latest periodic report - results discussion'
@@ -42,7 +42,16 @@ EXPENSE_LINES = {'research and development expense': 'ResearchAndDevelopmentExpe
                  'selling, general and administrative expense': 'SellingGeneralAndAdministrativeExpense',
                  'general and administrative expense': 'GeneralAndAdministrativeExpense'}
 EXPLANATION_CONCEPTS = (*BRIDGE_CONCEPTS, OTHER_NONOPERATING, *EXPENSE_LINES.values())
-METRIC_WORDS = {
+class _MetricWords(dict):
+    """Fixed metric phrases, plus revenue components named by their XBRL member
+    ("non cash royalty revenue" -> "Non-cash royalty revenue")."""
+    def __missing__(self, key):
+        if isinstance(key, str) and re.fullmatch(r'[a-z0-9]+(?: [a-z0-9]+){0,8} revenue', key):
+            return r'\b' + r'[\s-]+'.join(map(re.escape, key.split())) + r'\b'
+        raise KeyError(key)
+
+
+METRIC_WORDS = _MetricWords({
     'revenue': r'\b(?:net sales|total revenues|revenues?)\b',
     'operating income': r'(?:\boperating (?:income|profit)\b(?! margin)|\b(?:income|loss) from operations\b)',
     'net income': r'\bnet (?:income|earnings)\b',
@@ -56,7 +65,45 @@ METRIC_WORDS = {
     'research and development expense': r'\bresearch and development (?:expenses?|costs?)\b',
     'selling, general and administrative expense': r'\bselling, general and administrative (?:expenses?|costs?)\b',
     'general and administrative expense': r'(?<!selling, )\bgeneral and administrative (?:expenses?|costs?)\b',
-}
+})
+
+
+def _member_metric_name(member):
+    """'NonCashRoyaltyRevenueMember' -> 'non cash royalty revenue'; None unless a named revenue component."""
+    words = re.findall(r'[A-Z][a-z0-9]*|[0-9]+', member.removesuffix('Member'))
+    name = ' '.join(word.lower() for word in words)
+    return name if re.fullmatch(r'[a-z0-9]+(?: [a-z0-9]+){0,8} revenue', name) else None
+
+
+def revenue_components(members, revenue, current, prior):
+    """Revenue components whose connection to reported revenue is arithmetic.
+
+    members: (amount, observation) facts of the revenue concept disaggregated by
+    one srt:ProductOrServiceAxis member. A member is a component only if, in BOTH
+    periods, it belongs to a set of members (one value each) that sums exactly
+    to the reported consolidated revenue of that period."""
+    exact = {}
+    for key, (start, end) in (('current', current), ('prior', prior)):
+        values = {}
+        for amount, row in members:
+            if row['start'] == start and row['end'] == end:
+                values.setdefault(row['member'], set()).add(amount)
+        values = {member: found.pop() for member, found in values.items() if len(found) == 1}
+        if not 2 <= len(values) <= 12:
+            return {}
+        names, total, covered = list(values), revenue[key], set()
+        for mask in range(1, 1 << len(names)):
+            subset = [names[i] for i in range(len(names)) if mask >> i & 1]
+            if len(subset) >= 2 and sum(values[name] for name in subset) == total:
+                covered.update(subset)
+        exact[key] = {member: values[member] for member in covered}
+    components = {}
+    for member in exact['current'].keys() & exact['prior'].keys():
+        name = _member_metric_name(member)
+        current_value, prior_value = exact['current'][member], exact['prior'][member]
+        if name and name != 'revenue' and current_value != prior_value:
+            components[name] = {'current': current_value, 'prior': prior_value}
+    return components
 # Direction-only: margins are stated in basis points or percentages, never amounts.
 DIRECTION_ONLY = {'operating margin'}
 _QUARTER_NAMES = {3: 'first', 6: 'second', 9: 'third', 12: 'fourth'}
@@ -676,7 +723,7 @@ def definition_quote(all_sentences, index, metric, metrics, period):
     raise ValueError('definition not found')
 
 
-def explanation_value(text, observations, filing_items, *, ticker, document_type, filed_at):
+def explanation_value(text, observations, filing_items, *, ticker, document_type, filed_at, members=()):
     metrics, period = _metrics(filing_items)
     # Banks and other issuers without a revenue line still explain net income.
     if not period or not metrics.keys() & {'revenue', 'operating income', 'net income'}:
@@ -699,6 +746,11 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             # Reported separately inside the total; a sentence binds to it only
             # when its figures reconcile with this line and not the total.
             metrics['other income (expense), net'] = other
+    if 'revenue' in metrics and members:
+        # A disaggregated revenue line (e.g. royalty revenue) binds only through
+        # an exact reconciliation to reported revenue in both periods.
+        for name, values in revenue_components(members, metrics['revenue'], current, prior).items():
+            metrics.setdefault(name, values)
     for name, concept in EXPENSE_LINES.items():
         values = {}
         for key, (start, end) in (('current', current), ('prior', prior)):
@@ -820,8 +872,12 @@ def extract_current_period_explanation(document, filing_items, *, ticker, cik):
     try:
         observations = [(amount, row) for row in document.inline_xbrl_facts
                         if (amount := validated_observation(row, cik=cik, concepts=EXPLANATION_CONCEPTS)) is not None]
+        from .financial_thesis_foundation import CORE_METRICS
+        members = [(amount, row) for row in getattr(document, 'inline_member_facts', ()) or ()
+                   if (amount := validated_member_observation(row, cik=cik, concepts=CORE_METRICS['revenue'])) is not None]
         value = explanation_value(document.text, observations, filing_items, ticker=ticker,
-                                  document_type=document.document_type, filed_at=document.published_at)
+                                  document_type=document.document_type, filed_at=document.published_at,
+                                  members=members)
         if value is None or not date.fromisoformat(value['period']['current_end']) <= date.fromisoformat(document.published_at) <= date.today():
             return []
         # The reference anchors one bound statement; every other quote is

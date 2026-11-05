@@ -130,3 +130,84 @@ def test_rights_and_non_dependence_statements_are_not_business_descriptions():
                  'We sell rail products and provide track services to railroads, including products made under our own '
                  'patents.'):
         assert _business_quote_rejection(kept) is None
+
+
+# -- revenue components through an exact member reconciliation ----------------------
+
+from app.providers.sec_inline_facts import parse_inline_observations, parse_member_observations, validated_observation
+
+_NS = ('xmlns="http://www.w3.org/1999/xhtml" xmlns:ix="http://www.xbrl.org/2013/inlineXBRL" '
+       'xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:xbrldi="http://xbrl.org/2006/xbrldi" '
+       'xmlns:iso4217="http://www.xbrl.org/2003/iso4217" xmlns:us-gaap="http://fasb.org/us-gaap/2026" '
+       'xmlns:srt="http://fasb.org/srt/2026" xmlns:abc="http://abc.example/2026" '
+       'xmlns:ixt="http://www.xbrl.org/inlineXBRL/transformation/2020-02-12"')
+
+
+def _context(cid, start, end, member=None, extra_axis=False):
+    segment = ''
+    if member:
+        segment = f'<xbrli:segment><xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">abc:{member}</xbrldi:explicitMember>'
+        if extra_axis:
+            segment += '<xbrldi:explicitMember dimension="srt:StatementGeographicalAxis">abc:USMember</xbrldi:explicitMember>'
+        segment += '</xbrli:segment>'
+    return (f'<xbrli:context id="{cid}"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">0000000123'
+            f'</xbrli:identifier>{segment}</xbrli:entity><xbrli:period><xbrli:startDate>{start}</xbrli:startDate>'
+            f'<xbrli:endDate>{end}</xbrli:endDate></xbrli:period></xbrli:context>')
+
+
+def _fact(fid, cid, value):
+    return (f'<ix:nonFraction id="{fid}" name="us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax" '
+            f'contextRef="{cid}" unitRef="usd" decimals="-3" scale="3" format="ixt:num-dot-decimal">{value}</ix:nonFraction>')
+
+
+def _filing(royalty_prior='24,831'):
+    periods = {'c': ('2026-04-01', '2026-06-30'), 'p': ('2025-04-01', '2025-06-30')}
+    rows = {'c': [('Total', None, '34,518'), ('Roy', 'NonCashRoyaltyRevenueMember', '28,146'),
+                  ('Pre', 'PreCommercialProductRevenueMember', '6,372')],
+            'p': [('Total', None, '25,691'), ('Roy', 'NonCashRoyaltyRevenueMember', royalty_prior),
+                  ('Rnd', 'ResearchAndDevelopmentRevenueMember', '334'), ('Oth', 'OtherMember', '526')]}
+    contexts, facts = [], []
+    for key, entries in rows.items():
+        for name, member, value in entries:
+            contexts.append(_context(f'{key}{name}', *periods[key], member))
+            facts.append(_fact(f'f{key}{name}', f'{key}{name}', value))
+    # A two-axis context is not a product-or-service disaggregation.
+    contexts.append(_context('cGeo', *periods['c'], 'NonCashRoyaltyRevenueMember', extra_axis=True))
+    facts.append(_fact('fcGeo', 'cGeo', '28,146'))
+    return (f'<html {_NS}><body><ix:header><ix:resources>{"".join(contexts)}'
+            '<xbrli:unit id="usd"><xbrli:measure>iso4217:USD</xbrli:measure></xbrli:unit>'
+            f'</ix:resources></ix:header>{"".join(facts)}</body></html>')
+
+
+REV = ('RevenueFromContractWithCustomerExcludingAssessedTax',)
+CURRENT, PRIOR = ('2026-04-01', '2026-06-30'), ('2025-04-01', '2025-06-30')
+ROYALTY = ('Non-cash royalty revenue related to our agreement with GSK increased $3.3 million, to approximately '
+           '$28.1 million for the three months ended June 30, 2026, from $24.8 million for the three months ended '
+           'June 30, 2025, due to increased net sales of the partner’s vaccines containing our adjuvant.')
+
+
+def _members(text):
+    from app.providers.sec_inline_facts import validated_member_observation
+    return [(amount, row) for row in parse_member_observations(text, cik='123', concepts=REV)
+            if (amount := validated_member_observation(row, cik='123', concepts=REV)) is not None]
+
+
+def test_member_facts_are_opt_in_and_never_consolidated():
+    text = _filing()
+    consolidated = parse_inline_observations(text, cik='123', concepts=REV)
+    assert {row['fact_id'] for row in consolidated} == {'fcTotal', 'fpTotal'}
+    members = parse_member_observations(text, cik='123', concepts=REV)
+    assert {row['member'] for row in members} == {'NonCashRoyaltyRevenueMember', 'PreCommercialProductRevenueMember',
+                                                  'ResearchAndDevelopmentRevenueMember', 'OtherMember'}
+    assert 'fcGeo' not in {row['fact_id'] for row in members}       # two axes: not a disaggregation
+    assert all(validated_observation(row, cik='123', concepts=REV) is None for row in members)
+
+
+def test_a_revenue_component_needs_an_exact_reconciliation_in_both_periods():
+    revenue = {'current': 34518000, 'prior': 25691000}
+    components = cpe.revenue_components(_members(_filing()), revenue, CURRENT, PRIOR)
+    assert components == {'non cash royalty revenue': {'current': 28146000, 'prior': 24831000}}
+    assert cpe.bind_statement(ROYALTY, {'revenue': revenue, **components})['metric'] == 'non cash royalty revenue'
+    # Members that do not sum to reported revenue in a period bind nothing.
+    assert cpe.revenue_components(_members(_filing(royalty_prior='24,832')), revenue, CURRENT, PRIOR) == {}
+    assert cpe.revenue_components(_members(_filing()), {'current': 34518000, 'prior': 25690000}, CURRENT, PRIOR) == {}
