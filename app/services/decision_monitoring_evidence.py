@@ -98,7 +98,10 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     if not calculations:
         # Missing operating income must not discard other independently rebuilt
         # comparisons. Do not use this path to bypass mismatched margin inputs.
-        if 'operating income' not in foundation['unanswered_parts']:
+        # A bank reports no operating-income line: the same partial path, but
+        # the margin is not applicable rather than unverified.
+        not_applicable = 'operating income' in foundation.get('not_applicable', ())
+        if 'operating income' not in foundation['unanswered_parts'] and not not_applicable:
             return None
         observations = [row for row in foundation['inferences']
                         if row['kind'] == 'financial_inference']
@@ -108,10 +111,14 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         answer += '\n\nMonitoring conditions\n' + '\n\n'.join(
             row['text'] + ' ' + ' '.join(f'[{ref}]' for ref in row['reference_ids'])
             + ' ' + row['conditional_test'] for row in observations)
-        answer += ('\n\nOperating income was not verified, so no operating margin '
+        answer += ('\n\n' + ('Banks report no operating-income line, so no operating margin '
+                   'or margin benchmark applies. Pretax income, if shown, is supplementary '
+                   'profitability context. ' if not_applicable else
+                   'Operating income was not verified, so no operating margin '
                    'or margin benchmark has been calculated. Pretax income, if '
                    'shown, is supplementary profitability context and does not '
-                   'establish operating income. Evaluate each comparison against '
+                   'establish operating income. ') +
+                   'Evaluate each comparison against '
                    'its own reporting period; these observations do not establish '
                    'a common-period ratio or causal relationship. They do not '
                    'determine whether the stock is attractive or unattractive. '
@@ -119,7 +126,7 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
                    'breakpoints and quantified earnings impacts remain unverified.')
         return {'answer': answer, 'benchmarks': [], 'calculations': observations,
                 'foundation': foundation,
-                'unanswered_parts': ['operating income', 'operating margin']}
+                'unanswered_parts': [] if not_applicable else ['operating income', 'operating margin']}
     benchmarks = []
     for row in calculations:
         benchmarks.append({

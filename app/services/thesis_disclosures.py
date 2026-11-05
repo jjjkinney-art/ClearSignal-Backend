@@ -92,7 +92,7 @@ def _segment_business_scope(quote):
 
 
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
-    r"\b(?:for|to)\s+(?:our|its|new|existing|all|current)\s+(?:(?:new|existing|current)\s+)?(?:employees|staff|workforce|personnel)\b|"
+    r"\b(?:for|to)\s+(?:our|its)\s+(?:(?:new|existing|current|all)\s+)?(?:employees|staff|workforce|personnel)\b|"
     # "<Issuer> provides our employees with … wellness programs": human
     # capital, not a product, customer or revenue activity.
     r"\bprovides?\s+(?:our\s+|its\s+)?(?:employees|staff|workforce)\b|"
@@ -110,6 +110,14 @@ _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:learning|professional|career|leadership|talent)(?:\s+and\s+(?:professional\s+)?)?\s*development\s+"
     r"(?:opportunities|programs?)\b[^.]{0,120}\bemployees\b|"
     r"\b(?:employee\s+)?well[- ]?being\s+programs?\b", re.I)
+# Without a possessive ("to new employees", "for all employees") the employees
+# may be a customer's: internal only when no client or customer is named.
+_UNOWNED_EMPLOYEES = re.compile(
+    r"\b(?:for|to)\s+(?:new|existing|all|current)\s+(?:employees|staff|workforce|personnel)\b", re.I)
+_CUSTOMER_SCOPE = re.compile(
+    r"\b(?:clients?|customers?|employers?|subscribers?|businesses|organi[sz]ations|companies|enterprises)\b", re.I)
+
+
 # Where the issuer's reports can be obtained, not what the issuer does
 # ("We offer, free of charge, downloads of our annual, quarterly and current reports").
 _FILING_AVAILABILITY = re.compile(
@@ -192,7 +200,8 @@ def _business_quote_rejection(quote):
     # A current 'provide' predicate can describe internal human-capital
     # programs rather than the issuer's products or customer services.
     # Withhold the complete sentence; never clip out a business-looking clause.
-    if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote):
+    if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote) or (
+            _UNOWNED_EMPLOYEES.search(quote) and not _CUSTOMER_SCOPE.search(quote)):
         return "internal_employee_activity"
     if _INTERNAL_HOSTING_ACTIVITY.search(quote):
         return "internal_hosting_activity"

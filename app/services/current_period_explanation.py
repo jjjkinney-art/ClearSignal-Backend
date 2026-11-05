@@ -148,11 +148,19 @@ def _table_context(text, offset, period):
     return text[headings[-1].start():offset].strip() if headings else None
 
 
-def sentences(text):
+# A flattened results table carries a duration heading ("Three months ended
+# September 30," with the years often in a later header row).
+_DURATION_HEADING = re.compile(r'\b(?:Three|Six|Nine|Twelve)[- ]months? (?:periods? )?ended\b', re.I)
+
+
+def sentences(text, split_tables=False):
     """(offset, sentence) pairs. A boundary is terminal punctuation followed by
     whitespace and a capital or digit, so a decimal such as $21.0 billion never
     splits. Byte-order marks count as spaces (same length, offsets unchanged).
-    A narrative sentence run onto a flattened table is yielded on its own."""
+    With split_tables (the explanation reader only), a narrative sentence run
+    onto a flattened table is yielded on its own, and only when a duration
+    heading ("Three months ended …") opens that table within MAX_TABLE_CHARS;
+    every other text is split exactly as before."""
     text = text.replace('\ufeff', ' ')
     start = 0
     for match in _BOUNDARY.finditer(text):
@@ -160,7 +168,10 @@ def sentences(text):
         sentence = chunk.strip()
         if sentence:
             offset = start + len(chunk) - len(chunk.lstrip())
-            split = _narrative_tail(sentence)
+            split = _narrative_tail(sentence) if split_tables else None
+            if split is not None and not _DURATION_HEADING.search(
+                    text, max(0, offset + split - MAX_TABLE_CHARS), offset + split):
+                split = None
             if split is None:
                 yield offset, sentence
             else:
@@ -661,7 +672,7 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
         metrics['operating margin'] = {key: int(round(Decimal(metrics['operating income'][key]) * 10000
                                                       / Decimal(metrics['revenue'][key]))) for key in ('current', 'prior')}
     candidates, components, anchor, used = {}, [], None, set()
-    all_sentences = list(sentences(text))
+    all_sentences = list(sentences(text, split_tables=True))
     blocks = table_blocks(text, period_value)
     definition = None
     for index, (offset, sentence) in enumerate(all_sentences):

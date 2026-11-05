@@ -46,12 +46,26 @@ RESORT_METRICS = {'revenue': {'current': 3216000000, 'prior': 3331000000}}
 
 def test_a_narrative_sentence_run_onto_a_flattened_table_is_split_off():
     text = COPPER_TABLE + COPPER_STATEMENT + ' ' + COPPER_CAUSE
-    parts = [sentence for _, sentence in cpe.sentences(text)]
+    parts = [sentence for _, sentence in cpe.sentences(text, split_tables=True)]
     assert COPPER_STATEMENT in parts and COPPER_CAUSE in parts
     # Offsets still address the source text exactly.
-    assert all(text[offset:offset + len(sentence)] == sentence for offset, sentence in cpe.sentences(text))
+    assert all(text[offset:offset + len(sentence)] == sentence
+               for offset, sentence in cpe.sentences(text, split_tables=True))
     # Ordinary prose with figures is never split.
-    assert [s for _, s in cpe.sentences(COPPER_STATEMENT)] == [COPPER_STATEMENT]
+    assert [s for _, s in cpe.sentences(COPPER_STATEMENT, split_tables=True)] == [COPPER_STATEMENT]
+
+
+def test_the_table_split_is_confined_to_a_current_period_table():
+    text = COPPER_TABLE + COPPER_STATEMENT
+    # Without a period (every other reader of sentences), nothing changes.
+    assert [s for _, s in cpe.sentences(text)] == [text.strip()]
+    # Number runs without a duration heading (not a results table) are not split.
+    headless = COPPER_TABLE.replace('Three months ended', 'Quarter')
+    assert len(list(cpe.sentences(headless + COPPER_STATEMENT, split_tables=True))) == 1
+    # Number runs in prose without a period heading stay one sentence.
+    prose = ('Shipments were 12 14 and 16 units in the three quarters Management expects demand to remain '
+             'steady through the remainder of the fiscal year.')
+    assert len(list(cpe.sentences(prose, split_tables=True))) == 1
 
 
 def test_a_stated_level_with_an_article_rate_binds_only_when_it_reconciles():
@@ -116,6 +130,11 @@ def test_results_section_is_the_longest_span_not_the_table_of_contents():
     ('We offer, free of charge, downloads of our annual, quarterly and current reports, as soon as they can be '
      'reasonably made available following electronic or physical filing with the SEC.', 'filing_availability'),
     ('We offer employee benefits administration software to customers through subscription contracts.', None),
+    # Without a possessive, employees may be a client's: not internal when a client or customer is named.
+    ('We provide payroll processing and benefits administration to all employees of our client companies.', None),
+    ('We provide compliance training courses to new employees at customer organizations nationwide.', None),
+    ('We provide health and retirement benefits to all employees and their eligible family members.',
+     'internal_employee_activity'),
     ('We provide professional development courses to teachers in public school districts.', None),
     ('We sell our products directly to consumers through our website and retail stores.', None),
 ])

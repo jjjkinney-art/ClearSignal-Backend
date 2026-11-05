@@ -47,6 +47,15 @@ SECTOR_SIGNATURES = {
     "bank": ("provision for credit losses", "noninterest income"),
     "insurer": ("premiums earned", "policyholder benefits and claims"),
 }
+# Core measures a bank does not report as such: its revenue is net interest
+# and noninterest income, and it reports no operating-income line. Their
+# absence is not an unverified gap; the bank measures stand in their place.
+SECTOR_NOT_APPLICABLE = {"bank": ("revenue", "operating income")}
+# When the issuer's industry code was not retrieved, the business type is
+# unknown: say so rather than silently omitting business-type measures.
+SECTOR_UNKNOWN_GAP = "business-type measures (the issuer's SEC industry code was not retrieved)"
+BANK_PRETAX_LIMITATION = ("The cited pretax-income comparison is supplementary profitability context. "
+    "Pretax income includes credit-loss provisions and other effects; banks report no operating-income line.")
 # What a business-type answer needs but standard reported facts do not supply.
 SECTOR_GAPS = {
     "bank": ["deposits, loan growth and credit quality"],
@@ -60,6 +69,12 @@ def issuer_sector(cik: str | None) -> str | None:
     from .providers.sec_provider import issuer_sic
     sic = issuer_sic(cik) if cik else None
     return next((sector for sector, codes in SECTOR_SIC.items() if sic in codes), None)
+
+
+def issuer_sector_known(cik: str | None) -> bool:
+    """The issuer's industry code was retrieved, so issuer_sector is an answer, not a gap."""
+    from .providers.sec_provider import issuer_sic
+    return bool(cik) and issuer_sic(cik) is not None
 
 
 def financial_metric_label(name: str, concept: str) -> str:
@@ -401,7 +416,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         rows.append({"claim": rebuilt.summary, "reference_id": ref, "claim_kind": "sector_financial_comparison"})
         selected.append(item)
     if sector:
+        missing = [name for name in missing if name not in SECTOR_NOT_APPLICABLE.get(sector, ())]
         missing.extend(SECTOR_GAPS[sector])
+    elif not issuer_sector_known(expected_cik):
+        missing.append(SECTOR_UNKNOWN_GAP)
     periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
     limitation = ("These metrics cover different reporting durations or end dates. Evaluate each "
                   "against its own comparable prior-year period; they do not establish a common-period "
@@ -418,7 +436,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     answer += "\n\nReported evidence\n" + "\n\n".join(
         f"{index}. {row['claim']} [{row['reference_id']}]" for index, row in enumerate(rows, start=1))
     if supplemental:
-        answer += "\n\n" + PRETAX_LIMITATION
+        answer += "\n\n" + (BANK_PRETAX_LIMITATION if sector == "bank" else PRETAX_LIMITATION)
     answer += "\n\nInterpretation and conditional tests\n" + "\n\n".join(
         f"{row['text']} [{row['reference_ids'][0]}] {_once_per_section(row['conditional_test'])}"
         for row in interpretations)
@@ -665,4 +683,5 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     return {"answer": answer, "claims": rows, "selected_items": selected,
             "inferences": interpretations, "unanswered_parts": unanswered,
             "business_context_coverage": business_coverage,
-            "common_reporting_period": len(periods) == 1}
+            "common_reporting_period": len(periods) == 1,
+            "not_applicable": list(SECTOR_NOT_APPLICABLE.get(sector, ()))}
