@@ -2487,6 +2487,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         )
 
     # ── Graceful "Did you mean?" fallback ────────────────────────────────────
+    # When the question names a company by an exact official name that stays
+    # ambiguous (two registrants share it), suggest those registrants, never
+    # fuzzy matches on other words of the question ("for", "material").
+    def _named_issuer_candidates(question):
+        try:
+            from .issuer_identity import official_name_spans
+            spans = official_name_spans(question)
+        except Exception:
+            return []
+        named = {}
+        for _, issuers in spans:
+            for issuer in issuers:
+                named.setdefault(issuer.ticker, (issuer.ticker, issuer.name, 1.0))
+        return list(named.values())[:3]
+
     # When entity resolution failed (confidence 0.0) but we have candidate
     # matches, return a structured suggestion response instead of falling
     # silently to a generic general-finance answer.
@@ -2512,7 +2527,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         and _has_quality_candidates
     ):
         request_id = str(uuid.uuid4())
-        candidates = _entity_resolution.candidates[:3]
+        candidates = _named_issuer_candidates(request.question) or _entity_resolution.candidates[:3]
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",

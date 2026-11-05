@@ -153,6 +153,12 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
     return windows
 
 
+# A five-letter symbol ending in F is, by US symbology convention, an
+# over-the-counter line for a foreign issuer's ordinary shares (SMFNF beside
+# SMFG). It is not a share class that needs an explicit selection.
+_FOREIGN_ORDINARY_LINE = re.compile(r"[A-Z]{4}F")
+
+
 def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
     """Where exact current official names occur in free text, and whose they are."""
     return _name_windows(value, _load_directory()) if value.strip() else []
@@ -201,6 +207,11 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             # single symbol without a class or series suffix names the issuer.
             # Distinct base symbols (two share classes) still abstain.
             base = [item for item in matches.values() if not re.search(r"[.-]", item.ticker)]
+            if len(base) > 1:
+                # An issuer's US listing beside its foreign-ordinary OTC line.
+                # Distinct share classes (GOOGL/GOOG) still abstain.
+                listed = [item for item in base if not _FOREIGN_ORDINARY_LINE.fullmatch(item.ticker)]
+                base = listed if len(listed) == 1 else base
             issuer = base[0] if len(base) == 1 else None
     if issuer is None:
         return None
