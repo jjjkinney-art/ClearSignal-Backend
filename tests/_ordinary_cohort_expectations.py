@@ -8,7 +8,8 @@ model call; the zero-model boundary refuses it and halts the run there
 (invalid_request), on every host. Runs 1-2 and run 3 (now pinned to
 company_analysis throughout) complete. Run 5 answers seven cases, leaves SMFG x2
 and OWL x2 unresolved (directory ambiguity) and halts at BNY:core_thesis, which
-amendment 2 orders last so that no other case is lost.
+amendment 2 orders last so that no other case is lost. With the run-5 identity
+follow-up it answers nine cases and leaves OWL x2 unresolved.
 
 The frozen run-3 commit (6efe7d2) was pre-registered to halt at
 BWMX:decision_threshold, which resolved to another issuer (DE); that
@@ -22,11 +23,11 @@ from validation.ordinary_pilot_contract import CASES, COHORT
 GENERAL_INTENT = [case for case in CASES if frontend_intent(case) != 'company_analysis']
 EXPECTED_HALT = (GENERAL_INTENT[0], 'invalid_request') if GENERAL_INTENT else None
 _HALT_INDEX = CASES.index(EXPECTED_HALT[0]) if EXPECTED_HALT else len(CASES)
-# Run 5: the frozen backend leaves these unresolved from SEC's directory alone
-# (SMFG shares its CIK with a second unsuffixed symbol, SMFNF; "Blue Owl Capital"
-# also names OBDC), predicted offline before packaging and kept in the cohort.
-IDENTITY_UNRESOLVED = {'run5': ('SMFG:core_thesis', 'SMFG:decision_threshold',
-                                'OWL:core_thesis', 'OWL:decision_threshold')}.get(COHORT, ())
+# Run 5: unresolved from SEC's directory alone. "Blue Owl Capital" also names
+# OBDC (a different registrant), so both OWL questions stay unresolved. SMFG,
+# unresolved at the frozen run-5 commit (its CIK also lists the OTC
+# foreign-ordinary line SMFNF), now resolves (fix/run5-identity-suggestions).
+IDENTITY_UNRESOLVED = {'run5': ('OWL:core_thesis', 'OWL:decision_threshold')}.get(COHORT, ())
 UNRESOLVED = [case for case in CASES[:_HALT_INDEX] if case in IDENTITY_UNRESOLVED]
 COMPLETED = [case for case in CASES[:_HALT_INDEX] if case not in UNRESOLVED]
 EXPECTED_STATUS = 'halted' if EXPECTED_HALT else 'complete'
