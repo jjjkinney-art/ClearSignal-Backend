@@ -1,0 +1,76 @@
+{
+ "seed": "clearsignal-generalization-2:",
+ "buckets": [
+  [
+   "large",
+   1,
+   200
+  ],
+  [
+   "mid",
+   501,
+   1500
+  ],
+  [
+   "small",
+   2501,
+   5000
+  ]
+ ],
+ "per_bucket": 2,
+ "code_commit": "773449d",
+ "directory_sha256": "de59c00edabfb8b540c61ea4805446763bc9ba6aa8b42fa2955f5439556558d2",
+ "directory_rows": 10410,
+ "excluded_prior_cohort_or_retained": 12,
+ "excluded_code_mentions": 772,
+ "cohort": [
+  {
+   "bucket": "large",
+   "position": 101,
+   "ticker": "SMFG",
+   "cik": 1022837,
+   "sec_name": "SUMITOMO MITSUI FINANCIAL GROUP, INC.",
+   "rank": "0e6b5235432cca02f5baca28cba4a1483a7ff484c29882b751305cea16fe99ee"
+  },
+  {
+   "bucket": "large",
+   "position": 171,
+   "ticker": "BNY",
+   "cik": 1390777,
+   "sec_name": "Bank of New York Mellon Corp",
+   "rank": "0f9098075f68e962166e66e11b8caabeeabe491f1fbc660d7313bca492852e6d"
+  },
+  {
+   "bucket": "mid",
+   "position": 709,
+   "ticker": "OWL",
+   "cik": 1823945,
+   "sec_name": "BLUE OWL CAPITAL INC.",
+   "rank": "003e60932de9d55a67b18cecae2698d4d569a66a62bc772a547749d7f911ef0a"
+  },
+  {
+   "bucket": "mid",
+   "position": 963,
+   "ticker": "TWST",
+   "cik": 1581280,
+   "sec_name": "Twist Bioscience Corp",
+   "rank": "0052cc6a4a0575518e7ab2097bbcc027322e6341a1e811127a5ceb37f0c671de"
+  },
+  {
+   "bucket": "small",
+   "position": 3715,
+   "ticker": "AGEN",
+   "cik": 1098972,
+   "sec_name": "AGENUS INC",
+   "rank": "004aa53e7c4754374fa3d20f7063f9c347df5e826353c14cbd1dfc0ea45ce3fc"
+  },
+  {
+   "bucket": "small",
+   "position": 3465,
+   "ticker": "FSTR",
+   "cik": 352825,
+   "sec_name": "FOSTER L B CO",
+   "rank": "004b81ce9327ac539fd7ffb4951bf5ae6b6a740ac24af9a72300eb0d12fa7151"
+  }
+ ]
+}
