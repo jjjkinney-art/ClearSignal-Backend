@@ -620,6 +620,7 @@ def monitoring_criteria(value):
 def _metrics(filing_items):
     """Current/prior values from the same filing's verified comparisons."""
     names = {'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': 'revenue', 'us-gaap:Revenues': 'revenue',
+             'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax': 'revenue',
              'us-gaap:OperatingIncomeLoss': 'operating income', 'us-gaap:NetIncomeLoss': 'net income'}
     metrics, period = {}, None
     for item in filing_items:

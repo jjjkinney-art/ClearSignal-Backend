@@ -34,7 +34,8 @@ def operating_margin_assessment(metrics, references):
             context.prec = 40
             for sales, profit in zip(revenue.verified_claims, income.verified_claims):
                 if (sales['metric'] not in {'us-gaap:Revenues',
-                        'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'}
+                        'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax',
+                        'us-gaap:RevenueFromContractWithCustomerIncludingAssessedTax'}
                         or profit['metric'] != 'us-gaap:OperatingIncomeLoss'
                         or any(sales[key] != profit[key] for key in (
                             'ticker', 'scope', 'unit', 'currency', 'period_start', 'period_end', 'source'))

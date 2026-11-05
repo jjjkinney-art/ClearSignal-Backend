@@ -14,7 +14,8 @@ from ..providers.sec_client import SecFactRecord
 from ..providers.sec_fact_policy import REPORTING_CURRENCIES, PER_SHARE_UNITS
 
 CORE_METRICS = {
-    "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
+    "revenue": ("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense",
+                "RevenueFromContractWithCustomerIncludingAssessedTax"),
     "operating income": ("OperatingIncomeLoss",),
     "net income": ("NetIncomeLoss", "ProfitLoss"),
     "operating cash flow": ("NetCashProvidedByUsedInOperatingActivities",),

@@ -20,7 +20,11 @@ _TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z])?\Z")
 _LATEST_PERIOD_ANCHOR = ("Assets", "USD")
 _MAX_STALENESS_DAYS = 550
 _METRICS = (
-    (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
+    # Including-assessed-tax revenue is last: an equal-period tie keeps the
+    # configured order, so it is chosen only when no earlier concept has a
+    # comparable pair as recent (issuers that tag revenue only this way).
+    (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense",
+      "RevenueFromContractWithCustomerIncludingAssessedTax"),
      "revenue", ("revenue", "revenues", "sales", "top line", "top-line"), "USD", "duration"),
     (("GrossProfit",), "gross profit", ("gross profit", "gross margin"), "USD", "duration"),
     (("OperatingIncomeLoss",), "operating income",
