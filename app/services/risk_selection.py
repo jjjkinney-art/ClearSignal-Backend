@@ -126,8 +126,9 @@ def _content_words(quote):
 
 
 def near_duplicate(first, second):
-    """The same risk stated twice: the shorter quote's content words (four or
-    more letters, at least five of them) nearly all recur in the other."""
+    """The same risk stated twice: every content word (four or more letters, at
+    least five of them) of the shorter quote recurs in the other. One differing
+    word ("customers" vs "suppliers") keeps two risks distinct."""
     a, b = _content_words(first), _content_words(second)
-    small = min(len(a), len(b))
-    return small >= 5 and len(a & b) / small >= 0.8
+    shorter, longer = (a, b) if len(a) <= len(b) else (b, a)
+    return len(shorter) >= 5 and shorter <= longer
