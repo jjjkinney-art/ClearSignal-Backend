@@ -154,8 +154,11 @@ def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int
 
 
 # A five-letter symbol ending in F is, by US symbology convention, an
-# over-the-counter line for a foreign issuer's ordinary shares (SMFNF beside
-# SMFG). It is not a share class that needs an explicit selection.
+# over-the-counter line for a foreign issuer's ordinary or preferred shares
+# (SMFNF beside SMFG; ENBFF beside ENB). Within one CIK it is not a share class
+# that needs an explicit selection: when exactly one other unsuffixed symbol
+# remains (an exchange listing or a Y-ending ADR line), that symbol names the
+# issuer. Several remaining symbols, or only F lines, still abstain.
 _FOREIGN_ORDINARY_LINE = re.compile(r"[A-Z]{4}F")
 
 
@@ -208,7 +211,7 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             # Distinct base symbols (two share classes) still abstain.
             base = [item for item in matches.values() if not re.search(r"[.-]", item.ticker)]
             if len(base) > 1:
-                # An issuer's US listing beside its foreign-ordinary OTC line.
+                # An issuer's US listing or ADR beside its foreign-security OTC lines.
                 # Distinct share classes (GOOGL/GOOG) still abstain.
                 listed = [item for item in base if not _FOREIGN_ORDINARY_LINE.fullmatch(item.ticker)]
                 base = listed if len(listed) == 1 else base
