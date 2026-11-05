@@ -113,6 +113,10 @@ def test_near_duplicate_risks_are_kept_once():
     assert risk_selection.near_duplicate(first, second)
     assert not risk_selection.near_duplicate(first, 'A significant portion of our revenue comes from customers '
                                                     'in Peru, so local political changes could reduce our sales.')
+    # Same wording, different risk: customer versus supplier concentration stays two risks.
+    customers = ('We depend on a limited number of customers, and the loss of any of them would adversely '
+                 'affect our business.')
+    assert not risk_selection.near_duplicate(customers, customers.replace('customers', 'suppliers'))
     selected, reasons = risk_selection.select_risks([first, second], quote_of=lambda q: q, offset_of=lambda q: 0)
     assert len(selected) == 1 and 'near_duplicate' in reasons
 
