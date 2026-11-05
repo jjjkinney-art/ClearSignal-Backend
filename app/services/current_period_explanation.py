@@ -34,7 +34,14 @@ SECTION = 'Latest periodic report - results discussion'
 BRIDGE_CONCEPTS = ('OperatingIncomeLoss', 'NonoperatingIncomeExpense', 'IncomeTaxExpenseBenefit', 'NetIncomeLoss')
 # Reported separately by some issuers inside total non-operating income.
 OTHER_NONOPERATING = 'OtherNonoperatingIncomeExpense'
-EXPLANATION_CONCEPTS = (*BRIDGE_CONCEPTS, OTHER_NONOPERATING)
+# Operating-expense lines. Some filings explain a period's change only through
+# them ("Research and development expense decreased 45% to $14.8 million …").
+# A line becomes a metric only when the filing's own inline XBRL gives exactly
+# one current and one prior value, so a sentence binds only if it reconciles.
+EXPENSE_LINES = {'research and development expense': 'ResearchAndDevelopmentExpense',
+                 'selling, general and administrative expense': 'SellingGeneralAndAdministrativeExpense',
+                 'general and administrative expense': 'GeneralAndAdministrativeExpense'}
+EXPLANATION_CONCEPTS = (*BRIDGE_CONCEPTS, OTHER_NONOPERATING, *EXPENSE_LINES.values())
 METRIC_WORDS = {
     'revenue': r'\b(?:net sales|total revenues|revenues?)\b',
     'operating income': r'(?:\boperating (?:income|profit)\b(?! margin)|\b(?:income|loss) from operations\b)',
@@ -46,6 +53,9 @@ METRIC_WORDS = {
     # The separately reported line item inside it, when an issuer has one.
     'other income (expense), net': r'\bother income \(expense\), net\b',
     'operating margin': r'\boperating (?:profit |income )?margin\b',
+    'research and development expense': r'\bresearch and development (?:expenses?|costs?)\b',
+    'selling, general and administrative expense': r'\bselling, general and administrative (?:expenses?|costs?)\b',
+    'general and administrative expense': r'(?<!selling, )\bgeneral and administrative (?:expenses?|costs?)\b',
 }
 # Direction-only: margins are stated in basis points or percentages, never amounts.
 DIRECTION_ONLY = {'operating margin'}
@@ -63,7 +73,9 @@ _SCOPE = re.compile(
 _ANAPHOR = re.compile(r'(?:The|This|These|That) '
                       r'(?:(?:\$\s?[\d,]+(?:\.\d+)?(?:\s*(?:thousand|million|billion))?(?:\s+or\s+\d+(?:\.\d+)?\s?%)?'
                       r'|\d+(?:\.\d+)?\s?%)\s+)?(?:(?:net|overall|year-over-year) )?'
-                      r'(increases?|decreases?|declines?|improvements?|reductions?|growth|changes?|deteriorations?)\b')
+                      r'(increases?|decreases?|declines?|improvements?|reductions?|growth|changes?|deteriorations?'
+                      # "The decreased expenses …" refers back to an expense line's stated change.
+                      r'|(?:increased|decreased) (?:expenses?|costs?|spending))\b')
 _OTHER_PERIOD = re.compile(r'\b(?:six|nine|twelve) months\b|\byear[- ]to[- ]date\b|\bfirst (?:half|nine months)\b'
                            r'|\bfull[- ]year\b|\bfiscal\b|\bannual\b|\b(?:19|20)\d{2}\b', re.I)
 _PCT_LEVELS = re.compile(
@@ -327,6 +339,19 @@ def stated_direction(sentence):
     return 'up' if _rising(verb) or verb.group(1).lower() == 'improved' else 'down'
 
 
+_CLAUSE_BREAK = re.compile(r', (?:and )?an? \$|; ')
+
+
+def cause_excerpt(following):
+    """The cause sentence, or its verbatim opening up to the last clause boundary
+    (", a $3.1 million decrease …", "; ") within MAX_SENTENCE when it is longer.
+    None when a long sentence has no such boundary."""
+    if not following or len(following) <= MAX_SENTENCE:
+        return following
+    cuts = [m.start() for m in _CLAUSE_BREAK.finditer(following, 0, MAX_SENTENCE)]
+    return following[:cuts[-1]] if cuts else None
+
+
 def following_cause(sentence, following, period):
     """Whether the next sentence explains this sentence's own stated change.
 
@@ -334,7 +359,8 @@ def following_cause(sentence, following, period):
     ("The decrease …"), agree in direction, state a cause, introduce no new
     segment or region before the cause, and name no other period.
     """
-    if not following or len(following) > MAX_SENTENCE or cause_match(sentence):
+    following = cause_excerpt(following)
+    if not following or cause_match(sentence):
         return False
     anaphor, cause = _ANAPHOR.match(following), cause_match(following)
     direction = stated_direction(sentence)
@@ -479,6 +505,12 @@ def clause_starts(sentence):
             trimmed = match.start()  # the latest break wins: the whole heading is removed
     if trimmed is not None:
         yield trimmed
+    # A labelled bullet list run into the sentence ("Financial highlights compared
+    # to the same periods in the prior fiscal year: • For the three …"): quote the
+    # bullet's own statement.
+    bullet = re.match(r'[^.•:]{1,200}:\s*•\s*(?=[A-Z])', sentence)
+    if bullet:
+        yield bullet.end()
     yield 0
     if len(sentence) <= MAX_SENTENCE:
         return
@@ -667,6 +699,15 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
             # Reported separately inside the total; a sentence binds to it only
             # when its figures reconcile with this line and not the total.
             metrics['other income (expense), net'] = other
+    for name, concept in EXPENSE_LINES.items():
+        values = {}
+        for key, (start, end) in (('current', current), ('prior', prior)):
+            found = {amount for amount, row in observations
+                     if row['concept'] == concept and row['start'] == start and row['end'] == end}
+            if len(found) == 1:
+                values[key] = found.pop()
+        if len(values) == 2 and values['current'] != values['prior']:
+            metrics[name] = values
     if ('operating income' in metrics and 'revenue' in metrics
             and metrics['revenue']['current'] > 0 and metrics['revenue']['prior'] > 0):
         # Basis points; used only for direction, never reconciled against stated amounts.
@@ -710,7 +751,7 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
         if binding['metric'] == 'revenue' and anchor is None:
             anchor = index
         if following_cause(quote, following, period_value):
-            binding['cause_quote'] = following
+            binding['cause_quote'] = cause_excerpt(following)
         # Prefer a stated cause, then figures that reconcile, then document order.
         rank = (cause_match(quote) is None and 'cause_quote' not in binding,
                 binding['basis'] == 'period-matched attribution', offset)

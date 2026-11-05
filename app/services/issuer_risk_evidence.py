@@ -182,6 +182,16 @@ def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | No
     return IssuerRiskProfile(cik, *topic) if topic else None
 
 
+# Title-case heading words, optionally "Related to …", ending where a sentence
+# begins (a capitalized word followed by a lowercase one), with an optional bullet.
+_HEADING_WORD = r"(?:[A-Z][A-Za-z,&\-]*|the|of|and|to|in|for|our|an?|with)"
+RUN_IN_RISK_HEADING = re.compile(
+    r"^(?:[A-Z][A-Za-z,&\-]*\s+){0,4}(?:Risks?|Risk Factors)"
+    r"(?:\s+(?:[Rr]elat(?:ed|ing)|[Aa]ssociated|[Pp]ertaining|[Ss]pecific)\s+(?:to|[Ww]ith)(?:\s+" + _HEADING_WORD + r"){1,10})?"
+    # The sentence starts here, never inside the heading ("Risks Specific to …").
+    r"\s*(?:•\s*)?(?!(?:Related|Relating|Associated|Pertaining|Specific)\b)(?=[A-Z][a-z]+\s+[a-z])")
+
+
 def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, ...]:
     """Stable reason codes for the existing admission rules; never source prose."""
     max_chars = 300 if profile.scope == "Services" else 900
@@ -280,6 +290,13 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
         section = text[section_start:section_end]
         for sentence_start, sentence_end in risk_sentence_spans(section):
             quote = section[sentence_start:sentence_end]
+            # A risk-factor section heading run into the sentence ("Risks Related
+            # to the Development of Our Product Candidates • Our business …") is
+            # not part of the risk: quote the sentence after it, verbatim.
+            heading = RUN_IN_RISK_HEADING.match(quote)
+            if heading and len(quote) - heading.end() >= 40:
+                sentence_start += heading.end()
+                quote = quote[heading.end():]
             stats["sentences"] += 1
             is_topic = _has_topic_scope(quote, profile, disclosure=True)
             stats["topic_sentences"] += int(is_topic)

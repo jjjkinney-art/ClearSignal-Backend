@@ -112,4 +112,22 @@ def select_risks(candidates, *, quote_of, offset_of, limit=2):
         else:
             kept.append(item)
     kept.sort(key=lambda item: (-specificity(quote_of(item)), offset_of(item)))
-    return kept[:limit], reasons
+    distinct = []
+    for item in kept:
+        if any(near_duplicate(quote_of(item), quote_of(other)) for other in distinct):
+            reasons.append('near_duplicate')
+            continue
+        distinct.append(item)
+    return distinct[:limit], reasons
+
+
+def _content_words(quote):
+    return {word for word in re.findall(r"[a-z][a-z\-]{3,}", quote.lower())}
+
+
+def near_duplicate(first, second):
+    """The same risk stated twice: the shorter quote's content words (four or
+    more letters, at least five of them) nearly all recur in the other."""
+    a, b = _content_words(first), _content_words(second)
+    small = min(len(a), len(b))
+    return small >= 5 and len(a & b) / small >= 0.8

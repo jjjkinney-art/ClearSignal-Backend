@@ -110,6 +110,10 @@ _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     r"\b(?:learning|professional|career|leadership|talent)(?:\s+and\s+(?:professional\s+)?)?\s*development\s+"
     r"(?:opportunities|programs?)\b[^.]{0,120}\bemployees\b|"
     r"\b(?:employee\s+)?well[- ]?being\s+programs?\b", re.I)
+_NEGATED_OR_RIGHTS_ONLY = re.compile(r"\bnot (?:materially |substantially )?(?:dependent|reliant) (?:up)?on\b", re.I)
+_RIGHTS = re.compile(r"\b(?:patents?|trademarks?|licen[cs]es?|copyrights?|intellectual property|distribution rights)\b", re.I)
+_BUSINESS_ACTIVITY = re.compile(r"\b(?:products?|services?|customers?|manufactur\w*|sells?|sold|provides?|offers?|"
+                                r"operates?|develops?|designs?|distribut(?:es|ing))\b", re.I)
 # Without a possessive ("to new employees", "for all employees") the employees
 # may be a customer's: internal only when no client or customer is named.
 _UNOWNED_EMPLOYEES = re.compile(
@@ -200,6 +204,12 @@ def _business_quote_rejection(quote):
     # A current 'provide' predicate can describe internal human-capital
     # programs rather than the issuer's products or customer services.
     # Withhold the complete sentence; never clip out a business-looking clause.
+    # What the business does not depend on, or which rights it holds, is not a
+    # description of what it does ("… segments are not dependent upon any
+    # individual patents … licenses or distribution rights").
+    if _NEGATED_OR_RIGHTS_ONLY.search(quote) or (
+            _RIGHTS.search(quote) and not _BUSINESS_ACTIVITY.search(quote)):
+        return "not_a_business_description"
     if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote) or (
             _UNOWNED_EMPLOYEES.search(quote) and not _CUSTOMER_SCOPE.search(quote)):
         return "internal_employee_activity"
