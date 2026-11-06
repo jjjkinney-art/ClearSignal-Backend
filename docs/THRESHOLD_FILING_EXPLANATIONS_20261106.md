@@ -39,7 +39,21 @@ even when the stage's requests settled. The export reports that case as
 Answers from consumed runs never declare `degraded`, so their records and exports
 are unaffected.
 
-In a pilot, a failed SEC request is not a gap in the answer: the boundary halts the
-run with the first failure recorded. That includes a peer that sends nothing for the
-transport's 10 s read timeout. Only a filing that keeps arriving, but too slowly,
-degrades one answer.
+## Transport failures halt the run
+
+Graceful degradation and transport failure are different outcomes:
+
+| Event | Outcome |
+|---|---|
+| A filing still arriving at the 16 s wait | One answer degraded; the run continues |
+| A complete filing arriving after the 12 s cutoff | One answer degraded; the run continues |
+| Connection failure, or no bytes within the 10 s read timeout | **The run halts**, with the first failure recorded |
+| Refused or malformed SEC response | **The run halts**, with the first failure recorded |
+
+The 10 s read timeout is deliberate and stays. A halted run reports its remaining
+cases as not run; nothing substitutes for them.
+
+**This does not satisfy the broader degradation launch requirement.** It covers slow
+filings on threshold answers, in a pilot boundary. Graceful handling of transport
+failures remains unimplemented and unvalidated, and no live run has exercised any of
+this.

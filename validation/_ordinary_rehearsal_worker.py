@@ -155,7 +155,11 @@ def main():
     policy = request['policy']
     mode = request.get('mode')
     live = mode in LIVE_MODES
-    from validation.ordinary_pilot_contract import contract_profile
+    from validation.ordinary_pilot_contract import APPROVED_COHORT, COHORT, contract_profile
+    # The launcher refuses a selected cohort before it gets here; a worker started any
+    # other way refuses it too, so approved execution never depends on one caller.
+    if mode == 'approved' and COHORT != APPROVED_COHORT:
+        return 2
     profile = contract_profile()
     # Bound by the policy, which the ledger re-derives from the contract: a policy and
     # a cohort that disagree about the switch never reach a ledger or a request.
