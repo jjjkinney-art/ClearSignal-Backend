@@ -15,6 +15,8 @@ from .providers import sec_provider
 from .public_document_ingestion import fetch_public_document
 from .thesis_disclosures import _business_issuer_url, requests_thesis_disclosures
 
+from .current_period_explanation import EXPLANATION_CONCEPTS, extract_current_period_explanation
+
 FILING_METRICS = {**CORE_METRICS, **SUPPLEMENTARY_METRICS}
 
 logger = logging.getLogger(__name__)
@@ -120,13 +122,15 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
             publisher='SEC EDGAR', published_at=filing.timestamp, document_type=filing.document_type,
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,
             extract_tables=False, inline_fact_cik=cik,
-            inline_fact_concepts=tuple(c for group in FILING_METRICS.values() for c in group))
+            inline_fact_concepts=tuple(dict.fromkeys((*(c for group in FILING_METRICS.values() for c in group),
+                                                      *EXPLANATION_CONCEPTS))))
         items = evidence_from_filing(document, filing, ticker=ticker, cik=cik)
         (logger.info if items else logger.warning)(
             'Latest filing metrics %s: period=%s observations=%d comparisons=%d',
             ticker, filing.reporting_period_end, len(document.inline_xbrl_facts), len(items))
         if requests_thesis_disclosures(ticker, question) or _monitoring_filing_request(question):
-            return items
+            # The same admitted filing may explain its own latest-period changes.
+            return items + extract_current_period_explanation(document, items, ticker=ticker, cik=cik)
         from .verified_sec_metric_service import _requested_metrics
         requested = {f'us-gaap:{concept}' for concepts, _, _, _, _ in
                      _requested_metrics(question, include_defaults=False) for concept in concepts}

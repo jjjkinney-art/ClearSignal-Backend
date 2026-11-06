@@ -240,6 +240,23 @@ async def open_session(*, read_only: bool):
     from app.config import settings
     from app.db.connection import close_db, get_session_factory, init_db
 
+    # This operator tool requires an already migrated database. Refuse a missing
+    # ordinary SQLite file before starting aiosqlite's worker: otherwise opening
+    # it can create an empty file, and failed opens can leave queued cleanup at
+    # event-loop shutdown. URI targets retain the driver's existing semantics.
+    from sqlalchemy.engine import make_url
+    from pathlib import Path
+    try:
+        target = make_url(settings.database_url)
+        if (target.get_backend_name() == 'sqlite'
+                and str(target.query.get('uri', 'false')).lower() != 'true'
+                and (not target.database or not Path(target.database).is_file())):
+            raise Refused('persistence unavailable: connection failed')
+    except Refused:
+        raise
+    except Exception:
+        raise Refused('persistence unavailable: connection failed') from None
+
     await init_db(settings.database_url)
     try:
         factory = get_session_factory()
