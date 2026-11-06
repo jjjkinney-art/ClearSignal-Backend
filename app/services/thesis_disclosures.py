@@ -92,14 +92,30 @@ def _segment_business_scope(quote):
 
 
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
-    r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
+    r"\b(?:for|to)\s+(?:our|its|new|existing|all|current)\s+(?:(?:new|existing|current)\s+)?(?:employees|staff|workforce|personnel)\b|"
+    # "<Issuer> provides our employees with … wellness programs": human
+    # capital, not a product, customer or revenue activity.
+    r"\bprovides?\s+(?:our\s+|its\s+)?(?:employees|staff|workforce)\b|"
+    r"\b(?:employee\s+)?wellness\s+programs?\b|"
     r"^(?:We|Our company|The company|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"offers?\s+(?:our\s+)?(?:employees|staff|workforce)\s+"
     r"(?:(?:a|an|the)\s+(?:[a-z-]+\s+){0,3})?"
     r"(?:package of benefits|benefits|healthcare|stipends)\b|"
     r"\b(?:skills|professional|career) development across our "
-    r"(?:organization|workforce)\b", re.I)
+    r"(?:organization|workforce)\b|"
+    # Development programs whose beneficiaries are employees, however the
+    # issuer is named ("Blackstone offers … learning and professional
+    # development opportunities … to help employees advance their careers").
+    r"\b(?:learning|professional|career|leadership|talent)(?:\s+and\s+(?:professional\s+)?)?\s*development\s+"
+    r"(?:opportunities|programs?)\b[^.]{0,120}\bemployees\b|"
+    r"\b(?:employee\s+)?well[- ]?being\s+programs?\b", re.I)
+# Where the issuer's reports can be obtained, not what the issuer does
+# ("We offer, free of charge, downloads of our annual, quarterly and current reports").
+_FILING_AVAILABILITY = re.compile(
+    r"\bfree of charge\b|"
+    r"\b(?:annual|quarterly|current|periodic)\s+reports?\b[^.]{0,160}\b(?:available|website|internet|download)|"
+    r"\b(?:reports?|filings?|proxy statements?)\b[^.]{0,80}\b(?:filed with|furnished to) the (?:SEC|Securities and Exchange Commission)\b", re.I)
 _INTERNAL_HOSTING_ACTIVITY = re.compile(
     r"\b(?:migrate|host|run) our (?:production|internal) "
     r"(?:services|systems|applications)\b", re.I)
@@ -180,6 +196,8 @@ def _business_quote_rejection(quote):
         return "internal_employee_activity"
     if _INTERNAL_HOSTING_ACTIVITY.search(quote):
         return "internal_hosting_activity"
+    if _FILING_AVAILABILITY.search(quote):
+        return "filing_availability"
     # Activity words in a strategy, belief or potential project are not a
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.
@@ -467,9 +485,13 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                 if value and value["quote"] not in seen:
                     seen.add(value["quote"])
                     risks.append(item)
-        # Source order, never an assertion that these are the most material risks.
-        risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + competition + risks[:2] + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
+        # Company-specific first, boilerplate removed; never an assertion that
+        # these are the most material risks.
+        from .risk_selection import select_risks
+        risks, rejected = select_risks(risks, quote_of=lambda item: item.risk_disclosures[0]["quote"],
+                                       offset_of=lambda item: item.risk_disclosures[0]["start_offset"])
+        stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
+        return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
     except Exception as exc:
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):

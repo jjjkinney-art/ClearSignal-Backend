@@ -72,6 +72,13 @@ _FORM_LABELS: dict = {
 
 # Module-level cache for ticker → zero-padded CIK (loaded once per process).
 _ticker_cik_cache: Optional[Dict[str, str]] = None
+# SEC Standard Industrial Classification code per CIK, recorded from submissions
+# responses already fetched for filings; never a separate request.
+_issuer_sic: Dict[str, str] = {}
+
+
+def issuer_sic(cik: str) -> Optional[str]:
+    return _issuer_sic.get(str(cik).zfill(10))
 _ticker_cik_lock = Lock()
 
 # One shared full company_tickers.json response for every directory consumer.
@@ -296,6 +303,8 @@ def _fetch_by_cik(
 
     data        = _fetch_json(url, timeout=10)
     entity_name = data.get("name", ticker)
+    if str(data.get("sic") or "").isdigit():
+        _issuer_sic[str(cik).zfill(10)] = str(data["sic"])
     recent      = data.get("filings", {}).get("recent", {})
 
     filing_dates = recent.get("filingDate", [])
