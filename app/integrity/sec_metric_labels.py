@@ -13,6 +13,8 @@ def metric_label(name: str, concept: str) -> str:
         "RevenueFromContractWithCustomerExcludingAssessedTax":
             "revenue from contracts with customers excluding assessed taxes",
         "RevenuesNetOfInterestExpense": "revenue net of interest expense",
+        "RevenueFromContractWithCustomerIncludingAssessedTax":
+            "revenue from contracts with customers including assessed taxes",
     }.get(concept, name)
 
 

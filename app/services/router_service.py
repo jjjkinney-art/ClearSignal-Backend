@@ -972,8 +972,24 @@ def _detect_question_intent(question: str) -> str:
     return "investment_thesis"
 
 
-def _collect_investment_evidence(futures, *, source_evidence_view=False):
-    """Snapshot providers at 10s; source views give SEC documents 20s total."""
+# With threshold filing explanations on, a threshold case's filing wait ends here
+# so the answer can still be composed inside that case's 20 s deadline.
+THRESHOLD_DOCUMENT_WAIT_SECONDS = 16
+# Parsing cannot be interrupted and an abandoned parse still holds the case open.
+# A filing arriving later than this is not parsed, leaving time for the largest
+# retained filings (up to about 6 s to parse) to finish inside the deadline.
+# These cutoffs reserve processing time; they cannot guarantee completion on an
+# overloaded host, where a case can still pass its deadline.
+THRESHOLD_FILING_PARSE_CUTOFF_SECONDS = 12
+
+
+def _collect_investment_evidence(futures, *, source_evidence_view=False, document_seconds=20,
+                                 abandoned=None):
+    """Snapshot providers at 10s; source views give SEC documents 20s total.
+
+    ``document_seconds`` shortens that document wait where a case deadline needs
+    room to finish its answer. Keys left unfinished are appended to ``abandoned``.
+    """
     started = time.monotonic()
     _cf_wait(list(futures.values()), timeout=10, return_when=ALL_COMPLETED)
     completed = {key for key, future in futures.items() if future.done()}
@@ -983,7 +999,7 @@ def _collect_investment_evidence(futures, *, source_evidence_view=False):
     if source_evidence_view and pending_documents:
         # This path skips model agents and synthesis. The grace period belongs
         # only to SEC documents, never to unrelated providers finishing late.
-        remaining = max(0, 20 - (time.monotonic() - started))
+        remaining = max(0, document_seconds - (time.monotonic() - started))
         if remaining:
             _cf_wait(list(pending_documents.values()), timeout=remaining,
                      return_when=ALL_COMPLETED)
@@ -997,9 +1013,11 @@ def _collect_investment_evidence(futures, *, source_evidence_view=False):
                 logger.warning('[router] evidence task %s failed: %r', key, type(exc).__name__)
                 results[key] = []
         else:
-            cap = 20 if source_evidence_view and key in documents else 10
+            cap = document_seconds if source_evidence_view and key in documents else 10
             logger.warning('[router] evidence task %s abandoned (>%ss wall time)', key, cap)
             results[key] = []
+            if abandoned is not None:
+                abandoned.append(key)
     return results
 
 
@@ -1254,7 +1272,7 @@ def _run_investment_pipeline(
         def _run():
             _t0 = time.monotonic()
             try:
-                result = fn()
+                result = _sec_provider.bind_submissions_scope(fn, _submissions_scope)()
             except Exception as _exc:
                 _obs_provider(
                     provider=provider, stage="retrieval",
@@ -1273,22 +1291,44 @@ def _run_investment_pipeline(
 
         return _obs_bind(_run)
 
+    # Threshold filing explanations (default off): one submissions GET per
+    # request, and a document wait that leaves the case deadline room to answer.
+    _submissions_scope = None
+    _document_seconds = 20
+    _abandoned_evidence: list = []
+    from ..config import settings as _evidence_settings
+    if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
+        _submissions_scope = _sec_provider.SubmissionsRequestScope()
+        from .source_answer import is_decision_monitoring_request
+        if is_decision_monitoring_request(question):
+            _document_seconds = THRESHOLD_DOCUMENT_WAIT_SECONDS
+            _submissions_scope.filing_parse_deadline = time.monotonic() + THRESHOLD_FILING_PARSE_CUTOFF_SECONDS
     _ev_pool = ThreadPoolExecutor(max_workers=len(_ev_tasks))
     try:
         _ev_futures_map = {k: _ev_pool.submit(_observed(k, fn))
                            for k, fn in _ev_tasks.items()}
         _ev_results = _collect_investment_evidence(
             _ev_futures_map, source_evidence_view=is_source_answer_request(question),
+            document_seconds=_document_seconds, abandoned=_abandoned_evidence,
         )
     except Exception as _pool_exc:
         logger.warning("[router] evidence pool error (%r) — falling back to sequential", type(_pool_exc).__name__)
         for k, fn in _ev_tasks.items():
             try:
-                _ev_results[k] = fn()
+                _ev_results[k] = _sec_provider.bind_submissions_scope(fn, _submissions_scope)()
             except Exception as _e:
                 _ev_results[k] = []
     finally:
         _ev_pool.shutdown(wait=False)  # Don't block — let abandoned tasks finish in background
+    _evidence_gaps: list = []
+    if _submissions_scope is not None:
+        _obs_provider(provider="sec_submissions", stage="retrieval", duration_ms=0.0,
+                      result_count=_submissions_scope.fetches, cache="request",
+                      status="error" if _submissions_scope.failures else "ok",
+                      reuses=_submissions_scope.reuses, failures=_submissions_scope.failures)
+        from .source_answer import evidence_gaps
+        _evidence_gaps = evidence_gaps(_abandoned_evidence, _submissions_scope.failures,
+                                       _submissions_scope.filing_read_failures)
 
     _fmp_ev:     list = _ev_results.get("fmp",       [])
     _sec_ev:     list = _ev_results.get("sec",       [])
@@ -1300,14 +1340,22 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
     from .filing_metric_evidence import merge_latest_filing_metrics
+    # A filing's explanation of its own changes is not a metric comparison;
+    # it travels beside the merged comparisons rather than through the merge.
+    _period_explanation_evidence: list = [
+        item for item in _ev_results.get("filing_metrics", []) if getattr(item, "period_explanations", None)
+    ]
     _sec_metric_evidence = merge_latest_filing_metrics(
-        _sec_metric_evidence, _ev_results.get("filing_metrics", []), ticker=ticker, question=question,
+        _sec_metric_evidence,
+        [item for item in _ev_results.get("filing_metrics", []) if not getattr(item, "period_explanations", None)],
+        ticker=ticker, question=question,
     )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.
     evidence = (_issuer_release_evidence + _issuer_kpi_evidence + _sec_metric_evidence
+                + _period_explanation_evidence
                 + _ev_results.get("thesis_disclosures", []) + market_evidence
                 + fred_evidence + _val_ratios + _analyst_ests)
     from .evidence_references import admit_evidence
@@ -1677,8 +1725,9 @@ def _run_investment_pipeline(
 
     # Apply the source boundary before any thesis can enter legacy snapshots,
     # comparison evaluation or the final account-owned response snapshot.
-    from .source_answer import apply_source_answer_gate
+    from .source_answer import apply_evidence_gaps, apply_source_answer_gate
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
+    _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
 
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
@@ -1756,6 +1805,7 @@ def _run_investment_pipeline(
     # same boundary at serialization so those changes cannot reintroduce an
     # unsupported Services assertion into the emitted or saved response.
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
+    _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
 
     try:
         thesis_dict = thesis.model_dump()
@@ -2293,6 +2343,36 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
+                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                    # A ticker-shaped word that occurs only inside other issuers'
+                    # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
+                    # C.V", "T" in "T-Mobile US, Inc.") is part of those names,
+                    # not a second company. The official name wins when it
+                    # identifies one issuer; otherwise the ticker is not trusted
+                    # and the named issuer's securities become suggestions.
+                    from .issuer_identity import official_name_spans, symbol
+                    _ticker = symbol(_entity_resolution.context.ticker)
+                    _token = (_entity_resolution.matched_text or "").strip().lstrip("$")
+                    _names = [(span, found) for span, found in official_name_spans(request.question)
+                              if _ticker not in {item.ticker for item in found}]
+                    _hits = [hit.span() for hit in re.finditer(
+                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question)] if _token else []
+                    if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
+                                     for start, end in _hits):
+                        from .company_detection import EntityResolution
+                        _official = discover_company(request.question, question_text=True, as_of=request.as_of)
+                        if _official is not None and symbol(_official.ticker) != _ticker:
+                            _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
+                        else:
+                            _named = {item.ticker: item for span, found in _names for item in found
+                                      if not any(other != span and other[0] <= span[0] and span[1] <= other[1]
+                                                 for other, _ in _names)}
+                            _entity_resolution = EntityResolution(
+                                None, 0.0, "not_found", _entity_resolution.matched_text,
+                                candidates=[(item.ticker, item.name, 1.0) for item in _named.values()],
+                                rejection_reason="ticker_inside_official_name",
+                                fallback_reason="candidates_available",
+                            )
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
@@ -2449,6 +2529,21 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         )
 
     # ── Graceful "Did you mean?" fallback ────────────────────────────────────
+    # When the question names a company by an exact official name that stays
+    # ambiguous (two registrants share it), suggest those registrants, never
+    # fuzzy matches on other words of the question ("for", "material").
+    def _named_issuer_candidates(question):
+        try:
+            from .issuer_identity import official_name_spans
+            spans = official_name_spans(question)
+        except Exception:
+            return []
+        named = {}
+        for _, issuers in spans:
+            for issuer in issuers:
+                named.setdefault(issuer.ticker, (issuer.ticker, issuer.name, 1.0))
+        return list(named.values())[:3]
+
     # When entity resolution failed (confidence 0.0) but we have candidate
     # matches, return a structured suggestion response instead of falling
     # silently to a generic general-finance answer.
@@ -2474,7 +2569,7 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
         and _has_quality_candidates
     ):
         request_id = str(uuid.uuid4())
-        candidates = _entity_resolution.candidates[:3]
+        candidates = _named_issuer_candidates(request.question) or _entity_resolution.candidates[:3]
         logger.info(
             json.dumps({
                 "event": "entity_resolution_suggestions",
