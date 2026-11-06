@@ -18,6 +18,8 @@ from app.services.source_answer import apply_source_answer_gate
 
 QUESTION = "What current public evidence identifies an operating risk to XOM commodity prices?"
 QUOTE = "Commodity prices could decline and adversely affect our operating results."
+SPECIFIC_QUOTE = ("Because crude oil sales account for a significant portion of our revenues, commodity prices "
+                  "could decline and adversely affect our operating results.")
 URL = "https://www.sec.gov/Archives/edgar/data/34088/000003408826000045/xom-20251231.htm"
 CURRENT_URL = "https://www.sec.gov/Archives/edgar/data/2115436/000003408826000093/xom-20260630.htm"
 
@@ -64,7 +66,7 @@ def test_broad_thesis_reuses_exact_predecessor_risks_without_inheriting_business
     from test_financial_thesis_foundation import pair
     question = "What is the investment thesis for XOM, what supports it, and what could invalidate it?"
     business = "We manufacture specialized components and distribute our products through independent dealers."
-    text = (f"Item 1. Business {business} Item 1A. Risk Factors {QUOTE} "
+    text = (f"Item 1. Business {business} Item 1A. Risk Factors {SPECIFIC_QUOTE} "
             "Item 1B. Unresolved Staff Comments")
     doc = document(text=text, content_hash=sha256(text.encode()).hexdigest())
     calls = []
@@ -86,7 +88,7 @@ def test_broad_thesis_reuses_exact_predecessor_risks_without_inheriting_business
     assert references[0]["issuer_relationship"] == reviewed_succession("XOM").provenance()
     result = build_financial_foundation("XOM", pair(ticker="XOM", cik="2115436") + admitted,
                                         None, expected_cik="2115436")
-    assert business not in result["answer"] and QUOTE in result["answer"]
+    assert business not in result["answer"] and SPECIFIC_QUOTE in result["answer"]
     assert "current successor-disclosed operating-risk mechanisms" in result["unanswered_parts"]
     assert "business model and competitive position" in result["unanswered_parts"]
     risk = result["claims"][-1]
@@ -94,7 +96,7 @@ def test_broad_thesis_reuses_exact_predecessor_risks_without_inheriting_business
     monkeypatch.setattr(service.sec_provider, "_load_ticker_cik_map", lambda: {"XOM": "2115436"})
     thesis = InvestmentThesis(ticker="XOM", company_name="ExxonMobil Holdings Corp")
     status = apply_source_answer_gate(thesis, question, pair(ticker="XOM", cik="2115436") + admitted)
-    assert status["status"] == "partial" and QUOTE in thesis.direct_answer
+    assert status["status"] == "partial" and SPECIFIC_QUOTE in thesis.direct_answer
     assert "current successor-disclosed operating-risk mechanisms" in status["unanswered_parts"]
 
 

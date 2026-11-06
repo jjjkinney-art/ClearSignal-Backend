@@ -37,10 +37,10 @@ class FrozenModelRequest(NamedTuple):
 
 
 class PilotBoundary:
-    def __init__(self, ledger, scenario):
+    def __init__(self, ledger, scenario, *, cases=None):
         self.ledger, self.scenario = ledger, scenario
         self.contact = SYNTHETIC_CONTACT
-        self.cases = preflight()['cases']
+        self.cases = preflight()['cases'] if cases is None else cases
         self.identities = [case['identity'] for case in self.cases[::2]]
         self.case = self.case_run = None
         self.stage = ContextVar('offline_pilot_stage', default='outside_pipeline')
@@ -100,6 +100,11 @@ class PilotBoundary:
             if not self.fault_used and self.scenario in names:
                 self.fault_used = True
                 return True
+        return False
+
+    def abandoned_task(self, stage):
+        """Whether a failing pool task belongs to an evidence stage the
+        application abandoned. Historical boundaries never abandon."""
         return False
 
     def _patch(self, target, name, value):
@@ -310,6 +315,8 @@ class PilotBoundary:
                         owner.active()
                         return fn(*args, **kwargs)
                     except BaseException:
+                        if owner.abandoned_task(stage):
+                            raise  # The application already discarded this task.
                         owner.ledger.halt('pool_failure')
                         owner.release.set()
                         raise BudgetError('offline pipeline worker failed') from None

@@ -130,6 +130,10 @@ def validate_approval(approval, binding, execution, *, monitoring=False, freshne
 class ExchangeGate:
     """Thread-local grant for one immutable, durably claimed exchange."""
     def __init__(self, owner):
+        if owner.ledger.policy.get('purpose') == 'approved_ordinary_twelve_case_pilot':
+            from validation.ordinary_native_ledger import OrdinaryNativeGate
+            if type(self) is not OrdinaryNativeGate:
+                raise BudgetError('ordinary profile requires its wire-entry gate')
         self.owner = owner
         self.current = ContextVar('owned_claimed_network_exchange', default=None)
         self.closed = False
@@ -163,6 +167,7 @@ class ExchangeGate:
             self.owner.active()
             verify_network_configuration(self.owner.ledger.policy['execution_configuration'])
         state = {'url': url, 'host': host, 'addresses': set(), 'dispatched': False,
+                 'attempt': attempt, 'case_run': case_run,
                  'validated': False, 'fingerprint': fingerprint, 'route': route,
                  'stage': stage, 'active': True, 'thread': get_ident()}
         token = self.current.set(state)
