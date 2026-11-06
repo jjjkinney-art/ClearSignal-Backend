@@ -2293,6 +2293,36 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                     if _official is not None:
                         from .company_detection import EntityResolution
                         _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
+                elif _entity_resolution.method == "exact_ticker" and _entity_resolution.context is not None:
+                    # A ticker-shaped word that occurs only inside other issuers'
+                    # official names ("DE" in "BETTERWARE DE MEXICO, S.A.P.I. DE
+                    # C.V", "T" in "T-Mobile US, Inc.") is part of those names,
+                    # not a second company. The official name wins when it
+                    # identifies one issuer; otherwise the ticker is not trusted
+                    # and the named issuer's securities become suggestions.
+                    from .issuer_identity import official_name_spans, symbol
+                    _ticker = symbol(_entity_resolution.context.ticker)
+                    _token = (_entity_resolution.matched_text or "").strip().lstrip("$")
+                    _names = [(span, found) for span, found in official_name_spans(request.question)
+                              if _ticker not in {item.ticker for item in found}]
+                    _hits = [hit.span() for hit in re.finditer(
+                        rf"(?<![\w$])\$?{re.escape(_token)}(?!\w)", request.question)] if _token else []
+                    if _hits and all(any(span[0] <= start and end <= span[1] for span, _ in _names)
+                                     for start, end in _hits):
+                        from .company_detection import EntityResolution
+                        _official = discover_company(request.question, question_text=True, as_of=request.as_of)
+                        if _official is not None and symbol(_official.ticker) != _ticker:
+                            _entity_resolution = EntityResolution(_official, 1.0, "sec_directory_exact", request.question)
+                        else:
+                            _named = {item.ticker: item for span, found in _names for item in found
+                                      if not any(other != span and other[0] <= span[0] and span[1] <= other[1]
+                                                 for other, _ in _names)}
+                            _entity_resolution = EntityResolution(
+                                None, 0.0, "not_found", _entity_resolution.matched_text,
+                                candidates=[(item.ticker, item.name, 1.0) for item in _named.values()],
+                                rejection_reason="ticker_inside_official_name",
+                                fallback_reason="candidates_available",
+                            )
             logger.info(
                 json.dumps({
                     "event": "entity_resolution",
