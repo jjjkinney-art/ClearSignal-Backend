@@ -51,6 +51,8 @@ SCENARIO_FAULTS = {
     # Option B candidate only: that issuer's third document request is the one
     # its threshold case makes, after its thesis case's two.
     'threshold_filing_slow': ('crawl', rf'/Archives/edgar/data/{_FAULT_CIK}/', 3),
+    # The same document, complete but past the threshold parse cutoff.
+    'threshold_filing_after_cutoff': ('late', rf'/Archives/edgar/data/{_FAULT_CIK}/', 3),
 }
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
@@ -156,7 +158,7 @@ def main():
     candidate = request.get('candidate')
     if candidate is not None and (candidate != 'option_b' or mode != 'rehearsal'):
         return 2
-    if (candidate is None) and scenario == 'threshold_filing_slow':
+    if candidate is None and scenario in {'threshold_filing_slow', 'threshold_filing_after_cutoff'}:
         return 2
     if (mode == 'rehearsal' and (scenario not in SCENARIO_FAULTS or request.get('scenario') != scenario)
             or live and (scenario != mode or 'scenario' in request

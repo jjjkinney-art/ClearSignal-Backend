@@ -161,14 +161,15 @@ _EVIDENCE_GAP_SOURCES = {
 
 
 def evidence_gaps(abandoned: Iterable[str], submissions_failures: int,
-                  filing_read_failures: int = 0) -> list[dict]:
+                  filing_read_failures: Iterable[str] = ()) -> list[dict]:
     """What a request lost to its time limits or to a failed SEC read."""
+    abandoned = list(abandoned)
     gaps = [{"source": _EVIDENCE_GAP_SOURCES[key], "task": key, "reason": "time_limit"}
             for key in abandoned if key in _EVIDENCE_GAP_SOURCES]
     if submissions_failures:
         gaps.append({"source": "the SEC filing list", "task": "sec_submissions", "reason": "retrieval_failed"})
-    if filing_read_failures:
-        gaps.append({"source": "the latest SEC filing", "task": "filing_document", "reason": "not_read"})
+    gaps += [{"source": _EVIDENCE_GAP_SOURCES[key], "task": key, "reason": "not_read"}
+             for key in dict.fromkeys(filing_read_failures) if key in _EVIDENCE_GAP_SOURCES and key not in abandoned]
     return gaps
 
 

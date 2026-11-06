@@ -45,7 +45,7 @@ _DIRECTORY_ONLY = [(1022837, 'SMFNF', 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
                    (1747777, 'OTF', 'Blue Owl Technology Finance Corp.')]
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
-SYNTHETIC_FAULTS = frozenset({'crawl', 'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
+SYNTHETIC_FAULTS = frozenset({'crawl', 'late', 'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
 
 
 def _ticker(cik):
@@ -196,6 +196,10 @@ class _Tunnel:
             self.slow = self.backend.take_fault(path, 'slow')
             # A small document's slow peer: one byte a second, past any case limit.
             self.crawl = self.backend.take_fault(path, 'crawl')
+            if self.backend.take_fault(path, 'late'):
+                # Complete, but only after a threshold case's parse cutoff.
+                import time
+                time.sleep(13.0)
             fault = self.backend.take_fault(path, 'read_failure')
             status, media, body = respond(path) if method == 'GET' else (405, 'text/plain', b'')
             extra = b''

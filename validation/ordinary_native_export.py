@@ -13,7 +13,7 @@ from pathlib import Path
 import sqlite3
 
 from validation.capture_budget import BudgetError, digest
-from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, screen_body
+from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, degraded_stages, screen_body
 from validation.ordinary_pilot_contract import CASES, quota_contract
 
 
@@ -176,6 +176,17 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             raise ExportRefused('stage abandonment outside its recorded case')
         abandoned_runs.add(run)
         abandoned_stages.append({'case_id': case_of[run], 'stage': stage})
+
+    # An answer that declares itself degraded must have the matching durable
+    # record. Answers of consumed runs never declare it, so they are unaffected.
+    recorded_stages = {(row['case_id'], row['stage']) for row in abandoned_stages}
+    for run, (case_id, _, raw, _) in answers.items():
+        try:
+            declared = degraded_stages(json.loads(raw))
+        except BudgetError:
+            raise ExportRefused('degraded answer has invalid evidence gaps') from None
+        if any((case_id, stage) not in recorded_stages for stage in declared):
+            raise ExportRefused('degraded answer without its ledger record')
 
     # Twelve outcomes; a halt never turns gaps into passes.
     outcomes = []

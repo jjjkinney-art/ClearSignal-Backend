@@ -197,12 +197,12 @@ class SubmissionsRequestScope:
         self.fetches = 0
         self.reuses = 0
         self.failures = 0
-        self.filing_read_failures = 0
+        self.filing_read_failures = []
         self.filing_parse_deadline = None  # time.monotonic() value, or no limit
 
-    def note_filing_read_failure(self):
+    def note_filing_read_failure(self, task: str):
         with self._lock:
-            self.filing_read_failures += 1
+            self.filing_read_failures.append(task)
 
     def fetch(self, url: str, cik: str, *, timeout: int):
         with self._lock:
@@ -237,11 +237,11 @@ _submissions_scope: ContextVar[Optional[SubmissionsRequestScope]] = ContextVar(
     "sec_submissions_request_scope", default=None)
 
 
-def note_filing_read_failure() -> None:
-    """Tell the active request a filing document could not be read, if it asks."""
+def note_filing_read_failure(task: str) -> None:
+    """Tell the active request an evidence task lost its filing, if it asks."""
     scope = _submissions_scope.get()
     if scope is not None:
-        scope.note_filing_read_failure()
+        scope.note_filing_read_failure(task)
 
 
 def filing_parse_deadline() -> Optional[float]:

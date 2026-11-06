@@ -42,6 +42,29 @@ class AbandonedExchange(BudgetError):
     """
 
 
+# The evidence stage behind each task a degraded answer can name.
+_DEGRADED_TASK_STAGES = {'filing_metrics': 'evidence.filing_metrics',
+                         'thesis_disclosures': 'evidence.thesis_disclosures',
+                         'sec_metrics': 'evidence.sec_metrics', 'sec': 'evidence.sec',
+                         'sec_submissions': 'evidence.sec'}
+
+
+def degraded_stages(payload):
+    """Stages an answer says it went without. Empty for an answer that does not
+    declare itself degraded, which includes every answer of every consumed run."""
+    answer = payload.get('answer') if type(payload) is dict else None
+    source = answer.get('source_answer') if type(answer) is dict else None
+    if type(source) is not dict or source.get('degraded') is not True:
+        return ()
+    gaps = source.get('evidence_gaps')
+    if type(gaps) is not list or not gaps:
+        raise BudgetError('degraded answer without its evidence gaps')
+    try:
+        return tuple(dict.fromkeys(_DEGRADED_TASK_STAGES[gap['task']] for gap in gaps))
+    except (KeyError, TypeError):
+        raise BudgetError('degraded answer names an unknown evidence task') from None
+
+
 def case_seconds(case_id):
     return CASE_SECONDS[case_id.split(':')[1]]
 
@@ -301,6 +324,7 @@ class OrdinaryNativeLedger(AttemptLedger):
                 raise BudgetError('invalid answer')
             from validation.pilot_policy import reject_runtime_values
             reject_runtime_values(payload, forbidden_values, raw=raw)
+            stages = degraded_stages(payload)
         except (BudgetError, TypeError, ValueError, RecursionError):
             self.halt('invalid_response')
             raise BudgetError('ordinary answer retention refused') from None
@@ -323,6 +347,10 @@ class OrdinaryNativeLedger(AttemptLedger):
             else:
                 db.execute('INSERT INTO ordinary_answers VALUES (?,?,?,?,?)',
                            (case_run, case[0], hashlib.sha256(raw).hexdigest(), raw, now))
+                # Same transaction: a retained degraded answer always has its record.
+                # A stage already abandoned at the application's timeout keeps its row.
+                db.executemany('INSERT OR IGNORE INTO ordinary_stage_abandonments VALUES (?,?,?)',
+                               [(case_run, stage, now) for stage in stages])
                 db.execute("UPDATE cases SET status='complete' WHERE id=?", (case_run,))
         if reason:
             raise BudgetError('ordinary answer retention refused')

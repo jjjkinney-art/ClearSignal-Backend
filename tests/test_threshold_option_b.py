@@ -222,12 +222,13 @@ def test_a_failed_filing_list_is_a_gap():
 
 
 def test_a_failed_filing_read_is_a_gap_and_reaches_the_request_scope():
-    assert evidence_gaps([], 0, 1) == [{'source': 'the latest SEC filing', 'task': 'filing_document',
-                                        'reason': 'not_read'}]
+    assert evidence_gaps([], 0, ['filing_metrics']) == [{'source': 'the latest SEC filing', 'task': 'filing_metrics',
+                                                         'reason': 'not_read'}]
+    assert [g['reason'] for g in evidence_gaps(['filing_metrics'], 0, ['filing_metrics'])] == ['time_limit']
     scope = sec_provider.SubmissionsRequestScope()
-    sec_provider.note_filing_read_failure()  # no active scope: nothing to tell
-    sec_provider.bind_submissions_scope(sec_provider.note_filing_read_failure, scope)()
-    assert scope.filing_read_failures == 1
+    sec_provider.note_filing_read_failure('filing_metrics')  # no active scope: nothing to tell
+    sec_provider.bind_submissions_scope(sec_provider.note_filing_read_failure, scope)('filing_metrics')
+    assert scope.filing_read_failures == ['filing_metrics']
 
 
 def test_a_gap_elsewhere_does_not_claim_the_drivers_are_missing():

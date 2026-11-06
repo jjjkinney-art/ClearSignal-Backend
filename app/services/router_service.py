@@ -978,6 +978,8 @@ THRESHOLD_DOCUMENT_WAIT_SECONDS = 16
 # Parsing cannot be interrupted and an abandoned parse still holds the case open.
 # A filing arriving later than this is not parsed, leaving time for the largest
 # retained filings (up to about 6 s to parse) to finish inside the deadline.
+# These cutoffs reserve processing time; they cannot guarantee completion on an
+# overloaded host, where a case can still pass its deadline.
 THRESHOLD_FILING_PARSE_CUTOFF_SECONDS = 12
 
 

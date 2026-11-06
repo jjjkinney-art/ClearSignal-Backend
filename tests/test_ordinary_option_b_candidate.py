@@ -7,6 +7,7 @@ or authority to run a pilot.
 import json
 import os
 from pathlib import Path
+import sqlite3
 import subprocess
 import sys
 
@@ -15,6 +16,7 @@ import pytest
 from validation.capture_budget import BudgetError
 from validation.ordinary_option_b_candidate import candidate_limits, candidate_quota_contract, validate_candidate
 from validation import ordinary_native_ledger, ordinary_pilot_contract
+from validation.ordinary_native_ledger import degraded_stages
 from validation.ordinary_pilot_contract import CASES, quota_contract
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -29,6 +31,27 @@ def rehearse(tmp_path, scenario):
                           capture_output=True, text=True, timeout=900)
     assert done.returncode == 0, done.stderr[-2000:]
     return json.loads(next(line[6:] for line in done.stdout.splitlines() if line.startswith('RESULT')))
+
+
+def rehearse_and_tamper(tmp_path, scenario, sql):
+    """A rehearsal, then one ledger edit, then the parent export, in one fresh process."""
+    code = ("import json,shutil,sqlite3,sys; sys.path.insert(0, %r); "
+            "from pathlib import Path; "
+            "from validation.ordinary_option_b_candidate import candidate_limits, run_candidate_rehearsal as r; "
+            "from validation.ordinary_native_export import ExportRefused, export_packet; "
+            "from validation.ordinary_isolated_rehearsal import rehearsal_policy; "
+            "from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME; "
+            "out=Path(sys.argv[1]); r(out, scenario=sys.argv[2]); "
+            "policy=json.loads((out/'request.json').read_text())['policy']; "
+            "db=sqlite3.connect(out/'ledger.sqlite'); db.execute(sys.argv[3]); db.commit(); db.close(); "
+            "\nwith candidate_limits():\n"
+            " try:\n  export_packet(out/'ledger.sqlite', policy, forbidden_values=tuple(REHEARSAL_RUNTIME.values()), synthetic=True); print('RESULTexported')\n"
+            " except ExportRefused as exc:\n  print('RESULT'+str(exc))\n" % str(ROOT))
+    done = subprocess.run([sys.executable, '-c', code, str(tmp_path / scenario), scenario, sql], cwd=ROOT,
+                          env={**os.environ, 'ORDINARY_PILOT_COHORT': 'runs-1-2'},
+                          capture_output=True, text=True, timeout=900)
+    assert done.returncode == 0, done.stderr[-2000:]
+    return next(line[6:] for line in done.stdout.splitlines() if line.startswith('RESULT'))
 
 
 def test_the_approved_contract_is_unchanged():
@@ -110,3 +133,59 @@ def test_a_slow_filing_degrades_the_threshold_answer_inside_its_deadline(tmp_pat
     assert 'Incomplete answer: the latest SEC filing could not be read for this answer' in text
     assert source is None or source['degraded'] is True
     assert packet['quality_pass_rate'] is None
+
+
+def _cutoff_case(packet):
+    degraded = [c['case_id'] for c in packet['cases'] if c['status'] == 'answered_degraded_unadjudicated']
+    assert len(degraded) == 1 and degraded[0].endswith(':decision_threshold')
+    return degraded[0]
+
+
+@pytest.mark.timeout(900)
+def test_a_filing_past_the_cutoff_is_degraded_in_ledger_export_and_packet(tmp_path):
+    result = rehearse(tmp_path, 'threshold_filing_after_cutoff')
+    packet, worker = result['packet'], result['worker']
+    assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
+    case = _cutoff_case(packet)
+    # The request finished, so nothing was abandoned on the wire...
+    assert worker['abandoned_evidence'] == []
+    assert all(a['status'] == 'settled' for a in packet['attempts'])
+    assert [a['route'] for a in packet['attempts'] if a['case_id'] == case and a['stage'] == 'evidence.filing_metrics'
+            ] == ['sec/document']
+    # ...and the case is still degraded everywhere it is reported.
+    assert packet['abandoned_stages'] == [{'case_id': case, 'stage': 'evidence.filing_metrics'}]
+    assert packet['outcome_counts']['degraded_answer'] == 1 and packet['quality_pass_rate'] is None
+    source = packet['answers'][case]['response']['answer']['source_answer']
+    assert source['degraded'] is True
+    assert source['evidence_gaps'] == [{'source': 'the latest SEC filing', 'task': 'filing_metrics', 'reason': 'not_read'}]
+    assert 'Incomplete answer: the latest SEC filing' in json.dumps(packet['answers'][case]['response'])
+    with sqlite3.connect(tmp_path / 'threshold_filing_after_cutoff' / 'ledger.sqlite') as db:
+        assert db.execute('SELECT c.case_id, s.stage FROM ordinary_stage_abandonments s JOIN cases c ON c.id=s.case_run'
+                          ).fetchall() == [(case, 'evidence.filing_metrics')]
+
+
+@pytest.mark.timeout(900)
+def test_export_refuses_a_degraded_answer_without_its_ledger_record(tmp_path):
+    assert rehearse_and_tamper(tmp_path, 'threshold_filing_after_cutoff',
+                               'DELETE FROM ordinary_stage_abandonments') == 'degraded answer without its ledger record'
+
+
+def test_an_answer_without_the_declaration_records_nothing():
+    # Every answer of every consumed run has this shape.
+    for payload in ({'answer': {'source_answer': {'status': 'partial', 'claims': []}}}, {'answer': {}}, {},
+                    {'answer': {'source_answer': None}}, {'answer': {'source_answer': {'degraded': False}}}):
+        assert degraded_stages(payload) == ()
+
+
+def test_declared_gaps_map_to_their_stages():
+    gaps = [{'task': 'filing_metrics'}, {'task': 'sec_submissions'}, {'task': 'sec'}]
+    assert degraded_stages({'answer': {'source_answer': {'degraded': True, 'evidence_gaps': gaps}}}) == (
+        'evidence.filing_metrics', 'evidence.sec')
+
+
+@pytest.mark.parametrize('source', [{'degraded': True}, {'degraded': True, 'evidence_gaps': []},
+                                    {'degraded': True, 'evidence_gaps': [{'task': 'invented'}]},
+                                    {'degraded': True, 'evidence_gaps': ['filing_metrics']}])
+def test_a_malformed_declaration_is_refused(source):
+    with pytest.raises(BudgetError):
+        degraded_stages({'answer': {'source_answer': source}})
