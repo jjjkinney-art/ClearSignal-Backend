@@ -127,6 +127,37 @@ def exact_issuer(value: str, directory: Directory) -> Issuer | None:
     return matches[0] if len(matches) == 1 else None
 
 
+def _name_windows(value: str, directory: Directory) -> list[tuple[tuple[int, int], list[Issuer]]]:
+    """Exact official-name word windows in free text, as (character span, issuers)."""
+    from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, _CONTEXT_WORDS
+    excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
+    words = list(re.finditer(r"[a-z0-9]+", value.lower()))
+    windows = []
+    for start in range(len(words)):
+        for width in range(1, min(12, len(words) - start) + 1):
+            key = " ".join(word.group() for word in words[start:start + width])
+            if width == 1 and (len(key) < 5 or key.upper() in excluded or key in _CONTEXT_WORDS):
+                continue
+            found = directory.names.get(key, [])
+            if not found and width > 1:
+                # Windows are already normalised words, so name_key differs
+                # only by removing a trailing legal form. That explicit form
+                # ("NN Inc") makes a short registrant name exact; the bare
+                # word ("nn") never qualifies.
+                legal = name_key(key)
+                if legal != key and not (" " not in legal and (
+                        legal.upper() in excluded or legal in _CONTEXT_WORDS)):
+                    found = directory.names.get(legal, [])
+            if found:
+                windows.append(((words[start].start(), words[start + width - 1].end()), found))
+    return windows
+
+
+def official_name_spans(value: str) -> list[tuple[tuple[int, int], list[Issuer]]]:
+    """Where exact current official names occur in free text, and whose they are."""
+    return _name_windows(value, _load_directory()) if value.strip() else []
+
+
 def discover_company(value: str, *, question_text: bool = False, as_of=None) -> CompanyContext | None:
     """Resolve exact official names/tickers; ambiguous and historical gaps close.
 
@@ -139,23 +170,21 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
     if not question_text:
         issuer = exact_issuer(value, directory)
     else:
-        from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS, _CONTEXT_WORDS
+        from .company_detection import _TICKER_STOP_WORDS, PROTECTED_GENERIC_TICKERS
         excluded = _TICKER_STOP_WORDS | frozenset(PROTECTED_GENERIC_TICKERS)
         matches = {}
         # Full exact name spans take precedence over ticker-like words inside
         # that name: SEC's "WD 40 CO" must not also select ticker WD.
-        words = list(re.finditer(r"[a-z0-9]+", value.lower()))
-        name_spans = []
-        for start in range(len(words)):
-            for width in range(1, min(12, len(words) - start) + 1):
-                key = " ".join(word.group() for word in words[start:start + width])
-                if width == 1 and (len(key) < 5 or key.upper() in excluded or key in _CONTEXT_WORDS):
-                    continue
-                found = directory.names.get(key, [])
-                if found:
-                    name_spans.append((words[start].start(), words[start + width - 1].end()))
-                    for item in found:
-                        matches[item.ticker] = item
+        name_matches = _name_windows(value, directory)
+        name_spans = [span for span, _ in name_matches]
+        # The longest exact name wins: a shorter official name lying wholly
+        # inside a longer one ("southern" in "southern copper corp") is part of
+        # that name, not a second company.
+        for span, found in name_matches:
+            if not any(other != span and other[0] <= span[0] and span[1] <= other[1]
+                       for other, _ in name_matches):
+                for item in found:
+                    matches[item.ticker] = item
         for token_match in re.finditer(r"(?<!\w)\$?[A-Z][A-Z0-9]{0,11}(?:[.-][A-Z0-9]{1,4})?(?!\w)", value):
             if any(start <= token_match.start() and token_match.end() <= end
                    for start, end in name_spans):
@@ -167,6 +196,12 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
             if item:
                 matches[item.ticker] = item
         issuer = next(iter(matches.values())) if len(matches) == 1 else None
+        if issuer is None and len({item.cik for item in matches.values()}) == 1:
+            # One issuer's securities (common plus preferred or notes): the
+            # single symbol without a class or series suffix names the issuer.
+            # Distinct base symbols (two share classes) still abstain.
+            base = [item for item in matches.values() if not re.search(r"[.-]", item.ticker)]
+            issuer = base[0] if len(base) == 1 else None
     if issuer is None:
         return None
     return CompanyContext(ticker=issuer.ticker, company_name=issuer.name, aliases=[value])

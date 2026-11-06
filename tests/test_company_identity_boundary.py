@@ -157,3 +157,53 @@ def test_official_legal_name_does_not_select_ticker_embedded_in_name(monkeypatch
     monkeypatch.setattr(identity, "_load_directory", lambda: parsed)
     assert identity.discover_company("What public evidence identifies risks at WD 40 CO?", question_text=True).ticker == "WDFC"
     assert identity.discover_company("Compare WD 40 CO with WD", question_text=True) is None
+
+
+# A short registrant name is unambiguous only with its explicit legal form.
+NNBR_QUESTIONS = [
+    "What is the investment thesis for NN INC, what supports it, and what could invalidate it?",
+    "Which valuation and operating assumptions would make NN INC attractive or unattractive?",
+    "Is NN Inc. a good investment?",
+]
+
+
+@pytest.fixture
+def short_names(monkeypatch):
+    parsed = identity.parse_directory({
+        "0": {"ticker": "NNBR", "cik_str": 918541, "title": "NN INC"},
+        "1": {"ticker": "ABX", "cik_str": 111, "title": "AB INC"},
+        "2": {"ticker": "ABY", "cik_str": 222, "title": "AB CORP"},
+        "3": {"ticker": "WDFC", "cik_str": 105132, "title": "WD-40 CO"}})
+    monkeypatch.setattr(identity, "_load_directory", lambda: parsed)
+    return parsed
+
+
+@pytest.mark.parametrize("question", NNBR_QUESTIONS)
+def test_short_legal_name_with_its_legal_form_resolves_from_question_text(short_names, question):
+    assert identity.discover_company(question, question_text=True).ticker == "NNBR"
+
+
+@pytest.mark.parametrize("question", [
+    "What is the outlook for nn stocks?",           # bare short word
+    "Is NN a buy?",                                  # short uppercase token, not a ticker
+    "What is the investment thesis for AB INC?",     # AB INC and AB CORP share a name key
+    "Compare NN INC with WD-40 CO",                  # two issuers named
+])
+def test_short_names_without_unambiguous_legal_form_stay_unresolved(short_names, question):
+    assert identity.discover_company(question, question_text=True) is None
+
+
+def test_a_stop_word_legal_name_is_not_selected(monkeypatch):
+    from app.services.company_detection import _TICKER_STOP_WORDS
+    word = sorted(w for w in _TICKER_STOP_WORDS if w.isalpha() and len(w) <= 4)[0]
+    parsed = identity.parse_directory({"0": {"ticker": "ZZQX", "cik_str": 999, "title": f"{word} INC"}})
+    monkeypatch.setattr(identity, "_load_directory", lambda: parsed)
+    assert identity.discover_company(f"Is {word.lower()} inc worth buying?", question_text=True) is None
+
+
+@pytest.mark.parametrize("question", NNBR_QUESTIONS[:2])
+def test_frontend_shaped_ask_resolves_nn_inc(monkeypatch, short_names, question):
+    monkeypatch.setattr(router_service, "_run_investment_pipeline", lambda **k:
+        AgentAnswerResponse(company=k["company"].ticker, request_id="test", agents_used=[], answer={}))
+    response = router_service.route_question(QuestionRequest(company_name="", question=question))
+    assert response.company == "NNBR"
