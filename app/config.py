@@ -203,6 +203,11 @@ class Settings(BaseSettings):
     # Additional filing retrieval for broad monitoring questions. Opt-in only;
     # existing frozen pilots have no document slots for this path.
     decision_monitoring_filing_fallback_enabled: bool = False
+    # Threshold answers read the latest filing, within the same request budget:
+    # one submissions response per request, reused by its evidence stages, a
+    # shorter document wait, and an explicit notice when evidence is missing.
+    # Default off; existing pilot contracts and production behaviour are unchanged.
+    threshold_filing_explanations_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False

@@ -1,5 +1,6 @@
 """Rebuilt financial monitoring benchmarks, never bull/bear price targets."""
 from datetime import date
+from decimal import Decimal
 import re
 
 from .financial_thesis_foundation import build_financial_foundation
@@ -97,7 +98,10 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     if not calculations:
         # Missing operating income must not discard other independently rebuilt
         # comparisons. Do not use this path to bypass mismatched margin inputs.
-        if 'operating income' not in foundation['unanswered_parts']:
+        # A bank reports no operating-income line: the same partial path, but
+        # the margin is not applicable rather than unverified.
+        not_applicable = 'operating income' in foundation.get('not_applicable', ())
+        if 'operating income' not in foundation['unanswered_parts'] and not not_applicable:
             return None
         observations = [row for row in foundation['inferences']
                         if row['kind'] == 'financial_inference']
@@ -107,10 +111,14 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         answer += '\n\nMonitoring conditions\n' + '\n\n'.join(
             row['text'] + ' ' + ' '.join(f'[{ref}]' for ref in row['reference_ids'])
             + ' ' + row['conditional_test'] for row in observations)
-        answer += ('\n\nOperating income was not verified, so no operating margin '
+        answer += ('\n\n' + ('Banks report no operating-income line, so no operating margin '
+                   'or margin benchmark applies. Pretax income, if shown, is supplementary '
+                   'profitability context. ' if not_applicable else
+                   'Operating income was not verified, so no operating margin '
                    'or margin benchmark has been calculated. Pretax income, if '
                    'shown, is supplementary profitability context and does not '
-                   'establish operating income. Evaluate each comparison against '
+                   'establish operating income. ') +
+                   'Evaluate each comparison against '
                    'its own reporting period; these observations do not establish '
                    'a common-period ratio or causal relationship. They do not '
                    'determine whether the stock is attractive or unattractive. '
@@ -118,7 +126,7 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
                    'breakpoints and quantified earnings impacts remain unverified.')
         return {'answer': answer, 'benchmarks': [], 'calculations': observations,
                 'foundation': foundation,
-                'unanswered_parts': ['operating income', 'operating margin']}
+                'unanswered_parts': [] if not_applicable else ['operating income', 'operating margin']}
     benchmarks = []
     for row in calculations:
         benchmarks.append({
@@ -130,16 +138,31 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
             'formula': row['formula'],
             'inputs': row['current'],
             'reference_ids': row['reference_ids'],
-            'condition': 'Review a future comparable margin below this reported-period benchmark.',
+            'condition': 'Compare the margin for the corresponding period one year later with this historical baseline.',
             'limitation': 'This is a monitoring benchmark, not a buy/sell boundary, forecast or materiality threshold.',
         })
     answer = 'Evidence-backed financial monitoring (partial)\n\n'
     answer += '\n\n'.join(row['text'] + ' ' + ' '.join(
         f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
-    answer += ('\n\nReview a future comparable margin below the cited current margin. '
-               'Use the same consolidated scope, currency and reporting duration. '
-               'This benchmark does not determine whether the stock is attractive or '
-               'unattractive. Valuation boundaries, expected returns, operating KPI '
-               'breakpoints and quantified earnings impacts remain unverified.')
+    answer += '\n\nMonitoring criteria\n' + '\n'.join(
+        f"- Historical baseline, not an investment threshold: operating margin of "
+        f"{Decimal(row['current']['margin_percent']):.2f}% for {row['current']['period_start']} to "
+        f"{row['current']['period_end']}. A lower margin for the corresponding period one year later, on the "
+        "same consolidated scope, currency and duration, would "
+        + ("mean a larger operating loss relative to revenue and weaken any recovery assumption"
+           if Decimal(row['current']['margin_percent']) <= 0 else "weaken the profitability assumption")
+        + "; it would not by itself make the company unattractive. "
+        + ' '.join(f'[{ref}]' for ref in row['reference_ids']) for row in calculations)
+    explanation = next((row for row in foundation['claims'] if row.get('period_explanation')), None)
+    if explanation:
+        from .current_period_explanation import monitoring_criteria
+        # Management's own stated drivers and the filing's bridge, as bound.
+        answer += ''.join(f"\n- {line} [{explanation['reference_id']}]"
+                          for line in monitoring_criteria(explanation['period_explanation']))
+    answer += ('\nThese criteria restate reported figures and management attributions. They do not '
+               'determine whether the stock is attractive or unattractive. Seasonality between different '
+               'quarters has not been assessed, so a sequential quarter is not a comparable period. Valuation '
+               'boundaries, expected returns, operating KPI breakpoints and quantified earnings impacts remain '
+               'unverified.')
     return {'answer': answer, 'benchmarks': benchmarks,
             'calculations': calculations, 'foundation': foundation}
