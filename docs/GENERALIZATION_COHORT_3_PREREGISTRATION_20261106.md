@@ -1,6 +1,7 @@
 # Unseen-company evaluation, cohort 3: pre-registration (2026-11-06)
 
-Status: **plan only.** No package, approval, retrieval or run exists for it.
+Status: **plan only.** No package, approval, retrieval or run exists for it. Connected to
+the contract by amendment 1, below.
 
 ## Frozen implementation
 
@@ -133,3 +134,61 @@ The run-1/run-2 templates, with the SEC name verbatim. Records:
 
 No package, approval file, retrieval or run. Those need the amendment above, its CI, and separate
 human approval.
+
+## Amendment 1 (2026-11-07, before any package or retrieval): configuration
+
+Connects the pre-registered cohort to the threshold-filing profile. **A configuration
+amendment, not a change to the application.**
+
+| | Frozen application code | Configuration amendment |
+|---|---|---|
+| Commit | `45f5283c9fdc714ba1720bf60098c195977bf67d` | `556d889a4cae2e943811f5f2cdd8d24b7408f472` |
+| `app/` tree | `b9f1cd7383b30f2c9ecafea18f4c82fc4da365dc` | Unchanged, same tree |
+| Source binding (`app/` and `validation/`) | `3f6080da40cdd2e2edcd7381f501141e52f5b2cfb3da5711105ac7bd93a0df5f` | `1c0a060e732b56e9beb2bca230ba02fcd95365ffb688a3248bfe17c6437aae2c` |
+
+The binding changes because `validation/` changes. **A future package must bind the amended
+value.** Any further change under `app/` invalidates this plan; any further change under
+`validation/` needs a further amendment or a new pre-registration.
+
+**What changes (`validation/`, `tests/`, supporting records):**
+
+- `THRESHOLD_FILING_PROFILE` now names `run6` and binds its question order and digest, the
+  frontend pin and hashes, the 6 and 5 request quotas within 66, the switch, and the timing: 16 s
+  filing wait, 12 s parse cutoff, 10 s read timeout, 30 s and 20 s deadlines, 480 s run limit.
+- `APPROVED_COHORT` is `run6`. The launcher refuses any selected cohort, including consumed ones.
+- `tests/ordinary_run6_cases.json` is byte-for-byte the pre-registered case file: six issuers,
+  twelve questions, the pre-registered order. LLYVA's two cases stay and are expected unresolved.
+- The launcher refuses a profile that differs from the running cohort, questions or frontend pin.
+- The rehearsal-only cohort and the test-only lift of the launcher's cohort check are removed.
+  Nothing lifts that check now.
+- Evidence templates are regenerated for this profile. Their attestations are still blank.
+- The synthetic backend gains these issuers, for identity only. Its figures and filing forms are
+  invented and say nothing about these companies.
+
+**What does not change:** selection, issuers, questions, predicted outcomes and the assessment.
+Run 5's commit `0d7152a`, package and consumed approval stay as they are. Consumed cohorts keep
+byte-identical quota contracts, now pinned by digest in a test, and Runs 2, 4 and 5 re-export with
+unchanged cases, outcome counts, attempts and answer hashes.
+
+**Test structure:** 13 tests build requests against the original quota shape, so they skip under
+this profile and must pass in `test_ordinary_historical_cohort`, which verifies them by name.
+
+## Coverage gaps that remain (not closed by this amendment)
+
+**Earlier live pilots do not validate this profile.** Runs 1-5 used the original contract, without
+the switch, shared submissions, the filing wait or the parse cutoff. No live run has used any of
+them. Rehearsals use invented SEC responses.
+
+Approved-worker paths never exercised:
+
+- a complete approved-mode run; approved mode has only been tested refusing before a ledger exists;
+- the real-resolver branch (`gate.resolve = original_dns`);
+- real DNS, proxy or direct TLS to the SEC with a real certificate chain (loopback uses a test CA,
+  and resolution rules have unit tests only);
+- the network check against a real reviewed configuration (tests use invented CA bytes);
+- a ledger, export and `packet.json` from an approved worker (the outcome-record test returns a
+  loopback worker's result to the real launcher);
+- approved-only worker output values, such as `live_network: true`;
+- real SEC response shapes, sizes, timing and rate behaviour under this profile.
+
+Transport failures halt the run. This does not satisfy the broader degradation launch requirement.
