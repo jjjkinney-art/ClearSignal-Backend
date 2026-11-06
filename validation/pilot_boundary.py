@@ -37,6 +37,9 @@ class FrozenModelRequest(NamedTuple):
 
 
 class PilotBoundary:
+    # Only a candidate boundary reads a filing on threshold cases.
+    threshold_filing = False
+
     def __init__(self, ledger, scenario, *, cases=None):
         self.ledger, self.scenario = ledger, scenario
         self.contact = SYNTHETIC_CONTACT
@@ -228,7 +231,7 @@ class PilotBoundary:
                         pool.names += ['sec_metrics']
                     if core:
                         pool.names += ['thesis_disclosures', 'filing_metrics']
-                    elif owner.freshness:
+                    elif owner.freshness or owner.threshold_filing:
                         pool.names += ['filing_metrics']
                     expected = len(pool.names)
                 elif not source and owner.pool_index == 2:

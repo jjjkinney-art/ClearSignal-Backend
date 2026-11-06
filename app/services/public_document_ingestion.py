@@ -11,6 +11,7 @@ import hashlib
 import ipaddress
 import re
 import socket
+import time
 from io import BytesIO
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -588,6 +589,7 @@ def fetch_public_document(
     preserve_sec_business: bool = False,
     extract_tables: bool = True,
     inline_fact_cik: str | None = None,
+    parse_deadline: float | None = None,
     preserve_sec_results: bool = False,
     segment_fact_cik: str | None = None,
     inline_fact_concepts: tuple[str, ...] = (),
@@ -645,6 +647,9 @@ def fetch_public_document(
         if response is not None:
             response.close()
 
+    if parse_deadline is not None and time.monotonic() > parse_deadline:
+        # Parsing cannot be interrupted, so a caller with a hard deadline can refuse to start.
+        raise PublicDocumentError("document arrived too late to parse", failure_kind="time_limit")
     digest = hashlib.sha256(body).hexdigest()
     canonical_digest = reviewed_body_hash(body) if layout or incorporation else None
     if layout and canonical_digest != layout["canonical_content_hash"]:

@@ -26,7 +26,8 @@ def _monitoring_filing_request(question):
     """Separate rollout switch: existing frozen monitoring quotas stay intact."""
     from .source_answer import is_decision_monitoring_request
     return (getattr(settings, 'decision_monitoring_inputs_enabled', False) is True
-            and getattr(settings, 'decision_monitoring_filing_fallback_enabled', False) is True
+            and (getattr(settings, 'decision_monitoring_filing_fallback_enabled', False) is True
+                 or getattr(settings, 'threshold_filing_explanations_enabled', False) is True)
             and is_decision_monitoring_request(question))
 
 
@@ -122,6 +123,7 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
             publisher='SEC EDGAR', published_at=filing.timestamp, document_type=filing.document_type,
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,
             preserve_sec_results=True, extract_tables=False, inline_fact_cik=cik,
+            parse_deadline=sec_provider.filing_parse_deadline(),
             inline_fact_concepts=tuple(dict.fromkeys((*(c for group in FILING_METRICS.values() for c in group),
                                                       *EXPLANATION_CONCEPTS))))
         items = evidence_from_filing(document, filing, ticker=ticker, cik=cik)
@@ -139,6 +141,7 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         return [item for item in items if item.verified_claims[0]['metric'] in requested]
     except Exception as exc:
         logger.warning('Latest filing metrics unavailable for %s: %s', ticker, type(exc).__name__)
+        sec_provider.note_filing_read_failure()
         return []
 
 

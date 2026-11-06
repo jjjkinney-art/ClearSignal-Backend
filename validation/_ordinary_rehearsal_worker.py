@@ -48,6 +48,9 @@ SCENARIO_FAULTS = {
     # A slow but live peer on that issuer's first facts request: the application
     # abandons that evidence at its 10 s wait and answers without it.
     'evidence_abandoned': ('slow', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
+    # Option B candidate only: that issuer's third document request is the one
+    # its threshold case makes, after its thesis case's two.
+    'threshold_filing_slow': ('crawl', rf'/Archives/edgar/data/{_FAULT_CIK}/', 3),
 }
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
@@ -150,6 +153,11 @@ def main():
     policy = request['policy']
     mode = request.get('mode')
     live = mode in LIVE_MODES
+    candidate = request.get('candidate')
+    if candidate is not None and (candidate != 'option_b' or mode != 'rehearsal'):
+        return 2
+    if (candidate is None) and scenario == 'threshold_filing_slow':
+        return 2
     if (mode == 'rehearsal' and (scenario not in SCENARIO_FAULTS or request.get('scenario') != scenario)
             or live and (scenario != mode or 'scenario' in request
                          or not live_request_allowed(policy, mode, output))
@@ -173,6 +181,10 @@ def main():
                       # As in production /ask: authenticated mode, so the router
                       # never writes the legacy global watchlist/history.
                       AUTH_ENABLED='true', **runtime)
+    if candidate is not None:
+        os.environ['THRESHOLD_FILING_EXPLANATIONS_ENABLED'] = 'true'
+        from validation.ordinary_option_b_candidate import activate
+        activate()
     # Direct TLS sets no proxy selector and verifies that none is present.
     for name in execution.get('proxy_selectors') or ():
         os.environ[name] = execution['proxy']
@@ -251,7 +263,11 @@ def main():
     ledger = OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
     holder.append(ledger)
     backend = NATIVE_BACKEND if live else OrdinarySyntheticSEC(SCENARIO_FAULTS[scenario])
-    boundary = OrdinaryNativeBoundary(ledger, backend=backend)
+    if candidate is not None:
+        from validation.ordinary_option_b_candidate import OptionBBoundary
+        boundary = OptionBBoundary(ledger, backend=backend)
+    else:
+        boundary = OrdinaryNativeBoundary(ledger, backend=backend)
     # The gate's resolver: the system resolver when approved (direct mode then
     # admits only globally routable answers), fixed 127.0.0.1 answers only in
     # the TEST-ONLY loopback mode.

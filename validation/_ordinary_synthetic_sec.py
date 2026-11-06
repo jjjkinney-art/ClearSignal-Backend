@@ -45,7 +45,7 @@ _DIRECTORY_ONLY = [(1022837, 'SMFNF', 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
                    (1747777, 'OTF', 'Blue Owl Technology Finance Corp.')]
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
-SYNTHETIC_FAULTS = frozenset({'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
+SYNTHETIC_FAULTS = frozenset({'crawl', 'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
 
 
 def _ticker(cik):
@@ -194,6 +194,8 @@ class _Tunnel:
             # A slow but live peer: the complete response arrives in 512-byte
             # reads one second apart (finite, unlike a stall).
             self.slow = self.backend.take_fault(path, 'slow')
+            # A small document's slow peer: one byte a second, past any case limit.
+            self.crawl = self.backend.take_fault(path, 'crawl')
             fault = self.backend.take_fault(path, 'read_failure')
             status, media, body = respond(path) if method == 'GET' else (405, 'text/plain', b'')
             extra = b''
@@ -215,6 +217,10 @@ class _Tunnel:
             import time
             time.sleep(1.0)
             max_bytes = min(max_bytes, 512)
+        if getattr(self, 'crawl', False):
+            import time
+            time.sleep(1.0)
+            max_bytes = 1
         chunk = self.response[self.offset:self.offset + max_bytes]
         self.offset += len(chunk)
         return chunk

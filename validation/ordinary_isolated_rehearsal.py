@@ -85,7 +85,7 @@ def rehearsal_policy(output, *, ca=None, network='proxy'):
     return policy_for(approval=approval, **values)
 
 
-def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthetic):
+def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthetic, candidate=None):
     """Launch the worker once in ``output``, supervise it, and export its ledger.
 
     The parent's deadlines are authoritative and the child's own report is
@@ -94,6 +94,8 @@ def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthe
     request = {'policy': policy, 'mode': mode}
     if mode == 'rehearsal':
         request['scenario'] = scenario
+    if candidate is not None:
+        request['candidate'] = candidate
     with (output / 'request.json').open('x') as stream:
         json.dump(request, stream, sort_keys=True)
     code = ('import sys; sys.path.insert(0, ' + repr(str(ROOT)) + '); '
