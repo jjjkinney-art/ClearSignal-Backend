@@ -407,12 +407,13 @@ def fetch_verified_metric_evidence(
         ]
         item = candidates[0] if candidates else None
         if metric_name == "revenue" and item is not None:
-            # A complete net-revenue pair may supersede older generic revenue.
-            # Never join values from different concepts or reporting durations.
-            bank = next((candidate for candidate in candidates
-                         if candidate.verified_claims[0]["metric"] == "us-gaap:RevenuesNetOfInterestExpense"), None)
-            if bank is not None and bank.reporting_period_end > item.reporting_period_end:
-                item = bank
+            # Issuers change revenue concepts over time (Alphabet moved from
+            # RevenueFromContractWithCustomerExcludingAssessedTax to Revenues),
+            # leaving the preferred concept's last pair stale. Each candidate is
+            # already a complete same-concept, same-unit, same-duration pair;
+            # take the one with the latest current period. Equal periods keep
+            # the configured order. Values are never joined across concepts.
+            item = max(candidates, key=lambda candidate: candidate.reporting_period_end or "")
         if item is not None and latest_issuer_end and item.reporting_period_end:
             age = (
                 date.fromisoformat(latest_issuer_end)

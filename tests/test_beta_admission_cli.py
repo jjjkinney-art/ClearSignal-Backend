@@ -240,6 +240,12 @@ class TestRefusals:
         assert "secret-host-name" not in out and "nonexistent-dir" not in out
         assert "Traceback" not in out
 
+    def test_missing_sqlite_file_is_not_created_by_dry_run(self, tmp_path):
+        path = tmp_path / 'secret-host-name.db'
+        code, out = _run('grandfather-existing', db=str(path))
+        assert code == 2 and out.strip() == 'refused: persistence unavailable: connection failed'
+        assert not path.exists()
+
     def test_engine_that_cannot_initialise_refuses(self):
         """init_db swallows its own failure and leaves persistence disabled.
 
