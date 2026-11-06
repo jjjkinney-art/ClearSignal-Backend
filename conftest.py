@@ -398,7 +398,7 @@ _watchdog_lock = threading.Lock()
 _current_watchdog: Optional[threading.Timer] = None
 
 
-def _start_test_watchdog(test_name: str = "") -> None:
+def _start_test_watchdog(test_name: str = "", timeout_s: float = _PER_TEST_TIMEOUT_S) -> None:
     global _current_watchdog
     with _watchdog_lock:
         if _current_watchdog is not None:
@@ -407,12 +407,12 @@ def _start_test_watchdog(test_name: str = "") -> None:
         def _kill():
             sys.stderr.write(
                 f"\n\nWATCHDOG: test '{test_name}' exceeded "
-                f"{_PER_TEST_TIMEOUT_S}s — aborting process\n"
+                f"{timeout_s}s — aborting process\n"
             )
             sys.stderr.flush()
             os._exit(124)
 
-        _current_watchdog = threading.Timer(_PER_TEST_TIMEOUT_S, _kill)
+        _current_watchdog = threading.Timer(timeout_s, _kill)
         _current_watchdog.daemon = True
         _current_watchdog.start()
 
@@ -559,7 +559,13 @@ try:
                 pass
 
         test_name = getattr(request.node, "name", "<unknown>")
-        _start_test_watchdog(test_name)
+        # Honor the declared timeout marker for tests that intentionally exercise
+        # a real deadline longer than the default test watchdog.
+        timeout_marker = request.node.get_closest_marker('timeout')
+        timeout_s = float(timeout_marker.args[0]) if timeout_marker and timeout_marker.args else _PER_TEST_TIMEOUT_S
+        if not 0 < timeout_s < float('inf'):
+            raise ValueError('test timeout must be finite and positive')
+        _start_test_watchdog(test_name, timeout_s)
         try:
             yield
         finally:
