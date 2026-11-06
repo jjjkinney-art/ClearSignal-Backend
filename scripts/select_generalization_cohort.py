@@ -22,7 +22,7 @@ import sqlite3
 import subprocess
 import sys
 
-SEED = "clearsignal-generalization-2:"
+SEED = "clearsignal-generalization-3:"
 BUCKETS = (("large", 1, 200), ("mid", 501, 1500), ("small", 2501, 5000))
 PER_BUCKET = 2
 TICKER = re.compile(r"^[A-Z]{1,5}$")
