@@ -26,7 +26,8 @@ from validation.pilot_policy import AUDITED_DEPENDENCIES
 
 ROOT = Path(__file__).resolve().parents[1]
 SCENARIOS = ('happy', 'wire_read_failure', 'wire_redirect', 'wire_oversize', 'wire_connect_failure',
-             'core_deadline', 'threshold_deadline', 'evidence_abandoned')
+             'core_deadline', 'threshold_deadline', 'evidence_abandoned',
+             'threshold_filing_slow', 'threshold_filing_after_cutoff')
 LOOPBACK_CONTACT = 'Ordinary loopback fixture loopback@example.invalid'
 
 
@@ -85,7 +86,7 @@ def rehearsal_policy(output, *, ca=None, network='proxy'):
     return policy_for(approval=approval, **values)
 
 
-def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthetic, candidate=None):
+def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthetic):
     """Launch the worker once in ``output``, supervise it, and export its ledger.
 
     The parent's deadlines are authoritative and the child's own report is
@@ -94,8 +95,6 @@ def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthe
     request = {'policy': policy, 'mode': mode}
     if mode == 'rehearsal':
         request['scenario'] = scenario
-    if candidate is not None:
-        request['candidate'] = candidate
     with (output / 'request.json').open('x') as stream:
         json.dump(request, stream, sort_keys=True)
     code = ('import sys; sys.path.insert(0, ' + repr(str(ROOT)) + '); '

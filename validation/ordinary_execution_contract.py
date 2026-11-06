@@ -10,7 +10,7 @@ import re
 from decimal import Decimal, InvalidOperation
 from pathlib import PurePosixPath
 
-from .ordinary_pilot_contract import CASES, COHORT, quota_contract, validate_contract
+from .ordinary_pilot_contract import CASES, COHORT, contract_profile, quota_contract, validate_contract
 
 # Projection of the twelve case records: run 3 from tests/ordinary_run3_cases.json
 # (file SHA-256 28e88911a66fc4d19af4c4562df67307623d043a413a8a8c71ec84e2c04046c5);
@@ -21,7 +21,8 @@ from .ordinary_pilot_contract import CASES, COHORT, quota_contract, validate_con
 PACKET_CASE_PROJECTION_SHA256 = {
     'run5': '38f270a9734985eee1ebf03f770ada69111090817705e7e5d2574e5de8083e75',
     'run3': 'a87bd50548790b0e3e42ed1a3fc31513764296352a3d4cd54dd4c49ac2cfdfa6',
-    'runs-1-2': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'}[COHORT]
+    'runs-1-2': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3',
+    'threshold-filing-rehearsal': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'}[COHORT]
 
 def _digest(value):
     encoded = json.dumps(value, sort_keys=True, separators=(',', ':'),
@@ -58,7 +59,9 @@ def pending_manifest(*, cases, source_sha256, dependency_sha256, output_dir,
             raise ValueError('invalid cost ceiling')
     except InvalidOperation:
         raise ValueError('invalid cost ceiling') from None
-    return {'purpose': 'ordinary_twelve_case_pilot_pending', 'schema_version': 1,
+    profile = contract_profile()
+    return {**({'contract_profile': profile} if profile else {}),
+            'purpose': 'ordinary_twelve_case_pilot_pending', 'schema_version': 1,
             'case_records_sha256': _digest(cases), 'case_order': list(CASES),
             'source_sha256': source_sha256, 'dependency_sha256': dependency_sha256,
             'output_dir': output_dir, 'all_in_usd': all_in_usd,
@@ -76,11 +79,16 @@ def matches_separate_approval(manifest, approval):
                      'retention_reference', 'limits', 'case_seconds', 'sec_dispatches_per_second',
                      'follow_redirects', 'retry_attempts', 'approval_status',
                      'invoice_ceiling_verified', 'execution_authorized'}
+    profile = contract_profile()
+    if profile:
+        manifest_keys = manifest_keys | {'contract_profile'}
     keys = {'reference', 'manifest_sha256', 'output_dir', 'all_in_usd',
             'execution_allowed', 'spending_authorized'}
     if type(manifest) is not dict or set(manifest) != manifest_keys:
         raise ValueError('invalid proposal manifest')
     validate_contract(manifest['limits'])
+    if profile and manifest['contract_profile'] != profile:
+        raise ValueError('invalid proposal manifest')
     output = manifest['output_dir']
     if (manifest.get('purpose') != 'ordinary_twelve_case_pilot_pending'
             or type(manifest['schema_version']) is not int or manifest['schema_version'] != 1

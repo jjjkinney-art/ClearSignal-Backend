@@ -12,6 +12,7 @@ import re
 import socketserver
 import ssl
 import threading
+import time
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -68,7 +69,11 @@ class LoopbackSEC:
     With ``untrusted=True`` the served leaf is issued by a different CA than
     the one written to ``ca_path``, so certificate verification must fail.
     """
-    def __init__(self, directory, *, untrusted=False, direct=False):
+    def __init__(self, directory, *, untrusted=False, direct=False, fault=None):
+        # (kind, path regex, nth match): 'late' completes after 13 s with bytes arriving
+        # inside the read timeout, 'silent' sends nothing for 13 s, 'crawl' sends one byte
+        # a second, 'close' hangs up without answering.
+        self.fault, self.fault_matches = fault, 0
         ca_key, ca_cert = _authority('Ordinary loopback test CA')
         issuer = _authority('Unpinned loopback CA') if untrusted else (ca_key, ca_cert)
         leaf_key, leaf_cert = _leaf(*issuer)
@@ -128,6 +133,13 @@ class LoopbackSEC:
         connection.sendall(b'HTTP/1.1 200 Connection established\r\n\r\n')
         self._serve(connection, match[1])
 
+    def _take_fault(self, path):
+        if self.fault is None or not re.search(self.fault[1], path):
+            return None
+        with self.lock:
+            self.fault_matches += 1
+            return self.fault[0] if self.fault_matches == self.fault[2] else None
+
     def _serve(self, connection, tunnel):
         try:
             tls = self.context.wrap_socket(connection, server_side=True)
@@ -148,5 +160,30 @@ class LoopbackSEC:
                                       'path': path, 'user_agent': headers.get('user-agent')})
             status, media, body = respond(path) if method == 'GET' else (405, 'text/plain', b'')
             reason = {200: b'OK', 404: b'Not Found', 405: b'Method Not Allowed'}[status]
-            tls.sendall(b'HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %d\r\n'
-                        b'Connection: close\r\n\r\n' % (status, reason, media.encode(), len(body)) + body)
+            kind = self._take_fault(path)
+            if kind == 'close':
+                return
+            if kind == 'silent':
+                time.sleep(13.0)
+            payload = (b'HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %d\r\n'
+                       b'Connection: close\r\n\r\n' % (status, reason, media.encode(), len(body)) + body)
+            if kind == 'late':
+                try:
+                    head, tail = payload[:-1], payload[-1:]
+                    tls.sendall(head[:1])
+                    time.sleep(6.5)
+                    tls.sendall(head[1:])
+                    time.sleep(6.5)
+                    tls.sendall(tail)
+                except OSError:
+                    pass
+                return
+            if kind == 'crawl':
+                try:
+                    for index in range(len(payload)):
+                        tls.sendall(payload[index:index + 1])
+                        time.sleep(1.0)
+                except OSError:
+                    pass  # The client closed its abandoned exchange.
+                return
+            tls.sendall(payload)

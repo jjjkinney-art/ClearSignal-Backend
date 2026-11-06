@@ -15,7 +15,7 @@ BWMX:decision_threshold, which resolved to another issuer (DE); that
 prediction, its rehearsal and the run-3 outputs are preserved with that commit.
 """
 from validation.ordinary_frontend_intents import frontend_intent
-from validation.ordinary_pilot_contract import CASES, COHORT
+from validation.ordinary_pilot_contract import CASES, COHORT, contract_profile
 
 # A general frontend intent reaches the general route's model call, which the
 # zero-model boundary refuses: the run halts at the first such case.
@@ -39,7 +39,11 @@ EXPECTED_REFUSED_MODEL_REQUESTS = 1 if EXPECTED_HALT else 0
 # SEC exchanges per answered case: seven for a thesis question, three otherwise;
 # plus the routing-stage directory GET when the first case resolves no company
 # (its response is retained, then shared with later cases).
-EXPECTED_SEC_EXCHANGES = (sum(7 if case.endswith(':core_thesis') else 3 for case in COMPLETED)
+# Under the threshold-filing profile: five (one shared submissions response) and four
+# (that response, plus the filing).
+EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES = (5, 4) if contract_profile() else (7, 3)
+EXPECTED_SEC_EXCHANGES = (sum(EXPECTED_THESIS_EXCHANGES if case.endswith(':core_thesis') else EXPECTED_THRESHOLD_EXCHANGES
+                              for case in COMPLETED)
                           + (CASES[0] in IDENTITY_UNRESOLVED))
 # The route each unresolved case takes: an unresolved identity asks for
 # clarification (a thesis question through entity suggestions) and makes no

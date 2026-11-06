@@ -155,10 +155,14 @@ def main():
     policy = request['policy']
     mode = request.get('mode')
     live = mode in LIVE_MODES
-    candidate = request.get('candidate')
-    if candidate is not None and (candidate != 'option_b' or mode != 'rehearsal'):
+    from validation.ordinary_pilot_contract import contract_profile
+    profile = contract_profile()
+    # Bound by the policy, which the ledger re-derives from the contract: a policy and
+    # a cohort that disagree about the switch never reach a ledger or a request.
+    settings = policy['configuration']['settings']
+    if settings.get('threshold_filing_explanations_enabled', False) is not (profile is not None):
         return 2
-    if candidate is None and scenario in {'threshold_filing_slow', 'threshold_filing_after_cutoff'}:
+    if profile is None and scenario in {'threshold_filing_slow', 'threshold_filing_after_cutoff'}:
         return 2
     if (mode == 'rehearsal' and (scenario not in SCENARIO_FAULTS or request.get('scenario') != scenario)
             or live and (scenario != mode or 'scenario' in request
@@ -183,10 +187,8 @@ def main():
                       # As in production /ask: authenticated mode, so the router
                       # never writes the legacy global watchlist/history.
                       AUTH_ENABLED='true', **runtime)
-    if candidate is not None:
+    if profile is not None:
         os.environ['THRESHOLD_FILING_EXPLANATIONS_ENABLED'] = 'true'
-        from validation.ordinary_option_b_candidate import activate
-        activate()
     # Direct TLS sets no proxy selector and verifies that none is present.
     for name in execution.get('proxy_selectors') or ():
         os.environ[name] = execution['proxy']
@@ -265,11 +267,7 @@ def main():
     ledger = OrdinaryNativeLedger(output / 'ledger.sqlite', policy, create=True)
     holder.append(ledger)
     backend = NATIVE_BACKEND if live else OrdinarySyntheticSEC(SCENARIO_FAULTS[scenario])
-    if candidate is not None:
-        from validation.ordinary_option_b_candidate import OptionBBoundary
-        boundary = OptionBBoundary(ledger, backend=backend)
-    else:
-        boundary = OrdinaryNativeBoundary(ledger, backend=backend)
+    boundary = OrdinaryNativeBoundary(ledger, backend=backend)
     # The gate's resolver: the system resolver when approved (direct mode then
     # admits only globally routable answers), fixed 127.0.0.1 answers only in
     # the TEST-ONLY loopback mode.

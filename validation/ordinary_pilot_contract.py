@@ -32,6 +32,10 @@ COHORTS = {
              + (LAST_CASE,)),
     'runs-1-2': ('tests/ordinary_pilot_cases.json',
                  tuple(f'{i}:{q}' for i in RUN_1_2_ISSUERS for q in QUESTIONS)),
+    # Rehearsal only: the runs-1-2 questions under the threshold-filing profile. It is
+    # never APPROVED_COHORT, so no package or approved run can use it.
+    'threshold-filing-rehearsal': ('tests/ordinary_pilot_cases.json',
+                                   tuple(f'{i}:{q}' for i in RUN_1_2_ISSUERS for q in QUESTIONS)),
     'run5': ('tests/ordinary_run5_cases.json',
              tuple(case for case in (f'{i}:{q}' for i in RUN_5_ISSUERS for q in QUESTIONS) if case != RUN_5_LAST_CASE)
              + (RUN_5_LAST_CASE,)),
@@ -54,6 +58,27 @@ LAST_CASE = CASES[-1] if COHORT != 'run3' else LAST_CASE
 FAULT_CASE_INDEX = FAULT_CASE_INDEX.get(COHORT, 4)
 ISSUERS = tuple(dict.fromkeys(case.split(':')[0] for case in CASES))
 
+# Threshold answers read the latest filing. This is the one place that binds the
+# cohort, request quotas, application switch and filing limits together. A cohort
+# not named here keeps the contract below exactly as it was, so consumed runs still
+# export unchanged. Pre-registering a real cohort means naming it here and making
+# it APPROVED_COHORT; until then this profile cannot reach a package or approval.
+THRESHOLD_FILING_PROFILE = {
+    'name': 'threshold_filing_v1',
+    'cohort': 'threshold-filing-rehearsal',
+    'sec_gets_per_case': {'core_thesis': 6, 'decision_threshold': 5},
+    'switch': 'threshold_filing_explanations_enabled',
+    'filing_wait_seconds': 16,
+    'filing_parse_cutoff_seconds': 12,
+    'case_seconds': {'core_thesis': 30, 'decision_threshold': 20},
+    'sec_gets': 66,
+}
+
+
+def contract_profile():
+    """The running cohort's named profile, or None for the original contract."""
+    return deepcopy(THRESHOLD_FILING_PROFILE) if COHORT == THRESHOLD_FILING_PROFILE['cohort'] else None
+
 
 def quota_contract():
     per_case, per_stage = {}, {}
@@ -73,6 +98,15 @@ def quota_contract():
             for stage in ('evidence.filing_metrics', 'evidence.thesis_disclosures'):
                 stages[stage] = {'sec/directory': 1, 'sec/submissions': 1, 'sec/document': 1}
         per_stage[case] = stages
+    if contract_profile() is not None:
+        for case in CASES:
+            if case.endswith(':core_thesis'):
+                per_case[case].update({'sec': 6, 'sec/submissions': 1})
+            else:
+                per_case[case].update({'sec': 5, 'sec/directory': 2, 'sec/document': 1})
+                # Whichever stage arrives first fetches the case's one submissions response.
+                per_stage[case]['evidence.filing_metrics'] = {
+                    'sec/directory': 1, 'sec/submissions': 1, 'sec/document': 1}
     return {'case_order': list(CASES), 'sec_gets': 66, 'per_case': per_case,
             'per_stage': per_stage, 'execution_authorized': False,
             'model_attempts': 0, 'paid_provider_attempts': 0,

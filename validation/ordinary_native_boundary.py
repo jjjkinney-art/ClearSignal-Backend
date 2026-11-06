@@ -19,7 +19,7 @@ from threading import BoundedSemaphore
 from validation.capture_budget import BudgetError, RateLimitDelay, digest
 from validation.ordinary_native_ledger import AbandonedExchange, OrdinaryNativeGate, OrdinaryNativeLedger
 from validation.ordinary_network import DirectScopedBackend, is_direct
-from validation.ordinary_pilot_contract import quota_contract
+from validation.ordinary_pilot_contract import contract_profile, quota_contract
 from validation.ordinary_transport import OrdinaryHTTPTransport
 from validation.pilot_approved import ScopedBackend, runtime_values
 from validation.pilot_boundary import PilotBoundary
@@ -53,11 +53,29 @@ def boundary_cases(policy):
             for r in policy['case_records']]
 
 
+def verify_contract_profile(profile, settings, router):
+    """The running application must match the cohort's contract, in both directions.
+
+    A cohort without the profile refuses the switch; a cohort with it refuses a
+    missing switch or filing limits that differ from what the profile bound.
+    """
+    enabled = getattr(settings, 'threshold_filing_explanations_enabled', False)
+    if enabled is not (profile is not None):
+        return False
+    if getattr(settings, 'decision_monitoring_filing_fallback_enabled', False) is not False:
+        return False
+    return profile is None or (
+        router.THRESHOLD_DOCUMENT_WAIT_SECONDS == profile['filing_wait_seconds']
+        and router.THRESHOLD_FILING_PARSE_CUTOFF_SECONDS == profile['filing_parse_cutoff_seconds'])
+
+
 class OrdinaryNativeBoundary(PilotBoundary):
     def __init__(self, ledger, *, backend):
         if type(ledger) is not OrdinaryNativeLedger:
             raise BudgetError('ordinary boundary requires its fresh native ledger')
         policy = ledger.policy
+        self.profile = contract_profile()
+        self.threshold_filing = self.profile is not None
         super().__init__(ledger, 'ordinary_native', cases=boundary_cases(policy))
         if not self.monitoring or self.freshness:
             raise BudgetError('ordinary source-evidence configuration required')
@@ -105,6 +123,11 @@ class OrdinaryNativeBoundary(PilotBoundary):
             if (any(getattr(self.settings, key, missing) != value for key, value in expected.items())
                     or self.settings.fmp_api_key or self.settings.fred_api_key
                     or self.settings.sec_user_agent != self.contact):
+                self.refuse('configuration_drift')
+            router = None
+            if self.profile is not None:
+                from app.services import router_service as router
+            if not verify_contract_profile(self.profile, self.settings, router):
                 self.refuse('configuration_drift')
 
     def model_request(self, request):
@@ -275,6 +298,11 @@ class OrdinaryNativeBoundary(PilotBoundary):
                 if self.case_documents.setdefault(self.case_run, urls) != urls:
                     self.refuse('configuration_drift')
                 self.admitted[(self.case_run, stage)] = urls
+                if self.threshold_filing:
+                    # One validated response per case admits its documents for every
+                    # stage. A discarded late response never reaches this point.
+                    for other in DOCUMENT_STAGES:
+                        self.admitted[(self.case_run, other)] = urls
 
     def sec_exchange(self, method, url, body):
         route = self.sec_route(method, url, body)

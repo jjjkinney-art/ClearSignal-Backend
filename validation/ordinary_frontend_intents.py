@@ -23,7 +23,8 @@ FRONTEND = {
     # from this commit (Node 24.15.0). Any new cohort must be classified the same way.
     'questions_sha256': {'run5': '2f2e0db6f80c457a54bd01859ff3af094df02159fcbd4d338cf851158c351860',
                          'run3': '835a5fe7d038e21f7085f078f63cf10b92a4d58c310cce00fc6a80c5087f061d',
-                         'runs-1-2': 'e9948dbc5a8038b2d32805ec39135e7e329c984bff38144679317774ce5eec28'}[COHORT],
+                         'runs-1-2': 'e9948dbc5a8038b2d32805ec39135e7e329c984bff38144679317774ce5eec28',
+                         'threshold-filing-rehearsal': 'e9948dbc5a8038b2d32805ec39135e7e329c984bff38144679317774ce5eec28'}[COHORT],
 }
 # The frontend's QueryIntent union.
 FRONTEND_INTENTS = frozenset({'company_analysis', 'market_question', 'investing_education',

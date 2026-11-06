@@ -30,7 +30,7 @@ from validation.ordinary_native_boundary import PAID_PROVIDER_ENVIRONMENT
 from validation.ordinary_native_ledger import create_fresh_output
 from validation.ordinary_native_policy import (ZERO_MODEL_PLACEHOLDER, execution_package, policy_for,
                                                 test_only_references)
-from validation.ordinary_pilot_contract import CASES, COHORT_FILE, quota_contract
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE, contract_profile, quota_contract
 from validation.ordinary_network import validate_ordinary_execution, verify_ordinary_network
 from validation.pilot_approved import runtime_values
 from validation.pilot_live import READ_CHUNK_BYTES
@@ -76,14 +76,26 @@ ENFORCED_BY = (
     'tests/test_ordinary_native_boundary.py',
     'tests/test_ordinary_native_ledger.py',
 )
+# Added to the evidence only for a cohort under the threshold-filing profile.
+PROFILE_ENFORCED_BY = (
+    'tests/test_ordinary_contract_profile.py::test_a_late_filing_is_degraded_on_the_live_code_path',
+    'tests/test_ordinary_contract_profile.py::test_a_stalled_filing_is_degraded_on_the_live_code_path',
+    'tests/test_ordinary_contract_profile.py::test_a_failed_filing_list_halts_on_the_live_code_path',
+    'tests/test_ordinary_contract_profile.py::test_a_silent_peer_halts_on_the_live_code_path',
+    'tests/test_ordinary_contract_profile.py::test_degradation_reaches_the_approved_outcome_record',
+    'tests/test_ordinary_contract_profile.py::test_check_refuses_a_package_with_a_changed_profile',
+)
 _ATTESTATION = re.compile(r'[ -~]{8,500}')
 
 
 def derived_evidence(kind):
     """The code-derived half of an evidence document; re-derived at run time."""
     limits = quota_contract()
+    profile = contract_profile()
+    enforced_by = [*ENFORCED_BY, *(PROFILE_ENFORCED_BY if profile else ())]
+    profile_fact = {'contract_profile': profile} if profile else {}
     if kind == 'cost':
-        return {'sec_gets_maximum': limits['sec_gets'],
+        return {**profile_fact, 'sec_gets_maximum': limits['sec_gets'],
                 'sec_gets_per_case': {case: v['sec'] for case, v in limits['per_case'].items()},
                 'sec_dispatches_per_second_maximum': 10, 'concurrent_sec_maximum': limits['concurrent_sec'],
                 'wall_seconds_maximum': limits['wall_seconds'],
@@ -112,14 +124,14 @@ def derived_evidence(kind):
                                 'direct TLS to the SEC hosts with no application proxy (any VPN or other '
                                 'network layer below the process is outside this code); either way TLS is '
                                 'verified against a pinned CA bundle with hostname checking',
-                'transport_retries': 0, 'follow_redirects': False, 'enforced_by': list(ENFORCED_BY)}
+                'transport_retries': 0, 'follow_redirects': False, 'enforced_by': enforced_by}
     if kind == 'retention':
-        return {'output_directory_mode': '0700', 'output_inventory': OUTPUT_INVENTORY,
+        return {**profile_fact, 'output_directory_mode': '0700', 'output_inventory': OUTPUT_INVENTORY,
                 'ledger_tables': list(LEDGER_TABLES),
                 'source_content': 'public SEC EDGAR responses from www.sec.gov and data.sec.gov only',
                 'runtime_values_never_stored': ['SEC_USER_AGENT value', 'OPENAI_API_KEY value'],
                 'runtime_value_screening': 'retention and export refuse any record containing a runtime value',
-                'enforced_by': list(ENFORCED_BY)}
+                'enforced_by': enforced_by}
     raise BudgetError('unknown evidence kind')
 
 

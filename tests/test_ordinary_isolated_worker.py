@@ -18,7 +18,7 @@ from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-from _ordinary_cohort_expectations import (COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
+from _ordinary_cohort_expectations import (EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
                                           EXPECTED_SEC_EXCHANGES, GENERAL_INTENT,
                                           UNRESOLVED)
 
@@ -64,7 +64,8 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     assert packet['attempt_count'] == packet['wire_entries'] == worker['synthetic_requests']
     assert all(a['status'] == 'settled' and a['response'] and a['failure'] is None for a in packet['attempts'])
     per_case = {case: sum(a['case_id'] == case for a in packet['attempts']) for case in COMPLETED}
-    assert per_case == {case: (7 if case.endswith(':core_thesis') else 3) for case in COMPLETED}
+    assert per_case == {case: (EXPECTED_THESIS_EXCHANGES if case.endswith(':core_thesis') else EXPECTED_THRESHOLD_EXCHANGES)
+                        for case in COMPLETED}
     assert packet['attempt_count'] <= quota_contract()['sec_gets']
     # Identity resolution used the routing slot once (first unseen issuer, case
     # one); the pipeline then reused that directory response instead of a GET.

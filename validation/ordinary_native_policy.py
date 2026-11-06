@@ -8,7 +8,7 @@ import re
 
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_execution_contract import pending_manifest
-from validation.ordinary_pilot_contract import CASES, quota_contract
+from validation.ordinary_pilot_contract import CASES, contract_profile, quota_contract
 from validation.ordinary_network import validate_ordinary_execution
 from validation.pilot_policy import AUDITED_DEPENDENCIES, MODEL_ROUTES, SEC_ROUTES
 
@@ -60,6 +60,7 @@ def policy_for(code_binding, dependencies, approval, execution, *, cases, all_in
                    or approval[k] in {'pending', 'NO_SPENDING_AUTHORITY'} for k in ('reference', 'run_id'))):
         raise BudgetError('separate approval must match complete ordinary package')
     limits = quota_contract()
+    profile = contract_profile()
     routes = (*MODEL_ROUTES, *SEC_ROUTES)
     return {'schema_version': 2, 'purpose': PURPOSE, 'pilot_id': approval['run_id'],
         'approval_reference': approval['reference'], 'approval': approval,
@@ -76,7 +77,8 @@ def policy_for(code_binding, dependencies, approval, execution, *, cases, all_in
                           'transport_retries': 0,
                           'settings': {'decision_monitoring_inputs_enabled': True,
                                        'decision_monitoring_filing_fallback_enabled': False,
-                                       'auth_enabled': True}},
+                                       'auth_enabled': True,
+                                       **({profile['switch']: True} if profile else {})}},
         'prices': {route: {'currency': 'USD', 'all_incremental_charges_accounted': False,
             'request_usd': '0', 'input_token_usd': '0', 'output_token_usd': '0',
             'maximum_input_tokens': 0, 'maximum_output_tokens': 0} for route in routes},
