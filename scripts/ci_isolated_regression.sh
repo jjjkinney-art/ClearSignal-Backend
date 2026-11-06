@@ -38,5 +38,5 @@ for f in "${test_files[@]}"; do
   [ "$st" = 0 ] || failures+=("$f")
 done
 printf 'files=%s pool=%s (%ss) serial=%s (%ss)\n' "${#test_files[@]}" "${#pool[@]}" "$pool_s" "${#serial[@]}" "$((SECONDS-start))"
-printf 'Slowest:\n'; cat "$results"/*.status | sort -t$'\t' -k2,2nr | head -10
+printf 'Slowest:\n'; cat "$results"/*.status | sort -t$'\t' -k2,2nr | sed -n 1,10p
 if ((${#failures[@]})); then printf 'Failed test files:\n'; printf ' - %s\n' "${failures[@]}"; exit 1; fi
