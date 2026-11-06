@@ -35,6 +35,14 @@ REGISTRANTS = {
     'TWST': (1581280, 'Twist Bioscience Corp'),
     'AGEN': (1098972, 'AGENUS INC'),
     'FSTR': (352825, 'FOSTER L B CO'),
+    # Run-6 cohort (identity only; every figure below remains invented, including
+    # any filing form or share count: these are not these companies' records).
+    'BP': (313807, 'BP PLC'),
+    'MNST': (865752, 'Monster Beverage Corp'),
+    'CRDO': (1807794, 'Credo Technology Group Holding Ltd'),
+    'LLYVA': (2078416, 'Liberty Live Holdings, Inc.'),
+    'DGXX': (1854368, 'Digi Power X Inc.'),
+    'VIRC': (751365, 'VIRCO MFG CORPORATION'),
 }
 # Real directory rows that share a run-5 issuer's CIK or name, as SEC's retained
 # directory (run 4, sha256 de59c00e...) lists them. Directory identity only: they
@@ -42,7 +50,11 @@ REGISTRANTS = {
 # submissions, facts or documents are served for the other issuers.
 _DIRECTORY_ONLY = [(1022837, 'SMFNF', 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
                    (1655888, 'OBDC', 'Blue Owl Capital Corp'),
-                   (1747777, 'OTF', 'Blue Owl Technology Finance Corp.')]
+                   (1747777, 'OTF', 'Blue Owl Technology Finance Corp.'),
+                   # Run 6, as the run-5 retained directory (sha256 76b4b2ab...) lists them.
+                   (313807, 'BPAQF', 'BP PLC'), (313807, 'BPPFF', 'BP PLC'),
+                   (2078416, 'LLYVB', 'Liberty Live Holdings, Inc.'),
+                   (2078416, 'LLYVK', 'Liberty Live Holdings, Inc.')]
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
 SYNTHETIC_FAULTS = frozenset({'crawl', 'late', 'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})

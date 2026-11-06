@@ -7,13 +7,16 @@ frontend sends with a general intent takes the general route, which attempts a
 model call; the zero-model boundary refuses it and halts the run there
 (invalid_request), on every host. With the frontend pinned to 138d646, no cohort
 case takes it, so every cohort completes: run 5 here answers ten cases and leaves
-OWL x2 unresolved. Run 5 itself was bound to 84466b2 and halted at BNY:core_thesis;
-that record stays with its frozen commit, 0d7152a.
+OWL x2 unresolved, and run 6 answers ten and leaves LLYVA x2 unresolved. Run 5 itself
+was bound to 84466b2 and halted at BNY:core_thesis; that record stays with its frozen
+commit, 0d7152a.
 
 The frozen run-3 commit (6efe7d2) was pre-registered to halt at
 BWMX:decision_threshold, which resolved to another issuer (DE); that
 prediction, its rehearsal and the run-3 outputs are preserved with that commit.
 """
+import pytest
+
 from validation.ordinary_frontend_intents import frontend_intent
 from validation.ordinary_pilot_contract import CASES, COHORT, contract_profile
 
@@ -26,7 +29,10 @@ _HALT_INDEX = CASES.index(EXPECTED_HALT[0]) if EXPECTED_HALT else len(CASES)
 # OBDC (a different registrant), so both OWL questions stay unresolved. SMFG,
 # unresolved at the frozen run-5 commit (its CIK also lists the OTC
 # foreign-ordinary line SMFNF), now resolves (fix/run5-identity-suggestions).
-IDENTITY_UNRESOLVED = {'run5': ('OWL:core_thesis', 'OWL:decision_threshold')}.get(COHORT, ())
+# Run 6: LLYVA, LLYVB and LLYVK are one issuer's distinct share classes, so its name
+# abstains by design. Both cases stay in the denominator.
+IDENTITY_UNRESOLVED = {'run5': ('OWL:core_thesis', 'OWL:decision_threshold'),
+                       'run6': ('LLYVA:core_thesis', 'LLYVA:decision_threshold')}.get(COHORT, ())
 UNRESOLVED = [case for case in CASES[:_HALT_INDEX] if case in IDENTITY_UNRESOLVED]
 COMPLETED = [case for case in CASES[:_HALT_INDEX] if case not in UNRESOLVED]
 EXPECTED_STATUS = 'halted' if EXPECTED_HALT else 'complete'
@@ -50,3 +56,19 @@ EXPECTED_SEC_EXCHANGES = (sum(EXPECTED_THESIS_EXCHANGES if case.endswith(':core_
 # SEC evidence request. A halted case records no route.
 UNRESOLVED_ROUTES = [('entity_suggestion' if case.endswith(':core_thesis')
                       else 'company_identity_clarification', None) for case in UNRESOLVED]
+
+# These build their own requests against the original quota shape. They still run, on
+# that contract, in test_ordinary_historical_cohort, which requires each one to pass.
+ORIGINAL_QUOTA_SHAPE = pytest.mark.skipif(
+    contract_profile() is not None, reason='original quota shape; verified by test_ordinary_historical_cohort')
+ORIGINAL_QUOTA_SHAPE_TESTS = {
+    'test_ordinary_native_boundary': ('test_multi_row_submissions_admit_exact_supported_documents_for_their_stage',
+                                      'test_submissions_drift_within_a_case_halts',
+                                      'test_requests_wait_for_one_of_four_slots_instead_of_halting'),
+    'test_ordinary_native_ledger': ('test_concurrency_is_checked_at_wire_entry_and_duplicate_claims_never_replay',
+                                    'test_actual_entry_rate_is_independent_of_earlier_reservation_rate',
+                                    'test_a_fifth_concurrent_wire_entry_halts',
+                                    'test_case_completes_only_with_its_own_screened_timely_answer',
+                                    'test_no_late_work_after_a_case_is_complete'),
+    'test_ordinary_pilot_contract': ('test_twelve_fixed_cases_and_nontransferable_limits',),
+}

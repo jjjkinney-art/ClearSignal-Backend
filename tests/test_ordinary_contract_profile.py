@@ -1,15 +1,15 @@
 """The threshold-filing contract profile: bound, refused when altered, and honest.
 
-Everything runs against invented SEC responses and invented approvals. The rehearsal
-cohort reuses the runs-1-2 questions and is never APPROVED_COHORT. Nothing here is
-real-company evidence or authority to run a pilot.
+Everything runs against invented SEC responses and invented approvals; the run-6 issuers
+are identity only here. Nothing is real-company evidence or authority to run a pilot.
 
-Tests of the profile run in a child process that selects its cohort, because the
-cohort is fixed at import. That child also runs every other ordinary test, so each
-existing refusal is exercised under the profile.
+Profile tests run in a child process with verified counts, which also runs every other
+approved-path suite. The original contracts are checked in children selecting consumed
+cohorts, because the cohort is fixed at import.
 """
 import ast
-from collections import Counter
+import hashlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -17,19 +17,25 @@ import re
 import sqlite3
 import subprocess
 import sys
-from xml.etree import ElementTree
 
 import pytest
 
+from _ordinary_child_report import child_counts, child_problems, read_junit
+from _ordinary_cohort_expectations import EXPECTED_SEC_EXCHANGES, UNRESOLVED
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_native_boundary import verify_contract_profile
 from validation.ordinary_native_ledger import CASE_SECONDS, degraded_stages
+from validation.ordinary_transport import OrdinaryHTTPTransport
 from validation.ordinary_pilot_contract import (APPROVED_COHORT, CASES, COHORT, THRESHOLD_FILING_PROFILE,
                                                 contract_profile, quota_contract)
 
 ROOT = Path(__file__).resolve().parents[1]
-ORIGINAL_ONLY = pytest.mark.skipif(COHORT != APPROVED_COHORT, reason='runs in the original-contract process')
-PROFILE_ONLY = pytest.mark.skipif(contract_profile() is None, reason='runs in the profile child process')
+CHILD = os.environ.get('ORDINARY_PROFILE_CHILD') == '1'
+ORIGINAL_ONLY = pytest.mark.skipif(contract_profile() is not None, reason='needs a consumed cohort')
+PROFILE_ONLY = pytest.mark.skipif(contract_profile() is None or not CHILD, reason='runs in the profile child process')
+MAIN_ONLY = pytest.mark.skipif(contract_profile() is None or CHILD, reason='starts the child processes')
+# sha256 of each consumed cohort's quota contract before cohort 3 was connected.
+ORIGINAL_CONTRACT_DIGESTS = {'run5': 'd663fea486005a05b3a8a5ead195afd57e78f4e941eeb2f5858bae97298489cf', 'run3': 'f3cda6d201e4c01bdce75e5ead08b4b8ac610e3158ab9f3decc667d38cb6b9fe', 'runs-1-2': '4c6dfba55b44665da9bde6e63204a7f9fa2a2af6f442f35b3ddbd121c9f83d1f'}
 SLOW, AFTER_CUTOFF = 'threshold_filing_slow', 'threshold_filing_after_cutoff'
 NOTICE = 'Incomplete answer: the latest SEC filing could not be read for this answer'
 
@@ -58,6 +64,11 @@ def test_the_original_contract_is_unchanged():
                                             'sec/submissions': 3 if core else 1, 'sec/facts': 1,
                                             'sec/document': 2 if core else 0}
         assert ('evidence.filing_metrics' in limits['per_stage'][case]) is core
+
+
+@ORIGINAL_ONLY
+def test_the_consumed_contract_is_byte_identical():
+    assert digest(quota_contract()) == ORIGINAL_CONTRACT_DIGESTS[COHORT]
 
 
 @ORIGINAL_ONLY
@@ -90,13 +101,13 @@ def test_the_original_cohort_refuses_the_profile_scenarios(tmp_path, scenario):
 @ORIGINAL_ONLY
 @pytest.mark.timeout(120)
 def test_the_original_cohort_refuses_a_policy_with_the_switch(tmp_path):
-    from validation.ordinary_isolated_rehearsal import rehearsal_policy, run_worker
+    from validation.ordinary_isolated_rehearsal import cohort_selection, rehearsal_policy, run_worker
     from validation.ordinary_native_ledger import create_fresh_output
     from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
     output = create_fresh_output(tmp_path / 'run')
     policy = rehearsal_policy(output)
     policy['configuration']['settings']['threshold_filing_explanations_enabled'] = True
-    result = run_worker(output, policy, mode='rehearsal', scenario='happy', environment={},
+    result = run_worker(output, policy, mode='rehearsal', scenario='happy', environment=cohort_selection(),
                         forbidden=tuple(REHEARSAL_RUNTIME.values()), synthetic=True)
     assert result['status'] == 'worker_incomplete' and result['supervisor']['returncode'] == 2
     assert not (output / 'ledger.sqlite').exists()
@@ -137,14 +148,44 @@ def test_document_admission_is_case_wide_only_under_the_profile(shared):
 
 def test_the_profile_binds_every_named_value():
     profile = THRESHOLD_FILING_PROFILE
-    assert profile['name'] == 'threshold_filing_v1' and profile['cohort'] != APPROVED_COHORT
+    assert profile['name'] == 'threshold_filing_v1' and profile['cohort'] == APPROVED_COHORT == 'run6'
     assert profile['sec_gets_per_case'] == {'core_thesis': 6, 'decision_threshold': 5} and profile['sec_gets'] == 66
     assert profile['switch'] == 'threshold_filing_explanations_enabled'
     assert profile['filing_parse_cutoff_seconds'] < profile['filing_wait_seconds'] < profile['case_seconds']['decision_threshold']
-    assert profile['case_seconds'] == CASE_SECONDS
+    assert profile['case_seconds'] == CASE_SECONDS and profile['wall_seconds'] == quota_contract()['wall_seconds']
+    assert profile['read_timeout_seconds'] == inspect.signature(OrdinaryHTTPTransport.exchange).parameters['timeout'].default
     from app.services import router_service
     assert router_service.THRESHOLD_DOCUMENT_WAIT_SECONDS == profile['filing_wait_seconds']
     assert router_service.THRESHOLD_FILING_PARSE_CUTOFF_SECONDS == profile['filing_parse_cutoff_seconds']
+
+
+def test_the_pre_registered_cohort_is_bound_unchanged():
+    records = json.loads((ROOT / 'tests' / 'ordinary_run6_cases.json').read_text())
+    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_3_cases.json').read_text())
+    selection = json.loads((ROOT / 'docs' / 'generalization_cohort_3_selection.json').read_text())
+    issuers = [row['ticker'] for row in selection['cohort']]
+    assert issuers == ['BP', 'MNST', 'CRDO', 'LLYVA', 'DGXX', 'VIRC']
+    case_order = [f'{issuer}:{question}' for issuer in issuers for question in ('core_thesis', 'decision_threshold')]
+    assert [record['case_id'] for record in records] == case_order == THRESHOLD_FILING_PROFILE['case_order']
+    assert {int(record['expected_cik']) for record in records} == {row['cik'] for row in selection['cohort']}
+    questions = [record['question'] for record in records]
+    assert hashlib.sha256(json.dumps(questions).encode()).hexdigest() == THRESHOLD_FILING_PROFILE['questions_sha256']
+    checks = json.loads((ROOT / 'docs' / 'generalization_cohort_3_offline_checks.json').read_text())
+    assert checks['questions_sha256'] == THRESHOLD_FILING_PROFILE['questions_sha256']
+    assert checks['frontend_commit'] == THRESHOLD_FILING_PROFILE['frontend']['commit']
+    assert checks['classifier_sha256'] == THRESHOLD_FILING_PROFILE['frontend']['classifier_sha256']
+    assert set(checks['intents'].values()) == {'company_analysis'}
+    assert [row['case_id'] for row in checks['identity'] if row['verdict'] == 'no company'] == [
+        'LLYVA:core_thesis', 'LLYVA:decision_threshold']
+
+
+@PROFILE_ONLY
+def test_the_frontend_pin_is_bound_to_the_profile():
+    from validation.ordinary_frontend_intents import CASE_INTENTS, FRONTEND
+    for key, value in THRESHOLD_FILING_PROFILE['frontend'].items():
+        assert FRONTEND[key] == value
+    assert FRONTEND['questions_sha256'] == THRESHOLD_FILING_PROFILE['questions_sha256']
+    assert set(CASE_INTENTS.values()) == {'company_analysis'} and list(CASE_INTENTS) == list(CASES)
 
 
 def test_an_answer_without_the_declaration_records_nothing():
@@ -173,52 +214,6 @@ def _decorated_with(marker):
     tree = ast.parse(Path(__file__).read_text())
     return {node.name for node in tree.body if isinstance(node, ast.FunctionDef) and node.name.startswith('test_')
             and any(isinstance(d, ast.Name) and d.id == marker for d in node.decorator_list)}
-
-
-def read_junit(path):
-    """Per-test outcomes from a pytest JUnit report: (module, function, status)."""
-    rows = []
-    for case in ElementTree.parse(path).getroot().iter('testcase'):
-        status = 'passed'
-        for child in case:
-            if child.tag in {'failure', 'error', 'skipped'}:
-                status = {'failure': 'failed', 'error': 'error', 'skipped': 'skipped'}[child.tag]
-                break
-        rows.append((case.get('classname', '').rsplit('.', 1)[-1], case.get('name', '').split('[')[0], status))
-    return rows
-
-
-def child_counts(rows, returncode):
-    counts = Counter(status for _, _, status in rows)
-    per_module = {}
-    for module, _, status in rows:
-        per_module.setdefault(module, Counter())[status] += 1
-    return {'returncode': returncode, 'collected': len(rows), 'passed': counts['passed'], 'failed': counts['failed'],
-            'error': counts['error'], 'skipped': counts['skipped'],
-            'per_module': {m: dict(c) for m, c in sorted(per_module.items())},
-            'skipped_tests': sorted(f'{m}::{f}' for m, f, status in rows if status == 'skipped'),
-            'failed_tests': sorted(f'{m}::{f}' for m, f, status in rows if status in {'failed', 'error'})}
-
-
-def child_problems(rows, returncode, *, required, allowed_skips):
-    """Why a child run does not count. A process that exits 0 can still have skipped everything."""
-    problems = [] if returncode == 0 else [f'child exited {returncode}']
-    if not rows:
-        problems.append('child collected no tests')
-    outcomes = {}
-    for module, function, status in rows:
-        outcomes.setdefault((module, function), []).append(status)
-    for key in sorted(required):
-        if key not in outcomes:
-            problems.append(f'required test missing: {key}')
-        elif set(outcomes[key]) != {'passed'}:
-            problems.append(f'required test not passed: {key} {sorted(set(outcomes[key]))}')
-    for key, statuses in sorted(outcomes.items()):
-        if {'failed', 'error'} & set(statuses):
-            problems.append(f'test failed: {key}')
-        if 'skipped' in statuses and key not in allowed_skips:
-            problems.append(f'unexpected skip: {key}')
-    return problems
 
 
 def test_child_problems_reject_a_run_that_only_looks_green():
@@ -266,40 +261,59 @@ REQUIRED_APPROVED_PATH_TESTS = {
         'test_prepare_refuses_test_only_or_incomplete_inputs',
         'test_prepare_and_check_refuse_any_cohort_selection',
         'test_direct_tls_reaches_only_the_claimed_sec_host_within_every_limit',
+        'test_committed_evidence_templates_match_the_code',
     )} | {('test_ordinary_isolated_worker', name) for name in (
         'test_twelve_cases_run_through_the_integrated_native_path',
         'test_an_answer_the_parent_ruled_late_is_never_exported',
         'test_an_abandoned_evidence_request_degrades_one_answer_without_halting',
     )}
-# Skips the child is expected to have. Anything else fails the run.
-ALLOWED_CHILD_SKIPS = {('test_ordinary_live_launcher', 'test_committed_evidence_templates_match_the_code')}
+def _child_env(**values):
+    env = {key: value for key, value in os.environ.items()
+           if key not in {'ORDINARY_PILOT_COHORT', 'ORDINARY_PROFILE_CHILD'}}
+    return {**env, **values}
 
 
-@ORIGINAL_ONLY
+@MAIN_ONLY
 @pytest.mark.timeout(1800)
 def test_the_ordinary_tests_pass_under_the_profile(tmp_path):
     # The native ledger, boundary and contract tests build their own requests against the
-    # original quota shape; the profile's limits are proven below and by these suites.
+    # original quota shape; test_ordinary_historical_cohort verifies them on that contract.
     tests = [f'tests/test_ordinary_{name}.py' for name in
              ('contract_profile', 'live_launcher', 'isolated_worker', 'execution_contract')]
     junit = tmp_path / 'child.xml'
     done = subprocess.run([sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', '-o', 'addopts=',
                            '--disable-warnings', '--tb=short', f'--junitxml={junit}', *tests], cwd=ROOT,
-                          env={**os.environ, 'ORDINARY_PILOT_COHORT': THRESHOLD_FILING_PROFILE['cohort']},
-                          capture_output=True, text=True, timeout=1750)
+                          env=_child_env(ORDINARY_PROFILE_CHILD='1'), capture_output=True, text=True, timeout=1750)
     assert junit.is_file(), done.stdout[-6000:] + done.stderr[-2000:]
     rows = read_junit(junit)
     module = Path(__file__).stem
     required = REQUIRED_APPROVED_PATH_TESTS | {(module, name) for name in _decorated_with('PROFILE_ONLY')}
-    allowed = ALLOWED_CHILD_SKIPS | {(module, name) for name in _decorated_with('ORIGINAL_ONLY')}
+    allowed = {(module, name) for name in _decorated_with('ORIGINAL_ONLY') | _decorated_with('MAIN_ONLY')}
     counts = child_counts(rows, done.returncode)
-    counts.update(required_tests=len(required), commit_note='ordinary tests under threshold_filing_v1')
+    counts.update(required_tests=len(required), required_missing_or_not_passed=[
+        problem for problem in child_problems(rows, done.returncode, required=required)
+        if problem.startswith('required')], cohort=contract_profile()['cohort'], profile=contract_profile()['name'])
     # CI keeps this file. Written before the checks, so a failing run still leaves its counts.
     destination = os.environ.get('ORDINARY_PROFILE_CHILD_REPORT')
     if destination:
         Path(destination).write_text(json.dumps(counts, indent=1, sort_keys=True))
     problems = child_problems(rows, done.returncode, required=required, allowed_skips=allowed)
     assert problems == [], '\n'.join(problems) + '\n' + done.stdout[-4000:]
+
+
+@MAIN_ONLY
+@pytest.mark.timeout(600)
+@pytest.mark.parametrize('cohort', ['run5', 'run3', 'runs-1-2'])
+def test_consumed_cohorts_keep_their_original_contracts(tmp_path, cohort):
+    junit = tmp_path / 'child.xml'
+    done = subprocess.run([sys.executable, '-m', 'pytest', '-q', '-p', 'no:cacheprovider', '-o', 'addopts=',
+                           '--disable-warnings', '--tb=short', f'--junitxml={junit}', 'tests/test_ordinary_contract_profile.py',
+                           '-k', 'original or consumed_contract'], cwd=ROOT,
+                          env=_child_env(ORDINARY_PILOT_COHORT=cohort), capture_output=True, text=True, timeout=580)
+    assert junit.is_file(), done.stdout[-4000:] + done.stderr[-2000:]
+    module = Path(__file__).stem
+    required = {(module, name) for name in _decorated_with('ORIGINAL_ONLY')}
+    assert child_problems(read_junit(junit), done.returncode, required=required) == [], done.stdout[-4000:]
 
 
 # -- the profile -------------------------------------------------------------------
@@ -332,14 +346,20 @@ def test_the_profile_runs_within_its_limits_and_reuses_submissions(tmp_path):
     result = run_rehearsal(tmp_path / 'run', scenario='happy')
     packet = result['packet']
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
-    assert packet['attempt_count'] == 54 and result['worker']['refused_requests'] == []
+    assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES == 45 and result['worker']['refused_requests'] == []
     routes = {}
     for attempt in packet['attempts']:
         assert attempt['status'] == 'settled'
         routes[attempt['case_id'], attempt['route']] = routes.get((attempt['case_id'], attempt['route']), 0) + 1
     for case in CASES:
+        if case in UNRESOLVED:
+            assert not any(key[0] == case for key in routes)
+            continue
         assert routes[case, 'sec/submissions'] == 1
         assert routes[case, 'sec/document'] == (2 if case.endswith(':core_thesis') else 1)
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert [case for case, status in statuses.items() if status == 'identity_unresolved'] == [
+        'LLYVA:core_thesis', 'LLYVA:decision_threshold']
 
 
 def _degraded_case(packet):
@@ -438,8 +458,8 @@ def test_the_profile_uses_the_live_code_path_within_every_limit(tmp_path):
     result, sec, _ = _loopback(tmp_path, None)
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and packet['first_failure'] is None
-    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == 54
-    assert len(sec.connects) == len(sec.requests) == 54 and sec.handshake_failures == 0
+    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == 45
+    assert len(sec.connects) == len(sec.requests) == 45 and sec.handshake_failures == 0
     assert worker['mode'] == 'loopback' and worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     assert 1 <= worker['max_inflight_sec'] <= 4
@@ -508,19 +528,13 @@ def approved(tmp_path, monkeypatch):
 
 
 @PROFILE_ONLY
-def test_the_launcher_refuses_the_rehearsal_cohort(tmp_path, monkeypatch):
-    from validation import ordinary_approved as launcher
-    with pytest.raises(BudgetError, match='rehearsals only'):
-        launcher.require_approved_cohort()
-
-
-@PROFILE_ONLY
-def test_a_complete_package_for_the_rehearsal_cohort_is_still_refused(approved, monkeypatch):
-    from test_ordinary_live_launcher import REQUIRE_APPROVED_COHORT
+@pytest.mark.parametrize('selected', ['run5', 'run3', 'runs-1-2'])
+def test_a_selected_cohort_is_refused_even_with_a_complete_package(approved, monkeypatch, selected):
+    # Consumed cohorts stay exportable through a selection; none can be packaged or run.
     from validation import ordinary_approved as launcher
     paths, files, output = approved
-    assert launcher.check(**paths)  # complete and valid once the test lifts the cohort check
-    monkeypatch.setattr(launcher, 'require_approved_cohort', REQUIRE_APPROVED_COHORT)
+    assert launcher.check(**paths)
+    monkeypatch.setenv('ORDINARY_PILOT_COHORT', selected)
     with pytest.raises(BudgetError, match='rehearsals only'):
         launcher.check(**paths)
     with pytest.raises(BudgetError, match='rehearsals only'):
@@ -533,45 +547,61 @@ def test_a_complete_package_for_the_rehearsal_cohort_is_still_refused(approved, 
 
 @PROFILE_ONLY
 @pytest.mark.timeout(120)
-def test_the_approved_worker_itself_refuses_a_selected_cohort(tmp_path, approved, monkeypatch):
-    # Approved mode needs a non-test approval, so this reaches the worker's own check.
+def test_the_approved_worker_itself_refuses_a_selected_cohort(approved):
     from validation import ordinary_approved as launcher
-    from validation.ordinary_isolated_rehearsal import cohort_selection, run_worker
+    from validation.ordinary_isolated_rehearsal import run_worker
     from validation.ordinary_native_ledger import create_fresh_output
     paths, _, _ = approved
     policy, runtime = launcher.check(**paths)
     output = create_fresh_output(policy['approval']['output_dir'])
-    result = run_worker(output, policy, mode='approved', scenario='approved', environment={**runtime, **cohort_selection()},
+    result = run_worker(output, policy, mode='approved', scenario='approved',
+                        environment={**runtime, 'ORDINARY_PILOT_COHORT': 'run5'},
                         forbidden=tuple(runtime.values()), synthetic=False)
     assert result['status'] == 'worker_incomplete' and result['supervisor']['returncode'] == 2
     assert not (output / 'ledger.sqlite').exists()
 
 
-def test_the_cohort_check_cannot_be_selected_or_lifted_outside_tests():
+@PROFILE_ONLY
+@pytest.mark.parametrize('change', [
+    lambda p: p.update(case_order=list(reversed(p['case_order']))),
+    lambda p: p.update(cohort='run5'),
+    lambda p: p.update(questions_sha256='0' * 64),
+    lambda p: p['frontend'].update(commit='84466b2926c5e231b322db7f6a363763de544a95'),
+    lambda p: p['frontend'].update(classifier_sha256='0' * 64),
+    lambda p: p['frontend'].update(resolver_sha256='0' * 64),
+], ids=['order', 'cohort', 'questions', 'frontend_commit', 'classifier', 'resolver'])
+def test_the_launcher_refuses_a_profile_that_differs_from_what_runs(approved, monkeypatch, change):
+    from validation import ordinary_approved as launcher, ordinary_pilot_contract as contract
+    paths, _, _ = approved
+    profile = contract.contract_profile()
+    change(profile)
+    monkeypatch.setattr(launcher, 'contract_profile', lambda: profile)
+    with pytest.raises(BudgetError, match='differs from the running cohort or frontend pin'):
+        launcher.require_profile_binding()
+    with pytest.raises(BudgetError, match='differs from the running cohort or frontend pin'):
+        launcher.check(**paths)
+
+
+def test_nothing_lifts_the_cohort_check():
     source = (ROOT / 'validation' / 'ordinary_approved.py').read_text()
     definition = re.search(r"def require_approved_cohort\(\):\n(?:    .*\n)+", source)[0]
     assert "COHORT != APPROVED_COHORT or 'ORDINARY_PILOT_COHORT' in os.environ" in definition
     assert source.count('require_approved_cohort()') == 3  # the definition, prepare and check
-    for path in (*(ROOT / 'validation').glob('*.py'), *(ROOT / 'app').rglob('*.py'), *(ROOT / 'scripts').glob('*.py')):
+    for path in (*(ROOT / 'validation').glob('*.py'), *(ROOT / 'app').rglob('*.py'), *(ROOT / 'scripts').glob('*.py'),
+                 *(path for path in (ROOT / 'tests').glob('*.py') if path.name != Path(__file__).name)):
         assert "'require_approved_cohort'" not in path.read_text(), path.name
-    # Only the fixture that builds invented approved inputs lifts it, and only under the profile.
-    lifting = [path.name for path in (ROOT / 'tests').glob('*.py') if path.name != Path(__file__).name
-               and "setattr(launcher, 'require_approved_cohort', lambda" in path.read_text()]
-    assert lifting == ['test_ordinary_live_launcher.py']
-    fixture = (ROOT / 'tests' / 'test_ordinary_live_launcher.py').read_text()
-    assert ("    if contract_profile() is not None:\n        # No real cohort" in fixture
-            and fixture.count("'require_approved_cohort', lambda") == 1)
 
 
-@ORIGINAL_ONLY
-@pytest.mark.parametrize('field', ['contract_profile', 'cohort'])
-def test_a_package_cannot_select_the_profile_or_a_cohort(approved, field):
-    # Limits, policy and evidence all come from the running code's cohort, and check
-    # rebuilds the package from them, so no field in a package can choose either.
+@PROFILE_ONLY
+@pytest.mark.parametrize('field,value', [('contract_profile', {'name': 'another'}), ('cohort', 'run5'),
+                                         ('selected_cohort', 'run5')])
+def test_a_package_cannot_select_a_profile_or_cohort(approved, field, value):
+    # Limits, policy and evidence all come from the running code, and check rebuilds the
+    # package from them, so no field in a package can choose either.
     from validation import ordinary_approved as launcher
     paths, files, _ = approved
     package = json.loads(files['package'].read_text())
-    package['proposal'][field] = THRESHOLD_FILING_PROFILE if field == 'contract_profile' else THRESHOLD_FILING_PROFILE['cohort']
+    package['proposal'][field] = value
     files['package'].write_text(json.dumps(package))
     with pytest.raises(BudgetError, match='package differs'):
         launcher.check(**paths)
@@ -602,7 +632,7 @@ def test_the_package_and_policy_bind_the_profile(approved):
     lambda p: p['proposal']['contract_profile'].update(filing_wait_seconds=20),
     lambda p: p['proposal']['contract_profile'].update(filing_parse_cutoff_seconds=16),
     lambda p: p['proposal']['contract_profile'].update(switch='another_switch'),
-    lambda p: p['proposal']['contract_profile'].update(cohort=APPROVED_COHORT),
+    lambda p: p['proposal']['contract_profile'].update(cohort='run5'),
     lambda p: p['proposal'].pop('contract_profile'),
     lambda p: p['proposal']['limits']['per_case'][CASES[0]].update(sec=8),
     lambda p: p['proposal']['case_seconds'].update(decision_threshold=30),

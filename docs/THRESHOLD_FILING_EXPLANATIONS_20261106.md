@@ -6,11 +6,12 @@
 ## Contract profile
 
 `THRESHOLD_FILING_PROFILE` in `validation/ordinary_pilot_contract.py` is the one
-place binding the cohort, quotas (6 thesis, 5 threshold, 66 in all), switch, filing
-wait and parse cutoff. A cohort it does not name keeps the original contract, so
-consumed runs export unchanged. Its only cohort is rehearsal-only and is never
-`APPROVED_COHORT`, so it cannot reach a package or approval. Using it for real means
-pre-registering a cohort, naming it in the profile and making it `APPROVED_COHORT`.
+place binding the cohort, question order, frontend pin, quotas (6 thesis, 5 threshold,
+66 in all), switch, and timing: 16 s filing wait, 12 s parse cutoff, 10 s read timeout,
+30 s and 20 s case deadlines and the 480 s run limit. Its cohort is run 6, pre-registered
+in `GENERALIZATION_COHORT_3_PREREGISTRATION_20261106.md`. A cohort it does not name keeps
+the original contract, so consumed runs export unchanged under their own selection, and
+the launcher refuses any selected cohort.
 
 The boundary refuses a switch that disagrees with the running cohort's contract in
 either direction, and filing limits that differ from the profile's.

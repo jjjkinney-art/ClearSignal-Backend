@@ -1,5 +1,43 @@
 {
   "derived": {
+    "contract_profile": {
+      "case_order": [
+        "BP:core_thesis",
+        "BP:decision_threshold",
+        "MNST:core_thesis",
+        "MNST:decision_threshold",
+        "CRDO:core_thesis",
+        "CRDO:decision_threshold",
+        "LLYVA:core_thesis",
+        "LLYVA:decision_threshold",
+        "DGXX:core_thesis",
+        "DGXX:decision_threshold",
+        "VIRC:core_thesis",
+        "VIRC:decision_threshold"
+      ],
+      "case_seconds": {
+        "core_thesis": 30,
+        "decision_threshold": 20
+      },
+      "cohort": "run6",
+      "filing_parse_cutoff_seconds": 12,
+      "filing_wait_seconds": 16,
+      "frontend": {
+        "classifier_sha256": "6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38",
+        "commit": "138d6461a7d6822fd9b27c784a410f55b243a40e",
+        "resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542"
+      },
+      "name": "threshold_filing_v1",
+      "questions_sha256": "c0617b758458f25c7517393d00809a8d667ad2023b1689e16b813c19be74a4a1",
+      "read_timeout_seconds": 10,
+      "sec_gets": 66,
+      "sec_gets_per_case": {
+        "core_thesis": 6,
+        "decision_threshold": 5
+      },
+      "switch": "threshold_filing_explanations_enabled",
+      "wall_seconds": 480
+    },
     "enforced_by": [
       "tests/test_ordinary_live_launcher.py::test_loopback_run_uses_the_live_code_path_within_every_limit",
       "tests/test_ordinary_live_launcher.py::test_an_unpinned_certificate_halts_before_any_request_is_served",
@@ -13,7 +51,13 @@
       "tests/test_ordinary_isolated_worker.py::test_an_abandoned_evidence_request_degrades_one_answer_without_halting",
       "tests/test_ordinary_isolated_worker.py::test_the_abandoned_response_never_reaches_the_answer_and_closes_before_the_next_case",
       "tests/test_ordinary_native_boundary.py",
-      "tests/test_ordinary_native_ledger.py"
+      "tests/test_ordinary_native_ledger.py",
+      "tests/test_ordinary_contract_profile.py::test_a_late_filing_is_degraded_on_the_live_code_path",
+      "tests/test_ordinary_contract_profile.py::test_a_stalled_filing_is_degraded_on_the_live_code_path",
+      "tests/test_ordinary_contract_profile.py::test_a_failed_filing_list_halts_on_the_live_code_path",
+      "tests/test_ordinary_contract_profile.py::test_a_silent_peer_halts_on_the_live_code_path",
+      "tests/test_ordinary_contract_profile.py::test_degradation_reaches_the_approved_outcome_record",
+      "tests/test_ordinary_contract_profile.py::test_check_refuses_a_package_with_a_changed_profile"
     ],
     "ledger_tables": [
       "attempts",

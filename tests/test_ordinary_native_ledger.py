@@ -13,6 +13,7 @@ from validation.capture_budget import AttemptLedger, BudgetError, digest, valida
 from validation.ordinary_native_policy import execution_package, policy_for
 from validation.ordinary_native_ledger import OrdinaryNativeLedger, OrdinaryNativeGate, create_fresh_output
 from validation.ordinary_pilot_contract import CASES, COHORT_FILE
+from _ordinary_cohort_expectations import ORIGINAL_QUOTA_SHAPE
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 from validation.pilot_approved import ScopedBackend, ExchangeGate
 from validation.ordinary_transport import OrdinaryHTTPTransport
@@ -107,6 +108,7 @@ def test_mutated_or_legacy_profile_cannot_enter_new_native_ledger(tmp_path):
     with pytest.raises(BudgetError): OrdinaryNativeGate(SimpleNamespace(ledger=object()))
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_concurrency_is_checked_at_wire_entry_and_duplicate_claims_never_replay(tmp_path):
     book = ledger(tmp_path); case = book.begin_case(CASES[0])
     claims = [reserve(book, case, *scope) for scope in PLAN[:5]]
@@ -117,6 +119,7 @@ def test_concurrency_is_checked_at_wire_entry_and_duplicate_claims_never_replay(
     with pytest.raises(BudgetError): book.claim_wire_entry(claims[0][0], **claims[0][1])
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_actual_entry_rate_is_independent_of_earlier_reservation_rate(tmp_path, monkeypatch):
     import validation.ordinary_native_ledger as native
     now = [10_000_000_000]
@@ -264,6 +267,7 @@ def test_rate_excess_paces_without_halting(tmp_path, monkeypatch):
         assert db.execute('SELECT COUNT(*) FROM ordinary_wire_entries WHERE attempt_id=?', (attempt,)).fetchone() == (1,)
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_a_fifth_concurrent_wire_entry_halts(tmp_path):
     book = ledger(tmp_path); case = book.begin_case(CASES[0])
     claims = [reserve(book, case, *scope) for scope in PLAN[:5]]
@@ -303,6 +307,7 @@ def finish_all(book, case):
         book.claim_wire_entry(attempt, **binding); complete(book, attempt, binding)
 
 
+@ORIGINAL_QUOTA_SHAPE
 @pytest.mark.parametrize('fault', ['none', 'unsettled', 'issuer', 'secret', 'late', 'twice', 'oversize'])
 def test_case_completes_only_with_its_own_screened_timely_answer(tmp_path, monkeypatch, fault):
     import validation.ordinary_native_ledger as native
@@ -337,6 +342,7 @@ def test_case_completes_only_with_its_own_screened_timely_answer(tmp_path, monke
         assert db.execute('SELECT COUNT(*) FROM ordinary_answers').fetchone() == (0,)
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_no_late_work_after_a_case_is_complete(tmp_path):
     book = ledger(tmp_path); case = book.begin_case(CASES[0])
     finish_all(book, case)

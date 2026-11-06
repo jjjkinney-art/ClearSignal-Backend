@@ -22,7 +22,8 @@ PACKET_CASE_PROJECTION_SHA256 = {
     'run5': '38f270a9734985eee1ebf03f770ada69111090817705e7e5d2574e5de8083e75',
     'run3': 'a87bd50548790b0e3e42ed1a3fc31513764296352a3d4cd54dd4c49ac2cfdfa6',
     'runs-1-2': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3',
-    'threshold-filing-rehearsal': 'fa9159abaf5b396bee5a5d51c55031044a148f94997709ea601e49f0508747e3'}[COHORT]
+    # Cohort 3, from tests/ordinary_run6_cases.json.
+    'run6': '9be9788956389d35941614283a8724ed248464a9169f107f3342b7ec2b4028ba'}[COHORT]
 
 def _digest(value):
     encoded = json.dumps(value, sort_keys=True, separators=(',', ':'),

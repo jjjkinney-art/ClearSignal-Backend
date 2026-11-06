@@ -20,6 +20,10 @@ RUN_3_ISSUERS = ('SCCO', 'BX', 'LNC', 'LVS', 'USCB', 'BWMX')
 # stays in the denominator as a failed case.
 RUN_5_ISSUERS = ('SMFG', 'BNY', 'OWL', 'TWST', 'AGEN', 'FSTR')
 RUN_5_LAST_CASE = 'BNY:core_thesis'
+# Run 6 is unseen-company cohort 3, pre-registered in
+# docs/GENERALIZATION_COHORT_3_PREREGISTRATION_20261106.md and connected by its
+# amendment 1. No case is reordered: no halt is predicted.
+RUN_6_ISSUERS = ('BP', 'MNST', 'CRDO', 'LLYVA', 'DGXX', 'VIRC')
 # Both BWMX cases are predicted offline to halt the run, so they are ordered
 # last and no other case is lost; both stay in the denominator. The threshold
 # question resolves to another issuer, whose SEC request the boundary refuses
@@ -32,20 +36,18 @@ COHORTS = {
              + (LAST_CASE,)),
     'runs-1-2': ('tests/ordinary_pilot_cases.json',
                  tuple(f'{i}:{q}' for i in RUN_1_2_ISSUERS for q in QUESTIONS)),
-    # Rehearsal only: the runs-1-2 questions under the threshold-filing profile. It is
-    # never APPROVED_COHORT, so no package or approved run can use it.
-    'threshold-filing-rehearsal': ('tests/ordinary_pilot_cases.json',
-                                   tuple(f'{i}:{q}' for i in RUN_1_2_ISSUERS for q in QUESTIONS)),
     'run5': ('tests/ordinary_run5_cases.json',
              tuple(case for case in (f'{i}:{q}' for i in RUN_5_ISSUERS for q in QUESTIONS) if case != RUN_5_LAST_CASE)
              + (RUN_5_LAST_CASE,)),
+    'run6': ('tests/ordinary_run6_cases.json',
+             tuple(f'{i}:{q}' for i in RUN_6_ISSUERS for q in QUESTIONS)),
 }
 # Rehearsal fault scenarios target the thesis case at this index and the
 # threshold case after it: the third issuer's, unless that issuer is predicted
 # unresolved (run 5: OWL), then the next issuer whose two cases are answered.
 FAULT_CASE_INDEX = {'run5': 5}
 # The only cohort an approved package or run may use.
-APPROVED_COHORT = 'run5'
+APPROVED_COHORT = 'run6'
 # Rehearsal tests may select the historical cohort to keep exercising a fully
 # completing run; the approved launcher refuses any selection, so an approved
 # execution always uses APPROVED_COHORT, whose case records its package binds.
@@ -59,19 +61,25 @@ FAULT_CASE_INDEX = FAULT_CASE_INDEX.get(COHORT, 4)
 ISSUERS = tuple(dict.fromkeys(case.split(':')[0] for case in CASES))
 
 # Threshold answers read the latest filing. This is the one place that binds the
-# cohort, request quotas, application switch and filing limits together. A cohort
-# not named here keeps the contract below exactly as it was, so consumed runs still
-# export unchanged. Pre-registering a real cohort means naming it here and making
-# it APPROVED_COHORT; until then this profile cannot reach a package or approval.
+# cohort, question order, frontend pin, request quotas, application switch and timing
+# settings together. A cohort not named here keeps the contract below exactly as it was,
+# so consumed runs still export unchanged, under their own cohort selection.
 THRESHOLD_FILING_PROFILE = {
     'name': 'threshold_filing_v1',
-    'cohort': 'threshold-filing-rehearsal',
+    'cohort': 'run6',
+    'case_order': list(COHORTS['run6'][1]),
+    'questions_sha256': 'c0617b758458f25c7517393d00809a8d667ad2023b1689e16b813c19be74a4a1',
+    'frontend': {'commit': '138d6461a7d6822fd9b27c784a410f55b243a40e',
+                 'classifier_sha256': '6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38',
+                 'resolver_sha256': '6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542'},
     'sec_gets_per_case': {'core_thesis': 6, 'decision_threshold': 5},
+    'sec_gets': 66,
     'switch': 'threshold_filing_explanations_enabled',
     'filing_wait_seconds': 16,
     'filing_parse_cutoff_seconds': 12,
+    'read_timeout_seconds': 10,
     'case_seconds': {'core_thesis': 30, 'decision_threshold': 20},
-    'sec_gets': 66,
+    'wall_seconds': 480,
 }
 
 

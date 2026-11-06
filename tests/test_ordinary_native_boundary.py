@@ -19,6 +19,7 @@ from validation.ordinary_isolated_rehearsal import rehearsal_policy
 from validation.ordinary_native_boundary import OrdinaryNativeBoundary
 from validation.ordinary_native_ledger import OrdinaryNativeLedger, create_fresh_output
 from validation.ordinary_pilot_contract import CASES, COHORT_FILE
+from _ordinary_cohort_expectations import ORIGINAL_QUOTA_SHAPE
 
 # The first case's issuer in the active cohort; its synthetic filings are generic.
 FIRST = next(c for c in json.loads((Path(__file__).resolve().parents[1] / COHORT_FILE).read_text())
@@ -83,6 +84,7 @@ def test_documents_are_admitted_only_from_this_case_and_stage_submissions(bounda
     assert boundary.refused_requests == [{'stage': 'evidence.thesis_disclosures', 'target': ANNUAL}]
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_multi_row_submissions_admit_exact_supported_documents_for_their_stage(tmp_path, monkeypatch):
     owner = make_boundary(tmp_path, monkeypatch)
     try:
@@ -164,6 +166,7 @@ def test_semantic_refusals_record_the_first_cause_and_never_retain(boundary, mon
     assert failure == ('sec_refusal' if code else 'identity_mismatch',)
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_submissions_drift_within_a_case_halts(boundary, monkeypatch):
     fetch(boundary, 'evidence.sec', SUBMISSIONS)
     original = synthetic._filings
@@ -203,6 +206,7 @@ class HeldSEC(synthetic.OrdinarySyntheticSEC):
         return proxy
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_requests_wait_for_one_of_four_slots_instead_of_halting(tmp_path, monkeypatch):
     backend = HeldSEC()
     owner = make_boundary(tmp_path, monkeypatch, backend)

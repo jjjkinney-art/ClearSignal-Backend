@@ -20,9 +20,7 @@ from validation import ordinary_approved as launcher
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_isolated_rehearsal import LOOPBACK_CONTACT, run_loopback_rehearsal
 from validation.ordinary_native_policy import TEST_ONLY, ZERO_MODEL_PLACEHOLDER
-from validation.ordinary_pilot_contract import CASES, contract_profile
-
-REQUIRE_APPROVED_COHORT = launcher.require_approved_cohort
+from validation.ordinary_pilot_contract import CASES
 
 
 def _port_free():
@@ -126,7 +124,7 @@ def test_evidence_templates_carry_derived_facts_and_require_attestations():
     assert cost['transport_retries'] == 0 and cost['follow_redirects'] is False
 
 
-@pytest.mark.skipif(os.environ.get('ORDINARY_PILOT_COHORT') in {'runs-1-2', 'threshold-filing-rehearsal'},
+@pytest.mark.skipif('ORDINARY_PILOT_COHORT' in os.environ,
                     reason='the committed templates are for the approved cohort')
 def test_committed_evidence_templates_match_the_code():
     root = Path(__file__).resolve().parents[1] / 'docs/ordinary-evidence'
@@ -205,12 +203,7 @@ def approved_inputs(tmp_path, monkeypatch):
 
 
 def build_approved_inputs(tmp_path, monkeypatch, *, network):
-    if contract_profile() is not None:
-        # No real cohort is bound to the profile yet, so its rehearsal cohort stands in
-        # for one here. Only these tests lift this check; test_ordinary_contract_profile
-        # proves the launcher itself refuses that cohort.
-        monkeypatch.setattr(launcher, 'require_approved_cohort', lambda: None)
-    elif 'ORDINARY_PILOT_COHORT' in os.environ:
+    if 'ORDINARY_PILOT_COHORT' in os.environ:
         pytest.skip('approved packages use the approved cohort only; tested in the main process')
     base = tmp_path.resolve()
     ca = base / 'reviewed-ca.pem'
@@ -385,7 +378,6 @@ def test_prepare_refuses_test_only_or_incomplete_inputs(approved_inputs):
 def test_prepare_and_check_refuse_any_cohort_selection(approved_inputs, monkeypatch):
     # A rehearsal-only selection, even naming run 3, never reaches an approved package or run.
     paths, files, output = approved_inputs
-    monkeypatch.setattr(launcher, 'require_approved_cohort', REQUIRE_APPROVED_COHORT)
     monkeypatch.setenv('ORDINARY_PILOT_COHORT', 'run3')
     with pytest.raises(BudgetError, match='rehearsals only'):
         launcher.prepare(execution_path=files['execution'], cost_path=files['cost'],

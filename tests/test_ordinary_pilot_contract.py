@@ -1,8 +1,10 @@
 from copy import deepcopy
 import pytest
 from validation.ordinary_pilot_contract import quota_contract, validate_contract, CASES
+from _ordinary_cohort_expectations import ORIGINAL_QUOTA_SHAPE
 
 
+@ORIGINAL_QUOTA_SHAPE
 def test_twelve_fixed_cases_and_nontransferable_limits():
     c = quota_contract()
     assert len(CASES) == 12 and len(set(CASES)) == 12

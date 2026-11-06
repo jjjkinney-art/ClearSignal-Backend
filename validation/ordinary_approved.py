@@ -182,10 +182,27 @@ def require_approved_cohort():
         raise BudgetError('cohort selection is for rehearsals only')
 
 
+def require_profile_binding():
+    """The profile's named cohort, question order and frontend pin must be what runs."""
+    profile = contract_profile()
+    if profile is None:
+        return
+    from validation.ordinary_frontend_intents import FRONTEND
+    from validation.ordinary_pilot_contract import COHORT
+    questions = [case['question'] for case in json.loads((ROOT / COHORT_FILE).read_text())]
+    if (profile['cohort'] != COHORT or profile['case_order'] != list(CASES)
+            or [case['case_id'] for case in json.loads((ROOT / COHORT_FILE).read_text())] != list(CASES)
+            or hashlib.sha256(json.dumps(questions).encode()).hexdigest() != profile['questions_sha256']
+            or any(FRONTEND[key] != value for key, value in profile['frontend'].items())
+            or FRONTEND['questions_sha256'] != profile['questions_sha256']):
+        raise BudgetError('contract profile differs from the running cohort or frontend pin')
+
+
 def prepare(*, execution_path, cost_path, retention_path, output_dir):
     """The package for the running code; refuses incomplete evidence."""
     require_runtime()
     require_approved_cohort()
+    require_profile_binding()
     execution = _load(execution_path)
     validate_ordinary_execution(execution)
     cost = _load(cost_path)
@@ -206,6 +223,7 @@ def check(*, package_path, approval_path, cost_path, retention_path):
     """Every precondition for one approved run; returns (policy, runtime). Creates nothing."""
     require_runtime()
     require_approved_cohort()
+    require_profile_binding()
     package, approval = _load(package_path), _load(approval_path)
     try:
         execution = package['execution_configuration']
