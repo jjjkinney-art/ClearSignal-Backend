@@ -309,13 +309,13 @@ def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     assert hashlib.sha256(questions).hexdigest() == FRONTEND['questions_sha256']
     assert set(CASE_INTENTS.values()) <= FRONTEND_INTENTS
     # A general intent is authoritative in the backend and routes away from
-    # research. The deployed frontend (84466b2; classifier unchanged since PR #87)
-    # sends none for runs 1-4 and BNY:core_thesis as general for run 5, which is
-    # counted unresolved; at 5ee51c3 it sent BWMX:core_thesis as general (run 3).
-    assert FRONTEND['commit'] == '84466b2926c5e231b322db7f6a363763de544a95'
-    assert FRONTEND['classifier_sha256'] == 'f0b6a07b707beb6c94784e7b18cb5b7aee79b80e74b255e1e9c9367b73d0dde8'
+    # research. The deployed frontend (138d646, PR #90) sends none for runs 1-5; at
+    # 84466b2 it sent BNY:core_thesis as general (run 5), and at 5ee51c3 BWMX:core_thesis (run 3).
+    assert FRONTEND['commit'] == '138d6461a7d6822fd9b27c784a410f55b243a40e'
+    assert FRONTEND['classifier_sha256'] == '6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38'
+    assert FRONTEND['resolver_sha256'] == '6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542'
     general = [case for case in CASES if not intent_allows_company_detection(frontend_intent(case))]
-    assert general == (['BNY:core_thesis'] if COHORT == 'run5' else [])
+    assert general == []
     # Such a case halts the run (zero-model refusal), so it is ordered last.
     assert general == GENERAL_INTENT and all(CASES.index(case) == len(CASES) - 1 for case in general)
     assert not intent_allows_company_detection('investing_education')

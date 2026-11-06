@@ -5,11 +5,10 @@ the frozen backend identifies is answered. A company-analysis case whose
 identity stays unresolved is counted identity_unresolved. A case the pinned
 frontend sends with a general intent takes the general route, which attempts a
 model call; the zero-model boundary refuses it and halts the run there
-(invalid_request), on every host. Runs 1-2 and run 3 (now pinned to
-company_analysis throughout) complete. Run 5 answers seven cases, leaves SMFG x2
-and OWL x2 unresolved (directory ambiguity) and halts at BNY:core_thesis, which
-amendment 2 orders last so that no other case is lost. With the run-5 identity
-follow-up it answers nine cases and leaves OWL x2 unresolved.
+(invalid_request), on every host. With the frontend pinned to 138d646, no cohort
+case takes it, so every cohort completes: run 5 here answers ten cases and leaves
+OWL x2 unresolved. Run 5 itself was bound to 84466b2 and halted at BNY:core_thesis;
+that record stays with its frozen commit, 0d7152a.
 
 The frozen run-3 commit (6efe7d2) was pre-registered to halt at
 BWMX:decision_threshold, which resolved to another issuer (DE); that
