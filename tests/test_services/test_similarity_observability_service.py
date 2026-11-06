@@ -26,11 +26,17 @@ def engine():
 @pytest_asyncio.fixture()
 async def db(engine):
     from app.db.models import Base
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
-    async with AsyncSessionLocal() as session:
-        yield session
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+        async with AsyncSessionLocal() as session:
+            yield session
+    finally:
+        # Stop aiosqlite's worker thread while its event loop is still open. A
+        # thread left running can hit the closed loop at interpreter shutdown and
+        # abort Python while it holds the stderr lock, after every test has passed.
+        await engine.dispose()
 
 
 REQUIRED_KEYS = {
