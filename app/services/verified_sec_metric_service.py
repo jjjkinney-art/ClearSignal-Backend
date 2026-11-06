@@ -20,7 +20,11 @@ _TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z])?\Z")
 _LATEST_PERIOD_ANCHOR = ("Assets", "USD")
 _MAX_STALENESS_DAYS = 550
 _METRICS = (
-    (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense"),
+    # Including-assessed-tax revenue is last: an equal-period tie keeps the
+    # configured order, so it is chosen only when no earlier concept has a
+    # comparable pair as recent (issuers that tag revenue only this way).
+    (("RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenuesNetOfInterestExpense",
+      "RevenueFromContractWithCustomerIncludingAssessedTax"),
      "revenue", ("revenue", "revenues", "sales", "top line", "top-line"), "USD", "duration"),
     (("GrossProfit",), "gross profit", ("gross profit", "gross margin"), "USD", "duration"),
     (("OperatingIncomeLoss",), "operating income",
@@ -346,7 +350,15 @@ def fetch_verified_metric_evidence(
             get_company_fact_records_for_concept_units,
             getattr(settings, "sec_user_agent", "") or "")
     metrics = _requested_metrics(question)
-    from .financial_thesis_foundation import requests_profitability_context, financial_metric_label
+    from .financial_thesis_foundation import (requests_profitability_context, financial_metric_label,
+                                              is_broad_thesis_request, SECTOR_METRICS, SECTOR_SIGNATURES)
+    from .source_answer import is_decision_monitoring_request
+    sector_names = {}
+    if is_broad_thesis_request(question or "") or is_decision_monitoring_request(question or ""):
+        for sector, measures in SECTOR_METRICS.items():
+            for name, concepts in measures.items():
+                sector_names[name] = sector
+                metrics = (*metrics, (concepts, name, (), "USD", "duration"))
     supplementary = next(metric for metric in _METRICS if metric[1] == "pretax income")
     context_requested = requests_profitability_context(question)
     if context_requested and supplementary not in metrics:
@@ -407,12 +419,13 @@ def fetch_verified_metric_evidence(
         ]
         item = candidates[0] if candidates else None
         if metric_name == "revenue" and item is not None:
-            # A complete net-revenue pair may supersede older generic revenue.
-            # Never join values from different concepts or reporting durations.
-            bank = next((candidate for candidate in candidates
-                         if candidate.verified_claims[0]["metric"] == "us-gaap:RevenuesNetOfInterestExpense"), None)
-            if bank is not None and bank.reporting_period_end > item.reporting_period_end:
-                item = bank
+            # Issuers change revenue concepts over time (Alphabet moved from
+            # RevenueFromContractWithCustomerExcludingAssessedTax to Revenues),
+            # leaving the preferred concept's last pair stale. Each candidate is
+            # already a complete same-concept, same-unit, same-duration pair;
+            # take the one with the latest current period. Equal periods keep
+            # the configured order. Values are never joined across concepts.
+            item = max(candidates, key=lambda candidate: candidate.reporting_period_end or "")
         if item is not None and latest_issuer_end and item.reporting_period_end:
             age = (
                 date.fromisoformat(latest_issuer_end)
@@ -422,6 +435,16 @@ def fetch_verified_metric_evidence(
                 item = None
         if item is not None:
             evidence.append(item)
+    if sector_names:
+        # A business type's measures are kept only when its own signature pair
+        # was reported, so other issuers' answers are unchanged.
+        concept_names = {f"us-gaap:{concept}": name for measures in SECTOR_METRICS.values()
+                         for name, concepts in measures.items() for concept in concepts}
+        found = {concept_names.get(item.verified_claims[0].get("metric")) for item in evidence}
+        keep = {name for name, sector in sector_names.items()
+                if sector in SECTOR_SIGNATURES and set(SECTOR_SIGNATURES[sector]) <= found}
+        evidence = [item for item in evidence
+                    if concept_names.get(item.verified_claims[0].get("metric")) in (None, *keep)]
     if re.search(r"(?<!\w)(?:free cash flow|fcf)(?!\w)", (question or "").lower()):
         _attach_free_cash_flow_calculations(evidence)
     from .financial_thesis_foundation import requests_pretax_income

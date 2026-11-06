@@ -56,6 +56,7 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
     cik = str(data.get("cik", ""))
     if not cik.isdigit() or not concept or not unit:
         return []
+    cik = str(int(cik))  # numeric or zero-padded in SEC responses; one form downstream
     facts = data.get("facts", {})
     gaap = facts.get("us-gaap", {}) if isinstance(facts, dict) else {}
     entry = gaap.get(concept, {}) if isinstance(gaap, dict) else {}
@@ -128,7 +129,9 @@ def get_company_fact_records_for_concept_units(
         response = requests.get(url, headers={"User-Agent": user_agent or "ai-analyst-bot/0.1"}, timeout=10)
         response.raise_for_status()
         data = response.json()
-        if not isinstance(data, dict) or str(data.get("cik", "")) != str(int(cik)):
+        # SEC writes the CIK as a number or a zero-padded string; compare values.
+        reported_cik = str(data.get("cik", "")) if isinstance(data, dict) else ""
+        if not reported_cik.isdigit() or int(reported_cik) != int(cik):
             return []
         return [
             record
