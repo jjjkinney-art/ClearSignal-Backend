@@ -18,7 +18,7 @@ from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-from _ordinary_cohort_expectations import (EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
+from _ordinary_cohort_expectations import (attempt_reconciliation_problems, EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
                                           EXPECTED_SEC_EXCHANGES, GENERAL_INTENT,
                                           UNRESOLVED)
 
@@ -350,8 +350,10 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     assert counts['degraded_answer'] == statuses.count('answered_degraded_unadjudicated') >= 1
     assert packet['quality_pass_rate'] is None  # a degraded answer is never a pass
     # Every request counted, within quota, with a terminal outcome; abandoned ones never retained.
-    assert packet['attempt_count'] == packet['wire_entries'] <= 66
-    assert all(a['status'] in {'settled', 'abandoned'} for a in packet['attempts'])
+    # A stage abandoned between reservation and wire entry leaves an attempt with no wire entry.
+    assert attempt_reconciliation_problems(packet, quota_contract()) == []
+    # Nothing reached the network without a durable wire entry.
+    assert worker['synthetic_requests'] <= packet['wire_entries'] <= packet['attempt_count'] <= 66
     abandoned = [a for a in packet['attempts'] if a['status'] == 'abandoned']
     assert (CASES[FAULT_CASE_INDEX], 'evidence.sec_metrics', 'sec/facts') in {
         (a['case_id'], a['stage'], a['route']) for a in abandoned}

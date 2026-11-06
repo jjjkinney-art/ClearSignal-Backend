@@ -6,6 +6,8 @@ nothing. These checks cover admission, refusal and concurrency behaviour.
 """
 import json
 from pathlib import Path
+import shutil
+import sqlite3
 import threading
 import time
 from types import SimpleNamespace
@@ -14,11 +16,13 @@ import httpx
 import pytest
 
 import validation._ordinary_synthetic_sec as synthetic
-from validation.capture_budget import BudgetError
+from _ordinary_cohort_expectations import attempt_reconciliation_problems
+from validation.capture_budget import BudgetError, RateLimitDelay
+from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_isolated_rehearsal import rehearsal_policy
 from validation.ordinary_native_boundary import OrdinaryNativeBoundary
-from validation.ordinary_native_ledger import OrdinaryNativeLedger, create_fresh_output
-from validation.ordinary_pilot_contract import CASES, COHORT_FILE
+from validation.ordinary_native_ledger import AbandonedExchange, OrdinaryNativeLedger, create_fresh_output
+from validation.ordinary_pilot_contract import CASES, COHORT_FILE, quota_contract
 from _ordinary_cohort_expectations import ORIGINAL_QUOTA_SHAPE
 
 # The first case's issuer in the active cohort; its synthetic filings are generic.
@@ -238,6 +242,174 @@ def test_requests_wait_for_one_of_four_slots_instead_of_halting(tmp_path, monkey
     finally:
         backend.release.set()
         owner.close()
+
+
+# -- abandonment between reservation and the wire -----------------------------------
+
+@pytest.fixture
+def stoppable(tmp_path, monkeypatch):
+    backend = synthetic.OrdinarySyntheticSEC()
+    owner = make_boundary(tmp_path, monkeypatch, backend)
+    owner.begin(owner.cases[0])
+    yield owner, backend
+    owner.close()
+
+
+def abandon_while_waiting_for_a_slot(owner):
+    """Deterministic: every slot is held until the stage has been abandoned."""
+    for _ in range(4):
+        assert owner.slots.acquire(blocking=False)
+    outcome = []
+
+    def run():
+        try:
+            fetch(owner, 'evidence.sec', SUBMISSIONS)
+            outcome.append('returned')
+        except BaseException as exc:
+            outcome.append(exc)
+    thread = threading.Thread(target=run)
+    thread.start()
+    deadline = time.monotonic() + 15
+    while owner.slot_waits == 0 and time.monotonic() < deadline:
+        time.sleep(0.01)
+    assert owner.slot_waits > 0 and rows(owner, 'SELECT status FROM attempts') == [('pending',)]
+    owner.abandon('evidence.sec')
+    thread.join(15)
+    for _ in range(4):
+        owner.slots.release()
+    assert type(outcome[0]) is AbandonedExchange
+    return outcome[0]
+
+
+def assert_never_dispatched(owner, backend, *, claimed, native):
+    """One terminal attempt, nothing on the wire, and every resource given back."""
+    assert rows(owner, 'SELECT route,status FROM attempts') == [('sec/submissions', 'abandoned')]
+    assert rows(owner, 'SELECT code,detail FROM ordinary_exchange_failures') == [('abandoned', 'sec/submissions')]
+    assert rows(owner, 'SELECT COUNT(*) FROM ordinary_wire_entries') == [(0,)]
+    assert rows(owner, 'SELECT COUNT(*) FROM ordinary_responses') == [(0,)]
+    assert rows(owner, 'SELECT COUNT(*) FROM sec_claims') == [(1 if claimed else 0,)]
+    # The table appears with the first native dispatch.
+    table = rows(owner, "SELECT COUNT(*) FROM sqlite_master WHERE name='native_dispatches'") == [(1,)]
+    assert table is native and (not native or rows(owner, 'SELECT COUNT(*) FROM native_dispatches') == [(1,)])
+    assert rows(owner, 'SELECT stage FROM ordinary_stage_abandonments') == [('evidence.sec',)]
+    assert backend.requests == [] and backend.connects == 0
+    assert owner.inflight == 0 and owner.slots._value == 4  # concurrency and slots released
+    assert owner.gate.dispatched == 0 and owner.ledger.summary()['halted'] is None
+    assert owner.gate.grants == {} and owner.gate.open_states == {}
+
+
+def test_an_abandonment_before_reservation_charges_nothing(stoppable):
+    owner, backend = stoppable
+    owner.abandon('evidence.sec')
+    with pytest.raises(AbandonedExchange):
+        fetch(owner, 'evidence.sec', SUBMISSIONS)
+    assert rows(owner, 'SELECT COUNT(*) FROM attempts') == [(0,)] and backend.requests == []
+
+
+def test_an_abandonment_waiting_for_a_slot_never_dispatches(stoppable):
+    owner, backend = stoppable
+    abandon_while_waiting_for_a_slot(owner)
+    assert_never_dispatched(owner, backend, claimed=False, native=False)
+    # Other stages carry on: the run is degraded, not halted.
+    fetch(owner, 'evidence.sec_metrics', FACTS)
+    assert len(backend.requests) == 1 and owner.ledger.summary()['halted'] is None
+
+
+def test_an_abandonment_during_claim_pacing_never_dispatches(stoppable, monkeypatch):
+    owner, backend = stoppable
+
+    def paced(*args, **kwargs):
+        owner.abandon('evidence.sec')
+        raise RateLimitDelay(0.01)
+    monkeypatch.setattr(owner.ledger, 'claim_dispatch', paced)
+    with pytest.raises(AbandonedExchange):
+        fetch(owner, 'evidence.sec', SUBMISSIONS)
+    assert_never_dispatched(owner, backend, claimed=False, native=False)
+
+
+def test_an_abandonment_after_claim_never_reaches_the_wire(stoppable, monkeypatch):
+    owner, backend = stoppable
+    claim = owner.ledger.claim_dispatch
+
+    def claimed_then_abandoned(*args, **kwargs):
+        result = claim(*args, **kwargs)
+        owner.abandon('evidence.sec')
+        return result
+    monkeypatch.setattr(owner.ledger, 'claim_dispatch', claimed_then_abandoned)
+    with pytest.raises(AbandonedExchange):
+        fetch(owner, 'evidence.sec', SUBMISSIONS)
+    assert_never_dispatched(owner, backend, claimed=True, native=True)
+
+
+def test_an_abandoned_reservation_stays_charged_against_every_quota(stoppable):
+    owner, _ = stoppable
+    abandon_while_waiting_for_a_slot(owner)
+    limit = quota_contract()['per_case'][CASES[0]]['sec/submissions']
+    digest = '0' * 64
+    for stage in ('evidence.filing_metrics', 'evidence.thesis_disclosures')[:limit - 1]:
+        owner.ledger.reserve(owner.case_run, 'sec/submissions', stage=stage, input_bound=0, output_bound=0,
+                             request_sha256=digest)
+    with pytest.raises(BudgetError, match='quota'):  # the abandoned one still counts
+        owner.ledger.reserve(owner.case_run, 'sec/submissions', stage='evidence.filing_metrics', input_bound=0,
+                             output_bound=0, request_sha256=digest)
+
+
+def _export(owner, path=None):
+    return export_packet(path or owner.ledger.path, owner.ledger.policy,
+                         forbidden_values=tuple(RUNTIME.values()), synthetic=True)
+
+
+def test_a_never_dispatched_attempt_reconciles_through_export(stoppable):
+    owner, backend = stoppable
+    abandon_while_waiting_for_a_slot(owner)
+    fetch(owner, 'evidence.sec_metrics', FACTS)
+    owner.complete_case({'company': FIRST['issuer_id'], 'answer': {}})
+    packet = _export(owner)
+    assert (packet['attempt_count'], packet['wire_entries'], len(backend.requests)) == (2, 1, 1)
+    never = [a for a in packet['attempts'] if a['wire_entered_offset_ms'] is None]
+    assert [(a['stage'], a['route'], a['status']) for a in never] == [('evidence.sec', 'sec/submissions', 'abandoned')]
+    assert never[0]['failure'] == {'code': 'abandoned', 'detail': 'sec/submissions'} and never[0]['response'] is None
+    assert attempt_reconciliation_problems(packet, quota_contract()) == []
+    assert packet['cases'][0]['status'] == 'answered_degraded_unadjudicated'
+    assert packet['abandoned_stages'] == [{'case_id': CASES[0], 'stage': 'evidence.sec'}]
+
+
+@pytest.mark.parametrize('sql', [
+    "UPDATE attempts SET status='claimed' WHERE status='abandoned'",
+    "DELETE FROM ordinary_exchange_failures",
+    "INSERT INTO ordinary_wire_entries SELECT id, 1 FROM attempts WHERE status='abandoned'",
+    "INSERT INTO ordinary_responses SELECT id, 'https://www.sec.gov/x', 200, 'text/html', '0', x'00', 1 FROM attempts WHERE status='abandoned'",
+], ids=['status_reopened', 'no_terminal_record', 'invented_wire_entry', 'invented_response'])
+def test_export_refuses_an_inconsistent_never_dispatched_attempt(stoppable, tmp_path, sql):
+    owner, _ = stoppable
+    abandon_while_waiting_for_a_slot(owner)
+    owner.complete_case({'company': FIRST['issuer_id'], 'answer': {}})
+    assert _export(owner)['attempt_count'] == 1
+    copy = tmp_path / 'tampered.sqlite'
+    shutil.copyfile(owner.ledger.path, copy)
+    with sqlite3.connect(copy) as db:
+        db.execute(sql)
+    with pytest.raises((ExportRefused, TypeError)):
+        _export(owner, copy)
+
+
+def test_reconciliation_rejects_attempts_that_do_not_account_for_themselves():
+    limits = quota_contract()
+    good = {'case_id': CASES[0], 'stage': 'evidence.sec', 'route': 'sec/submissions', 'status': 'abandoned',
+            'wire_entered_offset_ms': None, 'response': None, 'failure': {'code': 'abandoned', 'detail': 'sec/submissions'}}
+    packet = {'attempts': [good], 'attempt_count': 1, 'wire_entries': 0,
+              'abandoned_stages': [{'case_id': CASES[0], 'stage': 'evidence.sec'}]}
+    assert attempt_reconciliation_problems(packet, limits) == []
+    for change, expected in [
+            ({'wire_entries': 1}, 'wire entries'), ({'attempt_count': 2}, 'attempt count'),
+            ({'abandoned_stages': []}, 'without its stage record'),
+            ({'attempts': [{**good, 'status': 'claimed'}]}, 'without an abandoned status'),
+            ({'attempts': [{**good, 'failure': None}]}, 'terminal record'),
+            ({'attempts': [{**good, 'response': {}}]}, 'has a response'),
+            ({'attempts': [{**good, 'stage': 'evidence.sec_metrics'}], 'abandoned_stages': [
+                {'case_id': CASES[0], 'stage': 'evidence.sec_metrics'}]}, 'stage limit'),
+            ({'attempts': [good] * 99, 'attempt_count': 99}, 'run limit')]:
+        assert any(expected in problem for problem in attempt_reconciliation_problems({**packet, **change}, limits)), expected
 
 
 # -- zero model and paid-provider calls ----------------------------------------------

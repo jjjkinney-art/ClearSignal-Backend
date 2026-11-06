@@ -72,3 +72,53 @@ ORIGINAL_QUOTA_SHAPE_TESTS = {
                                     'test_no_late_work_after_a_case_is_complete'),
     'test_ordinary_pilot_contract': ('test_twelve_fixed_cases_and_nontransferable_limits',),
 }
+
+
+def attempt_reconciliation_problems(packet, limits):
+    """Why a packet's attempts do not account for themselves, dispatched or not.
+
+    Reservation charges quota and wire entry records a dispatch; an abandoned stage can
+    stop a request between the two. So attempts and wire entries differ by exactly the
+    attempts that never reached the wire, each of which must have a terminal record.
+    """
+    problems = []
+    attempts = packet['attempts']
+    dispatched = [a for a in attempts if a['wire_entered_offset_ms'] is not None]
+    never = [a for a in attempts if a['wire_entered_offset_ms'] is None]
+    abandoned_stages = {(row['case_id'], row['stage']) for row in packet['abandoned_stages']}
+    if packet['attempt_count'] != len(attempts) or packet['attempt_count'] != len(dispatched) + len(never):
+        problems.append('attempt count does not reconcile')
+    if packet['wire_entries'] != len(dispatched):
+        problems.append('wire entries do not match dispatched attempts')
+    for attempt in never:
+        label = (attempt['case_id'], attempt['stage'], attempt['route'])
+        if attempt['status'] != 'abandoned':
+            problems.append(f'never dispatched without an abandoned status: {label}')
+        if attempt['failure'] != {'code': 'abandoned', 'detail': attempt['route']}:
+            problems.append(f'never dispatched without its terminal record: {label}')
+        if attempt['response'] is not None:
+            problems.append(f'never dispatched but has a response: {label}')
+    for attempt in attempts:
+        label = (attempt['case_id'], attempt['stage'], attempt['route'])
+        if attempt['status'] == 'abandoned' and (attempt['case_id'], attempt['stage']) not in abandoned_stages:
+            problems.append(f'abandoned attempt without its stage record: {label}')
+        if attempt['status'] == 'settled' and (attempt['response'] is None or attempt['wire_entered_offset_ms'] is None):
+            problems.append(f'settled attempt without its response and wire entry: {label}')
+        if attempt['status'] not in {'settled', 'abandoned'}:
+            problems.append(f'attempt without a terminal status: {label}')
+    # Quotas charge every reservation, including those that never reached the wire.
+    if len(attempts) > limits['sec_gets']:
+        problems.append('attempts exceed the run limit')
+    for case in {a['case_id'] for a in attempts}:
+        mine = [a for a in attempts if a['case_id'] == case]
+        if len(mine) > limits['per_case'][case]['sec']:
+            problems.append(f'attempts exceed the case limit: {case}')
+        for route in {a['route'] for a in mine}:
+            if sum(a['route'] == route for a in mine) > limits['per_case'][case][route]:
+                problems.append(f'attempts exceed the route limit: {case} {route}')
+        for stage, route in {(a['stage'], a['route']) for a in mine}:
+            if (sum(a['stage'] == stage and a['route'] == route for a in mine)
+                    > limits['per_stage'][case].get(stage, {}).get(route, 0)):
+                problems.append(f'attempts exceed the stage limit: {case} {stage} {route}')
+    return problems
+
