@@ -170,7 +170,7 @@ Run 5's commit `0d7152a`, package and consumed approval stay as they are. Consum
 byte-identical quota contracts, now pinned by digest in a test, and Runs 2, 4 and 5 re-export with
 unchanged cases, outcome counts, attempts and answer hashes.
 
-**Test structure:** 13 tests build requests against the original quota shape, so they skip under
+**Test structure:** 9 test functions (14 cases) build requests against the original quota shape, so they skip under
 this profile and must pass in `test_ordinary_historical_cohort`, which verifies them by name.
 
 ## Coverage gaps that remain (not closed by this amendment)
