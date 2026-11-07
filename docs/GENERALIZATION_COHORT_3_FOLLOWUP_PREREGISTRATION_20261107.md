@@ -1,5 +1,7 @@
 # Cohort 3 follow-up: pre-registration of an operational follow-up
 
+**Superseded for planning by** `docs/GENERALIZATION_COHORT_3_FOLLOWUP_REVISION_2_20261107.md`. Run 7 used this version, and this record stays as it was approved. Its predicted outcomes are assessed there.
+
 Status: **plan only.** No package, approval file, retrieval, merge, deployment or run exists or is
 authorized by this document. Launch readiness stays false.
 
