@@ -55,7 +55,38 @@ SCENARIO_FAULTS = {
     'threshold_filing_slow': ('crawl', rf'/Archives/edgar/data/{_FAULT_CIK}/', 3),
     # The same document, complete but past the threshold parse cutoff.
     'threshold_filing_after_cutoff': ('late', rf'/Archives/edgar/data/{_FAULT_CIK}/', 3),
+    # Rehearsal only: processing, not the network, outlasts the application's 20 s wait.
+    'processing_cancelled': None,
+    'processing_cancelled_only_evidence': None,
+    'processing_uninterruptible': None,
 }
+# Seconds one processing stage of the target issuer's thesis case is held. The first ends
+# between the application's 20 s wait and the 30 s case deadline; the second does not.
+PROCESSING_HOLD = {'processing_cancelled': 22.0, 'processing_cancelled_only_evidence': 22.0,
+                   'processing_uninterruptible': 45.0}
+
+
+def install_processing_hold(scenario):
+    """An invented slow stage, standing in for processing no checkpoint can interrupt."""
+    import time
+    from app.services import thesis_competition
+    from validation import _ordinary_synthetic_sec as synthetic
+    original, held = thesis_competition.extract_competition_descriptions, []
+
+    def extract(document, *, ticker, cik):
+        if int(cik) == _FAULT_CIK and not held:
+            held.append(True)
+            time.sleep(PROCESSING_HOLD[scenario])
+        return original(document, ticker=ticker, cik=cik)
+    thesis_competition.extract_competition_descriptions = extract
+    if scenario == 'processing_cancelled_only_evidence':
+        # Valid company facts with nothing comparable, so the filing was all there was.
+        facts = synthetic.companyfacts
+
+        def no_comparable_facts(cik):
+            data = facts(cik)
+            return {**data, 'facts': {'ifrs-full': {}}} if cik == _FAULT_CIK else data
+        synthetic.companyfacts = no_comparable_facts
 REHEARSAL_RUNTIME = {'OPENAI_API_KEY': 'TEST_ONLY_ORDINARY_PLACEHOLDER',
                      'SEC_USER_AGENT': 'Ordinary rehearsal fixture rehearsal@example.invalid'}
 LIVE_MODES = ('loopback', 'approved')
@@ -168,7 +199,7 @@ def main():
     settings = policy['configuration']['settings']
     if settings.get('threshold_filing_explanations_enabled', False) is not (profile is not None):
         return 2
-    if profile is None and scenario in {'threshold_filing_slow', 'threshold_filing_after_cutoff'}:
+    if profile is None and scenario in {'threshold_filing_slow', 'threshold_filing_after_cutoff', *PROCESSING_HOLD}:
         return 2
     if (mode == 'rehearsal' and (scenario not in SCENARIO_FAULTS or request.get('scenario') != scenario)
             or live and (scenario != mode or 'scenario' in request
@@ -295,6 +326,8 @@ def main():
             from app.services.providers import sec_provider
             boundary.settings = settings
             boundary.active()
+            if mode == 'rehearsal' and scenario in PROCESSING_HOLD:
+                install_processing_hold(scenario)
             for case in boundary.cases:
                 with case_scope(case['case_id']):
                     boundary.begin(case)

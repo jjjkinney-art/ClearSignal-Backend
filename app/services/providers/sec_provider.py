@@ -182,6 +182,32 @@ class SubmissionsUnavailable(Exception):
 _SUBMISSIONS_WAIT_SECONDS = 20
 
 
+class FilingTaskCancelled(BaseException):
+    """The request stopped waiting for this filing task, so it stops at its next checkpoint.
+
+    A BaseException so that no broad ``except Exception`` in the extractors can absorb
+    it and carry on. Nothing reads the result of a task the request abandoned.
+    """
+
+
+# Set only by the pilot harness, to time stages. Takes (task, stage, thread CPU ns).
+_filing_stage_observer = None
+
+
+def set_filing_stage_observer(observer) -> None:
+    global _filing_stage_observer
+    _filing_stage_observer = observer
+
+
+def _observe_filing_stage(task: str, stage: str) -> None:
+    observer = _filing_stage_observer
+    if observer is not None:
+        try:
+            observer(task, stage, time.thread_time_ns())
+        except Exception:
+            pass  # Timing never changes an outcome.
+
+
 class SubmissionsRequestScope:
     """One request's submissions responses, shared by its evidence stages.
 
@@ -200,11 +226,20 @@ class SubmissionsRequestScope:
         self.filing_read_failures = []
         self.filing_too_large = []  # the subset rejected by a size limit
         self.filing_forms = {}  # task -> the form of the filing it chose to read
+        self.cancelled_tasks = set()
         self.filing_parse_deadline = None  # time.monotonic() value, or no limit
 
     def note_filing_selected(self, task: str, form: str):
         with self._lock:
             self.filing_forms[task] = form
+
+    def cancel_tasks(self, tasks):
+        with self._lock:
+            self.cancelled_tasks.update(tasks)
+
+    def task_cancelled(self, task: str) -> bool:
+        with self._lock:
+            return task in self.cancelled_tasks
 
     def note_filing_read_failure(self, task: str, *, too_large: bool = False):
         with self._lock:
@@ -250,6 +285,22 @@ def note_filing_selected(task: str, form: str) -> None:
     scope = _submissions_scope.get()
     if scope is not None:
         scope.note_filing_selected(task, form)
+
+
+def filing_checkpoint(task: str, stage: str, *, observe: bool = True) -> None:
+    """Between processing stages: record the stage, and stop if the request gave up.
+
+    Does nothing outside a request that asks for it. Code between two checkpoints
+    cannot be interrupted, so a task can still outlive its abandonment by one stage.
+    """
+    scope = _submissions_scope.get()
+    if scope is None:
+        return
+    cancelled = scope.task_cancelled(task)
+    if observe or cancelled:
+        _observe_filing_stage(task, f'cancelled:{stage}' if cancelled else stage)
+    if cancelled:
+        raise FilingTaskCancelled(task)
 
 
 def note_filing_read_failure(task: str, *, too_large: bool = False) -> None:

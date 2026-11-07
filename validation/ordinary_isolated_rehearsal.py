@@ -18,6 +18,7 @@ import sys
 
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_native_export import export_packet, record_parent_stop
+from validation.ordinary_host_readings import HostReadings
 from validation.ordinary_native_ledger import create_fresh_output
 from validation.ordinary_native_policy import TEST_ONLY, ZERO_MODEL_PLACEHOLDER
 from validation.ordinary_pilot_contract import CASES, COHORT_FILE
@@ -27,7 +28,8 @@ from validation.pilot_policy import AUDITED_DEPENDENCIES
 ROOT = Path(__file__).resolve().parents[1]
 SCENARIOS = ('happy', 'wire_read_failure', 'wire_redirect', 'wire_oversize', 'wire_oversize_facts', 'wire_connect_failure',
              'core_deadline', 'threshold_deadline', 'evidence_abandoned',
-             'threshold_filing_slow', 'threshold_filing_after_cutoff')
+             'threshold_filing_slow', 'threshold_filing_after_cutoff',
+             'processing_cancelled', 'processing_cancelled_only_evidence', 'processing_uninterruptible')
 LOOPBACK_CONTACT = 'Ordinary loopback fixture loopback@example.invalid'
 
 
@@ -99,8 +101,9 @@ def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthe
         json.dump(request, stream, sort_keys=True)
     code = ('import sys; sys.path.insert(0, ' + repr(str(ROOT)) + '); '
             'from validation._ordinary_rehearsal_worker import main; raise SystemExit(main())')
-    child = supervise([sys.executable, '-I', '-B', '-c', code, scenario], output=output,
-                      environment={'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1', **environment})
+    with HostReadings(output) as host:
+        child = supervise([sys.executable, '-I', '-B', '-c', code, scenario], output=output,
+                          environment={'PATH': '/usr/bin:/bin', 'PYTHONDONTWRITEBYTECODE': '1', **environment})
     ledger = output / 'ledger.sqlite'
     result = {'mode': mode, 'execution_authorized': mode == 'approved',
               'synthetic_sec_backend': synthetic, 'supervisor': child, 'denominator': len(CASES),
@@ -116,6 +119,7 @@ def run_worker(output, policy, *, mode, scenario, environment, forbidden, synthe
     elif child['returncode']:
         record_parent_stop(ledger, 'rehearsal_failure')
     packet = export_packet(ledger, policy, forbidden_values=forbidden, synthetic=synthetic)
+    packet['host_readings'] = host.summary()
     worker = None
     report = output / 'worker.json'
     if not child['stop_reason'] and not child['returncode'] and report.is_file() and not report.is_symlink():

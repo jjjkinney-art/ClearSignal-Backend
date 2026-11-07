@@ -50,6 +50,8 @@ OUTPUT_INVENTORY = {
                      'receipts, answers, failures, halts',
     'ledger.sqlite-journal': 'transient SQLite rollback journal; absent after commit or parent rollback',
     'worker.json': 'worker report: counts, routing, pacing, diagnostics hash',
+    'host_readings.json': 'parent readings during the run: load, power, CPU limits and worker CPU, '
+                          'from launch to exit; no filing content',
     'packet.json': 'parent record of all twelve outcomes: the ledger export, or twelve not_run '
                    'outcomes when the worker stopped before creating its ledger',
     'isolated-home': 'empty HOME directory for the worker',
@@ -58,7 +60,8 @@ OUTPUT_INVENTORY = {
 }
 LEDGER_TABLES = ('attempts', 'cases', 'first_sec_refusal', 'first_transport_failure', 'native_dispatches',
                  'ordinary_answers', 'ordinary_case_times', 'ordinary_exchange_failures',
-                 'ordinary_responses', 'ordinary_run', 'ordinary_size_rejections', 'ordinary_stage_abandonments', 'ordinary_wire_entries', 'policy',
+                 'ordinary_responses', 'ordinary_run', 'ordinary_size_rejections', 'ordinary_stage_abandonments',
+                 'ordinary_stage_timings', 'ordinary_wire_entries', 'policy',
                  'sec_claims', 'stage_reservations')
 # Offline tests a reviewer can run for each derived property.
 ENFORCED_BY = (
@@ -87,6 +90,9 @@ PROFILE_ENFORCED_BY = (
     'tests/test_ordinary_contract_profile.py::test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered',
     'tests/test_ordinary_contract_profile.py::test_a_completed_insufficient_evidence_response_is_not_counted_as_content',
     'tests/test_ordinary_contract_profile.py::test_oversized_facts_are_not_a_filing_and_still_halt',
+    'tests/test_ordinary_contract_profile.py::test_cancellation_stops_processing_at_the_next_checkpoint',
+    'tests/test_ordinary_contract_profile.py::test_cancellation_leaving_nothing_to_answer_is_unanswered',
+    'tests/test_ordinary_contract_profile.py::test_an_uninterruptible_stage_keeps_the_safe_halt',
     'tests/test_ordinary_contract_profile.py::test_oversized_recovery_reaches_the_approved_outcome_record',
     'tests/test_ordinary_contract_profile.py::test_the_export_refuses_a_size_rejection_that_does_not_reconcile',
     'tests/test_ordinary_contract_profile.py::test_check_refuses_a_package_with_a_changed_profile',

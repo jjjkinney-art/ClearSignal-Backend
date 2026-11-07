@@ -340,17 +340,24 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
     statuses = [c['status'] for c in packet['cases']]
-    assert len(statuses) == 12 and statuses[FAULT_CASE_INDEX] == 'answered_degraded_unadjudicated'
+    # The application says whether anything was left to answer with once this evidence was gone.
+    fault_source = packet['answers'][CASES[FAULT_CASE_INDEX]]['response']['answer']['source_answer']
+    insufficient = fault_source['status'] == 'insufficient_claim_evidence'
+    degraded_statuses = {'answered_degraded_unadjudicated', 'unanswered_evidence_abandoned'}
+    assert len(statuses) == 12 and statuses[FAULT_CASE_INDEX] == (
+        'unanswered_evidence_abandoned' if insufficient else 'answered_degraded_unadjudicated')
     # Other cases are full answers, unless the application's own 10 s window
     # also expired for them under load; then they too are degraded, never failed.
     # A case the pinned frontend sends as general is unanswered, as in production.
     assert [s for s, case in zip(statuses, CASES) if case in UNRESOLVED] == ['identity_unresolved'] * len(UNRESOLVED)
     assert {s for s, case in zip(statuses, CASES) if case not in UNRESOLVED} <= {
-        'answered_unadjudicated', 'answered_degraded_unadjudicated'}
+        'answered_unadjudicated', *degraded_statuses}
     counts = packet['outcome_counts']
-    assert counts['unanswered'] == len(UNRESOLVED) and counts['operational_failure'] == 0
+    assert counts['unanswered'] == len(UNRESOLVED) + statuses.count('unanswered_evidence_abandoned')
+    assert counts['operational_failure'] == 0
     assert sum(counts.values()) == 12
-    assert counts['degraded_answer'] == statuses.count('answered_degraded_unadjudicated') >= 1
+    assert counts['degraded_answer'] == statuses.count('answered_degraded_unadjudicated')
+    assert sum(status in degraded_statuses for status in statuses) >= 1
     assert packet['quality_pass_rate'] is None  # a degraded answer is never a pass
     # Every request counted, within quota, with a terminal outcome; abandoned ones never retained.
     # A stage abandoned between reservation and wire entry leaves an attempt with no wire entry.
@@ -362,7 +369,7 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
         (a['case_id'], a['stage'], a['route']) for a in abandoned}
     assert all(a['failure'] == {'code': 'abandoned', 'detail': a['route']} and a['response'] is None
                for a in abandoned)
-    degraded_cases = {case for case, status in zip(CASES, statuses) if status == 'answered_degraded_unadjudicated'}
+    degraded_cases = {case for case, status in zip(CASES, statuses) if status in degraded_statuses}
     assert {a['case_id'] for a in abandoned} == degraded_cases
     assert {'case_id': CASES[FAULT_CASE_INDEX], 'stage': 'evidence.sec_metrics'} in worker['abandoned_evidence']
     assert worker['blocked_external_operations'] == [] and worker['unfinished_workers'] == 0

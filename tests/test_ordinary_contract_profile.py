@@ -570,6 +570,127 @@ def test_an_oversized_filing_in_the_threshold_case_is_recovered_too(tmp_path):
     assert rejections[0]['case_id'].endswith(':decision_threshold')
 
 
+def _timings(packet, case, task='thesis_disclosures'):
+    return [row for row in packet['stage_timings'] if row['case_id'] == case and row['task'] == task]
+
+
+def _case_started_after(output, case):
+    """(this case's start, the next case's start), from the ledger."""
+    with sqlite3.connect(output / 'ledger.sqlite') as db:
+        run_started, = db.execute('SELECT started_ns FROM ordinary_run').fetchone()
+        rows = db.execute('SELECT c.case_id,t.started_ns FROM ordinary_case_times t JOIN cases c ON c.id=t.case_run '
+                          'ORDER BY t.started_ns').fetchall()
+    starts = {c: (n - run_started) / 1e6 for c, n in rows}
+    following = CASES[CASES.index(case) + 1]
+    return starts[case], starts[following]
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_cancellation_stops_processing_at_the_next_checkpoint(tmp_path):
+    from validation.ordinary_isolated_rehearsal import run_rehearsal
+    case = CASES[FAULT_CASE_INDEX]
+    control = run_rehearsal(tmp_path / 'control', scenario='happy')['packet']
+    stages = [row['stage'] for row in _timings(control, case)]
+    assert 'competition_extracted' in stages and 'risks_selected' in stages and not any('cancelled' in s for s in stages)
+
+    result = run_rehearsal(tmp_path / 'run', scenario='processing_cancelled')
+    packet, worker = result['packet'], result['worker']
+    assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
+    assert worker['unfinished_workers'] == 0 and worker['failure_class'] is None
+    # Downloaded, then stopped at the first checkpoint after the 20 s wait ended.
+    rows = _timings(packet, case)
+    stages = [row['stage'] for row in rows]
+    assert stages[-1] == 'cancelled:competition_extracted' and stages.count('cancelled:competition_extracted') == 1
+    assert 'document_read' in stages and 'business_extracted' in stages
+    assert 'risks_selected' not in stages and 'context_extracted' not in stages
+    # The next case began only after the task had ended, and no deadline moved.
+    started, following = _case_started_after(tmp_path / 'run', case)
+    assert started < rows[-1]['offset_ms'] < following
+    assert rows[-1]['offset_ms'] - started < 30_000 and CASE_SECONDS == {'core_thesis': 30, 'decision_threshold': 20}
+    # Degraded, stated, and the abandoned evidence is not in the answer.
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert statuses[case] == 'answered_degraded_unadjudicated'
+    assert {'case_id': case, 'stage': 'evidence.thesis_disclosures'} in packet['abandoned_stages']
+    response = packet['answers'][case]['response']
+    source = response['answer']['source_answer']
+    # Cancelled after it chose the filing, so the notice names that report, not a generic one.
+    assert source['degraded'] is True and {'source': 'the annual report (Form 10-K)', 'task': 'thesis_disclosures',
+                                           'reason': 'time_limit'} in source['evidence_gaps']
+    notice = 'Incomplete answer: the annual report (Form 10-K) could not be read for this answer'
+    assert notice in json.dumps(response) and 'latest SEC filing' not in json.dumps(response)
+    assert 'Trying again may give a fuller answer' in json.dumps(response)  # A time limit may not recur.
+    marker = 'designs, manufactures and sells'
+    assert marker in json.dumps(control['answers'][case]['response']) and marker not in json.dumps(response)
+    # Every other case ran as usual.
+    assert sum(packet['outcome_counts'].values()) == 12 and packet['outcome_counts']['operational_failure'] == 0
+    assert statuses[CASES[FAULT_CASE_INDEX + 1]] == 'answered_unadjudicated'
+    assert packet['host_readings']['readings'] >= 2 and packet['host_readings']['first_offset_s'] < 2
+    readings = json.loads((tmp_path / 'run' / 'host_readings.json').read_text())
+    assert readings['readings'][-1]['offset_s'] > 22 and {'load1', 'cpu_speed_limit', 'worker_cpu_percent'} <= set(readings['readings'][0])
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_cancellation_leaving_nothing_to_answer_is_unanswered(tmp_path):
+    from validation.ordinary_isolated_rehearsal import run_rehearsal
+    case = CASES[FAULT_CASE_INDEX]
+    result = run_rehearsal(tmp_path / 'run', scenario='processing_cancelled_only_evidence')
+    packet = result['packet']
+    assert result['status'] == 'complete' and packet['halt'] is None
+    assert {'case_id': case, 'status': 'unanswered_evidence_abandoned'} in packet['cases']
+    assert {'case_id': case, 'content': 'insufficient_evidence'} in packet['answer_content']['cases']
+    source = packet['answers'][case]['response']['answer']['source_answer']
+    assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == [] and source['degraded'] is True
+    assert {'source': 'the annual report (Form 10-K)', 'task': 'thesis_disclosures',
+            'reason': 'time_limit'} in source['evidence_gaps']
+    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+    assert packet['outcome_counts']['operational_failure'] == 0
+    assert _timings(packet, case)[-1]['stage'] == 'cancelled:competition_extracted'
+    started, following = _case_started_after(tmp_path / 'run', case)
+    assert _timings(packet, case)[-1]['offset_ms'] < following
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_an_uninterruptible_stage_keeps_the_safe_halt(tmp_path):
+    """The limit of cooperative cancellation: a stage that never reaches a checkpoint
+    still halts the run rather than running on into the next case."""
+    from validation.ordinary_isolated_rehearsal import run_rehearsal
+    case = CASES[FAULT_CASE_INDEX]
+    result = run_rehearsal(tmp_path / 'run', scenario='processing_uninterruptible')
+    packet = result['packet']
+    assert result['status'] != 'complete' and packet['halt'] == 'stage_timeout'
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert statuses[case] == 'halted' and case not in packet['answers']
+    assert statuses[CASES[FAULT_CASE_INDEX + 1]] == 'not_run_after_halt'
+    # The ledger shows the last stage finished before the stall, and no next case.
+    stages = [row['stage'] for row in _timings(packet, case)]
+    assert stages[-1] == 'business_extracted' and not any('cancelled' in s for s in stages)
+    with sqlite3.connect(tmp_path / 'run' / 'ledger.sqlite') as db:
+        assert db.execute('SELECT COUNT(*) FROM cases').fetchone() == (FAULT_CASE_INDEX + 1,)
+    assert packet['host_readings']['readings'] >= 2
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_the_export_refuses_a_stage_timing_past_the_next_case(tmp_path):
+    from validation.ordinary_native_export import ExportRefused, export_packet
+    from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
+    from validation.ordinary_isolated_rehearsal import run_rehearsal
+    output = tmp_path / 'run'
+    run_rehearsal(output, scenario='happy')
+    policy = json.loads((output / 'request.json').read_text())['policy']
+    copy = tmp_path / 'late.sqlite'
+    copy.write_bytes((output / 'ledger.sqlite').read_bytes())
+    with sqlite3.connect(copy) as db:
+        first, = db.execute('SELECT c.id FROM cases c JOIN ordinary_case_times t ON t.case_run=c.id ORDER BY t.started_ns LIMIT 1').fetchone()
+        db.execute("INSERT INTO ordinary_stage_timings (case_run,task,stage,recorded_ns,thread_cpu_ns) "
+                   "SELECT ?, 'thesis_disclosures', 'risks_selected', MAX(started_ns)+1, 1 FROM ordinary_case_times", (first,))
+    with pytest.raises(ExportRefused):
+        export_packet(copy, policy, forbidden_values=tuple(REHEARSAL_RUNTIME.values()), synthetic=True)
+
+
 def _only_evidence_fault(kind, nth):
     from validation._ordinary_rehearsal_worker import _FAULT_CIK
     return _FAULT_CIK, (kind, rf'/Archives/edgar/data/{_FAULT_CIK}/[0-9]+/[a-z]+-20260630\.htm$', nth)
@@ -696,9 +817,10 @@ def test_a_ledger_from_before_the_split_exports_without_the_content_record(tmp_p
     copy.write_bytes((output / 'ledger.sqlite').read_bytes())
     with sqlite3.connect(copy) as db:
         db.execute('DROP TABLE ordinary_size_rejections')
+        db.execute('DROP TABLE ordinary_stage_timings')
     older = export_packet(copy, policy, forbidden_values=tuple(REHEARSAL_RUNTIME.values()),
                           synthetic=result['packet']['synthetic_sec_backend'])
-    new_fields = {'answer_content', 'size_rejections'}
+    new_fields = {'answer_content', 'size_rejections', 'stage_timings', 'host_readings'}  # host readings: parent only
     assert not new_fields & set(older)
     assert {key: value for key, value in result['packet'].items() if key not in new_fields} == older
 

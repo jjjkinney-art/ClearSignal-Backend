@@ -101,6 +101,11 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         size_rejections = {r[0]: r[1:] for r in db.execute(
             'SELECT attempt_id,case_run,stage,url,limit_bytes,declared_bytes,bytes_read,recorded_ns '
             'FROM ordinary_size_rejections')} if has_size_rejections else {}
+        # Absent from ledgers created before stages were timed.
+        has_stage_timings = bool(db.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='ordinary_stage_timings'").fetchone())
+        stage_timings = db.execute('SELECT case_run,task,stage,recorded_ns,thread_cpu_ns FROM ordinary_stage_timings '
+                                   'ORDER BY id').fetchall() if has_stage_timings else []
         first_transport = db.execute('SELECT attempt_id,route,stage,code FROM first_transport_failure WHERE id=1').fetchone()
         first_refusal = db.execute('SELECT attempt_id,route,stage,code FROM first_sec_refusal WHERE id=1').fetchone()
 
@@ -236,6 +241,17 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         abandoned_runs.add(run)
         abandoned_stages.append({'case_id': case_of[run], 'stage': stage})
 
+    # Every timed stage ended inside its own case: nothing ran on into the next one.
+    timing_records = []
+    for run, task, stage, recorded, cpu in stage_timings:
+        later = [row[3] for row in cases if run in case_start and row[3] > case_start[run]]
+        if (run not in case_start or type(recorded) is not int or type(cpu) is not int
+                or recorded < case_start[run] or (later and recorded >= min(later))):
+            raise ExportRefused('stage timing outside its recorded case')
+        timing_records.append({'case_id': case_of[run], 'task': task, 'stage': stage,
+                               'offset_ms': round((recorded - run_started) / 1e6, 3),
+                               'thread_cpu_ms': round(cpu / 1e6, 3)})
+
     # An answer that declares itself degraded must have the matching durable
     # record. Answers of consumed runs never declare it, so they are unaffected.
     recorded_stages = {(row['case_id'], row['stage']) for row in abandoned_stages}
@@ -262,15 +278,19 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             unresolved = payload.get('company') == ''
             status = ('identity_unresolved' if unresolved else
                       'unanswered_size_rejected' if row[0] in rejected_runs and _insufficient(payload) else
+                      'unanswered_evidence_abandoned' if (has_stage_timings and row[0] in abandoned_runs
+                                                          and _insufficient(payload)) else
                       'answered_degraded_unadjudicated' if row[0] in abandoned_runs | rejected_runs
                       else 'answered_unadjudicated')
         else:
             status = 'halted'
         outcomes.append({'case_id': case_id, 'status': status})
     complete = not halted and all(o['status'] in {'answered_unadjudicated', 'answered_degraded_unadjudicated',
-                                                  'identity_unresolved', 'unanswered_size_rejected'} for o in outcomes)
+                                                  'identity_unresolved', 'unanswered_size_rejected',
+                                                  'unanswered_evidence_abandoned'} for o in outcomes)
     kinds = {'answered_unadjudicated': 'full_answer', 'answered_degraded_unadjudicated': 'degraded_answer',
-             'identity_unresolved': 'unanswered', 'unanswered_size_rejected': 'unanswered'}
+             'identity_unresolved': 'unanswered', 'unanswered_size_rejected': 'unanswered',
+             'unanswered_evidence_abandoned': 'unanswered'}
     outcome_counts = Counter(kinds.get(o['status'], 'operational_failure') for o in outcomes)
     # New ledgers only, so a consumed run's export stays exactly as it was. Its names
     # predate this split: 'answered_unadjudicated' and 'full_answer' mean a case finished
@@ -295,7 +315,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             'answers': {answers[run][0]: {'sha256': answers[run][1], 'response': json.loads(answers[run][2])}
                         for run in answers},
             'attempts': records, 'attempt_count': len(records), 'abandoned_stages': abandoned_stages,
-            **content,
+            **content, **({'stage_timings': timing_records} if has_stage_timings else {}),
             'retained_body_bytes': aggregate, 'wire_entries': len(entries_seen),
             'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False,
             'invoice_ceiling_verified': False}
