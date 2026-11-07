@@ -152,6 +152,15 @@ def discover_company(value: str, *, question_text: bool = False, as_of=None) -> 
                 if width == 1 and (len(key) < 5 or key.upper() in excluded or key in _CONTEXT_WORDS):
                     continue
                 found = directory.names.get(key, [])
+                if not found and width > 1:
+                    # Windows are already normalised words, so name_key differs
+                    # only by removing a trailing legal form. That explicit form
+                    # ("NN Inc") makes a short registrant name exact; the bare
+                    # word ("nn") never qualifies.
+                    legal = name_key(key)
+                    if legal != key and not (" " not in legal and (
+                            legal.upper() in excluded or legal in _CONTEXT_WORDS)):
+                        found = directory.names.get(legal, [])
                 if found:
                     name_spans.append((words[start].start(), words[start + width - 1].end()))
                     for item in found:
