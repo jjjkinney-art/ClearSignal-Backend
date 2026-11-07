@@ -1143,3 +1143,22 @@ def test_risk_display_retains_substantive_conditions_and_internal_qualifiers(con
     result = _risk_monitoring_inference(dict(quote=f'{condition} could adversely affect our manufacturing operations.',
         scope='Supply chain'), 'E1')
     assert result['display_condition'] == condition == result['condition']
+
+
+@pytest.mark.parametrize('quote, reason', [
+    ('We offer the following energy drinks under the Fury product line: Gold Strike and Mango Mayhem and others.', 'product_catalog'),
+    ('We offer a number of brands under the Wasatch brand family including Apricot Hefeweizen and others.', 'product_catalog'),
+    ('We offer a wide array of benefits including comprehensive health and welfare insurance; generous time-off and leave; and retirement programs.', 'internal_employee_activity'),
+    ('We offer benefits programs that are designed to be competitive within local markets and compliant with applicable laws.', 'internal_employee_activity'),
+    ('We provide emotional, physical, legal and financial well-being services through our Employee Assistance Program.', 'internal_employee_activity'),
+])
+def test_catalogs_and_employee_benefits_are_not_business_descriptions(quote, reason):
+    assert service._business_quote_rejection(quote) == reason
+
+
+@pytest.mark.parametrize('quote', [
+    'Our Monster Energy Drinks segment primarily generates net operating revenues by selling ready-to-drink packaged drinks to bottlers.',
+    'The Corporation operates data center facilities and sells colocation services to enterprise customers.',
+])
+def test_segment_revenue_models_and_a_corporation_subject_describe_the_business(quote):
+    assert service._business_quote_rejection(quote) is None

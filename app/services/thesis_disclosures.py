@@ -28,18 +28,18 @@ _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"creating long[- ]term value|strong returns|profitably|"
     r"high[- ]quality|cost[- ]effective)\b", re.I)
 _CURRENT_BUSINESS_PREDICATE = re.compile(
-    r"^(?:We|Our company|The company|The firm)\s+"
+    r"^(?:We|Our company|The company|The corporation|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
     r"distributes?|delivers?|produces?|markets?|offers?|"
     r"(?:are|is) (?:a|an) (?:manufacturer|provider|producer|distributor|"
     r"operator|developer|retailer))\b|"
-    r"^(?:Our company|The company|The firm)['\u2019]s\s+"
+    r"^(?:Our company|The company|The corporation|The firm)['\u2019]s\s+"
     r"(?:operations|business|(?:line|range|portfolio) of [^.]{1,100})\s+"
     r"(?:(?:are|is) (?:comprised of|organized into)|"
     r"includes?|comprises?|consists? of)\b", re.I)
 _CURRENT_REVENUE_MODEL = re.compile(
-    r"^(?:We|Our company|The company|The firm)\s+"
+    r"^(?:We|Our company|The company|The corporation|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"generates? revenue (?:primarily |principally )?from\s+"
     r"(?:sales of (?:subscriptions|(?:our )?products|services)|"
@@ -60,12 +60,12 @@ _NAMED_ISSUER_ACTIVITY = re.compile(
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
     r"distributes?|delivers?|produces?|markets?|offers?|enables?)\b", re.I)
 _CURRENT_SEGMENT_STRUCTURE = re.compile(
-    r"^(?:Our company|The company|The firm)['\u2019]s\s+"
+    r"^(?:Our company|The company|The corporation|The firm)['\u2019]s\s+"
     r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
     r"(?:is|are)\s+(?!expected\b|planned\b|proposed\b|potential\b|intended\b)", re.I)
 _NAMED_SEGMENT_STRUCTURE = re.compile(
     r"^(?:For management reporting purposes,\s+)?"
-    r"(?:We|Our company|The company|The firm)\s+(?:has|have)\s+"
+    r"(?:We|Our company|The company|The corporation|The firm)\s+(?:has|have)\s+"
     r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+"
     r"reportable business segments?\s*[\u2013\u2014:-]\s+"
     # Require spelled-out names, rather than interpreting unfamiliar acronyms.
@@ -97,7 +97,7 @@ _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
     # capital, not a product, customer or revenue activity.
     r"\bprovides?\s+(?:our\s+|its\s+)?(?:employees|staff|workforce)\b|"
     r"\b(?:employee\s+)?wellness\s+programs?\b|"
-    r"^(?:We|Our company|The company|The firm)\s+"
+    r"^(?:We|Our company|The company|The corporation|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"offers?\s+(?:our\s+)?(?:employees|staff|workforce)\s+"
     r"(?:(?:a|an|the)\s+(?:[a-z-]+\s+){0,3})?"
@@ -191,6 +191,18 @@ def _customer_purpose_activity(quote):
     return bool(lead and _CURRENT_BUSINESS_PREDICATE.match(quote[lead.end():]))
 
 
+# A list of flavors or brands in one line says what a line contains, not what the business does.
+_PRODUCT_CATALOG = re.compile(
+    r"(?:We|The company|The corporation) offers? (?:the following|a number of)\b.*\b"
+    r"(?:product lines?|brand famil(?:y|ies)|brands?|flavors?)\b", re.I)
+_EMPLOYEE_BENEFITS = re.compile(
+    r"\b(?:benefits? (?:programs?|packages?)|array of benefits|health and welfare|employee assistance program)\b", re.I)
+# How a named segment earns its revenue is a description of the business model.
+_SEGMENT_REVENUE_MODEL = re.compile(
+    r"(?:Our|The company['\u2019]s|The corporation['\u2019]s)\s+[^.]{1,80}?\bsegment\s+(?:primarily\s+)?"
+    r"generates\s+(?:net\s+)?(?:operating\s+)?revenues?\s+(?:primarily\s+)?(?:by|from)\s", re.I)
+
+
 def _business_quote_rejection(quote):
     # Exact complete, short qualitative sentences only. Numbers, forecasts and
     # mixed operational/aspirational prose do not become business-model facts.
@@ -207,6 +219,10 @@ def _business_quote_rejection(quote):
     # What the business does not depend on, or which rights it holds, is not a
     # description of what it does ("… segments are not dependent upon any
     # individual patents … licenses or distribution rights").
+    if _PRODUCT_CATALOG.match(quote):
+        return "product_catalog"
+    if _EMPLOYEE_BENEFITS.search(quote):
+        return "internal_employee_activity"
     if _NEGATED_OR_RIGHTS_ONLY.search(quote) or (
             _RIGHTS.search(quote) and not _BUSINESS_ACTIVITY.search(quote)):
         return "not_a_business_description"
@@ -223,6 +239,7 @@ def _business_quote_rejection(quote):
     if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
              or _customer_purpose_activity(quote)
              or _CURRENT_REVENUE_MODEL.match(quote)
+             or _SEGMENT_REVENUE_MODEL.match(quote)
              or _CURRENT_PRODUCT_DISTRIBUTION.fullmatch(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
              or _NAMED_SEGMENT_COMPOSITION.fullmatch(quote)
@@ -279,7 +296,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         # only an explicit shared heading prefix; retain the entire sentence.
         heading = _BUSINESS_HEADING_PREFIX.match(quote)
         after_heading = quote[heading.end():] if heading else ""
-        if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The firm)\b", after_heading, re.I)
+        if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The corporation|The firm)\b", after_heading, re.I)
                         or _customer_purpose_activity(after_heading)
                         or _named_issuer_quote(after_heading, ticker=ticker, cik=cik)):
             left += heading.end()

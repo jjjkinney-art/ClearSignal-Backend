@@ -6,10 +6,30 @@ import re
 from .financial_thesis_foundation import build_financial_foundation
 
 
+# Exactly what a decision threshold would need and SEC filings do not supply. Stated instead of a number.
+MISSING_THRESHOLD_INPUTS = [
+    {'decision': 'Valuation boundary',
+     'missing': 'a dated share price and share count, and a valuation multiple or discount rate with its stated basis'},
+    {'decision': 'Expected return',
+     'missing': 'a dated entry price, a forecast of earnings or cash flow with its assumptions, and a holding period'},
+    {'decision': 'Investment cutoff', 'missing': "the investor's own required return and risk limit"},
+    {'decision': 'Operating KPI breakpoint or quantified earnings impact',
+     'missing': 'reported KPI history and a stated, reproducible link from that KPI to earnings'},
+]
+
+
+def render_missing_threshold_inputs():
+    return ('\n\nNot a decision threshold\nThe figures above are historical baselines for monitoring. '
+            'A decision threshold needs inputs this evidence does not contain, so none is stated:\n'
+            + '\n'.join(f"- {row['decision']}: needs {row['missing']}." for row in MISSING_THRESHOLD_INPUTS))
+
+
 def build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     result = _build_decision_monitoring(ticker, items, references, expected_cik=expected_cik)
     if result is None:
         return None
+    result['answer'] += render_missing_threshold_inputs()
+    result['missing_threshold_inputs'] = MISSING_THRESHOLD_INPUTS
     coverage = _newer_filing_coverage(result['foundation'], items, references)
     if coverage:
         result['reporting_period_coverage'] = coverage
@@ -138,7 +158,8 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
             'formula': row['formula'],
             'inputs': row['current'],
             'reference_ids': row['reference_ids'],
-            'condition': 'Compare the margin for the corresponding period one year later with this historical baseline.',
+            'condition': ('Monitoring condition: the margin for the corresponding period one year later is below '
+                          f"{Decimal(row['current']['margin_percent']):.2f}%, on the same scope, currency and duration."),
             'limitation': 'This is a monitoring benchmark, not a buy/sell boundary, forecast or materiality threshold.',
         })
     answer = 'Evidence-backed financial monitoring (partial)\n\n'
@@ -147,8 +168,9 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
     answer += '\n\nMonitoring criteria\n' + '\n'.join(
         f"- Historical baseline, not an investment threshold: operating margin of "
         f"{Decimal(row['current']['margin_percent']):.2f}% for {row['current']['period_start']} to "
-        f"{row['current']['period_end']}. A lower margin for the corresponding period one year later, on the "
-        "same consolidated scope, currency and duration, would "
+        f"{row['current']['period_end']}. Monitoring condition: if the margin for the corresponding period one "
+        f"year later is below {Decimal(row['current']['margin_percent']):.2f}%, on the same consolidated scope, "
+        "currency and duration, that would "
         + ("mean a larger operating loss relative to revenue and weaken any recovery assumption"
            if Decimal(row['current']['margin_percent']) <= 0 else "weaken the profitability assumption")
         + "; it would not by itself make the company unattractive. "

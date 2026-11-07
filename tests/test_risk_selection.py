@@ -74,3 +74,24 @@ def test_employee_programs_are_not_business_descriptions():
         == 'internal_employee_activity'
     assert _business_quote_rejection('We sell refined corn oil (from germ) to packers of cooking oil and to producers '
                                      'of margarine, salad dressings and other foods.') is None
+
+
+import pytest  # noqa: E402
+
+
+@pytest.mark.parametrize('quote, reason', [
+    ('We conduct substantially all of our operations through our indirect, wholly-owned subsidiaries in the United States.', 'corporate_structure'),
+    ('The Corporation’s success is largely dependent on the performance of the Corporation’s management and executive officers.', 'generic_key_person'),
+    ('If any such risks actually occur, our business could be materially adversely affected.', 'risk_factor_preamble'),
+    ('The occurrence of any of the foregoing risks may have a material adverse effect on us.', 'risk_factor_preamble'),
+])
+def test_structure_key_person_and_summary_sentences_are_not_company_risks(quote, reason):
+    from app.services.risk_selection import rejection
+    assert rejection(quote) == reason
+
+
+def test_a_dependence_on_a_named_partner_or_customers_still_qualifies():
+    from app.services.risk_selection import qualifies, rejection
+    for quote in ('The Company and TCCC have extensive commercial arrangements and, as a result, the Company’s future performance is substantially dependent on the success of its relationship with TCCC.',
+                  'We depend on a limited number of customers for a substantial portion of our revenue.'):
+        assert rejection(quote) is None and qualifies(quote)

@@ -52,7 +52,7 @@ class _MetricWords(dict):
 
 
 METRIC_WORDS = _MetricWords({
-    'revenue': r'\b(?:net sales|total revenues|revenues?)\b',
+    'revenue': r'\b(?:net sales|total revenues|revenues?)\b|^Sales\b',
     'operating income': r'(?:\boperating (?:income|profit)\b(?! margin)|\b(?:income|loss) from operations\b)',
     'net income': r'\bnet (?:income|earnings)\b',
     # Total non-operating income (us-gaap:NonoperatingIncomeExpense); many
@@ -399,6 +399,22 @@ def cause_excerpt(following):
     return following[:cuts[-1]] if cuts else None
 
 
+_RESTATED_METRIC = re.compile(
+    r'((?:net |total )?(?:sales|revenues?)|operating (?:income|profit)|net (?:income|earnings)) '
+    r'(increased|decreased|rose|fell|declined|grew)\s+(?:primarily |mainly |largely |principally )?'
+    r'(?:due to|driven by|attributable to|as a result of|because of)\b', re.I)
+
+
+def _restated_metric(sentence, following):
+    """A next sentence that only gives the cause, opening with this sentence's own metric:
+    "Net sales increased primarily due to …". One stating its own amounts binds by itself."""
+    match = _RESTATED_METRIC.match(following)
+    if not match or not re.match(r'(?:the |our )?' + re.escape(match.group(1)) + r'\b', sentence, re.I):
+        return None
+    return re.match(r'(?:(?:net |total )?(?:sales|revenues?)|operating (?:income|profit)|net (?:income|earnings)) '
+                    r'(increased|decreased|rose|fell|declined|grew)\b', following, re.I)
+
+
 def following_cause(sentence, following, period):
     """Whether the next sentence explains this sentence's own stated change.
 
@@ -409,14 +425,14 @@ def following_cause(sentence, following, period):
     following = cause_excerpt(following)
     if not following or cause_match(sentence):
         return False
-    anaphor, cause = _ANAPHOR.match(following), cause_match(following)
+    anaphor, cause = _ANAPHOR.match(following) or _restated_metric(sentence, following), cause_match(following)
     direction = stated_direction(sentence)
     if not anaphor or not cause or cause.start() < anaphor.end() or direction is None:
         return False
     word = anaphor.group(1).lower()
-    if word.startswith(('increase', 'improvement', 'growth')) and direction != 'up':
+    if word.startswith(('increase', 'rose', 'grew', 'improvement', 'growth')) and direction != 'up':
         return False
-    if word.startswith(('decrease', 'decline', 'reduction', 'deterioration')) and direction != 'down':
+    if word.startswith(('decrease', 'decline', 'fell', 'reduction', 'deterioration')) and direction != 'down':
         return False
     restated = _amounts(following[:anaphor.end()])
     if restated and not all(any(_close(value, half, other) for other, _ in _amounts(sentence)) for value, half in restated):

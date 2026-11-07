@@ -52,3 +52,11 @@ def test_response_preserves_benchmark_but_never_model_investment_boundaries(monk
         assert result['monitoring_benchmarks'][0]['benchmark_percent'] == '20.0'
         assert not thesis.decision_thresholds and not thesis.threshold_zones
         assert not thesis.bull_thesis and thesis.confidence_score == 0
+
+
+def test_missing_threshold_inputs_name_what_is_needed_and_no_number():
+    from app.services.decision_monitoring_evidence import MISSING_THRESHOLD_INPUTS, render_missing_threshold_inputs
+    text = render_missing_threshold_inputs()
+    assert 'Not a decision threshold' in text and 'historical baselines' in text and 'none is stated' in text
+    assert {row['decision'] for row in MISSING_THRESHOLD_INPUTS} >= {'Valuation boundary', 'Expected return', 'Investment cutoff'}
+    assert not any(character.isdigit() for character in text)

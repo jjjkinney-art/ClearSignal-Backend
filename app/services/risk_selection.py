@@ -15,7 +15,13 @@ import re
 # About the section, not a risk: "the events discussed in these risk factors …".
 _PREAMBLE = re.compile(
     r"\b(?:these|the|such|our) risk factors\b|\brisks? (?:discussed|described|set forth|identified) "
-    r"(?:below|above|herein|in this)\b|\b(?:discussed|described) (?:below|above)\b", re.I)
+    r"(?:below|above|herein|in this)\b|\b(?:discussed|described) (?:below|above)\b"
+    r"|\bif any (?:of )?(?:such|these|those|the foregoing) risks\b|\b(?:any|each) of the foregoing risks\b", re.I)
+# How a holding company is organized, not a risk to its operations.
+_CORPORATE_STRUCTURE = re.compile(
+    r"\b(?:operations|business) through (?:our|its) (?:\w+[, -]+){0,4}subsidiaries\b", re.I)
+# Any issuer depends on its management; this says nothing particular to one.
+_KEY_PERSON = re.compile(r"\bdependent (?:up)?on [^.]{0,60}?\b(?:management|executive officers|key personnel)\b", re.I)
 _BULLET = re.compile(r"•")
 # Generic macro hazards; four or more distinct ones make a catch-all list.
 _HAZARDS = {
@@ -68,6 +74,10 @@ def rejection(quote):
         return 'risk_factor_preamble'
     if len(_BULLET.findall(quote)) >= 2:
         return 'bullet_summary'
+    if _CORPORATE_STRUCTURE.search(quote):
+        return 'corporate_structure'
+    if _KEY_PERSON.search(quote):
+        return 'generic_key_person'
     if run_in_heading(quote):
         return 'run_in_heading'
     if hazard_count(quote) >= 4:

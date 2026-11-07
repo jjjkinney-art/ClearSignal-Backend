@@ -186,10 +186,10 @@ def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | No
 # begins (a capitalized word followed by a lowercase one), with an optional bullet.
 _HEADING_WORD = r"(?:[A-Z][A-Za-z,&\-]*|the|of|and|to|in|for|our|an?|with)"
 RUN_IN_RISK_HEADING = re.compile(
-    r"^(?:[A-Z][A-Za-z,&\-]*\s+){0,4}(?:Risks?|Risk Factors)"
+    r"^(?:(?:[A-Z][A-Za-z,&\-]*|and)\s+){0,9}(?:Risks?|Risk Factors)"
     r"(?:\s+(?:[Rr]elat(?:ed|ing)|[Aa]ssociated|[Pp]ertaining|[Ss]pecific)\s+(?:to|[Ww]ith)(?:\s+" + _HEADING_WORD + r"){1,10})?"
     # The sentence starts here, never inside the heading ("Risks Specific to …").
-    r"\s*(?:•\s*)?(?!(?:Related|Relating|Associated|Pertaining|Specific)\b)(?=[A-Z][a-z]+\s+[a-z])")
+    r"\s*(?:[•●]\s*(?=[A-Z])|(?!(?:Related|Relating|Associated|Pertaining|Specific)\b)(?=[A-Z][a-z]+\s+[a-z]))")
 
 
 def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, ...]:

@@ -245,6 +245,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             return {'status': 'partial', 'claims': foundation['claims'],
                     'reason': 'Rebuilt financial monitoring evidence; investment boundaries remain unverified.',
                     'monitoring_benchmarks': monitoring['benchmarks'],
+                    'missing_threshold_inputs': monitoring['missing_threshold_inputs'],
                     'reporting_period_coverage': monitoring.get('reporting_period_coverage'),
                     'inferences': monitoring['calculations'],
                     'unanswered_parts': monitoring.get('unanswered_parts', []) + ['valuation decision boundaries', 'expected returns',
@@ -257,6 +258,9 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
             "scenario assumptions and a reproducible calculation tied to those inputs. "
             "No numerical investment boundary or attractiveness conclusion is verified."
         )
+        from .decision_monitoring_evidence import MISSING_THRESHOLD_INPUTS, render_missing_threshold_inputs
+        answer += render_missing_threshold_inputs().replace(
+            'The figures above are historical baselines for monitoring. ', '')
         _restrict_evidence_thesis(thesis, answer, [], [], enough=False,
                                  scope="Decision threshold")
         # Confidence retained for ordinary evidence views must not communicate
@@ -265,6 +269,7 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
         thesis.score_source = "not_assessed_evidence_view"
         thesis.conviction_dimensions = {}
         return {"status": "insufficient_claim_evidence", "claims": [],
+                "missing_threshold_inputs": MISSING_THRESHOLD_INPUTS,
                 "reason": "No validated producer-bound decision-threshold derivation is available.",
                 "unanswered_parts": ["numerical decision thresholds", "valuation and expected returns",
                                      "quantified earnings impact"]}

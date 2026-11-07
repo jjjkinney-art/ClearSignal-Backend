@@ -118,3 +118,23 @@ def test_material_same_direction_non_operating_swings_get_a_bridge():
     assert 'Net income moved $0.0M while operating income moved $0.0M: non-operating income (expense) went from' in rendered
     assert 'No stated cause was bound to these figures' in rendered
     assert 'Its change exceeded the change in operating income' in cpe.monitoring_criteria(value)[0]
+
+
+def test_a_next_sentence_restating_the_metric_gives_the_cause():
+    from app.services.current_period_explanation import following_cause
+    period = {'current_start': '2026-07-01', 'current_end': '2026-09-30', 'prior_start': '2025-07-01', 'prior_end': '2025-09-30'}
+    sentence = 'Net sales were $2.56 billion for the three-months ended September 30, 2026, an increase of approximately $365.9 million.'
+    assert following_cause(sentence, 'Net sales increased primarily due to increased consumer demand.', period)
+    # The wrong direction, another metric, or a sentence with its own amounts does not.
+    assert not following_cause(sentence, 'Net sales decreased primarily due to lower demand.', period)
+    assert not following_cause(sentence, 'Operating income increased primarily due to lower costs.', period)
+    assert not following_cause(sentence, 'Net sales increased by $27.2 million, primarily due to demand.', period)
+
+
+def test_a_sentence_opening_with_sales_names_revenue():
+    from app.services.current_period_explanation import bind_statement
+    metrics = {'revenue': {'current': 87466000, 'prior': 92086000}}
+    sentence = 'Sales for the three months ended July 31, 2026 decreased by approximately $4.6 million or 5.0%, compared to the prior year.'
+    assert bind_statement(sentence, metrics) == {'metric': 'revenue', 'basis': 'stated change'}
+    # "Sales" mid-sentence is often another scope and still does not name revenue.
+    assert bind_statement('Direct sales for the quarter decreased by approximately $4.6 million.', metrics) is None
