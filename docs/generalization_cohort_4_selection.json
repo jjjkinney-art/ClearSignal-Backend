@@ -1,0 +1,76 @@
+{
+ "seed": "clearsignal-generalization-4:",
+ "buckets": [
+  [
+   "mid",
+   1001,
+   2500
+  ],
+  [
+   "small",
+   2501,
+   5000
+  ],
+  [
+   "micro",
+   5001,
+   9000
+  ]
+ ],
+ "per_bucket": 2,
+ "code_commit": "5410eebcd24800943be7425ddc4401f7f7a817a5",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "directory_rows": 10409,
+ "excluded_prior_cohort_or_retained": 24,
+ "excluded_code_mentions": 779,
+ "cohort": [
+  {
+   "bucket": "mid",
+   "position": 1510,
+   "ticker": "CNK",
+   "cik": 1385280,
+   "sec_name": "Cinemark Holdings, Inc.",
+   "rank": "000b6004f917780802ec1f53a07346f11c356ffc6a9337f5f5ee7e4ff99c5e15"
+  },
+  {
+   "bucket": "mid",
+   "position": 2002,
+   "ticker": "COHU",
+   "cik": 21535,
+   "sec_name": "COHU INC",
+   "rank": "00835c06eb2beb6c6fb5841109e372f3a002b8ed90f1f63327a7a4fe88cc12bd"
+  },
+  {
+   "bucket": "small",
+   "position": 2577,
+   "ticker": "TRIP",
+   "cik": 1526520,
+   "sec_name": "TripAdvisor, Inc.",
+   "rank": "0015c6eaf3e48964eefa61bc9f09b09f6415cb70b46d46ab78ed758d889abeb7"
+  },
+  {
+   "bucket": "small",
+   "position": 2989,
+   "ticker": "LXRX",
+   "cik": 1062822,
+   "sec_name": "LEXICON PHARMACEUTICALS, INC.",
+   "rank": "0017c879af41dfc97cc67db90734960a5eedf3b883ff7b75b343e8f0e2e21f77"
+  },
+  {
+   "bucket": "micro",
+   "position": 7441,
+   "ticker": "MRX",
+   "cik": 1997464,
+   "sec_name": "Marex Group Ltd",
+   "rank": "0014e5e30c7d83ec795e30cd006115b145ef55a4ae9a5e9c69fade5faeb7e6d3"
+  },
+  {
+   "bucket": "micro",
+   "position": 5479,
+   "ticker": "DCGO",
+   "cik": 1822359,
+   "sec_name": "DocGo Inc.",
+   "rank": "0020985a7d2ba467197d05c3f630ff884a9f6cd180b95c8f820fe44c96a6a39d"
+  }
+ ]
+}
