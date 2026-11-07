@@ -11,6 +11,8 @@ from xml.etree import ElementTree as ET
 
 XBRLI = 'http://www.xbrl.org/2003/instance'
 IX = 'http://www.xbrl.org/2013/inlineXBRL'
+XBRLDI = 'http://xbrl.org/2006/xbrldi'
+_SRT = re.compile(r'https?://fasb\.org/srt/20\d{2}(?:-\d{2}-\d{2})?\Z')
 USD = 'http://www.xbrl.org/2003/iso4217'
 _ID = re.compile(r'[A-Za-z_][A-Za-z0-9_.-]{0,199}\Z')
 _GAAP = re.compile(r'https?://(?:fasb\.org|xbrl\.us)/us-gaap/20\d{2}(?:-\d{2}-\d{2})?\Z')
@@ -95,8 +97,12 @@ class _InlineTarget:
     There is no document tree or namespace index for unrelated display markup.
     All IDs are checked through EOF so a later duplicate still rejects a fact.
     """
-    def __init__(self, concepts):
+    def __init__(self, concepts, *, product_members=False):
         self.concepts = frozenset(concepts)
+        # Opt-in: contexts with exactly one srt:ProductOrServiceAxis member
+        # (a disaggregation of the concept by product or service). Off by
+        # default, so ordinary callers never see dimensional facts.
+        self.product_members = product_members
         self.stack, self.pending, self.scope = [], [], {}
         self.ids, self.duplicates = set(), set()
         self.contexts, self.units, self.facts = {}, {}, []
@@ -154,7 +160,7 @@ class _InlineTarget:
             if not self.resource_invalid:
                 if self.stack and element is not self.resource:
                     self.stack[-1]['element'].append(element)
-                if tag == f'{{{XBRLI}}}measure':
+                if tag in (f'{{{XBRLI}}}measure', f'{{{XBRLDI}}}explicitMember'):
                     self.resource_namespaces[id(element)] = self.scope
         self.stack.append(frame)
 
@@ -163,8 +169,11 @@ class _InlineTarget:
             return
         frame = self.stack[-1]
         element = frame['element']
-        if (element is None or frame['text_overflow'] or
-                frame['tag'] not in _TEXT_FIELDS):
+        # Member text is collected only in the opt-in product-member mode; other
+        # parsers built on this target handle dimensional members themselves.
+        if (element is None or frame['text_overflow'] or (
+                frame['tag'] not in _TEXT_FIELDS
+                and not (self.product_members and frame['tag'] == f'{{{XBRLDI}}}explicitMember'))):
             return
         if len(element.text or '') + len(text) > MAX_FIELD_CHARS:
             frame['text_overflow'] = True
@@ -180,8 +189,15 @@ class _InlineTarget:
         if element.tag == f'{{{XBRLI}}}context':
             entity = element.find(f'{{{XBRLI}}}entity')
             period = element.find(f'{{{XBRLI}}}period')
+            member = None
+            if self.product_members and entity is not None and len(entity) == 2:
+                member = self._product_member(entity.find(f'{{{XBRLI}}}segment'))
+                if member is None:
+                    return
+            elif self.product_members:
+                return  # member mode returns only member facts
             if (entity is None or period is None or len(element) != 2
-                    or len(entity) != 1 or len(period) != 2):
+                    or len(entity) != (2 if member else 1) or len(period) != 2):
                 return
             identifier = entity.find(f'{{{XBRLI}}}identifier')
             start = period.find(f'{{{XBRLI}}}startDate')
@@ -194,6 +210,8 @@ class _InlineTarget:
             if (len(values['entity_identifier']) > 10 or len(values['start']) != 10
                     or len(values['end']) != 10):
                 return
+            if member:
+                values.update(member_namespace=member[0], member=member[1])
             self.contexts[key] = values
         else:
             measure = element.find(f'{{{XBRLI}}}measure')
@@ -203,6 +221,21 @@ class _InlineTarget:
                                      (measure.text or '').strip())
             if unit == 'USD' and namespace == USD:
                 self.units[key] = dict(unit_namespace=namespace, unit=unit)
+
+    def _product_member(self, segment):
+        """(namespace, local name) of the one srt:ProductOrServiceAxis member, or None."""
+        if segment is None or len(segment) != 1:
+            return None
+        explicit = segment[0]
+        if explicit.tag != f'{{{XBRLDI}}}explicitMember' or len(explicit):
+            return None
+        scope = self.resource_namespaces.get(id(explicit), {})
+        dimension = _qname(scope, explicit.get('dimension'))
+        member = _qname(scope, (explicit.text or '').strip())
+        if (not _SRT.fullmatch(dimension[0]) or dimension[1] != 'ProductOrServiceAxis'
+                or not member[0] or not re.fullmatch(r'[A-Za-z][A-Za-z0-9]{0,150}Member', member[1])):
+            return None
+        return member
 
     def _fact(self, frame):
         fact = frame['element']
@@ -244,11 +277,33 @@ class _InlineTarget:
         return self
 
 
-def parse_inline_observations(text, *, cik, concepts):
+def validated_member_observation(value, *, cik, concepts):
+    """The amount of a product-or-service member fact, rechecked like a consolidated one."""
+    if (not isinstance(value, dict) or value.get('scope') != 'product_or_service'
+            or not isinstance(value.get('member'), str)
+            or not re.fullmatch(r'[A-Za-z][A-Za-z0-9]{0,150}Member', value['member'])
+            or not isinstance(value.get('member_namespace'), str) or not value['member_namespace']):
+        return None
+    return validated_observation({**value, 'scope': 'consolidated'}, cik=cik, concepts=concepts)
+
+
+def parse_member_observations(text, *, cik, concepts):
+    """Facts disaggregated by exactly one srt:ProductOrServiceAxis member.
+
+    Each is validated exactly as a consolidated fact, then marked
+    scope='product_or_service' with its member, so validated_observation (which
+    requires scope='consolidated') never admits it as a consolidated value."""
+    observations = []
+    for observation in parse_inline_observations(text, cik=cik, concepts=concepts, product_members=True):
+        observations.append({**observation, 'scope': 'product_or_service'})
+    return tuple(observations)
+
+
+def parse_inline_observations(text, *, cik, concepts, product_members=False):
     """Parse bounded XML callbacks; unsupported or incomplete input fails closed."""
     if not isinstance(text, str) or len(text) > 15_000_000 or _DECLARATION.search(text):
         return ()
-    target = _InlineTarget(concepts)
+    target = _InlineTarget(concepts, product_members=product_members)
     parser = ET.XMLParser(target=target)
     try:
         # Feeding slices avoids an additional whole-document StringIO copy.

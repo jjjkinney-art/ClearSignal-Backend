@@ -14,6 +14,9 @@ QUOTE = 'Supply chain disruptions may increase our production costs and reduce o
 # Owner-provided pilot excerpts, replayed as synthetic source documents here.
 STAFFING = ('Human Capital Risks • Our facilities face competition for staffing, labor shortages '
             'and higher turnover rates that may increase our labor costs and reduce our profitability.')
+# The run-in section heading ("Human Capital Risks •") is not part of the risk:
+# the bound quote is the sentence after it, verbatim at its own offsets.
+BOUND = {STAFFING: STAFFING.removeprefix('Human Capital Risks • ')}
 PROCUREMENT = ('New laws, regulations or procurement requirements or changes to current ones '
                '(for example, regulations related to cybersecurity and related certification requirements, '
                'specialty metals, and conflict minerals) can significantly increase the Company’s '
@@ -26,8 +29,8 @@ def risk_item(quote=QUOTE, scope='Supply chain'):
     item, = disclosures.extract_issuer_risk_evidence(doc, ticker='AAPL',
         question=f'What operating risk affects {scope}?')
     value = disclosures.bound_thesis_risk(item, ticker='AAPL')
-    assert value and value['quote'] == quote
-    assert doc.text[value['start_offset']:value['end_offset']] == quote
+    assert value and value['quote'] == BOUND.get(quote, quote)
+    assert doc.text[value['start_offset']:value['end_offset']] == value['quote']
     return item
 
 
@@ -50,8 +53,10 @@ def test_bound_direct_and_relative_mechanisms_retain_complete_source_and_modal(q
     refs = [reference(item, name) for item, name in zip(items, ('E12', 'E7', 'E19'))]
     result = compose(items, refs)
     row, = mechanisms(result)
-    assert row['source_quote'] == quote and row['modality'] == modal
-    assert quote == row['condition'] + (' that ' if quote == STAFFING else ' ') + modal + ' ' + row['potential_effect'] + '.'
+    bound = BOUND.get(quote, quote)
+    assert row['source_quote'] == bound and row['modality'] == modal
+    assert bound == row['condition'] + (' that ' if quote == STAFFING else ' ') + modal + ' ' + row['potential_effect'] + '.'
+    assert 'Human Capital Risks' not in result['answer']
     assert row['risk_reference_id'] == 'E19' and row['risk_filed_at'] == '2025-08-01'
     assert row['reference_ids'] == ['E19', 'E7']  # revenue is not profitability context
     target, = row['financial_context']
@@ -60,7 +65,7 @@ def test_bound_direct_and_relative_mechanisms_retain_complete_source_and_modal(q
         prior_period_start='2024-04-01', prior_period_end='2024-06-30')
     assert not row['causal_attribution_established']
     assert not row['materiality_assessed'] and not row['measure_equivalence_established']
-    assert quote in result['answer']
+    assert bound in result['answer']
     assert 'risk materiality, likelihood and effect on the investment case' in result['unanswered_parts']
     assert len(result['claims']) == 3
 
