@@ -152,6 +152,69 @@ def _requested_bound_metric(item: object, ticker: str, question: str) -> bool:
                for claim in getattr(item, "verified_claims", []) or [])
 
 
+_FILING_TASKS = frozenset({"filing_metrics", "thesis_disclosures"})
+_EVIDENCE_GAP_SOURCES = {
+    # A task lost before it chose a filing names none; see _filing_source.
+    "filing_metrics": "an SEC filing",
+    "thesis_disclosures": "an SEC filing",
+    "sec_metrics": "SEC company facts",
+    "sec": "the SEC filing list",
+}
+
+
+def _filing_source(form: str | None) -> str | None:
+    """The report a form names, never implying it is the issuer's newest filing."""
+    base = (form or "").removesuffix("/A")
+    if base in {"10-K", "20-F"}:
+        return f"the annual report (Form {form})"
+    if base == "10-Q":
+        return f"the quarterly report (Form {form})"
+    return None
+
+
+def evidence_gaps(abandoned: Iterable[str], submissions_failures: int,
+                  filing_read_failures: Iterable[str] = (),
+                  filing_too_large: Iterable[str] = (),
+                  filing_forms: dict[str, str] | None = None) -> list[dict]:
+    """What a request lost to its time limits or to a failed SEC read."""
+    abandoned = list(abandoned)
+    forms = filing_forms or {}
+
+    def source(key: str) -> str:
+        return _filing_source(forms.get(key)) or _EVIDENCE_GAP_SOURCES[key]
+
+    gaps = [{"source": source(key), "task": key, "reason": "time_limit"}
+            for key in abandoned if key in _EVIDENCE_GAP_SOURCES]
+    if submissions_failures:
+        gaps.append({"source": "the SEC filing list", "task": "sec_submissions", "reason": "retrieval_failed"})
+    too_large = set(filing_too_large)
+    gaps += [{"source": source(key), "task": key, "reason": "too_large" if key in too_large else "not_read"}
+             for key in dict.fromkeys(filing_read_failures) if key in _EVIDENCE_GAP_SOURCES and key not in abandoned]
+    return gaps
+
+
+def apply_evidence_gaps(thesis: object, source_answer: dict | None, gaps: list[dict]) -> dict | None:
+    """State plainly that this answer is missing evidence it tried to read."""
+    if not gaps or source_answer is None:
+        return source_answer
+    sources = list(dict.fromkeys(gap["source"] for gap in gaps))
+    names = sources[0] if len(sources) == 1 else ", ".join(sources[:-1]) + " and " + sources[-1]
+    drivers = ", including any drivers management states there," if any(gap["task"] in _FILING_TASKS for gap in gaps) else ""
+    # A document over the size limit stays over it, so retrying would not help.
+    too_large = all(gap["reason"] == "too_large" for gap in gaps)
+    cause = ", because the document is larger than the size limit" if too_large else ""
+    closing = "" if too_large else " Trying again may give a fuller answer."
+    notice = (f"Incomplete answer: {names} could not be read for this answer{cause}, so what it would have "
+              f"added{drivers} is missing.{closing}")
+    direct_answer = getattr(thesis, "direct_answer", "") or ""
+    if not direct_answer.startswith(notice):
+        thesis.direct_answer = f"{notice}\n\n{direct_answer}" if direct_answer else notice
+    missing = [f"evidence from {source}" for source in sources]
+    return {**source_answer, "degraded": True, "evidence_gaps": gaps,
+            "status": "partial" if source_answer.get("status") == "attributed" else source_answer.get("status"),
+            "unanswered_parts": list(dict.fromkeys([*(source_answer.get("unanswered_parts") or []), *missing]))}
+
+
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
                              *, references: list[dict] | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""

@@ -24,10 +24,12 @@ def _word(value: str) -> str:
 
 
 _ITEM = _word("Item")
+# Item numbers may carry a period and a dash before the title ("ITEM 1A. — RISK FACTORS").
+_SEP = r"(?:[.:—–-]\s*){0,2}"
 RISK_START = re.compile(
-    rf"\b{_ITEM}\s+1\s*A\s*[.:—–-]?\s*{_word('Risk')}\s+{_word('Factors')}\b", re.I)
+    rf"\b{_ITEM}\s+1\s*A\s*{_SEP}{_word('Risk')}\s+{_word('Factors')}\b", re.I)
 RISK_END = re.compile(
-    rf"\b{_ITEM}\s+(?:1\s*B|1\s*C|2)(?:\s*[.:—–-]\s*|\s+)(?:"
+    rf"\b{_ITEM}\s+(?:1\s*B|1\s*C|2)(?:\s*(?:[.:—–-]\s*){{1,2}}|\s+)(?:"
     rf"{_word('Unresolved')}(?:\s+{_word('Staff')}\s+{_word('Comments')})?|"
     rf"{_word('Cybersecurity')}|{_word('Properties')}|"
     rf"{_word('Legal')}(?:\s+{_word('Proceedings')})?|"
@@ -150,7 +152,34 @@ def risk_sentence_spans(text: str):
         start = end
 
 
-BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*[.:—–-]?\s*{_word('Business')}\b", re.I)
+BUSINESS_START = re.compile(rf"\b{_ITEM}\s+1\s*{_SEP}{_word('Business')}\b", re.I)
+
+
+# The periodic report's results discussion (MD&A): Item 2 of a 10-Q, Item 7 of a 10-K.
+_RESULTS_START = {
+    '10-Q': re.compile(rf"\b{_ITEM}\s+2\s*{_SEP}{_word('Management')}\W{{0,2}}s?\s+{_word('Discussion')}\b", re.I),
+    '10-K': re.compile(rf"\b{_ITEM}\s+7\s*{_SEP}{_word('Management')}\W{{0,2}}s?\s+{_word('Discussion')}\b", re.I),
+}
+_RESULTS_END = {
+    '10-Q': re.compile(rf"\b{_ITEM}\s+(?:3\s*{_SEP}{_word('Quantitative')}|4\s*{_SEP}{_word('Controls')})\b", re.I),
+    '10-K': re.compile(rf"\b{_ITEM}\s+(?:7\s*A\s*{_SEP}{_word('Quantitative')}|8\s*{_SEP}{_word('Financial')})\b", re.I),
+}
+
+
+def results_section_bounds(text, *, form):
+    """(start, end) of the results discussion, or None. A table-of-contents
+    entry is followed almost at once by the next item, so the longest span
+    between an opening and the following closing heading is the section."""
+    base = (form or '').split('/')[0]
+    if base not in _RESULTS_START:
+        return None
+    best = None
+    for opening in _RESULTS_START[base].finditer(text):
+        closing = _RESULTS_END[base].search(text, opening.end())
+        end = closing.start() if closing else len(text)
+        if best is None or end - opening.start() > best[1] - best[0]:
+            best = (opening.start(), end)
+    return best
 
 
 _FOREIGN_BUSINESS_END = re.compile(
