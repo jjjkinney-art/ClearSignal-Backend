@@ -161,7 +161,7 @@ class OrdinaryNativeLedger(AttemptLedger):
                        'sha256 TEXT NOT NULL, payload BLOB NOT NULL, recorded_ns INTEGER NOT NULL)')
             db.execute('CREATE TABLE ordinary_stage_abandonments (case_run TEXT NOT NULL, stage TEXT NOT NULL, '
                        'recorded_ns INTEGER NOT NULL, PRIMARY KEY (case_run, stage))')
-            db.execute('CREATE TABLE ordinary_stage_timings (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+            db.execute('CREATE TABLE ordinary_stage_timings (id INTEGER PRIMARY KEY, '
                        'case_run TEXT NOT NULL, task TEXT NOT NULL, stage TEXT NOT NULL, '
                        'recorded_ns INTEGER NOT NULL, thread_cpu_ns INTEGER NOT NULL)')
             db.execute('CREATE TABLE ordinary_size_rejections (attempt_id TEXT PRIMARY KEY, case_run TEXT NOT NULL, '

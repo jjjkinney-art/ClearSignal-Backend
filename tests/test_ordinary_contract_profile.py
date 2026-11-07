@@ -808,9 +808,10 @@ def test_a_ledger_from_before_the_split_exports_without_the_content_record(tmp_p
     copy.write_bytes((output / 'ledger.sqlite').read_bytes())
     with sqlite3.connect(copy) as db:
         db.execute('DROP TABLE ordinary_size_rejections')
+        db.execute('DROP TABLE ordinary_stage_timings')
     older = export_packet(copy, policy, forbidden_values=tuple(REHEARSAL_RUNTIME.values()),
                           synthetic=result['packet']['synthetic_sec_backend'])
-    new_fields = {'answer_content', 'size_rejections'}
+    new_fields = {'answer_content', 'size_rejections', 'stage_timings', 'host_readings'}  # host readings: parent only
     assert not new_fields & set(older)
     assert {key: value for key, value in result['packet'].items() if key not in new_fields} == older
 
