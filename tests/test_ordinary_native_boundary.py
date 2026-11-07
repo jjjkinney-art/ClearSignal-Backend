@@ -578,7 +578,7 @@ def test_a_declared_rejection_finishes_the_case_with_no_halt(boundary, monkeypat
     company = boundary.case['case_id'].split(':')[0]
     boundary.complete_case({'company': company, 'answer': {'source_answer': {
         'status': 'partial', 'degraded': True,
-        'evidence_gaps': [{'source': 'the latest SEC filing', 'task': 'thesis_disclosures', 'reason': 'too_large'}]}}})
+        'evidence_gaps': [{'source': 'the annual report (Form 10-K)', 'task': 'thesis_disclosures', 'reason': 'too_large'}]}}})
     assert rows(boundary, 'SELECT halted FROM policy') == [(None,)]
     assert rows(boundary, "SELECT status FROM cases") == [('complete',)]
     assert rows(boundary, 'SELECT stage FROM ordinary_stage_abandonments') == [('evidence.thesis_disclosures',)]

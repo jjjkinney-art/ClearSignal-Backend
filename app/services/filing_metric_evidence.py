@@ -119,6 +119,7 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         if not valid:
             return []
         filing = max(valid, key=lambda item: (item.reporting_period_end, item.timestamp))
+        sec_provider.note_filing_selected('filing_metrics', filing.document_type)
         document = fetch_public_document(filing.url, user_agent=settings.sec_user_agent,
             publisher='SEC EDGAR', published_at=filing.timestamp, document_type=filing.document_type,
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,

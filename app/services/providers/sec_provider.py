@@ -199,7 +199,12 @@ class SubmissionsRequestScope:
         self.failures = 0
         self.filing_read_failures = []
         self.filing_too_large = []  # the subset rejected by a size limit
+        self.filing_forms = {}  # task -> the form of the filing it chose to read
         self.filing_parse_deadline = None  # time.monotonic() value, or no limit
+
+    def note_filing_selected(self, task: str, form: str):
+        with self._lock:
+            self.filing_forms[task] = form
 
     def note_filing_read_failure(self, task: str, *, too_large: bool = False):
         with self._lock:
@@ -238,6 +243,13 @@ class SubmissionsRequestScope:
 
 _submissions_scope: ContextVar[Optional[SubmissionsRequestScope]] = ContextVar(
     "sec_submissions_request_scope", default=None)
+
+
+def note_filing_selected(task: str, form: str) -> None:
+    """Tell the active request which form an evidence task is about to read."""
+    scope = _submissions_scope.get()
+    if scope is not None:
+        scope.note_filing_selected(task, form)
 
 
 def note_filing_read_failure(task: str, *, too_large: bool = False) -> None:

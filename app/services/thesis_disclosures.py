@@ -434,6 +434,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                 quarter = quarters[0]
                 try:
                     stats["stage"] = "quarterly_document"
+                    sec_provider.note_filing_selected('thesis_disclosures', quarter.document_type)
                     quarterly_document = fetch_public_document(quarter.url, user_agent=user_agent,
                         publisher="SEC EDGAR", published_at=quarter.timestamp, document_type="10-Q",
                         source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
@@ -455,6 +456,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
             stats["status"] = "unsupported_form"
             return []
         stats.update(stage="annual_document", status="document_unavailable")
+        sec_provider.note_filing_selected('thesis_disclosures', filing.document_type)
         document = fetch_public_document(filing.url, user_agent=user_agent, publisher="SEC EDGAR",
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,

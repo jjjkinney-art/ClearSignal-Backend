@@ -205,13 +205,13 @@ class Thesis:
 def test_a_gap_is_stated_to_the_user_and_recorded():
     thesis = Thesis()
     gaps = evidence_gaps(['filing_metrics', 'news_co'], 0)
-    assert gaps == [{'source': 'the latest SEC filing', 'task': 'filing_metrics', 'reason': 'time_limit'}]
+    assert gaps == [{'source': 'an SEC filing', 'task': 'filing_metrics', 'reason': 'time_limit'}]
     source = apply_evidence_gaps(thesis, {'status': 'attributed', 'claims': [1]}, gaps)
-    assert thesis.direct_answer.startswith('Incomplete answer: the latest SEC filing could not be read for this answer')
+    assert thesis.direct_answer.startswith('Incomplete answer: an SEC filing could not be read for this answer')
     assert 'including any drivers management states there' in thesis.direct_answer
     assert thesis.direct_answer.endswith('Evidence-backed financial monitoring (partial)')
     assert source['degraded'] is True and source['status'] == 'partial' and source['evidence_gaps'] == gaps
-    assert source['claims'] == [1] and 'evidence from the latest SEC filing' in source['unanswered_parts']
+    assert source['claims'] == [1] and 'evidence from an SEC filing' in source['unanswered_parts']
     apply_evidence_gaps(thesis, source, gaps)
     assert thesis.direct_answer.count('Incomplete answer') == 1
 
@@ -222,7 +222,7 @@ def test_a_failed_filing_list_is_a_gap():
 
 
 def test_a_failed_filing_read_is_a_gap_and_reaches_the_request_scope():
-    assert evidence_gaps([], 0, ['filing_metrics']) == [{'source': 'the latest SEC filing', 'task': 'filing_metrics',
+    assert evidence_gaps([], 0, ['filing_metrics']) == [{'source': 'an SEC filing', 'task': 'filing_metrics',
                                                          'reason': 'not_read'}]
     assert [g['reason'] for g in evidence_gaps(['filing_metrics'], 0, ['filing_metrics'])] == ['time_limit']
     scope = sec_provider.SubmissionsRequestScope()
@@ -277,7 +277,7 @@ def test_a_filing_over_the_size_limit_is_named_and_does_not_suggest_a_retry():
     from types import SimpleNamespace
     from app.services.source_answer import apply_evidence_gaps, evidence_gaps
     gaps = evidence_gaps([], 0, ['thesis_disclosures'], ['thesis_disclosures'])
-    assert gaps == [{'source': 'the latest SEC filing', 'task': 'thesis_disclosures', 'reason': 'too_large'}]
+    assert gaps == [{'source': 'an SEC filing', 'task': 'thesis_disclosures', 'reason': 'too_large'}]
     thesis = SimpleNamespace(direct_answer='Answer.')
     source = apply_evidence_gaps(thesis, {'status': 'attributed'}, gaps)
     assert source['degraded'] is True and source['status'] == 'partial'
@@ -302,3 +302,61 @@ def test_a_failed_quarterly_filing_is_noted_as_a_read_failure(monkeypatch):
     source = Path('app/services/thesis_disclosures.py').read_text()
     block = re.search(r'stats\["stage"\] = "quarterly_document".*?stats\["status"\] = "quarterly_document_unavailable"', source, re.S)
     assert block and 'note_filing_read_failure' in block.group(0)
+
+
+@pytest.mark.parametrize('form, source', [
+    ('10-K', 'the annual report (Form 10-K)'), ('10-K/A', 'the annual report (Form 10-K/A)'),
+    ('20-F', 'the annual report (Form 20-F)'), ('10-Q', 'the quarterly report (Form 10-Q)'),
+    ('10-Q/A', 'the quarterly report (Form 10-Q/A)'), ('8-K', 'an SEC filing'), (None, 'an SEC filing')])
+@pytest.mark.parametrize('reason, args', [
+    ('time_limit', (['thesis_disclosures'], 0)), ('not_read', ([], 0, ['thesis_disclosures'])),
+    ('too_large', ([], 0, ['thesis_disclosures'], ['thesis_disclosures']))])
+def test_a_gap_names_the_report_the_task_chose(form, source, reason, args):
+    from types import SimpleNamespace
+    from app.services.source_answer import apply_evidence_gaps, evidence_gaps
+    gaps = evidence_gaps(*args, filing_forms={'thesis_disclosures': form} if form else None)
+    assert gaps == [{'source': source, 'task': 'thesis_disclosures', 'reason': reason}]
+    thesis = SimpleNamespace(direct_answer='Answer.')
+    result = apply_evidence_gaps(thesis, {'status': 'attributed'}, gaps)
+    assert thesis.direct_answer.startswith(f'Incomplete answer: {source} could not be read for this answer')
+    assert 'including any drivers management states there' in thesis.direct_answer
+    assert f'evidence from {source}' in result['unanswered_parts']
+    assert 'latest' not in thesis.direct_answer.split('Answer.')[0]
+
+
+def test_two_tasks_name_their_own_reports():
+    from types import SimpleNamespace
+    from app.services.source_answer import apply_evidence_gaps, evidence_gaps
+    gaps = evidence_gaps([], 0, ['thesis_disclosures', 'filing_metrics'],
+                         filing_forms={'thesis_disclosures': '10-K', 'filing_metrics': '10-Q'})
+    assert {g['task']: g['source'] for g in gaps} == {'thesis_disclosures': 'the annual report (Form 10-K)',
+                                                      'filing_metrics': 'the quarterly report (Form 10-Q)'}
+    thesis = SimpleNamespace(direct_answer='')
+    apply_evidence_gaps(thesis, {'status': 'partial'}, gaps)
+    assert 'the annual report (Form 10-K) and the quarterly report (Form 10-Q) could not be read' in thesis.direct_answer
+
+
+def test_the_same_report_is_named_once_for_two_tasks():
+    from types import SimpleNamespace
+    from app.services.source_answer import apply_evidence_gaps, evidence_gaps
+    gaps = evidence_gaps([], 0, ['thesis_disclosures', 'filing_metrics'],
+                         filing_forms={'thesis_disclosures': '10-K', 'filing_metrics': '10-K'})
+    thesis = SimpleNamespace(direct_answer='')
+    apply_evidence_gaps(thesis, {'status': 'partial'}, gaps)
+    assert thesis.direct_answer.count('the annual report (Form 10-K)') == 1
+
+
+def test_a_non_filing_gap_does_not_mention_management_drivers():
+    from types import SimpleNamespace
+    from app.services.source_answer import apply_evidence_gaps, evidence_gaps
+    thesis = SimpleNamespace(direct_answer='')
+    apply_evidence_gaps(thesis, {'status': 'partial'}, evidence_gaps(['sec_metrics'], 0))
+    assert 'drivers' not in thesis.direct_answer
+
+
+def test_the_scope_remembers_the_form_each_task_chose():
+    from app.services.providers import sec_provider
+    sec_provider.note_filing_selected('filing_metrics', '10-Q')  # no active scope: nothing to tell
+    scope = sec_provider.SubmissionsRequestScope()
+    sec_provider.bind_submissions_scope(sec_provider.note_filing_selected, scope)('thesis_disclosures', '20-F')
+    assert scope.filing_forms == {'thesis_disclosures': '20-F'}

@@ -37,7 +37,7 @@ MAIN_ONLY = pytest.mark.skipif(contract_profile() is None or CHILD, reason='star
 # sha256 of each consumed cohort's quota contract before cohort 3 was connected.
 ORIGINAL_CONTRACT_DIGESTS = {'run5': 'd663fea486005a05b3a8a5ead195afd57e78f4e941eeb2f5858bae97298489cf', 'run3': 'f3cda6d201e4c01bdce75e5ead08b4b8ac610e3158ab9f3decc667d38cb6b9fe', 'runs-1-2': '4c6dfba55b44665da9bde6e63204a7f9fa2a2af6f442f35b3ddbd121c9f83d1f'}
 SLOW, AFTER_CUTOFF = 'threshold_filing_slow', 'threshold_filing_after_cutoff'
-NOTICE = 'Incomplete answer: the latest SEC filing could not be read for this answer'
+NOTICE = 'Incomplete answer: the quarterly report (Form 10-Q) could not be read for this answer'
 
 
 class Settings:
@@ -372,7 +372,7 @@ def _degraded_case(packet):
 def _assert_filing_gap(packet, case, reason):
     source = packet['answers'][case]['response']['answer']['source_answer']
     assert source['degraded'] is True
-    assert source['evidence_gaps'] == [{'source': 'the latest SEC filing', 'task': 'filing_metrics', 'reason': reason}]
+    assert source['evidence_gaps'] == [{'source': 'the quarterly report (Form 10-Q)', 'task': 'filing_metrics', 'reason': reason}]
     assert NOTICE in json.dumps(packet['answers'][case]['response'])
     assert packet['abandoned_stages'] == [{'case_id': case, 'stage': 'evidence.filing_metrics'}]
 
@@ -527,7 +527,10 @@ def _assert_size_recovered(result, sec, output, kind, *, count=1):
         response = packet['answers'][row['case_id']]['response']
         source = response['answer']['source_answer']
         assert source['degraded'] is True
-        assert {'source': 'the latest SEC filing', 'task': row['stage'].split('.')[1], 'reason': 'too_large'} in source['evidence_gaps']
+        # The invented filings: the thesis task reads a 10-K, the metrics task its latest 10-Q.
+        expected = {'evidence.thesis_disclosures': 'the annual report (Form 10-K)',
+                    'evidence.filing_metrics': 'the quarterly report (Form 10-Q)'}[row['stage']]
+        assert {'source': expected, 'task': row['stage'].split('.')[1], 'reason': 'too_large'} in source['evidence_gaps']
         assert 'because the document is larger than the size limit' in json.dumps(response)
         assert 'Trying again' not in json.dumps(response)
         assert {'case_id': row['case_id'], 'stage': row['stage']} in packet['abandoned_stages']
@@ -608,7 +611,7 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
     # The answer is the application's own: no claims, and it says why.
     source = _source(packet, case)
     assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == [] and source['degraded'] is True
-    assert source['evidence_gaps'] == [{'source': 'the latest SEC filing', 'task': 'filing_metrics', 'reason': 'too_large'}]
+    assert source['evidence_gaps'] == [{'source': 'the quarterly report (Form 10-Q)', 'task': 'filing_metrics', 'reason': 'too_large'}]
     response = json.dumps(packet['answers'][case]['response'])
     assert 'because the document is larger than the size limit' in response and 'Trying again' not in response
     # Worker: one rejection, every worker finished, and the peer was cut off.
