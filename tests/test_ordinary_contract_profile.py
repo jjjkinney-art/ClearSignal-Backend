@@ -594,6 +594,7 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
     assert control['status'] == 'complete' and control['packet']['size_rejections'] == []
     assert {'case_id': case, 'status': 'answered_unadjudicated'} in control['packet']['cases']
     assert _source(control['packet'], case)['status'] == 'partial' and _source(control['packet'], case)['claims']
+    assert {'case_id': case, 'content': 'source_bound_claims'} in control['packet']['answer_content']['cases']
 
     result, sec, output = _loopback(tmp_path / 'rejected', fault, ifrs_only_cik=cik)
     packet = result['packet']
@@ -603,6 +604,7 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
     assert statuses[case] == 'unanswered_size_rejected'
     assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
     assert packet['outcome_counts']['operational_failure'] == 0 and packet['quality_pass_rate'] is None
+    assert {'case_id': case, 'content': 'insufficient_evidence'} in packet['answer_content']['cases']
     # The answer is the application's own: no claims, and it says why.
     source = _source(packet, case)
     assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == [] and source['degraded'] is True
@@ -634,6 +636,68 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
     # case, because nothing is remembered between cases.
     sibling = CASES[FAULT_CASE_INDEX + 1 if nth == 1 else FAULT_CASE_INDEX]
     assert statuses[sibling] == 'answered_unadjudicated' and _source(packet, sibling)['status'] == 'partial'
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_completed_insufficient_evidence_response_is_not_counted_as_content(tmp_path):
+    """No rejection and no gap: operationally it keeps its historic name, and the separate
+    content record says it delivered no answer to the question."""
+    from validation._ordinary_rehearsal_worker import _FAULT_CIK
+    _needs_port()
+    case = CASES[FAULT_CASE_INDEX]
+    result, _, _ = _loopback(tmp_path, None, ifrs_only_cik=_FAULT_CIK, inline_filing=False)
+    packet = result['packet']
+    assert result['status'] == 'complete' and packet['size_rejections'] == []
+    # The misleading operational label, preserved.
+    assert {'case_id': case, 'status': 'answered_unadjudicated'} in packet['cases']
+    assert _source(packet, case)['status'] == 'insufficient_claim_evidence' and _source(packet, case)['claims'] == []
+    content = packet['answer_content']
+    assert {'case_id': case, 'content': 'insufficient_evidence'} in content['cases']
+    counts = content['counts']
+    assert counts['insufficient_evidence'] >= 1 and counts['identity_unresolved'] == len(UNRESOLVED)
+    assert sum(counts.values()) == 12 and counts['unclassified'] == 0
+    assert counts['source_bound_claims'] < packet['outcome_counts']['full_answer']
+    assert 'accuracy and usefulness are assessed separately' in content['scope']
+    assert packet['quality_pass_rate'] is None
+
+
+@pytest.mark.parametrize('status, payload, expected', [
+    ('not_run_after_halt', None, 'not_run'),
+    ('not_run', None, 'not_run'),
+    ('halted', None, 'no_answer'),
+    ('identity_unresolved', {'company': '', 'answer': {'source_answer': {'status': 'unresolved_company_identity'}}}, 'identity_unresolved'),
+    ('answered_unadjudicated', {'answer': {'source_answer': {'status': 'insufficient_claim_evidence', 'claims': []}}}, 'insufficient_evidence'),
+    ('answered_degraded_unadjudicated', {'answer': {'source_answer': {'status': 'insufficient_claim_evidence', 'claims': []}}}, 'insufficient_evidence'),
+    ('unanswered_size_rejected', {'answer': {'source_answer': {'status': 'insufficient_claim_evidence', 'claims': []}}}, 'insufficient_evidence'),
+    ('answered_unadjudicated', {'answer': {'source_answer': {'status': 'partial', 'claims': [{'text': 'x'}]}}}, 'source_bound_claims'),
+    ('answered_unadjudicated', {'answer': {'source_answer': {'status': 'attributed', 'claims': [{'text': 'x'}]}}}, 'source_bound_claims'),
+    # Never counted as content without source-bound claims, whatever the status says.
+    ('answered_unadjudicated', {'answer': {'source_answer': {'status': 'partial', 'claims': []}}}, 'unclassified'),
+    ('answered_unadjudicated', {'answer': {}}, 'unclassified'),
+])
+def test_only_source_bound_claims_count_as_answer_content(status, payload, expected):
+    from validation.ordinary_native_export import answer_content
+    assert answer_content(status, payload) == expected
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_ledger_from_before_the_split_exports_without_the_content_record(tmp_path):
+    from validation.ordinary_native_export import export_packet
+    from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
+    _needs_port()
+    result, _, output = _loopback(tmp_path, None)
+    policy = json.loads((output / 'request.json').read_text())['policy']
+    copy = tmp_path / 'older.sqlite'
+    copy.write_bytes((output / 'ledger.sqlite').read_bytes())
+    with sqlite3.connect(copy) as db:
+        db.execute('DROP TABLE ordinary_size_rejections')
+    older = export_packet(copy, policy, forbidden_values=tuple(REHEARSAL_RUNTIME.values()),
+                          synthetic=result['packet']['synthetic_sec_backend'])
+    new_fields = {'answer_content', 'size_rejections'}
+    assert not new_fields & set(older)
+    assert {key: value for key, value in result['packet'].items() if key not in new_fields} == older
 
 
 @PROFILE_ONLY

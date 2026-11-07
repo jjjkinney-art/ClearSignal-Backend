@@ -17,6 +17,10 @@ from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, degrade
 from validation.ordinary_pilot_contract import CASES, quota_contract
 
 
+ANSWER_CONTENT_KINDS = ('source_bound_claims', 'insufficient_evidence', 'identity_unresolved',
+                        'no_answer', 'not_run', 'unclassified')
+
+
 class ExportRefused(BudgetError):
     pass
 
@@ -26,6 +30,29 @@ def _insufficient(payload):
     answer = payload.get('answer') if type(payload) is dict else None
     source = answer.get('source_answer') if type(answer) is dict else None
     return type(source) is dict and source.get('status') == 'insufficient_claim_evidence'
+
+
+def answer_content(case_status, payload):
+    """What a case delivered, separate from whether it completed operationally.
+
+    Only an answer carrying source-bound claims counts as having content, and even
+    that says nothing about accuracy or usefulness, which are assessed separately.
+    Anything else, including a completed insufficient-evidence response, does not.
+    """
+    if case_status in {'not_run', 'not_run_after_halt'}:
+        return 'not_run'
+    if payload is None:
+        return 'no_answer'
+    if case_status == 'identity_unresolved':
+        return 'identity_unresolved'
+    answer = payload.get('answer') if type(payload) is dict else None
+    source = answer.get('source_answer') if type(answer) is dict else None
+    status = source.get('status') if type(source) is dict else None
+    if status == 'insufficient_claim_evidence':
+        return 'insufficient_evidence'
+    if status in {'attributed', 'partial'} and source.get('claims'):
+        return 'source_bound_claims'
+    return 'unclassified'
 
 
 def record_parent_stop(path, reason):
@@ -69,10 +96,11 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
                                         'ORDER BY recorded_ns').fetchall() \
             if db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_stage_abandonments'").fetchone() else []
         # Absent from ledgers created before size rejections were recoverable.
+        has_size_rejections = bool(db.execute(
+            "SELECT 1 FROM sqlite_master WHERE name='ordinary_size_rejections'").fetchone())
         size_rejections = {r[0]: r[1:] for r in db.execute(
             'SELECT attempt_id,case_run,stage,url,limit_bytes,declared_bytes,bytes_read,recorded_ns '
-            'FROM ordinary_size_rejections')} \
-            if db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_size_rejections'").fetchone() else {}
+            'FROM ordinary_size_rejections')} if has_size_rejections else {}
         first_transport = db.execute('SELECT attempt_id,route,stage,code FROM first_transport_failure WHERE id=1').fetchone()
         first_refusal = db.execute('SELECT attempt_id,route,stage,code FROM first_sec_refusal WHERE id=1').fetchone()
 
@@ -244,6 +272,19 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
     kinds = {'answered_unadjudicated': 'full_answer', 'answered_degraded_unadjudicated': 'degraded_answer',
              'identity_unresolved': 'unanswered', 'unanswered_size_rejected': 'unanswered'}
     outcome_counts = Counter(kinds.get(o['status'], 'operational_failure') for o in outcomes)
+    # New ledgers only, so a consumed run's export stays exactly as it was. Its names
+    # predate this split: 'answered_unadjudicated' and 'full_answer' mean a case finished
+    # operationally with no recorded evidence gap, not that it answered the question.
+    content = {}
+    if has_size_rejections:
+        payloads = {answers[run][0]: json.loads(answers[run][2]) for run in answers}
+        cases_content = [{'case_id': o['case_id'], 'content': answer_content(o['status'], payloads.get(o['case_id']))}
+                         for o in outcomes]
+        tally = Counter(row['content'] for row in cases_content)
+        content = {'size_rejections': rejection_records,
+                   'answer_content': {'scope': 'delivered content only; accuracy and usefulness are assessed separately',
+                                      'cases': cases_content,
+                                      'counts': {key: tally.get(key, 0) for key in ANSWER_CONTENT_KINDS}}}
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
     return {'format': 'ordinary-native-packet-v1', 'synthetic_sec_backend': synthetic,
@@ -254,7 +295,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             'answers': {answers[run][0]: {'sha256': answers[run][1], 'response': json.loads(answers[run][2])}
                         for run in answers},
             'attempts': records, 'attempt_count': len(records), 'abandoned_stages': abandoned_stages,
-            'size_rejections': rejection_records,
+            **content,
             'retained_body_bytes': aggregate, 'wire_entries': len(entries_seen),
             'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False,
             'invoice_ceiling_verified': False}

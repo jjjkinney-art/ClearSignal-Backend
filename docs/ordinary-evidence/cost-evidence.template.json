@@ -61,6 +61,7 @@
       "tests/test_ordinary_contract_profile.py::test_degradation_reaches_the_approved_outcome_record",
       "tests/test_ordinary_contract_profile.py::test_an_oversized_filing_degrades_one_answer_and_later_cases_run",
       "tests/test_ordinary_contract_profile.py::test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered",
+      "tests/test_ordinary_contract_profile.py::test_a_completed_insufficient_evidence_response_is_not_counted_as_content",
       "tests/test_ordinary_contract_profile.py::test_oversized_facts_are_not_a_filing_and_still_halt",
       "tests/test_ordinary_contract_profile.py::test_oversized_recovery_reaches_the_approved_outcome_record",
       "tests/test_ordinary_contract_profile.py::test_the_export_refuses_a_size_rejection_that_does_not_reconcile",

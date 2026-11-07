@@ -263,3 +263,57 @@ predictions and offline checks at the new version.
 
 **Requires before any run:** the new pre-registration above, a new package and a new separate approval.
 None of them exists.
+
+## Amendment 3 (2026-11-07): operational completion is not a substantive answer
+
+**The misleading label:** `answered_unadjudicated`, counted as `full_answer`, means a case finished
+operationally with no recorded evidence gap. It does not mean the question was answered: it also
+covers completed responses reporting `insufficient_claim_evidence`, with no claims.
+
+Counted from the retained packets, without changing them:
+
+| Run | `answered_unadjudicated` cases | Of those, `insufficient_claim_evidence` | Of those, with source-bound claims |
+|---|---|---|---|
+| 1 | 4 | 1 | 3 |
+| 2 | 12 | 0 | 12 |
+| 3 | 0 | 0 | 0 |
+| 4 | 12 | 3 | 9 |
+| 5 | 7 | 2 | 5 |
+| 6 | 0 | 0 | 0 |
+
+Anyone reading `full_answer` from Runs 1, 4 or 5 should use the last column instead. Claims still say
+nothing about accuracy or usefulness.
+
+**Historical outputs are preserved:** consumed packets, ledgers, statuses and count names are unchanged,
+and a ledger from before this split exports with no new field.
+
+**Going forward:** new ledgers also export `answer_content`, one value per case: `source_bound_claims`,
+`insufficient_evidence`, `identity_unresolved`, `no_answer`, `not_run` or `unclassified`. Assessments report
+these separately:
+
+1. **Operational completion:** `cases` and `outcome_counts`, read only as whether the machinery finished.
+2. **Delivered content:** `answer_content`. Only `source_bound_claims` counts as a substantive answer to
+   assess. `insufficient_evidence`, `identity_unresolved`, `no_answer`, `not_run` and `unclassified` do not.
+3. **Accuracy, research quality and usefulness:** the unchanged rubric, on what was delivered. A response
+   with no substantive answer has no research accuracy to score and delivers usefulness 0. It is never
+   reported as an answered case. A source-bound claim is not evidence that the answer is right.
+
+## Requirements for the new pre-registration, same cohort
+
+Nothing here exists yet, and none of it authorizes retrieval, a package, an approval or a run.
+
+1. **Freeze:** name the commit, its tree, `app/` and `validation/` trees, source binding and passing CI.
+2. **Cohort:** the same six issuers, twelve questions and order, with no substitution.
+3. **Exposure:** Run 6's exposure as stated in amendment 2. It may not claim a blind operational test,
+   and the design of the handling used knowledge of BP's filing. BP answer-quality data remains unseen.
+4. **Claim:** state what the run could and could not show, and that earlier runs do not validate this version.
+5. **Predictions, before any data:** outcomes and request counts per case at this version, with BP's
+   rejected filing, its effect and any repeat request. Filing sizes for the other five stay unknown; a
+   check of them would be new SEC retrieval needing its own approval.
+6. **Offline checks:** re-run the identity, route and frontend-intent checks at this version, under the
+   offline guard, and record them. Those on record describe `45f5283`.
+7. **Assessment:** the unchanged rubric with amendment 3's three separate reports. No pooled score, pass
+   rate or improvement claim.
+8. **Risk summary:** oversized filings by name (amendment 2's standing disclosure), run-halting
+   failures, the coverage gaps, updated for what Run 6's four requests did and did not exercise.
+9. **After that, separately:** a new package, a new approval and a new output directory.

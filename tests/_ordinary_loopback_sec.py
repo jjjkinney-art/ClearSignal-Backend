@@ -97,11 +97,11 @@ class LoopbackSEC:
     With ``untrusted=True`` the served leaf is issued by a different CA than
     the one written to ``ca_path``, so certificate verification must fail.
     """
-    def __init__(self, directory, *, untrusted=False, direct=False, fault=None, ifrs_only_cik=None):
+    def __init__(self, directory, *, untrusted=False, direct=False, fault=None, ifrs_only_cik=None, inline_filing=True):
         # ifrs_only_cik: that issuer's company facts are valid but hold no us-gaap, so they
         # support no comparison, and its latest filing carries the only comparable facts.
         # That filing is then the difference between an answer and none.
-        self.ifrs_only_cik = ifrs_only_cik
+        self.ifrs_only_cik, self.inline_filing = ifrs_only_cik, inline_filing
         # (kind, path regex, nth match): 'late' completes after 13 s with bytes arriving
         # inside the read timeout, 'silent' sends nothing for 13 s, 'crawl' sends one byte
         # a second, 'close' hangs up without answering.
@@ -218,7 +218,7 @@ class LoopbackSEC:
                 facts = json.loads(body)
                 facts['facts'] = {'ifrs-full': {'Revenue': {'label': 'Invented rehearsal value', 'units': {}}}}
                 body = json.dumps(facts).encode()
-            if (self.ifrs_only_cik is not None and media == 'text/html'
+            if (self.ifrs_only_cik is not None and self.inline_filing and media == 'text/html'
                     and re.search(rf'/edgar/data/{self.ifrs_only_cik}/[0-9]+/[a-z]+-20260630\.htm$', path)):
                 body = inline_quarterly_filing(self.ifrs_only_cik)
             reason = {200: b'OK', 404: b'Not Found', 405: b'Method Not Allowed'}[status]
