@@ -153,22 +153,43 @@ def requests_thesis_disclosures(ticker: str, question: str) -> bool:
             and not requested_issuer_kpi_aliases(question))
 
 
-def _business_quote(quote, *, ticker=None, cik=None):
+def _business_quote(quote, *, ticker=None, cik=None, defined_name=None):
     reason = _business_quote_rejection(quote)
     return reason is None or (reason == "subject_or_activity"
-                             and _named_issuer_quote(quote, ticker=ticker, cik=cik))
+                             and _named_issuer_quote(quote, ticker=ticker, cik=cik, defined_name=defined_name))
 
 
-def _named_issuer_quote(quote, *, ticker, cik):
-    """A named subject requires exact current directory identity, never an alias guess."""
+# "these items" means something only with the sentence before it, which is not quoted.
+_UNRESOLVED_REFERENCE = re.compile(r"\b(?:these|those) (?:items|products|solutions|offerings)\b", re.I)
+
+
+def _defined_short_name(text):
+    """The short name a filing defines for its registrant: 'Foo Mfg. Corporation ("Foo" or …'."""
+    match = re.search(r'\(\s*[\u201c"]([A-Z][A-Za-z]{3,30})[\u201d"]', text or "")
+    return match.group(1) if match else None
+
+
+def _named_issuer_quote(quote, *, ticker, cik, defined_name=None):
+    """A named subject requires exact current directory identity, never an alias guess.
+
+    Inside one issuer's already verified filing, a short name also counts if that filing
+    defines it and the directory's registrant name begins with it. This selects a quote
+    only; it plays no part in identity resolution or routing.
+    """
     match = _NAMED_ISSUER_ACTIVITY.match(quote)
     if not match or not quote.endswith(".") or not ticker or not isinstance(cik, str) or not cik.isdigit():
+        return False
+    if _UNRESOLVED_REFERENCE.search(quote):
         return False
     from . import issuer_identity
     try:
         issuer = issuer_identity._load_directory().symbols.get(ticker)
-        return bool(issuer and int(issuer.cik) == int(cik)
-                    and issuer_identity.name_key(match['subject']) == issuer_identity.name_key(issuer.name))
+        if not issuer or int(issuer.cik) != int(cik):
+            return False
+        subject = issuer_identity.name_key(re.sub(r"\s+also$", "", match['subject'], flags=re.I))
+        name = issuer_identity.name_key(issuer.name)
+        return subject == name or bool(
+            defined_name and subject == issuer_identity.name_key(defined_name) and name.startswith(subject + " "))
     except Exception:
         return False
 
@@ -286,6 +307,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     if not window:
         return []
     start, end = window
+    defined_name = _defined_short_name(document.text[start:start + 1000])
     stats["status"] = "no_qualifying_business_sentence"
     candidates = []
     named_offsets = set()
@@ -298,12 +320,12 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         after_heading = quote[heading.end():] if heading else ""
         if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The corporation|The firm)\b", after_heading, re.I)
                         or _customer_purpose_activity(after_heading)
-                        or _named_issuer_quote(after_heading, ticker=ticker, cik=cik)):
+                        or _named_issuer_quote(after_heading, ticker=ticker, cik=cik, defined_name=defined_name)):
             left += heading.end()
             quote = document.text[start + left:start + right]
             stats["heading_prefixes_removed"] += 1
         reason = _business_quote_rejection(quote)
-        if reason == "subject_or_activity" and _named_issuer_quote(quote, ticker=ticker, cik=cik):
+        if reason == "subject_or_activity" and _named_issuer_quote(quote, ticker=ticker, cik=cik, defined_name=defined_name):
             reason = None
             named_offsets.add(start + left)
         if reason:
@@ -335,6 +357,8 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
             return []
         value = dict(claim_kind="issuer_business_description", ticker=ticker, quote=quote,
                      start_offset=offset, end_offset=offset + len(quote), document_ref=ref)
+        if defined_name and offset in named_offsets:
+            value["defined_short_name"] = defined_name
         scope = _segment_business_scope(quote)
         if scope:
             value['business_scope'] = scope
@@ -373,7 +397,8 @@ def bound_business_description(item, *, ticker, cik):
         section = business_section_label(item.document_type, layout)
         if (value.get("claim_kind") != "issuer_business_description" or value.get("ticker") != ticker
                 or value.get('business_scope') != _segment_business_scope(value.get('quote', ''))
-                or not _business_quote(value.get("quote"), ticker=ticker, cik=cik) or value["quote"] != ref.get("quote")
+                or not _business_quote(value.get("quote"), ticker=ticker, cik=cik,
+                                       defined_name=value.get("defined_short_name")) or value["quote"] != ref.get("quote")
                 or ref.get("provider") != "SEC EDGAR" or ref.get("section") != section
                 or not ref.get("content_hash") or not _business_issuer_url(ref["url"], cik)
                 or ref["url"] != item.url or ref.get("published_at") != item.timestamp
@@ -535,9 +560,13 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                     risks.append(item)
         # Company-specific first, boilerplate removed; never an assertion that
         # these are the most material risks.
-        from .risk_selection import select_risks
+        from .risk_selection import business_terms, select_risks
+        business_window = complete_business_window(document.text, form=document.document_type, layout=None)
         risks, rejected = select_risks(risks, quote_of=lambda item: item.risk_disclosures[0]["quote"],
-                                       offset_of=lambda item: item.risk_disclosures[0]["start_offset"])
+                                       offset_of=lambda item: item.risk_disclosures[0]["start_offset"],
+                                       heading_of=lambda item: item.risk_disclosures[0].get("section_heading"),
+                                       terms=business_terms(document.text[business_window[0]:business_window[1]])
+                                       if business_window else frozenset())
         stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
         checkpoint("risks_selected")
         return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge

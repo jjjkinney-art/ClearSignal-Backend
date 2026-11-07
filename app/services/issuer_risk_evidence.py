@@ -294,7 +294,10 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             # to the Development of Our Product Candidates • Our business …") is
             # not part of the risk: quote the sentence after it, verbatim.
             heading = RUN_IN_RISK_HEADING.match(quote)
+            section_heading = None
             if heading and len(quote) - heading.end() >= 40:
+                # Kept as context for selection; it is not part of the quote.
+                section_heading = quote[:heading.end()].strip(' \u2022\u25cf')
                 sentence_start += heading.end()
                 quote = quote[heading.end():]
             stats["sentences"] += 1
@@ -321,6 +324,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             disclosure = {"claim_kind": "issuer_disclosed_risk", "ticker": ticker, "scope": profile.scope,
                           "quote": quote, "start_offset": offset, "end_offset": offset + len(quote),
                           "document_ref": reference}
+            if section_heading:
+                disclosure["section_heading"] = section_heading
             if layout and document.canonical_content_hash:
                 disclosure["reviewed_layout"] = layout_binding(layout, document.content_hash)
             if predecessor:

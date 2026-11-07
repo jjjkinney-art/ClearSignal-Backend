@@ -179,3 +179,14 @@ def test_a_risk_summary_heading_before_a_bullet_is_not_quoted():
             ('Government Regulation and Litigation Risks ● Changes in regulation could adversely affect us.', 'Changes'),
             ('Intellectual Property, Information Technology and Data Privacy and Security Risks ● Our rights are critical.', 'Our')):
         assert quote[RUN_IN_RISK_HEADING.match(quote).end():].startswith(sentence)
+
+
+def test_a_stripped_heading_is_kept_as_context_and_stays_out_of_the_quote():
+    text = ('Item 1A. Risk Factors Government Regulation and Litigation Risks ● Changes in government regulation '
+            'could adversely affect our business, financial condition and results of operations. '
+            'Item 1B. Unresolved Staff Comments')
+    from app.services.issuer_risk_evidence import RUN_IN_RISK_HEADING
+    quote = text[len('Item 1A. Risk Factors '):text.index(' Item 1B')]
+    match = RUN_IN_RISK_HEADING.match(quote)
+    assert quote[:match.end()].strip(' ●') == 'Government Regulation and Litigation Risks'
+    assert quote[match.end():].startswith('Changes in government regulation')

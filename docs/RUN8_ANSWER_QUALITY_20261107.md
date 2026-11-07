@@ -16,11 +16,29 @@ Development evidence only. These fixes were designed on Run 8's retained respons
 ## Decision-threshold answers
 Each states a historical baseline, an explicit monitoring condition with its basis, and exactly which inputs a decision threshold would need: no number is invented.
 
+## Second pass: risks and business sentences
+- **Heading as context:** a stripped summary heading is kept beside the risk, never in its quote. It can support a passage that itself states the issuer's exposure and a consequence.
+- **Plain-language risks:** a risk can now qualify if the passage states the issuer's own exposure and a consequence, and uses a term that this filing's business section repeats and that is not common across business sections generally. A term alone never qualifies, and a sentence naming a macro hazard still needs a concrete dependency.
+- **Common-word list:** `business_common_words.py` is fixed, derived from 18 issuers in retained filings, and is itself development data.
+- **Ranking:** at equal specificity, a risk the issuer heads in its own summary comes first. The limit stays two.
+- **Filing-defined short names:** used only to select a quote inside one issuer's already verified filing, when the filing defines the name and the directory's registrant name begins with it. Identity resolution and routing are unchanged. A complete sentence was tried first: VIRC's best one contains a digit, so a longer limit gained nothing and was reverted.
+
+Replayed against Runs 2, 4, 5 and 8, compared with `2e58f6e`:
+
+| Result | Cases |
+|---|---|
+| Material risk recovered | MNST regulation; AGEN clinical-trial enrollment |
+| Added, weaker | INGR capital-spending funding; MAN reputation damage, partly generic |
+| Useful risk lost from this pass | None found |
+| Still missed | MNST bottlers and aluminum (limit of two); DGXX data-center and HPC risks |
+| Threshold answers | Unchanged |
+
 ## Evidence gaps and unfixed limits
 - **DGXX cause:** the filing gives causes for a revenue line (energy sales), not for reported total revenue, so none is bound. That is correct behaviour.
 - **DGXX business:** remaining sentences carry numbers or promotional wording, which existing rules exclude.
-- **VIRC business:** better sentences exist, but need a short-name alias ("Virco"), which existing identity rules forbid, or a 304-character limit change. Left for a decision.
-- **Plain-language risks:** bottler, aluminum, data-center and supplier risks exist but do not meet the specificity rule. Fixing summary headings removed MNST's regulation risk, whose score came from the heading.
 - **MNST operating income:** the filing's attribution is at segment level, so none is bound to the consolidated figure.
+- **Checker limit:** one Run 2 NPK business quotation fails the verbatim check because it begins with a stray invisible character. The business quote was not changed by this work.
+
+**Next quality checkpoint:** a fresh cohort. These replays cannot measure generalization.
 
 Using this in a run needs a new freeze, pre-registration, package and approval.

@@ -95,3 +95,44 @@ def test_a_dependence_on_a_named_partner_or_customers_still_qualifies():
     for quote in ('The Company and TCCC have extensive commercial arrangements and, as a result, the Company’s future performance is substantially dependent on the success of its relationship with TCCC.',
                   'We depend on a limited number of customers for a substantial portion of our revenue.'):
         assert rejection(quote) is None and qualifies(quote)
+
+
+TERMS = frozenset({'bottler', 'aluminum', 'clinical'})
+
+
+def test_a_plain_language_risk_needs_the_filing_term_and_a_stated_exposure():
+    from app.services.risk_selection import plain_exposure
+    exposed = 'If we are unable to maintain good relationships with our existing bottlers, our business could suffer.'
+    assert plain_exposure(exposed, terms=TERMS)
+    # A business term alone, with no consequence or no first-person exposure, does not qualify.
+    assert not plain_exposure('Our products are sold through bottlers in many countries.', terms=TERMS)
+    assert not plain_exposure('Bottlers could suffer in some markets.', terms=TERMS)
+    # A stated exposure with no term of this filing does not qualify either.
+    assert not plain_exposure('If we are unable to retain staff, our business could suffer.', terms=TERMS)
+    # A macro hazard still needs a concrete dependency, whatever else it mentions.
+    assert not plain_exposure('Tariffs on aluminum could adversely affect our margins.', terms=TERMS)
+
+
+def test_a_heading_is_context_for_the_passage_and_never_enough_alone():
+    from app.services.risk_selection import plain_exposure
+    passage = 'Changes in government regulation could adversely affect our business.'
+    heading = 'Government Regulation and Litigation Risks'
+    assert plain_exposure(passage, heading=heading) and not plain_exposure(passage)
+    # The heading's topic is not in the passage, or the passage states no consequence.
+    assert not plain_exposure('Our staff could suffer in some years, and our plans could be harmed.', heading=heading)
+    assert not plain_exposure('Changes in government regulation occur in many markets.', heading=heading)
+
+
+def test_a_headed_risk_comes_before_an_unheaded_one_and_the_limit_holds():
+    headed = (2, 'Changes in government regulation could adversely affect our business.', 'Government Regulation Risks')
+    plain = (1, 'If we are unable to keep our bottlers, our business could suffer.', None)
+    other = (3, 'Our aluminum supply could be reduced, and our margins could suffer.', None)
+    selected, _ = select_risks([plain, other, headed], quote_of=lambda c: c[1], offset_of=lambda c: c[0],
+                               heading_of=lambda c: c[2], terms=TERMS)
+    assert [row[0] for row in selected] == [2, 1]
+
+
+def test_business_terms_drop_words_common_to_any_business_section():
+    from app.services.risk_selection import business_terms
+    text = 'bottlers bottlers bottlers could could could customers customers customers aluminum'
+    assert business_terms(text) == frozenset({'bottler'})

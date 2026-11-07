@@ -57,7 +57,7 @@ _DEPENDENCY = re.compile(
     r"|\b(?:is|are) concentrated in\b|\bconcentration of our\b", re.I)
 _GENERIC_CAPITALIZED = {
     'The', 'Our', 'We', 'Any', 'If', 'In', 'For', 'Some', 'Many', 'Such', 'These', 'This', 'Company',
-    'Despite', 'Because', 'As', 'An', 'A', 'New', 'Failure', 'Failures', 'Failing', 'Decisions'}
+    'Despite', 'Because', 'As', 'An', 'A', 'New', 'Failure', 'Failures', 'Failing', 'Decisions', 'Corporation'}
 def hazard_count(quote):
     return sum(bool(pattern.search(quote)) for pattern in _HAZARD_PATTERNS.values())
 
@@ -112,16 +112,59 @@ def qualifies(quote):
     return specificity(quote) > 0
 
 
-def select_risks(candidates, *, quote_of, offset_of, limit=2):
+# The issuer speaking about itself, and a stated consequence. Neither alone is an exposure.
+_OWN = re.compile(r"\b(?:we|our|us|the company|the corporation)\b|\bthe (?:company|corporation)['\u2019]s\b", re.I)
+_ADVERSE = re.compile(
+    r"\b(?:could|may|might|would|will)\b[^.]{0,120}?\b(?:adverse\w*|harm\w*|suffer\w*|negatively|disrupt\w*|"
+    r"reduc\w*|decreas\w*|los[es]\w*|impair\w*|limit\w*|interrupt\w*|jeopardi[sz]\w*)\b"
+    r"|\bif we (?:are|were) (?:not able|unable)\b[^.]*\b(?:could|may|might|would)\b", re.I)
+_TERM = re.compile(r"[a-z][a-z\-]{4,}")
+
+
+def _term(word):
+    return word[:-1] if word.endswith('s') and not word.endswith('ss') else word
+
+
+def business_terms(text, *, minimum=3):
+    """Words this filing's own business section uses repeatedly, beyond any section's vocabulary."""
+    from .business_common_words import BUSINESS_COMMON_WORDS
+    counts = {}
+    for word in _TERM.findall((text or '').lower()):
+        if _term(word) not in BUSINESS_COMMON_WORDS:
+            counts[_term(word)] = counts.get(_term(word), 0) + 1
+    return frozenset(term for term, count in counts.items() if count >= minimum)
+
+
+def plain_exposure(quote, *, terms=frozenset(), heading=None):
+    """A plain-language risk stating this issuer's own exposure and its consequence.
+
+    The passage must state both. A business term or the section heading only supports it:
+    neither qualifies a sentence by itself, and the heading is never quoted. A sentence naming
+    a macro hazard still needs a concrete dependency.
+    """
+    if hazard_count(quote) >= 1 or not _OWN.search(quote) or not _ADVERSE.search(quote):
+        return False
+    words = {_term(word) for word in _TERM.findall(quote.lower())}
+    if words & terms:
+        return True
+    topic = {_term(word) for word in re.findall(r"[a-z][a-z\-]{5,}", (heading or '').lower())} - {'related', 'relating'}
+    return bool(words & topic)
+
+
+def select_risks(candidates, *, quote_of, offset_of, limit=2, heading_of=None, terms=frozenset()):
     """(selected, rejected reasons). Empty selection means none qualified."""
     kept, reasons = [], []
     for item in candidates:
-        reason = rejection(quote_of(item)) or (None if qualifies(quote_of(item)) else 'not_company_specific')
+        quote = quote_of(item)
+        heading = heading_of(item) if heading_of else None
+        reason = rejection(quote) or (None if qualifies(quote) or plain_exposure(quote, terms=terms, heading=heading)
+                                      else 'not_company_specific')
         if reason:
             reasons.append(reason)
         else:
             kept.append(item)
-    kept.sort(key=lambda item: (-specificity(quote_of(item)), offset_of(item)))
+    # A risk the issuer heads in its own summary comes before one it does not, at equal specificity.
+    kept.sort(key=lambda item: (-specificity(quote_of(item)), 0 if heading_of and heading_of(item) else 1, offset_of(item)))
     distinct = []
     for item in kept:
         if any(near_duplicate(quote_of(item), quote_of(other)) for other in distinct):

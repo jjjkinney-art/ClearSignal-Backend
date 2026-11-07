@@ -1162,3 +1162,45 @@ def test_catalogs_and_employee_benefits_are_not_business_descriptions(quote, rea
 ])
 def test_segment_revenue_models_and_a_corporation_subject_describe_the_business(quote):
     assert service._business_quote_rejection(quote) is None
+
+
+class _Issuer:
+    cik, name = 751365, 'VIRCO MFG CORPORATION'
+
+
+@pytest.fixture
+def directory_with_issuer(monkeypatch):
+    from types import SimpleNamespace
+    from app.services import issuer_identity
+    monkeypatch.setattr(issuer_identity, '_load_directory', lambda: SimpleNamespace(symbols={'VIRC': _Issuer}))
+
+
+SHORT_NAME_QUOTE = 'Virco also provides a variety of products for preschool markets and has developed products for colleges.'
+
+
+def test_a_filing_defined_short_name_selects_a_quote_only_inside_that_filing(directory_with_issuer):
+    named = service._named_issuer_quote
+    assert not named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000751365')
+    assert named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000751365', defined_name='Virco')
+    # Not a name the registrant's begins with, or another issuer's filing.
+    assert not named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000751365', defined_name='Rival')
+    assert not named('Rival also provides a variety of products for preschool markets.', ticker='VIRC',
+                     cik='0000751365', defined_name='Rival')
+    assert not named(SHORT_NAME_QUOTE, ticker='VIRC', cik='0000000001', defined_name='Virco')
+
+
+def test_a_quote_needing_the_sentence_before_it_is_not_selected(directory_with_issuer):
+    assert not service._named_issuer_quote('Virco manufactures the table bases of these items and equips them with tops.',
+                                           ticker='VIRC', cik='0000751365', defined_name='Virco')
+
+
+def test_the_short_name_comes_from_the_filing_definition():
+    assert service._defined_short_name('Virco Mfg. Corporation (“Virco” or the “Company”) designs furniture.') == 'Virco'
+    assert service._defined_short_name('Virco Mfg. Corporation designs furniture.') is None
+
+
+def test_identity_resolution_does_not_use_short_names():
+    import inspect
+    from app.services import company_detection, issuer_identity
+    for module in (company_detection, issuer_identity):
+        assert '_defined_short_name' not in inspect.getsource(module)
