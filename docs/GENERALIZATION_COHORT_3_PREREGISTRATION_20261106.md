@@ -236,8 +236,12 @@ Consumed cohorts keep their historic halt.
 16 MiB is not read. That answer loses that filing's evidence, is marked degraded or unanswered, and
 each such download still costs up to 16 MiB of transfer and time from the case deadline. Filing sizes
 are not known before a run. BP's 20-F is known to exceed the limit, so BP's answers are expected to
-lack it. A rejected filing is requested again by a later case of the same issuer, so it is charged
-again; nothing is remembered between cases.
+lack it. Nothing is remembered between requests, so a rejected filing is downloaded and charged again
+whenever a later request asks for the same document.
+
+**Correction (same day):** this amendment first said BP's filing would be requested again by a later
+case. The offline check for the follow-up pre-registration shows BP's threshold case requests no
+document, so no repeat is expected for BP. Repeats remain possible for other issuers.
 
 **Tested:** offline only, on invented data. This has never run against the SEC.
 
@@ -281,8 +285,9 @@ Counted from the retained packets, without changing them:
 | 5 | 7 | 2 | 5 |
 | 6 | 0 | 0 | 0 |
 
-Anyone reading `full_answer` from Runs 1, 4 or 5 should use the last column instead. Claims still say
-nothing about accuracy or usefulness.
+Anyone reading the packet's `full_answer` from Runs 1, 4 or 5 should use the last column instead.
+Claims still say nothing about accuracy or usefulness. The Run 2, 4 and 5 assessments already kept
+these apart; `docs/HISTORICAL_SUBSTANTIVE_RECONCILIATION_20261107.md` reconciles every case.
 
 **Historical outputs are preserved:** consumed packets, ledgers, statuses and count names are unchanged,
 and a ledger from before this split exports with no new field.
@@ -317,3 +322,5 @@ Nothing here exists yet, and none of it authorizes retrieval, a package, an appr
 8. **Risk summary:** oversized filings by name (amendment 2's standing disclosure), run-halting
    failures, the coverage gaps, updated for what Run 6's four requests did and did not exercise.
 9. **After that, separately:** a new package, a new approval and a new output directory.
+
+**Superseded for planning by** `docs/GENERALIZATION_COHORT_3_FOLLOWUP_PREREGISTRATION_20261107.md`.
