@@ -1300,14 +1300,22 @@ def _run_investment_pipeline(
     _analyst_ests:   list = _ev_results.get("estimates", [])
     _sec_metric_evidence: list = _ev_results.get("sec_metrics", [])
     from .filing_metric_evidence import merge_latest_filing_metrics
+    # A filing's explanation of its own changes is not a metric comparison;
+    # it travels beside the merged comparisons rather than through the merge.
+    _period_explanation_evidence: list = [
+        item for item in _ev_results.get("filing_metrics", []) if getattr(item, "period_explanations", None)
+    ]
     _sec_metric_evidence = merge_latest_filing_metrics(
-        _sec_metric_evidence, _ev_results.get("filing_metrics", []), ticker=ticker, question=question,
+        _sec_metric_evidence,
+        [item for item in _ev_results.get("filing_metrics", []) if not getattr(item, "period_explanations", None)],
+        ticker=ticker, question=question,
     )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])
     _issuer_release_evidence: list = _ev_results.get("issuer_releases", [])
     # Exact XBRL comparisons lead source-oriented answers so E1-E3 bind to
     # claim-level facts rather than generic filing-discovery metadata.
     evidence = (_issuer_release_evidence + _issuer_kpi_evidence + _sec_metric_evidence
+                + _period_explanation_evidence
                 + _ev_results.get("thesis_disclosures", []) + market_evidence
                 + fred_evidence + _val_ratios + _analyst_ests)
     from .evidence_references import admit_evidence

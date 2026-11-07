@@ -84,9 +84,10 @@ def operating_margin_assessment(metrics, references):
                 'change_unit': 'percentage_points', 'change_percentage_points': str(change),
                 'direction': direction, 'current': current, 'prior': prior,
                 'reference_ids': [revenue_ref, income_ref], 'text': text,
-                'conditional_test': 'A future comparable margin below the cited current margin would weaken '
-                    'the profitability assumption. Review pricing, costs and product mix, and comparable '
-                    'peer evidence, before drawing a competitive-strength conclusion; this is not a forecast.',
+                'conditional_test': 'The cited margin is a historical baseline, not an investment threshold. '
+                    'A lower margin for the corresponding period one year later would weaken the profitability '
+                    'assumption. Review pricing, costs and product mix, and comparable peer evidence, before '
+                    'drawing a competitive-strength conclusion; this is not a forecast.',
             }
     except (KeyError, TypeError, ValueError, DecimalException):
         return None
