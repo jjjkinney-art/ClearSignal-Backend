@@ -83,7 +83,7 @@ class ClaimDocumentReference:
         # Preserve complete bounded risk sentences and separately admitted
         # segment product lists. Ordinary business quote limits stay 300.
         quote_limit = (900 if self.provider == "SEC EDGAR" and host == "www.sec.gov"
-            and self.section in {"Item 1A. Risk Factors", "Item 3.D. Risk Factors", "Strategic report - Risk and security - Risk factors", "Annual Report 2025 - Risk management - Key risks and mitigations", "Item 1. Business - Reported segment products", "Item 1. Business - Reported organisation activities", "Item 7. Management discussion - Deposit impairment"}
+            and self.section in {"Item 1A. Risk Factors", "Item 3.D. Risk Factors", "Strategic report - Risk and security - Risk factors", "Annual Report 2025 - Risk management - Key risks and mitigations", "Item 1. Business - Reported segment products", "Item 1. Business - Reported organisation activities", "Item 7. Management discussion - Deposit impairment", "Latest periodic report - results discussion"}
                        and self.content_hash else 300)
         if (self.provider == 'SEC EDGAR' and host == 'www.sec.gov' and self.content_hash
                 and self.section == 'Financial statement notes - Segment revenue policies'):
