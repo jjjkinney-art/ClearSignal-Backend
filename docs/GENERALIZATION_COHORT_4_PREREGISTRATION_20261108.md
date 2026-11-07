@@ -91,7 +91,7 @@ No pooled score or pass rate. Results are compared with these criteria and the p
 - **Requests:** about 5 per thesis case and 4 per threshold case for 10-K filers. MRX is predicted to file a 20-F, which is unchecked general knowledge; if so, it gets fewer document requests and fewer comparisons.
 - **Not predicted:** filing sizes, completion, content counts, figures, accuracy or usefulness. Any filing may be oversized; any host may throttle.
 
-## Proposed success criteria (for review, not yet agreed)
+## Proposed success criteria (approved by the owner 2026-11-08; see amendment 1)
 
 | Area | Proposed criterion |
 |---|---|
@@ -126,3 +126,29 @@ A run that misses any criterion is reported as such. Meeting them would not esta
 2. A new frozen commit carrying it, its source binding and offline checks.
 3. Clean clone, execution configuration, cost and retention evidence, package built twice, and the owner's separate approval.
 4. Launch-time checks, then checks-only, then one execution.
+
+## Amendment 1 (2026-11-08, before any package or retrieval): criteria and configuration
+
+**Success criteria approved by the owner:**
+1. All 12 cases reach a recorded outcome, with no halt.
+2. All quotations and figures reconcile.
+3. No historical baseline is presented as an investment threshold.
+4. At least 8 cases deliver source-bound claims.
+5. At least 8 score 1 or higher for usefulness, including at least 3 that score 2.
+6. Every unanswered part names the missing evidence.
+
+**Clarification:** supported historical numbers may be shown, labelled as baselines. Where an investment cutoff cannot be supported, the answer states the missing inputs and gives no number. An invented cutoff is an error under criterion 3.
+
+**Configuration:**
+- **Contract:** the six registered issuers and all 12 questions, in the registered order, are connected as cohort `run9` in `validation/ordinary_pilot_contract.py`, and `run9` becomes `APPROVED_COHORT`.
+- **Profile:** `threshold_filing_v1` binds `run9` with the same limits, quotas and timing. Run 6's profile entry is unchanged, and its contract digests are pinned by a test, so Runs 6-8 still export as recorded.
+- **Bindings:** the case records (`tests/ordinary_run9_cases.json`, equal to `docs/generalization_cohort_4_cases.json`), question digest and frontend pin are bound as for cohort 3.
+- **Synthetic fixture:** gains the six issuers for identity only; its figures are invented.
+- **Unchanged:** `app/`, all limits, the questions and the rubric. No substitution.
+
+This changes `validation/`, so the source binding changes. The commit carrying it is the new frozen code and needs its own CI.
+
+**Finding from wiring, not changed:** `app/`'s named-subject rule for business sentences does not accept a registrant name containing a comma. Three of the six names have one: Cinemark Holdings, Inc., TripAdvisor, Inc. and LEXICON PHARMACEUTICALS, INC. Real filings usually open with "We", "The Company" or a defined short name, so the effect on real answers is unknown. It is not fixed, because `app/` is frozen. Rehearsal fault tests target COHU instead of TRIP, whose synthetic business sentence would otherwise yield nothing to exclude.
+
+**Rehearsal request count:** 54, because all 12 cases resolve. Cohort 3 made 45, with LLYVA's two cases making none.
+

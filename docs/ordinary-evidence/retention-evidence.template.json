@@ -2,24 +2,24 @@
   "derived": {
     "contract_profile": {
       "case_order": [
-        "BP:core_thesis",
-        "BP:decision_threshold",
-        "MNST:core_thesis",
-        "MNST:decision_threshold",
-        "CRDO:core_thesis",
-        "CRDO:decision_threshold",
-        "LLYVA:core_thesis",
-        "LLYVA:decision_threshold",
-        "DGXX:core_thesis",
-        "DGXX:decision_threshold",
-        "VIRC:core_thesis",
-        "VIRC:decision_threshold"
+        "CNK:core_thesis",
+        "CNK:decision_threshold",
+        "COHU:core_thesis",
+        "COHU:decision_threshold",
+        "TRIP:core_thesis",
+        "TRIP:decision_threshold",
+        "LXRX:core_thesis",
+        "LXRX:decision_threshold",
+        "MRX:core_thesis",
+        "MRX:decision_threshold",
+        "DCGO:core_thesis",
+        "DCGO:decision_threshold"
       ],
       "case_seconds": {
         "core_thesis": 30,
         "decision_threshold": 20
       },
-      "cohort": "run6",
+      "cohort": "run9",
       "filing_parse_cutoff_seconds": 12,
       "filing_wait_seconds": 16,
       "frontend": {
@@ -28,7 +28,7 @@
         "resolver_sha256": "6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542"
       },
       "name": "threshold_filing_v1",
-      "questions_sha256": "c0617b758458f25c7517393d00809a8d667ad2023b1689e16b813c19be74a4a1",
+      "questions_sha256": "33f47ba6198b87310926f33e0d9cee6326a352fc74301645ee52a8f688b37643",
       "read_timeout_seconds": 10,
       "sec_gets": 66,
       "sec_gets_per_case": {

@@ -43,6 +43,14 @@ REGISTRANTS = {
     'LLYVA': (2078416, 'Liberty Live Holdings, Inc.'),
     'DGXX': (1854368, 'Digi Power X Inc.'),
     'VIRC': (751365, 'VIRCO MFG CORPORATION'),
+    # Run-9 cohort (identity only; every figure below remains invented, including
+    # any filing form or share count: these are not these companies' records).
+    'CNK': (1385280, 'Cinemark Holdings, Inc.'),
+    'COHU': (21535, 'COHU INC'),
+    'TRIP': (1526520, 'TripAdvisor, Inc.'),
+    'LXRX': (1062822, 'LEXICON PHARMACEUTICALS, INC.'),
+    'MRX': (1997464, 'Marex Group Ltd'),
+    'DCGO': (1822359, 'DocGo Inc.'),
 }
 # Real directory rows that share a run-5 issuer's CIK or name, as SEC's retained
 # directory (run 4, sha256 de59c00e...) lists them. Directory identity only: they

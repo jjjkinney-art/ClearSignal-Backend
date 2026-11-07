@@ -148,7 +148,7 @@ def test_document_admission_is_case_wide_only_under_the_profile(shared):
 
 def test_the_profile_binds_every_named_value():
     profile = THRESHOLD_FILING_PROFILE
-    assert profile['name'] == 'threshold_filing_v1' and profile['cohort'] == APPROVED_COHORT == 'run6'
+    assert profile['name'] == 'threshold_filing_v1' and profile['cohort'] == APPROVED_COHORT == 'run9'
     assert profile['sec_gets_per_case'] == {'core_thesis': 6, 'decision_threshold': 5} and profile['sec_gets'] == 66
     assert profile['switch'] == 'threshold_filing_explanations_enabled'
     assert profile['filing_parse_cutoff_seconds'] < profile['filing_wait_seconds'] < profile['case_seconds']['decision_threshold']
@@ -160,23 +160,38 @@ def test_the_profile_binds_every_named_value():
 
 
 def test_the_pre_registered_cohort_is_bound_unchanged():
-    records = json.loads((ROOT / 'tests' / 'ordinary_run6_cases.json').read_text())
-    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_3_cases.json').read_text())
-    selection = json.loads((ROOT / 'docs' / 'generalization_cohort_3_selection.json').read_text())
+    records = json.loads((ROOT / 'tests' / 'ordinary_run9_cases.json').read_text())
+    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_4_cases.json').read_text())
+    selection = json.loads((ROOT / 'docs' / 'generalization_cohort_4_selection.json').read_text())
     issuers = [row['ticker'] for row in selection['cohort']]
-    assert issuers == ['BP', 'MNST', 'CRDO', 'LLYVA', 'DGXX', 'VIRC']
+    assert issuers == ['CNK', 'COHU', 'TRIP', 'LXRX', 'MRX', 'DCGO']
     case_order = [f'{issuer}:{question}' for issuer in issuers for question in ('core_thesis', 'decision_threshold')]
     assert [record['case_id'] for record in records] == case_order == THRESHOLD_FILING_PROFILE['case_order']
     assert {int(record['expected_cik']) for record in records} == {row['cik'] for row in selection['cohort']}
     questions = [record['question'] for record in records]
     assert hashlib.sha256(json.dumps(questions).encode()).hexdigest() == THRESHOLD_FILING_PROFILE['questions_sha256']
-    checks = json.loads((ROOT / 'docs' / 'generalization_cohort_3_offline_checks.json').read_text())
-    assert checks['questions_sha256'] == THRESHOLD_FILING_PROFILE['questions_sha256']
+    checks = json.loads((ROOT / 'docs' / 'generalization_cohort_4_offline_checks.json').read_text())
+    assert checks['cases_sha256'] == hashlib.sha256((ROOT / 'docs' / 'generalization_cohort_4_cases.json').read_bytes()).hexdigest()
     assert checks['frontend_commit'] == THRESHOLD_FILING_PROFILE['frontend']['commit']
     assert checks['classifier_sha256'] == THRESHOLD_FILING_PROFILE['frontend']['classifier_sha256']
-    assert set(checks['intents'].values()) == {'company_analysis'}
-    assert [row['case_id'] for row in checks['identity'] if row['verdict'] == 'no company'] == [
-        'LLYVA:core_thesis', 'LLYVA:decision_threshold']
+    assert checks['resolver_sha256'] == THRESHOLD_FILING_PROFILE['frontend']['resolver_sha256']
+    # The record stores intents with sorted keys; every registered case is classified, and nothing else.
+    assert sorted(checks['intents']) == sorted(case_order) and set(checks['intents'].values()) == {'company_analysis'}
+    # Every case resolves to its own issuer offline; none is predicted unresolved.
+    assert [(row['case_id'], row['verdict']) for row in checks['identity']] == [(case, 'correct issuer') for case in case_order]
+
+
+def test_the_consumed_cohort_3_contract_is_unchanged():
+    """Runs 6-8 used cohort 3 under this profile; connecting cohort 4 changes nothing they bound."""
+    code = ('import sys; sys.path.insert(0, "."); from validation.capture_budget import digest; '
+            'from validation.ordinary_pilot_contract import quota_contract, contract_profile; '
+            'print(digest(quota_contract()), digest(contract_profile()))')
+    env = _child_env(ORDINARY_PILOT_COHORT='run6', ORDINARY_PROFILE_CHILD='')
+    done = subprocess.run([sys.executable, '-c', code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+    assert done.stdout.split()[-2:] == ['10b87f7391e3991e15eaa49cb27723eb36897ed0d1c362971848535facd96c18',
+                                        '66cbeee59440dbbb4cdadbc4fd798840e5c1afe4c5b6d955744e691ae2d41899'], done.stderr[-800:]
+    records = json.loads((ROOT / 'tests' / 'ordinary_run6_cases.json').read_text())
+    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_3_cases.json').read_text())
 
 
 @PROFILE_ONLY
@@ -346,7 +361,8 @@ def test_the_profile_runs_within_its_limits_and_reuses_submissions(tmp_path):
     result = run_rehearsal(tmp_path / 'run', scenario='happy')
     packet = result['packet']
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
-    assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES == 45 and result['worker']['refused_requests'] == []
+    # 54 for cohort 4: all twelve cases resolve (cohort 3 made 45, with LLYVA's two making none).
+    assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES == 54 and result['worker']['refused_requests'] == []
     routes = {}
     for attempt in packet['attempts']:
         assert attempt['status'] == 'settled'
@@ -358,8 +374,7 @@ def test_the_profile_runs_within_its_limits_and_reuses_submissions(tmp_path):
         assert routes[case, 'sec/submissions'] == 1
         assert routes[case, 'sec/document'] == (2 if case.endswith(':core_thesis') else 1)
     statuses = {row['case_id']: row['status'] for row in packet['cases']}
-    assert [case for case, status in statuses.items() if status == 'identity_unresolved'] == [
-        'LLYVA:core_thesis', 'LLYVA:decision_threshold']
+    assert [case for case, status in statuses.items() if status == 'identity_unresolved'] == UNRESOLVED
 
 
 def _degraded_case(packet):
@@ -458,8 +473,8 @@ def test_the_profile_uses_the_live_code_path_within_every_limit(tmp_path):
     result, sec, _ = _loopback(tmp_path, None)
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and packet['first_failure'] is None
-    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == 45
-    assert len(sec.connects) == len(sec.requests) == 45 and sec.handshake_failures == 0
+    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == EXPECTED_SEC_EXCHANGES == 54
+    assert len(sec.connects) == len(sec.requests) == 54 and sec.handshake_failures == 0
     assert worker['mode'] == 'loopback' and worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     assert 1 <= worker['max_inflight_sec'] <= 4

@@ -7,7 +7,8 @@ frontend sends with a general intent takes the general route, which attempts a
 model call; the zero-model boundary refuses it and halts the run there
 (invalid_request), on every host. With the frontend pinned to 138d646, no cohort
 case takes it, so every cohort completes: run 5 here answers ten cases and leaves
-OWL x2 unresolved, and run 6 answers ten and leaves LLYVA x2 unresolved. Run 5 itself
+OWL x2 unresolved, run 6 answers ten and leaves LLYVA x2 unresolved, and run 9 answers all
+twelve. Run 5 itself
 was bound to 84466b2 and halted at BNY:core_thesis; that record stays with its frozen
 commit, 0d7152a.
 
@@ -32,7 +33,8 @@ _HALT_INDEX = CASES.index(EXPECTED_HALT[0]) if EXPECTED_HALT else len(CASES)
 # Run 6: LLYVA, LLYVB and LLYVK are one issuer's distinct share classes, so its name
 # abstains by design. Both cases stay in the denominator.
 IDENTITY_UNRESOLVED = {'run5': ('OWL:core_thesis', 'OWL:decision_threshold'),
-                       'run6': ('LLYVA:core_thesis', 'LLYVA:decision_threshold')}.get(COHORT, ())
+                       'run6': ('LLYVA:core_thesis', 'LLYVA:decision_threshold'),
+                       'run9': ()}.get(COHORT, ())
 UNRESOLVED = [case for case in CASES[:_HALT_INDEX] if case in IDENTITY_UNRESOLVED]
 COMPLETED = [case for case in CASES[:_HALT_INDEX] if case not in UNRESOLVED]
 EXPECTED_STATUS = 'halted' if EXPECTED_HALT else 'complete'

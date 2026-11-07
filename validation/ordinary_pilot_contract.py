@@ -24,6 +24,10 @@ RUN_5_LAST_CASE = 'BNY:core_thesis'
 # docs/GENERALIZATION_COHORT_3_PREREGISTRATION_20261106.md and connected by its
 # amendment 1. No case is reordered: no halt is predicted.
 RUN_6_ISSUERS = ('BP', 'MNST', 'CRDO', 'LLYVA', 'DGXX', 'VIRC')
+# Run 9 is unseen-company cohort 4, pre-registered in
+# docs/GENERALIZATION_COHORT_4_PREREGISTRATION_20261108.md and connected by its
+# amendment 1. No case is reordered: every case resolves offline and no halt is predicted.
+RUN_9_ISSUERS = ('CNK', 'COHU', 'TRIP', 'LXRX', 'MRX', 'DCGO')
 # Both BWMX cases are predicted offline to halt the run, so they are ordered
 # last and no other case is lost; both stay in the denominator. The threshold
 # question resolves to another issuer, whose SEC request the boundary refuses
@@ -41,13 +45,19 @@ COHORTS = {
              + (RUN_5_LAST_CASE,)),
     'run6': ('tests/ordinary_run6_cases.json',
              tuple(f'{i}:{q}' for i in RUN_6_ISSUERS for q in QUESTIONS)),
+    'run9': ('tests/ordinary_run9_cases.json',
+             tuple(f'{i}:{q}' for i in RUN_9_ISSUERS for q in QUESTIONS)),
 }
 # Rehearsal fault scenarios target the thesis case at this index and the
 # threshold case after it: the third issuer's, unless that issuer is predicted
 # unresolved (run 5: OWL), then the next issuer whose two cases are answered.
-FAULT_CASE_INDEX = {'run5': 5}
+# Run 9: COHU, the second issuer. The synthetic filing opens its business sentence with
+# the registrant's name, and the application's named-subject rule does not accept a
+# name with a comma ("TripAdvisor, Inc."), so the third issuer's rehearsal would have no
+# business description for the cancellation tests to exclude.
+FAULT_CASE_INDEX = {'run5': 5, 'run9': 2}
 # The only cohort an approved package or run may use.
-APPROVED_COHORT = 'run6'
+APPROVED_COHORT = 'run9'
 # Rehearsal tests may select the historical cohort to keep exercising a fully
 # completing run; the approved launcher refuses any selection, so an approved
 # execution always uses APPROVED_COHORT, whose case records its package binds.
@@ -64,7 +74,7 @@ ISSUERS = tuple(dict.fromkeys(case.split(':')[0] for case in CASES))
 # cohort, question order, frontend pin, request quotas, application switch and timing
 # settings together. A cohort not named here keeps the contract below exactly as it was,
 # so consumed runs still export unchanged, under their own cohort selection.
-THRESHOLD_FILING_PROFILE = {
+_RUN_6_PROFILE = {
     'name': 'threshold_filing_v1',
     'cohort': 'run6',
     'case_order': list(COHORTS['run6'][1]),
@@ -81,11 +91,20 @@ THRESHOLD_FILING_PROFILE = {
     'case_seconds': {'core_thesis': 30, 'decision_threshold': 20},
     'wall_seconds': 480,
 }
+# The same profile, limits and timing for cohort 4; only the cohort it binds differs.
+# Run 6's entry stays exactly as it was, so runs 6-8 still export unchanged.
+PROFILES = {
+    'run6': _RUN_6_PROFILE,
+    'run9': {**_RUN_6_PROFILE, 'cohort': 'run9', 'case_order': list(COHORTS['run9'][1]),
+             'questions_sha256': '33f47ba6198b87310926f33e0d9cee6326a352fc74301645ee52a8f688b37643'},
+}
+# The approved cohort's profile.
+THRESHOLD_FILING_PROFILE = PROFILES[APPROVED_COHORT]
 
 
 def contract_profile():
     """The running cohort's named profile, or None for the original contract."""
-    return deepcopy(THRESHOLD_FILING_PROFILE) if COHORT == THRESHOLD_FILING_PROFILE['cohort'] else None
+    return deepcopy(PROFILES[COHORT]) if COHORT in PROFILES else None
 
 
 def quota_contract():
