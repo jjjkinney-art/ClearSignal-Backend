@@ -43,6 +43,8 @@ import datetime
 import json
 import logging
 import re
+import threading
+from contextvars import ContextVar
 from typing import Dict, List, Optional
 from threading import Lock
 import time
@@ -72,6 +74,13 @@ _FORM_LABELS: dict = {
 
 # Module-level cache for ticker → zero-padded CIK (loaded once per process).
 _ticker_cik_cache: Optional[Dict[str, str]] = None
+# SEC Standard Industrial Classification code per CIK, recorded from submissions
+# responses already fetched for filings; never a separate request.
+_issuer_sic: Dict[str, str] = {}
+
+
+def issuer_sic(cik: str) -> Optional[str]:
+    return _issuer_sic.get(str(cik).zfill(10))
 _ticker_cik_lock = Lock()
 
 # One shared full company_tickers.json response for every directory consumer.
@@ -162,6 +171,163 @@ def _reset_shared_company_tickers() -> None:
     with _directory_lock:
         _directory_response = None
         _directory_failure = None
+
+
+class SubmissionsUnavailable(Exception):
+    """A request's shared submissions response is absent, failed or mismatched."""
+
+
+# How long a stage waits for the stage fetching its request's submissions. The
+# fetching stage is itself bounded, so this only guards against a lost owner.
+_SUBMISSIONS_WAIT_SECONDS = 20
+
+
+class FilingTaskCancelled(BaseException):
+    """The request stopped waiting for this filing task, so it stops at its next checkpoint.
+
+    A BaseException so that no broad ``except Exception`` in the extractors can absorb
+    it and carry on. Nothing reads the result of a task the request abandoned.
+    """
+
+
+# Set only by the pilot harness, to time stages. Takes (task, stage, thread CPU ns).
+_filing_stage_observer = None
+
+
+def set_filing_stage_observer(observer) -> None:
+    global _filing_stage_observer
+    _filing_stage_observer = observer
+
+
+def _observe_filing_stage(task: str, stage: str) -> None:
+    observer = _filing_stage_observer
+    if observer is not None:
+        try:
+            observer(task, stage, time.thread_time_ns())
+        except Exception:
+            pass  # Timing never changes an outcome.
+
+
+class SubmissionsRequestScope:
+    """One request's submissions responses, shared by its evidence stages.
+
+    One GET per URL per scope. Concurrent stages wait for that GET and receive
+    their own copy, or its failure: a failed GET is not retried within the
+    request, so the request's accounting stays exact. Nothing outlives the
+    scope, and the URL names the CIK, so issuers and requests never share data.
+    """
+
+    def __init__(self):
+        self._lock = Lock()
+        self._entries = {}
+        self.fetches = 0
+        self.reuses = 0
+        self.failures = 0
+        self.filing_read_failures = []
+        self.filing_too_large = []  # the subset rejected by a size limit
+        self.filing_forms = {}  # task -> the form of the filing it chose to read
+        self.cancelled_tasks = set()
+        self.filing_parse_deadline = None  # time.monotonic() value, or no limit
+
+    def note_filing_selected(self, task: str, form: str):
+        with self._lock:
+            self.filing_forms[task] = form
+
+    def cancel_tasks(self, tasks):
+        with self._lock:
+            self.cancelled_tasks.update(tasks)
+
+    def task_cancelled(self, task: str) -> bool:
+        with self._lock:
+            return task in self.cancelled_tasks
+
+    def note_filing_read_failure(self, task: str, *, too_large: bool = False):
+        with self._lock:
+            self.filing_read_failures.append(task)
+            if too_large:
+                self.filing_too_large.append(task)
+
+    def fetch(self, url: str, cik: str, *, timeout: int):
+        with self._lock:
+            entry = self._entries.get(url)
+            owner = entry is None
+            if owner:
+                entry = {"done": threading.Event(), "data": None}
+                self._entries[url] = entry
+                self.fetches += 1
+            else:
+                self.reuses += 1
+        if not owner:
+            if not entry["done"].wait(timeout=_SUBMISSIONS_WAIT_SECONDS) or entry["data"] is None:
+                raise SubmissionsUnavailable("shared SEC submissions fetch failed")
+            return copy.deepcopy(entry["data"])
+        try:
+            data = _fetch_json(url, timeout=timeout)
+            reported = str(data.get("cik", "")) if isinstance(data, dict) else ""
+            if not reported.isdigit() or int(reported) != int(cik):
+                raise SubmissionsUnavailable("SEC submissions response names another issuer")
+            entry["data"] = copy.deepcopy(data)
+            return data
+        except BaseException:
+            with self._lock:
+                self.failures += 1
+            raise
+        finally:
+            entry["done"].set()
+
+
+_submissions_scope: ContextVar[Optional[SubmissionsRequestScope]] = ContextVar(
+    "sec_submissions_request_scope", default=None)
+
+
+def note_filing_selected(task: str, form: str) -> None:
+    """Tell the active request which form an evidence task is about to read."""
+    scope = _submissions_scope.get()
+    if scope is not None:
+        scope.note_filing_selected(task, form)
+
+
+def filing_checkpoint(task: str, stage: str, *, observe: bool = True) -> None:
+    """Between processing stages: record the stage, and stop if the request gave up.
+
+    Does nothing outside a request that asks for it. Code between two checkpoints
+    cannot be interrupted, so a task can still outlive its abandonment by one stage.
+    """
+    scope = _submissions_scope.get()
+    if scope is None:
+        return
+    cancelled = scope.task_cancelled(task)
+    if observe or cancelled:
+        _observe_filing_stage(task, f'cancelled:{stage}' if cancelled else stage)
+    if cancelled:
+        raise FilingTaskCancelled(task)
+
+
+def note_filing_read_failure(task: str, *, too_large: bool = False) -> None:
+    """Tell the active request an evidence task lost its filing, if it asks."""
+    scope = _submissions_scope.get()
+    if scope is not None:
+        scope.note_filing_read_failure(task, too_large=too_large)
+
+
+def filing_parse_deadline() -> Optional[float]:
+    scope = _submissions_scope.get()
+    return scope.filing_parse_deadline if scope is not None else None
+
+
+def bind_submissions_scope(fn, scope: Optional[SubmissionsRequestScope]):
+    """Run ``fn`` with ``scope`` active; worker threads do not inherit contextvars."""
+    if scope is None:
+        return fn
+
+    def _bound(*args, **kwargs):
+        token = _submissions_scope.set(scope)
+        try:
+            return fn(*args, **kwargs)
+        finally:
+            _submissions_scope.reset(token)
+
+    return _bound
 
 
 def _years_ago(n: int) -> str:
@@ -294,8 +460,12 @@ def _fetch_by_cik(
     url = f"{_SUBMISSIONS_BASE}/CIK{cik}.json"
     print(f"[DIAG] SEC EDGAR (CIK): fetching submissions for ticker={ticker} CIK={cik}")
 
-    data        = _fetch_json(url, timeout=10)
+    scope = _submissions_scope.get()
+    data = (scope.fetch(url, cik, timeout=10) if scope is not None
+            else _fetch_json(url, timeout=10))
     entity_name = data.get("name", ticker)
+    if str(data.get("sic") or "").isdigit():
+        _issuer_sic[str(cik).zfill(10)] = str(data["sic"])
     recent      = data.get("filings", {}).get("recent", {})
 
     filing_dates = recent.get("filingDate", [])

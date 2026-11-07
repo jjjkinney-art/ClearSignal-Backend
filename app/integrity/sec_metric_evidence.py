@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 from decimal import Decimal
 from typing import Sequence
 
@@ -14,19 +15,32 @@ from .sec_fact_binding import bind_sec_fact
 from .sec_metric_labels import metric_label, income_attribution
 
 
-def _scaled(value: int | float, *, prefix: str = "", suffix: str = "") -> str:
+def _scaled(value: int | float, *, prefix: str = "", suffix: str = "", decimals: int = 1) -> str:
     amount = Decimal(str(value))
     sign = "-" if amount < 0 else ""
     amount = abs(amount)
     for divisor, scale in ((Decimal("1e12"), "T"), (Decimal("1e9"), "B"),
                            (Decimal("1e6"), "M")):
         if amount >= divisor:
-            rendered = f"{amount / divisor:.1f}".rstrip("0").rstrip(".")
+            rendered = f"{amount / divisor:.{decimals}f}".rstrip("0").rstrip(".")
             return f"{sign}{prefix}{rendered}{scale}{suffix}"
     rendered = format(amount, ",f")
     if "." in rendered:
         rendered = rendered.rstrip("0").rstrip(".")
     return f"{sign}{prefix}{rendered}{suffix}"
+
+
+def _distinct_values(current: int | float, prior: int | float, unit: str) -> tuple[str, str]:
+    """Both amounts, with enough precision that a real change does not read as none."""
+    rendered = _value(current, unit), _value(prior, unit)
+    if rendered[0] != rendered[1] or current == prior or unit not in {"USD", "EUR"}:
+        return rendered
+    affixes = {"prefix": "$"} if unit == "USD" else {"suffix": " EUR"}
+    for decimals in range(2, 7):
+        rendered = (_scaled(current, decimals=decimals, **affixes), _scaled(prior, decimals=decimals, **affixes))
+        if rendered[0] != rendered[1]:
+            break
+    return rendered
 
 
 def _value(value: int | float, unit: str) -> str:
@@ -232,11 +246,32 @@ def comparable_metric_evidence(
             def cash_state(value):
                 return "cash used" if value < 0 else "cash provided" if value > 0 else "zero net cash flow"
             movement = f"operating cash flow moved from {cash_state(prior.value)} to {cash_state(current.value)}"
-    amount_join = "; signed amounts: " if cash_flow and (current.value <= 0 or prior.value <= 0) else " to "
+    elif current.value <= 0 or prior.value <= 0:
+        # A percentage of a loss or across a sign change misleads; state the
+        # absolute change and what kind of movement it is.
+        difference = abs(Decimal(str(current.value)) - Decimal(str(prior.value)))
+        profit_measure = re.search(r"income|earnings|profit|per share", metric_name, re.I)
+        negative, positive = ("a loss", "a profit") if profit_measure else ("negative", "positive")
+        if current.value < 0 and prior.value < 0 and profit_measure:
+            state = (f"loss narrowed by {_value(difference, unit)}" if current.value > prior.value
+                     else f"loss widened by {_value(difference, unit)}" if current.value < prior.value
+                     else "loss was unchanged")
+            movement = f"{metric_name} was a loss in both periods; the {state}"
+        elif current.value < 0 and prior.value < 0:
+            direction = "rose" if current.value > prior.value else "fell" if current.value < prior.value else "was unchanged"
+            movement = (f"{metric_name} was negative in both periods and {direction}"
+                        + (f" by {_value(difference, unit)}" if difference else ""))
+        else:
+            def state_of(value):
+                return negative if value < 0 else positive if value > 0 else "zero"
+            movement = (f"{metric_name} moved from {state_of(prior.value)} to {state_of(current.value)}, "
+                        f"a change of {_value(difference, unit)}")
+    amount_join = "; signed amounts: " if current.value <= 0 or prior.value <= 0 else " to "
+    current_text, prior_text = _distinct_values(current.value, prior.value, unit)
     summary = (
         f"{ticker} {movement}{amount_join}"
-        f"{_value(current.value, unit)} for the period {current.start} to {current.end}, from "
-        f"{_value(prior.value, unit)} in the comparable prior-year period "
+        f"{current_text} for the period {current.start} to {current.end}, from "
+        f"{prior_text} in the comparable prior-year period "
         f"{prior.start} to {prior.end}."
     )
     verified_claims = [

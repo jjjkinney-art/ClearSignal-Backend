@@ -1,0 +1,76 @@
+{
+ "seed": "clearsignal-generalization-3:",
+ "buckets": [
+  [
+   "large",
+   1,
+   200
+  ],
+  [
+   "mid",
+   501,
+   1500
+  ],
+  [
+   "small",
+   2501,
+   5000
+  ]
+ ],
+ "per_bucket": 2,
+ "code_commit": "45f5283c9fdc714ba1720bf60098c195977bf67d",
+ "directory_sha256": "76b4b2abb9f7dd0e9cff38e2f20336952bb41806057b2dd1033e244f3e1faec2",
+ "directory_rows": 10409,
+ "excluded_prior_cohort_or_retained": 18,
+ "excluded_code_mentions": 776,
+ "cohort": [
+  {
+   "bucket": "large",
+   "position": 132,
+   "ticker": "BP",
+   "cik": 313807,
+   "sec_name": "BP PLC",
+   "rank": "00d62775713ca33521720fd1b79fc5aa4dbfdaf2c3726058f62b60878de174e6"
+  },
+  {
+   "bucket": "large",
+   "position": 182,
+   "ticker": "MNST",
+   "cik": 865752,
+   "sec_name": "Monster Beverage Corp",
+   "rank": "030f3734ab57f83353d61a6c866551342705dd45f78fdda6e6dea0b047131863"
+  },
+  {
+   "bucket": "mid",
+   "position": 508,
+   "ticker": "CRDO",
+   "cik": 1807794,
+   "sec_name": "Credo Technology Group Holding Ltd",
+   "rank": "002ba32acc3f848d973001ab3d3a7f54ce44c4e4a1d782f14a039b2fc9c2a2ce"
+  },
+  {
+   "bucket": "mid",
+   "position": 998,
+   "ticker": "LLYVA",
+   "cik": 2078416,
+   "sec_name": "Liberty Live Holdings, Inc.",
+   "rank": "005f400c51dbfc72d12382c46cb691729704fd18bd40d0d56f8c94e9a43fc9fb"
+  },
+  {
+   "bucket": "small",
+   "position": 4008,
+   "ticker": "DGXX",
+   "cik": 1854368,
+   "sec_name": "Digi Power X Inc.",
+   "rank": "00410b68ec0cda24dce70212a9ab696446f2150d71554c590d037bfd4fd9555f"
+  },
+  {
+   "bucket": "small",
+   "position": 4642,
+   "ticker": "VIRC",
+   "cik": 751365,
+   "sec_name": "VIRCO MFG CORPORATION",
+   "rank": "005685c5ea9029be57860b09d177457568e3753a90e6962f83458baba59820ba"
+  }
+ ]
+}

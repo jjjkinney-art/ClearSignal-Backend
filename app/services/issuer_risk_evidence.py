@@ -24,6 +24,14 @@ from .sec_risk_sections import (
 _SCOPE = re.compile(r"\b(?:services|app store|icloud|apple music|digital content)\b", re.I)
 _POSSIBILITY = re.compile(r"\b(?:may|could|can|might)\b", re.I)
 _REPORTED_EVENT = re.compile(r"\b(?:are|is|were|was|have been|has been) experiencing\b", re.I)
+# A stated dependency or concentration is itself the issuer's disclosed exposure;
+# it needs no "may"/"could" wording to be a risk mechanism.
+STATED_CONCENTRATION = re.compile((
+    r"\b(?:(?:highly|heavily|significantly|substantially|primarily|principally|largely) dependent (?:up)?on"
+    r"|depends? (?:primarily|principally|heavily|substantially|largely) (?:up)?on"
+    r"|(?:a (?:significant|substantial|large) (?:portion|part|majority)|(?:all|substantially all)) of our "
+    r"(?:current )?(?:operations|revenues?|sales|cash flows?|assets|properties|loans?|loan portfolio)"
+    r"|(?:is|are) concentrated in|concentration of our)\b"), re.I)
 _ADVERSE = re.compile(r"\b(?:adverse|adversely|harm|loss|lost|reduce|reduced|decline|disrupt(?:ion|ions|ed|s|ing)?|unable|cease|fail(?:ure|ures|ed|ing|s)?|shortage|damage|suffer|delay|constraints?|shortfalls?|insufficient|legal liabilities|negatively (?:affect|impact)|incur (?:additional|higher|increased) costs|close\b[^.!?]{0,80}\b(?:rooms|hotels|facilities))\b", re.I)
 _NON_TOPIC_PREFIX = re.compile(r"\bnon[\s\-‐‑‒–—]*$", re.I)
 
@@ -65,7 +73,16 @@ RISK_TOPICS = {
     "Patents": r"\b(?:patents?|patent expir\w*|intellectual property)\b",
     "Membership renewals": r"\b(?:memberships?|member renewal\w*)\b",
     "Marketplace sellers": r"\b(?:sellers?|merchants?|marketplace)\b",
-    "Commodity prices": r"\b(?:commodity prices?|oil prices?|gas prices?|aluminum prices?|alumina prices?)\b",
+    "Commodity prices": (r"\b(?:commodity prices?|oil prices?|gas prices?|aluminum prices?|alumina prices?"
+                         r"|(?:metals?|copper|zinc|nickel|silver|gold|iron ore|steel|lithium|coal|molybdenum) prices?"
+                         r"|prices? of (?:copper|zinc|nickel|silver|gold|iron ore|steel|lithium|coal|molybdenum"
+                         r"|(?:the )?metals?(?: (?:that )?we produce)?))\b"),
+    # The issuer's own stated dependency or concentration (markets, properties, loans).
+    "Operating concentration": (r"\b(?:operating concentration|(?:highly|heavily|significantly|substantially|primarily|principally|largely) dependent (?:up)?on"
+                      r"|depends? (?:primarily|principally|heavily|substantially|largely) (?:up)?on"
+                      r"|(?:a (?:significant|substantial|large) (?:portion|part|majority)|(?:all|substantially all)) of our "
+                      r"(?:current )?(?:operations|revenues?|sales|cash flows?|assets|properties|loans?|loan portfolio)"
+                      r"|(?:is|are) concentrated in|concentration of our|geographic(?:al)? concentration)\b"),
     "Occupancy": r"\b(?:occupancy|hotel demand|room demand|RevPAR)\b",
     "Production quality": r"\b(?:production quality|product defects?|product quality|aircraft safety|quality control)\b",
     "Export controls": r"\b(?:export controls?|export restrictions?|export licens\w*|sanctions?)\b",
@@ -165,6 +182,16 @@ def requested_risk_profile(ticker: str, question: str) -> IssuerRiskProfile | No
     return IssuerRiskProfile(cik, *topic) if topic else None
 
 
+# Title-case heading words, optionally "Related to …", ending where a sentence
+# begins (a capitalized word followed by a lowercase one), with an optional bullet.
+_HEADING_WORD = r"(?:[A-Z][A-Za-z,&\-]*|the|of|and|to|in|for|our|an?|with)"
+RUN_IN_RISK_HEADING = re.compile(
+    r"^(?:(?:[A-Z][A-Za-z,&\-]*|and)\s+){0,9}(?:Risks?|Risk Factors)"
+    r"(?:\s+(?:[Rr]elat(?:ed|ing)|[Aa]ssociated|[Pp]ertaining|[Ss]pecific)\s+(?:to|[Ww]ith)(?:\s+" + _HEADING_WORD + r"){1,10})?"
+    # The sentence starts here, never inside the heading ("Risks Specific to …").
+    r"\s*(?:[•●]\s*(?=[A-Z])|(?!(?:Related|Relating|Associated|Pertaining|Specific)\b)(?=[A-Z][a-z]+\s+[a-z]))")
+
+
 def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, ...]:
     """Stable reason codes for the existing admission rules; never source prose."""
     max_chars = 300 if profile.scope == "Services" else 900
@@ -176,8 +203,9 @@ def risk_quote_rejections(quote: str, profile: IssuerRiskProfile) -> tuple[str, 
         ("topic_scope", _has_topic_scope(quote, profile, disclosure=True)),
         # Retain the stable diagnostic code; explicit reported risk events can
         # also qualify. Emission still says the event is issuer-reported only.
-        ("possibility_language", bool(_POSSIBILITY.search(quote) or _REPORTED_EVENT.search(quote))),
-        ("adverse_mechanism", bool(_ADVERSE.search(quote))),
+        ("possibility_language", bool(_POSSIBILITY.search(quote) or _REPORTED_EVENT.search(quote)
+                                      or STATED_CONCENTRATION.search(quote))),
+        ("adverse_mechanism", bool(_ADVERSE.search(quote) or STATED_CONCENTRATION.search(quote))),
         ("generic_products_and_services", not re.search(r"\bproducts and services\b", quote, re.I)),
         ("unresolved_reference", not re.match(r"(?:this|these|that|those|it|they|such)\b", quote, re.I)),
         ("cross_reference_or_instruction", not re.search(
@@ -262,6 +290,16 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
         section = text[section_start:section_end]
         for sentence_start, sentence_end in risk_sentence_spans(section):
             quote = section[sentence_start:sentence_end]
+            # A risk-factor section heading run into the sentence ("Risks Related
+            # to the Development of Our Product Candidates • Our business …") is
+            # not part of the risk: quote the sentence after it, verbatim.
+            heading = RUN_IN_RISK_HEADING.match(quote)
+            section_heading = None
+            if heading and len(quote) - heading.end() >= 40:
+                # Kept as context for selection; it is not part of the quote.
+                section_heading = quote[:heading.end()].strip(' \u2022\u25cf')
+                sentence_start += heading.end()
+                quote = quote[heading.end():]
             stats["sentences"] += 1
             is_topic = _has_topic_scope(quote, profile, disclosure=True)
             stats["topic_sentences"] += int(is_topic)
@@ -286,6 +324,8 @@ def extract_issuer_risk_evidence(document: PublicDocument, *, ticker: str,
             disclosure = {"claim_kind": "issuer_disclosed_risk", "ticker": ticker, "scope": profile.scope,
                           "quote": quote, "start_offset": offset, "end_offset": offset + len(quote),
                           "document_ref": reference}
+            if section_heading:
+                disclosure["section_heading"] = section_heading
             if layout and document.canonical_content_hash:
                 disclosure["reviewed_layout"] = layout_binding(layout, document.content_hash)
             if predecessor:

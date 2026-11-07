@@ -28,18 +28,18 @@ _BUSINESS_ASPIRATION_OR_PROMOTION = re.compile(
     r"creating long[- ]term value|strong returns|profitably|"
     r"high[- ]quality|cost[- ]effective)\b", re.I)
 _CURRENT_BUSINESS_PREDICATE = re.compile(
-    r"^(?:We|Our company|The company|The firm)\s+"
+    r"^(?:We|Our company|The company|The corporation|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
     r"distributes?|delivers?|produces?|markets?|offers?|"
     r"(?:are|is) (?:a|an) (?:manufacturer|provider|producer|distributor|"
     r"operator|developer|retailer))\b|"
-    r"^(?:Our company|The company|The firm)['\u2019]s\s+"
+    r"^(?:Our company|The company|The corporation|The firm)['\u2019]s\s+"
     r"(?:operations|business|(?:line|range|portfolio) of [^.]{1,100})\s+"
     r"(?:(?:are|is) (?:comprised of|organized into)|"
     r"includes?|comprises?|consists? of)\b", re.I)
 _CURRENT_REVENUE_MODEL = re.compile(
-    r"^(?:We|Our company|The company|The firm)\s+"
+    r"^(?:We|Our company|The company|The corporation|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"generates? revenue (?:primarily |principally )?from\s+"
     r"(?:sales of (?:subscriptions|(?:our )?products|services)|"
@@ -60,12 +60,12 @@ _NAMED_ISSUER_ACTIVITY = re.compile(
     r"(?:designs?|manufactures?|develops?|provides?|sells?|operates?|"
     r"distributes?|delivers?|produces?|markets?|offers?|enables?)\b", re.I)
 _CURRENT_SEGMENT_STRUCTURE = re.compile(
-    r"^(?:Our company|The company|The firm)['\u2019]s\s+"
+    r"^(?:Our company|The company|The corporation|The firm)['\u2019]s\s+"
     r"(?:(?:consumer|wholesale|retail|commercial)\s+)?business segments?\s+"
     r"(?:is|are)\s+(?!expected\b|planned\b|proposed\b|potential\b|intended\b)", re.I)
 _NAMED_SEGMENT_STRUCTURE = re.compile(
     r"^(?:For management reporting purposes,\s+)?"
-    r"(?:We|Our company|The company|The firm)\s+(?:has|have)\s+"
+    r"(?:We|Our company|The company|The corporation|The firm)\s+(?:has|have)\s+"
     r"(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)\s+"
     r"reportable business segments?\s*[\u2013\u2014:-]\s+"
     # Require spelled-out names, rather than interpreting unfamiliar acronyms.
@@ -92,14 +92,42 @@ def _segment_business_scope(quote):
 
 
 _INTERNAL_EMPLOYEE_ACTIVITY = re.compile(
-    r"\b(?:for|to)\s+our\s+(?:employees|staff|workforce)\b|"
-    r"^(?:We|Our company|The company|The firm)\s+"
+    r"\b(?:for|to)\s+(?:our|its)\s+(?:(?:new|existing|current|all)\s+)?(?:employees|staff|workforce|personnel)\b|"
+    # "<Issuer> provides our employees with … wellness programs": human
+    # capital, not a product, customer or revenue activity.
+    r"\bprovides?\s+(?:our\s+|its\s+)?(?:employees|staff|workforce)\b|"
+    r"\b(?:employee\s+)?wellness\s+programs?\b|"
+    r"^(?:We|Our company|The company|The corporation|The firm)\s+"
     r"(?:(?:also|primarily|principally|currently|generally)\s+){0,2}"
     r"offers?\s+(?:our\s+)?(?:employees|staff|workforce)\s+"
     r"(?:(?:a|an|the)\s+(?:[a-z-]+\s+){0,3})?"
     r"(?:package of benefits|benefits|healthcare|stipends)\b|"
     r"\b(?:skills|professional|career) development across our "
-    r"(?:organization|workforce)\b", re.I)
+    r"(?:organization|workforce)\b|"
+    # Development programs whose beneficiaries are employees, however the
+    # issuer is named ("Blackstone offers … learning and professional
+    # development opportunities … to help employees advance their careers").
+    r"\b(?:learning|professional|career|leadership|talent)(?:\s+and\s+(?:professional\s+)?)?\s*development\s+"
+    r"(?:opportunities|programs?)\b[^.]{0,120}\bemployees\b|"
+    r"\b(?:employee\s+)?well[- ]?being\s+programs?\b", re.I)
+_NEGATED_OR_RIGHTS_ONLY = re.compile(r"\bnot (?:materially |substantially )?(?:dependent|reliant) (?:up)?on\b", re.I)
+_RIGHTS = re.compile(r"\b(?:patents?|trademarks?|licen[cs]es?|copyrights?|intellectual property|distribution rights)\b", re.I)
+_BUSINESS_ACTIVITY = re.compile(r"\b(?:products?|services?|customers?|manufactur\w*|sells?|sold|provides?|offers?|"
+                                r"operates?|develops?|designs?|distribut(?:es|ing))\b", re.I)
+# Without a possessive ("to new employees", "for all employees") the employees
+# may be a customer's: internal only when no client or customer is named.
+_UNOWNED_EMPLOYEES = re.compile(
+    r"\b(?:for|to)\s+(?:new|existing|all|current)\s+(?:employees|staff|workforce|personnel)\b", re.I)
+_CUSTOMER_SCOPE = re.compile(
+    r"\b(?:clients?|customers?|employers?|subscribers?|businesses|organi[sz]ations|companies|enterprises)\b", re.I)
+
+
+# Where the issuer's reports can be obtained, not what the issuer does
+# ("We offer, free of charge, downloads of our annual, quarterly and current reports").
+_FILING_AVAILABILITY = re.compile(
+    r"\bfree of charge\b|"
+    r"\b(?:annual|quarterly|current|periodic)\s+reports?\b[^.]{0,160}\b(?:available|website|internet|download)|"
+    r"\b(?:reports?|filings?|proxy statements?)\b[^.]{0,80}\b(?:filed with|furnished to) the (?:SEC|Securities and Exchange Commission)\b", re.I)
 _INTERNAL_HOSTING_ACTIVITY = re.compile(
     r"\b(?:migrate|host|run) our (?:production|internal) "
     r"(?:services|systems|applications)\b", re.I)
@@ -125,22 +153,43 @@ def requests_thesis_disclosures(ticker: str, question: str) -> bool:
             and not requested_issuer_kpi_aliases(question))
 
 
-def _business_quote(quote, *, ticker=None, cik=None):
+def _business_quote(quote, *, ticker=None, cik=None, defined_name=None):
     reason = _business_quote_rejection(quote)
     return reason is None or (reason == "subject_or_activity"
-                             and _named_issuer_quote(quote, ticker=ticker, cik=cik))
+                             and _named_issuer_quote(quote, ticker=ticker, cik=cik, defined_name=defined_name))
 
 
-def _named_issuer_quote(quote, *, ticker, cik):
-    """A named subject requires exact current directory identity, never an alias guess."""
+# "these items" means something only with the sentence before it, which is not quoted.
+_UNRESOLVED_REFERENCE = re.compile(r"\b(?:these|those) (?:items|products|solutions|offerings)\b", re.I)
+
+
+def _defined_short_name(text):
+    """The short name a filing defines for its registrant: 'Foo Mfg. Corporation ("Foo" or …'."""
+    match = re.search(r'\(\s*[\u201c"]([A-Z][A-Za-z]{3,30})[\u201d"]', text or "")
+    return match.group(1) if match else None
+
+
+def _named_issuer_quote(quote, *, ticker, cik, defined_name=None):
+    """A named subject requires exact current directory identity, never an alias guess.
+
+    Inside one issuer's already verified filing, a short name also counts if that filing
+    defines it and the directory's registrant name begins with it. This selects a quote
+    only; it plays no part in identity resolution or routing.
+    """
     match = _NAMED_ISSUER_ACTIVITY.match(quote)
     if not match or not quote.endswith(".") or not ticker or not isinstance(cik, str) or not cik.isdigit():
+        return False
+    if _UNRESOLVED_REFERENCE.search(quote):
         return False
     from . import issuer_identity
     try:
         issuer = issuer_identity._load_directory().symbols.get(ticker)
-        return bool(issuer and int(issuer.cik) == int(cik)
-                    and issuer_identity.name_key(match['subject']) == issuer_identity.name_key(issuer.name))
+        if not issuer or int(issuer.cik) != int(cik):
+            return False
+        subject = issuer_identity.name_key(re.sub(r"\s+also$", "", match['subject'], flags=re.I))
+        name = issuer_identity.name_key(issuer.name)
+        return subject == name or bool(
+            defined_name and subject == issuer_identity.name_key(defined_name) and name.startswith(subject + " "))
     except Exception:
         return False
 
@@ -163,6 +212,18 @@ def _customer_purpose_activity(quote):
     return bool(lead and _CURRENT_BUSINESS_PREDICATE.match(quote[lead.end():]))
 
 
+# A list of flavors or brands in one line says what a line contains, not what the business does.
+_PRODUCT_CATALOG = re.compile(
+    r"(?:We|The company|The corporation) offers? (?:the following|a number of)\b.*\b"
+    r"(?:product lines?|brand famil(?:y|ies)|brands?|flavors?)\b", re.I)
+_EMPLOYEE_BENEFITS = re.compile(
+    r"\b(?:benefits? (?:programs?|packages?)|array of benefits|health and welfare|employee assistance program)\b", re.I)
+# How a named segment earns its revenue is a description of the business model.
+_SEGMENT_REVENUE_MODEL = re.compile(
+    r"(?:Our|The company['\u2019]s|The corporation['\u2019]s)\s+[^.]{1,80}?\bsegment\s+(?:primarily\s+)?"
+    r"generates\s+(?:net\s+)?(?:operating\s+)?revenues?\s+(?:primarily\s+)?(?:by|from)\s", re.I)
+
+
 def _business_quote_rejection(quote):
     # Exact complete, short qualitative sentences only. Numbers, forecasts and
     # mixed operational/aspirational prose do not become business-model facts.
@@ -176,16 +237,30 @@ def _business_quote_rejection(quote):
     # A current 'provide' predicate can describe internal human-capital
     # programs rather than the issuer's products or customer services.
     # Withhold the complete sentence; never clip out a business-looking clause.
-    if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote):
+    # What the business does not depend on, or which rights it holds, is not a
+    # description of what it does ("… segments are not dependent upon any
+    # individual patents … licenses or distribution rights").
+    if _PRODUCT_CATALOG.match(quote):
+        return "product_catalog"
+    if _EMPLOYEE_BENEFITS.search(quote):
+        return "internal_employee_activity"
+    if _NEGATED_OR_RIGHTS_ONLY.search(quote) or (
+            _RIGHTS.search(quote) and not _BUSINESS_ACTIVITY.search(quote)):
+        return "not_a_business_description"
+    if _INTERNAL_EMPLOYEE_ACTIVITY.search(quote) or (
+            _UNOWNED_EMPLOYEES.search(quote) and not _CUSTOMER_SCOPE.search(quote)):
         return "internal_employee_activity"
     if _INTERNAL_HOSTING_ACTIVITY.search(quote):
         return "internal_hosting_activity"
+    if _FILING_AVAILABILITY.search(quote):
+        return "filing_availability"
     # Activity words in a strategy, belief or potential project are not a
     # current operating predicate. Require the main subject to state the
     # activity, current business role, segment structure or product range.
     if (not (_CURRENT_BUSINESS_PREDICATE.match(quote)
              or _customer_purpose_activity(quote)
              or _CURRENT_REVENUE_MODEL.match(quote)
+             or _SEGMENT_REVENUE_MODEL.match(quote)
              or _CURRENT_PRODUCT_DISTRIBUTION.fullmatch(quote)
              or _CURRENT_SEGMENT_STRUCTURE.match(quote)
              or _NAMED_SEGMENT_COMPOSITION.fullmatch(quote)
@@ -232,6 +307,7 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     if not window:
         return []
     start, end = window
+    defined_name = _defined_short_name(document.text[start:start + 1000])
     stats["status"] = "no_qualifying_business_sentence"
     candidates = []
     named_offsets = set()
@@ -242,14 +318,14 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
         # only an explicit shared heading prefix; retain the entire sentence.
         heading = _BUSINESS_HEADING_PREFIX.match(quote)
         after_heading = quote[heading.end():] if heading else ""
-        if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The firm)\b", after_heading, re.I)
+        if heading and (re.match(r"(?:For management reporting purposes,\s+)?(?:We|Our company|The company|The corporation|The firm)\b", after_heading, re.I)
                         or _customer_purpose_activity(after_heading)
-                        or _named_issuer_quote(after_heading, ticker=ticker, cik=cik)):
+                        or _named_issuer_quote(after_heading, ticker=ticker, cik=cik, defined_name=defined_name)):
             left += heading.end()
             quote = document.text[start + left:start + right]
             stats["heading_prefixes_removed"] += 1
         reason = _business_quote_rejection(quote)
-        if reason == "subject_or_activity" and _named_issuer_quote(quote, ticker=ticker, cik=cik):
+        if reason == "subject_or_activity" and _named_issuer_quote(quote, ticker=ticker, cik=cik, defined_name=defined_name):
             reason = None
             named_offsets.add(start + left)
         if reason:
@@ -281,6 +357,8 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
             return []
         value = dict(claim_kind="issuer_business_description", ticker=ticker, quote=quote,
                      start_offset=offset, end_offset=offset + len(quote), document_ref=ref)
+        if defined_name and offset in named_offsets:
+            value["defined_short_name"] = defined_name
         scope = _segment_business_scope(quote)
         if scope:
             value['business_scope'] = scope
@@ -319,7 +397,8 @@ def bound_business_description(item, *, ticker, cik):
         section = business_section_label(item.document_type, layout)
         if (value.get("claim_kind") != "issuer_business_description" or value.get("ticker") != ticker
                 or value.get('business_scope') != _segment_business_scope(value.get('quote', ''))
-                or not _business_quote(value.get("quote"), ticker=ticker, cik=cik) or value["quote"] != ref.get("quote")
+                or not _business_quote(value.get("quote"), ticker=ticker, cik=cik,
+                                       defined_name=value.get("defined_short_name")) or value["quote"] != ref.get("quote")
                 or ref.get("provider") != "SEC EDGAR" or ref.get("section") != section
                 or not ref.get("content_hash") or not _business_issuer_url(ref["url"], cik)
                 or ref["url"] != item.url or ref.get("published_at") != item.timestamp
@@ -376,6 +455,10 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
     if not requests_thesis_disclosures(ticker, question):
         return []
     quarterly_business = []
+
+    def checkpoint(stage):
+        sec_provider.filing_checkpoint("thesis_disclosures", stage)
+
     try:
         stats.update(stage="identity", status="identity_unavailable")
         cik = sec_provider._load_ticker_cik_map().get(ticker)
@@ -397,13 +480,16 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                 quarter = quarters[0]
                 try:
                     stats["stage"] = "quarterly_document"
+                    sec_provider.note_filing_selected('thesis_disclosures', quarter.document_type)
                     quarterly_document = fetch_public_document(quarter.url, user_agent=user_agent,
                         publisher="SEC EDGAR", published_at=quarter.timestamp, document_type="10-Q",
                         source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
-                        preserve_sec_business=True, extract_tables=False)
+                        preserve_sec_business=True, extract_tables=False, checkpoint=checkpoint)
                     quarterly_business = extract_business_descriptions(quarterly_document,
                         ticker=ticker, cik=cik)
                 except Exception as exc:
+                    sec_provider.note_filing_read_failure(
+                        'thesis_disclosures', too_large=getattr(exc, 'size_limit_bytes', None) is not None)
                     stats["status"] = "quarterly_document_unavailable"
                     logger.warning("quarterly business context unavailable for %s: %s", ticker, type(exc).__name__)
             # Reuse the exact reviewed document authorization. It permits
@@ -416,19 +502,22 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
             stats["status"] = "unsupported_form"
             return []
         stats.update(stage="annual_document", status="document_unavailable")
+        sec_provider.note_filing_selected('thesis_disclosures', filing.document_type)
         document = fetch_public_document(filing.url, user_agent=user_agent, publisher="SEC EDGAR",
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
             preserve_sec_business=True, extract_tables=False,
-            segment_fact_cik=cik if relationship is None else None)
+            segment_fact_cik=cik if relationship is None else None, checkpoint=checkpoint)
         diagnostics = {}
         stats.update(stage="extraction", status="extraction_complete")
         business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
                     if relationship is None else [])
         stats["business_extraction"] = diagnostics
+        checkpoint("business_extracted")
         from .thesis_competition import extract_competition_descriptions
         competition = (extract_competition_descriptions(document, ticker=ticker, cik=cik)
                        if relationship is None else [])
+        checkpoint("competition_extracted")
         from .segment_order_context import extract_order_context
         orders = (extract_order_context(document, ticker=ticker, cik=cik)
                   if relationship is None else [])
@@ -453,6 +542,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         from .cash_reconciliation_evidence import extract_cash_reconciliation
         cash_bridge = (extract_cash_reconciliation(document,ticker=ticker,cik=cik)
                        if relationship is None else [])
+        checkpoint("context_extracted")
         if relationship is not None:
             diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
@@ -460,6 +550,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         risks = []
         seen = set()
         for scope in RISK_TOPICS:
+            sec_provider.filing_checkpoint("thesis_disclosures", "risk_extraction", observe=False)
             for item in extract_issuer_risk_evidence(document, ticker=ticker,
                     question=f"What operating risk affects {scope}?", issuer_relationship=relationship,
                     broad_thesis=True):
@@ -467,10 +558,21 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                 if value and value["quote"] not in seen:
                     seen.add(value["quote"])
                     risks.append(item)
-        # Source order, never an assertion that these are the most material risks.
-        risks.sort(key=lambda item: item.risk_disclosures[0]["start_offset"])
-        return (quarterly_business + business)[:2] + competition + risks[:2] + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
+        # Company-specific first, boilerplate removed; never an assertion that
+        # these are the most material risks.
+        from .risk_selection import business_terms, select_risks
+        business_window = complete_business_window(document.text, form=document.document_type, layout=None)
+        risks, rejected = select_risks(risks, quote_of=lambda item: item.risk_disclosures[0]["quote"],
+                                       offset_of=lambda item: item.risk_disclosures[0]["start_offset"],
+                                       heading_of=lambda item: item.risk_disclosures[0].get("section_heading"),
+                                       terms=business_terms(document.text[business_window[0]:business_window[1]])
+                                       if business_window else frozenset())
+        stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
+        checkpoint("risks_selected")
+        return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
     except Exception as exc:
+        sec_provider.note_filing_read_failure(
+            'thesis_disclosures', too_large=getattr(exc, 'size_limit_bytes', None) is not None)
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):
             stats["document_failure_kind"] = exc.failure_kind
