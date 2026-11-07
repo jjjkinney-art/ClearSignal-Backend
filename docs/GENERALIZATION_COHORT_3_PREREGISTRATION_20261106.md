@@ -222,7 +222,9 @@ anything. Nothing was learned about the other five issuers from Run 6.
   any declared length and the bytes read in `ordinary_size_rejections`.
 - The answer must declare the gap (`reason: too_large`), or the case halts. Its status is
   `answered_degraded_unadjudicated`, or `unanswered_size_rejected` when the application reports
-  `insufficient_claim_evidence`.
+  `insufficient_claim_evidence`. The second status is reached in tests by a synthetic issuer whose
+  company facts support nothing, so its filing is its only evidence: the same issuer answers without
+  the rejection and cannot answer with it.
 - The case can finish, and the next begin, only after every attempt is terminal and every task ended.
 
 **Still run-halting:** oversized directory, filing-list or facts responses; a size rejection whose
@@ -239,8 +241,25 @@ again; nothing is remembered between cases.
 
 **Tested:** offline only, on invented data. This has never run against the SEC.
 
-**Application change:** `app/` changes here, so the frozen `app/` tree of `45f5283` no longer describes
-this branch. The gap reason and notice wording are new. A failed quarterly filing is now noted too; it
-was previously silent. All of it reaches answers only with the threshold switch on.
+**New frozen application version:** the freeze at the top of this document no longer applies to this
+branch. It says any later change under `app/` invalidates that plan, and this amendment changes `app/`.
 
-**Requires before any run:** a new package and a new separate approval, neither of which exists.
+| | Previous, superseded here | New frozen version |
+|---|---|---|
+| `app/` tree | `b9f1cd7383b30f2c9ecafea18f4c82fc4da365dc` | `b27c28a2ad527edb9ab2fb38896c2c8f3fe29d5b` |
+| Introduced by | `45f5283` | `e7b3781` on `pilot/oversized-filing-recovery` |
+
+The tree hash identifies the version, whichever later commit carries it. Any further change under `app/`
+needs another new version. The change: the gap reason `too_large`, a notice that does not suggest a
+retry for it, and a noted failure for a quarterly filing, which was previously silent. All of it reaches
+answers only with the threshold switch on. The original evidence for the old freeze, its CI counts and
+its offline route checks, describe the old version and were not re-run for this one by that record.
+Runs 2, 4, 5 and 6 remain as recorded: their consumed packages and approvals are bound to their own code.
+
+**This does not satisfy the plan's rule by itself:** the plan also says a `validation/` change beyond
+connecting the cohort needs a new pre-registration. This amendment records the change and its exposure;
+a fresh pre-registration for this exposed cohort is still required before any run, with its own
+predictions and offline checks at the new version.
+
+**Requires before any run:** the new pre-registration above, a new package and a new separate approval.
+None of them exists.

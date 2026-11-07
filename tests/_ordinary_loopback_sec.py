@@ -8,6 +8,7 @@ invented responses of validation._ordinary_synthetic_sec are served. It never
 opens an outbound connection. Test infrastructure only.
 """
 import datetime
+import json
 import re
 import socketserver
 import ssl
@@ -27,6 +28,28 @@ PARTIAL_MARKER = b'<p>INVENTED-PARTIAL-OVERSIZED-FILING-TEXT</p>'
 OVERSIZE_FRAMING = {'oversize_declared': b'Content-Length: %d\r\n' % OVERSIZE_TOTAL,
                     'oversize_chunked': b'Transfer-Encoding: chunked\r\n',
                     'oversize_close': b'Connection: close\r\n'}
+
+
+def inline_quarterly_filing(cik):
+    """An invented quarterly filing whose inline facts compare two periods."""
+    def context(key, year):
+        return (f'<xbrli:context id="{key}"><xbrli:entity><xbrli:identifier scheme="http://www.sec.gov/CIK">{cik:010d}'
+                f'</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:startDate>{year}-04-01</xbrli:startDate>'
+                f'<xbrli:endDate>{year}-06-30</xbrli:endDate></xbrli:period></xbrli:context>')
+
+    def fact(concept, key, value):
+        return (f'<ix:nonFraction id="{concept}-{key}" name="us-gaap:{concept}" contextRef="{key}" unitRef="usd" '
+                f'decimals="-3" format="ixt:num-dot-decimal" scale="3">{value}</ix:nonFraction>')
+    facts = ''.join(fact(concept, 'current', current) + fact(concept, 'prior', prior)
+                    for concept, current, prior in (('Revenues', '1,100', '1,000'), ('OperatingIncomeLoss', '210', '190'),
+                                                    ('NetIncomeLoss', '160', '150')))
+    return (f'<html xmlns="http://www.w3.org/1999/xhtml" xmlns:xbrli="http://www.xbrl.org/2003/instance" '
+            'xmlns:ix="http://www.xbrl.org/2013/inlineXBRL" xmlns:us-gaap="http://fasb.org/us-gaap/2026" '
+            'xmlns:iso4217="http://www.xbrl.org/2003/iso4217" '
+            'xmlns:ixt="http://www.xbrl.org/inlineXBRL/transformation/2020-02-12">'
+            f'<head/><body><ix:header><ix:resources>{context("current", 2026)}{context("prior", 2025)}'
+            '<xbrli:unit id="usd"><xbrli:measure>iso4217:USD</xbrli:measure></xbrli:unit></ix:resources></ix:header>'
+            f'<p>Invented rehearsal quarterly report.</p>{facts}</body></html>').encode()
 
 
 def _authority(name):
@@ -74,7 +97,11 @@ class LoopbackSEC:
     With ``untrusted=True`` the served leaf is issued by a different CA than
     the one written to ``ca_path``, so certificate verification must fail.
     """
-    def __init__(self, directory, *, untrusted=False, direct=False, fault=None):
+    def __init__(self, directory, *, untrusted=False, direct=False, fault=None, ifrs_only_cik=None):
+        # ifrs_only_cik: that issuer's company facts are valid but hold no us-gaap, so they
+        # support no comparison, and its latest filing carries the only comparable facts.
+        # That filing is then the difference between an answer and none.
+        self.ifrs_only_cik = ifrs_only_cik
         # (kind, path regex, nth match): 'late' completes after 13 s with bytes arriving
         # inside the read timeout, 'silent' sends nothing for 13 s, 'crawl' sends one byte
         # a second, 'close' hangs up without answering.
@@ -187,6 +214,13 @@ class LoopbackSEC:
                                       'host': headers.get('host'), 'method': method,
                                       'path': path, 'user_agent': headers.get('user-agent')})
             status, media, body = respond(path) if method == 'GET' else (405, 'text/plain', b'')
+            if self.ifrs_only_cik is not None and path == f'/api/xbrl/companyfacts/CIK{self.ifrs_only_cik:010d}.json':
+                facts = json.loads(body)
+                facts['facts'] = {'ifrs-full': {'Revenue': {'label': 'Invented rehearsal value', 'units': {}}}}
+                body = json.dumps(facts).encode()
+            if (self.ifrs_only_cik is not None and media == 'text/html'
+                    and re.search(rf'/edgar/data/{self.ifrs_only_cik}/[0-9]+/[a-z]+-20260630\.htm$', path)):
+                body = inline_quarterly_filing(self.ifrs_only_cik)
             reason = {200: b'OK', 404: b'Not Found', 405: b'Method Not Allowed'}[status]
             kind = self._take_fault(path)
             if kind == 'close':

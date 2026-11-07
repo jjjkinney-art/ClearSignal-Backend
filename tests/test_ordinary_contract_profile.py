@@ -26,7 +26,7 @@ from validation.capture_budget import BudgetError, digest
 from validation.ordinary_native_boundary import verify_contract_profile
 from validation.ordinary_native_ledger import CASE_SECONDS, degraded_stages
 from validation.ordinary_transport import OrdinaryHTTPTransport
-from validation.ordinary_pilot_contract import (APPROVED_COHORT, CASES, COHORT, THRESHOLD_FILING_PROFILE,
+from validation.ordinary_pilot_contract import (APPROVED_COHORT, CASES, COHORT, FAULT_CASE_INDEX, THRESHOLD_FILING_PROFILE,
                                                 contract_profile, quota_contract)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -432,11 +432,11 @@ def test_export_refuses_a_degraded_answer_without_its_ledger_record(tmp_path):
 
 # -- the live code path: real sockets, TLS and the gate, against a loopback server ----
 
-def _loopback(tmp_path, fault):
+def _loopback(tmp_path, fault, **server):
     from _ordinary_loopback_sec import LoopbackSEC
     from validation.ordinary_isolated_rehearsal import run_loopback_rehearsal
     base = tmp_path.resolve()
-    with LoopbackSEC(base, fault=fault) as sec:
+    with LoopbackSEC(base, fault=fault, **server) as sec:
         return run_loopback_rehearsal(base / 'run', ca=sec.ca_path), sec, base / 'run'
 
 
@@ -567,17 +567,92 @@ def test_an_oversized_filing_in_the_threshold_case_is_recovered_too(tmp_path):
     assert rejections[0]['case_id'].endswith(':decision_threshold')
 
 
+def _only_evidence_fault(kind, nth):
+    from validation._ordinary_rehearsal_worker import _FAULT_CIK
+    return _FAULT_CIK, (kind, rf'/Archives/edgar/data/{_FAULT_CIK}/[0-9]+/[a-z]+-20260630\.htm$', nth)
+
+
+def _source(packet, case):
+    return packet['answers'][case]['response']['answer']['source_answer']
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(600)
+@pytest.mark.parametrize('kind, nth, case', [
+    ('oversize_declared', 1, CASES[FAULT_CASE_INDEX]),
+    ('oversize_chunked', 1, CASES[FAULT_CASE_INDEX]),
+    ('oversize_close', 2, CASES[FAULT_CASE_INDEX + 1]),
+], ids=['thesis_declared', 'thesis_chunked', 'threshold_close'])
+def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered(tmp_path, kind, nth, case):
+    """No stored answer is edited. The issuer's company facts support nothing, so its filing
+    alone can support an answer: the control answers from it, the rejected run cannot."""
+    _needs_port()
+    cik, fault = _only_evidence_fault(kind, nth)
+    (tmp_path / 'control').mkdir()
+    (tmp_path / 'rejected').mkdir()
+    control, _, _ = _loopback(tmp_path / 'control', None, ifrs_only_cik=cik)
+    assert control['status'] == 'complete' and control['packet']['size_rejections'] == []
+    assert {'case_id': case, 'status': 'answered_unadjudicated'} in control['packet']['cases']
+    assert _source(control['packet'], case)['status'] == 'partial' and _source(control['packet'], case)['claims']
+
+    result, sec, output = _loopback(tmp_path / 'rejected', fault, ifrs_only_cik=cik)
+    packet = result['packet']
+    # Export: unanswered, not degraded and not a failure; the run completes.
+    assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert statuses[case] == 'unanswered_size_rejected'
+    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+    assert packet['outcome_counts']['operational_failure'] == 0 and packet['quality_pass_rate'] is None
+    # The answer is the application's own: no claims, and it says why.
+    source = _source(packet, case)
+    assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == [] and source['degraded'] is True
+    assert source['evidence_gaps'] == [{'source': 'the latest SEC filing', 'task': 'filing_metrics', 'reason': 'too_large'}]
+    response = json.dumps(packet['answers'][case]['response'])
+    assert 'because the document is larger than the size limit' in response and 'Trying again' not in response
+    # Worker: one rejection, every worker finished, and the peer was cut off.
+    rejection, = packet['size_rejections']
+    assert (rejection['case_id'], rejection['stage']) == (case, 'evidence.filing_metrics')
+    assert [(r['case_id'], r['stage']) for r in result['worker']['size_rejections']] == [(case, 'evidence.filing_metrics')]
+    assert result['worker']['unfinished_workers'] == 0 and result['worker']['failure_class'] is None
+    assert [(s['kind'], s['client_hung_up']) for s in sec.oversize] == [(kind, True)]
+    # Ledger: the same outcome durably, with nothing of the body retained, the rejected
+    # attempt ended before the next case began, and every later case answered.
+    with sqlite3.connect(output / 'ledger.sqlite') as db:
+        assert db.execute('SELECT halted FROM policy').fetchone() == (None,)
+        assert db.execute('SELECT c.case_id,r.stage,r.bytes_read>0 OR r.declared_bytes>r.limit_bytes FROM ordinary_size_rejections r '
+                          'JOIN cases c ON c.id=r.case_run').fetchall() == [(case, 'evidence.filing_metrics', 1)]
+        attempt, recorded = db.execute('SELECT attempt_id,recorded_ns FROM ordinary_size_rejections').fetchone()
+        assert db.execute('SELECT status FROM attempts WHERE id=?', (attempt,)).fetchone() == ('size_rejected',)
+        assert db.execute('SELECT COUNT(*) FROM ordinary_responses WHERE attempt_id=?', (attempt,)).fetchone() == (0,)
+        assert db.execute('SELECT COUNT(*) FROM cases').fetchone() == (12,)
+        assert db.execute("SELECT COUNT(*) FROM cases WHERE status!='complete'").fetchone() == (0,)
+        following = CASES[CASES.index(case) + 1]
+        started, = db.execute('SELECT t.started_ns FROM ordinary_case_times t JOIN cases c ON c.id=t.case_run '
+                              'WHERE c.case_id=?', (following,)).fetchone()
+        assert recorded < started
+    # Other cases read their filings as before, including this filing in the sibling
+    # case, because nothing is remembered between cases.
+    sibling = CASES[FAULT_CASE_INDEX + 1 if nth == 1 else FAULT_CASE_INDEX]
+    assert statuses[sibling] == 'answered_unadjudicated' and _source(packet, sibling)['status'] == 'partial'
+
+
 @PROFILE_ONLY
 @pytest.mark.timeout(300)
-def test_oversized_facts_are_not_a_filing_and_still_halt(tmp_path):
+@pytest.mark.parametrize('route, pattern', [
+    ('facts', r'/companyfacts/CIK{cik:010d}\.json$'),
+    ('submissions', r'/submissions/CIK{cik:010d}\.json$'),
+    ('directory', r'/files/company_tickers\.json$'),
+])
+def test_oversized_facts_are_not_a_filing_and_still_halt(tmp_path, route, pattern):
     from validation._ordinary_rehearsal_worker import _FAULT_CIK
     _needs_port()
-    fault = ('oversize_close', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1)
-    result, _, _ = _loopback(tmp_path, fault)
+    result, sec, _ = _loopback(tmp_path, ('oversize_close', pattern.format(cik=_FAULT_CIK), 1))
     packet = result['packet']
     assert result['status'] != 'complete' and packet['halt'] == 'post_claim_failure'
     assert packet['first_failure']['code'] == 'response_size' and packet['size_rejections'] == []
+    assert not [a for a in packet['attempts'] if a['status'] == 'size_rejected']
     assert 'halted' in {c['status'] for c in packet['cases']}
+    assert packet['outcome_counts']['operational_failure'] >= 1
 
 
 @PROFILE_ONLY
