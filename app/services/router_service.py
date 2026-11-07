@@ -1311,6 +1311,9 @@ def _run_investment_pipeline(
             _ev_futures_map, source_evidence_view=is_source_answer_request(question),
             document_seconds=_document_seconds, abandoned=_abandoned_evidence,
         )
+        if _submissions_scope is not None:
+            # After the results were read, so a task stopping now cannot be one they include.
+            _submissions_scope.cancel_tasks(_abandoned_evidence)
     except Exception as _pool_exc:
         logger.warning("[router] evidence pool error (%r) — falling back to sequential", type(_pool_exc).__name__)
         for k, fn in _ev_tasks.items():

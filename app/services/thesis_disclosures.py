@@ -413,6 +413,10 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
     if not requests_thesis_disclosures(ticker, question):
         return []
     quarterly_business = []
+
+    def checkpoint(stage):
+        sec_provider.filing_checkpoint("thesis_disclosures", stage)
+
     try:
         stats.update(stage="identity", status="identity_unavailable")
         cik = sec_provider._load_ticker_cik_map().get(ticker)
@@ -437,7 +441,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                     quarterly_document = fetch_public_document(quarter.url, user_agent=user_agent,
                         publisher="SEC EDGAR", published_at=quarter.timestamp, document_type="10-Q",
                         source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
-                        preserve_sec_business=True, extract_tables=False)
+                        preserve_sec_business=True, extract_tables=False, checkpoint=checkpoint)
                     quarterly_business = extract_business_descriptions(quarterly_document,
                         ticker=ticker, cik=cik)
                 except Exception as exc:
@@ -459,15 +463,17 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
             preserve_sec_business=True, extract_tables=False,
-            segment_fact_cik=cik if relationship is None else None)
+            segment_fact_cik=cik if relationship is None else None, checkpoint=checkpoint)
         diagnostics = {}
         stats.update(stage="extraction", status="extraction_complete")
         business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
                     if relationship is None else [])
         stats["business_extraction"] = diagnostics
+        checkpoint("business_extracted")
         from .thesis_competition import extract_competition_descriptions
         competition = (extract_competition_descriptions(document, ticker=ticker, cik=cik)
                        if relationship is None else [])
+        checkpoint("competition_extracted")
         from .segment_order_context import extract_order_context
         orders = (extract_order_context(document, ticker=ticker, cik=cik)
                   if relationship is None else [])
@@ -492,6 +498,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         from .cash_reconciliation_evidence import extract_cash_reconciliation
         cash_bridge = (extract_cash_reconciliation(document,ticker=ticker,cik=cik)
                        if relationship is None else [])
+        checkpoint("context_extracted")
         if relationship is not None:
             diagnostics["status"] = "reviewed_predecessor_risk_context_only"
         (logger.info if business else logger.warning)("thesis business extraction %s: selection=%s diagnostics=%s",
@@ -499,6 +506,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         risks = []
         seen = set()
         for scope in RISK_TOPICS:
+            sec_provider.filing_checkpoint("thesis_disclosures", "risk_extraction", observe=False)
             for item in extract_issuer_risk_evidence(document, ticker=ticker,
                     question=f"What operating risk affects {scope}?", issuer_relationship=relationship,
                     broad_thesis=True):
@@ -512,6 +520,7 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         risks, rejected = select_risks(risks, quote_of=lambda item: item.risk_disclosures[0]["quote"],
                                        offset_of=lambda item: item.risk_disclosures[0]["start_offset"])
         stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
+        checkpoint("risks_selected")
         return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
     except Exception as exc:
         sec_provider.note_filing_read_failure(

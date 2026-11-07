@@ -590,6 +590,7 @@ def fetch_public_document(
     extract_tables: bool = True,
     inline_fact_cik: str | None = None,
     parse_deadline: float | None = None,
+    checkpoint=None,
     preserve_sec_results: bool = False,
     segment_fact_cik: str | None = None,
     inline_fact_concepts: tuple[str, ...] = (),
@@ -647,6 +648,11 @@ def fetch_public_document(
         if response is not None:
             response.close()
 
+    def _stage(name: str) -> None:
+        if checkpoint is not None:
+            checkpoint(name)
+
+    _stage("document_read")
     if parse_deadline is not None and time.monotonic() > parse_deadline:
         # Parsing cannot be interrupted, so a caller with a hard deadline can refuse to start.
         raise PublicDocumentError("document arrived too late to parse", failure_kind="time_limit")
@@ -670,31 +676,38 @@ def fetch_public_document(
             source_type=source_type, source_tier=source_tier,
         )
     decoded = body.decode(encoding, errors="replace")
+    _stage("document_decoded")
     inline_facts = ()
     inline_member_facts = ()
     if inline_fact_cik is not None:
         from ..providers.sec_inline_facts import parse_inline_observations, parse_member_observations
         inline_facts = parse_inline_observations(decoded, cik=inline_fact_cik,
                                                 concepts=inline_fact_concepts)
+        _stage("inline_facts_parsed")
         inline_member_facts = parse_member_observations(decoded, cik=inline_fact_cik,
                                                         concepts=inline_fact_concepts)
+        _stage("member_facts_parsed")
     segment_tables = ()
     impairment_proofs = ()
     cash_flow_observations = ()
     if segment_fact_cik is not None and media_type in {"text/html", "application/xhtml+xml"}:
         from ..providers.sec_segment_facts import parse_segment_tables
         segment_tables = parse_segment_tables(decoded, cik=segment_fact_cik)
+        _stage("segment_tables_parsed")
         if document_type == '10-K':
             from ..providers.sec_deposit_impairment import parse_impairment_tables
             impairment_proofs = parse_impairment_tables(decoded, cik=segment_fact_cik)
+            _stage("impairment_tables_parsed")
             from ..providers.sec_inline_facts import parse_inline_observations
             cash_flow_observations = parse_inline_observations(decoded, cik=segment_fact_cik,
                 concepts=('NetCashProvidedByUsedInOperatingActivities',))
+            _stage("cash_flow_parsed")
     tables: tuple[DocumentTable, ...] = ()
     text_metadata = {}
     if media_type in {"text/html", "application/xhtml+xml"}:
         parser = _HTMLTextExtractor()
         parser.feed(decoded)
+        _stage("html_parsed")
         if layout:
             mapped_text = parser.normalized_visible_text(preserve_sec_risk=True)
             if layout["mapping"] not in mapped_text:
@@ -705,6 +718,7 @@ def fetch_public_document(
             max_chars=MAX_SEC_PERIODIC_CHARS if sec_periodic_limits else MAX_EXTRACTED_CHARS,
             preserve_sec_risk=sec_periodic_limits, preserve_sec_business=preserve_sec_business, risk_form=document_type or "10-K", risk_layout=layout,
             preserve_sec_results=preserve_sec_results and sec_periodic_limits)
+        _stage("text_selected")
         text_metadata = {"canonical_content_hash": canonical_digest,
                          "normalized_text_chars_total": parser.normalized_text_chars_total,
                          "text_window_start": parser.text_window_start,
@@ -726,6 +740,7 @@ def fetch_public_document(
     if not text:
         raise PublicDocumentError("document contained no extractable text")
     cash_source = None
+    _stage("tables_parsed")
     if segment_fact_cik is not None and document_type == '10-K' and method == 'html':
         from ..providers.sec_cash_reconciliation import parse_cash_reconciliations
         from .cash_reconciliation_evidence import CashSource

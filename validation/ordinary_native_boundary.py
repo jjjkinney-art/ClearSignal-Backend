@@ -145,6 +145,9 @@ class OrdinaryNativeBoundary(PilotBoundary):
 
     # -- graceful degradation ----------------------------------------------------
 
+    def record_stage(self, task, stage, thread_cpu_ns):
+        self.ledger.record_stage_timing(self.case_run, task, stage, thread_cpu_ns)
+
     def install(self):
         """Mirror the application's evidence timeout instead of halting on it.
 
@@ -158,6 +161,8 @@ class OrdinaryNativeBoundary(PilotBoundary):
         historical halt.
         """
         super().install()
+        from app.services.providers import sec_provider
+        sec_provider.set_filing_stage_observer(self.record_stage)
         from concurrent import futures
         historical_wait = futures.wait
         owner = self

@@ -124,9 +124,11 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
             source_type='regulatory_filing', source_tier='primary', sec_periodic_limits=True,
             preserve_sec_results=True, extract_tables=False, inline_fact_cik=cik,
             parse_deadline=sec_provider.filing_parse_deadline(),
+            checkpoint=lambda stage: sec_provider.filing_checkpoint('filing_metrics', stage),
             inline_fact_concepts=tuple(dict.fromkeys((*(c for group in FILING_METRICS.values() for c in group),
                                                       *EXPLANATION_CONCEPTS))))
         items = evidence_from_filing(document, filing, ticker=ticker, cik=cik)
+        sec_provider.filing_checkpoint('filing_metrics', 'comparisons_built')
         (logger.info if items else logger.warning)(
             'Latest filing metrics %s: period=%s observations=%d comparisons=%d',
             ticker, filing.reporting_period_end, len(document.inline_xbrl_facts), len(items))

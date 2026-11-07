@@ -11,6 +11,7 @@ import html
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import stat
 from threading import get_ident
@@ -29,6 +30,7 @@ SEC_HOSTS = frozenset({'www.sec.gov', 'data.sec.gov'})
 ANSWER_MAX_BYTES = 4 * 1024 * 1024
 CASE_SECONDS = {'core_thesis': 30, 'decision_threshold': 20}
 RUN_SECONDS = 480
+STAGE_NAME = re.compile(r'[a-z_:]{1,64}')
 # One socket read past the limit is the most a stopped download can have seen.
 READ_CHUNK_ALLOWANCE = 65_536
 # Fixed failure vocabulary for every failed exchange, not just the first.
@@ -159,6 +161,9 @@ class OrdinaryNativeLedger(AttemptLedger):
                        'sha256 TEXT NOT NULL, payload BLOB NOT NULL, recorded_ns INTEGER NOT NULL)')
             db.execute('CREATE TABLE ordinary_stage_abandonments (case_run TEXT NOT NULL, stage TEXT NOT NULL, '
                        'recorded_ns INTEGER NOT NULL, PRIMARY KEY (case_run, stage))')
+            db.execute('CREATE TABLE ordinary_stage_timings (id INTEGER PRIMARY KEY AUTOINCREMENT, '
+                       'case_run TEXT NOT NULL, task TEXT NOT NULL, stage TEXT NOT NULL, '
+                       'recorded_ns INTEGER NOT NULL, thread_cpu_ns INTEGER NOT NULL)')
             db.execute('CREATE TABLE ordinary_size_rejections (attempt_id TEXT PRIMARY KEY, case_run TEXT NOT NULL, '
                        'stage TEXT NOT NULL, url TEXT NOT NULL, limit_bytes INTEGER NOT NULL, '
                        'declared_bytes INTEGER, bytes_read INTEGER NOT NULL, recorded_ns INTEGER NOT NULL)')
@@ -323,6 +328,19 @@ class OrdinaryNativeLedger(AttemptLedger):
             db.execute("UPDATE attempts SET status='abandoned' WHERE id=?", (attempt_id,))
             db.execute('INSERT INTO ordinary_exchange_failures VALUES (?,?,?,?)',
                        (attempt_id, 'abandoned', route, time.monotonic_ns()))
+
+    def record_stage_timing(self, case_run, task, stage, thread_cpu_ns):
+        """Durable at once, so a killed worker still shows the last stage it finished.
+
+        Names and durations only. Recorded after a halt too: it is evidence, not a claim.
+        """
+        if (type(task) is not str or type(stage) is not str or type(thread_cpu_ns) is not int
+                or not STAGE_NAME.fullmatch(task) or not STAGE_NAME.fullmatch(stage)):
+            raise BudgetError('invalid stage timing record')
+        with self.transaction() as db:
+            if db.execute('SELECT 1 FROM cases WHERE id=?', (case_run,)).fetchone():
+                db.execute('INSERT INTO ordinary_stage_timings (case_run,task,stage,recorded_ns,thread_cpu_ns) '
+                           'VALUES (?,?,?,?,?)', (case_run, task, stage, time.monotonic_ns(), thread_cpu_ns))
 
     def reject_oversized_document(self, attempt_id, *, url, limit_bytes, declared_bytes, bytes_read):
         """Terminal outcome for a filing document over the response limit.
