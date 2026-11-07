@@ -158,8 +158,9 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
             'formula': row['formula'],
             'inputs': row['current'],
             'reference_ids': row['reference_ids'],
-            'condition': ('Monitoring condition: the margin for the corresponding period one year later is below '
-                          f"{Decimal(row['current']['margin_percent']):.2f}%, on the same scope, currency and duration."),
+            'condition': ('Monitoring condition: the margin for the corresponding period one year later is lower than '
+                          f"this {Decimal(row['current']['margin_percent']):.2f}% baseline, on the same scope, currency "
+                          'and duration.'),
             'limitation': 'This is a monitoring benchmark, not a buy/sell boundary, forecast or materiality threshold.',
         })
     answer = 'Evidence-backed financial monitoring (partial)\n\n'
@@ -169,8 +170,8 @@ def _build_decision_monitoring(ticker, items, references, *, expected_cik=None):
         f"- Historical baseline, not an investment threshold: operating margin of "
         f"{Decimal(row['current']['margin_percent']):.2f}% for {row['current']['period_start']} to "
         f"{row['current']['period_end']}. Monitoring condition: if the margin for the corresponding period one "
-        f"year later is below {Decimal(row['current']['margin_percent']):.2f}%, on the same consolidated scope, "
-        "currency and duration, that would "
+        f"year later is lower than this {Decimal(row['current']['margin_percent']):.2f}% baseline, on the same "
+        "consolidated scope, currency and duration, that would "
         + ("mean a larger operating loss relative to revenue and weaken any recovery assumption"
            if Decimal(row['current']['margin_percent']) <= 0 else "weaken the profitability assumption")
         + "; it would not by itself make the company unattractive. "

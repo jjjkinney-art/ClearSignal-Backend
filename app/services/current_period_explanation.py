@@ -52,7 +52,7 @@ class _MetricWords(dict):
 
 
 METRIC_WORDS = _MetricWords({
-    'revenue': r'\b(?:net sales|total revenues|revenues?)\b|^Sales\b',
+    'revenue': r'(?:\b(?:net sales|total revenues|revenues?)\b|^Sales\b)',
     'operating income': r'(?:\boperating (?:income|profit)\b(?! margin)|\b(?:income|loss) from operations\b)',
     'net income': r'\bnet (?:income|earnings)\b',
     # Total non-operating income (us-gaap:NonoperatingIncomeExpense); many
