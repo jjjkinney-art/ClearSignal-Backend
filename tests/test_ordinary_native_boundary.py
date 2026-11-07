@@ -490,3 +490,95 @@ def test_routing_stage_admits_only_the_directory(boundary, url):
         fetch(boundary, 'routing', url)
     assert boundary.ledger.summary()['halted']
     assert rows(boundary, "SELECT COUNT(*) FROM attempts WHERE status='settled'") == [(1,)]
+
+
+# -- oversized filing documents ------------------------------------------------------
+OBSERVED = {'limit_bytes': 16 * 1024 * 1024, 'declared_bytes': None, 'bytes_read': 16 * 1024 * 1024 + 1}
+
+
+def oversized(monkeypatch, owner, observation=OBSERVED):
+    from validation.pilot_live import TransportFailure
+
+    def exchange(method, url, **kwargs):
+        owner.gate.validate_request(method, url, b'')
+        owner.gate.record_dispatch()
+        error = TransportFailure('response_size')
+        error.size_observation = observation
+        raise error
+    monkeypatch.setattr(owner.wire, 'exchange', exchange)
+
+
+def test_without_the_profile_an_oversized_filing_keeps_its_historic_halt(boundary, monkeypatch):
+    boundary.threshold_filing = False
+    fetch(boundary, 'evidence.thesis_disclosures', SUBMISSIONS)
+    oversized(monkeypatch, boundary)
+    with pytest.raises(BudgetError, match='ordinary SEC exchange refused'):
+        fetch(boundary, 'evidence.thesis_disclosures', ANNUAL)
+    assert rows(boundary, 'SELECT halted FROM policy') == [('post_claim_failure',)]
+    assert rows(boundary, 'SELECT COUNT(*) FROM ordinary_size_rejections') == [(0,)]
+
+
+def test_a_profile_rejection_is_recorded_raised_to_the_application_and_charged(boundary, monkeypatch):
+    from app.services.public_document_ingestion import PublicDocumentError
+    boundary.threshold_filing = True
+    fetch(boundary, 'evidence.thesis_disclosures', SUBMISSIONS)
+    oversized(monkeypatch, boundary)
+    with pytest.raises(PublicDocumentError) as caught:
+        fetch(boundary, 'evidence.thesis_disclosures', ANNUAL)
+    assert caught.value.size_limit_bytes == OBSERVED['limit_bytes']
+    assert rows(boundary, 'SELECT halted FROM policy') == [(None,)]
+    assert rows(boundary, "SELECT route,status FROM attempts WHERE status='size_rejected'") == [('sec/document', 'size_rejected')]
+    assert rows(boundary, 'SELECT stage,url,bytes_read FROM ordinary_size_rejections') == [
+        ('evidence.thesis_disclosures', ANNUAL, OBSERVED['bytes_read'])]
+    assert rows(boundary, "SELECT code,detail FROM ordinary_exchange_failures") == [('size_rejected', 'response_size')]
+    assert rows(boundary, 'SELECT COUNT(*) FROM ordinary_responses WHERE url=?'.replace('?', repr(ANNUAL))) == [(0,)]
+    assert rows(boundary, 'SELECT COUNT(*) FROM first_transport_failure') == [(0,)]
+
+
+@pytest.mark.parametrize('observation', [None, {**OBSERVED, 'limit_bytes': 8}, {**OBSERVED, 'bytes_read': 8},
+                                         {**OBSERVED, 'bytes_read': 64 * 1024 * 1024}],
+                         ids=['unclean_close', 'other_limit', 'under_limit', 'over_read'])
+def test_a_rejection_that_does_not_reconcile_halts(boundary, monkeypatch, observation):
+    boundary.threshold_filing = True
+    fetch(boundary, 'evidence.thesis_disclosures', SUBMISSIONS)
+    oversized(monkeypatch, boundary, observation)
+    with pytest.raises(BudgetError, match='ordinary SEC exchange refused'):
+        fetch(boundary, 'evidence.thesis_disclosures', ANNUAL)
+    assert rows(boundary, 'SELECT halted FROM policy') != [(None,)]
+    assert rows(boundary, 'SELECT COUNT(*) FROM ordinary_size_rejections') == [(0,)]
+
+
+def test_oversized_json_under_the_profile_still_halts(boundary, monkeypatch):
+    boundary.threshold_filing = True
+    oversized(monkeypatch, boundary)
+    with pytest.raises(BudgetError, match='ordinary SEC exchange refused'):
+        fetch(boundary, 'evidence.thesis_disclosures', SUBMISSIONS)
+    assert rows(boundary, 'SELECT halted FROM policy') == [('post_claim_failure',)]
+
+
+def test_an_answer_silent_about_its_rejected_filing_is_not_retained(boundary, monkeypatch):
+    boundary.threshold_filing = True
+    fetch(boundary, 'evidence.thesis_disclosures', SUBMISSIONS)
+    oversized(monkeypatch, boundary)
+    with pytest.raises(Exception):
+        fetch(boundary, 'evidence.thesis_disclosures', ANNUAL)
+    company = boundary.case['case_id'].split(':')[0]
+    with pytest.raises(BudgetError):
+        boundary.complete_case({'company': company, 'answer': {'source_answer': {'status': 'partial'}}})
+    assert rows(boundary, 'SELECT halted FROM policy') == [('invalid_response',)]
+    assert rows(boundary, 'SELECT COUNT(*) FROM ordinary_answers') == [(0,)]
+
+
+def test_a_declared_rejection_finishes_the_case_with_no_halt(boundary, monkeypatch):
+    boundary.threshold_filing = True
+    fetch(boundary, 'evidence.thesis_disclosures', SUBMISSIONS)
+    oversized(monkeypatch, boundary)
+    with pytest.raises(Exception):
+        fetch(boundary, 'evidence.thesis_disclosures', ANNUAL)
+    company = boundary.case['case_id'].split(':')[0]
+    boundary.complete_case({'company': company, 'answer': {'source_answer': {
+        'status': 'partial', 'degraded': True,
+        'evidence_gaps': [{'source': 'the latest SEC filing', 'task': 'thesis_disclosures', 'reason': 'too_large'}]}}})
+    assert rows(boundary, 'SELECT halted FROM policy') == [(None,)]
+    assert rows(boundary, "SELECT status FROM cases") == [('complete',)]
+    assert rows(boundary, 'SELECT stage FROM ordinary_stage_abandonments') == [('evidence.thesis_disclosures',)]

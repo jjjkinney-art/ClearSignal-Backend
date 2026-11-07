@@ -25,7 +25,7 @@ from validation.ordinary_process_supervisor import supervise
 from validation.pilot_policy import AUDITED_DEPENDENCIES
 
 ROOT = Path(__file__).resolve().parents[1]
-SCENARIOS = ('happy', 'wire_read_failure', 'wire_redirect', 'wire_oversize', 'wire_connect_failure',
+SCENARIOS = ('happy', 'wire_read_failure', 'wire_redirect', 'wire_oversize', 'wire_oversize_facts', 'wire_connect_failure',
              'core_deadline', 'threshold_deadline', 'evidence_abandoned',
              'threshold_filing_slow', 'threshold_filing_after_cutoff')
 LOOPBACK_CONTACT = 'Ordinary loopback fixture loopback@example.invalid'

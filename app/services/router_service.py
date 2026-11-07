@@ -1328,7 +1328,8 @@ def _run_investment_pipeline(
                       reuses=_submissions_scope.reuses, failures=_submissions_scope.failures)
         from .source_answer import evidence_gaps
         _evidence_gaps = evidence_gaps(_abandoned_evidence, _submissions_scope.failures,
-                                       _submissions_scope.filing_read_failures)
+                                       _submissions_scope.filing_read_failures,
+                                       _submissions_scope.filing_too_large)
 
     _fmp_ev:     list = _ev_results.get("fmp",       [])
     _sec_ev:     list = _ev_results.get("sec",       [])

@@ -441,6 +441,8 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                     quarterly_business = extract_business_descriptions(quarterly_document,
                         ticker=ticker, cik=cik)
                 except Exception as exc:
+                    sec_provider.note_filing_read_failure(
+                        'thesis_disclosures', too_large=getattr(exc, 'size_limit_bytes', None) is not None)
                     stats["status"] = "quarterly_document_unavailable"
                     logger.warning("quarterly business context unavailable for %s: %s", ticker, type(exc).__name__)
             # Reuse the exact reviewed document authorization. It permits
@@ -512,7 +514,8 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
         stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
         return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
     except Exception as exc:
-        sec_provider.note_filing_read_failure('thesis_disclosures')
+        sec_provider.note_filing_read_failure(
+            'thesis_disclosures', too_large=getattr(exc, 'size_limit_bytes', None) is not None)
         stats["status"] = "document_error" if isinstance(exc, PublicDocumentError) else "retrieval_or_extraction_error"
         if isinstance(exc, PublicDocumentError):
             stats["document_failure_kind"] = exc.failure_kind

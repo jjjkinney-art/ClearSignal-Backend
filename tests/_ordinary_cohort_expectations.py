@@ -104,7 +104,12 @@ def attempt_reconciliation_problems(packet, limits):
             problems.append(f'abandoned attempt without its stage record: {label}')
         if attempt['status'] == 'settled' and (attempt['response'] is None or attempt['wire_entered_offset_ms'] is None):
             problems.append(f'settled attempt without its response and wire entry: {label}')
-        if attempt['status'] not in {'settled', 'abandoned'}:
+        if attempt['status'] == 'size_rejected' and (
+                attempt['response'] is not None or attempt['wire_entered_offset_ms'] is None
+                or attempt['failure'] != {'code': 'size_rejected', 'detail': 'response_size'}
+                or attempt['route'] != 'sec/document'):
+            problems.append(f'size rejection without its terminal record: {label}')
+        if attempt['status'] not in {'settled', 'abandoned', 'size_rejected'}:
             problems.append(f'attempt without a terminal status: {label}')
     # Quotas charge every reservation, including those that never reached the wire.
     if len(attempts) > limits['sec_gets']:

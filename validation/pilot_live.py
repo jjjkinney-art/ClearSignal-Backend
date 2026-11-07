@@ -72,6 +72,9 @@ class TransportFailure(BudgetError):
         if type(code) is not str or code not in TRANSPORT_FAILURE_CODES:
             raise BudgetError('invalid transport failure code')
         self.code = code
+        # Set only on response_size whose response closed cleanly: what was seen
+        # before the download stopped. Never the content.
+        self.size_observation = None
         super().__init__('owned HTTP exchange failed')
 
 
@@ -247,6 +250,8 @@ class OwnedHTTPTransport:
         failure = None
         phase = 'dispatch_gate'
         result = None
+        observed = None
+        close_failed = False
         try:
             if self.gate is not None:
                 self.gate.record_dispatch()
@@ -269,12 +274,16 @@ class OwnedHTTPTransport:
                 if len(declared) != 1 or not re.fullmatch(r'[0-9]{1,15}', declared[0]):
                     raise TransportFailure('protocol_error')
                 if int(declared[0]) > limit:
+                    observed = {'limit_bytes': limit, 'declared_bytes': int(declared[0]), 'bytes_read': 0}
                     raise TransportFailure('response_size')
             content = bytearray()
             # Raw chunks are single httpcore socket reads (READ_CHUNK_BYTES each
             # at most). No re-chunking layer adds a buffer of its own.
             for chunk in response.iter_raw():
                 if len(content) + len(chunk) > limit:
+                    observed = {'limit_bytes': limit, 'declared_bytes': int(declared[0]) if declared else None,
+                                'bytes_read': len(content) + len(chunk)}
+                    content.clear()  # A partial body is discarded, never returned or retained.
                     raise TransportFailure('response_size')
                 content.extend(chunk)
             media = response.headers.get('content-type', '').split(';')[0]
@@ -299,10 +308,14 @@ class OwnedHTTPTransport:
                 try:
                     response.close()
                 except BaseException:
+                    close_failed = True
                     if failure is None:
                         failure = 'response_close'
         if failure is not None:
-            raise TransportFailure(failure) from None
+            error = TransportFailure(failure)
+            if failure == 'response_size' and not close_failed:
+                error.size_observation = observed
+            raise error from None
         return result
 
     def close(self):

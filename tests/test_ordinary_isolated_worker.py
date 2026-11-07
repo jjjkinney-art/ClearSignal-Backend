@@ -15,7 +15,7 @@ import pytest
 
 from validation.ordinary_isolated_rehearsal import run_rehearsal
 from validation.ordinary_native_export import ExportRefused, export_packet
-from validation.ordinary_pilot_contract import CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
+from validation.ordinary_pilot_contract import contract_profile, CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
 from _ordinary_cohort_expectations import (attempt_reconciliation_problems, EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
@@ -125,7 +125,10 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
 @pytest.mark.parametrize('scenario,case,code', [
     ('wire_read_failure', CASES[FAULT_CASE_INDEX], 'read_error'),
     ('wire_redirect', CASES[FAULT_CASE_INDEX], 'http_redirect'),
-    ('wire_oversize', CASES[FAULT_CASE_INDEX], 'response_size'),
+    # Under the threshold profile an oversized filing document is recoverable instead:
+    # test_ordinary_contract_profile.py::test_an_oversized_filing_degrades_one_answer_and_later_cases_run
+    *([] if contract_profile() else [('wire_oversize', CASES[FAULT_CASE_INDEX], 'response_size')]),
+    ('wire_oversize_facts', CASES[FAULT_CASE_INDEX], 'response_size'),
     ('wire_connect_failure', None, 'connect_error'),
 ])
 def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, case, code):

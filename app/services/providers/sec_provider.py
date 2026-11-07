@@ -198,11 +198,14 @@ class SubmissionsRequestScope:
         self.reuses = 0
         self.failures = 0
         self.filing_read_failures = []
+        self.filing_too_large = []  # the subset rejected by a size limit
         self.filing_parse_deadline = None  # time.monotonic() value, or no limit
 
-    def note_filing_read_failure(self, task: str):
+    def note_filing_read_failure(self, task: str, *, too_large: bool = False):
         with self._lock:
             self.filing_read_failures.append(task)
+            if too_large:
+                self.filing_too_large.append(task)
 
     def fetch(self, url: str, cik: str, *, timeout: int):
         with self._lock:
@@ -237,11 +240,11 @@ _submissions_scope: ContextVar[Optional[SubmissionsRequestScope]] = ContextVar(
     "sec_submissions_request_scope", default=None)
 
 
-def note_filing_read_failure(task: str) -> None:
+def note_filing_read_failure(task: str, *, too_large: bool = False) -> None:
     """Tell the active request an evidence task lost its filing, if it asks."""
     scope = _submissions_scope.get()
     if scope is not None:
-        scope.note_filing_read_failure(task)
+        scope.note_filing_read_failure(task, too_large=too_large)
 
 
 def filing_parse_deadline() -> Optional[float]:

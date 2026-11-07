@@ -141,7 +141,8 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
         return [item for item in items if item.verified_claims[0]['metric'] in requested]
     except Exception as exc:
         logger.warning('Latest filing metrics unavailable for %s: %s', ticker, type(exc).__name__)
-        sec_provider.note_filing_read_failure('filing_metrics')
+        sec_provider.note_filing_read_failure(
+            'filing_metrics', too_large=getattr(exc, 'size_limit_bytes', None) is not None)
         return []
 
 

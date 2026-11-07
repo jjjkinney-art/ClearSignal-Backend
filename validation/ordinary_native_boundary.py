@@ -100,6 +100,7 @@ class OrdinaryNativeBoundary(PilotBoundary):
         self.abandoned = set()
         self.evidence_waits = {}
         self.abandonments = []  # bounded diagnostics: case and stage only
+        self.size_rejections = []  # bounded diagnostics: sizes only, never content
 
     # -- configuration -----------------------------------------------------------
 
@@ -364,6 +365,21 @@ class OrdinaryNativeBoundary(PilotBoundary):
                     self._fail(exc, attempt, route, stage, claimed)
                     raise BudgetError('ordinary SEC exchange refused') from None
                 raise AbandonedExchange('evidence stage abandoned by the application') from None
+            observed = self._recoverable_size(exc, route, claimed)
+            if observed is not None:
+                try:
+                    self.ledger.reject_oversized_document(attempt, url=url, **observed)
+                except BaseException:
+                    self._fail(exc, attempt, route, stage, claimed)
+                    raise BudgetError('ordinary SEC exchange refused') from None
+                with self.lock:
+                    if len(self.size_rejections) < 24:
+                        self.size_rejections.append({'case_id': self.case['case_id'], 'stage': stage, **observed})
+                from app.services.public_document_ingestion import PublicDocumentError
+                raise PublicDocumentError('document exceeds the size limit',
+                                          size_limit_bytes=observed['limit_bytes'],
+                                          declared_bytes=observed['declared_bytes'],
+                                          observed_bytes=observed['bytes_read']) from None
             self._fail(exc, attempt, route, stage, claimed)
             raise BudgetError('ordinary SEC exchange refused') from None
         finally:
@@ -373,6 +389,17 @@ class OrdinaryNativeBoundary(PilotBoundary):
                 self.done()
             if slot:
                 self.slots.release()
+
+    def _recoverable_size(self, exc, route, claimed):
+        """What an oversized filing document saw, if this failure is recoverable.
+
+        Only under the threshold profile, only a filing document, and only once
+        the response closed cleanly. Every other failure keeps its halt.
+        """
+        if (not self.threshold_filing or not claimed or route != 'sec/document'
+                or type(exc) is not TransportFailure or exc.code != 'response_size'):
+            return None
+        return exc.size_observation
 
     def _record(self, attempt, code, detail):
         try:

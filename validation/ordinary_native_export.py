@@ -13,12 +13,19 @@ from pathlib import Path
 import sqlite3
 
 from validation.capture_budget import BudgetError, digest
-from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, degraded_stages, screen_body
+from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, degraded_stages, screen_body, valid_size_rejection
 from validation.ordinary_pilot_contract import CASES, quota_contract
 
 
 class ExportRefused(BudgetError):
     pass
+
+
+def _insufficient(payload):
+    """The application itself says too little evidence remains to answer."""
+    answer = payload.get('answer') if type(payload) is dict else None
+    source = answer.get('source_answer') if type(answer) is dict else None
+    return type(source) is dict and source.get('status') == 'insufficient_claim_evidence'
 
 
 def record_parent_stop(path, reason):
@@ -61,6 +68,11 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         stage_abandonments = db.execute('SELECT case_run,stage,recorded_ns FROM ordinary_stage_abandonments '
                                         'ORDER BY recorded_ns').fetchall() \
             if db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_stage_abandonments'").fetchone() else []
+        # Absent from ledgers created before size rejections were recoverable.
+        size_rejections = {r[0]: r[1:] for r in db.execute(
+            'SELECT attempt_id,case_run,stage,url,limit_bytes,declared_bytes,bytes_read,recorded_ns '
+            'FROM ordinary_size_rejections')} \
+            if db.execute("SELECT 1 FROM sqlite_master WHERE name='ordinary_size_rejections'").fetchone() else {}
         first_transport = db.execute('SELECT attempt_id,route,stage,code FROM first_transport_failure WHERE id=1').fetchone()
         first_refusal = db.execute('SELECT attempt_id,route,stage,code FROM first_sec_refusal WHERE id=1').fetchone()
 
@@ -97,7 +109,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
     # Attempts, quotas, receipts and wire timing.
     case_of = {row[0]: row[1] for row in cases}
     case_start = {row[0]: row[3] for row in cases}
-    abandoned_runs = set()
+    abandoned_runs, rejected_runs, rejection_records = set(), set(), []
     counts, total, entries_seen, aggregate = Counter(), 0, [], 0
     records = []
     for attempt, run, route, status, request_sha, stage in attempts:
@@ -127,8 +139,27 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
                     or (later and failure[2] >= min(later))):
                 raise ExportRefused('abandoned attempt without its closed terminal record')
             abandoned_runs.add(run)
+        rejection = size_rejections.get(attempt)
+        if (status == 'size_rejected') is not (rejection is not None):
+            raise ExportRefused('size rejection without its matching attempt')
+        if rejection is not None:
+            # Stopped at the limit: charged to every quota, closed before the next
+            # case began, and nothing of the body retained.
+            failure = failures.get(attempt)
+            later = [row[3] for row in cases if row[3] > case_start[run]]
+            rejected_run, rejected_stage, url, limit_bytes, declared, read, recorded = rejection
+            if (response is not None or entered is None or route != 'sec/document' or rejected_run != run
+                    or rejected_stage != stage or failure is None or failure[:2] != ('size_rejected', 'response_size')
+                    or request_sha != digest({'method': 'GET', 'url': url, 'route': route, 'stage': stage})
+                    or not valid_size_rejection(limit_bytes, declared, read, limits)
+                    or type(recorded) is not int or recorded < entered or failure[2] != recorded
+                    or (later and recorded >= min(later))):
+                raise ExportRefused('size rejection without its closed terminal record')
+            rejected_runs.add(run)
+            rejection_records.append({'case_id': case_id, 'stage': stage, 'url': url, 'limit_bytes': limit_bytes,
+                                      'declared_bytes': declared, 'bytes_read': read})
         if entered is not None:
-            ended = response[5] if response else (failures[attempt][2] if status == 'abandoned' else None)
+            ended = response[5] if response else (failures[attempt][2] if status in ('abandoned', 'size_rejected') else None)
             entries_seen.append((entered, ended))
             if attempt not in intents:
                 raise ExportRefused('wire entry without native intent')
@@ -153,7 +184,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             raise ExportRefused('settled attempt without retained response')
         if attempt in failures:
             record['failure'] = {'code': failures[attempt][0], 'detail': failures[attempt][1]}
-        if status not in ('settled', 'abandoned') and not halted:
+        if status not in ('settled', 'abandoned', 'size_rejected') and not halted:
             raise ExportRefused('unresolved attempt without a durable halt')
         records.append(record)
     if aggregate > limits['aggregate_raw_body_max_bytes']:
@@ -187,6 +218,8 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             raise ExportRefused('degraded answer has invalid evidence gaps') from None
         if any((case_id, stage) not in recorded_stages for stage in declared):
             raise ExportRefused('degraded answer without its ledger record')
+        if any(row['case_id'] == case_id and row['stage'] not in declared for row in rejection_records):
+            raise ExportRefused('answer does not declare its rejected filing')
 
     # Twelve outcomes; a halt never turns gaps into passes.
     outcomes = []
@@ -197,16 +230,19 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         elif row[2] == 'complete':
             # An unresolved company is retained and reported, never a pass. An
             # answer missing evidence the application abandoned is degraded.
-            unresolved = json.loads(answers[row[0]][2]).get('company') == ''
+            payload = json.loads(answers[row[0]][2])
+            unresolved = payload.get('company') == ''
             status = ('identity_unresolved' if unresolved else
-                      'answered_degraded_unadjudicated' if row[0] in abandoned_runs else 'answered_unadjudicated')
+                      'unanswered_size_rejected' if row[0] in rejected_runs and _insufficient(payload) else
+                      'answered_degraded_unadjudicated' if row[0] in abandoned_runs | rejected_runs
+                      else 'answered_unadjudicated')
         else:
             status = 'halted'
         outcomes.append({'case_id': case_id, 'status': status})
     complete = not halted and all(o['status'] in {'answered_unadjudicated', 'answered_degraded_unadjudicated',
-                                                  'identity_unresolved'} for o in outcomes)
+                                                  'identity_unresolved', 'unanswered_size_rejected'} for o in outcomes)
     kinds = {'answered_unadjudicated': 'full_answer', 'answered_degraded_unadjudicated': 'degraded_answer',
-             'identity_unresolved': 'unanswered'}
+             'identity_unresolved': 'unanswered', 'unanswered_size_rejected': 'unanswered'}
     outcome_counts = Counter(kinds.get(o['status'], 'operational_failure') for o in outcomes)
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
@@ -218,6 +254,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             'answers': {answers[run][0]: {'sha256': answers[run][1], 'response': json.loads(answers[run][2])}
                         for run in answers},
             'attempts': records, 'attempt_count': len(records), 'abandoned_stages': abandoned_stages,
+            'size_rejections': rejection_records,
             'retained_body_bytes': aggregate, 'wire_entries': len(entries_seen),
             'quality_pass_rate': None, 'launch_ready': False, 'execution_authorized': False,
             'invoice_ceiling_verified': False}

@@ -490,6 +490,180 @@ def test_a_stalled_filing_is_degraded_on_the_live_code_path(tmp_path):
     _assert_recorded(output / 'ledger.sqlite', case)
 
 
+def _document_fault(kind, nth=1):
+    from validation._ordinary_rehearsal_worker import _FAULT_CIK
+    return (kind, rf'/Archives/edgar/data/{_FAULT_CIK}/', nth)
+
+
+def _assert_size_recovered(result, sec, output, kind, *, count=1):
+    """One filing over the limit costs one answer its evidence, and nothing else."""
+    from _ordinary_cohort_expectations import attempt_reconciliation_problems
+    from _ordinary_loopback_sec import OVERSIZE_TOTAL, PARTIAL_MARKER
+    packet, worker = result['packet'], result['worker']
+    limit = quota_contract()['body_max_bytes']
+    assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
+    # Stopped and closed by the client, long before the peer had finished sending.
+    assert [(s['kind'], s['client_hung_up']) for s in sec.oversize] == [(kind, True)] * count
+    assert all(s['sent'] < OVERSIZE_TOTAL for s in sec.oversize)
+    # Recorded, sized and charged, with no response of any kind.
+    rejections = packet['size_rejections']
+    assert len(rejections) == count and worker['size_rejections'] and worker['unfinished_workers'] == 0
+    for row in rejections:
+        assert row['limit_bytes'] == limit and row['stage'] in {'evidence.thesis_disclosures', 'evidence.filing_metrics'}
+        if kind == 'oversize_declared':
+            assert (row['declared_bytes'], row['bytes_read']) == (OVERSIZE_TOTAL, 0)
+        else:
+            assert row['declared_bytes'] is None and limit < row['bytes_read'] <= limit + 65536
+    assert attempt_reconciliation_problems(packet, quota_contract()) == []
+    rejected = [a for a in packet['attempts'] if a['status'] == 'size_rejected']
+    assert len(rejected) == count and all(a['response'] is None and a['route'] == 'sec/document' for a in rejected)
+    # The partial body exists nowhere: not the ledger's bytes, the packet or the answers.
+    assert PARTIAL_MARKER.strip(b'<p>/') not in (output / 'ledger.sqlite').read_bytes()
+    assert PARTIAL_MARKER.decode().strip('<p>/') not in json.dumps(packet)
+    # The answer says what it is missing and why, and does not suggest a retry.
+    statuses = {c['case_id']: c['status'] for c in packet['cases']}
+    for row in rejections:
+        assert statuses[row['case_id']] in {'answered_degraded_unadjudicated', 'unanswered_size_rejected'}
+        response = packet['answers'][row['case_id']]['response']
+        source = response['answer']['source_answer']
+        assert source['degraded'] is True
+        assert {'source': 'the latest SEC filing', 'task': row['stage'].split('.')[1], 'reason': 'too_large'} in source['evidence_gaps']
+        assert 'because the document is larger than the size limit' in json.dumps(response)
+        assert 'Trying again' not in json.dumps(response)
+        assert {'case_id': row['case_id'], 'stage': row['stage']} in packet['abandoned_stages']
+    # Every case ran, in order, and only the affected ones lost anything.
+    assert len(statuses) == 12 and 'not_run_after_halt' not in statuses.values() and 'halted' not in statuses.values()
+    assert [c['status'] for c in packet['cases'] if c['case_id'] in UNRESOLVED] == ['identity_unresolved'] * len(UNRESOLVED)
+    affected = {row['case_id'] for row in rejections}
+    assert packet['outcome_counts']['operational_failure'] == 0 and packet['quality_pass_rate'] is None
+    assert sum(packet['outcome_counts'].values()) == 12
+    assert {s for c, s in statuses.items() if c not in affected and c not in UNRESOLVED} <= {
+        'answered_unadjudicated', 'answered_degraded_unadjudicated'}
+    # Terminal before the next case began.
+    with sqlite3.connect(output / 'ledger.sqlite') as db:
+        for recorded, started in db.execute(
+                'SELECT r.recorded_ns,t.started_ns FROM ordinary_size_rejections r JOIN ordinary_case_times t '
+                'ON t.case_run=r.case_run'):
+            later = db.execute('SELECT MIN(started_ns) FROM ordinary_case_times WHERE started_ns>?', (started,)).fetchone()[0]
+            assert later is None or recorded < later
+    return rejections
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+@pytest.mark.parametrize('kind', ['oversize_declared', 'oversize_chunked', 'oversize_close'])
+def test_an_oversized_filing_degrades_one_answer_and_later_cases_run(tmp_path, kind):
+    _needs_port()
+    result, sec, output = _loopback(tmp_path, _document_fault(kind))
+    _assert_size_recovered(result, sec, output, kind)
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_an_oversized_filing_in_the_threshold_case_is_recovered_too(tmp_path):
+    _needs_port()
+    result, sec, output = _loopback(tmp_path, _document_fault('oversize_chunked', 3))
+    rejections = _assert_size_recovered(result, sec, output, 'oversize_chunked')
+    assert rejections[0]['case_id'].endswith(':decision_threshold')
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_oversized_facts_are_not_a_filing_and_still_halt(tmp_path):
+    from validation._ordinary_rehearsal_worker import _FAULT_CIK
+    _needs_port()
+    fault = ('oversize_close', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1)
+    result, _, _ = _loopback(tmp_path, fault)
+    packet = result['packet']
+    assert result['status'] != 'complete' and packet['halt'] == 'post_claim_failure'
+    assert packet['first_failure']['code'] == 'response_size' and packet['size_rejections'] == []
+    assert 'halted' in {c['status'] for c in packet['cases']}
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_oversized_recovery_reaches_the_approved_outcome_record(approved, tmp_path, monkeypatch):
+    """Launcher, package, approval and outcome writing, with the same worker on loopback."""
+    from validation import ordinary_approved as launcher
+    paths, _, output = approved
+    seen = {}
+
+    def loopback_worker(out, policy, **kwargs):
+        loopback = tmp_path / 'loopback'
+        loopback.mkdir()
+        result, sec, run = _loopback(loopback, _document_fault('oversize_close'))
+        seen.update(sec=sec, run=run, kwargs=kwargs)
+        return result
+
+    _needs_port()
+    monkeypatch.setattr(launcher, 'run_worker', loopback_worker)
+    result = launcher.execute(**paths)
+    assert seen['kwargs']['mode'] == 'approved' and seen['kwargs']['synthetic'] is False
+    packet = json.loads((output / 'packet.json').read_text())
+    rejections = _assert_size_recovered({'status': 'complete', 'packet': packet, 'worker': json.loads(
+        (seen['run'] / 'worker.json').read_text())}, seen['sec'], seen['run'], 'oversize_close')
+    assert {'case_id': rejections[0]['case_id'], 'status': 'answered_degraded_unadjudicated'} in result['outcomes']
+    assert len(result['outcomes']) == 12
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_the_export_refuses_a_size_rejection_that_does_not_reconcile(tmp_path):
+    from _ordinary_loopback_sec import PARTIAL_MARKER
+    from validation.ordinary_native_export import ExportRefused, export_packet
+    from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
+    _needs_port()
+    result, _, output = _loopback(tmp_path, _document_fault('oversize_close'))
+    policy = json.loads((output / 'request.json').read_text())['policy']
+    forbidden = tuple(REHEARSAL_RUNTIME.values())
+    ledger = output / 'ledger.sqlite'
+    attempt = next(a['attempt_id'] for a in result['packet']['attempts'] if a['status'] == 'size_rejected')
+    url = result['packet']['size_rejections'][0]['url']
+    tampers = {
+        'row_deleted': ('DELETE FROM ordinary_size_rejections WHERE attempt_id=?', (attempt,)),
+        'status_changed': ("UPDATE attempts SET status='abandoned' WHERE id=?", (attempt,)),
+        'failure_changed': ("UPDATE ordinary_exchange_failures SET detail='sec/document' WHERE attempt_id=?", (attempt,)),
+        'other_url': ("UPDATE ordinary_size_rejections SET url=url||'x' WHERE attempt_id=?", (attempt,)),
+        'other_limit': ('UPDATE ordinary_size_rejections SET limit_bytes=limit_bytes*2 WHERE attempt_id=?', (attempt,)),
+        'under_limit': ('UPDATE ordinary_size_rejections SET declared_bytes=NULL,bytes_read=8 WHERE attempt_id=?', (attempt,)),
+        'over_read': ('UPDATE ordinary_size_rejections SET declared_bytes=NULL,bytes_read=limit_bytes*2 WHERE attempt_id=?', (attempt,)),
+        'never_on_wire': ('DELETE FROM ordinary_wire_entries WHERE attempt_id=?', (attempt,)),
+        'partial_retained': ("INSERT INTO ordinary_responses VALUES (?,?,200,'text/html','0',?,1)", (attempt, url, PARTIAL_MARKER)),
+        'closed_after_next_case': ('UPDATE ordinary_size_rejections SET recorded_ns=recorded_ns+1000000000000 WHERE attempt_id=?', (attempt,)),
+    }
+    for name, (sql, values) in tampers.items():
+        copy = tmp_path / f'{name}.sqlite'
+        copy.write_bytes(ledger.read_bytes())
+        with sqlite3.connect(copy) as db:
+            db.execute(sql, values)
+        with pytest.raises(ExportRefused):
+            export_packet(copy, policy, forbidden_values=forbidden, synthetic=False)
+    # An answer that stops declaring the rejected filing is refused as well.
+    case = result['packet']['size_rejections'][0]['case_id']
+    payload = json.loads(json.dumps(result['packet']['answers'][case]['response']))
+    payload['answer']['source_answer'].pop('degraded')
+    def rewrite(copy, payload):
+        raw = json.dumps(payload, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
+        with sqlite3.connect(copy) as db:
+            db.execute('UPDATE ordinary_answers SET payload=?,sha256=? WHERE case_id=?',
+                       (raw, hashlib.sha256(raw).hexdigest(), case))
+    copy = tmp_path / 'undeclared.sqlite'
+    copy.write_bytes(ledger.read_bytes())
+    rewrite(copy, payload)
+    with pytest.raises(ExportRefused):
+        export_packet(copy, policy, forbidden_values=forbidden, synthetic=False)
+    # The application saying too little evidence remains makes the case unanswered.
+    payload = json.loads(json.dumps(result['packet']['answers'][case]['response']))
+    payload['answer']['source_answer']['status'] = 'insufficient_claim_evidence'
+    copy = tmp_path / 'insufficient.sqlite'
+    copy.write_bytes(ledger.read_bytes())
+    rewrite(copy, payload)
+    packet = export_packet(copy, policy, forbidden_values=forbidden, synthetic=False)
+    assert {'case_id': case, 'status': 'unanswered_size_rejected'} in packet['cases']
+    assert packet['status'] == 'complete' and packet['outcome_counts']['operational_failure'] == 0
+    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+
+
 @PROFILE_ONLY
 @pytest.mark.timeout(300)
 def test_a_failed_filing_list_halts_on_the_live_code_path(tmp_path):

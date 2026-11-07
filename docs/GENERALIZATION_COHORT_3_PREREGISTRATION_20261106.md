@@ -191,4 +191,56 @@ Approved-worker paths never exercised:
 - approved-only worker output values, such as `live_network: true`;
 - real SEC response shapes, sizes, timing and rate behaviour under this profile.
 
-Transport failures halt the run. This does not satisfy the broader degradation launch requirement.
+Transport failures halt the run, except an oversized filing document after amendment 2. This does
+not satisfy the broader degradation launch requirement.
+
+## Amendment 2 (2026-11-07, after Run 6): oversized filing documents and exposure
+
+**What happened:** Run 6 (`ordinary-20261107-06`, package `462e2053...2934`, commit `50defea`) halted
+on its first case. BP's FY2025 20-F primary document, `bp-20251231.htm`, exceeded the 16 MiB response
+limit. BP:core_thesis halted, the other 11 cases were not run and no answer was produced. Research
+accuracy and quality are unassessable; delivered usefulness is 0. The "no predicted halt" prediction
+above was wrong and stays recorded as wrong. Run 6, its originals and its consumed approval are
+unchanged. Oversized filings were neither predicted nor named in the disclosure given before Run 6.
+
+**Cohort:** the same six issuers and twelve questions, in the same order. No substitution, including
+of BP.
+
+**Exposure, disclosed:** this cohort is now exposed for operational development. Run 6 retained BP's
+directory, filing-list and company-facts responses. The filing list was read to identify the failed
+document and its forms, dates and whole-filing sizes. The oversized-filing change was designed with
+that knowledge, so any later run of this cohort is not a blind test of operations. **BP answer-quality
+data remains unseen:** no BP answer exists, and no BP company-facts content or filing text was read
+for assessment. The questions and rubric are unchanged, and answer quality has not been used to change
+anything. Nothing was learned about the other five issuers from Run 6.
+
+**Handling, under this profile only:**
+
+- The limit stays 16 MiB. A filing document over it, declared or observed, is stopped and its
+  connection closed. Partial content is discarded and never retained or parsed.
+- The attempt stays charged to every quota and gets a `size_rejected` terminal status, with the limit,
+  any declared length and the bytes read in `ordinary_size_rejections`.
+- The answer must declare the gap (`reason: too_large`), or the case halts. Its status is
+  `answered_degraded_unadjudicated`, or `unanswered_size_rejected` when the application reports
+  `insufficient_claim_evidence`.
+- The case can finish, and the next begin, only after every attempt is terminal and every task ended.
+
+**Still run-halting:** oversized directory, filing-list or facts responses; a size rejection whose
+close failed or that does not reconcile; identity mismatches; accounting violations; security
+failures; refused or malformed responses; connection failures; silent peers; deadline breaches.
+Consumed cohorts keep their historic halt.
+
+**Standing risk disclosure, for every future risk summary of this profile:** a filing document over
+16 MiB is not read. That answer loses that filing's evidence, is marked degraded or unanswered, and
+each such download still costs up to 16 MiB of transfer and time from the case deadline. Filing sizes
+are not known before a run. BP's 20-F is known to exceed the limit, so BP's answers are expected to
+lack it. A rejected filing is requested again by a later case of the same issuer, so it is charged
+again; nothing is remembered between cases.
+
+**Tested:** offline only, on invented data. This has never run against the SEC.
+
+**Application change:** `app/` changes here, so the frozen `app/` tree of `45f5283` no longer describes
+this branch. The gap reason and notice wording are new. A failed quarterly filing is now noted too; it
+was previously silent. All of it reaches answers only with the threshold switch on.
+
+**Requires before any run:** a new package and a new separate approval, neither of which exists.

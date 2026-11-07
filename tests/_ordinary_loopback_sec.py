@@ -22,6 +22,11 @@ from cryptography.x509.oid import NameOID
 from validation._ordinary_synthetic_sec import respond
 
 SEC_HOSTS = ('www.sec.gov', 'data.sec.gov')
+OVERSIZE_TOTAL = 64 * 1024 * 1024
+PARTIAL_MARKER = b'<p>INVENTED-PARTIAL-OVERSIZED-FILING-TEXT</p>'
+OVERSIZE_FRAMING = {'oversize_declared': b'Content-Length: %d\r\n' % OVERSIZE_TOTAL,
+                    'oversize_chunked': b'Transfer-Encoding: chunked\r\n',
+                    'oversize_close': b'Connection: close\r\n'}
 
 
 def _authority(name):
@@ -88,6 +93,7 @@ class LoopbackSEC:
         # Per-connection SNI: the name the client asked TLS to verify.
         self.context.sni_callback = lambda sock, name, context: setattr(sock, 'sni_name', name)
         self.connects, self.requests, self.handshake_failures = [], [], 0
+        self.oversize = []  # what each oversized response managed to send before the client hung up
         self.lock = threading.Lock()
 
     def __enter__(self):
@@ -140,6 +146,28 @@ class LoopbackSEC:
             self.fault_matches += 1
             return self.fault[0] if self.fault_matches == self.fault[2] else None
 
+    def _send_oversize(self, tls, kind, media):
+        """Far more than the limit, for as long as the client keeps the connection.
+
+        Only 'oversize_close' asks for the connection to close afterwards, so ending
+        the other two early is the client's own doing.
+        """
+        framing = OVERSIZE_FRAMING[kind]
+        head = b'HTTP/1.1 200 OK\r\nContent-Type: %s\r\n%s\r\n' % (media.encode(), framing)
+        block = (PARTIAL_MARKER * (64 * 1024 // len(PARTIAL_MARKER) + 1))[:64 * 1024]
+        if kind == 'oversize_chunked':
+            block = b'%x\r\n%s\r\n' % (len(block), block)
+        sent, hung_up = 0, False
+        try:
+            tls.sendall(head)
+            while sent < OVERSIZE_TOTAL:
+                tls.sendall(block)
+                sent += len(block)
+        except OSError:
+            hung_up = True
+        with self.lock:
+            self.oversize.append({'kind': kind, 'sent': sent, 'client_hung_up': hung_up})
+
     def _serve(self, connection, tunnel):
         try:
             tls = self.context.wrap_socket(connection, server_side=True)
@@ -165,6 +193,9 @@ class LoopbackSEC:
                 return
             if kind == 'silent':
                 time.sleep(13.0)
+            if kind in OVERSIZE_FRAMING:
+                self._send_oversize(tls, kind, media)
+                return
             payload = (b'HTTP/1.1 %d %s\r\nContent-Type: %s\r\nContent-Length: %d\r\n'
                        b'Connection: close\r\n\r\n' % (status, reason, media.encode(), len(body)) + body)
             if kind == 'late':

@@ -29,10 +29,13 @@ SEC_HOSTS = frozenset({'www.sec.gov', 'data.sec.gov'})
 ANSWER_MAX_BYTES = 4 * 1024 * 1024
 CASE_SECONDS = {'core_thesis': 30, 'decision_threshold': 20}
 RUN_SECONDS = 480
+# One socket read past the limit is the most a stopped download can have seen.
+READ_CHUNK_ALLOWANCE = 65_536
 # Fixed failure vocabulary for every failed exchange, not just the first.
 EXCHANGE_FAILURE_CODES = frozenset({
     'transport', 'sec_refusal', 'identity_mismatch', 'semantic_refusal',
-    'retention_refused', 'halted_before_dispatch', 'slot_timeout', 'interrupted', 'abandoned'})
+    'retention_refused', 'halted_before_dispatch', 'slot_timeout', 'interrupted', 'abandoned',
+    'size_rejected'})
 
 
 class AbandonedExchange(BudgetError):
@@ -63,6 +66,15 @@ def degraded_stages(payload):
         return tuple(dict.fromkeys(_DEGRADED_TASK_STAGES[gap['task']] for gap in gaps))
     except (KeyError, TypeError):
         raise BudgetError('degraded answer names an unknown evidence task') from None
+
+
+def valid_size_rejection(limit_bytes, declared_bytes, bytes_read, limits):
+    """A real rejection: the contract's limit, exceeded by what was declared or read."""
+    if (type(limit_bytes) is not int or limit_bytes != limits['body_max_bytes']
+            or type(bytes_read) is not int or not 0 <= bytes_read <= limit_bytes + READ_CHUNK_ALLOWANCE
+            or (declared_bytes is not None and type(declared_bytes) is not int)):
+        return False
+    return bytes_read > limit_bytes or (declared_bytes is not None and declared_bytes > limit_bytes)
 
 
 def case_seconds(case_id):
@@ -147,6 +159,9 @@ class OrdinaryNativeLedger(AttemptLedger):
                        'sha256 TEXT NOT NULL, payload BLOB NOT NULL, recorded_ns INTEGER NOT NULL)')
             db.execute('CREATE TABLE ordinary_stage_abandonments (case_run TEXT NOT NULL, stage TEXT NOT NULL, '
                        'recorded_ns INTEGER NOT NULL, PRIMARY KEY (case_run, stage))')
+            db.execute('CREATE TABLE ordinary_size_rejections (attempt_id TEXT PRIMARY KEY, case_run TEXT NOT NULL, '
+                       'stage TEXT NOT NULL, url TEXT NOT NULL, limit_bytes INTEGER NOT NULL, '
+                       'declared_bytes INTEGER, bytes_read INTEGER NOT NULL, recorded_ns INTEGER NOT NULL)')
 
     def begin_case(self, case_id):
         run_id = str(uuid4())
@@ -309,6 +324,41 @@ class OrdinaryNativeLedger(AttemptLedger):
             db.execute('INSERT INTO ordinary_exchange_failures VALUES (?,?,?,?)',
                        (attempt_id, 'abandoned', route, time.monotonic_ns()))
 
+    def reject_oversized_document(self, attempt_id, *, url, limit_bytes, declared_bytes, bytes_read):
+        """Terminal outcome for a filing document over the response limit.
+
+        Called by the request's own thread after its exchange ended and its
+        connection closed. The attempt stays charged to every quota; nothing of
+        the body is retained. Anything that does not match the claimed document
+        request exactly halts the run, as does a passed deadline.
+        """
+        reason = None
+        with self.transaction() as db:
+            self.active(db)
+            row = db.execute('SELECT a.case_run,a.route,a.request_sha256,a.status,s.stage,c.case_id,t.started_ns '
+                'FROM attempts a JOIN stage_reservations s ON s.attempt_id=a.id '
+                'JOIN cases c ON c.id=a.case_run JOIN ordinary_case_times t ON t.case_run=c.id '
+                "WHERE a.id=? AND c.status='active'", (attempt_id,)).fetchone()
+            entered = db.execute('SELECT 1 FROM ordinary_wire_entries WHERE attempt_id=?', (attempt_id,)).fetchone()
+            now = time.monotonic_ns()
+            limits = quota_contract()
+            if (not row or row[1] != 'sec/document' or row[3] != 'claimed' or not entered
+                    or row[2] != digest({'method': 'GET', 'url': url, 'route': row[1], 'stage': row[4]})
+                    or not valid_size_rejection(limit_bytes, declared_bytes, bytes_read, limits)):
+                reason = 'invalid_response'
+            else:
+                reason = self._deadline_reason(now, row[5], row[6])
+            if reason:
+                db.execute('UPDATE policy SET halted=COALESCE(halted,?) WHERE id=1', (reason,))
+            else:
+                db.execute("UPDATE attempts SET status='size_rejected' WHERE id=?", (attempt_id,))
+                db.execute('INSERT INTO ordinary_exchange_failures VALUES (?,?,?,?)',
+                           (attempt_id, 'size_rejected', 'response_size', now))
+                db.execute('INSERT INTO ordinary_size_rejections VALUES (?,?,?,?,?,?,?,?)',
+                           (attempt_id, row[0], row[4], url, limit_bytes, declared_bytes, bytes_read, now))
+        if reason:
+            raise BudgetError('ordinary size rejection refused')
+
     def complete_case(self, case_run, payload, *, forbidden_values):
         """Retain the complete answer and finish its case in one transaction.
 
@@ -335,10 +385,13 @@ class OrdinaryNativeLedger(AttemptLedger):
                               "WHERE c.id=? AND c.status='active'", (case_run,)).fetchone()
             # Abandoned attempts are terminal only once their exchange has
             # ended (abandon_attempt); anything still pending or claimed blocks.
-            unsettled = db.execute("SELECT 1 FROM attempts WHERE case_run=? AND status NOT IN ('settled','abandoned')",
+            unsettled = db.execute("SELECT 1 FROM attempts WHERE case_run=? AND status NOT IN ('settled','abandoned','size_rejected')",
                                    (case_run,)).fetchone()
+            # An answer missing a filing the size limit rejected must say so.
+            rejected = {r[0] for r in db.execute('SELECT stage FROM ordinary_size_rejections WHERE case_run=?', (case_run,))}
             now = time.monotonic_ns()
-            if not case or unsettled or payload.get('company') not in {case[0].split(':')[0], ''}:
+            if (not case or unsettled or payload.get('company') not in {case[0].split(':')[0], ''}
+                    or rejected - set(stages)):
                 reason = 'invalid_response'
             else:
                 reason = self._deadline_reason(now, case[0], case[1])

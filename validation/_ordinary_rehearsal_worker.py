@@ -41,6 +41,8 @@ SCENARIO_FAULTS = {
     'wire_read_failure': ('read_failure', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
     'wire_redirect': ('redirect', rf'/submissions/CIK{_FAULT_CIK:010d}\.json$', 1),
     'wire_oversize': ('oversize', rf'/Archives/edgar/data/{_FAULT_CIK}/', 1),
+    # Not a filing document, so this one halts under every cohort.
+    'wire_oversize_facts': ('oversize', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
     'wire_connect_failure': ('connect_failure', '', 13),
     # Stalled peers: that issuer's first (core) and second (threshold) facts requests.
     'core_deadline': ('stall', rf'/companyfacts/CIK{_FAULT_CIK:010d}\.json$', 1),
@@ -336,6 +338,7 @@ def main():
               'blocked_external_operations': blocked[:10],
               'refused_model_requests': boundary.refused_model_requests,
               'abandoned_evidence': list(boundary.abandonments),
+              'size_rejections': list(boundary.size_rejections),
               'refused_requests': list(boundary.refused_requests),
               'transport_entries': dict(boundary.transport_entries),
               'synthetic_requests': None if live else len(backend.requests),

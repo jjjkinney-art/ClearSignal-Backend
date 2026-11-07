@@ -271,3 +271,34 @@ def test_no_gap_changes_nothing():
     assert apply_evidence_gaps(thesis, source, []) is source
     assert thesis.direct_answer == 'Evidence-backed financial monitoring (partial)'
     assert apply_evidence_gaps(thesis, None, evidence_gaps(['sec'], 0)) is None
+
+
+def test_a_filing_over_the_size_limit_is_named_and_does_not_suggest_a_retry():
+    from types import SimpleNamespace
+    from app.services.source_answer import apply_evidence_gaps, evidence_gaps
+    gaps = evidence_gaps([], 0, ['thesis_disclosures'], ['thesis_disclosures'])
+    assert gaps == [{'source': 'the latest SEC filing', 'task': 'thesis_disclosures', 'reason': 'too_large'}]
+    thesis = SimpleNamespace(direct_answer='Answer.')
+    source = apply_evidence_gaps(thesis, {'status': 'attributed'}, gaps)
+    assert source['degraded'] is True and source['status'] == 'partial'
+    assert 'because the document is larger than the size limit' in thesis.direct_answer
+    assert 'Trying again' not in thesis.direct_answer
+
+
+def test_a_mixed_gap_keeps_the_retry_advice_and_names_each_reason():
+    from types import SimpleNamespace
+    from app.services.source_answer import apply_evidence_gaps, evidence_gaps
+    gaps = evidence_gaps(['sec_metrics'], 0, ['filing_metrics', 'thesis_disclosures'], ['filing_metrics'])
+    assert {gap['task']: gap['reason'] for gap in gaps} == {
+        'sec_metrics': 'time_limit', 'filing_metrics': 'too_large', 'thesis_disclosures': 'not_read'}
+    thesis = SimpleNamespace(direct_answer='Answer.')
+    apply_evidence_gaps(thesis, {'status': 'attributed'}, gaps)
+    assert 'Trying again may give a fuller answer.' in thesis.direct_answer
+
+
+def test_a_failed_quarterly_filing_is_noted_as_a_read_failure(monkeypatch):
+    import re
+    from pathlib import Path
+    source = Path('app/services/thesis_disclosures.py').read_text()
+    block = re.search(r'stats\["stage"\] = "quarterly_document".*?stats\["status"\] = "quarterly_document_unavailable"', source, re.S)
+    assert block and 'note_filing_read_failure' in block.group(0)
