@@ -25,6 +25,8 @@ from _ordinary_cohort_expectations import (REGISTRATION_ONLY_CASES, expected_exc
 FORBIDDEN = tuple(REHEARSAL_RUNTIME.values())
 
 
+REDIRECT_FIXTURE_STATUS = 302  # validation/_pilot_wire_fixtures.py answers '302 Found' for wire_redirect
+
 @pytest.fixture(scope='module')
 def happy(tmp_path_factory):
     output = tmp_path_factory.mktemp('ordinary') / 'happy'
@@ -127,6 +129,8 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
 @pytest.mark.timeout(120)
 @pytest.mark.parametrize('scenario,case,code', [
     ('wire_read_failure', CASES[FAULT_CASE_INDEX], 'read_error'),
+    # The fixture answers 302 Found; the recorded detail carries that exact status (diagnosis only: the
+    # code, and so the halt, is the class alone).
     ('wire_redirect', CASES[FAULT_CASE_INDEX], 'http_redirect'),
     # Under the threshold profile an oversized filing document is recoverable instead:
     # test_ordinary_contract_profile.py::test_an_oversized_filing_degrades_one_answer_and_later_cases_run
@@ -135,6 +139,7 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
     ('wire_connect_failure', None, 'connect_error'),
 ])
 def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, case, code):
+    detail = f'{code}_{REDIRECT_FIXTURE_STATUS}' if scenario == 'wire_redirect' else code
     output = tmp_path / scenario
     result = run_rehearsal(output, scenario=scenario)
     packet = result['packet']
@@ -148,7 +153,13 @@ def test_first_failure_halts_and_every_outcome_is_reported(tmp_path, scenario, c
     assert set(packet['answers']) == set(CASES[:halted])
     failed = [a for a in packet['attempts'] if a['failure']]
     assert failed and all(a['response'] is None and a['status'] != 'settled' for a in failed)
-    assert any(a['failure'] == {'code': 'transport', 'detail': code} for a in failed)
+    # The transport code is the class; the detail adds the exact status the fixture sent, and nothing else.
+    assert any(a['failure'] == {'code': 'transport', 'detail': detail} for a in failed)
+    if scenario == 'wire_redirect':
+        # Never followed: no response of any kind was retained, and nothing reached the Location target.
+        assert not any(a['response'] for a in packet['attempts'] if a['failure'])
+        assert all('unreviewed.invalid' not in json.dumps(a['response']) for a in packet['attempts'])
+        assert result['worker']['refused_requests'] == [] and result['worker']['external_dispatches'] == 0
     no_runtime_values_written(output)
 
 
