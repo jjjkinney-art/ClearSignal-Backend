@@ -724,7 +724,9 @@ def _source(packet, case):
 ], ids=['thesis_declared', 'thesis_chunked', 'threshold_close'])
 def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered(tmp_path, kind, nth, case):
     """No stored answer is edited. The issuer's company facts support nothing, so its filing
-    alone can support an answer: the control answers from it, the rejected run cannot."""
+    alone can support a financial answer: the control answers from it, the rejected run cannot.
+    A decision-threshold case is then unanswered. A thesis case still delivers the annual
+    filing's quoted disclosures, labelled as having no financial analysis, with the rejection named."""
     _needs_port()
     cik, fault = _only_evidence_fault(kind, nth)
     (tmp_path / 'control').mkdir()
@@ -740,13 +742,27 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
     # Export: unanswered, not degraded and not a failure; the run completes.
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
     statuses = {row['case_id']: row['status'] for row in packet['cases']}
-    assert statuses[case] == 'unanswered_size_rejected'
-    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
-    assert packet['outcome_counts']['operational_failure'] == 0 and packet['quality_pass_rate'] is None
-    assert {'case_id': case, 'content': 'insufficient_evidence'} in packet['answer_content']['cases']
-    # The answer is the application's own: no claims, and it says why.
     source = _source(packet, case)
-    assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == [] and source['degraded'] is True
+    assert packet['outcome_counts']['operational_failure'] == 0 and packet['quality_pass_rate'] is None
+    if case == CASES[FAULT_CASE_INDEX]:
+        # A thesis case keeps the filing's quoted business statements, which the oversized
+        # quarterly report did not affect: a degraded answer, counted apart from any
+        # financial claim, never an unanswered case.
+        assert statuses[case] == 'answered_degraded_unadjudicated'
+        assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED)
+        assert packet['outcome_counts']['degraded_answer'] == 1
+        assert {'case_id': case, 'content': 'source_bound_disclosures_only'} in packet['answer_content']['cases']
+        assert source['status'] == 'partial' and source['content_scope'] == 'disclosures_only' and source['claims']
+        assert {row['claim_kind'] for row in source['claims']} <= {
+            'issuer_business_description', 'issuer_competition_description', 'issuer_disclosed_risk'}
+        assert 'no financial analysis was completed' in json.dumps(packet['answers'][case]['response'])
+    else:
+        assert statuses[case] == 'unanswered_size_rejected'
+        assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+        assert {'case_id': case, 'content': 'insufficient_evidence'} in packet['answer_content']['cases']
+        # The answer is the application's own: no claims, and it says why.
+        assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == []
+    assert source['degraded'] is True
     assert source['evidence_gaps'] == [{'source': 'the quarterly report (Form 10-Q)', 'task': 'filing_metrics', 'reason': 'too_large'}]
     response = json.dumps(packet['answers'][case]['response'])
     assert 'because the document is larger than the size limit' in response and 'Trying again' not in response
@@ -781,10 +797,12 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
 @pytest.mark.timeout(300)
 def test_a_completed_insufficient_evidence_response_is_not_counted_as_content(tmp_path):
     """No rejection and no gap: operationally it keeps its historic name, and the separate
-    content record says it delivered no answer to the question."""
+    content record says it delivered no answer to the question. The issuer's thesis case, whose
+    financial data this version cannot read, delivers only quoted disclosures and is counted
+    apart from financial claims."""
     from validation._ordinary_rehearsal_worker import _FAULT_CIK
     _needs_port()
-    case = CASES[FAULT_CASE_INDEX]
+    thesis, case = CASES[FAULT_CASE_INDEX], CASES[FAULT_CASE_INDEX + 1]
     result, _, _ = _loopback(tmp_path, None, ifrs_only_cik=_FAULT_CIK, inline_filing=False)
     packet = result['packet']
     assert result['status'] == 'complete' and packet['size_rejections'] == []
@@ -793,8 +811,18 @@ def test_a_completed_insufficient_evidence_response_is_not_counted_as_content(tm
     assert _source(packet, case)['status'] == 'insufficient_claim_evidence' and _source(packet, case)['claims'] == []
     content = packet['answer_content']
     assert {'case_id': case, 'content': 'insufficient_evidence'} in content['cases']
+    # The thesis case: quoted disclosures only, with the reason and without any financial claim.
+    assert {'case_id': thesis, 'status': 'answered_unadjudicated'} in packet['cases']
+    source = _source(packet, thesis)
+    assert source['status'] == 'partial' and source['content_scope'] == 'disclosures_only' and source['claims']
+    assert {row['claim_kind'] for row in source['claims']} == {'issuer_business_description'}
+    assert source['financial_analysis']['reason'] == 'ifrs_taxonomy_not_supported'
+    assert {'case_id': thesis, 'content': 'source_bound_disclosures_only'} in content['cases']
+    answer = packet['answers'][thesis]['response']['answer']['investment_thesis']['direct_answer']
+    assert answer.startswith('Source-bound disclosures only (partial): no financial analysis was completed') and 'IFRS' in answer
     counts = content['counts']
     assert counts['insufficient_evidence'] >= 1 and counts['identity_unresolved'] == len(UNRESOLVED)
+    assert counts['source_bound_disclosures_only'] == 1
     assert sum(counts.values()) == 12 and counts['unclassified'] == 0
     assert counts['source_bound_claims'] < packet['outcome_counts']['full_answer']
     assert 'accuracy and usefulness are assessed separately' in content['scope']
