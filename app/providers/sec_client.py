@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import logging
 import re
+import threading
+from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
@@ -25,6 +27,36 @@ from .sec_fact_policy import PERIODIC_FORMS
 logger = logging.getLogger(__name__)
 _ATOM = "{http://www.w3.org/2005/Atom}"
 _ACCESSION = re.compile(r"\d{10}-\d{2}-\d{6}\Z")
+
+
+# Which XBRL taxonomies the Company Facts response actually contained, with concept
+# counts. Recorded from a response this process already received (never fetched for
+# this purpose), so an answer can name the taxonomy only when retrieval confirmed it.
+_OBSERVED_TAXONOMIES: "OrderedDict[int, dict]" = OrderedDict()
+_OBSERVED_LOCK = threading.Lock()
+_OBSERVED_LIMIT = 512
+
+
+def _note_fact_taxonomies(cik: str, data: dict) -> None:
+    facts = data.get("facts") if isinstance(data, dict) else None
+    if not isinstance(facts, dict):
+        return
+    counts = {name: len(concepts) for name, concepts in facts.items()
+              if name in {"us-gaap", "ifrs-full"} and isinstance(concepts, dict)}
+    with _OBSERVED_LOCK:
+        _OBSERVED_TAXONOMIES[int(cik)] = counts
+        _OBSERVED_TAXONOMIES.move_to_end(int(cik))
+        while len(_OBSERVED_TAXONOMIES) > _OBSERVED_LIMIT:
+            _OBSERVED_TAXONOMIES.popitem(last=False)
+
+
+def observed_fact_taxonomies(cik: str) -> Optional[dict]:
+    """{'us-gaap': n, 'ifrs-full': m} from a received Company Facts response, else None."""
+    if not isinstance(cik, str) or not cik.isdigit():
+        return None
+    with _OBSERVED_LOCK:
+        observed = _OBSERVED_TAXONOMIES.get(int(cik))
+        return dict(observed) if observed is not None else None
 
 
 @dataclass(frozen=True)
@@ -133,6 +165,7 @@ def get_company_fact_records_for_concept_units(
         reported_cik = str(data.get("cik", "")) if isinstance(data, dict) else ""
         if not reported_cik.isdigit() or int(reported_cik) != int(cik):
             return []
+        _note_fact_taxonomies(cik, data)
         return [
             record
             for concept, unit in dict.fromkeys(concept_units)

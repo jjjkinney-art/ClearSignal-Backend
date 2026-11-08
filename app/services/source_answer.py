@@ -319,6 +319,21 @@ def apply_source_answer_gate(thesis: object, question: str, items: Iterable[obje
                     "common_reporting_period": foundation["common_reporting_period"],
                     "business_context_coverage": foundation["business_context_coverage"],
                     **({"reporting_coverage": coverage} if coverage else {})}
+        # No financial foundation: still deliver verified business and risk disclosures,
+        # labelled as a disclosure-only answer, rather than discarding them.
+        from .disclosure_only_answer import build_disclosure_only
+        disclosures = build_disclosure_only(str(getattr(thesis, "ticker", "")), material, references)
+        if disclosures:
+            _restrict_evidence_thesis(thesis, disclosures["answer"], disclosures["claims"],
+                                     disclosures["selected_items"], enough=True,
+                                     scope="Issuer disclosure")
+            return {"status": "partial",
+                    "reason": "Source-bound issuer disclosures only; no financial analysis was completed.",
+                    "claims": disclosures["claims"], "inferences": [],
+                    "unanswered_parts": disclosures["unanswered_parts"],
+                    "business_context_coverage": disclosures["business_context_coverage"],
+                    "content_scope": disclosures["content_scope"],
+                    "financial_analysis": disclosures["financial_analysis"]}
     from .verified_sec_metric_service import _requested_metrics
     requested_metrics = _requested_metrics(question, include_defaults=False)
     # A multipart metric question must retain all requested metric slots.

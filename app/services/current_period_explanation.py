@@ -108,7 +108,18 @@ def revenue_components(members, revenue, current, prior):
 DIRECTION_ONLY = {'operating margin'}
 _QUARTER_NAMES = {3: 'first', 6: 'second', 9: 'third', 12: 'fourth'}
 _OPENER = re.compile(r'(?:During|The|Our|We|In|For|On|As|Net|Total|Operating|Revenues?|Sales|Other|Income)\b')
-_HEADING_PREFIX = re.compile(r'(?:[A-Z0-9(][A-Za-z0-9&/\-(),.]*\s+){1,8}')
+# A genuine heading is capitalised words, numbers and the small function words of a title
+# ("Third Quarter of Fiscal 2026 Compared to Third Quarter of Fiscal 2025 Net Sales").
+# Any other lower-case word means the text is prose and is never stripped.
+_HEADING_FUNCTION_WORDS = frozenset({'of', 'to', 'and', 'the', 'for', 'in', 'on', 'vs', 'vs.', 'versus', 'compared', 'with'})
+_HEADING_PREFIX = re.compile(r'(?:[A-Z0-9(][A-Za-z0-9&/\-(),.]*\s+|(?:of|to|and|the|for|in|on|vs\.?|versus|compared|with)\s+){1,20}')
+
+
+def _is_heading(prefix):
+    words = prefix.split()
+    return (bool(_HEADING_PREFIX.fullmatch(prefix)) and words[-1].lower() not in _HEADING_FUNCTION_WORDS
+            and all(w.lower() in _HEADING_FUNCTION_WORDS for w in words if w[0].islower())
+            and not _CHANGE.search(prefix) and not _CAUSE.search(prefix))
 _SCOPE = re.compile(
     r'\b(?:segments?|regions?|brands?|divisions?)\b'
     r'|\b(?:in|for) (?:the |our )?(?!(?:first|second|third|fourth|three|six|nine|twelve|Q[1-4])\b)[A-Z][A-Za-z&.\-–/]+'
@@ -150,12 +161,25 @@ def _rising(verb):
     return word in _UP or word.endswith(' increase')
 _CAUSE = re.compile(r'\b(?:primarily|reflecting|due to|driven by|attributable to|as a result of|resulting from)\b', re.I)
 _MONEY = re.compile(r'\$\s?((?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?:\s*(thousand|million|billion)\b)?', re.I)
+# "primarily due to the factors discussed above" points elsewhere in the filing; it
+# states no cause of its own.
+_CROSS_REFERENCE = re.compile(
+    r'\s*(?:(?:primarily|mainly|largely|principally)\s+)?'
+    r'(?:(?:due to|driven by|attributable to|as a result of|resulting from|reflecting)\s+)?'
+    r'(?:the |these |those )?(?:factors|items|reasons|matters|events|developments|changes)\s+'
+    r'(?:(?:discussed|described|set forth|noted|mentioned|outlined|explained|presented|identified)\s+)?'
+    r'(?:above|below|earlier|previously|herein|elsewhere)\b', re.I)
+
+
 def cause_match(sentence):
     """The first causal connective, ignoring ownership labels such as
-    "net income attributable to <parent>"."""
+    "net income attributable to <parent>" and cross-references such as
+    "due to the factors discussed above"."""
     for match in _CAUSE.finditer(sentence):
         if match.group(0).lower() == 'attributable to' and re.search(
                 r'(?:income|loss|earnings|EPS|shares?)\s*$', sentence[:match.start()], re.I):
+            continue
+        if _CROSS_REFERENCE.match(sentence, match.end()):
             continue
         return match
     return None
@@ -177,7 +201,9 @@ _BOUNDARY = re.compile(r'[.!?](?=\s+[A-Z0-9("“•]|\s*$)')
 # after it joins the table. Its last cell ends in a number, percent sign or
 # closing parenthesis before a capitalized word.
 _CELL_END = re.compile(r'(?:\d|%|\))\s+(?=[A-Z][a-z]+\b)')
-_NUMBER_RUN = re.compile(r'(?:\$?\s?\(?\$?\s?\d[\d,.]*\)?\s*%?\s+){3,}')
+# Flattened cells write negatives as "(14.8 )%", "(313.1 )" and "(62.3 %)", with a space
+# before the closing parenthesis or percent sign.
+_NUMBER_RUN = re.compile(r'(?:\$?\s?\(?\s?\$?\s?\d[\d,.]*\s*%?\s*\)?\s*%?\s+){3,}')
 
 
 def _narrative_tail(sentence):
@@ -269,7 +295,70 @@ def current_period_patterns(period):
         patterns = [rf'(?:fiscal )?year ended {ended}', rf'\bfiscal(?: year)? {end.year}\b']
     else:
         return []
+    if 80 <= days <= 100 and (fiscal := _fiscal_quarter_valid(period)):
+        patterns += [rf'\b{fiscal["ordinal"]} quarter of fiscal {fiscal["fiscal_year"]}\b',
+                     rf'\bfiscal {fiscal["fiscal_year"]} {fiscal["ordinal"]} quarter\b']
     return [re.compile(pattern, re.I) for pattern in patterns]
+
+
+_ORDINALS = {2: 'second', 3: 'third'}
+_ORDINAL_WORDS = '|'.join(_ORDINALS.values())
+
+
+def _fiscal_comparison_pattern(ordinal, year):
+    return re.compile(rf'\b{ordinal} quarter of fiscal {year}\s+(?:compared (?:to|with)|versus|vs\.?)\s+'
+                      rf'{ordinal} quarter of fiscal {year - 1}\b', re.I)
+
+
+def _fiscal_quarter_valid(period):
+    """The fiscal-quarter naming a stored period establishes, or None.
+
+    Valid only when the year-to-date context that ends on the quarter's last day fixes
+    the quarter's number (second or third) and the filing's own comparison heading names
+    that quarter for this fiscal year against the prior one. Nothing is inferred from
+    the calendar: an issuer whose heading is missing, ambiguous or inconsistent with its
+    reported periods gets no fiscal-quarter naming.
+    """
+    fiscal = period.get('fiscal_quarter') if isinstance(period, dict) else None
+    try:
+        if (not isinstance(fiscal, dict) or set(fiscal) != {'ordinal', 'fiscal_year', 'year_to_date_start', 'heading_quote'}
+                or fiscal['ordinal'] not in _ORDINALS.values() or type(fiscal['fiscal_year']) is not int):
+            return None
+        quarter = next(number for number, word in _ORDINALS.items() if word == fiscal['ordinal'])
+        start, end = date.fromisoformat(period['current_start']), date.fromisoformat(period['current_end'])
+        ytd = date.fromisoformat(fiscal['year_to_date_start'])
+        if (abs((end - ytd).days - 91.3 * quarter) > 14 or abs((start - ytd).days - 91.3 * (quarter - 1)) > 14
+                or abs(fiscal['fiscal_year'] - end.year) > 1
+                or not _fiscal_comparison_pattern(fiscal['ordinal'], fiscal['fiscal_year']).fullmatch(fiscal['heading_quote'])):
+            return None
+    except (KeyError, StopIteration, TypeError, ValueError):
+        return None
+    return fiscal
+
+
+def fiscal_quarter(text, observations, period_value):
+    """Establish the current quarter's fiscal naming from the filing itself, or None."""
+    try:
+        end = date.fromisoformat(period_value['current_end'])
+        starts = {date.fromisoformat(row['start']) for _, row in observations
+                  if row.get('end') == period_value['current_end'] and row.get('start')}
+        if not starts:
+            return None
+        ytd = min(starts)
+        quarter = round((end - ytd).days / 91.3)
+        if quarter not in _ORDINALS:
+            return None
+        ordinal = _ORDINALS[quarter]
+        headings = {match.group(0): int(match.group(1)) for match in re.finditer(
+            rf'\b{ordinal} quarter of fiscal (\d{{4}})\s+(?:compared (?:to|with)|versus|vs\.?)\s+'
+            rf'{ordinal} quarter of fiscal \d{{4}}\b', text, re.I)}
+        if len(set(headings.values())) != 1:
+            return None
+        fiscal = {'ordinal': ordinal, 'fiscal_year': next(iter(headings.values())),
+                  'year_to_date_start': ytd.isoformat(), 'heading_quote': next(iter(headings))}
+        return fiscal if _fiscal_quarter_valid({**period_value, 'fiscal_quarter': fiscal}) else None
+    except (KeyError, TypeError, ValueError):
+        return None
 
 
 def names_current_period(sentence, period):
@@ -563,8 +652,7 @@ def clause_starts(sentence):
     trimmed = None
     for match in re.finditer(r'(?<=\s)[A-Z][a-z]', sentence[:120]):
         prefix, rest = sentence[:match.start()], sentence[match.start():]
-        if (_HEADING_PREFIX.fullmatch(prefix) and not re.search(r'(?:^|\s)[a-z]', prefix)
-                and (rest.lower().startswith(prefix.strip().lower() + ' ') or _OPENER.match(rest))):
+        if _is_heading(prefix) and (rest.lower().startswith(prefix.strip().lower() + ' ') or _OPENER.match(rest)):
             trimmed = match.start()  # the latest break wins: the whole heading is removed
     if trimmed is not None:
         yield trimmed
@@ -747,6 +835,8 @@ def explanation_value(text, observations, filing_items, *, ticker, document_type
     current, prior = (period[0], period[1]), (period[2], period[3])
     period_value = {'current_start': current[0], 'current_end': current[1],
                     'prior_start': prior[0], 'prior_end': prior[1]}
+    if (fiscal := fiscal_quarter(text, observations, period_value)):
+        period_value['fiscal_quarter'] = fiscal
     bridge = earnings_bridge(observations, current, prior)
     if bridge:
         v = bridge['values']
@@ -926,6 +1016,8 @@ def bound_current_period_explanation(item, *, ticker, cik):
     try:
         ref = ClaimDocumentReference(**v['document_ref']).to_dict()
         metrics = v['metrics']
+        if 'fiscal_quarter' in v['period'] and not _fiscal_quarter_valid(v['period']):
+            return None
         for statement in v['statements']:
             defined = None
             if 'context_quote' in statement:

@@ -19,6 +19,14 @@ from validation.ordinary_pilot_contract import CASES, quota_contract
 
 ANSWER_CONTENT_KINDS = ('source_bound_claims', 'insufficient_evidence', 'identity_unresolved',
                         'no_answer', 'not_run', 'unclassified')
+# A partial answer made only of quoted business, competition or risk disclosures, with no
+# financial comparison. It is counted apart from 'source_bound_claims' so it cannot be
+# mistaken for completed financial analysis. Listed in counts only when a case has it, so
+# the export of a ledger without any such case is exactly what it was. Kept equal to
+# app.services.disclosure_only_answer.DISCLOSURE_ONLY_KINDS by a test.
+DISCLOSURES_ONLY = 'source_bound_disclosures_only'
+DISCLOSURE_ONLY_CLAIM_KINDS = frozenset({'issuer_business_description', 'issuer_competition_description',
+                                         'issuer_disclosed_risk'})
 
 
 class ExportRefused(BudgetError):
@@ -51,6 +59,9 @@ def answer_content(case_status, payload):
     if status == 'insufficient_claim_evidence':
         return 'insufficient_evidence'
     if status in {'attributed', 'partial'} and source.get('claims'):
+        kinds = {claim.get('claim_kind') if type(claim) is dict else None for claim in source['claims']}
+        if source.get('content_scope') == 'disclosures_only' and kinds <= DISCLOSURE_ONLY_CLAIM_KINDS:
+            return DISCLOSURES_ONLY
         return 'source_bound_claims'
     return 'unclassified'
 
@@ -304,7 +315,9 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         content = {'size_rejections': rejection_records,
                    'answer_content': {'scope': 'delivered content only; accuracy and usefulness are assessed separately',
                                       'cases': cases_content,
-                                      'counts': {key: tally.get(key, 0) for key in ANSWER_CONTENT_KINDS}}}
+                                      'counts': {**{key: tally.get(key, 0) for key in ANSWER_CONTENT_KINDS},
+                                                 **({DISCLOSURES_ONLY: tally[DISCLOSURES_ONLY]}
+                                                    if tally.get(DISCLOSURES_ONLY) else {})}}}
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
     return {'format': 'ordinary-native-packet-v1', 'synthetic_sec_backend': synthetic,

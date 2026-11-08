@@ -271,6 +271,43 @@ def _business_quote_rejection(quote):
     return None
 
 
+# A Human Capital subsection describes the workforce, not what the business sells. It
+# is excluded only when both its heading and its end are clear: the heading starts a
+# sentence (not a cross-reference such as: see "Human Capital"), and the section ends
+# at the next standard Item 1 subsection heading or, with none, at the end of Item 1
+# within a section's usual length. Otherwise nothing is excluded.
+_HUMAN_CAPITAL_HEADING = re.compile(
+    r'(?:(?<=[.!?\u201d")%] )|(?<=\d )|(?<=Employees and )|^)'
+    r'Human Capital(?: (?:Resources|Management|Talent Management))?(?: and Emplo ?yees)?(?=\s+[A-Z0-9])')
+_ITEM_1_SUBSECTION = re.compile(
+    r'(?:(?<=[.!?\u201d")%] )|(?<=\d ))'
+    r'(?:Available Information|Corporate Information|Corporate History|Information About Our Executive Officers|'
+    r'Executive Officers(?: of the Registrant)?|(?:Government |International |Other )?Regulations?|Intellectual Property|'
+    r'Seasonality|Competition|Environmental (?:Matters|Regulation)|Properties|Insurance|Research and Development|'
+    r'Customers|Suppliers|Sales and Marketing|Backlog|Manufacturing|Raw Materials|Legal Proceedings|'
+    r'Website Access|Access to Our Filings|Our Business|Our Products|Products and Services|Business Overview|'
+    r'Company Overview|Business Description|Segment Information|Company Background)(?=\s+[A-Z])')
+_HUMAN_CAPITAL_MAX_TAIL = 12000
+
+
+def human_capital_zones(window_text):
+    """(start, end) offsets of clearly delimited Human Capital subsections in Item 1 text."""
+    zones, position = [], 0
+    for match in _HUMAN_CAPITAL_HEADING.finditer(window_text):
+        if match.start() < position:
+            continue
+        following = _ITEM_1_SUBSECTION.search(window_text, match.end())
+        if following:
+            end = following.start()
+        elif len(window_text) - match.start() <= _HUMAN_CAPITAL_MAX_TAIL:
+            end = len(window_text)
+        else:
+            continue
+        zones.append((match.start(), end))
+        position = end
+    return zones
+
+
 def _business_summary(value):
     return (f'{value["ticker"]} described its business in its {value.get("document_type", "10-K")} filed '
             f'{value["document_ref"]["published_at"]}: “{value["quote"]}” '
@@ -311,9 +348,13 @@ def extract_business_descriptions(document, *, ticker, cik, diagnostics=None):
     stats["status"] = "no_qualifying_business_sentence"
     candidates = []
     named_offsets = set()
+    zones = human_capital_zones(document.text[start:end])
     for left, right in islice(risk_sentence_spans(document.text[start:end]), 2000):
         quote = document.text[start + left:start + right]
         stats["sentences"] += 1
+        if any(a <= left < b for a, b in zones):
+            stats["rejection_counts"]["human_capital_section"] = stats["rejection_counts"].get("human_capital_section", 0) + 1
+            continue
         # Normalized HTML joins block headings to the next sentence. Remove
         # only an explicit shared heading prefix; retain the entire sentence.
         heading = _BUSINESS_HEADING_PREFIX.match(quote)
