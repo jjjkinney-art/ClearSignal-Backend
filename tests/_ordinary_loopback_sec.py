@@ -25,6 +25,7 @@ from validation._ordinary_synthetic_sec import respond
 SEC_HOSTS = ('www.sec.gov', 'data.sec.gov')
 OVERSIZE_TOTAL = 64 * 1024 * 1024
 PARTIAL_MARKER = b'<p>INVENTED-PARTIAL-OVERSIZED-FILING-TEXT</p>'
+HTTP_STATUS_FAULTS = frozenset({'http_403', 'http_404', 'http_429', 'http_500'})
 OVERSIZE_FRAMING = {'oversize_declared': b'Content-Length: %d\r\n' % OVERSIZE_TOTAL,
                     'oversize_chunked': b'Transfer-Encoding: chunked\r\n',
                     'oversize_close': b'Connection: close\r\n'}
@@ -221,8 +222,16 @@ class LoopbackSEC:
             if (self.ifrs_only_cik is not None and self.inline_filing and media == 'text/html'
                     and re.search(rf'/edgar/data/{self.ifrs_only_cik}/[0-9]+/[a-z]+-20260630\.htm$', path)):
                 body = inline_quarterly_filing(self.ifrs_only_cik)
-            reason = {200: b'OK', 404: b'Not Found', 405: b'Method Not Allowed'}[status]
             kind = self._take_fault(path)
+            if kind == 'xbrl_flagged':
+                # The same registrant's filing list, but one filing now claims XBRL: absence is not proven.
+                listing = json.loads(body)
+                listing['filings']['recent']['isXBRL'][0] = 1
+                body = json.dumps(listing).encode()
+            if kind in HTTP_STATUS_FAULTS:
+                status, media, body = int(kind[5:]), 'text/html', b'<html>Invented error</html>'
+            reason = {200: b'OK', 403: b'Forbidden', 404: b'Not Found', 405: b'Method Not Allowed',
+                      429: b'Too Many Requests', 500: b'Internal Server Error'}[status]
             if kind == 'close':
                 return
             if kind == 'silent':

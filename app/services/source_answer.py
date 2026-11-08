@@ -215,6 +215,22 @@ def apply_evidence_gaps(thesis: object, source_answer: dict | None, gaps: list[d
             "unanswered_parts": list(dict.fromkeys([*(source_answer.get("unanswered_parts") or []), *missing]))}
 
 
+def apply_evidence_not_applicable(thesis: object, source_answer: dict | None, records: list[dict]) -> dict | None:
+    """State plainly that financial analysis is unavailable because SEC's own filing list proves
+    the registrant has no XBRL data. This is a fact about the registrant, not lost evidence: it
+    never marks the answer degraded and is never mixed with evidence_gaps."""
+    if not records or source_answer is None:
+        return source_answer
+    from .sec_registration_only import explanation
+    notice = explanation(records[0]["evidence"])
+    direct_answer = getattr(thesis, "direct_answer", "") or ""
+    if not direct_answer.startswith(notice):
+        thesis.direct_answer = f"{notice}\n\n{direct_answer}" if direct_answer else notice
+    missing = "financial performance and reported comparisons (not applicable: no XBRL filings listed)"
+    return {**source_answer, "evidence_not_applicable": [dict(record) for record in records],
+            "unanswered_parts": list(dict.fromkeys([*(source_answer.get("unanswered_parts") or []), missing]))}
+
+
 def apply_source_answer_gate(thesis: object, question: str, items: Iterable[object],
                              *, references: list[dict] | None = None) -> dict | None:
     """Bind source-demand answers to retrieved evidence or fail closed."""

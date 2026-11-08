@@ -186,3 +186,15 @@ Evidence: the repository's deployment records for both Production environments n
 | Frontend pin | `77c33bbbb0c530e01f74b0d51502fabdf6d1ce12` |
 
 **Not done, and not authorized by this amendment:** no package, execution configuration, cost or retention evidence, approval file, new SEC retrieval, live run, backend merge or backend deployment.
+
+## Amendment 3 (2026-11-08): registration-only evidence-gap rule (implementation only)
+
+Run 10 is recorded as two answered, one halted (VBREY, position 3), nine not run; its originals, scores and consumed approval are untouched, and the HTTP status of the failed facts request remains unknown.
+
+**Unchanged:** the six issuers (NWBI, VBREY, GALT, AUDC, FORFF, IFCNF), the twelve exact questions in their registered order (`a56e53f7…`), every criterion, the content-reporting split, and every limit and quota of `threshold_filing_v1`.
+
+**Added (pilot profile only):** a rule that skips the company-facts request when the same CIK's complete SEC filing list proves a registration-only registrant, with ledger and export re-verification (`docs/REGISTRATION_ONLY_EVIDENCE_GAP_20261108.md`). VBREY and IFCNF were already disclosed as routing regression cases and remain cohort members.
+
+**What a next run would be:** an operational follow-up to Run 10, not a new cohort and not a rerun of a scored result. IFCNF is decided by its own retained evidence; nothing here predicts or guarantees its outcome. `unanswered_registration_only` cases stay in the 12-case denominator and are reported separately.
+
+**Not done, and not authorized by this amendment:** no package, approval file, new SEC retrieval, live run, backend merge or deployment.

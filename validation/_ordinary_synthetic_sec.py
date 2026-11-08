@@ -76,6 +76,11 @@ _DIRECTORY_ONLY = [(1022837, 'SMFNF', 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
                    (1666175, 'FTS', 'Fortis Inc.'), (2035057, 'IFHLY', 'Inficon Holding AG/ADR')]
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
+# Registration-only registrants: a depositary-receipt program entity (SEC type "other", SIC 8880),
+# modelled on the shape Run 10 retained for VBREY: a complete listing of registration forms, no XBRL
+# and no older pages. No filing document and no company facts exist for it, and its company-facts
+# route answers 404 as SEC's does (a request there is a failure the pilot must still halt on).
+REGISTRATION_ONLY = frozenset({'VBREY'})
 SYNTHETIC_FAULTS = frozenset({'crawl', 'late', 'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})
 
 
@@ -113,8 +118,26 @@ def _filings(cik):
     return recent
 
 
+def _registration_only_submissions(cik):
+    ticker = _ticker(cik)
+    rows = [('EFFECT', '2025-04-14', 'xslEFFECTX01/primary_doc.xml'), ('F-6', '2025-04-04', 'f6-invented.htm'),
+            ('F-6EF', '2022-03-09', 'f6ef-invented-a.htm'), ('424B3', '2021-10-29', '424b3-invented.htm'),
+            ('F-6 POS', '2021-10-29', 'f6pos-invented-a.htm'), ('F-6 POS', '2021-10-27', 'f6pos-invented-b.htm'),
+            ('F-6EF', '2021-01-25', 'f6ef-invented-b.htm'), ('F-6EF', '2021-01-14', 'f6ef-invented-c.htm'),
+            ('F-6EF', '2020-07-16', 'f6ef-invented-d.htm')]
+    recent = {'form': [r[0] for r in rows], 'filingDate': [r[1] for r in rows],
+              'accessionNumber': [f'{cik:010d}-{r[1][2:4]}-{900000 + i:06d}' for i, r in enumerate(rows)],
+              'primaryDocument': [r[2] for r in rows], 'reportDate': [''] * len(rows),
+              'isXBRL': [0] * len(rows), 'isInlineXBRL': [0] * len(rows), 'isXBRLNumeric': [None] * len(rows)}
+    return {'cik': f'{cik:010d}', 'entityType': 'other', 'sic': '8880', 'sicDescription': 'American Depositary Receipts',
+            'category': '', 'name': REGISTRANTS[ticker][1], 'tickers': [ticker], 'exchanges': ['OTC'],
+            'filings': {'recent': recent, 'files': []}}
+
+
 def submissions(cik):
     ticker = _ticker(cik)
+    if ticker in REGISTRATION_ONLY:
+        return _registration_only_submissions(cik)
     return {'cik': f'{cik:010d}', 'entityType': 'operating', 'name': REGISTRANTS[ticker][1],
             'tickers': [ticker], 'exchanges': ['Invented'],
             'filings': {'recent': _filings(cik), 'files': []}}
@@ -194,12 +217,13 @@ def respond(path):
     if match and int(match[1]) in {c for c, _ in REGISTRANTS.values()}:
         return 200, 'application/json', json.dumps(submissions(int(match[1]))).encode()
     match = re.fullmatch(r'/api/xbrl/companyfacts/CIK([0-9]{10})\.json', path)
-    if match and int(match[1]) in {c for c, _ in REGISTRANTS.values()}:
+    if match and int(match[1]) in {c for c, t in ((c, _ticker(c)) for c, _ in REGISTRANTS.values()) if t not in REGISTRATION_ONLY}:
         return 200, 'application/json', json.dumps(companyfacts(int(match[1]))).encode()
     if path == '/files/company_tickers.json':
         return 200, 'application/json', json.dumps(directory()).encode()
     match = re.fullmatch(r'/Archives/edgar/data/([0-9]+)/([0-9]{18})/([^/]+)', path)
-    if match and int(match[1]) in {c for c, _ in REGISTRANTS.values()}:
+    if (match and int(match[1]) in {c for c, _ in REGISTRANTS.values()}
+            and _ticker(int(match[1])) not in REGISTRATION_ONLY):
         listed = {(accn.replace('-', ''), doc) for accn, doc in
                   zip(_filings(int(match[1]))['accessionNumber'], _filings(int(match[1]))['primaryDocument'])}
         if (match[2], match[3]) in listed:

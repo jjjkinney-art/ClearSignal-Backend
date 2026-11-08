@@ -23,6 +23,7 @@ from validation.capture_budget import AttemptLedger, BudgetError, RateLimitDelay
 from validation.ordinary_native_policy import PURPOSE
 from validation.ordinary_network import SEC_PORT, admit_resolution, is_direct, public_address, verify_ordinary_network
 from validation.ordinary_pilot_contract import CASES, quota_contract
+from validation.ordinary_registration_only import declaration_supported, declared_not_applicable, submissions_url
 from validation.pilot_approved import ExchangeGate
 
 SEC_HOSTS = frozenset({'www.sec.gov', 'data.sec.gov'})
@@ -411,6 +412,19 @@ class OrdinaryNativeLedger(AttemptLedger):
                          (DIRECTORY_URL,)).fetchone()
         return answer_names_issuer(case_id, company, expected, bytes(row[0]) if row else None)
 
+    def _registration_only_supported(self, db, case_run, case_id, declared):
+        """A declared absence of company facts must be provable from this case's own retained
+        submissions response, for the CIK the case registered, with no facts request ever made."""
+        expected = next((r.get('expected_cik') for r in self.policy.get('case_records', ())
+                         if r.get('case_id') == case_id), None)
+        if type(expected) is not str or not re.fullmatch(r'[0-9]{10}', expected):
+            return False
+        row = db.execute('SELECT r.body FROM attempts a JOIN ordinary_responses r ON r.attempt_id=a.id '
+                         "WHERE a.case_run=? AND a.route='sec/submissions' AND r.url=? ORDER BY r.completed_ns LIMIT 1",
+                         (case_run, submissions_url(expected))).fetchone()
+        facts, = db.execute("SELECT COUNT(*) FROM attempts WHERE case_run=? AND route='sec/facts'", (case_run,)).fetchone()
+        return declaration_supported(declared, expected, bytes(row[0]) if row else None, facts)
+
     def complete_case(self, case_run, payload, *, forbidden_values):
         """Retain the complete answer and finish its case in one transaction.
 
@@ -427,6 +441,7 @@ class OrdinaryNativeLedger(AttemptLedger):
             from validation.pilot_policy import reject_runtime_values
             reject_runtime_values(payload, forbidden_values, raw=raw)
             stages = degraded_stages(payload)
+            declared = declared_not_applicable(payload)
         except (BudgetError, TypeError, ValueError, RecursionError):
             self.halt('invalid_response')
             raise BudgetError('ordinary answer retention refused') from None
@@ -443,7 +458,8 @@ class OrdinaryNativeLedger(AttemptLedger):
             rejected = {r[0] for r in db.execute('SELECT stage FROM ordinary_size_rejections WHERE case_run=?', (case_run,))}
             now = time.monotonic_ns()
             if (not case or unsettled or not self._names_this_issuer(db, case[0], payload.get('company'))
-                    or rejected - set(stages)):
+                    or rejected - set(stages)
+                    or (declared and not self._registration_only_supported(db, case_run, case[0], declared))):
                 reason = 'invalid_response'
             else:
                 reason = self._deadline_reason(now, case[0], case[1])

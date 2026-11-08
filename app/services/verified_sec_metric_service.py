@@ -14,7 +14,7 @@ from ..integrity.sec_metric_evidence import (
 from ..providers.sec_client import get_company_fact_records_for_concept_units
 from ..providers.sec_fact_policy import REPORTING_CURRENCIES
 from ..schemas import RetrievedEvidence
-from .providers.sec_provider import _load_ticker_cik_map
+from .providers.sec_provider import _load_ticker_cik_map, facts_not_applicable
 
 _TICKER = re.compile(r"[A-Z]{1,5}(?:\.[A-Z])?\Z")
 _LATEST_PERIOD_ANCHOR = ("Assets", "USD")
@@ -342,6 +342,10 @@ def fetch_verified_metric_evidence(
             return []
     cik = _load_ticker_cik_map().get(ticker)
     if not cik or not cik.isdigit():
+        return []
+    # A registrant whose own filing list proves it has no XBRL data has no company facts:
+    # no request is made (inside a request scope only; otherwise this is a no-op).
+    if facts_not_applicable(cik) is not None:
         return []
     from .annual_eps_research import annual_eps_request, fetch_annual_eps
     eps_request = annual_eps_request(question)

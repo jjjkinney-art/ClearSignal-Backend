@@ -52,8 +52,15 @@ def resolved_ticker(case_id):
 
 UNRESOLVED = [case for case in CASES[:_HALT_INDEX] if case in IDENTITY_UNRESOLVED]
 COMPLETED = [case for case in CASES[:_HALT_INDEX] if case not in UNRESOLVED]
+# Registration-only registrants (see validation._ordinary_synthetic_sec.REGISTRATION_ONLY; VBREY in run 10):
+# SEC's own filing list proves they have no XBRL data, so the application makes no company-facts request
+# and no filing request, says why, and the case is recorded unanswered_registration_only. It is a recorded
+# outcome (the run goes on) and stays in the denominator of twelve.
+from validation._ordinary_synthetic_sec import REGISTRATION_ONLY
+REGISTRATION_ONLY_CASES = [case for case in COMPLETED if case.split(':')[0] in REGISTRATION_ONLY]
 EXPECTED_STATUS = 'halted' if EXPECTED_HALT else 'complete'
-EXPECTED_CASE_STATUSES = (['identity_unresolved' if case in UNRESOLVED else 'answered_unadjudicated'
+EXPECTED_CASE_STATUSES = (['identity_unresolved' if case in UNRESOLVED else
+                           'unanswered_registration_only' if case in REGISTRATION_ONLY_CASES else 'answered_unadjudicated'
                            for case in CASES[:_HALT_INDEX]]
                           + (['halted'] + ['not_run_after_halt'] * (len(CASES) - _HALT_INDEX - 1)
                              if EXPECTED_HALT else []))
@@ -65,9 +72,18 @@ EXPECTED_REFUSED_MODEL_REQUESTS = 1 if EXPECTED_HALT else 0
 # Under the threshold-filing profile: five (one shared submissions response) and four
 # (that response, plus the filing).
 EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES = (5, 4) if contract_profile() else (7, 3)
-EXPECTED_SEC_EXCHANGES = (sum(EXPECTED_THESIS_EXCHANGES if case.endswith(':core_thesis') else EXPECTED_THRESHOLD_EXCHANGES
-                              for case in COMPLETED)
-                          + (CASES[0] in IDENTITY_UNRESOLVED))
+# A registration-only case makes two: the directory lookup and the submissions response. No facts request.
+REGISTRATION_ONLY_EXCHANGES = 2
+
+
+def expected_exchanges(case):
+    """SEC exchanges an answered case makes."""
+    if case in REGISTRATION_ONLY_CASES:
+        return REGISTRATION_ONLY_EXCHANGES
+    return EXPECTED_THESIS_EXCHANGES if case.endswith(':core_thesis') else EXPECTED_THRESHOLD_EXCHANGES
+
+
+EXPECTED_SEC_EXCHANGES = sum(expected_exchanges(case) for case in COMPLETED) + (CASES[0] in IDENTITY_UNRESOLVED)
 # The route each unresolved case takes: an unresolved identity asks for
 # clarification (a thesis question through entity suggestions) and makes no
 # SEC evidence request. A halted case records no route.

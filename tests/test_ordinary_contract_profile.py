@@ -21,12 +21,12 @@ import sys
 import pytest
 
 from _ordinary_child_report import child_counts, child_problems, read_junit
-from _ordinary_cohort_expectations import EXPECTED_SEC_EXCHANGES, UNRESOLVED
+from _ordinary_cohort_expectations import EXPECTED_SEC_EXCHANGES, REGISTRATION_ONLY_CASES, UNRESOLVED
 from validation.capture_budget import BudgetError, digest
 from validation.ordinary_native_boundary import verify_contract_profile
 from validation.ordinary_native_ledger import CASE_SECONDS, degraded_stages
 from validation.ordinary_transport import OrdinaryHTTPTransport
-from validation.ordinary_pilot_contract import (APPROVED_COHORT, CASES, COHORT, FAULT_CASE_INDEX, THRESHOLD_FILING_PROFILE,
+from validation.ordinary_pilot_contract import (APPROVED_COHORT, CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, THRESHOLD_FILING_PROFILE,
                                                 contract_profile, quota_contract)
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -402,8 +402,10 @@ def test_the_profile_runs_within_its_limits_and_reuses_submissions(tmp_path):
     result = run_rehearsal(tmp_path / 'run', scenario='happy')
     packet = result['packet']
     assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
-    # 54 for cohort 4: all twelve cases resolve (cohort 3 made 45, with LLYVA's two making none).
-    assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES == 54 and result['worker']['refused_requests'] == []
+    # 49 for cohort 5: the ten operating cases make 5 or 4 (54 minus the 9 that
+    # VBREY's two cases would have made), and VBREY's two registration-only cases make 2 each: the
+    # directory lookup and the submissions response, with no company-facts request.
+    assert packet['attempt_count'] == EXPECTED_SEC_EXCHANGES == 49 and result['worker']['refused_requests'] == []
     routes = {}
     for attempt in packet['attempts']:
         assert attempt['status'] == 'settled'
@@ -413,9 +415,35 @@ def test_the_profile_runs_within_its_limits_and_reuses_submissions(tmp_path):
             assert not any(key[0] == case for key in routes)
             continue
         assert routes[case, 'sec/submissions'] == 1
+        if case in REGISTRATION_ONLY_CASES:
+            # Proven from SEC's own filing list: no facts request and no filing request went out.
+            assert (case, 'sec/facts') not in routes and (case, 'sec/document') not in routes
+            continue
+        assert routes[case, 'sec/facts'] == 1
         assert routes[case, 'sec/document'] == (2 if case.endswith(':core_thesis') else 1)
     statuses = {row['case_id']: row['status'] for row in packet['cases']}
     assert [case for case, status in statuses.items() if status == 'identity_unresolved'] == UNRESOLVED
+    # The position-3 rehearsal: VBREY (cases 3 and 4) is recorded unanswered_registration_only, the run does
+    # not halt, every later case runs and is answered, and all twelve stay in the reporting denominator.
+    assert REGISTRATION_ONLY_CASES == ['VBREY:core_thesis', 'VBREY:decision_threshold']
+    assert [statuses[case] for case in REGISTRATION_ONLY_CASES] == ['unanswered_registration_only'] * 2
+    assert all(statuses[case] == 'answered_unadjudicated' for case in CASES[4:])
+    assert len(packet['cases']) == packet['denominator'] == 12
+    assert packet['outcome_counts'] == {'full_answer': 10, 'degraded_answer': 0, 'unanswered': 2, 'operational_failure': 0}
+    for case in REGISTRATION_ONLY_CASES:
+        source = packet['answers'][case]['response']['answer']['source_answer']
+        assert source['status'] == 'insufficient_claim_evidence' and source.get('degraded') is None
+        assert [(r['task'], r['reason']) for r in source['evidence_not_applicable']] == [('sec_metrics', 'no_xbrl_filings')]
+        assert source['evidence_not_applicable'][0]['evidence']['xbrl_flags'] == 0
+        text = packet['answers'][case]['response']['answer']['investment_thesis']['direct_answer']
+        assert text.startswith('No financial analysis is available for this registrant.') and 'not a retrieval failure' in text
+    content = packet['answer_content']
+    assert sum(content['counts'].values()) == 12 and content['coverage']['denominator'] == 12
+    scope = content['entity_scope']
+    assert scope['denominator'] == 12 and scope['strata']['registration_only']['cases'] == REGISTRATION_ONLY_CASES
+    assert scope['strata']['registration_only']['count'] + scope['strata']['operating_or_other']['count'] == 12
+    assert scope['strata']['registration_only']['coverage']['no_substantive_answer'] == 2
+    assert scope['strata']['operating_or_other']['coverage']['denominator'] == 10
 
 
 def _degraded_case(packet):
@@ -514,8 +542,11 @@ def test_the_profile_uses_the_live_code_path_within_every_limit(tmp_path):
     result, sec, _ = _loopback(tmp_path, None)
     packet, worker = result['packet'], result['worker']
     assert result['status'] == 'complete' and packet['first_failure'] is None
-    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == EXPECTED_SEC_EXCHANGES == 54
-    assert len(sec.connects) == len(sec.requests) == 54 and sec.handshake_failures == 0
+    assert packet['attempt_count'] == packet['wire_entries'] == worker['external_dispatches'] == EXPECTED_SEC_EXCHANGES == 49
+    assert len(sec.connects) == len(sec.requests) == 49 and sec.handshake_failures == 0
+    # On the wire, not just in the ledger: VBREY's facts and filings were never requested.
+    assert not [r for r in sec.requests if '0001000377' in r['path'] and 'companyfacts' in r['path']]
+    assert not [r for r in sec.requests if '/data/1000377/' in r['path']]
     assert worker['mode'] == 'loopback' and worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
     assert 1 <= worker['max_inflight_sec'] <= 4
@@ -596,7 +627,7 @@ def _assert_size_recovered(result, sec, output, kind, *, count=1):
     affected = {row['case_id'] for row in rejections}
     assert packet['outcome_counts']['operational_failure'] == 0 and packet['quality_pass_rate'] is None
     assert sum(packet['outcome_counts'].values()) == 12
-    assert {s for c, s in statuses.items() if c not in affected and c not in UNRESOLVED} <= {
+    assert {s for c, s in statuses.items() if c not in affected and c not in UNRESOLVED and c not in REGISTRATION_ONLY_CASES} <= {
         'answered_unadjudicated', 'answered_degraded_unadjudicated'}
     # Terminal before the next case began.
     with sqlite3.connect(output / 'ledger.sqlite') as db:
@@ -700,7 +731,7 @@ def test_cancellation_leaving_nothing_to_answer_is_unanswered(tmp_path):
     assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == [] and source['degraded'] is True
     assert {'source': 'the annual report (Form 10-K)', 'task': 'thesis_disclosures',
             'reason': 'time_limit'} in source['evidence_gaps']
-    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + len(REGISTRATION_ONLY_CASES) + 1
     assert packet['outcome_counts']['operational_failure'] == 0
     assert _timings(packet, case)[-1]['stage'] == 'cancelled:competition_extracted'
     started, following = _case_started_after(tmp_path / 'run', case)
@@ -790,7 +821,7 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
         # quarterly report did not affect: a degraded answer, counted apart from any
         # financial claim, never an unanswered case.
         assert statuses[case] == 'answered_degraded_unadjudicated'
-        assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED)
+        assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + len(REGISTRATION_ONLY_CASES)
         assert packet['outcome_counts']['degraded_answer'] == 1
         assert {'case_id': case, 'content': 'source_bound_disclosures_only'} in packet['answer_content']['cases']
         assert source['status'] == 'partial' and source['content_scope'] == 'disclosures_only' and source['claims']
@@ -799,7 +830,7 @@ def test_a_rejected_filing_that_was_the_only_evidence_leaves_the_case_unanswered
         assert 'no financial analysis was completed' in json.dumps(packet['answers'][case]['response'])
     else:
         assert statuses[case] == 'unanswered_size_rejected'
-        assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+        assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + len(REGISTRATION_ONLY_CASES) + 1
         assert {'case_id': case, 'content': 'insufficient_evidence'} in packet['answer_content']['cases']
         # The answer is the application's own: no claims, and it says why.
         assert source['status'] == 'insufficient_claim_evidence' and source['claims'] == []
@@ -1014,7 +1045,7 @@ def test_the_export_refuses_a_size_rejection_that_does_not_reconcile(tmp_path):
     packet = export_packet(copy, policy, forbidden_values=forbidden, synthetic=False)
     assert {'case_id': case, 'status': 'unanswered_size_rejected'} in packet['cases']
     assert packet['status'] == 'complete' and packet['outcome_counts']['operational_failure'] == 0
-    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + 1
+    assert packet['outcome_counts']['unanswered'] == len(UNRESOLVED) + len(REGISTRATION_ONLY_CASES) + 1
 
 
 @PROFILE_ONLY
@@ -1225,3 +1256,56 @@ def test_degradation_reaches_the_approved_outcome_record(approved, tmp_path, mon
     assert packet['execution_authorized'] is False
     with pytest.raises(BudgetError):
         launcher.execute(**paths)  # the directory now exists: the approval is spent
+
+
+# -- the registration-only rule never turns a failure into an absence --------------------
+
+def _cik_of(case):
+    return next(r['expected_cik'] for r in json.loads((ROOT / COHORT_FILE).read_text()) if r['case_id'] == case)
+
+
+def _run_registration_fault(tmp_path, kind, path_regex):
+    _needs_port()
+    return _loopback(tmp_path, (kind, path_regex, 1))
+
+
+def _assert_halted_at(result, sec, output, case, detail):
+    packet = result['packet']
+    assert result['status'] == 'halted' and packet['halt'] == 'post_claim_failure'
+    cls = detail.rsplit('_', 1)[0]
+    assert packet['first_failure']['code'] == cls          # the class decides the halt
+    # The numeric status is retained for diagnosis only.
+    assert any(a['failure'] == {'code': 'transport', 'detail': detail} for a in packet['attempts'] if a['failure'])
+    statuses = [c['status'] for c in packet['cases']]
+    halted = CASES.index(case)
+    assert statuses[halted] == 'halted' and statuses[halted + 1:].count('not_run_after_halt') == len(CASES) - halted - 1
+    assert len(packet['cases']) == packet['denominator'] == 12
+    # Absence is never inferred at or after the failure; earlier proven cases keep their recorded status.
+    assert not any(c['status'] == 'unanswered_registration_only' for c in packet['cases'][halted:])
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_filing_list_that_no_longer_proves_absence_requests_facts_and_its_404_halts(tmp_path):
+    # One filing claims XBRL, so absence is not proven: the facts request goes out, fails 404, and the run halts.
+    cik = _cik_of('VBREY:core_thesis')
+    result, sec, output = _run_registration_fault(tmp_path, 'xbrl_flagged', rf'/submissions/CIK{cik}\.json')
+    _assert_halted_at(result, sec, output, 'VBREY:core_thesis', 'http_client_error_404')
+    assert [r for r in sec.requests if cik in r['path'] and 'companyfacts' in r['path']]   # the request was made
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_403_on_the_registrants_filing_list_halts_and_is_not_read_as_absence(tmp_path):
+    cik = _cik_of('VBREY:core_thesis')
+    result, sec, output = _run_registration_fault(tmp_path, 'http_403', rf'/submissions/CIK{cik}\.json')
+    _assert_halted_at(result, sec, output, 'VBREY:core_thesis', 'http_auth_403')
+    assert not [r for r in sec.requests if cik in r['path'] and 'companyfacts' in r['path']]
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_429_on_an_operating_issuers_facts_halts(tmp_path):
+    cik = _cik_of('GALT:core_thesis')
+    result, sec, output = _run_registration_fault(tmp_path, 'http_429', rf'/companyfacts/CIK{cik}\.json')
+    _assert_halted_at(result, sec, output, 'GALT:core_thesis', 'http_throttled_429')

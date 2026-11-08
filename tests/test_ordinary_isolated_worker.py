@@ -18,7 +18,7 @@ from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_pilot_contract import contract_profile, CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-from _ordinary_cohort_expectations import (resolved_ticker, attempt_reconciliation_problems, EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
+from _ordinary_cohort_expectations import (REGISTRATION_ONLY_CASES, expected_exchanges, resolved_ticker, attempt_reconciliation_problems, EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
                                           EXPECTED_SEC_EXCHANGES, GENERAL_INTENT,
                                           UNRESOLVED)
 
@@ -64,8 +64,7 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     assert packet['attempt_count'] == packet['wire_entries'] == worker['synthetic_requests']
     assert all(a['status'] == 'settled' and a['response'] and a['failure'] is None for a in packet['attempts'])
     per_case = {case: sum(a['case_id'] == case for a in packet['attempts']) for case in COMPLETED}
-    assert per_case == {case: (EXPECTED_THESIS_EXCHANGES if case.endswith(':core_thesis') else EXPECTED_THRESHOLD_EXCHANGES)
-                        for case in COMPLETED}
+    assert per_case == {case: expected_exchanges(case) for case in COMPLETED}
     assert packet['attempt_count'] <= quota_contract()['sec_gets']
     # Identity resolution used the routing slot once (first unseen issuer, case
     # one); the pipeline then reused that directory response instead of a GET.
@@ -116,6 +115,10 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
         answer = packet['answers'][case]['response']
         assert answer['company'] == resolved_ticker(case)
         urls = {ref['url'] for ref in answer['answer']['evidence_references'] if ref.get('url')}
+        if case in REGISTRATION_ONLY_CASES:
+            # Nothing was cited and no facts exist: the answer only explains why.
+            assert urls <= retained | listed and not answer['answer']['verified_sec_facts'], case
+            continue
         assert urls and urls <= retained | listed, case
         # Facts reached the answer path (synthetic values; not research evidence).
         assert answer['answer']['verified_sec_facts'], case
@@ -355,10 +358,11 @@ def test_an_abandoned_evidence_request_degrades_one_answer_without_halting(degra
     # also expired for them under load; then they too are degraded, never failed.
     # A case the pinned frontend sends as general is unanswered, as in production.
     assert [s for s, case in zip(statuses, CASES) if case in UNRESOLVED] == ['identity_unresolved'] * len(UNRESOLVED)
-    assert {s for s, case in zip(statuses, CASES) if case not in UNRESOLVED} <= {
+    assert [s for s, case in zip(statuses, CASES) if case in REGISTRATION_ONLY_CASES] == ['unanswered_registration_only'] * len(REGISTRATION_ONLY_CASES)
+    assert {s for s, case in zip(statuses, CASES) if case not in UNRESOLVED and case not in REGISTRATION_ONLY_CASES} <= {
         'answered_unadjudicated', *degraded_statuses}
     counts = packet['outcome_counts']
-    assert counts['unanswered'] == len(UNRESOLVED) + statuses.count('unanswered_evidence_abandoned')
+    assert counts['unanswered'] == len(UNRESOLVED) + len(REGISTRATION_ONLY_CASES) + statuses.count('unanswered_evidence_abandoned')
     assert counts['operational_failure'] == 0
     assert sum(counts.values()) == 12
     assert counts['degraded_answer'] == statuses.count('answered_degraded_unadjudicated')
@@ -447,4 +451,26 @@ def test_a_stage_answered_without_degrades_its_case_even_when_its_requests_settl
 def test_parent_export_refuses_a_stage_abandonment_outside_its_case(happy, tmp_path, stage, offset):
     copy, policy = tampered(happy, tmp_path, _STAGE_ABANDONED.format(offset=offset), stage, COMPLETED[0])
     with pytest.raises(ExportRefused):
+        export_packet(copy, policy, forbidden_values=FORBIDDEN, synthetic=True)
+
+
+def _vbrey_core():
+    return 'VBREY:core_thesis'
+
+
+@pytest.mark.timeout(120)
+@pytest.mark.parametrize('sql', [
+    # The declared evidence no longer matches what the retained filing list proves.
+    "UPDATE ordinary_answers SET payload=CAST(replace(replace(CAST(payload AS TEXT), '\"filings_listed\": 9', '\"filings_listed\": 8'), "
+    "'\"filings_listed\":9', '\"filings_listed\":8') AS BLOB) WHERE case_id='VBREY:core_thesis'",
+    # The retained filing list itself is altered (no longer a registration-only registrant).
+    "UPDATE ordinary_responses SET body=CAST(replace(replace(CAST(body AS TEXT), '\"isXBRL\": [0', '\"isXBRL\": [1'), "
+    "'\"isXBRL\":[0', '\"isXBRL\":[1') AS BLOB) WHERE attempt_id IN (SELECT a.id FROM attempts a JOIN cases c ON a.case_run=c.id "
+    "WHERE c.case_id='VBREY:core_thesis' AND a.route='sec/submissions')",
+])
+def test_parent_export_refuses_a_registration_only_declaration_the_retained_evidence_does_not_prove(happy, tmp_path, sql):
+    if not REGISTRATION_ONLY_CASES:
+        pytest.skip('no registration-only case in this cohort')
+    copy, policy = tampered(happy, tmp_path, sql)
+    with pytest.raises((ExportRefused, sqlite3.IntegrityError)):
         export_packet(copy, policy, forbidden_values=FORBIDDEN, synthetic=True)

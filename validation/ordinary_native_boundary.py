@@ -418,7 +418,9 @@ class OrdinaryNativeBoundary(PilotBoundary):
         try:
             if type(exc) is TransportFailure:
                 self.ledger.record_transport_failure(attempt, route, stage, exc.code)
-                self._record(attempt, 'transport', exc.code)
+                # The numeric HTTP status, when the response had one, is kept in the detail for
+                # diagnosis only (code and halt are unchanged by it).
+                self._record(attempt, 'transport', exc.code if exc.status is None else f'{exc.code}_{exc.status}')
             elif type(exc) is _SecRefusal:
                 self.ledger.record_sec_refusal(attempt, route, stage, exc.code)
                 self._record(attempt, 'sec_refusal', exc.code)

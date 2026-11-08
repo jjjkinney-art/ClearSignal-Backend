@@ -228,6 +228,7 @@ class SubmissionsRequestScope:
         self.filing_forms = {}  # task -> the form of the filing it chose to read
         self.cancelled_tasks = set()
         self.filing_parse_deadline = None  # time.monotonic() value, or no limit
+        self.evidence_not_applicable = []  # verified absences: not failures, never degraded
 
     def note_filing_selected(self, task: str, form: str):
         with self._lock:
@@ -246,6 +247,32 @@ class SubmissionsRequestScope:
             self.filing_read_failures.append(task)
             if too_large:
                 self.filing_too_large.append(task)
+
+    def note_not_applicable(self, task: str, reason: str, evidence: dict):
+        with self._lock:
+            row = {"task": task, "reason": reason, "evidence": dict(evidence)}
+            if row not in self.evidence_not_applicable:
+                self.evidence_not_applicable.append(row)
+
+    def peek(self, url: str, *, wait: float):
+        """The shared response for ``url`` once another stage has fetched it, else None.
+
+        Never fetches (a stage may not own a submissions request its quota does not allow) and
+        never counts as a reuse. None when no stage requested it within ``wait`` seconds or the
+        fetch failed: the caller then does exactly what it did before this method existed.
+        """
+        deadline = time.monotonic() + wait
+        while True:
+            with self._lock:
+                entry = self._entries.get(url)
+            if entry is not None:
+                break
+            if time.monotonic() >= deadline:
+                return None
+            time.sleep(0.02)
+        if not entry["done"].wait(timeout=max(0.0, deadline - time.monotonic())) or entry["data"] is None:
+            return None
+        return copy.deepcopy(entry["data"])
 
     def fetch(self, url: str, cik: str, *, timeout: int):
         with self._lock:
@@ -278,6 +305,29 @@ class SubmissionsRequestScope:
 
 _submissions_scope: ContextVar[Optional[SubmissionsRequestScope]] = ContextVar(
     "sec_submissions_request_scope", default=None)
+
+
+_FACTS_EVIDENCE_WAIT_SECONDS = 5
+
+
+def facts_not_applicable(cik) -> Optional[dict]:
+    """Evidence that company facts cannot exist for ``cik``, or None (the request proceeds).
+
+    Only inside a request scope (the pilot profile): outside one nothing changes. It waits, for
+    a few seconds at most, for the submissions another stage fetches; any shortfall (no scope, no
+    response, a failed fetch, any condition unmet) returns None. When the response proves the
+    registrant has no XBRL filings, the absence is recorded on the scope as an explicit
+    not-applicable evidence record, which is not a failure and does not degrade the answer.
+    """
+    scope = _submissions_scope.get()
+    if scope is None or type(cik) is not str or not cik.isdigit():
+        return None
+    from ..sec_registration_only import REASON, registration_only_evidence
+    data = scope.peek(f"{_SUBMISSIONS_BASE}/CIK{cik}.json", wait=_FACTS_EVIDENCE_WAIT_SECONDS)
+    evidence = registration_only_evidence(data, cik)
+    if evidence is not None:
+        scope.note_not_applicable("sec_metrics", REASON, evidence)
+    return evidence
 
 
 def note_filing_selected(task: str, form: str) -> None:

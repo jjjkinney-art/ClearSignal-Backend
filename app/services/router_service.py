@@ -1324,6 +1324,7 @@ def _run_investment_pipeline(
     finally:
         _ev_pool.shutdown(wait=False)  # Don't block — let abandoned tasks finish in background
     _evidence_gaps: list = []
+    _evidence_not_applicable: list = []
     if _submissions_scope is not None:
         _obs_provider(provider="sec_submissions", stage="retrieval", duration_ms=0.0,
                       result_count=_submissions_scope.fetches, cache="request",
@@ -1334,6 +1335,7 @@ def _run_investment_pipeline(
                                        _submissions_scope.filing_read_failures,
                                        _submissions_scope.filing_too_large,
                                        _submissions_scope.filing_forms)
+        _evidence_not_applicable = list(_submissions_scope.evidence_not_applicable)
 
     _fmp_ev:     list = _ev_results.get("fmp",       [])
     _sec_ev:     list = _ev_results.get("sec",       [])
@@ -1730,9 +1732,10 @@ def _run_investment_pipeline(
 
     # Apply the source boundary before any thesis can enter legacy snapshots,
     # comparison evaluation or the final account-owned response snapshot.
-    from .source_answer import apply_evidence_gaps, apply_source_answer_gate
+    from .source_answer import apply_evidence_gaps, apply_evidence_not_applicable, apply_source_answer_gate
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
+    _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
 
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
@@ -1811,6 +1814,7 @@ def _run_investment_pipeline(
     # unsupported Services assertion into the emitted or saved response.
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
+    _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
 
     try:
         thesis_dict = thesis.model_dump()

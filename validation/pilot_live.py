@@ -72,6 +72,9 @@ class TransportFailure(BudgetError):
         if type(code) is not str or code not in TRANSPORT_FAILURE_CODES:
             raise BudgetError('invalid transport failure code')
         self.code = code
+        # The numeric HTTP status, for diagnosis only: set where a non-200 response raised this
+        # failure, else None. Nothing decides anything from it.
+        self.status = None
         # Set only on response_size whose response closed cleanly: what was seen
         # before the download stopped. Never the content.
         self.size_observation = None
@@ -252,6 +255,7 @@ class OwnedHTTPTransport:
         result = None
         observed = None
         close_failed = False
+        http_status = None
         try:
             if self.gate is not None:
                 self.gate.record_dispatch()
@@ -264,7 +268,9 @@ class OwnedHTTPTransport:
                         'http_throttled' if status == 429 else
                         'http_client_error' if 400 <= status < 500 else
                         'http_server_error' if 500 <= status < 600 else 'http_other_status')
-                raise TransportFailure(code)
+                failure = TransportFailure(code)
+                failure.status = status if type(status) is int and 100 <= status <= 599 else None
+                raise failure
             if response.headers.get('content-encoding', 'identity') != 'identity':
                 raise TransportFailure('response_encoding')
             # A declaration is advisory: it can refuse early, never admit. One
@@ -303,6 +309,8 @@ class OwnedHTTPTransport:
         except BaseException as exc:
             failure = (exc.code if type(exc) is TransportFailure else
                        transport_failure_code(exc) if phase == 'transport_other' else phase)
+            if type(exc) is TransportFailure:
+                http_status = exc.status      # diagnosis only; carried onto the re-raised failure
         finally:
             if response is not None:
                 try:
@@ -313,6 +321,7 @@ class OwnedHTTPTransport:
                         failure = 'response_close'
         if failure is not None:
             error = TransportFailure(failure)
+            error.status = http_status
             if failure == 'response_size' and not close_failed:
                 error.size_observation = observed
             raise error from None

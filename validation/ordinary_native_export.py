@@ -16,6 +16,7 @@ from validation.capture_budget import BudgetError, digest
 from validation.ordinary_native_ledger import (DIRECTORY_URL, RUN_SECONDS, answer_names_issuer, case_seconds, degraded_stages,
                                                 screen_body, valid_size_rejection)
 from validation.ordinary_pilot_contract import CASES, quota_contract
+from validation.ordinary_registration_only import declaration_supported, declared_not_applicable, submissions_url
 
 
 # Three kinds of delivered content, never pooled:
@@ -82,6 +83,21 @@ def answer_content(case_status, payload):
             return DISCLOSURES_ONLY
         return 'source_bound_claims'
     return 'unclassified'
+
+
+def _entity_scope(cases_content, registration_case_ids):
+    """Registration-only entities and every other case, reported apart and never dropped:
+    each case is in exactly one stratum and the strata sum to the denominator. The approved
+    targets are still read on the whole denominator (answer_content.coverage)."""
+    registration = set(registration_case_ids)
+    strata = {}
+    for name, rows in (('registration_only', [r for r in cases_content if r['case_id'] in registration]),
+                       ('operating_or_other', [r for r in cases_content if r['case_id'] not in registration])):
+        tally = Counter(row['content'] for row in rows)
+        strata[name] = {'cases': [row['case_id'] for row in rows], 'count': len(rows),
+                        'coverage': content_coverage(tally, len(rows))}
+    return {'denominator': len(cases_content), 'strata': strata,
+            'note': 'every case is in exactly one stratum; the approved targets are read on the whole denominator'}
 
 
 def record_parent_stop(path, reason):
@@ -153,6 +169,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
     if sum(row[2] == 'active' for row in cases) > 1 or (cases and any(r[2] == 'active' for r in cases[:-1])):
         raise ExportRefused('more than one active case')
     by_run = {row[0]: row for row in cases}
+    registration_runs = set()  # answers whose declared absence of company facts the run's own evidence proves
     for run, (case_id, sha, raw, recorded) in answers.items():
         row = by_run.get(run)
         if (row is None or row[1] != case_id or row[2] != 'complete'
@@ -169,6 +186,19 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         expected = next((r.get('expected_cik') for r in policy.get('case_records', ()) if r.get('case_id') == case_id), None)
         if not answer_names_issuer(case_id, payload.get('company'), expected, retained[0][1] if retained else None):
             raise ExportRefused('answer issuer mismatch')
+        try:
+            declared = declared_not_applicable(payload)
+        except BudgetError:
+            raise ExportRefused('malformed not-applicable declaration') from None
+        if declared:
+            # Re-proved from this case's own retained submissions response, for the CIK it registered,
+            # with no facts request ever made; otherwise the export refuses, as the ledger would have halted.
+            body = next((responses[a][4] for a, r, route, *_ in attempts if r == run and route == 'sec/submissions'
+                         and a in responses and responses[a][0] == submissions_url(expected)), None) if expected else None
+            facts = sum(1 for a in attempts if a[1] == run and a[2] == 'sec/facts')
+            if not declaration_supported(declared, expected, body, facts):
+                raise ExportRefused('registration-only declaration not supported by its own retained evidence')
+            registration_runs.add(run)
     if any(row[2] == 'complete' and row[0] not in answers for row in cases):
         raise ExportRefused('completed case without its retained answer')
 
@@ -310,6 +340,7 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
             payload = json.loads(answers[row[0]][2])
             unresolved = payload.get('company') == ''
             status = ('identity_unresolved' if unresolved else
+                      'unanswered_registration_only' if row[0] in registration_runs and _insufficient(payload) else
                       'unanswered_size_rejected' if row[0] in rejected_runs and _insufficient(payload) else
                       'unanswered_evidence_abandoned' if (has_stage_timings and row[0] in abandoned_runs
                                                           and _insufficient(payload)) else
@@ -320,10 +351,11 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         outcomes.append({'case_id': case_id, 'status': status})
     complete = not halted and all(o['status'] in {'answered_unadjudicated', 'answered_degraded_unadjudicated',
                                                   'identity_unresolved', 'unanswered_size_rejected',
-                                                  'unanswered_evidence_abandoned'} for o in outcomes)
+                                                  'unanswered_evidence_abandoned',
+                                                  'unanswered_registration_only'} for o in outcomes)
     kinds = {'answered_unadjudicated': 'full_answer', 'answered_degraded_unadjudicated': 'degraded_answer',
              'identity_unresolved': 'unanswered', 'unanswered_size_rejected': 'unanswered',
-             'unanswered_evidence_abandoned': 'unanswered'}
+             'unanswered_evidence_abandoned': 'unanswered', 'unanswered_registration_only': 'unanswered'}
     outcome_counts = Counter(kinds.get(o['status'], 'operational_failure') for o in outcomes)
     # New ledgers only, so a consumed run's export stays exactly as it was. Its names
     # predate this split: 'answered_unadjudicated' and 'full_answer' mean a case finished
@@ -338,7 +370,10 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
                    'answer_content': {'scope': 'delivered content only; accuracy and usefulness are assessed separately',
                                       'cases': cases_content,
                                       'counts': {key: tally.get(key, 0) for key in ANSWER_CONTENT_KINDS},
-                                      'coverage': content_coverage(tally, len(cases_content))}}
+                                      'coverage': content_coverage(tally, len(cases_content)),
+                                      # Only when a case declared (and proved) it: a consumed run's export is unchanged.
+                                      **({'entity_scope': _entity_scope(cases_content, [by_run[r][1] for r in registration_runs])}
+                                         if registration_runs else {})}}
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
     return {'format': 'ordinary-native-packet-v1', 'synthetic_sec_backend': synthetic,
