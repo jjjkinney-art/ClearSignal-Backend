@@ -122,3 +122,34 @@ Run offline through the guard against `59efed3`, with no network request and no 
 ### What this document does not authorize
 
 No wiring, package, approval file, retrieval, execution, merge or deployment. Run 9, its scores and its consumed approval are unchanged.
+
+## Amendment 1 (2026-11-08): the frontend routing defect, a candidate fix, and the routing regression cases
+
+Recorded before any wiring, package, approval or retrieval. **Unchanged by this amendment:** the six selected issuers, the twelve exact questions in their registered order (`docs/generalization_cohort_5_cases.json`, sha256 `a56e53f7…11e4f6`), the six success criteria, the content-reporting split and the usefulness rubric. No issuer is substituted. Run 9 and its results are not touched.
+
+**The original result is preserved.** The pinned frontend `138d6461` classified 10 of 12 questions as `company_analysis`; `VBREY:core_thesis` and `IFCNF:core_thesis` came back `investing_education` and took the general (model) route. That record (`docs/generalization_cohort_5_offline_checks.json`, and the local `intents.jsonl` and `identity.jsonl`) is not edited and stands as the pinned-frontend result.
+
+**Diagnosis.** SEC registers an American depositary receipt program as `<registrant>/ADR`. The marker is captured with the final token, so the registrant's legal form was no longer at the end of the subject, and the legal-form test failed (343 distinct names in the retained directory end `/ADR`, 8 end `/ADR/`). The question then fell to the education pattern.
+
+**Candidate fix (not merged, not deployed, not pinned).**
+
+| | |
+|---|---|
+| Repository and PR | `jjjkinney-art/Ai-Intelligence-interface` #91, draft, do not merge |
+| Branch and commit | `fix/adr-suffix-company-names`, `a2e768ce5990bc94ee840e6b07a069097302e09b` (one commit on `main` = `138d6461`) |
+| Change | `queryIntent.ts` +10 / -2 and `queryIntent.test.ts` +63: the legal form is read from the subject without a trailing `/ADR` or `/ADR/` marker. No issuer is named and no intent is forced |
+| Candidate classifier sha256 | `9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a` (pinned: `6ef10de3…1dc1df38`) |
+| Resolver | unchanged from the pin (`6fa4e195…38542`) |
+| Frontend CI (merge ref `220908c`, the merge of the commit into `138d6461`, tree `e3a85ea7…` identical to the commit's) | success, job `128633739881`, 2 m 27 s: 371 of 371 unit tests, 23 of 23 component test files, typecheck and build passed |
+
+Evidence on the classifier alone: over all 8,003 distinct registered names and both question templates (16,006 questions), 288 change, all to `company_analysis`, all for names ending in the marker, none for any other name. Genuine education questions about ADRs, and a marker after no legal form, keep their route (tests added). Known limits left alone: 61 ADR names with other forms (lowercase "plc", the deliberately excluded "AB"/"SE", no legal form); a slash-terminated "/ADR/" name in the "would make … attractive" pattern; and two unrelated ADR phrasings that were already misrouted on `main`.
+
+**Post-fix offline checks** (`docs/generalization_cohort_5_offline_checks_frontend_amendment.json`; no network, no guard refusal): all 12 questions classify as `company_analysis` and the backend identity check routes all 12 to research for the intended issuer (CIK verified), including `VBREY:core_thesis` and `IFCNF:core_thesis`. FORFF still resolves through FTS and IFCNF through IFHLY, same CIKs.
+
+**Disclosure: VBREY and IFCNF are now routing regression cases.** They were selected by the rule, not for this property, and their misrouting was found before any retrieval. Their routing outcome is therefore known; their filing content is not: no filing, form, company-facts record or filing list for either issuer has been retrieved or read, and they stay in the denominator. A passing routing check for them is not evidence about their answers.
+
+**What stays undecided (owner):**
+- Whether to merge, deploy and re-pin the frontend. Until then the pilot's pin remains `138d6461` and, under that pin, blocker 1 above stands (the Run 5-style option A).
+- If the fix is adopted: a new pin changes the wiring's frontend digests (pin commit, classifier sha), `CASE_INTENTS = company_analysis` for all twelve becomes a true statement, and the question digest is unchanged because the questions are. The frontend preview environments that Vercel creates automatically for a pull request are not a production deployment and do not change the pin.
+
+**Backend application freeze:** unchanged. Source binding `ee102739…0482` (461 files), `app/` and `validation/` identical to `59efed3`. This amendment adds documentation only.
