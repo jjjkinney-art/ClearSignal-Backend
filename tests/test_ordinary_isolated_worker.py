@@ -18,7 +18,7 @@ from validation.ordinary_native_export import ExportRefused, export_packet
 from validation.ordinary_pilot_contract import contract_profile, CASES, COHORT, COHORT_FILE, FAULT_CASE_INDEX, LAST_CASE, quota_contract
 from validation.pilot_live import submission_documents
 from validation._ordinary_rehearsal_worker import REHEARSAL_RUNTIME
-from _ordinary_cohort_expectations import (attempt_reconciliation_problems, EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
+from _ordinary_cohort_expectations import (resolved_ticker, attempt_reconciliation_problems, EXPECTED_THESIS_EXCHANGES, EXPECTED_THRESHOLD_EXCHANGES, COMPLETED, EXPECTED_CASE_STATUSES, EXPECTED_HALT, EXPECTED_REFUSED_MODEL_REQUESTS,
                                           EXPECTED_SEC_EXCHANGES, GENERAL_INTENT,
                                           UNRESOLVED)
 
@@ -77,7 +77,7 @@ def test_twelve_cases_run_through_the_integrated_native_path(happy):
     # Entered with the pinned frontend intent, as production /ask receives it.
     assert [(r['intent'], r['company'], r['pipeline'], r['response_mode']) for r in worker['routing']
             if r['case_id'] in COMPLETED] == [
-        ('company_analysis', case.split(':')[0], 'investment_thesis', 'source_evidence') for case in COMPLETED]
+        ('company_analysis', resolved_ticker(case), 'investment_thesis', 'source_evidence') for case in COMPLETED]
     assert worker['refused_model_requests'] == EXPECTED_REFUSED_MODEL_REQUESTS
     assert worker['blocked_external_operations'] == []
     assert worker['refused_requests'] == [] and worker['unfinished_workers'] == 0
@@ -114,7 +114,7 @@ def test_every_answer_reference_traces_to_retained_sources_of_its_own_case(happy
                 listed |= {f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/{accn.replace("-", "")}/{accn}-index.htm'
                            for accn in data['filings']['recent']['accessionNumber']}
         answer = packet['answers'][case]['response']
-        assert answer['company'] == case.split(':')[0]
+        assert answer['company'] == resolved_ticker(case)
         urls = {ref['url'] for ref in answer['answer']['evidence_references'] if ref.get('url')}
         assert urls and urls <= retained | listed, case
         # Facts reached the answer path (synthetic values; not research evidence).
@@ -315,8 +315,13 @@ def test_pinned_frontend_intents_cover_the_cohort_and_reach_company_research():
     # A general intent is authoritative in the backend and routes away from
     # research. The deployed frontend (138d646, PR #90) sends none for runs 1-5; at
     # 84466b2 it sent BNY:core_thesis as general (run 5), and at 5ee51c3 BWMX:core_thesis (run 3).
-    assert FRONTEND['commit'] == '138d6461a7d6822fd9b27c784a410f55b243a40e'
-    assert FRONTEND['classifier_sha256'] == '6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38'
+    # Cohort 5 (run 10) is bound to the deployed "/ADR" fix; every consumed cohort keeps 138d646.
+    commit, classifier = (('77c33bbbb0c530e01f74b0d51502fabdf6d1ce12',
+                           '9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a') if COHORT == 'run10' else
+                          ('138d6461a7d6822fd9b27c784a410f55b243a40e',
+                           '6ef10de383a75628b72bda552b624489992c84730e43ee884f56a4bc6dc1df38'))
+    assert FRONTEND['commit'] == commit
+    assert FRONTEND['classifier_sha256'] == classifier
     assert FRONTEND['resolver_sha256'] == '6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542'
     general = [case for case in CASES if not intent_allows_company_detection(frontend_intent(case))]
     assert general == []

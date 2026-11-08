@@ -51,6 +51,14 @@ REGISTRANTS = {
     'LXRX': (1062822, 'LEXICON PHARMACEUTICALS, INC.'),
     'MRX': (1997464, 'Marex Group Ltd'),
     'DCGO': (1822359, 'DocGo Inc.'),
+    # Run-10 cohort (identity only; every figure below remains invented, including
+    # any filing form or share count: these are not these companies' records).
+    'NWBI': (1471265, 'Northwest Bancshares, Inc.'),
+    'VBREY': (1000377, 'Vibra Energia S.A./ADR'),
+    'GALT': (1133416, 'GALECTIN THERAPEUTICS INC'),
+    'AUDC': (1086434, 'AUDIOCODES LTD'),
+    'FORFF': (1666175, 'Fortis Inc.'),
+    'IFCNF': (2035057, 'Inficon Holding AG/ADR'),
 }
 # Real directory rows that share a run-5 issuer's CIK or name, as SEC's retained
 # directory (run 4, sha256 de59c00e...) lists them. Directory identity only: they
@@ -62,7 +70,10 @@ _DIRECTORY_ONLY = [(1022837, 'SMFNF', 'SUMITOMO MITSUI FINANCIAL GROUP, INC.'),
                    # Run 6, as the run-5 retained directory (sha256 76b4b2ab...) lists them.
                    (313807, 'BPAQF', 'BP PLC'), (313807, 'BPPFF', 'BP PLC'),
                    (2078416, 'LLYVB', 'Liberty Live Holdings, Inc.'),
-                   (2078416, 'LLYVK', 'Liberty Live Holdings, Inc.')]
+                   (2078416, 'LLYVK', 'Liberty Live Holdings, Inc.'),
+                   # Run 10: the retained directory lists these issuers under a second ticker, and
+                   # name resolution returns it (FTS, IFHLY), with the same CIK.
+                   (1666175, 'FTS', 'Fortis Inc.'), (2035057, 'IFHLY', 'Inficon Holding AG/ADR')]
 _UNRELATED = [(9900001, 'INVA', 'Invented Unrelated Registrant A'),
               (9900002, 'INVB', 'Invented Unrelated Registrant B')]
 SYNTHETIC_FAULTS = frozenset({'crawl', 'late', 'connect_failure', 'read_failure', 'redirect', 'oversize', 'stall', 'slow'})

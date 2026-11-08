@@ -153,3 +153,36 @@ Evidence on the classifier alone: over all 8,003 distinct registered names and b
 - If the fix is adopted: a new pin changes the wiring's frontend digests (pin commit, classifier sha), `CASE_INTENTS = company_analysis` for all twelve becomes a true statement, and the question digest is unchanged because the questions are. The frontend preview environments that Vercel creates automatically for a pull request are not a production deployment and do not change the pin.
 
 **Backend application freeze:** unchanged. Source binding `ee102739…0482` (461 files), `app/` and `validation/` identical to `59efed3`. This amendment adds documentation only.
+
+## Amendment 2 (2026-11-08): frontend merged and deployed, re-pin, and wiring as `run10`
+
+Before any package, approval, retrieval or run. **Unchanged:** the six selected issuers, the twelve exact questions in their registered order (`docs/generalization_cohort_5_cases.json`, sha256 `a56e53f7…11e4f6`, byte-identical to `tests/ordinary_run10_cases.json`), the success criteria, the content-reporting split, the usefulness rubric, every limit, quota and timing value of `threshold_filing_v1`, and the backend `app/` tree. Run 9 and its results are not touched. The original 10-of-12 routing record and Amendment 1 are preserved byte for byte (their sha256 values are pinned by a test).
+
+**Merge (owner-authorized on stated conditions).** Frontend PR #91 was squash-merged only after re-verifying that its head was `a2e768ce5990bc94ee840e6b07a069097302e09b`, its base `main` was still `138d6461a7d6822fd9b27c784a410f55b243a40e`, there were no conflicts, and all four checks were green (Frontend CI plus the Vercel checks). The merge produced `main` = **`77c33bbbb0c530e01f74b0d51502fabdf6d1ce12`**, whose tree (`e3a85ea7641b7b46ae7c6003d855107bfb5c694d`) is identical to the reviewed commit's, with classifier sha256 `9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a` and resolver sha256 `6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542` (unchanged from the previous pin). A squash gives the code a new commit hash; the reviewed code and the deployed code are the same bytes.
+
+**Production verification (both Vercel projects).**
+
+| Project | Production deployment | Commit |
+|---|---|---|
+| `ai-intelligence-interface` | Production, Deployed (completed) | `77c33bbbb0c530e01f74b0d51502fabdf6d1ce12` |
+| `project-qxbjx` | Production, Deployed (completed) | `77c33bbbb0c530e01f74b0d51502fabdf6d1ce12` |
+
+Evidence: the repository's deployment records for both Production environments name that commit and `main`'s head; the Vercel dashboard's project list shows both projects' latest deployment as the #91 commit; and the new production deployments answer `/`, `/analyze`, `/login` and `/api/health` exactly as the previous (`138d6461`) production deployments did, on both projects. **Limits:** the classifier is bundled only in the sign-in-gated `/analyze` route, so the served bundle itself was not inspected, and the Vercel dashboard's deployment-detail pages did not render in the browser; the match rests on the deployed commit's source hashes. **Observation, not caused by this change:** on `project-qxbjx`, `/analyze` and `/login` return `MIDDLEWARE_INVOCATION_FAILED` on the new and on the previous production deployment alike; the main project redirects `/analyze` and serves `/login` normally.
+
+**Re-pin (cohort 5 only).** Frontend `77c33bbbb0c530e01f74b0d51502fabdf6d1ce12`, classifier `9f8b1e87…340a`, resolver `6fa4e195…38542`. Every consumed cohort keeps `138d6461`: the contract, profile and frontend digests of runs 6 and 9 are unchanged by the wiring (run 6: `10b87f73…6c18`, `66cbeee5…1899`; run 9: `df3a0bee…36cd`, `de5ee19e…aa6e`, frontend `2f9c11c5…0e06`), and a test pins them.
+
+**Offline checks with the deployed commit's own files** (`docs/generalization_cohort_5_offline_checks_deployed.json`; no network, no guard refusal): all 12 questions classify as `company_analysis` and the backend identity check routes all 12 to research for the intended CIK. This equals the candidate-commit result. FORFF resolves to FTS and IFCNF to IFHLY (same CIKs).
+
+**A finding the offline check could not show: alternate tickers.** The loopback rehearsal of the wired cohort halted at `FORFF:core_thesis` with `invalid_response`. The native ledger, and the export that re-checks it, accepted an answer only if its `company` was exactly the case's issuer ticker (or empty). For FORFF and IFCNF the application answers with the other ticker SEC lists for the same CIK (FTS, IFHLY), so a live run would have halted at case 9. Corrected narrowly, in `validation/` only: one shared function (`answer_names_issuer`) accepts the case's own ticker, no company, or another ticker that **the SEC directory retained by this very run** lists under **the case's registered CIK**. A ticker listed under a different CIK, an unlisted or malformed ticker, any ticker when no directory was retained, and an unpadded CIK are still drift and halt. This does not loosen identity: it is checked by CIK against SEC's own record rather than by ticker spelling, and every earlier cohort answers with its own ticker, so its behaviour is unchanged. Tests cover each accepted and refused case. Three other tests that assumed the issuer's own ticker now state the resolved ticker explicitly.
+
+**Wiring (`validation/`, six files):** the cohort and its profile (`run10`, `APPROVED_COHORT = 'run10'`), the per-cohort frontend pin and question digest (`6dba0677…00a3`), the case-record projection digest (`2e724123…1aaf`), the synthetic registrants (six issuers plus directory-only FTS and IFHLY rows), and the shared identity rule. The rehearsal fault target is `GALT:core_thesis` (the third issuer; its name has no comma, unlike NWBI's, which the application's named-subject rule does not accept for business sentences). Evidence templates were regenerated.
+
+**Frozen implementation after wiring.**
+
+| | |
+|---|---|
+| Backend `app/` tree | `e3ccf3e3de9b8d1e5c95e1cbb455582b1f244888`, unchanged from `59efed3` |
+| Source binding | `ea576d2578917337964c1d80dcabd7de99a2d9e11d42fde26bd08dd72f1c5074` (461 files; `59efed3`'s was `ee102739…0482`, the difference being exactly the six `validation/` files above) |
+| Frontend pin | `77c33bbbb0c530e01f74b0d51502fabdf6d1ce12` |
+
+**Not done, and not authorized by this amendment:** no package, execution configuration, cost or retention evidence, approval file, new SEC retrieval, live run, backend merge or backend deployment.

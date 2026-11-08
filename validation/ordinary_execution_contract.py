@@ -25,7 +25,9 @@ PACKET_CASE_PROJECTION_SHA256 = {
     # Cohort 3, from tests/ordinary_run6_cases.json.
     'run6': '9be9788956389d35941614283a8724ed248464a9169f107f3342b7ec2b4028ba',
     # Cohort 4, from tests/ordinary_run9_cases.json.
-    'run9': 'c0dd7f7ba336e136f99bbd6d83ec90e0aba328185e5e0cc8e430670a7955676e'}[COHORT]
+    'run9': 'c0dd7f7ba336e136f99bbd6d83ec90e0aba328185e5e0cc8e430670a7955676e',
+    # Generalization cohort 5, from tests/ordinary_run10_cases.json.
+    'run10': '2e724123d71d6c5954a8aa02b35199cbd86e2af70c8bcd0a97351c7418be1aaf'}[COHORT]
 
 def _digest(value):
     encoded = json.dumps(value, sort_keys=True, separators=(',', ':'),

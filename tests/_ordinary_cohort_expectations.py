@@ -7,8 +7,10 @@ frontend sends with a general intent takes the general route, which attempts a
 model call; the zero-model boundary refuses it and halts the run there
 (invalid_request), on every host. With the frontend pinned to 138d646, no cohort
 case takes it, so every cohort completes: run 5 here answers ten cases and leaves
-OWL x2 unresolved, run 6 answers ten and leaves LLYVA x2 unresolved, and run 9 answers all
-twelve. Run 5 itself
+OWL x2 unresolved, run 6 answers ten and leaves LLYVA x2 unresolved, and runs 9 and 10 answer
+all twelve (run 10 is pinned to frontend 77c33bb, which classifies its two "/ADR" thesis
+questions as company analysis; at 138d646 they were investing education and would have halted
+the run). Run 5 itself
 was bound to 84466b2 and halted at BNY:core_thesis; that record stays with its frozen
 commit, 0d7152a.
 
@@ -34,7 +36,20 @@ _HALT_INDEX = CASES.index(EXPECTED_HALT[0]) if EXPECTED_HALT else len(CASES)
 # abstains by design. Both cases stay in the denominator.
 IDENTITY_UNRESOLVED = {'run5': ('OWL:core_thesis', 'OWL:decision_threshold'),
                        'run6': ('LLYVA:core_thesis', 'LLYVA:decision_threshold'),
-                       'run9': ()}.get(COHORT, ())
+                       'run9': (),
+                       'run10': ()}.get(COHORT, ())
+# Run 10: SEC's directory lists Fortis Inc. under FTS as well as FORFF, and Inficon Holding AG/ADR
+# under IFHLY as well as IFCNF (same CIKs). Name resolution returns the first two, which the ledger
+# accepts because the directory it retained lists them under the case's registered CIK.
+RESOLVED_TICKER = {'run10': {'FORFF': 'FTS', 'IFCNF': 'IFHLY'}}.get(COHORT, {})
+
+
+def resolved_ticker(case_id):
+    """The ticker the application's answer names for this case's issuer."""
+    issuer = case_id.split(':')[0]
+    return RESOLVED_TICKER.get(issuer, issuer)
+
+
 UNRESOLVED = [case for case in CASES[:_HALT_INDEX] if case in IDENTITY_UNRESOLVED]
 COMPLETED = [case for case in CASES[:_HALT_INDEX] if case not in UNRESOLVED]
 EXPECTED_STATUS = 'halted' if EXPECTED_HALT else 'complete'

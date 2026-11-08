@@ -148,7 +148,7 @@ def test_document_admission_is_case_wide_only_under_the_profile(shared):
 
 def test_the_profile_binds_every_named_value():
     profile = THRESHOLD_FILING_PROFILE
-    assert profile['name'] == 'threshold_filing_v1' and profile['cohort'] == APPROVED_COHORT == 'run9'
+    assert profile['name'] == 'threshold_filing_v1' and profile['cohort'] == APPROVED_COHORT == 'run10'
     assert profile['sec_gets_per_case'] == {'core_thesis': 6, 'decision_threshold': 5} and profile['sec_gets'] == 66
     assert profile['switch'] == 'threshold_filing_explanations_enabled'
     assert profile['filing_parse_cutoff_seconds'] < profile['filing_wait_seconds'] < profile['case_seconds']['decision_threshold']
@@ -160,25 +160,66 @@ def test_the_profile_binds_every_named_value():
 
 
 def test_the_pre_registered_cohort_is_bound_unchanged():
-    records = json.loads((ROOT / 'tests' / 'ordinary_run9_cases.json').read_text())
-    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_4_cases.json').read_text())
-    selection = json.loads((ROOT / 'docs' / 'generalization_cohort_4_selection.json').read_text())
+    records = json.loads((ROOT / 'tests' / 'ordinary_run10_cases.json').read_text())
+    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_5_cases.json').read_text())
+    assert (ROOT / 'tests' / 'ordinary_run10_cases.json').read_bytes() == (ROOT / 'docs' / 'generalization_cohort_5_cases.json').read_bytes()
+    selection = json.loads((ROOT / 'docs' / 'generalization_cohort_5_selection.json').read_text())
     issuers = [row['ticker'] for row in selection['cohort']]
-    assert issuers == ['CNK', 'COHU', 'TRIP', 'LXRX', 'MRX', 'DCGO']
+    assert issuers == ['NWBI', 'VBREY', 'GALT', 'AUDC', 'FORFF', 'IFCNF']
     case_order = [f'{issuer}:{question}' for issuer in issuers for question in ('core_thesis', 'decision_threshold')]
     assert [record['case_id'] for record in records] == case_order == THRESHOLD_FILING_PROFILE['case_order']
     assert {int(record['expected_cik']) for record in records} == {row['cik'] for row in selection['cohort']}
     questions = [record['question'] for record in records]
     assert hashlib.sha256(json.dumps(questions).encode()).hexdigest() == THRESHOLD_FILING_PROFILE['questions_sha256']
-    checks = json.loads((ROOT / 'docs' / 'generalization_cohort_4_offline_checks.json').read_text())
-    assert checks['cases_sha256'] == hashlib.sha256((ROOT / 'docs' / 'generalization_cohort_4_cases.json').read_bytes()).hexdigest()
+    # The offline classification and identity record made with the files exported from the
+    # deployed frontend commit, which is the pin this profile binds.
+    checks = json.loads((ROOT / 'docs' / 'generalization_cohort_5_offline_checks_deployed.json').read_text())
+    assert checks['cases_sha256'] == hashlib.sha256((ROOT / 'docs' / 'generalization_cohort_5_cases.json').read_bytes()).hexdigest()
     assert checks['frontend_commit'] == THRESHOLD_FILING_PROFILE['frontend']['commit']
     assert checks['classifier_sha256'] == THRESHOLD_FILING_PROFILE['frontend']['classifier_sha256']
     assert checks['resolver_sha256'] == THRESHOLD_FILING_PROFILE['frontend']['resolver_sha256']
-    # The record stores intents with sorted keys; every registered case is classified, and nothing else.
     assert sorted(checks['intents']) == sorted(case_order) and set(checks['intents'].values()) == {'company_analysis'}
-    # Every case resolves to its own issuer offline; none is predicted unresolved.
-    assert [(row['case_id'], row['verdict']) for row in checks['identity']] == [(case, 'correct issuer') for case in case_order]
+    assert [(row['case_id'], row['verdict'], row['route']) for row in checks['identity']] == [
+        (case, 'correct issuer', 'research') for case in case_order]
+
+
+def test_the_original_pinned_frontend_routing_result_and_the_amendment_are_preserved():
+    """The 10-of-12 result at 138d646 and its amendment stay exactly as recorded."""
+    original = ROOT / 'docs' / 'generalization_cohort_5_offline_checks.json'
+    amendment = ROOT / 'docs' / 'generalization_cohort_5_offline_checks_frontend_amendment.json'
+    assert hashlib.sha256(original.read_bytes()).hexdigest() == 'f3fd0b0a544c65244b2366a042d385820b9bb83acf28d24cbe99ed951fa72c98'
+    assert hashlib.sha256(amendment.read_bytes()).hexdigest() == '74dbc99e1864eb1b8c5276119922192f8289f423ba46648a3466e596f07a9b4a'
+    record = json.loads(original.read_text())
+    assert record['frontend_commit'] == '138d6461a7d6822fd9b27c784a410f55b243a40e'
+    assert record['summary'] == {'correct_issuer_research_route': 10, 'no_company_general_route': 2,
+                                 'investing_education_cases': ['IFCNF:core_thesis', 'VBREY:core_thesis']}
+    assert {case for case, intent in record['intents'].items() if intent == 'investing_education'} == {
+        'IFCNF:core_thesis', 'VBREY:core_thesis'}
+    assert json.loads(amendment.read_text())['candidate_frontend_commit'] == 'a2e768ce5990bc94ee840e6b07a069097302e09b'
+
+
+def test_the_pre_registered_selection_and_questions_are_unchanged_by_wiring():
+    assert hashlib.sha256((ROOT / 'docs' / 'generalization_cohort_5_selection.json').read_bytes()).hexdigest() == \
+        'eda0d55e33059e3a52b1a532ac5cdfe8d2d247d5e004b01bae06ca65b3d877ac'
+    assert hashlib.sha256((ROOT / 'tests' / 'ordinary_run10_cases.json').read_bytes()).hexdigest() == \
+        'a56e53f7a452fe92ecf7e9d367b57c0e26ffb4bbfeb46df27086766a9111e4f6'
+
+
+def test_the_consumed_cohort_4_contract_and_frontend_pin_are_unchanged():
+    """Run 9 was consumed under frontend 138d646; connecting cohort 5 changes nothing it bound."""
+    code = ('import sys; sys.path.insert(0, "."); from validation.capture_budget import digest; '
+            'from validation.ordinary_pilot_contract import quota_contract, contract_profile; '
+            'from validation.ordinary_frontend_intents import FRONTEND; '
+            'print(digest(quota_contract()), digest(contract_profile()), digest(dict(FRONTEND)), FRONTEND["commit"])')
+    env = _child_env(ORDINARY_PILOT_COHORT='run9', ORDINARY_PROFILE_CHILD='')
+    done = subprocess.run([sys.executable, '-c', code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
+    assert done.stdout.split()[-4:] == [
+        'df3a0beeda54e2cbad0e4883a651a4e5fdc9e02315da28ca0e618375374e36cd',
+        'de5ee19e585e96ceab079ecbddaa0cb491ddd64e8bfd388bea1e130a6159aa6e',
+        '2f9c11c56f03da95e245139a06416e73917f6504ba6caa91f6b4afa757b40e06',
+        '138d6461a7d6822fd9b27c784a410f55b243a40e'], done.stderr[-800:]
+    records = json.loads((ROOT / 'tests' / 'ordinary_run9_cases.json').read_text())
+    assert records == json.loads((ROOT / 'docs' / 'generalization_cohort_4_cases.json').read_text())
 
 
 def test_the_consumed_cohort_3_contract_is_unchanged():

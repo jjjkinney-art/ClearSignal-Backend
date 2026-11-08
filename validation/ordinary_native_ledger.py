@@ -27,6 +27,32 @@ from validation.pilot_approved import ExchangeGate
 
 SEC_HOSTS = frozenset({'www.sec.gov', 'data.sec.gov'})
 
+DIRECTORY_URL = 'https://www.sec.gov/files/company_tickers.json'
+
+
+def answer_names_issuer(case_id, company, expected_cik, directory_body):
+    """Whether an answer's company is the case's issuer.
+
+    Its own ticker, or no company at all (an unresolved identity, an explicit retained gap), or
+    another ticker that SEC's directory, as retained by this very run, lists under the case's
+    registered CIK. SEC lists some registrants under more than one ticker (FTS for FORFF, IFHLY
+    for IFCNF) and name resolution may return either. Anything else, including a ticker the
+    directory does not list under that CIK, or any ticker when no directory was retained, is drift.
+    """
+    if company in {case_id.split(':')[0], ''}:
+        return True
+    if type(company) is not str or not re.fullmatch(r'[A-Z]{1,5}', company):
+        return False
+    if type(expected_cik) is not str or not re.fullmatch(r'[0-9]{10}', expected_cik) or directory_body is None:
+        return False
+    try:
+        listed = json.loads(directory_body)
+        return any(type(entry) is dict and entry.get('ticker') == company and int(entry['cik_str']) == int(expected_cik)
+                   for entry in listed.values())
+    except (ValueError, KeyError, TypeError, AttributeError, RecursionError):
+        return False
+
+
 ANSWER_MAX_BYTES = 4 * 1024 * 1024
 CASE_SECONDS = {'core_thesis': 30, 'decision_threshold': 20}
 RUN_SECONDS = 480
@@ -377,11 +403,19 @@ class OrdinaryNativeLedger(AttemptLedger):
         if reason:
             raise BudgetError('ordinary size rejection refused')
 
+    def _names_this_issuer(self, db, case_id, company):
+        """Whether an answer's company is this case's issuer (see answer_names_issuer)."""
+        expected = next((r.get('expected_cik') for r in self.policy.get('case_records', ())
+                         if r.get('case_id') == case_id), None)
+        row = db.execute('SELECT body FROM ordinary_responses WHERE url=? ORDER BY completed_ns LIMIT 1',
+                         (DIRECTORY_URL,)).fetchone()
+        return answer_names_issuer(case_id, company, expected, bytes(row[0]) if row else None)
+
     def complete_case(self, case_run, payload, *, forbidden_values):
         """Retain the complete answer and finish its case in one transaction.
 
-        The response must name this case's issuer, or no issuer at all when the
-        application could not resolve the company (an explicit, retained gap).
+        The response must name this case's issuer (see _names_this_issuer), or no issuer at
+        all when the application could not resolve the company (an explicit, retained gap).
         A response naming any other issuer is drift and halts.
         """
         try:
@@ -408,7 +442,7 @@ class OrdinaryNativeLedger(AttemptLedger):
             # An answer missing a filing the size limit rejected must say so.
             rejected = {r[0] for r in db.execute('SELECT stage FROM ordinary_size_rejections WHERE case_run=?', (case_run,))}
             now = time.monotonic_ns()
-            if (not case or unsettled or payload.get('company') not in {case[0].split(':')[0], ''}
+            if (not case or unsettled or not self._names_this_issuer(db, case[0], payload.get('company'))
                     or rejected - set(stages)):
                 reason = 'invalid_response'
             else:

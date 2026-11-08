@@ -13,7 +13,8 @@ from pathlib import Path
 import sqlite3
 
 from validation.capture_budget import BudgetError, digest
-from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, degraded_stages, screen_body, valid_size_rejection
+from validation.ordinary_native_ledger import (DIRECTORY_URL, RUN_SECONDS, answer_names_issuer, case_seconds, degraded_stages,
+                                                screen_body, valid_size_rejection)
 from validation.ordinary_pilot_contract import CASES, quota_contract
 
 
@@ -162,7 +163,11 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         payload = json.loads(raw)
         from validation.pilot_policy import reject_runtime_values
         reject_runtime_values(payload, forbidden_values, raw=raw)
-        if payload.get('company') not in {case_id.split(':')[0], ''}:
+        # The same rule the ledger applied: own ticker, none, or another ticker the directory this
+        # run retained lists under the case's registered CIK.
+        retained = sorted((r[5], r[4]) for r in responses.values() if r[0] == DIRECTORY_URL)
+        expected = next((r.get('expected_cik') for r in policy.get('case_records', ()) if r.get('case_id') == case_id), None)
+        if not answer_names_issuer(case_id, payload.get('company'), expected, retained[0][1] if retained else None):
             raise ExportRefused('answer issuer mismatch')
     if any(row[2] == 'complete' and row[0] not in answers for row in cases):
         raise ExportRefused('completed case without its retained answer')

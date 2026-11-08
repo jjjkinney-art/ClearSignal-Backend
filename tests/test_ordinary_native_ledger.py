@@ -375,3 +375,94 @@ def test_an_unresolved_identity_answer_is_retained_but_another_issuer_halts(tmp_
     with pytest.raises(BudgetError):
         book.complete_case(case, {'company': 'GOOGL', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
     assert book.summary()['halted'] == 'invalid_response'
+
+
+# -- an issuer SEC lists under more than one ticker -------------------------------------
+
+DIRECTORY_URL = 'https://www.sec.gov/files/company_tickers.json'
+
+
+def _retain_directory(book, entries, attempt='directory-attempt'):
+    body = json.dumps({str(i): {'cik_str': cik, 'ticker': ticker, 'title': 'Invented ' + ticker}
+                       for i, (cik, ticker) in enumerate(entries)}).encode()
+    with book.transaction() as db:
+        db.execute('INSERT INTO ordinary_responses VALUES (?,?,200,?,?,?,?)',
+                   (attempt, DIRECTORY_URL, 'application/json', hashlib.sha256(body).hexdigest(), body, 1))
+
+
+def _own(book_case_index=0):
+    case_id = CASES[book_case_index]
+    return case_id, case_id.split(':')[0], int(next(r['expected_cik'] for r in RECORDS if r['case_id'] == case_id))
+
+
+def test_an_alternate_ticker_of_the_same_registered_cik_names_the_issuer(tmp_path):
+    case_id, own, cik = _own()
+    book = ledger(tmp_path)
+    _retain_directory(book, [(cik, own), (cik, 'ALTX'), (cik + 1, 'OTHR')])
+    run = book.begin_case(case_id)
+    book.complete_case(run, {'company': 'ALTX', 'answer': {'text': 'Invented'}}, forbidden_values=('TEST-ONLY-secret',))
+    with book.transaction() as db:
+        assert db.execute('SELECT case_id FROM ordinary_answers').fetchall() == [(case_id,)]
+    assert book.summary()['halted'] is None
+
+
+@pytest.mark.parametrize('company, entries_for', [
+    ('OTHR', 'other_cik'),            # listed, but under a different registered CIK
+    ('NOPE', 'unlisted'),             # not in the directory at all
+    ('ALTX', 'no_directory'),         # plausible, but nothing retained to confirm it
+    ('altx', 'same_cik'),             # not ticker-shaped
+    ('TOOLONGX', 'same_cik'),
+    (None, 'same_cik'),
+    (7, 'same_cik'),
+    ('ALTX ', 'same_cik')])
+def test_any_other_company_is_drift_and_halts(tmp_path, company, entries_for):
+    case_id, own, cik = _own()
+    book = ledger(tmp_path)
+    if entries_for != 'no_directory':
+        entries = {'other_cik': [(cik, own), (cik + 1, 'OTHR')], 'unlisted': [(cik, own)],
+                   'same_cik': [(cik, own), (cik, 'ALTX')]}[entries_for]
+        _retain_directory(book, entries)
+    run = book.begin_case(case_id)
+    with pytest.raises(BudgetError):
+        book.complete_case(run, {'company': company, 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    assert book.summary()['halted'] == 'invalid_response'
+    with book.transaction() as db:
+        assert db.execute('SELECT COUNT(*) FROM ordinary_answers').fetchone() == (0,)
+
+
+def test_the_issuers_own_ticker_and_an_unresolved_company_need_no_directory(tmp_path):
+    case_id, own, _ = _own()
+    book = ledger(tmp_path)
+    book.complete_case(book.begin_case(case_id), {'company': own, 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    next_case = CASES[1]
+    book.complete_case(book.begin_case(next_case), {'company': '', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    assert book.summary()['halted'] is None
+
+
+def test_a_malformed_retained_directory_confirms_nothing(tmp_path):
+    case_id, own, cik = _own()
+    book = ledger(tmp_path)
+    for attempt, body in (('bad-json', b'not json'), ('not-a-map', b'[1, 2]')):
+        with book.transaction() as db:
+            db.execute('INSERT INTO ordinary_responses VALUES (?,?,200,?,?,?,?)',
+                       (attempt, DIRECTORY_URL, 'application/json', hashlib.sha256(body).hexdigest(), body, 1 + len(attempt)))
+    # The first retained body is the one consulted; it is malformed, so an alternate is refused.
+    run = book.begin_case(case_id)
+    with pytest.raises(BudgetError):
+        book.complete_case(run, {'company': 'ALTX', 'answer': {}}, forbidden_values=('TEST-ONLY-secret',))
+    assert book.summary()['halted'] == 'invalid_response'
+
+
+def test_the_identity_rule_is_one_function_shared_by_the_ledger_and_the_export():
+    from validation.ordinary_native_ledger import answer_names_issuer
+    directory = json.dumps({'0': {'cik_str': 1666175, 'ticker': 'FORFF', 'title': 'Fortis Inc.'},
+                            '1': {'cik_str': 1666175, 'ticker': 'FTS', 'title': 'Fortis Inc.'},
+                            '2': {'cik_str': 2035057, 'ticker': 'IFHLY', 'title': 'Inficon Holding AG/ADR'}}).encode()
+    case, cik = 'FORFF:core_thesis', '0001666175'
+    assert answer_names_issuer(case, 'FORFF', cik, None) and answer_names_issuer(case, '', cik, None)
+    assert answer_names_issuer(case, 'FTS', cik, directory)
+    assert not answer_names_issuer(case, 'FTS', cik, None)            # nothing retained to confirm it
+    assert not answer_names_issuer(case, 'IFHLY', cik, directory)     # another issuer's ticker
+    assert not answer_names_issuer(case, 'FTS', '1666175', directory)  # an unpadded CIK is not a registered one
+    assert not answer_names_issuer(case, 'FTS', None, directory)
+    assert not answer_names_issuer(case, 'fts', cik, directory) and not answer_names_issuer(case, None, cik, directory)

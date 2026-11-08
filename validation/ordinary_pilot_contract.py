@@ -28,6 +28,12 @@ RUN_6_ISSUERS = ('BP', 'MNST', 'CRDO', 'LLYVA', 'DGXX', 'VIRC')
 # docs/GENERALIZATION_COHORT_4_PREREGISTRATION_20261108.md and connected by its
 # amendment 1. No case is reordered: every case resolves offline and no halt is predicted.
 RUN_9_ISSUERS = ('CNK', 'COHU', 'TRIP', 'LXRX', 'MRX', 'DCGO')
+# Run 10 is unseen-company generalization cohort 5, pre-registered in
+# docs/GENERALIZATION_COHORT_5_PREREGISTRATION_20261108.md (amendments 1 and 2). Its frontend
+# pin is the deployed fix for SEC "/ADR" registrant names (frontend 77c33bb): at the earlier
+# pin 138d646, VBREY:core_thesis and IFCNF:core_thesis were classified as investing education
+# and would have taken the model route. No case is reordered; no halt is predicted.
+RUN_10_ISSUERS = ('NWBI', 'VBREY', 'GALT', 'AUDC', 'FORFF', 'IFCNF')
 # Both BWMX cases are predicted offline to halt the run, so they are ordered
 # last and no other case is lost; both stay in the denominator. The threshold
 # question resolves to another issuer, whose SEC request the boundary refuses
@@ -47,6 +53,8 @@ COHORTS = {
              tuple(f'{i}:{q}' for i in RUN_6_ISSUERS for q in QUESTIONS)),
     'run9': ('tests/ordinary_run9_cases.json',
              tuple(f'{i}:{q}' for i in RUN_9_ISSUERS for q in QUESTIONS)),
+    'run10': ('tests/ordinary_run10_cases.json',
+              tuple(f'{i}:{q}' for i in RUN_10_ISSUERS for q in QUESTIONS)),
 }
 # Rehearsal fault scenarios target the thesis case at this index and the
 # threshold case after it: the third issuer's, unless that issuer is predicted
@@ -57,7 +65,7 @@ COHORTS = {
 # business description for the cancellation tests to exclude.
 FAULT_CASE_INDEX = {'run5': 5, 'run9': 2}
 # The only cohort an approved package or run may use.
-APPROVED_COHORT = 'run9'
+APPROVED_COHORT = 'run10'
 # Rehearsal tests may select the historical cohort to keep exercising a fully
 # completing run; the approved launcher refuses any selection, so an approved
 # execution always uses APPROVED_COHORT, whose case records its package binds.
@@ -91,12 +99,18 @@ _RUN_6_PROFILE = {
     'case_seconds': {'core_thesis': 30, 'decision_threshold': 20},
     'wall_seconds': 480,
 }
-# The same profile, limits and timing for cohort 4; only the cohort it binds differs.
-# Run 6's entry stays exactly as it was, so runs 6-8 still export unchanged.
+# The same profile, limits and timing for cohorts 4 and 5; only the cohort they bind differs, and
+# cohort 5 also binds the later frontend pin. Run 6's and run 9's entries stay exactly as they
+# were (frontend 138d646), so runs 6-9 still export unchanged.
 PROFILES = {
     'run6': _RUN_6_PROFILE,
     'run9': {**_RUN_6_PROFILE, 'cohort': 'run9', 'case_order': list(COHORTS['run9'][1]),
              'questions_sha256': '33f47ba6198b87310926f33e0d9cee6326a352fc74301645ee52a8f688b37643'},
+    'run10': {**_RUN_6_PROFILE, 'cohort': 'run10', 'case_order': list(COHORTS['run10'][1]),
+              'questions_sha256': '6dba06777a5b95615e09fdb58a9fdc0afd0a75c8a383937de8d22981f4af00a3',
+              'frontend': {'commit': '77c33bbbb0c530e01f74b0d51502fabdf6d1ce12',
+                           'classifier_sha256': '9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a',
+                           'resolver_sha256': '6fa4e195816df8c09a6439c86fb4c41d3a9d60990745cb877f492a5d7dd38542'}},
 }
 # The approved cohort's profile.
 THRESHOLD_FILING_PROFILE = PROFILES[APPROVED_COHORT]
