@@ -17,16 +17,33 @@ from validation.ordinary_native_ledger import RUN_SECONDS, case_seconds, degrade
 from validation.ordinary_pilot_contract import CASES, quota_contract
 
 
-ANSWER_CONTENT_KINDS = ('source_bound_claims', 'insufficient_evidence', 'identity_unresolved',
-                        'no_answer', 'not_run', 'unclassified')
-# A partial answer made only of quoted business, competition or risk disclosures, with no
-# financial comparison. It is counted apart from 'source_bound_claims' so it cannot be
-# mistaken for completed financial analysis. Listed in counts only when a case has it, so
-# the export of a ledger without any such case is exactly what it was. Kept equal to
-# app.services.disclosure_only_answer.DISCLOSURE_ONLY_KINDS by a test.
+# Three kinds of delivered content, never pooled:
+#   source_bound_claims            financial claims (and any other bound claims) - counts toward the
+#                                  approved "source-bound claims" target
+#   source_bound_disclosures_only  quoted business, competition or risk statements with NO financial
+#                                  analysis - source-backed, but excluded from that target
+#   everything else                no substantive answer (insufficient evidence, unresolved identity, ...)
 DISCLOSURES_ONLY = 'source_bound_disclosures_only'
+ANSWER_CONTENT_KINDS = ('source_bound_claims', DISCLOSURES_ONLY, 'insufficient_evidence', 'identity_unresolved',
+                        'no_answer', 'not_run', 'unclassified')
+# Kept equal to app.services.disclosure_only_answer.DISCLOSURE_ONLY_KINDS by a test.
 DISCLOSURE_ONLY_CLAIM_KINDS = frozenset({'issuer_business_description', 'issuer_competition_description',
                                          'issuer_disclosed_risk'})
+
+
+def content_coverage(tally, denominator):
+    """Both coverage counts, so a disclosure-only answer cannot be read as financial analysis.
+
+    total_source_backed: every case that delivered any source-bound content.
+    toward_source_bound_claims_target: the count the existing "at least 8 of 12" target uses;
+    disclosure-only cases are excluded from it.
+    """
+    claims, disclosures = tally.get('source_bound_claims', 0), tally.get(DISCLOSURES_ONLY, 0)
+    return {'denominator': denominator,
+            'total_source_backed': claims + disclosures,
+            'toward_source_bound_claims_target': claims,
+            'disclosure_only_excluded_from_target': disclosures,
+            'no_substantive_answer': denominator - claims - disclosures}
 
 
 class ExportRefused(BudgetError):
@@ -315,9 +332,8 @@ def export_packet(path, policy, *, forbidden_values, synthetic):
         content = {'size_rejections': rejection_records,
                    'answer_content': {'scope': 'delivered content only; accuracy and usefulness are assessed separately',
                                       'cases': cases_content,
-                                      'counts': {**{key: tally.get(key, 0) for key in ANSWER_CONTENT_KINDS},
-                                                 **({DISCLOSURES_ONLY: tally[DISCLOSURES_ONLY]}
-                                                    if tally.get(DISCLOSURES_ONLY) else {})}}}
+                                      'counts': {key: tally.get(key, 0) for key in ANSWER_CONTENT_KINDS},
+                                      'coverage': content_coverage(tally, len(cases_content))}}
     first = (dict(zip(('attempt_id', 'route', 'stage', 'code'), first_transport)) if first_transport
              else dict(zip(('attempt_id', 'route', 'stage', 'code'), first_refusal)) if first_refusal else None)
     return {'format': 'ordinary-native-packet-v1', 'synthetic_sec_backend': synthetic,

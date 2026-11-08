@@ -26,8 +26,7 @@ The frozen `af36f55` tree reproduces **all six** original Run 9 thesis answers b
 
 None in the intended scope. Against the frozen tree, of 12 thesis cases only COHU, TRIP, DCGO, MRX, BWMX and BX changed; CNK, LXRX, SCCO, LNC, LVS and USCB are byte-identical. Of 36 direct replays, exactly five changed (BX explanation, COHU explanation, TRIP explanation, TRIP business, DCGO business), all intended.
 
-Two observations, not changed here:
-- Both disclosure-only answers include a workforce-competition sentence from the existing competition producer ("We compete with other brokers and banks for front-office staff."; "We also compete with other companies for distributors, leaders and consultants."). It is a quotation, but not about products or markets.
+One observation, now resolved (see "Competition sentences" below): both disclosure-only answers first included a workforce-style competition sentence.
 - COHU's explanation keeps one statement (the stated driver) and drops "net sales increased 37.0%…", because the explanation reader keeps one statement per metric and prefers one with a stated cause. COHU's revenue comparison is unchanged elsewhere in the answer.
 
 ## Before and after
@@ -45,16 +44,14 @@ Source-bound disclosures only (partial): no financial analysis was completed
 
 The SEC structured data retrieved for this issuer is tagged mainly under the IFRS taxonomy (ifrs-full), which this version does not read, so no revenue, profit or cash-flow comparison, monitoring baseline or threshold was attempted. The statements below are quotations from the issuer's annual filing; they are not a financial analysis, a thesis or an assessment.
 
-Official business, competition and sampled risk context
+Official business and sampled risk context
 MRX described its business in its 20-F filed 2026-03-25: “We offer execution and clearing services in metals (both base and precious), agricultural products (primarily soft commodities, which include cocoa, coffee, grains, livestock and sugar), energy and fixed income, digital assets and equity futures and options.” [E1]
 
 MRX described its business in its 20-F filed 2026-03-25: “We also provide execution services, where we execute transactions on a regulated exchange on behalf of our clients and then pass the transaction to the relevant counterparty or clearing house to settle and, in connection with our Prime Services, provide trade execution custody and clearing services.” [E2]
 
-MRX described competition in its 20-F filed 2026-03-25: “We compete with other brokers and banks for front-office staff.” This is issuer-reported competitive context; relative strength, market share and durable advantage remain unverified. [E3]
+MRX disclosed in its 20-F filed 2026-03-25: “We face numerous and evolving cybersecurity risks that threaten the confidentiality, integrity and availability of our IT Systems and Confidential Information, and the performance of these IT Systems could deteriorate or fail.” [E3]
 
-MRX disclosed in its 20-F filed 2026-03-25: “We face numerous and evolving cybersecurity risks that threaten the confidentiality, integrity and availability of our IT Systems and Confidential Information, and the performance of these IT Systems could deteriorate or fail.” [E4]
-
-MRX disclosed in its 20-F filed 2026-03-25: “Our indebtedness may increase, including as a result of the offering of Senior Notes, which could adversely affect our ability to raise additional capital to fund our operations, limit our ability to react to changes in the economy or our industry, expose us to interest rate risk to the extent of our floating rate notes and prevent us from meeting our debt obligations.” [E5]
+MRX disclosed in its 20-F filed 2026-03-25: “Our indebtedness may increase, including as a result of the offering of Senior Notes, which could adversely affect our ability to raise additional capital to fund our operations, limit our ability to react to changes in the economy or our industry, expose us to interest rate risk to the extent of our floating rate notes and prevent us from meeting our debt obligations.” [E4]
 These short excerpts are issuer statements and partial context, not a complete business model or a ranking of the most material risks, and not independent assessments. Competitive advantage and future performance remain unverified; disclosed possibilities do not establish occurrence, probability or a quantified effect.
 
 Business context coverage
@@ -172,7 +169,7 @@ Official business, competition and sampled risk context
 ## Reported separately
 
 **Claim accuracy (mechanical, development replay):**
-- All 36 newly quoted passages in the six changed answers appear verbatim in the retained filing text (0 not found).
+- All 36 newly quoted passages in the six changed answers appear verbatim in the retained filing text (0 not found). That check ran before the competition fix, which only removes one MRX sentence.
 - No figure, baseline or threshold is added anywhere. The disclosure-only answers contain no digits outside quoted filing sentences and their filing dates (test `test_the_partial_answer_states_no_figure_baseline_threshold_or_inference`), and carry no inference.
 - A cross-reference ("factors discussed above") is no longer presented as a stated cause, which removes two statements that read as causes but were not (COHU net income, TRIP net income).
 - This is not an independent accuracy review.
@@ -181,13 +178,13 @@ Official business, competition and sampled risk context
 
 | Case | Before | After |
 |---|---|---|
-| MRX thesis | `insufficient_claim_evidence`, 0 claims | `partial`, 5 claims (2 business, 1 competition, 2 risk), disclosure-only |
+| MRX thesis | `insufficient_claim_evidence`, 0 claims | `partial`, 4 claims (2 business, 2 risk), disclosure-only |
 | BWMX thesis (Run 4) | `insufficient_claim_evidence`, 0 claims | `partial`, 5 claims (2 business, 1 competition, 2 risk), disclosure-only |
 | COHU thesis | explanation quoted a table fragment and a cross-reference | explanation quotes management's stated driver |
 | TRIP thesis | 11 claims, one a leadership-training "business description", one cross-reference cause | 10 claims, neither |
 | DCGO thesis | 9 claims, one a pay-package "business description" | 8 claims, without it |
 
-Under the export's own classes, MRX and BWMX would count as `source_bound_disclosures_only`, not `source_bound_claims`, so they cannot be read as completed financial analysis. Under the approved cohort 4 criteria, "deliver source-bound claims" was defined before this class existed: whether a disclosure-only answer should count toward it is a decision for the criteria owner, not made here.
+Under the export's own classes, MRX and BWMX count as `source_bound_disclosures_only`, not `source_bound_claims`, so they cannot be read as completed financial analysis. For the next pilot the owner has decided that the existing 8-of-12 target counts `source_bound_claims` only, and that total source-backed coverage is reported alongside it; see `docs/PILOT_ANSWER_CONTENT_REPORTING.md`.
 
 **Usefulness:** not re-scored. The rubric is untouched and Run 9's recorded scores stand. Which changes bear on a user's decision and which are presentation was assessed in `offline-review/RUN9_DIAGNOSIS_20261108.md`; this branch implements that analysis and adds no new score.
 
@@ -198,3 +195,20 @@ Under the export's own classes, MRX and BWMX would count as `source_bound_disclo
 - The Human Capital rule recognises a fixed list of following Item 1 headings; an unlisted heading means the zone runs to the next listed one or the end of Item 1, never further than 12,000 characters.
 - IFRS facts are still not read. A disclosure-only answer reports that gap and nothing else about the issuer's finances.
 - Cooperative cancellation, web fallback and size rejection are unexercised, as before. Broad-company launch readiness and the approximately 95% accuracy target remain unverified.
+
+## Competition sentences (review after the first CI run)
+
+Both disclosure-only answers carried a competition sentence. Rule applied: keep it only if it describes a concrete, issuer-specific competitive exposure.
+
+| Sentence | Verdict | Reason |
+|---|---|---|
+| MRX: "We compete with other brokers and banks for front-office staff." | **Selection defect, removed** | It describes a labour market. The producer already excludes competition for `employees`, `personnel`, `workforce`, `recruit*`, `talent` and `sales professionals`; "staff" and "front-office" were missing from that list. |
+| BWMX: "We also compete with other companies for distributors, leaders and consultants." | Kept | It names the issuer's own sales network (a direct-selling channel), not employees, so it describes who the issuer must win to sell. It remains generic about who the rivals are ("other companies"). |
+
+Fix: `staff` and `front/middle/back-office` join the existing workforce exclusion in `app/services/thesis_competition.py`. Replay on all 20 retained annual filings: exactly one sentence changed (MRX's); the other 19 filings are identical. Replay of all 12 thesis cases through the router: only MRX changed (5 claims to 4: two business statements and two risks); the other 11 answers are byte-identical to the previous branch output. Tests: `tests/test_run9_competition_selection.py` (staff, talent and personnel competition rejected; channel, product-market and "staffing firm" competition still qualifies).
+
+Unchanged and not workforce-related, but generic: MNST "We also compete with companies that are smaller or primarily local in operation." and TRIP "We compete with different types of companies in the various markets…".
+
+## Reporting split
+
+Financial claims, disclosure-only content and no substantive answer are reported separately, with both total source-backed coverage and the count used for the 8-of-12 target (disclosure-only excluded). The export states both in `answer_content.coverage`. Status rule and wording: `docs/PILOT_ANSWER_CONTENT_REPORTING.md`.

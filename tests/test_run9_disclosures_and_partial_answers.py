@@ -227,3 +227,29 @@ def test_a_disclosure_only_answer_is_not_insufficient_evidence_and_not_financial
     assert answer_content('answered_unadjudicated', insufficient) == 'insufficient_evidence'
     assert answer_content('answered_unadjudicated', _payload('disclosures_only', 'issuer_disclosed_risk')) \
         not in {'source_bound_claims', 'insufficient_evidence'}
+
+
+# --- reporting split --------------------------------------------------------------------------------------
+
+def test_both_coverage_counts_are_reported_and_disclosure_only_is_excluded_from_the_target():
+    from validation.ordinary_native_export import ANSWER_CONTENT_KINDS, content_coverage
+    assert 'source_bound_disclosures_only' in ANSWER_CONTENT_KINDS
+    tally = {'source_bound_claims': 7, 'source_bound_disclosures_only': 2, 'insufficient_evidence': 3}
+    assert content_coverage(tally, 12) == {
+        'denominator': 12, 'total_source_backed': 9, 'toward_source_bound_claims_target': 7,
+        'disclosure_only_excluded_from_target': 2, 'no_substantive_answer': 3}
+    # Without any disclosure-only case the two counts agree.
+    plain = content_coverage({'source_bound_claims': 10, 'insufficient_evidence': 2}, 12)
+    assert plain['total_source_backed'] == plain['toward_source_bound_claims_target'] == 10
+    assert plain['disclosure_only_excluded_from_target'] == 0 and plain['no_substantive_answer'] == 2
+    # Eight disclosure-only answers never reach the eight-of-twelve target.
+    assert content_coverage({'source_bound_disclosures_only': 8}, 12)['toward_source_bound_claims_target'] == 0
+
+
+def test_the_three_kinds_of_content_partition_the_denominator():
+    from validation.ordinary_native_export import content_coverage
+    for tally in ({'source_bound_claims': 4, 'source_bound_disclosures_only': 5, 'unclassified': 3},
+                  {'insufficient_evidence': 12}, {}):
+        c = content_coverage(tally, 12)
+        assert c['toward_source_bound_claims_target'] + c['disclosure_only_excluded_from_target'] \
+            + c['no_substantive_answer'] == 12

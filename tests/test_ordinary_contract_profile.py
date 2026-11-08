@@ -823,6 +823,11 @@ def test_a_completed_insufficient_evidence_response_is_not_counted_as_content(tm
     counts = content['counts']
     assert counts['insufficient_evidence'] >= 1 and counts['identity_unresolved'] == len(UNRESOLVED)
     assert counts['source_bound_disclosures_only'] == 1
+    # Both coverage counts: the disclosure-only case is source-backed but not counted toward the target.
+    coverage = content['coverage']
+    assert coverage['total_source_backed'] == counts['source_bound_claims'] + 1
+    assert coverage['toward_source_bound_claims_target'] == counts['source_bound_claims']
+    assert coverage['disclosure_only_excluded_from_target'] == 1 and coverage['denominator'] == 12
     assert sum(counts.values()) == 12 and counts['unclassified'] == 0
     assert counts['source_bound_claims'] < packet['outcome_counts']['full_answer']
     assert 'accuracy and usefulness are assessed separately' in content['scope']
