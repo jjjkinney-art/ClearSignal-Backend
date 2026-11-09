@@ -117,6 +117,7 @@ class TestRetrievedEvidenceSchema:
             "cash_reconciliation_disclosures",
             "impairment_disclosures",
             "period_explanations",
+            "going_concern_disclosures",
         }
         assert d["source_type"] == "unknown"
         assert d["source_tier"] == "unverified"
