@@ -164,15 +164,22 @@ def get_company_fact_records_for_concept_units(
         # SEC writes the CIK as a number or a zero-padded string; compare values.
         reported_cik = str(data.get("cik", "")) if isinstance(data, dict) else ""
         if not reported_cik.isdigit() or int(reported_cik) != int(cik):
+            from ..services.evidence_outcomes import note_facts_rejected
+            note_facts_rejected(cik, "cik_mismatch")
             return []
         _note_fact_taxonomies(cik, data)
-        return [
+        records = [
             record
             for concept, unit in dict.fromkeys(concept_units)
             for record in parse_company_fact_records(data, concept=concept, unit=unit)
         ]
+        from ..services.evidence_outcomes import note_facts_received
+        note_facts_received(cik, data, concept_units, records)
+        return records
     except Exception as exc:
         logger.warning("SEC structured fact retrieval failed for CIK %s: %s", cik, exc)
+        from ..services.evidence_outcomes import note_facts_failure
+        note_facts_failure(cik, exc)
         return []
 
 
