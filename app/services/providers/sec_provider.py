@@ -335,6 +335,8 @@ def note_filing_selected(task: str, form: str) -> None:
     scope = _submissions_scope.get()
     if scope is not None:
         scope.note_filing_selected(task, form)
+    from ..evidence_outcomes import note_filing_selected
+    note_filing_selected(task, form)
 
 
 def filing_checkpoint(task: str, stage: str, *, observe: bool = True) -> None:
@@ -358,6 +360,8 @@ def note_filing_read_failure(task: str, *, too_large: bool = False) -> None:
     scope = _submissions_scope.get()
     if scope is not None:
         scope.note_filing_read_failure(task, too_large=too_large)
+    from ..evidence_outcomes import note_filing_read_failure as _outcome_read_failure
+    _outcome_read_failure(task, too_large)
 
 
 def filing_parse_deadline() -> Optional[float]:
@@ -514,6 +518,8 @@ def _fetch_by_cik(
     data = (scope.fetch(url, cik, timeout=10) if scope is not None
             else _fetch_json(url, timeout=10))
     entity_name = data.get("name", ticker)
+    from ..evidence_outcomes import note_filings_listed
+    note_filings_listed(data.get("filings", {}).get("recent", {}).get("form", []))
     if str(data.get("sic") or "").isdigit():
         _issuer_sic[str(cik).zfill(10)] = str(data["sic"])
     recent      = data.get("filings", {}).get("recent", {})
@@ -875,10 +881,16 @@ def fetch_recent_filings(
             if result:
                 return result
         except HTTPError as exc:
+            from ..evidence_outcomes import note_filing_list_failure
+            note_filing_list_failure(exc)
             print(f"[DIAG] SEC EDGAR (CIK): HTTP {exc.code} — filings withheld")
         except URLError as exc:
+            from ..evidence_outcomes import note_filing_list_failure
+            note_filing_list_failure(exc)
             print(f"[DIAG] SEC EDGAR (CIK): network error {exc.reason!r} — filings withheld")
         except Exception as exc:
+            from ..evidence_outcomes import note_filing_list_failure
+            note_filing_list_failure(exc)
             print(f"[DIAG] SEC EDGAR (CIK): unexpected error {exc!r} — filings withheld")
 
         # An exact security symbol must never fall into a full-text search

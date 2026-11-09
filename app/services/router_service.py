@@ -70,6 +70,7 @@ from .evidence_partitioner import partition_evidence
 from .providers import retrieve_market_evidence
 from .providers import fmp_provider as _fmp_provider
 from .providers import sec_provider as _sec_provider
+from . import evidence_outcomes as _outcome_notes_mod
 from .providers import news_provider as _news_provider
 from ..investment_agents import (
     run_valuation_agent,
@@ -1272,7 +1273,8 @@ def _run_investment_pipeline(
         def _run():
             _t0 = time.monotonic()
             try:
-                result = _sec_provider.bind_submissions_scope(fn, _submissions_scope)()
+                result = _outcome_notes_mod.bind_outcome_notes(
+                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes)()
             except Exception as _exc:
                 _obs_provider(
                     provider=provider, stage="retrieval",
@@ -1297,6 +1299,9 @@ def _run_investment_pipeline(
     _document_seconds = 20
     _abandoned_evidence: list = []
     from ..config import settings as _evidence_settings
+    # Evidence outcomes (default off): notes that only watch what the SEC clients already do.
+    _outcome_notes = (_outcome_notes_mod.OutcomeNotes()
+                      if getattr(_evidence_settings, "evidence_outcomes_enabled", False) is True else None)
     if getattr(_evidence_settings, "threshold_filing_explanations_enabled", False) is True:
         _submissions_scope = _sec_provider.SubmissionsRequestScope()
         from .source_answer import is_decision_monitoring_request
@@ -1318,7 +1323,8 @@ def _run_investment_pipeline(
         logger.warning("[router] evidence pool error (%r) — falling back to sequential", type(_pool_exc).__name__)
         for k, fn in _ev_tasks.items():
             try:
-                _ev_results[k] = _sec_provider.bind_submissions_scope(fn, _submissions_scope)()
+                _ev_results[k] = _outcome_notes_mod.bind_outcome_notes(
+                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes)()
             except Exception as _e:
                 _ev_results[k] = []
     finally:
@@ -1738,6 +1744,9 @@ def _run_investment_pipeline(
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
+    _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
+        thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
+        integrity=_evidence_integrity)
 
     # ── Thesis memory — snapshot + diff + alert ───────────────────────────────
     # Save snapshot, run diff against prior, emit MaterialChangeEvent if material.
@@ -1817,6 +1826,9 @@ def _run_investment_pipeline(
     _source_answer = apply_source_answer_gate(thesis, question, evidence, references=_evidence_references)
     _source_answer = apply_evidence_gaps(thesis, _source_answer, _evidence_gaps)
     _source_answer = apply_evidence_not_applicable(thesis, _source_answer, _evidence_not_applicable)
+    _source_answer = _outcome_notes_mod.apply_evidence_outcomes(
+        thesis, _source_answer, notes=_outcome_notes, references=_evidence_references,
+        integrity=_evidence_integrity)
 
     try:
         thesis_dict = thesis.model_dump()
@@ -2020,7 +2032,8 @@ def route_question(request: QuestionRequest) -> AgentAnswerResponse:
                 "ClearSignal could not verify the requested company identity. "
                 "No company analysis was run. Enter its exact ticker or legal name. "
                 "Coverage may be incomplete, ambiguous, or temporarily unavailable."
-            ), "source_answer": {"status": "unresolved_company_identity", "claims": []},
+            ), "source_answer": _outcome_notes_mod.identity_gap_source_answer(
+                {"status": "unresolved_company_identity", "claims": []}),
             "evidence_references": []},
             routing={"intent": "company_analysis", "pipeline": "company_identity_clarification"})
 
