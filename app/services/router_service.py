@@ -1275,6 +1275,8 @@ def _run_investment_pipeline(
             try:
                 result = _outcome_notes_mod.bind_outcome_notes(
                     _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes)()
+                if _outcome_notes is not None:
+                    _outcome_notes.mark_completed(name)
             except Exception as _exc:
                 _obs_provider(
                     provider=provider, stage="retrieval",
@@ -1325,10 +1327,14 @@ def _run_investment_pipeline(
             try:
                 _ev_results[k] = _outcome_notes_mod.bind_outcome_notes(
                     _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes)()
+                if _outcome_notes is not None:
+                    _outcome_notes.mark_completed(k)
             except Exception as _e:
                 _ev_results[k] = []
     finally:
         _ev_pool.shutdown(wait=False)  # Don't block — let abandoned tasks finish in background
+    if _outcome_notes is not None:
+        _outcome_notes.mark_abandoned(_abandoned_evidence)
     _evidence_gaps: list = []
     _evidence_not_applicable: list = []
     if _submissions_scope is not None:

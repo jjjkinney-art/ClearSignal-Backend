@@ -81,6 +81,8 @@ class OutcomeNotes:
         self.list_failures: list[dict] = []
         self.filing_selected: dict[str, str] = {}
         self.filing_read_failures: dict[str, bool] = {}  # task -> over the size limit
+        self.completed: set[str] = set()  # tasks that returned
+        self.abandoned: set[str] = set()  # tasks the request stopped waiting for
 
     def add_facts(self, row: dict):
         with self._lock:
@@ -93,6 +95,14 @@ class OutcomeNotes:
     def add_list_failure(self, row: dict):
         with self._lock:
             self.list_failures.append(row)
+
+    def mark_completed(self, task: str):
+        with self._lock:
+            self.completed.add(task)
+
+    def mark_abandoned(self, tasks: Iterable[str]):
+        with self._lock:
+            self.abandoned.update(tasks)
 
     def add_selected(self, task: str, form: str):
         with self._lock:
@@ -282,6 +292,10 @@ def _financial_state(source_answer, notes, references):
                            tried=True, source_family="sec_company_facts", detail={"gap_reason": gap.get("reason")},
                            user_text="SEC company facts could not be read within this request, so reported "
                                      "financials are missing. Trying again may give a fuller answer.")
+    if notes and "sec_metrics" in notes.abandoned and not ok:
+        return _record("reported_financials", "failed", "time_limit", tried=True, source_family="sec_company_facts",
+                       user_text="SEC company facts could not be read within this request, so reported "
+                                 "financials are missing. Trying again may give a fuller answer.")
     taxonomies = ok[-1].get("taxonomies", {}) if ok else {}
     currencies = ok[-1].get("currencies", {}) if ok else {}
     ifrs = (analysis.get("reason") == "ifrs_taxonomy_not_supported"
@@ -354,6 +368,16 @@ def _filing_state(need, source_answer, notes):
                            detail=dict(failure),
                            user_text="SEC's filing list could not be retrieved, so no filing was read for this part. "
                                      "That is a failed request, not evidence that no filing exists.")
+        if task in notes.filing_selected and task in notes.abandoned:
+            return _record(need, "failed", "time_limit", tried=True, source_family=family,
+                           detail={"form": notes.filing_selected[task]},
+                           user_text="The filing could not be read within the time limit for this answer. "
+                                     "What it would have added is missing.")
+        if task in notes.filing_selected and task not in notes.completed:
+            return _record(need, "failed", "filing_not_read", tried=True, source_family=family,
+                           detail={"form": notes.filing_selected[task]},
+                           user_text="The filing was chosen but its reading did not finish for this answer. "
+                                     "What it would have added is missing.")
         if task in notes.filing_selected:
             return _record(need, "unsupported", "selection_rules_not_met", tried=True, source_family=family,
                            detail={"form": notes.filing_selected[task]},
@@ -373,8 +397,8 @@ def _filing_state(need, source_answer, notes):
                                          "does not read. No filing was read for this part.")
             return _record(need, "not_attempted", "no_filing_listed", tried=False, source_family="sec_filing_list",
                            detail={"listed_forms": sorted(listed)},
-                           user_text="No annual or periodic report this version reads is in the recent filing list. "
-                                     "No filing was read for this part.")
+                           user_text="No annual or periodic report this version reads is in the recent filing list "
+                                     "(older filing pages were not read). No filing was read for this part.")
     return _record(need, "not_attempted", "not_recorded", tried=False, source_family=family,
                    user_text="This run recorded no filing read for this part, so what the filings say about it is unknown.")
 
@@ -387,7 +411,8 @@ def _decision_inputs(source_answer, financial):
     return _record("decision_inputs", financial["state"] if financial["state"] != "available" else "unsupported",
                    financial["reason"] if financial["state"] != "available" else "no_same_period_pair",
                    tried=financial["tried"], source_family=financial["source_family"], detail=dict(financial["detail"]),
-                   user_text="No monitoring baseline or decision threshold could be built. " + financial["user_text"])
+                   user_text="No monitoring baseline or decision threshold could be built. "
+                             + ("" if financial["state"] == "available" else financial["user_text"]))
 
 
 def _missing_parts(source_answer, notes):
@@ -465,18 +490,21 @@ def build_evidence_outcomes(source_answer: dict, *, notes: Optional[OutcomeNotes
 # --------------------------------------------------------------------------------------------------
 
 HEADER = "What remains unknown"
-_REWRITES = (
+def _rewrites(failed: bool):
+    """The sentences that say a disclosure 'qualified' or not, restated for a filing that was not read."""
+    how = "could not be read" if failed else "was not read"
+    return (
     ("No source-bound operating-risk disclosure qualified for this broad question. ", ""),
     ("No source-bound operating-risk disclosure qualified for the requested company and topic. The retrieved sources "
      "and consolidated metrics do not establish that risk, its likelihood, or its effect on the thesis. Review the "
      "linked primary documents; this part of the question remains unverified.",
-     "No filing was read for this part, so no operating-risk disclosure was examined; this part of the question "
+     f"The filing {how} for this part, so no operating-risk disclosure was examined; this part of the question "
      "remains unverified."),
     ("No source-bound operating-risk disclosure qualified for the requested company and topic; risk likelihood, "
      "financial effects, and thesis implications remain unverified.",
-     "No filing was read for the operating-risk part, so no disclosure was examined; risk likelihood, financial "
+     f"The filing {how} for the operating-risk part, so no disclosure was examined; risk likelihood, financial "
      "effects, and thesis implications remain unverified."),
-)
+    )
 
 
 _PART_TEXT = {
@@ -498,17 +526,18 @@ def render_unknown_block(records: list[dict]) -> str:
 def _correct_unread_risk_text(thesis, source_answer, records):
     """When no filing was read for the risk part, the answer must not say a disclosure was found wanting."""
     risk = next((row for row in records if row["need"] == "risk_disclosures"), None)
-    if not risk or risk["tried"] or risk["state"] == "available":
+    # Only a filing that was read to the end and yielded nothing may keep "qualified" wording.
+    if not risk or risk["state"] == "available" or risk["reason"] == "selection_rules_not_met":
         return source_answer
     for field in ("direct_answer", "conclusion"):
         text = getattr(thesis, field, None)
         if isinstance(text, str):
-            for old, new in _REWRITES:
+            for old, new in _rewrites(risk["state"] == "failed"):
                 text = text.replace(old, new)
             setattr(thesis, field, text)
     reason = source_answer.get("reason")
     if reason == "No relevant source-bound operating-risk disclosure qualified.":
-        source_answer = {**source_answer, "reason": "No filing was read for the operating-risk part of the question."}
+        source_answer = {**source_answer, "reason": "No filing was read to the end for the operating-risk part of the question."}
     return source_answer
 
 

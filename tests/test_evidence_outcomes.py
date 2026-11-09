@@ -143,6 +143,7 @@ def test_the_unread_risk_sentences_are_corrected_only_when_no_filing_was_read(mo
     read = OutcomeNotes()
     read.add_listed(['10-K'])
     read.add_selected('thesis_disclosures', '10-K')
+    read.mark_completed('thesis_disclosures')
     kept = Thesis(FORFF_OLD_TEXT)
     apply_evidence_outcomes(kept, thesis_answer(), notes=read)
     assert 'No source-bound operating-risk disclosure qualified' in kept.direct_answer
@@ -480,6 +481,82 @@ def test_the_filing_list_hook_records_forms_and_failures_without_changing_result
     failing = OutcomeNotes()
     assert bind_outcome_notes(lambda: sec_provider.fetch_recent_filings('FTS', forms=['10-K']), failing)() == []
     assert failing.list_failures and failing.list_failures[0]['http_status'] == 503
+
+
+# --- review fixes: nothing implies absence when reading was stopped, skipped or unrecorded ---------------
+
+def test_a_filing_chosen_but_abandoned_is_a_failed_read_not_a_finished_one():
+    notes = OutcomeNotes()
+    notes.add_selected('thesis_disclosures', '10-K')
+    notes.mark_abandoned(['thesis_disclosures'])
+    risk = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['risk_disclosures']
+    assert (risk['state'], risk['reason'], risk['tried']) == ('failed', 'time_limit', True)
+    assert 'was read and' not in risk['user_text'] and 'selection rules' not in risk['user_text']
+
+
+def test_a_filing_chosen_whose_reading_never_finished_is_not_called_read():
+    notes = OutcomeNotes()
+    notes.add_selected('filing_metrics', '10-Q')
+    row = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['change_drivers']
+    assert (row['state'], row['reason']) == ('failed', 'filing_not_read')
+    notes.mark_completed('filing_metrics')
+    row = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['change_drivers']
+    assert (row['state'], row['reason']) == ('unsupported', 'selection_rules_not_met')
+
+
+def test_an_abandoned_facts_task_is_a_time_limit_not_a_quiet_gap():
+    notes = OutcomeNotes()
+    notes.mark_abandoned(['sec_metrics'])
+    row = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['reported_financials']
+    assert (row['state'], row['reason']) == ('failed', 'time_limit')
+
+
+FAILED_NARROW_TEXT_AFTER = eo._rewrites(True)[1][1]
+
+
+def test_the_risk_sentence_is_restated_for_a_failed_read_and_kept_for_a_finished_one(monkeypatch):
+    from app import config
+    monkeypatch.setattr(config.settings, 'evidence_outcomes_enabled', True, raising=False)
+    failed = OutcomeNotes()
+    failed.add_selected('thesis_disclosures', '20-F')
+    failed.add_read_failure('thesis_disclosures', False)
+    thesis = Thesis(FORFF_OLD_TEXT)
+    apply_evidence_outcomes(thesis, thesis_answer(), notes=failed)
+    head = thesis.direct_answer.split('What remains unknown')[0]
+    assert 'qualified' not in head
+    assert 'could not be read' in FAILED_NARROW_TEXT_AFTER
+    finished = OutcomeNotes()
+    finished.add_selected('thesis_disclosures', '10-K')
+    finished.mark_completed('thesis_disclosures')
+    kept = Thesis(FORFF_OLD_TEXT)
+    apply_evidence_outcomes(kept, thesis_answer(), notes=finished)
+    assert 'No source-bound operating-risk disclosure qualified' in kept.direct_answer
+
+
+def test_no_label_or_text_says_a_thing_does_not_exist_unless_a_source_proved_it():
+    cases = []
+    for notes in (None, OutcomeNotes()):
+        cases.append(build_evidence_outcomes(thesis_answer(), notes=notes))
+    stopped = OutcomeNotes()
+    stopped.add_selected('thesis_disclosures', '10-K')
+    stopped.mark_abandoned(['thesis_disclosures', 'sec_metrics'])
+    cases.append(build_evidence_outcomes(thesis_answer(), notes=stopped))
+    cases.append(build_evidence_outcomes(thesis_answer(), notes=with_forms(OutcomeNotes(), 'BP (20-F, IFRS, older pages)')))
+    for rows in cases:
+        for row in rows:
+            if row['state'] != 'unavailable':
+                for phrase in ('does not exist', 'has no ', 'none exist', 'no such', 'did not report', 'confirmed'):
+                    assert phrase not in row['user_text'], (row['need'], row['user_text'])
+    unrecorded = cases[0]
+    assert {r['reason'] for r in unrecorded} == {'not_recorded'}
+
+
+def test_a_decision_input_record_never_reuses_the_bound_text():
+    answer = {'status': 'insufficient_claim_evidence', 'claims': [], 'missing_threshold_inputs': ['x']}
+    financial = {'state': 'available', 'reason': 'bound', 'tried': True, 'source_family': 'x', 'detail': {},
+                 'user_text': 'Bound to the cited evidence.'}
+    row = eo._decision_inputs(answer, financial)
+    assert 'Bound to the cited evidence' not in row['user_text']
 
 
 # --- 15 guards ---------------------------------------------------------------------------------------
