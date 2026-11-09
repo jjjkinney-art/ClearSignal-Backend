@@ -1,0 +1,86 @@
+[
+ {
+  "case_id": "ERO:core_thesis",
+  "issuer_id": "ERO",
+  "expected_cik": "0001853860",
+  "question": "What is the investment thesis for Ero Copper Corp., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "ERO:decision_threshold",
+  "issuer_id": "ERO",
+  "expected_cik": "0001853860",
+  "question": "Which valuation and operating assumptions would make Ero Copper Corp. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "MGRT:core_thesis",
+  "issuer_id": "MGRT",
+  "expected_cik": "0002033377",
+  "question": "What is the investment thesis for Mega Fortune Co Ltd, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "MGRT:decision_threshold",
+  "issuer_id": "MGRT",
+  "expected_cik": "0002033377",
+  "question": "Which valuation and operating assumptions would make Mega Fortune Co Ltd attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "MYGN:core_thesis",
+  "issuer_id": "MYGN",
+  "expected_cik": "0000899923",
+  "question": "What is the investment thesis for MYRIAD GENETICS INC, what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "MYGN:decision_threshold",
+  "issuer_id": "MYGN",
+  "expected_cik": "0000899923",
+  "question": "Which valuation and operating assumptions would make MYRIAD GENETICS INC attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "SUPV:core_thesis",
+  "issuer_id": "SUPV",
+  "expected_cik": "0001517399",
+  "question": "What is the investment thesis for Grupo Supervielle S.A., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "SUPV:decision_threshold",
+  "issuer_id": "SUPV",
+  "expected_cik": "0001517399",
+  "question": "Which valuation and operating assumptions would make Grupo Supervielle S.A. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "FMSTW:core_thesis",
+  "issuer_id": "FMSTW",
+  "expected_cik": "0001935418",
+  "question": "What is the investment thesis for Foremost Clean Energy Ltd., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "FMSTW:decision_threshold",
+  "issuer_id": "FMSTW",
+  "expected_cik": "0001935418",
+  "question": "Which valuation and operating assumptions would make Foremost Clean Energy Ltd. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ },
+ {
+  "case_id": "OPTT:core_thesis",
+  "issuer_id": "OPTT",
+  "expected_cik": "0001378140",
+  "question": "What is the investment thesis for Ocean Power Technologies, Inc., what supports it, and what could invalidate it? Distinguish reported facts from inference and cite material claims.",
+  "question_id": "core_thesis"
+ },
+ {
+  "case_id": "OPTT:decision_threshold",
+  "issuer_id": "OPTT",
+  "expected_cik": "0001378140",
+  "question": "Which valuation and operating assumptions would make Ocean Power Technologies, Inc. attractive or unattractive? Explain decision thresholds, evidence and uncertainty without inventing figures.",
+  "question_id": "decision_threshold"
+ }
+]

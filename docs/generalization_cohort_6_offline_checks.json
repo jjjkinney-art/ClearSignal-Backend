@@ -1,0 +1,137 @@
+{
+ "app_tree": "b3edb44e6600c3dbd182485ec3023eacd9420dfe",
+ "backend_commit_checked": "26d2859c49216809902b9d2d042e435d93e6f50a",
+ "cases_sha256": "f271e20ee68f040eeb0da4d145f3351f049d899fc105f50fe9d8685cea0ea7cb",
+ "classifier_runner_note": "Node 24.15.0 runs a copy of the pinned queryIntent.ts that differs in one line only (the ./symbolResolver import carries the .ts extension Node requires); the other 132 lines are identical. symbolResolver.ts is byte-identical to the pin (6fa4e195...).",
+ "classifier_sha256_at_pin": "9f8b1e87fc9f9353bc2c53d9ee0768596b9d6fb54d100074d6381e5540dd340a",
+ "directory_sha256": "a04725d9ea575489715bd16544f1cdcd420080fd81b8d8779dbb5ee19cdc62cb",
+ "format": "generalization-cohort-6-offline-checks-v1",
+ "frontend_commit": "77c33bbbb0c530e01f74b0d51502fabdf6d1ce12",
+ "identity": [
+  {
+   "case_id": "ERO:core_thesis",
+   "discovered": "ERO",
+   "intent": "company_analysis",
+   "issuer": "ERO",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "ERO:decision_threshold",
+   "discovered": "ERO",
+   "intent": "company_analysis",
+   "issuer": "ERO",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MGRT:core_thesis",
+   "discovered": "MGRT",
+   "intent": "company_analysis",
+   "issuer": "MGRT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MGRT:decision_threshold",
+   "discovered": "MGRT",
+   "intent": "company_analysis",
+   "issuer": "MGRT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MYGN:core_thesis",
+   "discovered": "MYGN",
+   "intent": "company_analysis",
+   "issuer": "MYGN",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "MYGN:decision_threshold",
+   "discovered": "MYGN",
+   "intent": "company_analysis",
+   "issuer": "MYGN",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "SUPV:core_thesis",
+   "discovered": "SUPV",
+   "intent": "company_analysis",
+   "issuer": "SUPV",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "SUPV:decision_threshold",
+   "discovered": "SUPV",
+   "intent": "company_analysis",
+   "issuer": "SUPV",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "FMSTW:core_thesis",
+   "discovered": "None",
+   "intent": "company_analysis",
+   "issuer": "company='' pipeline=entity_suggestion suggests=True ",
+   "route": "returned",
+   "verdict": "no company"
+  },
+  {
+   "case_id": "FMSTW:decision_threshold",
+   "discovered": "None",
+   "intent": "company_analysis",
+   "issuer": "company='' pipeline=company_identity_clarification suggests=False ",
+   "route": "returned",
+   "verdict": "no company"
+  },
+  {
+   "case_id": "OPTT:core_thesis",
+   "discovered": "OPTT",
+   "intent": "company_analysis",
+   "issuer": "OPTT",
+   "route": "research",
+   "verdict": "correct issuer"
+  },
+  {
+   "case_id": "OPTT:decision_threshold",
+   "discovered": "OPTT",
+   "intent": "company_analysis",
+   "issuer": "OPTT",
+   "route": "research",
+   "verdict": "correct issuer"
+  }
+ ],
+ "intents": {
+  "ERO:core_thesis": "company_analysis",
+  "ERO:decision_threshold": "company_analysis",
+  "FMSTW:core_thesis": "company_analysis",
+  "FMSTW:decision_threshold": "company_analysis",
+  "MGRT:core_thesis": "company_analysis",
+  "MGRT:decision_threshold": "company_analysis",
+  "MYGN:core_thesis": "company_analysis",
+  "MYGN:decision_threshold": "company_analysis",
+  "OPTT:core_thesis": "company_analysis",
+  "OPTT:decision_threshold": "company_analysis",
+  "SUPV:core_thesis": "company_analysis",
+  "SUPV:decision_threshold": "company_analysis"
+ },
+ "network_requests": 0,
+ "node": "v24.15.0",
+ "note": "Offline: no network request, no filing, company facts or submissions read. Identity and routing with the frozen backend app tree; classification with the pinned frontend classifier. Nothing is wired, packaged, approved or run.",
+ "rule_commit": "bf79e6f36fc54896da457c27351fd67590609bdc",
+ "selection_sha256": "1935ee86e2932c1804d124adb96f7e19174bbb52ae653717819fa85eb6601206",
+ "source_binding": "27f21d9109b35b063c943dbe127a77d4515476bdf7226bf5f2808518c83577cd",
+ "summary": {
+  "cause_of_no_company": "FMST and FMSTW are two unsuffixed symbols under one CIK; the same-CIK rule discounts five-letter ...F lines only, so a warrant line makes them two share classes and the resolver abstains (entity_suggestion / company_identity_clarification).",
+  "company_analysis": 12,
+  "no_company": [
+   "FMSTW:core_thesis",
+   "FMSTW:decision_threshold"
+  ],
+  "research_correct_issuer": 10
+ }
+}

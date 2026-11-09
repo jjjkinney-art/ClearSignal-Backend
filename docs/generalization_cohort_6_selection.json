@@ -1,0 +1,76 @@
+{
+ "seed": "clearsignal-generalization-6:",
+ "buckets": [
+  [
+   "mid",
+   1001,
+   2500
+  ],
+  [
+   "small",
+   2501,
+   5000
+  ],
+  [
+   "micro",
+   5001,
+   9000
+  ]
+ ],
+ "per_bucket": 2,
+ "code_commit": "26d2859c49216809902b9d2d042e435d93e6f50a",
+ "directory_sha256": "a04725d9ea575489715bd16544f1cdcd420080fd81b8d8779dbb5ee19cdc62cb",
+ "directory_rows": 10419,
+ "excluded_prior_cohort_or_retained": 36,
+ "excluded_code_mentions": 782,
+ "cohort": [
+  {
+   "bucket": "mid",
+   "position": 1822,
+   "ticker": "ERO",
+   "cik": 1853860,
+   "sec_name": "Ero Copper Corp.",
+   "rank": "003147c1bb9538ef2f0091d29fea6e3328558e5e7dd784d85cd36a2611fa0cff"
+  },
+  {
+   "bucket": "mid",
+   "position": 2256,
+   "ticker": "MGRT",
+   "cik": 2033377,
+   "sec_name": "Mega Fortune Co Ltd",
+   "rank": "0052ae1fa8d40b16ce3c9da5d5200cb7640482ef1c59065e8af7d2d3a3a87fe4"
+  },
+  {
+   "bucket": "small",
+   "position": 3045,
+   "ticker": "MYGN",
+   "cik": 899923,
+   "sec_name": "MYRIAD GENETICS INC",
+   "rank": "000839c20ba69ee4dfc3f29193ce3bd37f9cf4a822aff1b99ff01b849352c897"
+  },
+  {
+   "bucket": "small",
+   "position": 3110,
+   "ticker": "SUPV",
+   "cik": 1517399,
+   "sec_name": "Grupo Supervielle S.A.",
+   "rank": "00197b4744b863f04170345d34d4fdf76858925b4afae5e0ac2a093e6d07abcb"
+  },
+  {
+   "bucket": "micro",
+   "position": 8771,
+   "ticker": "FMSTW",
+   "cik": 1935418,
+   "sec_name": "Foremost Clean Energy Ltd.",
+   "rank": "0017c2a351004efa33da244eea2e48216a196f83a2a4d1e3f65d9ece04885627"
+  },
+  {
+   "bucket": "micro",
+   "position": 6336,
+   "ticker": "OPTT",
+   "cik": 1378140,
+   "sec_name": "Ocean Power Technologies, Inc.",
+   "rank": "002477df0366c317716cba981aa7cd2cca987e2baed977d4649b1492b768660b"
+  }
+ ]
+}
