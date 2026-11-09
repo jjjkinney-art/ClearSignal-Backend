@@ -98,11 +98,15 @@ class LoopbackSEC:
     With ``untrusted=True`` the served leaf is issued by a different CA than
     the one written to ``ca_path``, so certificate verification must fail.
     """
-    def __init__(self, directory, *, untrusted=False, direct=False, fault=None, ifrs_only_cik=None, inline_filing=True):
+    def __init__(self, directory, *, untrusted=False, direct=False, fault=None, ifrs_only_cik=None, inline_filing=True,
+                 sic_override=None):
         # ifrs_only_cik: that issuer's company facts are valid but hold no us-gaap, so they
         # support no comparison, and its latest filing carries the only comparable facts.
         # That filing is then the difference between an answer and none.
         self.ifrs_only_cik, self.inline_filing = ifrs_only_cik, inline_filing
+        # (cik, sic): that issuer's filing list is served with this SIC, '' meaning SEC's blank (the
+        # description is blanked with it, as SEC writes it); every other field is as served.
+        self.sic_override = sic_override
         # (kind, path regex, nth match): 'late' completes after 13 s with bytes arriving
         # inside the read timeout, 'silent' sends nothing for 13 s, 'crawl' sends one byte
         # a second, 'close' hangs up without answering.
@@ -222,6 +226,12 @@ class LoopbackSEC:
             if (self.ifrs_only_cik is not None and self.inline_filing and media == 'text/html'
                     and re.search(rf'/edgar/data/{self.ifrs_only_cik}/[0-9]+/[a-z]+-20260630\.htm$', path)):
                 body = inline_quarterly_filing(self.ifrs_only_cik)
+            if self.sic_override is not None and path == f'/submissions/CIK{self.sic_override[0]:010d}.json':
+                listing = json.loads(body)
+                listing['sic'] = self.sic_override[1]
+                if self.sic_override[1] == '':
+                    listing['sicDescription'] = ''
+                body = json.dumps(listing).encode()
             kind = self._take_fault(path)
             if kind == 'xbrl_flagged':
                 # The same registrant's filing list, but one filing now claims XBRL: absence is not proven.

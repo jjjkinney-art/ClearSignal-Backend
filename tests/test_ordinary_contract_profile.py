@@ -1309,3 +1309,114 @@ def test_a_429_on_an_operating_issuers_facts_halts(tmp_path):
     cik = _cik_of('GALT:core_thesis')
     result, sec, output = _run_registration_fault(tmp_path, 'http_429', rf'/companyfacts/CIK{cik}\.json')
     _assert_halted_at(result, sec, output, 'GALT:core_thesis', 'http_throttled_429')
+
+
+# -- a blank SIC: SEC's own complete filing list is the only thing that decides ------------------
+
+def _blank_sic_loopback(tmp_path, cik, sic='', fault=None):
+    _needs_port()
+    from _ordinary_loopback_sec import LoopbackSEC
+    from validation.ordinary_isolated_rehearsal import run_loopback_rehearsal
+    base = tmp_path.resolve()
+    with LoopbackSEC(base, fault=fault, sic_override=(int(cik), sic)) as sec:
+        return run_loopback_rehearsal(base / 'run', ca=sec.ca_path), sec, base / 'run'
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_blank_sic_registration_only_registrant_makes_no_facts_request_and_later_cases_run(tmp_path):
+    cik = _cik_of('VBREY:core_thesis')
+    result, sec, output = _blank_sic_loopback(tmp_path, cik)
+    packet = result['packet']
+    assert result['status'] == 'complete' and packet['halt'] is None and packet['first_failure'] is None
+    # On the wire, not just the ledger: no company-facts and no filing request for the registrant.
+    assert not [r for r in sec.requests if cik in r['path'] and 'companyfacts' in r['path']]
+    assert not [r for r in sec.requests if f'/data/{int(cik)}/' in r['path']]
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert [statuses[c] for c in REGISTRATION_ONLY_CASES] == ['unanswered_registration_only'] * 2
+    assert all(statuses[case] == 'answered_unadjudicated' for case in CASES[4:])     # the next cases ran
+    assert len(packet['cases']) == packet['denominator'] == 12 and packet['attempt_count'] == EXPECTED_SEC_EXCHANGES
+    source = packet['answers']['VBREY:core_thesis']['response']['answer']['source_answer']
+    assert source['evidence_not_applicable'][0]['evidence']['sic'] == ''
+    text = packet['answers']['VBREY:core_thesis']['response']['answer']['investment_thesis']['direct_answer']
+    assert 'was not queried' in text and "rests on SEC's filing list alone" in text
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_blank_sic_alone_never_excuses_an_operating_issuer(tmp_path):
+    cik = _cik_of('GALT:core_thesis')
+    result, sec, _ = _blank_sic_loopback(tmp_path, cik)
+    packet = result['packet']
+    # The listing carries operating forms and flags, so the rule does not apply: its facts are requested and it answers.
+    assert [r for r in sec.requests if cik in r['path'] and 'companyfacts' in r['path']]
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert statuses['GALT:core_thesis'] == 'answered_unadjudicated'
+    assert not any(row['status'] == 'unanswered_registration_only' and row['case_id'].startswith('GALT') for row in packet['cases'])
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+@pytest.mark.parametrize('kind,detail,sic', [
+    ('xbrl_flagged', 'http_client_error_404', ''),      # one filing now claims XBRL: absence is not proven; the issued 404 halts
+    ('none', 'http_client_error_404', '6021'),           # a conflicting SIC: not proven; the issued 404 halts
+    ('http_403', 'http_auth_403', ''),                   # access refused on the filing list itself
+])
+def test_without_proof_the_request_goes_out_and_its_failure_still_halts_under_its_own_code(tmp_path, kind, detail, sic):
+    cik = _cik_of('VBREY:core_thesis')
+    fault = None if kind == 'none' else (kind, rf'/submissions/CIK{cik}\.json', 1)
+    result, sec, output = _blank_sic_loopback(tmp_path, cik, sic=sic, fault=fault)
+    if detail == 'http_auth_403':
+        assert not [r for r in sec.requests if cik in r['path'] and 'companyfacts' in r['path']]
+    else:
+        assert [r for r in sec.requests if cik in r['path'] and 'companyfacts' in r['path']]
+    _assert_halted_at(result, sec, output, 'VBREY:core_thesis', detail)
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_a_429_on_an_operating_issuers_facts_still_halts_beside_a_blank_sic_registrant(tmp_path):
+    cik = _cik_of('GALT:core_thesis')
+    registrant = _cik_of('VBREY:core_thesis')
+    _needs_port()
+    from _ordinary_loopback_sec import LoopbackSEC
+    from validation.ordinary_isolated_rehearsal import run_loopback_rehearsal
+    base = tmp_path.resolve()
+    with LoopbackSEC(base, fault=('http_429', rf'/companyfacts/CIK{cik}\.json', 1), sic_override=(int(registrant), '')) as sec:
+        result = run_loopback_rehearsal(base / 'run', ca=sec.ca_path)
+    packet = result['packet']
+    assert packet['halt'] == 'post_claim_failure' and packet['first_failure']['code'] == 'http_throttled'
+    statuses = {row['case_id']: row['status'] for row in packet['cases']}
+    assert [statuses[c] for c in REGISTRATION_ONLY_CASES] == ['unanswered_registration_only'] * 2   # proven before the halt
+    assert statuses['GALT:core_thesis'] == 'halted' and statuses['GALT:decision_threshold'] == 'not_run_after_halt'
+
+
+@PROFILE_ONLY
+@pytest.mark.timeout(300)
+def test_the_export_refuses_a_blank_sic_ledger_whose_retained_list_is_altered(tmp_path):
+    import shutil
+    from validation.ordinary_isolated_rehearsal import LOOPBACK_CONTACT, ZERO_MODEL_PLACEHOLDER
+    from validation.ordinary_native_export import ExportRefused, export_packet
+    cik = _cik_of('VBREY:core_thesis')
+    result, _, output = _blank_sic_loopback(tmp_path, cik)
+    policy = json.loads((output / 'request.json').read_text())['policy']
+    forbidden = (ZERO_MODEL_PLACEHOLDER, LOOPBACK_CONTACT)
+    untouched = tmp_path / 'untouched.sqlite'
+    shutil.copyfile(output / 'ledger.sqlite', untouched)
+    assert export_packet(untouched, policy, forbidden_values=forbidden, synthetic=True)['answers']   # exports as is
+    for label, sql in {
+        'the retained list now claims a conflicting SIC':
+            "UPDATE ordinary_responses SET body=CAST(replace(CAST(body AS TEXT), '\"sic\": \"\"', '\"sic\": \"6021\"') AS BLOB) "
+            f"WHERE url LIKE '%submissions/CIK{cik}.json'",
+        'the retained list now holds a flagged filing':
+            "UPDATE ordinary_responses SET body=CAST(replace(CAST(body AS TEXT), '\"isXBRL\": [0', '\"isXBRL\": [1') AS BLOB) "
+            f"WHERE url LIKE '%submissions/CIK{cik}.json'",
+    }.items():
+        copy = tmp_path / 'tampered.sqlite'
+        shutil.copyfile(output / 'ledger.sqlite', copy)
+        with sqlite3.connect(copy) as db:
+            changed = db.execute(sql).rowcount
+        assert changed >= 1, label
+        with pytest.raises((ExportRefused, sqlite3.IntegrityError)):
+            export_packet(copy, policy, forbidden_values=forbidden, synthetic=True)
+        copy.unlink()

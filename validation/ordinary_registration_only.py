@@ -24,6 +24,15 @@ def _zero(value):
     return type(value) is int and value == 0
 
 
+def _sic_allows(submissions):
+    """SIC '8880', or SEC's blank for an unclassified entity: the key present as '' with an empty description."""
+    if 'sic' not in submissions or type(submissions['sic']) is not str:
+        return False
+    if submissions['sic'] == '8880':
+        return True
+    return submissions['sic'] == '' and 'sicDescription' in submissions and submissions['sicDescription'] == ''
+
+
 def registration_only_evidence(submissions, expected_cik):
     """The evidence summary if every condition holds, else None."""
     if type(expected_cik) is not str or not re.fullmatch(r'[0-9]{1,10}', expected_cik) or type(submissions) is not dict:
@@ -46,10 +55,10 @@ def registration_only_evidence(submissions, expected_cik):
             or not all(_zero(value) for value in is_xbrl) or not all(_zero(value) for value in is_inline)
             or any(value is not None and not _zero(value) for value in numeric)):
         return None
-    if submissions.get('entityType') != 'other' or submissions.get('sic') != '8880':
+    if submissions.get('entityType') != 'other' or not _sic_allows(submissions):
         return None
     return {'cik': reported, 'filings_listed': count, 'forms': sorted(set(forms)), 'xbrl_flags': 0,
-            'complete_listing': True, 'entity_type': 'other', 'sic': '8880'}
+            'complete_listing': True, 'entity_type': 'other', 'sic': submissions['sic']}
 
 
 def declared_not_applicable(payload):

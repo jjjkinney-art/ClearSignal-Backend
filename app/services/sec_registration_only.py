@@ -15,7 +15,11 @@ that is missing, malformed, ragged or of the wrong type makes the answer "not pr
   4. every ``isXBRL`` and ``isInlineXBRL`` is exactly the integer 0, and every
      ``isXBRLNumeric`` is null or 0 (SEC leaves it null on most entries);
   5. every form is one of the five the retained evidence shows (widened only on new evidence);
-  6. ``entityType`` is "other" and ``sic`` is "8880" (corroboration; never sufficient alone).
+  6. ``entityType`` is "other", and ``sic`` is either "8880" or SEC's own blank: the ``sic`` key is
+     present and exactly "" with an empty ``sicDescription`` (SEC assigned no industry code, as for
+     Inficon Holding AG/ADR). A blank code is no corroboration at all; conditions 1 to 5 then carry the
+     whole proof. Any other code, a missing or non-string ``sic``, or a blank code beside a description,
+     is a conflict or a malformed field and does not qualify.
 
 validation/ordinary_registration_only.py holds a second, independent copy of this predicate
 for the pilot's ledger and export; a test keeps the two equal.
@@ -29,6 +33,15 @@ _PARALLEL = ("form", "isXBRL", "isInlineXBRL", "isXBRLNumeric")
 
 def _exact_int(value, allowed):
     return type(value) is int and value in allowed
+
+
+def _sic_allows(submissions):
+    """SIC "8880", or SEC's blank for an unclassified entity: the key present as "" with an empty description."""
+    if "sic" not in submissions or type(submissions["sic"]) is not str:
+        return False
+    if submissions["sic"] == "8880":
+        return True
+    return submissions["sic"] == "" and "sicDescription" in submissions and submissions["sicDescription"] == ""
 
 
 def registration_only_evidence(submissions, expected_cik):
@@ -56,10 +69,10 @@ def registration_only_evidence(submissions, expected_cik):
             or any(not _exact_int(value, (0,)) for value in is_inline)
             or any(value is not None and not _exact_int(value, (0,)) for value in numeric)):
         return None
-    if submissions.get("entityType") != "other" or submissions.get("sic") != "8880":
+    if submissions.get("entityType") != "other" or not _sic_allows(submissions):
         return None
     return {"cik": reported, "filings_listed": count, "forms": sorted(set(forms)), "xbrl_flags": 0,
-            "complete_listing": True, "entity_type": "other", "sic": "8880"}
+            "complete_listing": True, "entity_type": "other", "sic": submissions["sic"]}
 
 
 def explanation(evidence):
@@ -69,4 +82,5 @@ def explanation(evidence):
             f"({evidence['filings_listed']} filings) contains only depositary-receipt registration forms "
             f"({forms}) and no XBRL financial filings, so no company-facts request was made and no "
             f"financial comparison, monitoring baseline or threshold exists. This describes the registrant; "
-            f"it is not a retrieval failure.")
+            f"it is not a retrieval failure. This rests on SEC's filing list alone; SEC's company-facts "
+            f"service was not queried, so nothing here states what it holds.")
