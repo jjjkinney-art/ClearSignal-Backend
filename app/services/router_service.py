@@ -1274,7 +1274,7 @@ def _run_investment_pipeline(
             _t0 = time.monotonic()
             try:
                 result = _outcome_notes_mod.bind_outcome_notes(
-                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes)()
+                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes, name)()
                 if _outcome_notes is not None:
                     _outcome_notes.mark_completed(name)
             except Exception as _exc:
@@ -1326,7 +1326,7 @@ def _run_investment_pipeline(
         for k, fn in _ev_tasks.items():
             try:
                 _ev_results[k] = _outcome_notes_mod.bind_outcome_notes(
-                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes)()
+                    _sec_provider.bind_submissions_scope(fn, _submissions_scope), _outcome_notes, k)()
                 if _outcome_notes is not None:
                     _outcome_notes.mark_completed(k)
             except Exception as _e:

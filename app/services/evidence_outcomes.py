@@ -84,21 +84,32 @@ class OutcomeNotes:
         self.completed: set[str] = set()  # tasks that returned
         self.abandoned: set[str] = set()  # tasks the request stopped waiting for
 
-    def add_facts(self, row: dict):
-        with self._lock:
-            self.facts_requests.append(row)
+    # Once the request has given up on a task, that task's outcome is final: a worker that keeps
+    # running in the background cannot add, change or complete anything. ``task`` is the writer
+    # (None for a write made outside any evidence task, which is never dropped).
 
-    def add_listed(self, forms: Iterable[str]):
-        with self._lock:
-            self.listed_forms.update(str(form) for form in forms if isinstance(form, str))
+    def _late(self, task) -> bool:
+        return task is not None and task in self.abandoned
 
-    def add_list_failure(self, row: dict):
+    def add_facts(self, row: dict, task: Optional[str] = None):
         with self._lock:
-            self.list_failures.append(row)
+            if not self._late(task):
+                self.facts_requests.append(row)
+
+    def add_listed(self, forms: Iterable[str], task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.listed_forms.update(str(form) for form in forms if isinstance(form, str))
+
+    def add_list_failure(self, row: dict, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.list_failures.append(row)
 
     def mark_completed(self, task: str):
         with self._lock:
-            self.completed.add(task)
+            if not self._late(task):
+                self.completed.add(task)
 
     def mark_abandoned(self, tasks: Iterable[str]):
         with self._lock:
@@ -106,26 +117,30 @@ class OutcomeNotes:
 
     def add_selected(self, task: str, form: str):
         with self._lock:
-            self.filing_selected[task] = form
+            if not self._late(task):
+                self.filing_selected[task] = form
 
     def add_read_failure(self, task: str, too_large: bool):
         with self._lock:
-            self.filing_read_failures[task] = bool(too_large) or self.filing_read_failures.get(task, False)
+            if not self._late(task):
+                self.filing_read_failures[task] = bool(too_large) or self.filing_read_failures.get(task, False)
 
 
 _notes: ContextVar[Optional[OutcomeNotes]] = ContextVar("evidence_outcome_notes", default=None)
+_task: ContextVar[Optional[str]] = ContextVar("evidence_outcome_task", default=None)
 
 
-def bind_outcome_notes(fn, notes: Optional[OutcomeNotes]):
-    """Run ``fn`` with ``notes`` active; worker threads do not inherit contextvars."""
+def bind_outcome_notes(fn, notes: Optional[OutcomeNotes], task: Optional[str] = None):
+    """Run ``fn`` with ``notes`` active, writing as ``task``; worker threads do not inherit contextvars."""
     if notes is None:
         return fn
 
     def _bound(*args, **kwargs):
-        token = _notes.set(notes)
+        token, task_token = _notes.set(notes), _task.set(task)
         try:
             return fn(*args, **kwargs)
         finally:
+            _task.reset(task_token)
             _notes.reset(token)
 
     return _bound
@@ -151,12 +166,13 @@ def _failure(exc: BaseException) -> dict:
 
 
 def note_facts_failure(cik: str, exc: BaseException):
-    _safe(lambda notes: notes.add_facts({"cik": cik, "ok": False, **_failure(exc)}))
+    _safe(lambda notes: notes.add_facts({"cik": cik, "ok": False, **_failure(exc)}, _task.get()))
 
 
 def note_facts_rejected(cik: str, reason: str):
     """A response arrived but was not about the requested CIK."""
-    _safe(lambda notes: notes.add_facts({"cik": cik, "ok": False, "error_class": reason, "http_status": None}))
+    _safe(lambda notes: notes.add_facts(
+        {"cik": cik, "ok": False, "error_class": reason, "http_status": None}, _task.get()))
 
 
 def note_facts_received(cik: str, data: dict, concept_units, records) -> None:
@@ -187,16 +203,16 @@ def note_facts_received(cik: str, data: dict, concept_units, records) -> None:
             "cik": cik, "ok": True, "taxonomies": counts, "currencies": currencies,
             "requested": requested, "present": [c for c in requested if c in gaap],
             "with_records": sorted({getattr(r, "concept", "") for r in records} & set(requested)),
-        })
+        }, _task.get())
     _safe(action)
 
 
 def note_filings_listed(forms) -> None:
-    _safe(lambda notes: notes.add_listed(forms))
+    _safe(lambda notes: notes.add_listed(forms, _task.get()))
 
 
 def note_filing_list_failure(exc: BaseException):
-    _safe(lambda notes: notes.add_list_failure(_failure(exc)))
+    _safe(lambda notes: notes.add_list_failure(_failure(exc), _task.get()))
 
 
 def note_filing_selected(task: str, form: str):

@@ -559,6 +559,115 @@ def test_a_decision_input_record_never_reuses_the_bound_text():
     assert 'Bound to the cited evidence' not in row['user_text']
 
 
+# --- a late worker cannot rewrite an outcome the request already gave up on --------------------------
+
+def _as_task(notes, task, action):
+    return bind_outcome_notes(action, notes, task)()
+
+
+def test_a_late_worker_cannot_overwrite_an_abandoned_filing_outcome():
+    notes = OutcomeNotes()
+    _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_selected('thesis_disclosures', '10-K'))
+    notes.mark_abandoned(['thesis_disclosures'])
+    before = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['risk_disclosures']
+    assert (before['state'], before['reason']) == ('failed', 'time_limit')
+    # The abandoned worker keeps running and now fails, finishes and lists forms.
+    _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_read_failure('thesis_disclosures', True))
+    _as_task(notes, 'thesis_disclosures', lambda: eo.note_filings_listed(['40-F']))
+    _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_selected('thesis_disclosures', '10-Q'))
+    notes.mark_completed('thesis_disclosures')
+    after = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['risk_disclosures']
+    assert after == before
+
+
+def test_a_late_facts_worker_cannot_overwrite_an_abandoned_facts_outcome(monkeypatch):
+    notes = OutcomeNotes()
+    notes.mark_abandoned(['sec_metrics'])
+    before = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['reported_financials']
+    assert (before['state'], before['reason']) == ('failed', 'time_limit')
+    monkeypatch.setattr(sec_client.requests, 'get',
+                        lambda *a, **k: Reply(FACTS['FORFF (Run 11, us-gaap, CAD)']))
+    cik = str(FACTS['FORFF (Run 11, us-gaap, CAD)']['cik'])
+    bind_outcome_notes(lambda: sec_client.get_company_fact_records_for_concept_units(
+        cik, concept_units=CONCEPT_UNITS), notes, 'sec_metrics')()
+    bind_outcome_notes(lambda: sec_client.get_company_fact_records_for_concept_units(
+        cik, concept_units=CONCEPT_UNITS), notes, 'sec_metrics')()
+    assert notes.facts_requests == []
+    assert by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['reported_financials'] == before
+
+
+def test_a_real_late_thread_cannot_change_the_outcome_the_request_returned():
+    import threading
+    notes = OutcomeNotes()
+    started, release, done = threading.Event(), threading.Event(), threading.Event()
+
+    def worker():
+        eo.note_filing_selected('thesis_disclosures', '10-K')
+        started.set()
+        release.wait(5)
+        eo.note_filing_read_failure('thesis_disclosures', True)
+        done.set()
+
+    thread = threading.Thread(target=bind_outcome_notes(worker, notes, 'thesis_disclosures'))
+    thread.start()
+    assert started.wait(5)
+    notes.mark_abandoned(['thesis_disclosures'])  # the request stops waiting and answers
+    answered = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['risk_disclosures']
+    release.set()
+    assert done.wait(5)
+    thread.join()
+    assert answered['reason'] == 'time_limit'
+    assert by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['risk_disclosures'] == answered
+
+
+def test_other_tasks_keep_recording_after_one_task_is_abandoned():
+    notes = OutcomeNotes()
+    notes.mark_abandoned(['thesis_disclosures'])
+    _as_task(notes, 'filing_metrics', lambda: eo.note_filing_selected('filing_metrics', '10-Q'))
+    notes.mark_completed('filing_metrics')
+    row = by_need(build_evidence_outcomes(thesis_answer(), notes=notes))['change_drivers']
+    assert (row['state'], row['reason']) == ('unsupported', 'selection_rules_not_met')
+
+
+def test_completed_failed_and_abandoned_reads_say_three_different_true_things(monkeypatch):
+    from app import config
+    monkeypatch.setattr(config.settings, 'evidence_outcomes_enabled', True, raising=False)
+
+    def run(prepare):
+        notes = OutcomeNotes()
+        prepare(notes)
+        thesis = Thesis(FORFF_OLD_TEXT)
+        out = apply_evidence_outcomes(thesis, thesis_answer(), notes=notes)
+        risk = by_need(out['evidence_outcomes'])['risk_disclosures']
+        return risk, thesis.direct_answer
+
+    def completed(notes):
+        _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_selected('thesis_disclosures', '10-K'))
+        notes.mark_completed('thesis_disclosures')
+
+    def failed(notes):
+        _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_selected('thesis_disclosures', '10-K'))
+        _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_read_failure('thesis_disclosures', False))
+        notes.mark_completed('thesis_disclosures')
+
+    def abandoned(notes):
+        _as_task(notes, 'thesis_disclosures', lambda: eo.note_filing_selected('thesis_disclosures', '10-K'))
+        notes.mark_abandoned(['thesis_disclosures'])
+
+    done, done_text = run(completed)
+    lost, lost_text = run(failed)
+    late, late_text = run(abandoned)
+    assert [(r['state'], r['reason']) for r in (done, lost, late)] == [
+        ('unsupported', 'selection_rules_not_met'), ('failed', 'filing_not_read'), ('failed', 'time_limit')]
+    assert len({done['user_text'], lost['user_text'], late['user_text']}) == 3
+    assert 'was read and no passage met' in done['user_text'] and 'does not establish' in done['user_text']
+    assert 'could not be read for this answer' in lost['user_text'] and 'time limit' not in lost['user_text']
+    assert 'within the time limit' in late['user_text'] and 'was read and' not in late['user_text']
+    assert 'No source-bound operating-risk disclosure qualified' in done_text  # a finished read keeps its wording
+    for text in (lost_text, late_text):
+        assert 'qualified' not in text.split('What remains unknown')[0]
+
+
 # --- 15 guards ---------------------------------------------------------------------------------------
 
 COHORT_6 = ['E' + 'RO', 'MG' + 'RT', 'MY' + 'GN', 'SU' + 'PV', 'FMS' + 'TW', 'FM' + 'ST', 'OP' + 'TT']
