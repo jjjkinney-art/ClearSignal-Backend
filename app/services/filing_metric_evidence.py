@@ -135,7 +135,9 @@ def fetch_latest_filing_metrics(ticker, *, question, as_of=None):
             ticker, filing.reporting_period_end, len(document.inline_xbrl_facts), len(items))
         if requests_thesis_disclosures(ticker, question) or _monitoring_filing_request(question):
             # The same admitted filing may explain its own latest-period changes.
-            return items + extract_current_period_explanation(document, items, ticker=ticker, cik=cik)
+            from .going_concern_disclosure import extract_going_concern
+            return (items + extract_current_period_explanation(document, items, ticker=ticker, cik=cik)
+                    + extract_going_concern(document, ticker=ticker, cik=cik, period_end=filing.reporting_period_end))
         from .verified_sec_metric_service import _requested_metrics
         requested = {f'us-gaap:{concept}' for concepts, _, _, _, _ in
                      _requested_metrics(question, include_defaults=False) for concept in concepts}

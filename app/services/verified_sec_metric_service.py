@@ -355,7 +355,8 @@ def fetch_verified_metric_evidence(
             getattr(settings, "sec_user_agent", "") or "")
     metrics = _requested_metrics(question)
     from .financial_thesis_foundation import (requests_profitability_context, financial_metric_label,
-                                              is_broad_thesis_request, SECTOR_METRICS, SECTOR_SIGNATURES)
+                                              is_broad_thesis_request, SECTOR_METRICS, SECTOR_SIGNATURES,
+                                              SECTOR_BALANCE_METRICS)
     from .source_answer import is_decision_monitoring_request
     sector_names = {}
     if is_broad_thesis_request(question or "") or is_decision_monitoring_request(question or ""):
@@ -363,6 +364,10 @@ def fetch_verified_metric_evidence(
             for name, concepts in measures.items():
                 sector_names[name] = sector
                 metrics = (*metrics, (concepts, name, (), "USD", "duration"))
+        for sector, measures in SECTOR_BALANCE_METRICS.items():
+            for name, concepts in measures.items():
+                sector_names[name] = sector
+                metrics = (*metrics, (concepts, name, (), "USD", "instant"))
     supplementary = next(metric for metric in _METRICS if metric[1] == "pretax income")
     context_requested = requests_profitability_context(question)
     if context_requested and supplementary not in metrics:
@@ -442,7 +447,8 @@ def fetch_verified_metric_evidence(
     if sector_names:
         # A business type's measures are kept only when its own signature pair
         # was reported, so other issuers' answers are unchanged.
-        concept_names = {f"us-gaap:{concept}": name for measures in SECTOR_METRICS.values()
+        concept_names = {f"us-gaap:{concept}": name
+                         for measures in (*SECTOR_METRICS.values(), *SECTOR_BALANCE_METRICS.values())
                          for name, concepts in measures.items() for concept in concepts}
         found = {concept_names.get(item.verified_claims[0].get("metric")) for item in evidence}
         keep = {name for name, sector in sector_names.items()

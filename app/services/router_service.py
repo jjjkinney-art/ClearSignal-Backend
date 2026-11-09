@@ -1349,12 +1349,14 @@ def _run_investment_pipeline(
     from .filing_metric_evidence import merge_latest_filing_metrics
     # A filing's explanation of its own changes is not a metric comparison;
     # it travels beside the merged comparisons rather than through the merge.
+    def _stage_context_item(item):
+        return bool(getattr(item, "period_explanations", None) or getattr(item, "going_concern_disclosures", None))
     _period_explanation_evidence: list = [
-        item for item in _ev_results.get("filing_metrics", []) if getattr(item, "period_explanations", None)
+        item for item in _ev_results.get("filing_metrics", []) if _stage_context_item(item)
     ]
     _sec_metric_evidence = merge_latest_filing_metrics(
         _sec_metric_evidence,
-        [item for item in _ev_results.get("filing_metrics", []) if not getattr(item, "period_explanations", None)],
+        [item for item in _ev_results.get("filing_metrics", []) if not _stage_context_item(item)],
         ticker=ticker, question=question,
     )
     _issuer_kpi_evidence: list = _ev_results.get("issuer_kpis", [])

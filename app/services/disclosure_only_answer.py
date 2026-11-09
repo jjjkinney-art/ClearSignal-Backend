@@ -13,13 +13,14 @@ more ifrs-full than us-gaap concepts; otherwise the reason stays generic.
 import re
 
 from .business_context import coverage_from_bound_descriptions, render_business_coverage
+from .going_concern_disclosure import bound_going_concern
 from .thesis_competition import bound_competition_description
 from .thesis_disclosures import bound_business_description, bound_thesis_risk
 
 CONTENT_SCOPE = 'disclosures_only'
 # The only claim kinds a disclosure-only answer may carry. None states a figure.
 DISCLOSURE_ONLY_KINDS = frozenset({'issuer_business_description', 'issuer_competition_description',
-                                   'issuer_disclosed_risk'})
+                                   'issuer_disclosed_risk', 'issuer_going_concern_disclosure'})
 _PER_KIND_LIMIT = 2
 
 IFRS_REASON = ('The SEC structured data retrieved for this issuer is tagged mainly under the IFRS taxonomy '
@@ -54,9 +55,12 @@ def build_disclosure_only(ticker, items, references, *, expected_cik=None):
     rows, selected, seen = [], [], set()
     counts = {kind: 0 for kind in DISCLOSURE_ONLY_KINDS}
     business = []
-    for index, item in enumerate(items, start=1):
+    # The issuer's going-concern conclusion is stated first; reference numbers keep the item order.
+    for index, item in sorted(enumerate(items, start=1),
+                              key=lambda pair: not getattr(pair[1], 'going_concern_disclosures', None)):
         value = (bound_business_description(item, ticker=ticker, cik=expected_cik)
                  or bound_competition_description(item, ticker=ticker, cik=expected_cik)
+                 or bound_going_concern(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value['claim_kind'] not in DISCLOSURE_ONLY_KINDS or value['quote'] in seen
                 or counts[value['claim_kind']] >= _PER_KIND_LIMIT):

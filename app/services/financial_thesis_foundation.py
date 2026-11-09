@@ -9,7 +9,7 @@ from datetime import date
 from decimal import Decimal
 import re
 
-from ..integrity.sec_metric_evidence import _value, comparable_metric_evidence
+from ..integrity.sec_metric_evidence import _value, comparable_instant_metric_evidence, comparable_metric_evidence
 from ..providers.sec_client import SecFactRecord
 from ..providers.sec_fact_policy import REPORTING_CURRENCIES, PER_SHARE_UNITS
 
@@ -44,6 +44,22 @@ SECTOR_METRICS = {
     },
     "asset manager": {},
 }
+# Point-in-time balances of a business type: the latest period-end balance against the same
+# date a year earlier, from the same consolidated XBRL facts. They are shown only when the
+# balance date is a period end of the answer's own core comparisons, so no balance from a
+# different date is presented beside them. Credit quality (allowance, nonaccrual loans) needs
+# concept continuity checks not made here, so it stays an unverified part.
+SECTOR_BALANCE_METRICS = {
+    "bank": {
+        "deposits": ("Deposits",),
+        "net loans (financing receivables, net of allowance)":
+            ("FinancingReceivableExcludingAccruedInterestAfterAllowanceForCreditLoss",),
+    },
+}
+BANK_BALANCE_GAP_NAMES = {"deposits": "deposits",
+                          "net loans (financing receivables, net of allowance)": "loan growth"}
+BALANCE_LIMITATION = ("Balance-sheet comparisons are reported totals at two dates; acquisitions, divestitures "
+                      "and reclassifications between the dates are not adjusted for.")
 SECTOR_SIGNATURES = {
     "bank": ("provision for credit losses", "noninterest income"),
     "insurer": ("premiums earned", "policyholder benefits and claims"),
@@ -206,7 +222,7 @@ def _risk_monitoring_inference(value, reference_id):
 
 
 def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
-             expected_unit: str | None = None):
+             expected_unit: str | None = None, instant: bool = False):
     """Recheck both facts and the displayed summary with the existing producer."""
     # Explicit scenario bridges reconstruct one exact named per-share concept.
     # No mixed basic/diluted family; ordinary foundation callers retain money.
@@ -266,10 +282,10 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
                 end=claim["period_end"], filed=ref["published_at"], form=claim["source"],
                 accession=match[2], filing_url=ref["url"],
             ))
-        rebuilt = comparable_metric_evidence(records, ticker=ticker, expected_cik=cik,
-                                             concepts=concepts,
-                                             metric_name=financial_metric_label(name, records[0].concept),
-                                             unit=records[0].unit)
+        builder = comparable_instant_metric_evidence if instant else comparable_metric_evidence
+        rebuilt = builder(records, ticker=ticker, expected_cik=cik, concepts=concepts,
+                          metric_name=financial_metric_label(name, records[0].concept),
+                          unit=records[0].unit)
         if (rebuilt is None or rebuilt.verified_claims != claims
                 or rebuilt.summary != item.summary or rebuilt.url != item.url
                 or rebuilt.timestamp != item.timestamp
@@ -416,16 +432,49 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         item, rebuilt, ref = qualified[0]
         rows.append({"claim": rebuilt.summary, "reference_id": ref, "claim_kind": "sector_financial_comparison"})
         selected.append(item)
+    surfaced_balances = set()
+    core_ends = {end for _, end in core_periods}
+    for name, concepts in SECTOR_BALANCE_METRICS.get(sector, {}).items():
+        qualified = []
+        for index, item in enumerate(items, 1):
+            rebuilt = _rebuild(item, ticker=ticker, cik=expected_cik, name=name, concepts=concepts, instant=True)
+            if (rebuilt is None or item.reporting_period_start is not None
+                    or item.reporting_period_end not in core_ends):
+                continue
+            ref = f"E{index}"
+            if references is not None:
+                ref = next((r.get("id") for r in references
+                    if r.get("title") == item.title.strip()[:300]
+                    and r.get("source") == item.source.strip()[:120]
+                    and r.get("url") == item.url and r.get("published_at") == item.timestamp), None)
+                if not re.fullmatch(r"E[1-9]\d*", str(ref or "")):
+                    continue
+            qualified.append((item, rebuilt, ref))
+        # Anything short of one unambiguous, aligned pair stays an unverified part.
+        if not qualified or len({repr(row[1].verified_claims) for row in qualified}) != 1:
+            continue
+        item, rebuilt, ref = qualified[0]
+        rows.append({"claim": rebuilt.summary, "reference_id": ref, "claim_kind": "sector_financial_comparison"})
+        selected.append(item)
+        surfaced_balances.add(name)
     if sector:
         missing = [name for name in missing if name not in SECTOR_NOT_APPLICABLE.get(sector, ())]
-        missing.extend(SECTOR_GAPS[sector])
+        if sector == "bank" and surfaced_balances:
+            parts = [label for name, label in BANK_BALANCE_GAP_NAMES.items() if name not in surfaced_balances]
+            parts.append("credit quality")
+            missing.append(", ".join(parts[:-1]) + " and " + parts[-1] if len(parts) > 1 else parts[0])
+        else:
+            missing.extend(SECTOR_GAPS[sector])
     elif not issuer_sector_known(expected_cik):
         missing.append(SECTOR_UNKNOWN_GAP)
-    periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected}
+    periods = {(item.reporting_period_start, item.reporting_period_end) for item in selected
+                if item.reporting_period_start is not None}
     limitation = ("These metrics cover different reporting durations or end dates. Evaluate each "
                   "against its own comparable prior-year period; they do not establish a common-period "
                   "margin, cash-conversion ratio or causal relationship." if len(periods) > 1 else
                   "The observations share a reporting period. No margin or cash-conversion ratio has been calculated here.")
+    if surfaced_balances:
+        limitation += " " + BALANCE_LIMITATION
     supporting = [f"{row['metric']} [{row['reference_ids'][0]}]" for row in interpretations if row["signal"] == "supporting"]
     counter = [f"{row['metric']} [{row['reference_ids'][0]}]" for row in interpretations if row["signal"] == "counter_evidence"]
     hypothesis = ("Positive, rising reported comparisons: " +
@@ -464,7 +513,9 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     from .annual_cash_flow_context import bound_annual_cash_flow_context
     from .cash_reconciliation_evidence import bound_cash_reconciliation
     from .current_period_explanation import bound_current_period_explanation
+    from .going_concern_disclosure import bound_going_concern
     period_explanations = []
+    going_concern = []
     disclosures = []
     risk_interpretations = []
     risk_financial_links = []
@@ -476,7 +527,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
               "issuer_segment_financial_context": 0, "issuer_segment_product_context": 0, "issuer_organisation_activity_context": 0,
               "issuer_deposit_impairment_context": 0, "issuer_segment_revenue_policy": 0,
               "issuer_annual_cash_flow_context": 0, "issuer_cash_reconciliation": 0,
-              "issuer_current_period_explanation": 0}
+              "issuer_current_period_explanation": 0, "issuer_going_concern_disclosure": 0}
     current_risks = 0
     business_descriptions = []
     seen = set()
@@ -492,9 +543,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                  or bound_annual_cash_flow_context(item,ticker=ticker,cik=expected_cik)
                  or bound_cash_reconciliation(item,ticker=ticker,cik=expected_cik)
                  or bound_current_period_explanation(item, ticker=ticker, cik=expected_cik)
+                 or bound_going_concern(item, ticker=ticker, cik=expected_cik)
                  or bound_thesis_risk(item, ticker=ticker))
         if (not value or value["quote"] in seen or counts[value["claim_kind"]] >=
-                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation', 'issuer_current_period_explanation'} else 2)):
+                (1 if value['claim_kind'] in {'issuer_order_backlog_context', 'issuer_segment_financial_context', 'issuer_segment_product_context', 'issuer_organisation_activity_context', 'issuer_deposit_impairment_context', 'issuer_annual_cash_flow_context', 'issuer_cash_reconciliation', 'issuer_current_period_explanation', 'issuer_going_concern_disclosure'} else 2)):
             continue
         if value['claim_kind'] == 'issuer_current_period_explanation':
             # Only the period a verified comparison describes: revenue, or for
@@ -546,6 +598,10 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
         if value['claim_kind'] == 'issuer_current_period_explanation':
             row['period_explanation'] = value
             period_explanations.append((value, reference_id))
+        if value['claim_kind'] == 'issuer_going_concern_disclosure':
+            row['document_ref'] = value['document_ref']
+            row['going_concern'] = {k: value[k] for k in ('conclusion', 'period_end', 'document_type')}
+            going_concern.append(reference_id)
         if value['claim_kind'] == 'issuer_cash_reconciliation':
             row['cash_reconciliation'] = value['bridge']
             row['row_references'] = value['row_references']
@@ -610,7 +666,7 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
     # These complete statements appear once in the opening. Retain all structured
     # rows, selected evidence and original reference IDs for downstream consumers.
     remaining_disclosures = [row for row in disclosures if row['claim_kind'] not in OVERVIEW_CLAIM_KINDS
-                             and row['claim_kind'] != 'issuer_current_period_explanation']
+                             and row['claim_kind'] not in {'issuer_current_period_explanation', 'issuer_going_concern_disclosure'}]
     if period_explanations:
         # What changed in the latest period goes directly after the opening
         # observation, ahead of the itemised figures.
@@ -623,6 +679,12 @@ def build_financial_foundation(ticker: str, items: list, references: list[dict] 
                         + "\n".join(f"- {line} [{reference_id}]" for line in criteria)
                         + "\nThese restate the filing's own historical figures and management's attributions; "
                           "they are not forecasts, valuation thresholds or investment criteria.")
+        answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
+    if going_concern:
+        # The issuer's own going-concern conclusion is stated first, before any figure or sampled excerpt.
+        gc_row = next(row for row in disclosures if row['claim_kind'] == 'issuer_going_concern_disclosure')
+        section = ('\n\nGoing-concern disclosure in the latest periodic filing\n'
+                   + f"{gc_row['claim']} [{going_concern[0]}]")
         answer = answer[:len(hypothesis)] + section + answer[len(hypothesis):]
     if remaining_disclosures:
         context_heading = ("Official business, competition and sampled risk context"

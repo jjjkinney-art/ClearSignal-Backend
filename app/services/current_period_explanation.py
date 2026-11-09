@@ -642,6 +642,19 @@ def bind_statement(sentence, metrics):
     return None
 
 
+# A chart or table lead-in run into the statement it introduces ("The following chart
+# provides a reconciliation of net income from the quarter ended September 30, 2025 to the
+# quarter ended September 30, 2026 (dollars in thousands): Net income for the quarter ...").
+# The statement is a real sentence of the filing; the lead-in only introduces the chart.
+# A lead-in that scopes or qualifies the statement (a segment, a non-GAAP or adjusted or
+# constant-currency measure) is never dropped.
+_CHART_LEAD_IN = re.compile(
+    r'(?:The )?(?:following|above|below) (?:chart|table|graph|schedule)\b[^:.;]{0,240}:\s*(?=[A-Z])')
+_LEAD_IN_QUALIFIER = re.compile(
+    r'non-gaap|adjusted|pro forma|constant[- ]currency|organic|excluding|excludes|segment|region|brand|division|'
+    r'product|geograph', re.I)
+
+
 def clause_starts(sentence):
     """Where a quotable statement may begin: the sentence itself, or, after table
     text with no full stop, a capitalised metric phrase close enough to the end."""
@@ -654,6 +667,10 @@ def clause_starts(sentence):
         prefix, rest = sentence[:match.start()], sentence[match.start():]
         if _is_heading(prefix) and (rest.lower().startswith(prefix.strip().lower() + ' ') or _OPENER.match(rest)):
             trimmed = match.start()  # the latest break wins: the whole heading is removed
+    for origin in ((trimmed,) if trimmed is not None else ()) + (0,):
+        lead_in = _CHART_LEAD_IN.match(sentence, origin)
+        if lead_in and not _LEAD_IN_QUALIFIER.search(lead_in.group(0)):
+            yield lead_in.end()
     if trimmed is not None:
         yield trimmed
     # A labelled bullet list run into the sentence ("Financial highlights compared

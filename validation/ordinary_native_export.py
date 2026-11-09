@@ -30,7 +30,7 @@ ANSWER_CONTENT_KINDS = ('source_bound_claims', DISCLOSURES_ONLY, 'insufficient_e
                         'no_answer', 'not_run', 'unclassified')
 # Kept equal to app.services.disclosure_only_answer.DISCLOSURE_ONLY_KINDS by a test.
 DISCLOSURE_ONLY_CLAIM_KINDS = frozenset({'issuer_business_description', 'issuer_competition_description',
-                                         'issuer_disclosed_risk'})
+                                         'issuer_disclosed_risk', 'issuer_going_concern_disclosure'})
 
 
 def content_coverage(tally, denominator):
