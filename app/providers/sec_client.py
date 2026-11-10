@@ -152,8 +152,13 @@ def get_company_fact_records_for_concepts(
 
 def get_company_fact_records_for_concept_units(
     cik: str, *, concept_units: tuple[tuple[str, str], ...], user_agent: str = "",
+    capture: Optional[dict] = None,
 ) -> list[SecFactRecord]:
-    """Fetch explicit concept/unit pairs in one Company Facts request."""
+    """Fetch explicit concept/unit pairs in one Company Facts request.
+
+    ``capture`` (default None) receives the parsed response under ``"data"`` so a caller that needs more
+    of the same document can read it without a second request. Nothing else changes.
+    """
     if (not cik or not cik.isdigit() or not concept_units
             or not all(concept and unit for concept, unit in concept_units)):
         return []
@@ -169,6 +174,8 @@ def get_company_fact_records_for_concept_units(
             note_facts_rejected(cik, "cik_mismatch")
             return []
         _note_fact_taxonomies(cik, data)
+        if capture is not None:
+            capture["data"] = data
         records = [
             record
             for concept, unit in dict.fromkeys(concept_units)
@@ -187,41 +194,29 @@ def get_company_fact_records_for_concept_units(
 AS_REPORTED_FORMS = ("10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A")
 
 
-def get_as_reported_fact_records(
-    cik: str, *, specs: tuple[tuple[str, str], ...], user_agent: str = "",
+def as_reported_records_from_facts(
+    data: dict, cik: str, *, specs: tuple[tuple[str, str], ...],
 ) -> list[SecFactRecord]:
-    """Annual observations of explicit (taxonomy, concept) pairs in every currency unit they report.
+    """Annual observations of explicit (taxonomy, concept) pairs, in every currency unit they report.
 
-    One Company Facts request (flag-gated callers only). Units are kept exactly as reported; nothing
-    here converts a currency. Failures return [] and are noted for outcome records, like the USD path.
+    Pure: it parses a Company Facts response the caller already holds and never makes a request. Units are
+    kept exactly as reported; nothing here converts a currency.
     """
-    if not cik or not cik.isdigit() or not specs:
+    if not isinstance(data, dict) or not cik or not cik.isdigit() or not specs:
         return []
-    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik.zfill(10)}.json"
-    try:
-        response = requests.get(url, headers={"User-Agent": user_agent or "ai-analyst-bot/0.1"}, timeout=10)
-        response.raise_for_status()
-        data = response.json()
-        reported_cik = str(data.get("cik", "")) if isinstance(data, dict) else ""
-        if not reported_cik.isdigit() or int(reported_cik) != int(cik):
-            from ..services.evidence_outcomes import note_facts_rejected
-            note_facts_rejected(cik, "cik_mismatch")
-            return []
-        facts = data.get("facts") if isinstance(data.get("facts"), dict) else {}
-        records = []
-        for taxonomy, concept in dict.fromkeys(specs):
-            entry = (facts.get(taxonomy) or {}).get(concept) if isinstance(facts.get(taxonomy), dict) else None
-            units = entry.get("units") if isinstance(entry, dict) and isinstance(entry.get("units"), dict) else {}
-            for unit in units:
-                if re.fullmatch(r"[A-Z]{3}", str(unit)):
-                    records.extend(parse_company_fact_records(
-                        data, concept=concept, unit=unit, taxonomy=taxonomy, forms=AS_REPORTED_FORMS))
-        return records
-    except Exception as exc:
-        logger.warning("SEC as-reported fact retrieval failed for CIK %s: %s", cik, exc)
-        from ..services.evidence_outcomes import note_facts_failure
-        note_facts_failure(cik, exc)
+    reported_cik = str(data.get("cik", ""))
+    if not reported_cik.isdigit() or int(reported_cik) != int(cik):
         return []
+    facts = data.get("facts") if isinstance(data.get("facts"), dict) else {}
+    records = []
+    for taxonomy, concept in dict.fromkeys(specs):
+        entry = (facts.get(taxonomy) or {}).get(concept) if isinstance(facts.get(taxonomy), dict) else None
+        units = entry.get("units") if isinstance(entry, dict) and isinstance(entry.get("units"), dict) else {}
+        for unit in units:
+            if re.fullmatch(r"[A-Z]{3}", str(unit)):
+                records.extend(parse_company_fact_records(
+                    data, concept=concept, unit=unit, taxonomy=taxonomy, forms=AS_REPORTED_FORMS))
+    return records
 
 
 def _filing_link(entry: ElementTree.Element) -> Optional[str]:

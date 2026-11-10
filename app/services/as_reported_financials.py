@@ -1,8 +1,9 @@
 """Annual comparisons from SEC company facts reported under IFRS or in a currency other than USD/EUR.
 
 Default off (``settings.as_reported_financials_enabled``). It runs only when the existing US-GAAP
-USD/EUR path produced no comparison, and it uses company facts only: one Company Facts request made
-by the same caller, no other source.
+USD/EUR path produced no comparison, and it uses company facts only: **the Company Facts response that
+path already fetched for this request** (no additional request, no other source). It is not used for
+decision-threshold questions.
 
 Rules, each one withholding (with a stated reason) rather than guessing:
 * Amounts keep the unit the filing reported. **Nothing is converted**, and a figure in one currency is never
@@ -268,10 +269,13 @@ def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str
     return evidence, withheld
 
 
-def fetch_as_reported_evidence(ticker: str, cik: str, *, boundary: Optional[date] = None, user_agent: str = ""):
-    """Read the issuer's annual as-reported facts and build comparisons. (evidence, withheld)."""
-    from ..providers.sec_client import get_as_reported_fact_records
-    records = get_as_reported_fact_records(cik, specs=requested_specs(), user_agent=user_agent)
+def evidence_from_response(data: Optional[dict], ticker: str, cik: str, *, boundary: Optional[date] = None):
+    """Build annual comparisons from the Company Facts response the request already holds. (evidence, withheld).
+
+    Makes no request. With no response (the existing fetch failed or was not made) it returns nothing.
+    """
+    from ..providers.sec_client import as_reported_records_from_facts
+    records = as_reported_records_from_facts(data, cik, specs=requested_specs()) if data else []
     if boundary is not None:
         records = [r for r in records if date.fromisoformat(r.filed) <= boundary and date.fromisoformat(r.end) <= boundary]
     if not records:

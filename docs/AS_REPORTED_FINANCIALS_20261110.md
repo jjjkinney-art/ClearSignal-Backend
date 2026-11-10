@@ -7,8 +7,8 @@ remedy router. Offline work on retained SEC facts only: no live retrieval, provi
 ## What it does
 
 `settings.as_reported_financials_enabled` (default `False`). With it off, nothing changes. With it on, when the existing
-US-GAAP USD/EUR path found no comparison for an issuer, the sec_metrics task reads the same Company Facts document once more
-and builds **annual** comparisons for revenue, operating income, net income and operating cash flow from:
+US-GAAP USD/EUR path found no comparison for an issuer, the sec_metrics task builds **annual** comparisons from the Company
+Facts response that path already fetched (handed over through an optional `capture` argument; **no additional request**) for revenue, operating income, net income and operating cash flow from:
 
 - `ifrs-full` facts (Revenue, ProfitLossFromOperatingActivities, ProfitLoss, CashFlowsFromUsedInOperatingActivities), or
 - `us-gaap` facts in a currency other than USD or EUR (for example CAD),
@@ -41,12 +41,11 @@ gained the reason `as_reported_comparison_withheld`.
 
 ## Consequences to know
 
-- **One extra request in production** (flag on): issuers the existing path cannot read cost a second GET of the same
-  Company Facts URL. Issuers it serves are not touched. The flag stays off in every pilot profile.
-- **Threshold answers change too.** The existing monitoring builder accepts the new comparisons, so with the flag on Fortis
-  and Marex threshold questions now show historical comparison baselines, and Fortis an operating-margin baseline (29.3%, CAD
-  operating income over CAD revenue, same period). Valuation boundaries are still withheld. This follows from reusing the existing
-  builders and is flagged for your decision.
+- **No additional request.** Enabling the flag makes the same single Company Facts request as before (tests assert identical
+  request counts with the flag on and off, for BP, Marex, Betterware, Fortis and a US-GAAP issuer). If the existing request failed
+  there is nothing to read and no retry. The flag stays off in every pilot profile.
+- **Decision-threshold answers are unchanged** with the flag on: the path is not used for those questions, so no
+  as-reported comparison, margin or baseline appears there.
 - **Stale retained data.** Betterware's retained facts end at FY2024, so its comparisons are built but not shown; the answer and
   outcome record say so.
 - The legacy sentence "this version does not read IFRS" is replaced, flag on, by one that says the data was read as reported
@@ -63,7 +62,7 @@ gained the reason `as_reported_comparison_withheld`.
 
 Matching means concept, unit, period, accession, form, filed date and value equal a retained SEC observation. Flag off, all
 48 retained cases are identical to the previous baseline apart from clock text; with the flag on only the four targeted issuers'
-answers change. Full before and after answers: `offline-review/AS_REPORTED_BEFORE_AFTER_20261110.md`.
+thesis answers change (thresholds do not). Full before and after answers: `offline-review/AS_REPORTED_BEFORE_AFTER_20261110.md`.
 
 ## Limits
 

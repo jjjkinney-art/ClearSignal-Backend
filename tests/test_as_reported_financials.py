@@ -39,21 +39,24 @@ class Reply:
 
 @pytest.fixture
 def facts_get(monkeypatch):
+    """The builder is pure over a response the request already holds: any request here is a failure."""
     calls = []
 
     def install(key):
         def get(*args, **kwargs):
             calls.append(args)
-            return Reply(FACTS[key])
+            raise AssertionError('the as-reported builder must not make a request')
         monkeypatch.setattr(sec_client.requests, 'get', get)
         return calls
     return install
 
 
 def build(key, facts_get):
-    facts_get(key)
+    calls = facts_get(key)
     cik = str(FACTS[key]['cik'])
-    return ar.fetch_as_reported_evidence(TICKER[key], cik)
+    out = ar.evidence_from_response(FACTS[key], TICKER[key], cik)
+    assert calls == []
+    return out
 
 
 def observation(key, taxonomy, concept, unit, end, value, accn):
@@ -235,7 +238,7 @@ def test_alias_concepts_are_never_joined():
 def test_the_as_of_boundary_excludes_later_filings(facts_get):
     facts_get('BP')
     cik = str(FACTS['BP']['cik'])
-    evidence, _ = ar.fetch_as_reported_evidence('BP', cik, boundary=date(2025, 6, 30))
+    evidence, _ = ar.evidence_from_response(FACTS['BP'], 'BP', cik, boundary=date(2025, 6, 30))
     assert all(c['period_end'] <= '2024-12-31' for item in evidence for c in item.verified_claims)
 
 
@@ -341,12 +344,52 @@ def test_flag_off_the_service_returns_nothing_for_these_issuers_and_makes_one_re
     assert len(calls) == 1
 
 
-def test_flag_on_the_service_returns_the_comparisons_with_one_extra_request(service_get, monkeypatch):
+@pytest.mark.parametrize('key,ticker,count', [('BP', 'BP', 4), ('MRX', 'MRX', 3), ('BWMX', 'BWMX', 3), ('FORFF', 'FTS', 4)])
+def test_enabling_the_flag_makes_no_additional_request_and_returns_the_comparisons(service_get, monkeypatch, key, ticker, count):
+    question = f'What is the investment thesis for {ticker}, what supports it, and what could invalidate it?'
+    monkeypatch.setattr(settings, 'as_reported_financials_enabled', False, raising=False)
+    off_calls = service_get(key, ticker)
+    off = service.fetch_verified_metric_evidence(ticker, question=question)
     monkeypatch.setattr(settings, 'as_reported_financials_enabled', True, raising=False)
-    calls = service_get('BP', 'BP')
-    items = service.fetch_verified_metric_evidence('BP', question='What is the investment thesis for BP?')
-    assert len(items) == 4 and len(calls) == 2
-    assert reconcile('BP', items) == 8
+    on_calls = service_get(key, ticker)
+    on = service.fetch_verified_metric_evidence(ticker, question=question)
+    assert off == [] and len(on) == count
+    assert len(off_calls) == len(on_calls) == 1  # the request count is identical with the flag on and off
+    assert reconcile(key, on) == 2 * count
+
+
+def test_a_failed_existing_request_gives_nothing_and_no_retry_for_the_as_reported_path(service_get, monkeypatch):
+    monkeypatch.setattr(settings, 'as_reported_financials_enabled', True, raising=False)
+    service_get('BP', 'BP')
+    attempts = []
+
+    def failing(*a, **k):
+        attempts.append(a)
+        raise sec_client.requests.ConnectionError('x')
+    monkeypatch.setattr(sec_client.requests, 'get', failing)
+    notes = eo.OutcomeNotes()
+    items = eo.bind_outcome_notes(lambda: service.fetch_verified_metric_evidence(
+        'BP', question='What is the investment thesis for BP?'), notes, 'sec_metrics')()
+    assert items == [] and len(attempts) == 1
+    assert notes.facts_requests and notes.facts_requests[0]['ok'] is False and notes.as_reported_withheld == []
+
+
+def test_decision_threshold_questions_are_not_served_by_the_flag(service_get, monkeypatch):
+    threshold = ('Which valuation and operating assumptions would make {n} attractive or unattractive, and what '
+                 'numerical thresholds would change that view?')
+    from app.services.source_answer import is_decision_monitoring_request
+    for key, ticker in (('BP', 'BP'), ('MRX', 'MRX'), ('FORFF', 'FTS')):
+        question = threshold.format(n=ticker)
+        assert is_decision_monitoring_request(question)
+        monkeypatch.setattr(settings, 'as_reported_financials_enabled', False, raising=False)
+        calls = service_get(key, ticker)
+        off = service.fetch_verified_metric_evidence(ticker, question=question)
+        monkeypatch.setattr(settings, 'as_reported_financials_enabled', True, raising=False)
+        on_calls = service_get(key, ticker)
+        notes = eo.OutcomeNotes()
+        on = eo.bind_outcome_notes(lambda: service.fetch_verified_metric_evidence(ticker, question=question), notes, 'sec_metrics')()
+        assert on == off == [] and len(calls) == len(on_calls) == 1
+        assert notes.as_reported_withheld == [] and notes.as_reported_built == []
 
 
 def test_flag_on_does_not_touch_an_issuer_the_existing_path_already_serves(service_get, monkeypatch):
@@ -371,14 +414,6 @@ def test_flag_on_does_not_touch_an_issuer_the_existing_path_already_serves(servi
     finally:
         del FACTS['__usd__']
 
-
-def test_a_failed_second_request_is_noted_and_returns_nothing(service_get, monkeypatch):
-    monkeypatch.setattr(settings, 'as_reported_financials_enabled', True, raising=False)
-    service_get('BP', 'BP')
-    monkeypatch.setattr(sec_client.requests, 'get', lambda *a, **k: (_ for _ in ()).throw(sec_client.requests.ConnectionError('x')))
-    notes = eo.OutcomeNotes()
-    items = eo.bind_outcome_notes(lambda: service.fetch_verified_metric_evidence('BP', question='x'), notes, 'sec_metrics')()
-    assert items == [] and notes.facts_requests and notes.facts_requests[0]['ok'] is False
 
 
 # --- outcome records say what happened -------------------------------------------------------------
@@ -431,6 +466,21 @@ def test_us_gaap_parsing_defaults_are_unchanged():
     assert [(r.taxonomy, r.form) for r in rows] == [('us-gaap', '10-K')]
     both = sec_client.parse_company_fact_records(body, concept='Assets', unit='USD', forms=sec_client.AS_REPORTED_FORMS)
     assert [r.form for r in both] == ['10-K', '40-F']
+
+
+def test_the_client_helper_is_pure_and_the_capture_hook_changes_nothing(monkeypatch):
+    calls = []
+    monkeypatch.setattr(sec_client.requests, 'get', lambda *a, **k: calls.append(a))
+    rows = sec_client.as_reported_records_from_facts(FACTS['BP'], str(FACTS['BP']['cik']), specs=ar.requested_specs())
+    assert rows and calls == []
+    assert sec_client.as_reported_records_from_facts(FACTS['BP'], '999', specs=ar.requested_specs()) == []
+    assert sec_client.as_reported_records_from_facts({}, '1', specs=ar.requested_specs()) == []
+    monkeypatch.setattr(sec_client.requests, 'get', lambda *a, **k: Reply(FACTS['GALT'] if 'GALT' in FACTS else FACTS['BP']))
+    cik = str(FACTS['BP']['cik'])
+    plain = sec_client.get_company_fact_records_for_concept_units(cik, concept_units=(('Assets', 'USD'),))
+    held = {}
+    with_capture = sec_client.get_company_fact_records_for_concept_units(cik, concept_units=(('Assets', 'USD'),), capture=held)
+    assert plain == with_capture == [] and held['data']['cik'] == FACTS['BP']['cik']
 
 
 def test_no_cohort_6_issuer_and_no_conversion_anywhere_in_the_module():
