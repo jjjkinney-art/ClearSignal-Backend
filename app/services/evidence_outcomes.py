@@ -86,6 +86,7 @@ class OutcomeNotes:
         self.abandoned: set[str] = set()  # tasks the request stopped waiting for
         self.as_reported_withheld: list[dict] = []  # comparisons the as-reported slice declined, with why
         self.as_reported_built: list[dict] = []  # comparisons it built (title, period end) before admission
+        self.annual_filing_read: Optional[dict] = None  # a 20-F read through the annual filing path (form, currencies)
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -123,6 +124,11 @@ class OutcomeNotes:
             if not self._late(task):
                 self.as_reported_withheld.extend(dict(row) for row in rows)
                 self.as_reported_built.extend(dict(row) for row in built)
+
+    def add_annual_filing_read(self, row: dict, task: Optional[str] = None):
+        with self._lock:
+            if not self._late(task):
+                self.annual_filing_read = dict(row)
 
     def add_selected(self, task: str, form: str):
         with self._lock:
@@ -218,6 +224,10 @@ def note_facts_received(cik: str, data: dict, concept_units, records) -> None:
 
 def note_as_reported_withheld(rows, built=()) -> None:
     _safe(lambda notes: notes.add_as_reported_withheld(rows or [], _task.get(), built or ()))
+
+
+def note_annual_filing_read(form: str, currencies) -> None:
+    _safe(lambda notes: notes.add_annual_filing_read({"form": form, "currencies": sorted(currencies)}, _task.get()))
 
 
 def note_filings_listed(forms) -> None:
@@ -418,6 +428,19 @@ def _filing_state(need, source_answer, notes):
                            detail=dict(failure),
                            user_text="SEC's filing list could not be retrieved, so no filing was read for this part. "
                                      "That is a failed request, not evidence that no filing exists.")
+        if task == "filing_metrics" and notes.annual_filing_read:
+            read = notes.annual_filing_read
+            if any(c != "USD" for c in read["currencies"]):
+                return _record(need, "unsupported", "non_usd_reporting", tried=True, source_family=family,
+                               detail={"form": read["form"], "currencies": read["currencies"]},
+                               user_text=f"A Form {read['form']} was read, and it reports in {', '.join(read['currencies'])}. "
+                                         "Management's stated explanations are read only from US dollar filings, so none "
+                                         "was attempted for this part.")
+            return _record(need, "unsupported", "selection_rules_not_met", tried=True, source_family=family,
+                           detail={"form": read["form"]},
+                           user_text=f"A Form {read['form']} was read and no management statement met this version's "
+                                     "selection rules for this part. This does not establish that the filing has no "
+                                     "such disclosure.")
         if task in notes.filing_selected and task in notes.abandoned:
             return _record(need, "failed", "time_limit", tried=True, source_family=family,
                            detail={"form": notes.filing_selected[task]},

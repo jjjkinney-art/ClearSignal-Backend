@@ -103,8 +103,41 @@ def _comparable(current: SecFactRecord, prior: SecFactRecord) -> bool:
     return 350 <= gap <= 380 and abs(_duration(current) - _duration(prior)) <= 7
 
 
+def _proof_taxonomy(proof) -> Optional[str]:
+    """The taxonomy the filing's own markup names for the fact (its concept namespace), never a caller's word."""
+    from ..providers.sec_inline_facts import _TAXONOMIES
+    namespace = proof.get("concept_namespace") if isinstance(proof, dict) else None
+    return next((name for name in BASES if isinstance(namespace, str) and _TAXONOMIES[name].fullmatch(namespace)), None)
+
+
+def _bind_inline(record: SecFactRecord, *, ticker: str, expected_cik: str) -> Optional[dict]:
+    """A claim for a fact read from the filing's own inline XBRL, bound to its exact location in that document."""
+    from ..integrity.sec_inline_binding import inline_document_reference
+    if _proof_taxonomy(record.inline_binding) != record.taxonomy:
+        return None
+    reference = inline_document_reference(record, expected_cik=expected_cik, taxonomies=tuple(BASES), currencies="*")
+    if (reference is None or record.form not in AS_REPORTED_FORMS or isinstance(record.value, bool)
+            or record.concept not in {c for by in CORE.values() for cs in by.values() for c in cs}):
+        return None
+    claim = QuantitativeClaim(
+        value_text=_display(record.value, record.unit), provenance=Provenance.REPORTED, raw_value=record.value,
+        unit=record.unit, ticker=ticker, metric=f"{record.taxonomy}:{record.concept}", as_of=record.end,
+        source=record.form, document_ref=reference)
+    output = claim.to_dict()
+    output.update({
+        "period_start": record.start, "period_end": record.end, "period": f"FY{record.end[:4]}",
+        "scope": "consolidated", "currency": record.unit, "label": record.label,
+        "taxonomy": record.taxonomy, "reporting_basis": BASES[record.taxonomy],
+        # Additive: the exact source location of the fact inside the filing document.
+        "inline_binding": dict(record.inline_binding),
+    })
+    return output
+
+
 def _bind(record: SecFactRecord, *, ticker: str, expected_cik: str) -> Optional[dict]:
     """A producer-bound claim for one fact, or None unless every identity agrees."""
+    if record.inline_binding is not None:
+        return _bind_inline(record, ticker=ticker, expected_cik=expected_cik)
     if (record.taxonomy not in BASES or not re.fullmatch(r"[A-Z]{3}", record.unit or "") or not record.concept
             or record.form not in AS_REPORTED_FORMS or not expected_cik.isdigit() or not record.cik.isdigit()
             or int(expected_cik) != int(record.cik) or not _ACCESSION.fullmatch(record.accession or "")
@@ -188,6 +221,21 @@ def rebuild_as_reported(item, *, ticker: str, cik: str, name: str) -> Optional[R
         records = []
         for claim in claims:
             ref = claim["document_ref"]
+            if claim.get("inline_binding") is not None:
+                proof = claim["inline_binding"]
+                if (_proof_taxonomy(proof) != claim.get("taxonomy") or claim["ticker"] != ticker or claim["provenance"] != "reported" or claim["scope"] != "consolidated"
+                        or claim.get("taxonomy") not in BASES or claim.get("reporting_basis") != BASES[claim["taxonomy"]]
+                        or claim["metric"] != f"{claim['taxonomy']}:{proof['concept']}" or claim["currency"] != claim["unit"]
+                        or proof["concept"] not in CORE[name].get(claim["taxonomy"], ())
+                        or proof["unit"] != claim["unit"] or proof["start"] != claim["period_start"]
+                        or proof["end"] != claim["period_end"]):
+                    return None
+                records.append(SecFactRecord(
+                    cik=str(int(cik)), taxonomy=claim["taxonomy"], concept=proof["concept"], label=proof["concept"],
+                    unit=claim["unit"], value=claim["raw_value"], start=claim["period_start"], end=claim["period_end"],
+                    filed=ref["published_at"], form=claim["source"], accession=proof["accession"],
+                    filing_url=ref["url"], inline_binding=proof))
+                continue
             match = _REFERENCE.fullmatch(ref["reference_id"])
             if (not match or int(match[1]) != int(cik) or claim["ticker"] != ticker or claim["provenance"] != "reported"
                     or claim["scope"] != "consolidated" or ref["provider"] != "SEC EDGAR"
@@ -275,6 +323,16 @@ def build_comparisons(records: Sequence[SecFactRecord], *, ticker: str, cik: str
         else:
             withheld.append({"metric": name, "reason": reasons[0][1] if reasons else "concept_not_reported",
                              "concepts": [c for c, _ in reasons] or list(by_tax.get(taxonomy, ())),
+                             "basis": BASES[taxonomy], "currency": currency})
+    # One period for the whole answer: a measure whose latest valid annual period is older than another's is
+    # withheld rather than shown beside it as if the periods matched.
+    if evidence:
+        newest = max(item.reporting_period_end or "" for item in evidence)
+        for item in [i for i in evidence if (i.reporting_period_end or "") != newest]:
+            evidence.remove(item)
+            name = next(n for n, by in CORE.items() if item.verified_claims[0]["metric"].partition(":")[2] in by.get(taxonomy, ()))
+            withheld.append({"metric": name, "reason": "older_period_than_other_measures",
+                             "concepts": [item.verified_claims[0]["metric"].partition(":")[2]],
                              "basis": BASES[taxonomy], "currency": currency})
     return evidence, withheld
 

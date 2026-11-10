@@ -447,6 +447,9 @@ def fetch_verified_metric_evidence(
                 item = None
         if item is not None:
             evidence.append(item)
+    if _as_reported:
+        from .annual_filing_facts import note_company_facts
+        note_company_facts(_response.get("data"))
     if not evidence and _as_reported and not is_decision_monitoring_request(question or ""):
         # IFRS or non-USD/EUR company facts, as reported (default off): annual comparisons only, no conversion,
         # from the response above (no further request), and never for decision-threshold questions.

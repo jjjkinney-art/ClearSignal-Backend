@@ -544,11 +544,14 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
             return []
         stats.update(stage="annual_document", status="document_unavailable")
         sec_provider.note_filing_selected('thesis_disclosures', filing.document_type)
+        from . import annual_filing_facts
+        _filing_facts = (annual_filing_facts.enabled() and filing.document_type == "20-F" and relationship is None)
         document = fetch_public_document(filing.url, user_agent=user_agent, publisher="SEC EDGAR",
             published_at=filing.timestamp, document_type=filing.document_type,
             source_type="regulatory_filing", source_tier="primary", sec_periodic_limits=True,
             preserve_sec_business=True, extract_tables=False,
-            segment_fact_cik=cik if relationship is None else None, checkpoint=checkpoint)
+            segment_fact_cik=cik if relationship is None else None, checkpoint=checkpoint,
+            **({**annual_filing_facts.fetch_options(), "inline_fact_cik": cik} if _filing_facts else {}))
         diagnostics = {}
         stats.update(stage="extraction", status="extraction_complete")
         business = (extract_business_descriptions(document, ticker=ticker, cik=cik, diagnostics=diagnostics)
@@ -610,7 +613,16 @@ def _fetch_thesis_disclosures(ticker, *, question, user_agent, stats):
                                        if business_window else frozenset())
         stats["risk_selection"] = {"selected": len(risks), "rejected": sorted(set(rejected))}
         checkpoint("risks_selected")
-        return (quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations + impairments + policies + cash_context + cash_bridge
+        _filing_items = []
+        if _filing_facts:
+            _comparisons, _explanations, _withheld = annual_filing_facts.extra_items(document, ticker, cik)
+            _filing_items = _comparisons + _explanations
+            from .evidence_outcomes import note_annual_filing_read, note_as_reported_withheld
+            note_as_reported_withheld(_withheld, [
+                {"title": item.title, "period_end": item.reporting_period_end} for item in _comparisons])
+            note_annual_filing_read(document.document_type, {row["unit"] for row in document.inline_xbrl_facts})
+        return ((quarterly_business + business)[:2] + competition + risks + orders + segments + products + organisations
+                + impairments + policies + cash_context + cash_bridge + _filing_items)
     except Exception as exc:
         sec_provider.note_filing_read_failure(
             'thesis_disclosures', too_large=getattr(exc, 'size_limit_bytes', None) is not None)

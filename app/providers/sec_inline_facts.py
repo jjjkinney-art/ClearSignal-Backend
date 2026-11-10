@@ -16,6 +16,17 @@ _SRT = re.compile(r'https?://fasb\.org/srt/20\d{2}(?:-\d{2}-\d{2})?\Z')
 USD = 'http://www.xbrl.org/2003/iso4217'
 _ID = re.compile(r'[A-Za-z_][A-Za-z0-9_.-]{0,199}\Z')
 _GAAP = re.compile(r'https?://(?:fasb\.org|xbrl\.us)/us-gaap/20\d{2}(?:-\d{2}-\d{2})?\Z')
+_IFRS = re.compile(r'https?://xbrl\.ifrs\.org/taxonomy/20\d{2}-\d{2}-\d{2}/ifrs-full\Z')
+_TAXONOMIES = {'us-gaap': _GAAP, 'ifrs-full': _IFRS}
+_CURRENCY = re.compile(r'[A-Z]{3}\Z')
+
+
+def _currency_ok(unit, currencies):
+    return unit in currencies if currencies != '*' else bool(_CURRENCY.fullmatch(unit or ''))
+
+
+def _namespace_ok(namespace, taxonomies):
+    return any(_TAXONOMIES[name].fullmatch(namespace) for name in taxonomies)
 _TRANSFORMS = {
     'http://www.xbrl.org/inlineXBRL/transformation/2011-07-31': {'numcommadot'},
     'http://www.xbrl.org/inlineXBRL/transformation/2015-02-26': {'numdotdecimal'},
@@ -24,11 +35,15 @@ _TRANSFORMS = {
 }
 
 
-def validated_observation(value, *, cik, concepts):
-    """Recheck the producer's source observation before binding or rendering."""
+def validated_observation(value, *, cik, concepts, taxonomies=('us-gaap',), currencies=('USD',)):
+    """Recheck the producer's source observation before binding or rendering.
+
+    ``taxonomies`` and ``currencies`` default to the US-GAAP/USD behaviour; a caller that opts in (the annual
+    filing as-reported slice) may also admit ifrs-full facts and other ISO currency units, kept as reported.
+    """
     try:
-        if (not isinstance(value, dict) or not _GAAP.fullmatch(value['concept_namespace'])
-                or value['concept'] not in concepts or value['unit'] != 'USD'
+        if (not isinstance(value, dict) or not _namespace_ok(value['concept_namespace'], taxonomies)
+                or value['concept'] not in concepts or not _currency_ok(value['unit'], currencies)
                 or value['unit_namespace'] != USD
                 or value['entity_scheme'] != 'http://www.sec.gov/CIK'
                 or not re.fullmatch(r'[0-9]{1,10}', value['entity_identifier'])
@@ -97,8 +112,10 @@ class _InlineTarget:
     There is no document tree or namespace index for unrelated display markup.
     All IDs are checked through EOF so a later duplicate still rejects a fact.
     """
-    def __init__(self, concepts, *, product_members=False):
+    def __init__(self, concepts, *, product_members=False, taxonomies=('us-gaap',), currencies=('USD',)):
         self.concepts = frozenset(concepts)
+        self.taxonomies = tuple(taxonomies)
+        self.currencies = currencies if currencies == '*' else tuple(currencies)
         # Opt-in: contexts with exactly one srt:ProductOrServiceAxis member
         # (a disaggregation of the concept by product or service). Off by
         # default, so ordinary callers never see dimensional facts.
@@ -219,7 +236,7 @@ class _InlineTarget:
                 return
             namespace, unit = _qname(self.resource_namespaces.get(id(measure), {}),
                                      (measure.text or '').strip())
-            if unit == 'USD' and namespace == USD:
+            if _currency_ok(unit, self.currencies) and namespace == USD:
                 self.units[key] = dict(unit_namespace=namespace, unit=unit)
 
     def _product_member(self, segment):
@@ -241,7 +258,7 @@ class _InlineTarget:
         fact = frame['element']
         attrs = fact.attrib
         namespace, concept = _qname(frame['scope'], attrs.get('name'))
-        if (concept not in self.concepts or not _GAAP.fullmatch(namespace)
+        if (concept not in self.concepts or not _namespace_ok(namespace, self.taxonomies)
                 or frame['children'] or frame['text_overflow']
                 or any(key in attrs for key in ('tupleRef', 'target', 'continuedAt', 'precision'))
                 or attrs.get('{http://www.w3.org/2001/XMLSchema-instance}nil') is not None
@@ -299,11 +316,12 @@ def parse_member_observations(text, *, cik, concepts):
     return tuple(observations)
 
 
-def parse_inline_observations(text, *, cik, concepts, product_members=False):
+def parse_inline_observations(text, *, cik, concepts, product_members=False, taxonomies=('us-gaap',),
+                              currencies=('USD',)):
     """Parse bounded XML callbacks; unsupported or incomplete input fails closed."""
     if not isinstance(text, str) or len(text) > 15_000_000 or _DECLARATION.search(text):
         return ()
-    target = _InlineTarget(concepts, product_members=product_members)
+    target = _InlineTarget(concepts, product_members=product_members, taxonomies=taxonomies, currencies=currencies)
     parser = ET.XMLParser(target=target)
     try:
         # Feeding slices avoids an additional whole-document StringIO copy.
@@ -324,6 +342,7 @@ def parse_inline_observations(text, *, cik, concepts, product_members=False):
         if context is None or unit is None:
             continue
         observation = dict(**fact, **context, **unit, scope='consolidated')
-        if validated_observation(observation, cik=cik, concepts=concepts) is not None:
+        if validated_observation(observation, cik=cik, concepts=concepts, taxonomies=taxonomies,
+                                 currencies=currencies) is not None:
             observations.append(observation)
     return tuple(observations)
