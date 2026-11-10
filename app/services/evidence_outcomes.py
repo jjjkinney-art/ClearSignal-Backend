@@ -39,7 +39,8 @@ REASONS = {
     "available": ("bound",),
     "unavailable": ("registration_only_filing_list", "concept_absent_from_returned_facts"),
     "unsupported": ("ifrs_taxonomy", "non_usd_reporting", "annual_form_not_read", "interim_form_not_read",
-                    "no_same_period_pair", "conflicting_evidence", "selection_rules_not_met"),
+                    "no_same_period_pair", "conflicting_evidence", "selection_rules_not_met",
+                    "as_reported_comparison_withheld"),
     "failed": ("facts_retrieval_failed", "filing_list_failed", "filing_too_large", "filing_not_read",
                "time_limit"),
     "not_attempted": ("identity_unresolved", "no_filing_listed", "not_requested", "no_provider",
@@ -83,6 +84,8 @@ class OutcomeNotes:
         self.filing_read_failures: dict[str, bool] = {}  # task -> over the size limit
         self.completed: set[str] = set()  # tasks that returned
         self.abandoned: set[str] = set()  # tasks the request stopped waiting for
+        self.as_reported_withheld: list[dict] = []  # comparisons the as-reported slice declined, with why
+        self.as_reported_built: list[dict] = []  # comparisons it built (title, period end) before admission
 
     # Once the request has given up on a task, that task's outcome is final: a worker that keeps
     # running in the background cannot add, change or complete anything. ``task`` is the writer
@@ -114,6 +117,12 @@ class OutcomeNotes:
     def mark_abandoned(self, tasks: Iterable[str]):
         with self._lock:
             self.abandoned.update(tasks)
+
+    def add_as_reported_withheld(self, rows, task: Optional[str] = None, built=()):
+        with self._lock:
+            if not self._late(task):
+                self.as_reported_withheld.extend(dict(row) for row in rows)
+                self.as_reported_built.extend(dict(row) for row in built)
 
     def add_selected(self, task: str, form: str):
         with self._lock:
@@ -205,6 +214,10 @@ def note_facts_received(cik: str, data: dict, concept_units, records) -> None:
             "with_records": sorted({getattr(r, "concept", "") for r in records} & set(requested)),
         }, _task.get())
     _safe(action)
+
+
+def note_as_reported_withheld(rows, built=()) -> None:
+    _safe(lambda notes: notes.add_as_reported_withheld(rows or [], _task.get(), built or ()))
 
 
 def note_filings_listed(forms) -> None:
@@ -312,6 +325,27 @@ def _financial_state(source_answer, notes, references):
         return _record("reported_financials", "failed", "time_limit", tried=True, source_family="sec_company_facts",
                        user_text="SEC company facts could not be read within this request, so reported "
                                  "financials are missing. Trying again may give a fuller answer.")
+    if notes and (notes.as_reported_withheld or notes.as_reported_built) \
+            and not _claims_for(source_answer, "reported_financials"):
+        built = {row["title"]: row for row in notes.as_reported_built}
+        stale = [row for row in references or [] if row.get("freshness_status") == "stale" and row.get("title") in built]
+        parts = []
+        if built:
+            ends = sorted({row["period_end"] for row in notes.as_reported_built})
+            if stale:
+                parts.append(f"{len(built)} annual comparison(s) were built, but the latest annual period "
+                             f"(ending {ends[-1]}) is older than the freshness window, so none is shown")
+            else:
+                parts.append(f"{len(built)} annual comparison(s) were built but could not be used in this answer")
+        if notes.as_reported_withheld:
+            parts.append("withheld: " + "; ".join(
+                f"{row['metric']} ({row['reason'].replace('_', ' ')})" for row in notes.as_reported_withheld))
+        return _record("reported_financials", "unsupported", "as_reported_comparison_withheld", tried=True,
+                       source_family="sec_company_facts",
+                       detail={"withheld": list(notes.as_reported_withheld), "built": list(notes.as_reported_built),
+                               "stale_references": [row.get("id") for row in stale]},
+                       user_text="The issuer's SEC data was read as reported (annual comparisons only, in its own currency, "
+                                 "no conversion): " + "; ".join(parts) + ".")
     taxonomies = ok[-1].get("taxonomies", {}) if ok else {}
     currencies = ok[-1].get("currencies", {}) if ok else {}
     ifrs = (analysis.get("reason") == "ifrs_taxonomy_not_supported"

@@ -56,6 +56,10 @@ def _value(value: int | float, unit: str) -> str:
     if unit == "EUR/shares":
         amount = Decimal(str(value))
         return f"{amount:,.2f} EUR per share"
+    if re.fullmatch(r"[A-Z]{3}", str(unit)):
+        # An as-reported currency (as-reported slice): the filing's own unit, never converted. Only reached by
+        # units that previously raised, so existing output is unchanged.
+        return _scaled(value, suffix=f" {unit}")
     raise ValueError("unsupported SEC fact unit")
 
 

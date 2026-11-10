@@ -444,6 +444,14 @@ def fetch_verified_metric_evidence(
                 item = None
         if item is not None:
             evidence.append(item)
+    if not evidence and getattr(settings, "as_reported_financials_enabled", False) is True:
+        # IFRS or non-USD/EUR company facts, as reported (default off): annual comparisons only, no conversion.
+        from .as_reported_financials import fetch_as_reported_evidence
+        from .evidence_outcomes import note_as_reported_withheld
+        evidence, _withheld = fetch_as_reported_evidence(
+            ticker, cik, boundary=boundary, user_agent=getattr(settings, "sec_user_agent", "") or "")
+        note_as_reported_withheld(_withheld, [
+            {"title": item.title, "period_end": item.reporting_period_end} for item in evidence])
     if sector_names:
         # A business type's measures are kept only when its own signature pair
         # was reported, so other issuers' answers are unchanged.

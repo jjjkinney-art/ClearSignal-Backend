@@ -31,11 +31,21 @@ GENERIC_REASON = ('A verified comparison of at least two current and prior-perio
                   'threshold was attempted.')
 
 
+AS_REPORTED_IFRS_REASON = ('The SEC structured data retrieved for this issuer is tagged mainly under the IFRS taxonomy '
+                           '(ifrs-full). It was read as reported (annual comparisons, in the filing\'s own currency, no '
+                           'conversion), but no annual comparison could be shown, so no revenue, profit or cash-flow '
+                           'comparison, monitoring baseline or threshold was attempted.')
+
+
 def financial_gap(cik):
     """Why no financial analysis exists, naming IFRS only when retrieval confirmed it."""
     from ..providers.sec_client import observed_fact_taxonomies
     observed = observed_fact_taxonomies(cik) if isinstance(cik, str) else None
     if observed and observed.get('ifrs-full', 0) > observed.get('us-gaap', 0):
+        from ..config import settings
+        if getattr(settings, 'as_reported_financials_enabled', False) is True:
+            return {'status': 'not_established', 'reason': 'as_reported_comparisons_not_shown',
+                    'observed_taxonomies': observed, 'text': AS_REPORTED_IFRS_REASON}
         return {'status': 'not_established', 'reason': 'ifrs_taxonomy_not_supported',
                 'observed_taxonomies': observed, 'text': IFRS_REASON}
     return {'status': 'not_established', 'reason': 'comparisons_unavailable',

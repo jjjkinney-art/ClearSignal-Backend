@@ -15,6 +15,10 @@ def metric_label(name: str, concept: str) -> str:
         "RevenuesNetOfInterestExpense": "revenue net of interest expense",
         "RevenueFromContractWithCustomerIncludingAssessedTax":
             "revenue from contracts with customers including assessed taxes",
+        # IFRS concepts (as-reported slice); labels follow the concept's own meaning and no more.
+        "Revenue": "revenue (as reported)",
+        "RevenueFromContractsWithCustomers": "revenue from contracts with customers",
+        "ProfitLossFromOperatingActivities": "profit from operating activities (as reported)",
     }.get(concept, name)
 
 

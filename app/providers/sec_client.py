@@ -78,7 +78,8 @@ class SecFactRecord:
     inline_binding: Optional[dict] = None
 
 
-def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[SecFactRecord]:
+def parse_company_fact_records(data: dict, *, concept: str, unit: str, taxonomy: str = "us-gaap",
+                               forms: tuple = PERIODIC_FORMS) -> list[SecFactRecord]:
     """Select observations for one explicit US-GAAP concept and unit.
 
     Do not infer that a number in generated prose represents this concept.
@@ -90,7 +91,7 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
         return []
     cik = str(int(cik))  # numeric or zero-padded in SEC responses; one form downstream
     facts = data.get("facts", {})
-    gaap = facts.get("us-gaap", {}) if isinstance(facts, dict) else {}
+    gaap = facts.get(taxonomy, {}) if isinstance(facts, dict) else {}
     entry = gaap.get(concept, {}) if isinstance(gaap, dict) else {}
     units = entry.get("units", {}) if isinstance(entry, dict) else {}
     observations = units.get(unit, []) if isinstance(units, dict) else []
@@ -103,7 +104,7 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
         accession, form = item.get("accn"), item.get("form")
         if not isinstance(accession, str) or not _ACCESSION.fullmatch(accession):
             continue
-        if form not in PERIODIC_FORMS:
+        if form not in forms:
             continue
         end, filed, start = item.get("end"), item.get("filed"), item.get("start")
         try:
@@ -122,7 +123,7 @@ def parse_company_fact_records(data: dict, *, concept: str, unit: str) -> list[S
         except (InvalidOperation, ValueError):
             continue
         records.append(SecFactRecord(
-            cik=cik, taxonomy="us-gaap", concept=concept,
+            cik=cik, taxonomy=taxonomy, concept=concept,
             label=str(entry.get("label", concept)), unit=unit, value=value,
             start=start, end=end, filed=filed, form=form, accession=accession,
             filing_url=(f"https://www.sec.gov/Archives/edgar/data/{int(cik)}/"
@@ -178,6 +179,46 @@ def get_company_fact_records_for_concept_units(
         return records
     except Exception as exc:
         logger.warning("SEC structured fact retrieval failed for CIK %s: %s", cik, exc)
+        from ..services.evidence_outcomes import note_facts_failure
+        note_facts_failure(cik, exc)
+        return []
+
+
+AS_REPORTED_FORMS = ("10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A")
+
+
+def get_as_reported_fact_records(
+    cik: str, *, specs: tuple[tuple[str, str], ...], user_agent: str = "",
+) -> list[SecFactRecord]:
+    """Annual observations of explicit (taxonomy, concept) pairs in every currency unit they report.
+
+    One Company Facts request (flag-gated callers only). Units are kept exactly as reported; nothing
+    here converts a currency. Failures return [] and are noted for outcome records, like the USD path.
+    """
+    if not cik or not cik.isdigit() or not specs:
+        return []
+    url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik.zfill(10)}.json"
+    try:
+        response = requests.get(url, headers={"User-Agent": user_agent or "ai-analyst-bot/0.1"}, timeout=10)
+        response.raise_for_status()
+        data = response.json()
+        reported_cik = str(data.get("cik", "")) if isinstance(data, dict) else ""
+        if not reported_cik.isdigit() or int(reported_cik) != int(cik):
+            from ..services.evidence_outcomes import note_facts_rejected
+            note_facts_rejected(cik, "cik_mismatch")
+            return []
+        facts = data.get("facts") if isinstance(data.get("facts"), dict) else {}
+        records = []
+        for taxonomy, concept in dict.fromkeys(specs):
+            entry = (facts.get(taxonomy) or {}).get(concept) if isinstance(facts.get(taxonomy), dict) else None
+            units = entry.get("units") if isinstance(entry, dict) and isinstance(entry.get("units"), dict) else {}
+            for unit in units:
+                if re.fullmatch(r"[A-Z]{3}", str(unit)):
+                    records.extend(parse_company_fact_records(
+                        data, concept=concept, unit=unit, taxonomy=taxonomy, forms=AS_REPORTED_FORMS))
+        return records
+    except Exception as exc:
+        logger.warning("SEC as-reported fact retrieval failed for CIK %s: %s", cik, exc)
         from ..services.evidence_outcomes import note_facts_failure
         note_facts_failure(cik, exc)
         return []
