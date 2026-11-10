@@ -379,9 +379,12 @@ def fetch_verified_metric_evidence(
     )
     concept_units = tuple(dict.fromkeys((*concept_units,
         *((_LATEST_PERIOD_ANCHOR[0], currency) for currency in REPORTING_CURRENCIES))))
+    _as_reported = getattr(settings, "as_reported_financials_enabled", False) is True
+    _response: dict = {}
     records = get_company_fact_records_for_concept_units(
         cik, concept_units=concept_units,
         user_agent=getattr(settings, "sec_user_agent", "") or "",
+        **({"capture": _response} if _as_reported else {}),
     )
     if boundary is not None:
         records = [
@@ -444,6 +447,14 @@ def fetch_verified_metric_evidence(
                 item = None
         if item is not None:
             evidence.append(item)
+    if not evidence and _as_reported and not is_decision_monitoring_request(question or ""):
+        # IFRS or non-USD/EUR company facts, as reported (default off): annual comparisons only, no conversion,
+        # from the response above (no further request), and never for decision-threshold questions.
+        from .as_reported_financials import evidence_from_response
+        from .evidence_outcomes import note_as_reported_withheld
+        evidence, _withheld = evidence_from_response(_response.get("data"), ticker, cik, boundary=boundary)
+        note_as_reported_withheld(_withheld, [
+            {"title": item.title, "period_end": item.reporting_period_end} for item in evidence])
     if sector_names:
         # A business type's measures are kept only when its own signature pair
         # was reported, so other issuers' answers are unchanged.

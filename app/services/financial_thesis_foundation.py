@@ -242,6 +242,15 @@ def _rebuild(item, *, ticker: str, cik: str, name: str, concepts: tuple,
     claims = getattr(item, "verified_claims", [])
     if not isinstance(claims, list) or len(claims) != 2:
         return None
+    if isinstance(claims[0], dict) and claims[0].get("taxonomy") is not None:
+        # An as-reported comparison (IFRS, or a currency other than USD/EUR): rebuilt by its own producer, and
+        # only while that slice is enabled, for the core measures, in the filing's own currency.
+        from ..config import settings
+        if (getattr(settings, "as_reported_financials_enabled", False) is not True
+                or expected_unit is not None or instant):
+            return None
+        from .as_reported_financials import rebuild_as_reported
+        return rebuild_as_reported(item, ticker=ticker, cik=cik, name=name)
     records = []
     try:
         for claim in claims:

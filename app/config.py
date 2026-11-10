@@ -212,6 +212,10 @@ class Settings(BaseSettings):
     # unsupported, failed or not attempted) and a "What remains unknown" block. Adds no source, claim
     # or request. Default off: with it off the field is absent and every answer is unchanged.
     evidence_outcomes_enabled: bool = False
+    # Reads company facts reported under the IFRS taxonomy or in a currency other than USD/EUR, as reported:
+    # annual comparisons only, in the filing's own currency, with no conversion. Adds taxonomy, currency and
+    # reporting-basis metadata to the claims it produces. Default off: with it off nothing changes.
+    as_reported_financials_enabled: bool = False
     # Separate explicit-assumption HTTP path. Activation requires source/usage
     # review; never enabled by a request or the existing monitoring flags.
     conditional_valuation_scenarios_enabled: bool = False
