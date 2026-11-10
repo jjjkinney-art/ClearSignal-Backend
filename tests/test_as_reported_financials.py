@@ -180,6 +180,57 @@ def test_an_incompatible_or_unusable_prior_is_withheld_with_its_reason(over, rea
     assert reason_for(pair(**over)) == reason
 
 
+def movement_of(current, prior):
+    cur = rec(start='2025-01-01', end='2025-12-31', filed='2026-03-01', accession='0000000001-26-000001', value=current)
+    old = rec(value=prior)
+    anchor = rec(concept='Assets', start=None, end='2025-12-31', filed='2026-03-01', accession='0000000001-26-000001', value=9)
+    evidence, _ = evidence_of([cur, old, anchor])
+    assert len(evidence) == 1
+    return evidence[0]
+
+
+def test_equal_values_say_unchanged_with_no_direction_or_percentage():
+    for value in (120, 1_000_000_000, 7):
+        item = movement_of(value, value)
+        assert ' was unchanged at ' in item.summary and ', the same as ' in item.summary
+        assert 'increased' not in item.summary and 'decreased' not in item.summary and '%' not in item.summary
+        assert [c['raw_value'] for c in item.verified_claims] == [value, value]
+        assert rebuilt_ok(item)
+
+
+def test_a_small_increase_keeps_its_direction_and_says_less_than_a_tenth_of_a_percent():
+    for current, prior in ((1_000_000_001, 1_000_000_000), (100_004, 100_000), (1_000_049, 1_000_000)):
+        item = movement_of(current, prior)
+        assert 'increased by less than 0.1% to' in item.summary, item.summary
+        assert 'decreased' not in item.summary and 'unchanged' not in item.summary and '0.0%' not in item.summary
+        assert rebuilt_ok(item)
+
+
+def test_a_small_decrease_keeps_its_direction_and_says_less_than_a_tenth_of_a_percent():
+    for current, prior in ((999_999_999, 1_000_000_000), (99_996, 100_000), (999_951, 1_000_000)):
+        item = movement_of(current, prior)
+        assert 'decreased by less than 0.1% to' in item.summary, item.summary
+        assert 'increased' not in item.summary and 'unchanged' not in item.summary and '0.0%' not in item.summary
+        assert rebuilt_ok(item)
+
+
+def test_movements_at_and_above_a_tenth_of_a_percent_keep_the_percentage():
+    for current, prior, text in ((1_000_600, 1_000_000, 'increased 0.1%'), (999_400, 1_000_000, 'decreased 0.1%'),
+                                 (120, 100, 'increased 20.0%'), (80, 100, 'decreased 20.0%'), (1_001_000, 1_000_000, 'increased 0.1%')):
+        item = movement_of(current, prior)
+        assert text in item.summary and 'less than' not in item.summary and 'unchanged' not in item.summary, item.summary
+
+
+def test_an_exact_tie_at_half_a_tenth_of_a_percent_follows_the_display_rounding_and_keeps_its_direction():
+    # 0.05% shows as 0.0% at one decimal (round-half-even), so it is worded "less than 0.1%", never "0.0%".
+    assert 'increased by less than 0.1% to' in movement_of(1_000_500, 1_000_000).summary
+    assert 'decreased by less than 0.1% to' in movement_of(999_500, 1_000_000).summary
+
+
+def rebuilt_ok(item):
+    return ar.rebuild_as_reported(item, ticker='TST', cik='1', name='revenue') == item
+
+
 def test_a_non_positive_current_value_is_withheld_not_turned_into_a_percentage():
     records = pair()
     records[0] = rec(start='2025-01-01', end='2025-12-31', filed='2026-03-01', accession='0000000001-26-000001', value=-1)

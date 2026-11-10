@@ -152,9 +152,19 @@ def evidence_from_pair(current: SecFactRecord, prior: SecFactRecord, *, ticker: 
         return None, "non_positive_value"
     name = metric_label(metric_name, current.concept)
     change = ((Decimal(str(current.value)) - Decimal(str(prior.value))) / abs(Decimal(str(prior.value))) * 100)
-    movement = f"{name} {'increased' if change >= 0 else 'decreased'} {abs(change):.1f}%"
     current_text, prior_text = _short_pair(current.value, prior.value, current.unit)
-    summary = (f"{ticker} {movement} to {current_text} for the period {current.start} to {current.end}, from "
+    if change == 0:
+        # Equal amounts: nothing moved, so no direction and no percentage.
+        lead, link = f"{ticker} {name} was unchanged at", "the same as"
+    else:
+        direction = "increased" if change > 0 else "decreased"
+        if f"{abs(change):.1f}" == "0.0":
+            # A real movement too small to show at one decimal keeps its direction and is not rounded to nothing.
+            lead = f"{ticker} {name} {direction} by less than 0.1% to"
+        else:
+            lead = f"{ticker} {name} {direction} {abs(change):.1f}% to"
+        link = "from"
+    summary = (f"{lead} {current_text} for the period {current.start} to {current.end}, {link} "
                f"{prior_text} in the comparable prior-year period {prior.start} to {prior.end}. "
                f"Reported in {current.unit} under {BASES[current.taxonomy]}; no currency conversion was applied.")
     claims = [claim for record in (current, prior)
