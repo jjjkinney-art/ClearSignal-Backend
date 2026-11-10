@@ -17,7 +17,10 @@ every answer is unchanged.
 - **`source_eligibility(claim_type, descriptor)`** decides from **metadata only** whether a source may go on to claim
   verification: `eligible_for_verification`, `eligible_labelled` or `withhold`. **It never marks a claim verified**
   (`claim_verified` is always false). Verification is a separate step against retained bytes, which this module cannot do.
-- **`arbitrate(candidates, claim_type)`** applies the conflict rules to candidates for one claim.
+- **`arbitrate(candidates, claim_type)`** decides which candidates for one claim may go forward when they disagree. It
+  never verifies a claim (`claim_verified` is always false) and applies **no source ranking unless
+  `policy.tier_ranking_approved`** (default false): until then any disagreement among eligible candidates withholds
+  all of them. Source ranking and conflict resolution remain an open decision.
 - **`tier_breakdown(decisions)`** counts decisions by source tier for reporting.
 
 ## The five evidence situations are kept apart
@@ -31,8 +34,8 @@ every answer is unchanged.
 | Failed retrieval | `failed` + class | per class, below |
 
 Failure classes are classified and recommended separately: 429, 5xx, transport and timeout, time limit, filing-list
-failure and not-read give a budgeted retry recommendation; a 404 gives one confirming attempt and is **never**
-absence; a 403 is not retried blindly and is referred for access-policy review; a different-entity response and an
+failure and not-read give a budgeted retry recommendation; a 404 is **never** absence and is **not retried**
+(disclosed as an unproven gap, and flagged for owner review if a retained filing list shows XBRL filings); a 403 is not retried blindly and is referred for access-policy review; a different-entity response and an
 oversize document are disclosed (a retry cannot help).
 
 ## Policy defaults to unapproved

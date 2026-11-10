@@ -113,7 +113,7 @@ FAILURES = [
     (failed(http_status=429, error_class='HTTPError'), er.RATE_LIMITED, RETRY, True),
     (failed(http_status=500, error_class='HTTPError'), er.SERVER_ERROR, RETRY, True),
     (failed(http_status=503, error_class='HTTPError'), er.SERVER_ERROR, RETRY, True),
-    (failed(http_status=404, error_class='HTTPError'), er.NOT_FOUND, RETRY, True),
+    (failed(http_status=404, error_class='HTTPError'), er.NOT_FOUND, DISCLOSE, False),
     (failed(http_status=403, error_class='HTTPError'), er.FORBIDDEN, DISCLOSE, False),
     (failed(http_status=None, error_class='ConnectionError'), er.TRANSPORT, RETRY, True),
     (failed(http_status=None, error_class='ReadTimeout'), er.TRANSPORT, RETRY, True),
@@ -134,13 +134,17 @@ def test_each_failure_class_has_its_own_recommendation(record, cls, remedy, retr
     assert out['retry']['failure_class'] == cls and out['retry']['retryable'] is retryable
     assert out['executes_anything'] is False
     assert out['remedy'] not in {ALTERNATE, NONE}  # a failure never becomes absence or a fallback by itself
+    assert (out['remedy'] == RETRY) is retryable
     if retryable:
         assert out['retry']['budget_required'] is True and 'max_attempts' not in out['retry']
 
 
-def test_a_404_is_never_called_absence_and_a_403_is_not_retried_blindly():
+def test_a_404_is_never_called_absence_and_is_not_retried_and_a_403_is_not_retried_blindly():
     out = remedy_for(failed(http_status=404, error_class='HTTPError'))
-    assert 'does not prove absence' in out['rationale'] and out['remedy'] == RETRY
+    assert 'does not prove absence' in out['rationale'] and out['remedy'] == DISCLOSE
+    assert out['retry']['retryable'] is False and out['retry']['budget_required'] is False
+    assert 'retry' not in out['rationale'].lower().replace('repeating the same request is not recommended', '')
+    assert out['permitted'] is True and out['remedy'] != ALTERNATE
     forbidden = remedy_for(failed(http_status=403, error_class='HTTPError'))
     assert forbidden['retry']['retryable'] is False and 'access_policy_review' in forbidden['blocked_by']
 
@@ -307,16 +311,46 @@ def test_candidate_text_cannot_change_a_decision():
 
 # --- conflicts ---------------------------------------------------------------------------------------
 
+RANKED = SourcePolicy(**{**APPROVED.__dict__, 'tier_ranking_approved': True})
+
+
+def test_arbitration_applies_no_ranking_and_verifies_nothing_under_the_default_policy():
+    primary = src('sec_filing', asserted_value='100')
+    secondary = src('news', tier='reputable_secondary', independence_group='o', asserted_value='90')
+    # Default policy: the news source is not eligible at all (corroboration rule unapproved), so there is no dispute.
+    rows = arbitrate([primary, secondary], 'event', policy=er.DEFAULT_POLICY)
+    assert [(r['decision'], r['reason']) for r in rows] == [(ELIGIBLE, 'primary_event_source'), (WITHHELD, 'source_policy_unapproved')]
+    # Both eligible but ranking unapproved: a primary source does not beat a lower tier; nothing goes forward.
+    rows = arbitrate([primary, secondary], 'event', policy=APPROVED)
+    assert [r['decision'] for r in rows] == [WITHHELD, WITHHELD]
+    assert {r['reason'] for r in rows} == {'disagreement_ranking_policy_unapproved'}
+    assert all(r['claim_verified'] is False for r in rows)
+    agreeing = arbitrate([src('sec_filing', asserted_value='100'), src('regulator_filing', regulator='home_reg', asserted_value='100')],
+                         'reported_figure', policy=APPROVED)
+    assert [r['decision'] for r in agreeing] == [ELIGIBLE, ELIGIBLE] and all(r['claim_verified'] is False for r in agreeing)
+
+
+def test_arbitration_never_marks_a_claim_verified_for_any_policy_or_outcome():
+    sets = [[src('sec_filing', asserted_value='1')], [src('sec_filing', asserted_value='1'), src('sec_filing', asserted_value='2')],
+            [src('sec_filing', asserted_value='1'), src('news', tier='reputable_secondary', independence_group='x', asserted_value='2')],
+            [src('aggregator', asserted_value='1'), src('forum', asserted_value='1')]]
+    for candidates in sets:
+        for policy in (er.DEFAULT_POLICY, APPROVED, RANKED):
+            for claim_type in er.CLAIM_TYPES:
+                for row in arbitrate(candidates, claim_type, policy=policy):
+                    assert row['claim_verified'] is False and row['decision'] in {ELIGIBLE, ELIGIBLE_LABELLED, WITHHELD}
+
+
 def test_same_tier_disagreement_withholds_every_disagreeing_candidate():
     rows = arbitrate([src('sec_filing', asserted_value='100', claim_key='k'), src('regulator_filing', regulator='home_reg', asserted_value='120', claim_key='k')],
-                     'reported_figure', policy=APPROVED)
+                     'reported_figure', policy=RANKED)
     assert [r['decision'] for r in rows] == [WITHHELD, WITHHELD] and {r['reason'] for r in rows} == {'same_tier_disagreement'}
 
 
-def test_a_lower_tier_that_disagrees_is_set_aside_and_the_disagreement_recorded():
+def test_a_lower_tier_that_disagrees_is_set_aside_only_when_ranking_is_approved():
     primary = src('sec_filing', asserted_value='100')
     secondary = src('news', tier='reputable_secondary', independence_group='o', asserted_value='90')
-    rows = arbitrate([primary, secondary], 'event', policy=APPROVED)
+    rows = arbitrate([primary, secondary], 'event', policy=RANKED)
     assert rows[0]['decision'] == ELIGIBLE and rows[0]['disagreement'] == 'lower_tier_disagrees'
     assert (rows[1]['decision'], rows[1]['reason'], rows[1]['disagreement']) == (WITHHELD, 'disagrees_with_higher_tier', 'shown_not_used')
 

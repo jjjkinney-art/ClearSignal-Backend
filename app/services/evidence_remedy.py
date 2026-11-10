@@ -83,6 +83,9 @@ class SourcePolicy:
     third_party_labelled_approved: bool = False  # decision 4 ("reported by X, not verified")
     issuer_ir_numeric_eligible: bool = False  # decision 1 (recommended False)
     min_independent_origins: int = 2
+    # Decision on source ranking and conflict resolution is still open. While False, ``arbitrate`` applies no
+    # ranking at all: any disagreement among eligible candidates withholds every one of them.
+    tier_ranking_approved: bool = False
 
 
 DEFAULT_POLICY = SourcePolicy()
@@ -111,8 +114,9 @@ def _failure_remedy(record):
         TIME_LIMIT: (RETRY, True, "The request ran out of time; a later attempt may succeed, and it needs a time budget."),
         LIST_FAILED: (RETRY, True, "The filing list could not be retrieved; a later attempt may succeed."),
         NOT_READ: (RETRY, True, "The filing could not be read; a later attempt may succeed."),
-        NOT_FOUND: (RETRY, True, "A 404 does not prove absence. One confirming attempt, then check the filing list; "
-                                 "until then it stays an unproven gap."),
+        NOT_FOUND: (DISCLOSE, False, "A 404 does not prove absence, and repeating the same request is not recommended. "
+                                     "Disclose it as an unproven gap; if the filing list already held shows XBRL filings, "
+                                     "treat the 404 as an anomaly for the owner to review."),
         FORBIDDEN: (DISCLOSE, False, "A 403 may mean access is blocked; do not retry blindly. Disclose it and refer it "
                                      "to the owner as an access-policy question."),
         INTEGRITY: (DISCLOSE, False, "The response was for a different entity; it must not be used or retried silently."),
@@ -308,8 +312,11 @@ def arbitrate(candidates: Iterable[SourceDescriptor], claim_type: str, *, policy
               context: Optional[dict] = None) -> list:
     """Which candidates for one claim may go forward when they disagree. Returns one row per candidate.
 
-    Same-tier disagreement withholds every disagreeing candidate. A lower tier that disagrees with the
-    highest eligible tier is set aside and the disagreement is recorded; a copy of one origin counts once.
+    Every row carries ``claim_verified: False``: arbitration only decides who may go on to verification.
+    No source ranking is applied unless ``policy.tier_ranking_approved`` is true. Until then any disagreement
+    among eligible candidates withholds all of them (fail closed). With ranking approved, same-tier
+    disagreement still withholds every disagreeing candidate, and a lower tier that disagrees with the
+    highest eligible tier is set aside and the disagreement recorded.
     """
     candidates = list(candidates)
     rows = []
@@ -320,6 +327,10 @@ def arbitrate(candidates: Iterable[SourceDescriptor], claim_type: str, *, policy
     live = [r for r in rows if r["decision"] != WITHHELD and r["candidate"].asserted_value is not None]
     values = {r["candidate"].asserted_value for r in live}
     if len(values) > 1:
+        if not policy.tier_ranking_approved:
+            for r in live:
+                r.update(decision=WITHHELD, reason="disagreement_ranking_policy_unapproved", disagreement="unresolved")
+            return rows
         best = min(_TIER_RANK.get(r["candidate"].tier, 3) for r in live)
         top = [r for r in live if _TIER_RANK.get(r["candidate"].tier, 3) == best]
         if len({r["candidate"].asserted_value for r in top}) > 1:
