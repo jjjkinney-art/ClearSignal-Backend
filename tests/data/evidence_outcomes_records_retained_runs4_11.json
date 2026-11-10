@@ -1,0 +1,918 @@
+{
+ "run11 AUDC:core_thesis": [
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "bound",
+   "source_family": "sec_company_facts",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "144",
+     "144/A",
+     "20-F",
+     "20-F/A",
+     "3",
+     "4",
+     "424B2",
+     "424B3",
+     "424B5",
+     "6-K",
+     "6-K/A",
+     "CORRESP",
+     "CT ORDER",
+     "EFFECT",
+     "F-3",
+     "F-3/A",
+     "F-3ASR",
+     "FWP",
+     "RW",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SC TO-I",
+     "SC TO-I/A",
+     "SCHEDULE 13G/A",
+     "SD",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "144",
+     "144/A",
+     "20-F",
+     "20-F/A",
+     "3",
+     "4",
+     "424B2",
+     "424B3",
+     "424B5",
+     "6-K",
+     "6-K/A",
+     "CORRESP",
+     "CT ORDER",
+     "EFFECT",
+     "F-3",
+     "F-3/A",
+     "F-3ASR",
+     "FWP",
+     "RW",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SC TO-I",
+     "SC TO-I/A",
+     "SCHEDULE 13G/A",
+     "SD",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  }
+ ],
+ "run11 FORFF:core_thesis": [
+  {
+   "detail": {
+    "currencies": [
+     "CAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "non_usd_reporting",
+   "source_family": "sec_company_facts",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "3",
+     "4",
+     "40-F",
+     "40-F/A",
+     "424B3",
+     "425",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERTNYS",
+     "CORRESP",
+     "EFFECT",
+     "F-10",
+     "F-10/A",
+     "F-10EF",
+     "F-3D",
+     "F-3DPOS",
+     "F-4",
+     "F-4/A",
+     "F-X",
+     "FWP",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SCHEDULE 13G",
+     "SCHEDULE 13G/A",
+     "SUPPL",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "3",
+     "4",
+     "40-F",
+     "40-F/A",
+     "424B3",
+     "425",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERTNYS",
+     "CORRESP",
+     "EFFECT",
+     "F-10",
+     "F-10/A",
+     "F-10EF",
+     "F-3D",
+     "F-3DPOS",
+     "F-4",
+     "F-4/A",
+     "F-X",
+     "FWP",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SCHEDULE 13G",
+     "SCHEDULE 13G/A",
+     "SUPPL",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "3",
+     "4",
+     "40-F",
+     "40-F/A",
+     "424B3",
+     "425",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERTNYS",
+     "CORRESP",
+     "EFFECT",
+     "F-10",
+     "F-10/A",
+     "F-10EF",
+     "F-3D",
+     "F-3DPOS",
+     "F-4",
+     "F-4/A",
+     "F-X",
+     "FWP",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SCHEDULE 13G",
+     "SCHEDULE 13G/A",
+     "SUPPL",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "3",
+     "4",
+     "40-F",
+     "40-F/A",
+     "424B3",
+     "425",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERTNYS",
+     "CORRESP",
+     "EFFECT",
+     "F-10",
+     "F-10/A",
+     "F-10EF",
+     "F-3D",
+     "F-3DPOS",
+     "F-4",
+     "F-4/A",
+     "F-X",
+     "FWP",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SCHEDULE 13G",
+     "SCHEDULE 13G/A",
+     "SUPPL",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  }
+ ],
+ "run11 GALT:core_thesis": [
+  {
+   "detail": {},
+   "missing_parts": [
+    {
+     "part": "revenue",
+     "reason": "concept_absent_from_returned_facts",
+     "state": "unavailable"
+    }
+   ],
+   "need": "reported_financials",
+   "reason": "bound",
+   "source_family": "sec_company_facts",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {
+    "form": "10-Q"
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "selection_rules_not_met",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "form": "10-K"
+   },
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "selection_rules_not_met",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  }
+ ],
+ "run11 GALT:decision_threshold": [
+  {
+   "detail": {
+    "present": [
+     "OperatingIncomeLoss",
+     "NetIncomeLoss",
+     "NetCashProvidedByUsedInOperatingActivities",
+     "Assets"
+    ]
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "no_same_period_pair",
+   "source_family": "sec_company_facts",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "form": "10-Q"
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "selection_rules_not_met",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "present": [
+     "OperatingIncomeLoss",
+     "NetIncomeLoss",
+     "NetCashProvidedByUsedInOperatingActivities",
+     "Assets"
+    ]
+   },
+   "missing_parts": [],
+   "need": "decision_inputs",
+   "reason": "no_same_period_pair",
+   "source_family": "sec_company_facts",
+   "state": "unsupported",
+   "tried": true
+  }
+ ],
+ "run11 IFCNF:core_thesis": [
+  {
+   "detail": {
+    "company_facts_queried": false
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  }
+ ],
+ "run11 NWBI:core_thesis": [
+  {
+   "detail": {},
+   "missing_parts": [
+    {
+     "part": "revenue",
+     "reason": "concept_absent_from_returned_facts",
+     "state": "unavailable"
+    }
+   ],
+   "need": "reported_financials",
+   "reason": "bound",
+   "source_family": "sec_company_facts",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {
+    "form": "10-Q"
+   },
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "selection_rules_not_met",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": true
+  }
+ ],
+ "run11 VBREY:core_thesis": [
+  {
+   "detail": {
+    "company_facts_queried": false
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "registration_only_filing_list",
+   "source_family": "sec_filing_list",
+   "state": "unavailable",
+   "tried": true
+  }
+ ],
+ "run4 BWMX:core_thesis": [
+  {
+   "detail": {
+    "currencies": [
+     "EUR",
+     "IDR",
+     "MXN",
+     "USD"
+    ],
+    "taxonomies": {
+     "ifrs-full": 304,
+     "us-gaap": 4
+    }
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "ifrs_taxonomy",
+   "source_family": "sec_company_facts",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "20-F",
+     "20-F/A",
+     "25",
+     "3",
+     "4",
+     "424B3",
+     "424B4",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERT",
+     "CORRESP",
+     "EFFECT",
+     "F-1",
+     "F-1/A",
+     "F-3",
+     "F-4",
+     "F-4/A",
+     "NT 20-F",
+     "SC 13D",
+     "SC 13D/A",
+     "SC 13G/A",
+     "SCHEDULE 13D/A",
+     "SCHEDULE 13G",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "20-F",
+     "20-F/A",
+     "25",
+     "3",
+     "4",
+     "424B3",
+     "424B4",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERT",
+     "CORRESP",
+     "EFFECT",
+     "F-1",
+     "F-1/A",
+     "F-3",
+     "F-4",
+     "F-4/A",
+     "NT 20-F",
+     "SC 13D",
+     "SC 13D/A",
+     "SC 13G/A",
+     "SCHEDULE 13D/A",
+     "SCHEDULE 13G",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  }
+ ],
+ "run4 SCCO:decision_threshold": [
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "decision_inputs",
+   "reason": "no_provider",
+   "source_family": "none",
+   "state": "not_attempted",
+   "tried": false
+  }
+ ],
+ "run8 BP:core_thesis": [
+  {
+   "detail": {
+    "currencies": [
+     "USD"
+    ],
+    "taxonomies": {
+     "ifrs-full": 320
+    }
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "ifrs_taxonomy",
+   "source_family": "sec_company_facts",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "11-K",
+     "13F-HR",
+     "13F-HR/A",
+     "20-F",
+     "20-F/A",
+     "25-NSE",
+     "424B3",
+     "424B5",
+     "425",
+     "6-K",
+     "6-K/A",
+     "CORRESP",
+     "EFFECT",
+     "F-3",
+     "F-3/A",
+     "F-3ASR",
+     "F-4",
+     "F-4/A",
+     "F-6 POS",
+     "FWP",
+     "IRANNOTICE",
+     "PX14A6G",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SCHEDULE 13G/A",
+     "SD",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {
+    "form": "20-F"
+   },
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "filing_not_read",
+   "source_family": "sec_filing",
+   "state": "failed",
+   "tried": true
+  },
+  {
+   "detail": {
+    "form": "20-F"
+   },
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "filing_not_read",
+   "source_family": "sec_filing",
+   "state": "failed",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "11-K",
+     "13F-HR",
+     "13F-HR/A",
+     "20-F",
+     "20-F/A",
+     "25-NSE",
+     "424B3",
+     "424B5",
+     "425",
+     "6-K",
+     "6-K/A",
+     "CORRESP",
+     "EFFECT",
+     "F-3",
+     "F-3/A",
+     "F-3ASR",
+     "F-4",
+     "F-4/A",
+     "F-6 POS",
+     "FWP",
+     "IRANNOTICE",
+     "PX14A6G",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SC 13G/A",
+     "SCHEDULE 13G/A",
+     "SD",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  }
+ ],
+ "run9 MRX:core_thesis": [
+  {
+   "detail": {
+    "currencies": [
+     "USD"
+    ],
+    "taxonomies": {
+     "ifrs-full": 230
+    }
+   },
+   "missing_parts": [],
+   "need": "reported_financials",
+   "reason": "ifrs_taxonomy",
+   "source_family": "sec_company_facts",
+   "state": "unsupported",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "13F-HR",
+     "144",
+     "144/A",
+     "20-F",
+     "3",
+     "4",
+     "424B1",
+     "424B2",
+     "424B3",
+     "424B4",
+     "424B5",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERT",
+     "CORRESP",
+     "DRS",
+     "DRS/A",
+     "DRSLTR",
+     "EFFECT",
+     "F-1",
+     "F-1/A",
+     "F-1MEF",
+     "F-3ASR",
+     "FWP",
+     "N-PX",
+     "POSASR",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SCHEDULE 13G",
+     "SCHEDULE 13G/A",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "change_drivers",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "business_description",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {},
+   "missing_parts": [],
+   "need": "risk_disclosures",
+   "reason": "bound",
+   "source_family": "sec_filing",
+   "state": "available",
+   "tried": true
+  },
+  {
+   "detail": {
+    "listed_forms": [
+     "13F-HR",
+     "144",
+     "144/A",
+     "20-F",
+     "3",
+     "4",
+     "424B1",
+     "424B2",
+     "424B3",
+     "424B4",
+     "424B5",
+     "6-K",
+     "6-K/A",
+     "8-A12B",
+     "CERT",
+     "CORRESP",
+     "DRS",
+     "DRS/A",
+     "DRSLTR",
+     "EFFECT",
+     "F-1",
+     "F-1/A",
+     "F-1MEF",
+     "F-3ASR",
+     "FWP",
+     "N-PX",
+     "POSASR",
+     "S-8",
+     "S-8 POS",
+     "SC 13G",
+     "SCHEDULE 13G",
+     "SCHEDULE 13G/A",
+     "UPLOAD"
+    ]
+   },
+   "missing_parts": [],
+   "need": "liquidity_going_concern",
+   "reason": "annual_form_not_read",
+   "source_family": "sec_filing",
+   "state": "unsupported",
+   "tried": false
+  }
+ ]
+}
